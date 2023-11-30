@@ -12,25 +12,25 @@ latestAboutLibsRelease = "10.8.3"
 coroutinesVersion = "1.7.3"
 glideVersion = "4.16.0"
 pagingVersion = "3.2.1"
-roomVersion = "2.6.0"
+roomVersion = "2.6.1"
 navVersion = "2.7.5"
 koinVersion = "3.5.0"
 coil = "2.5.0"
 lifecycle = "2.6.2"
 jetpack = "1.6.0-alpha03"
-jetpackCompiler = "1.5.4"
+jetpackCompiler = "1.5.5"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.33.1-alpha"
 okhttpVersion = "4.12.0"
 ktorVersion = "2.3.6"
 tvCompose = "1.0.0-alpha10"
-workVersion = "2.8.1"
+workVersion = "2.9.0"
 ziplineVersion = "1.1.0"
 landscapist = "2.2.11"
 protobufVersion = "3.25.1"
 sketchVersion = "3.2.5"
 activity = "1.8.1"
-composeBomVersion = "2023.12.00-alpha02"
+composeBomVersion = "2023.12.00-alpha03"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -140,7 +140,7 @@ ktorOkHttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorVersion
 ktorGson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktorVersion" }
 ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.0.0"
 
-workRuntime = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
+workRuntime = { module = "androidx.work:work-runtime", version.ref = "workVersion" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
 roomPaging = { module = "androidx.room:room-paging", version.ref = "roomVersion" }
@@ -263,7 +263,7 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.1"
-androidxWebkit = "androidx.webkit:webkit:1.8.0"
+androidxWebkit = "androidx.webkit:webkit:1.9.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.2"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.4"

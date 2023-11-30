@@ -99,7 +99,6 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.minus
-import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.toComposeColor
 import com.programmersbox.uiviews.utils.topBounds
 import dev.chrisbanes.haze.haze
@@ -280,33 +279,57 @@ fun DetailsView(
                                 unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         )
-                    },
-                    floatingActionButton = {
+
                         val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
 
-                        ExtendedFloatingActionButton(
+                        NavigationBarItem(
+                            selected = false,
                             onClick = {
                                 scope.launch {
                                     if (expanded) collapsableBehavior.state.animateExpand()
                                     else collapsableBehavior.state.animateCollapse()
                                 }
                             },
-                            containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
-                            contentColor = swatchInfo?.titleColor?.toComposeColor()
-                                ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
-                            text = { Text("${if (expanded) "Show" else "Hide"} Details") },
                             icon = {
                                 Icon(
                                     Icons.Default.ArrowDropDownCircle,
                                     modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
-                                    contentDescription = if (expanded) {
-                                        "Expand"
-                                    } else {
-                                        "Collapse"
-                                    }
+                                    contentDescription = if (expanded) "Expand" else "Collapse"
                                 )
                             },
+                            label = { Text("Details") },
+                            colors = NavigationBarItemDefaults.colors(
+                                unselectedIconColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         )
+                    },
+                    floatingActionButton = {
+                        AnimatedVisibility(
+                            visible = isSaved,
+                            enter = fadeIn() + slideInHorizontally { it / 2 },
+                            exit = slideOutHorizontally { it / 2 } + fadeOut(),
+                            label = "",
+                        ) {
+                            val notificationManager = LocalContext.current.notificationManager
+                            ExtendedFloatingActionButton(
+                                onClick = {
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.getNotificationItemFlow(info.url)
+                                            .firstOrNull()
+                                            ?.let {
+                                                dao.deleteNotification(it)
+                                                notificationManager.cancelNotification(it)
+                                            }
+                                    }
+                                },
+                                text = { Text("Remove from Saved") },
+                                icon = { Icon(Icons.Default.BookmarkRemove, null) },
+                                containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
+                                contentColor = swatchInfo?.titleColor?.toComposeColor()
+                                    ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
+                            )
+                        }
                     },
                     containerColor = Color.Transparent,
                     contentColor = topBarColor,
@@ -344,7 +367,7 @@ fun DetailsView(
                 }
             },
             floatingActionButton = {
-                AnimatedVisibility(
+                /*AnimatedVisibility(
                     visible = isSaved,
                     enter = fadeIn() + slideInHorizontally { it / 2 },
                     exit = slideOutHorizontally { it / 2 } + fadeOut(),
@@ -369,7 +392,7 @@ fun DetailsView(
                             ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
                         expanded = listState.isScrollingUp()
                     )
-                }
+                }*/
             },
             modifier = Modifier
                 .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }

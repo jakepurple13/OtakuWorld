@@ -86,7 +86,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.AnimatedPane
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.GutterSizes
 import androidx.compose.material3.adaptive.HingePolicy
 import androidx.compose.material3.adaptive.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
@@ -95,7 +94,7 @@ import androidx.compose.material3.adaptive.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldState
+import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -184,7 +183,7 @@ fun OtakuListStuff(
         .showListDetail
         .collectAsStateWithLifecycle(true)
 
-    val state = rememberListDetailPaneScaffoldState(
+    val state = rememberListDetailPaneScaffoldNavigator(
         scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
     )
 
@@ -218,7 +217,7 @@ fun OtakuListStuff(
     }
 
     ListDetailPaneScaffold(
-        scaffoldState = state,
+        scaffoldState = state.scaffoldState,
         listPane = {
             AnimatedPane(modifier = Modifier.fillMaxSize()) {
                 ListPart(
@@ -281,10 +280,12 @@ fun calculateStandardPaneScaffoldDirective(
     val posture = windowAdaptiveInfo.windowPosture
 
     return PaneScaffoldDirective(
-        maxHorizontalPartitions,
-        GutterSizes(contentPadding, verticalSpacerSize, horizontalSpacerSize),
-        maxVerticalPartitions,
-        when (verticalHingePolicy) {
+        maxHorizontalPartitions = maxHorizontalPartitions,
+        contentPadding = contentPadding,
+        verticalPartitionSpacerSize = verticalSpacerSize,
+        horizontalPartitionSpacerSize = horizontalSpacerSize,
+        maxVerticalPartitions = maxVerticalPartitions,
+        excludedBounds = when (verticalHingePolicy) {
             HingePolicy.AvoidSeparating -> posture.separatingVerticalHingeBounds
             HingePolicy.AvoidOccluding -> posture.occludingVerticalHingeBounds
             HingePolicy.AlwaysAvoid -> posture.allVerticalHingeBounds
