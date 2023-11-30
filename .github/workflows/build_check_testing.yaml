@@ -46,7 +46,7 @@ jobs:
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/gradle-build-action@v2.9.0
+        uses: gradle/gradle-build-action@v2.10.0
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -108,7 +108,7 @@ jobs:
 
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2.9.0
+        uses: gradle/gradle-build-action@v2.10.0
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -170,7 +170,7 @@ jobs:
 
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2.9.0
+        uses: gradle/gradle-build-action@v2.10.0
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -232,7 +232,7 @@ jobs:
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/gradle-build-action@v2.9.0
+        uses: gradle/gradle-build-action@v2.10.0
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
