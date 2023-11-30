@@ -46,7 +46,7 @@ jobs:
           MANGA_GOOGLE_SERVICES_JSON: ${{ secrets.MANGA_SERVICES }}
 
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: adopt
           java-version: 17
@@ -108,7 +108,7 @@ jobs:
           ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES }}
 
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: adopt
           java-version: 17
@@ -170,7 +170,7 @@ jobs:
           ANIME_TV_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_TV_SERVICES }}
 
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: adopt
           java-version: 17
@@ -232,7 +232,7 @@ jobs:
           NOVEL_GOOGLE_SERVICES_JSON: ${{ secrets.NOVEL_SERVICES }}
 
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: adopt
           java-version: 17
