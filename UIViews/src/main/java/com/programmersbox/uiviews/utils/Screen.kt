@@ -36,7 +36,6 @@ import com.programmersbox.uiviews.R
 import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.KoinExperimentalAPI
-import java.util.UUID
 
 sealed class Screen(val route: String) {
 
@@ -55,12 +54,6 @@ sealed class Screen(val route: String) {
     data object AboutScreen : Screen("about")
     data object DebugScreen : Screen("debug")
     data object CustomListScreen : Screen("custom_list")
-    data object CustomListStuffScreen : Screen("custom_list_stuff")
-    data object CustomListItemScreen : Screen("custom_list_item") {
-        fun navigate(navController: NavController, uuid: UUID) {
-            navController.navigate("$route/$uuid") { launchSingleTop = true }
-        }
-    }
 
     data object ImportListScreen : Screen("import_list") {
         fun navigate(navController: NavController, uri: Uri) {

@@ -10,7 +10,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -25,9 +24,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -37,10 +34,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -49,11 +46,8 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -68,11 +62,9 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -83,20 +75,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -104,7 +91,6 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.Alizarin
-import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -116,12 +102,9 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
-import com.programmersbox.uiviews.utils.components.GradientImage
-import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
@@ -140,26 +123,24 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuCustomListScreen(
+    viewModel: OtakuListViewModel,
+    navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
-    listDao: ListDao = LocalCustomListDao.current,
-    vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
-    val customItem = vm.customItem
+    val customItem = viewModel.customItem
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val logoDrawable = koinInject<AppLogo>().logo
+    val logoDrawable = koinInject<AppLogo>()
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { vm.writeToFile(it, context) } }
+    ) { document -> document?.let { viewModel.writeToFile(it, context) } }
 
     val shareItem = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -188,9 +169,9 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            withContext(Dispatchers.IO) { vm.deleteAll() }
+                            withContext(Dispatchers.IO) { viewModel.deleteAll() }
                             deleteList = false
-                            navController.popBackStack()
+                            navigateBack()
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -224,7 +205,7 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            vm.rename(name)
+                            viewModel.rename(name)
                             showAdd = false
                         }
                     },
@@ -248,10 +229,10 @@ fun OtakuCustomListScreen(
 
     if (showDeleteModal) {
         DeleteItemsModal(
-            list = vm.listBySource,
-            onRemove = vm::removeItems,
+            list = viewModel.listBySource,
+            onRemove = viewModel::removeItems,
             onDismiss = { showDeleteModal = false },
-            drawable = logoDrawable
+            drawable = logoDrawable.logo
         )
     }
 
@@ -262,15 +243,14 @@ fun OtakuCustomListScreen(
         bannerContent = {
             ListItem(
                 leadingContent = {
-                    val logo = koinInject<AppLogo>().logoId
                     CoilGradientImage(
                         model = rememberAsyncImagePainter(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(it?.imageUrl)
                                 .lifecycle(LocalLifecycleOwner.current)
                                 .crossfade(true)
-                                .placeholder(logo)
-                                .error(logo)
+                                .placeholder(logoDrawable.logoId)
+                                .error(logoDrawable.logoId)
                                 .build()
                         ),
                         modifier = Modifier
@@ -295,18 +275,20 @@ fun OtakuCustomListScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 DynamicSearchBar(
-                    query = vm.searchQuery,
-                    onQueryChange = vm::setQuery,
+                    query = viewModel.searchQuery,
+                    onQueryChange = viewModel::setQuery,
                     isDocked = isHorizontal,
-                    onSearch = { vm.searchBarActive = false },
-                    active = vm.searchBarActive,
-                    onActiveChange = { vm.searchBarActive = it },
+                    onSearch = { viewModel.searchBarActive = false },
+                    active = viewModel.searchBarActive,
+                    onActiveChange = { viewModel.searchBarActive = it },
                     placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
-                    leadingIcon = { BackButton() },
+                    leadingIcon = {
+                        IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    },
                     colors = SearchBarDefaults.colors(
                         containerColor = animateColorAsState(
                             MaterialTheme.colorScheme.surface.copy(
-                                alpha = if (vm.searchBarActive) 1f else 0f
+                                alpha = if (viewModel.searchBarActive) 1f else 0f
                             ),
                             label = ""
                         ).value,
@@ -315,8 +297,8 @@ fun OtakuCustomListScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AnimatedVisibility(vm.searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { vm.setQuery("") }) {
+                            AnimatedVisibility(viewModel.searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.setQuery("") }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             }
@@ -369,7 +351,7 @@ fun OtakuCustomListScreen(
                                 )
                             }
 
-                            AnimatedVisibility(!vm.searchBarActive) {
+                            AnimatedVisibility(!viewModel.searchBarActive) {
                                 IconButton(
                                     onClick = {
                                         shareItem.launchCatching(
@@ -388,7 +370,7 @@ fun OtakuCustomListScreen(
                                     }
                                 ) { Icon(Icons.Default.Share, null) }
                             }
-                            AnimatedVisibility(!vm.searchBarActive) {
+                            AnimatedVisibility(!viewModel.searchBarActive) {
                                 IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
                             }
                         }
@@ -400,17 +382,16 @@ fun OtakuCustomListScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .padding(16.dp)
-                            .padding(bottom = 80.dp)
                             .fillMaxWidth(),
                     ) {
-                        itemsIndexed(items = vm.searchItems) { index, item ->
+                        itemsIndexed(items = viewModel.searchItems) { index, item ->
                             ListItem(
                                 headlineContent = { Text(item.title) },
                                 leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
                                 modifier = Modifier
                                     .clickable {
-                                        vm.setQuery(item.title)
-                                        vm.searchBarActive = false
+                                        viewModel.setQuery(item.title)
+                                        viewModel.searchBarActive = false
                                     }
                                     .animateItemPlacement()
                             )
@@ -436,14 +417,14 @@ fun OtakuCustomListScreen(
                         )
                 ) {
                     items(
-                        items = vm.items,
+                        items = viewModel.items,
                         key = { it.key },
                         contentType = { it }
                     ) { item ->
                         CustomItemVertical(
                             items = item.value,
                             title = item.key,
-                            logo = logoDrawable,
+                            logo = logoDrawable.logo,
                             showLoadingDialog = { showLoadingDialog = it },
                             onError = {
                                 scope.launch {
@@ -581,163 +562,6 @@ private fun CustomItemVertical(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CustomItem(
-    item: CustomListInfo,
-    logo: Drawable?,
-    onDelete: (CustomListInfo) -> Unit,
-    showLoadingDialog: (Boolean) -> Unit,
-    onError: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val scope = rememberCoroutineScope()
-    val sourceRepository = LocalSourcesRepository.current
-    val navController = LocalNavController.current
-    var showPopup by remember { mutableStateOf(false) }
-
-    if (showPopup) {
-        val onDismiss = { showPopup = false }
-
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.removeNoti, item.title)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDismiss()
-                        onDelete(item)
-                    }
-                ) { Text(stringResource(R.string.yes)) }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-        )
-    }
-
-    val dismissState = rememberDismissState(
-        confirmValueChange = {
-            if (it == DismissValue.DismissedToStart) {
-                showPopup = true
-            }
-            false
-        }
-    )
-
-    SwipeToDismissBox(
-        modifier = modifier,
-        state = dismissState,
-        directions = setOf(DismissDirection.EndToStart),
-        backgroundContent = {
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToStart -> Color.Red
-                    DismissValue.DismissedToEnd -> Color.Red
-                }, label = ""
-            )
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(color)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = null,
-                    modifier = Modifier.scale(scale),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
-        content = {
-            ElevatedCard(
-                onClick = {
-                    sourceRepository
-                        .toSourceByApiServiceName(item.source)
-                        ?.apiService
-                        ?.let { source ->
-                            Cached.cache[item.url]?.let {
-                                flow {
-                                    emit(
-                                        it
-                                            .toDbModel()
-                                            .toItemModel(source)
-                                    )
-                                }
-                            } ?: source.getSourceByUrlFlow(item.url)
-                        }
-                        ?.dispatchIo()
-                        ?.onStart { showLoadingDialog(true) }
-                        ?.onEach {
-                            showLoadingDialog(false)
-                            navController.navigateToDetails(it)
-                        }
-                        ?.onCompletion { showLoadingDialog(false) }
-                        ?.launchIn(scope) ?: onError()
-                },
-                modifier = Modifier
-                    .height(ComposableUtils.IMAGE_HEIGHT)
-                    .padding(horizontal = 4.dp)
-            ) {
-                ImageFlushListItem(
-                    leadingContent = {
-                        GradientImage(
-                            model = item.imageUrl,
-                            placeholder = rememberDrawablePainter(logo),
-                            error = rememberDrawablePainter(logo),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = item.title,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    },
-                    overlineContent = { Text(item.source) },
-                    headlineContent = { Text(item.title) },
-                    supportingContent = {
-                        Text(
-                            item.description,
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = 3
-                        )
-                    },
-                    trailingContent = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        val dropDownDismiss = { showDropDown = false }
-
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.global_search_by_name)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    Screen.GlobalSearchScreen.navigate(navController, item.title)
-                                }
-                            )
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.remove)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    showPopup = true
-                                }
-                            )
-                        }
-
-                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
-                    }
-                )
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun DeleteItemsModal(
     list: Map<String, List<CustomListInfo>>,
     onRemove: suspend (List<CustomListInfo>) -> Result<Boolean>,
@@ -869,33 +693,10 @@ private fun DeleteItemsModal(
 private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
-        val vm: OtakuCustomListViewModel = viewModel {
-            OtakuCustomListViewModel(listDao, SavedStateHandle())
-        }
+        val vm: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
         OtakuCustomListScreen(
-            listDao = listDao,
-            vm = vm
-        )
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun CustomItemPreview() {
-    PreviewTheme {
-        CustomItem(
-            item = CustomListInfo(
-                uuid = UUID.randomUUID(),
-                title = "Title",
-                description = "description",
-                url = "",
-                imageUrl = "",
-                source = "MANGA_READ"
-            ),
-            logo = null,
-            onDelete = {},
-            showLoadingDialog = {},
-            onError = {}
+            viewModel = vm,
+            navigateBack = {}
         )
     }
 }

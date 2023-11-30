@@ -102,9 +102,7 @@ import com.programmersbox.uiviews.favorite.FavoriteUi
 import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
 import com.programmersbox.uiviews.lists.ImportListScreen
-import com.programmersbox.uiviews.lists.OtakuCustomListScreen
 import com.programmersbox.uiviews.lists.OtakuListScreen
-import com.programmersbox.uiviews.lists.OtakuListStuff
 import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.recent.RecentView
@@ -363,7 +361,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 NavigationRailItem(
                     imageVector = Icons.AutoMirrored.Default.List,
                     label = stringResource(R.string.custom_lists_title),
-                    screen = Screen.CustomListStuffScreen,
+                    screen = Screen.CustomListScreen,
                     currentDestination = currentDestination,
                     navController = navController,
                     customRoute = "_home"
@@ -500,7 +498,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     favoritesClick = { navController.navigate(Screen.FavoriteScreen.route) { launchSingleTop = true } },
                     historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
                     globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
-                    listClick = { navController.navigate(Screen.CustomListStuffScreen.route) { launchSingleTop = true } },
+                    listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } },
                     debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } }
                 )
             }
@@ -568,18 +566,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
 
             composable(
-                Screen.CustomListStuffScreen.route,
+                Screen.CustomListScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
-            ) { OtakuListStuff() }
-            composable(Screen.CustomListScreen.route) { OtakuListScreen() }
-            composable(
-                Screen.CustomListItemScreen.route + "/{uuid}"
-            ) {
-                OtakuCustomListScreen(
-                    isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
-                )
-            }
+            ) { OtakuListScreen() }
 
             composable(
                 Screen.ImportListScreen.route + "?uri={uri}"
@@ -627,12 +617,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable(Screen.CustomListScreen.route + "_home") { OtakuListScreen() }
         composable(
-            Screen.CustomListStuffScreen.route + "_home",
+            Screen.CustomListScreen.route + "_home",
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
-        ) { OtakuListStuff() }
+        ) { OtakuListScreen() }
 
         composable(
             Screen.NotificationScreen.route + "_home",
