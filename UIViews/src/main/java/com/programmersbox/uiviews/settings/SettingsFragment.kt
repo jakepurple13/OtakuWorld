@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -109,6 +110,7 @@ class ComposeSettingsDsl {
     }
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @Composable
@@ -166,8 +168,10 @@ fun SettingScreen(
     }
 
     //TODO: This will be for the future when this works again
-    /*val navigator = rememberListDetailPaneScaffoldNavigator()
-    var settingChoice by remember { mutableStateOf(SettingChoice.None) }
+    /*val navigator = rememberListDetailPaneScaffoldNavigator(
+        scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
+    )
+    var settingChoice by remember { mutableStateOf(SettingChoice.General) }
 
     BackHandler(settingChoice != SettingChoice.None) {
         navigator.navigateBack()
@@ -182,7 +186,7 @@ fun SettingScreen(
     ListDetailPaneScaffold(
         scaffoldState = navigator.scaffoldState,
         listPane = {
-            AnimatedPane(modifier = Modifier) {
+            //AnimatedPane(modifier = Modifier) {
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
                 OtakuScaffold(
                     topBar = {
@@ -213,17 +217,17 @@ fun SettingScreen(
                             globalSearchClick = globalSearchClick,
                             listClick = listClick,
                             extensionClick = extensionClick,
-                            notificationSettingsClick = { ChangeSetting(SettingChoice.Notification) },//notificationSettingsClick,
-                            generalClick = { ChangeSetting(SettingChoice.General) },//generalClick,
-                            otherClick = { ChangeSetting(SettingChoice.Other) },//otherClick,
-                            moreInfoClick = { ChangeSetting(SettingChoice.MoreInfo) }//moreInfoClick
+                            notificationSettingsClick = { ChangeSetting(SettingChoice.Notification) },
+                            generalClick = { ChangeSetting(SettingChoice.General) },
+                            otherClick = { ChangeSetting(SettingChoice.Other) },
+                            moreInfoClick = { ChangeSetting(SettingChoice.MoreInfo) }
                         )
                     }
                 }
-            }
+            //}
         }
     ) {
-        AnimatedPane(modifier = Modifier.fillMaxSize()) {
+        //AnimatedPane(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = settingChoice,
                 label = "",
@@ -242,7 +246,7 @@ fun SettingScreen(
                     SettingChoice.None -> {}
                 }
             }
-        }
+        //}
     }*/
 }
 

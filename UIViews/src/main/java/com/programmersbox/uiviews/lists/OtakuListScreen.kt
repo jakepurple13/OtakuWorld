@@ -19,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.AnimatedPane
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.HingePolicy
 import androidx.compose.material3.adaptive.ListDetailPaneScaffold
@@ -59,7 +58,7 @@ fun OtakuListScreen(
     )
 
     val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
-        AnimatedPane(modifier = Modifier.fillMaxSize()) {
+        //AnimatedPane(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = viewModel.customItem,
                 label = "",
@@ -95,13 +94,13 @@ fun OtakuListScreen(
                     NoDetailSelected()
                 }
             }
-        }
+        //}
     }
 
     ListDetailPaneScaffold(
         scaffoldState = state.scaffoldState,
         listPane = {
-            AnimatedPane(modifier = Modifier.fillMaxSize()) {
+            //AnimatedPane(modifier = Modifier.fillMaxSize()) {
                 OtakuListView(
                     customItem = viewModel.customItem,
                     customLists = viewModel.customLists,
@@ -113,7 +112,7 @@ fun OtakuListScreen(
                             state.navigateTo(ListDetailPaneScaffoldRole.Extra)
                     }
                 )
-            }
+            //}
         },
         detailPane = { if (showListDetail) details() },
         extraPane = if (!showListDetail) {
