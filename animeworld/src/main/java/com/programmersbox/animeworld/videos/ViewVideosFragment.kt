@@ -33,11 +33,10 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,10 +44,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -262,9 +262,10 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                             )
                         }
                     },
-                    overlineContent = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
-                        { Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
-                    } else null,
+                    overlineContent = {
+                        if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path))
+                            Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime())
+                    },
                     headlineContent = { Text(item.videoName.orEmpty()) },
                     supportingContent = { Text(item.path.orEmpty()) }
                 )
@@ -358,9 +359,9 @@ private fun VideoContentView(
     val navController = LocalNavController.current
     val context = LocalContext.current
 
-    val dismissState = rememberDismissState(
+    val dismissState = rememberSwipeToDismissState(
         confirmValueChange = {
-            if (it == DismissValue.DismissedToEnd) {
+            if (it == SwipeToDismissValue.StartToEnd) {
                 if (MainActivity.cast.isCastActive()) {
                     MainActivity.cast.loadMedia(
                         File(item.path!!),
@@ -376,7 +377,7 @@ private fun VideoContentView(
                         ""
                     )
                 }
-            } else if (it == DismissValue.DismissedToStart) {
+            } else if (it == SwipeToDismissValue.EndToStart) {
                 showDialog = true
             }
             false
@@ -386,23 +387,25 @@ private fun VideoContentView(
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismissBox
+            val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToEnd -> Emerald
-                    DismissValue.DismissedToStart -> Color.Red
+                    SwipeToDismissValue.Settled -> Color.Transparent
+                    SwipeToDismissValue.StartToEnd -> Emerald
+                    SwipeToDismissValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                DismissDirection.StartToEnd -> Alignment.CenterStart
-                DismissDirection.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
             }
             val icon = when (direction) {
-                DismissDirection.StartToEnd -> Icons.Default.PlayArrow
-                DismissDirection.EndToStart -> Icons.Default.Delete
+                SwipeToDismissValue.StartToEnd -> Icons.Default.PlayArrow
+                SwipeToDismissValue.EndToStart -> Icons.Default.Delete
+                else -> Icons.Default.Pages
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier

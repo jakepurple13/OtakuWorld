@@ -93,9 +93,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 import com.google.android.material.textview.MaterialTextView
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -158,8 +155,6 @@ class ReadViewModel(
             ) { launchSingleTop = true }
         }
     }
-
-    val ad by lazy { AdRequest.Builder().build() }
 
     private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
 
@@ -329,22 +324,6 @@ fun NovelReader(
                             actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
                             scrollBehavior = scrollBehavior
                         )
-                    },
-                    bottomBar = {
-                        if (!BuildConfig.DEBUG) {
-                            AndroidView(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 4.dp),
-                                factory = {
-                                    AdView(it).apply {
-                                        setAdSize(AdSize.BANNER)
-                                        adUnitId = context.getString(R.string.ad_unit_id)
-                                        loadAd(readVm.ad)
-                                    }
-                                }
-                            )
-                        }
                     }
                 ) { p ->
                     if (drawerState.isOpen) {
@@ -454,19 +433,6 @@ fun NovelReader(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.CenterHorizontally)
-                        )
-                    }
-
-                    if (!BuildConfig.DEBUG) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxWidth(),
-                            factory = {
-                                AdView(it).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = context.getString(R.string.ad_unit_id)
-                                    loadAd(readVm.ad)
-                                }
-                            }
                         )
                     }
                 }

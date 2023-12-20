@@ -36,8 +36,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -54,13 +52,14 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -550,9 +549,9 @@ private fun DateSort(
                                                 )
                                             }
 
-                                            val dismissState = rememberDismissState(
+                                            val dismissState = rememberSwipeToDismissState(
                                                 confirmValueChange = {
-                                                    if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+                                                    if (it == SwipeToDismissValue.StartToEnd || it == SwipeToDismissValue.EndToStart) {
                                                         showPopup = true
                                                     }
                                                     false
@@ -565,14 +564,14 @@ private fun DateSort(
                                                 backgroundContent = {
                                                     val color by animateColorAsState(
                                                         when (dismissState.targetValue) {
-                                                            DismissValue.Default -> Color.Transparent
-                                                            DismissValue.DismissedToEnd -> Color.Red
-                                                            DismissValue.DismissedToStart -> Color.Red
+                                                            SwipeToDismissValue.Settled -> Color.Transparent
+                                                            SwipeToDismissValue.StartToEnd -> Color.Red
+                                                            SwipeToDismissValue.EndToStart -> Color.Red
                                                         }, label = ""
                                                     )
 
                                                     val scale by animateFloatAsState(
-                                                        if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f,
+                                                        if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f,
                                                         label = ""
                                                     )
 
@@ -676,9 +675,9 @@ private fun NotificationItem(
         )
     }
 
-    val dismissState = rememberDismissState(
+    val dismissState = rememberSwipeToDismissState(
         confirmValueChange = {
-            if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+            if (it == SwipeToDismissValue.StartToEnd || it == SwipeToDismissValue.EndToStart) {
                 showPopup = true
             }
             false
@@ -688,23 +687,25 @@ private fun NotificationItem(
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismissBox
+            val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToEnd -> Color.Red
-                    DismissValue.DismissedToStart -> Color.Red
+                    SwipeToDismissValue.Settled -> Color.Transparent
+                    SwipeToDismissValue.StartToEnd -> Color.Red
+                    SwipeToDismissValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                DismissDirection.StartToEnd -> Alignment.CenterStart
-                DismissDirection.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
             }
             val icon = when (direction) {
-                DismissDirection.StartToEnd -> Icons.Default.Delete
-                DismissDirection.EndToStart -> Icons.Default.Delete
+                SwipeToDismissValue.StartToEnd -> Icons.Default.Delete
+                SwipeToDismissValue.EndToStart -> Icons.Default.Delete
+                else -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier

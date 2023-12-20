@@ -81,8 +81,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -101,13 +99,14 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -824,11 +823,11 @@ fun ChangeChapterSwipe(
             .heightIn(min = 100.dp)
             .wrapContentHeight()
     ) {
-        val dismissState = rememberDismissState(
+        val dismissState = rememberSwipeToDismissState(
             confirmValueChange = {
                 when (it) {
-                    DismissValue.DismissedToEnd -> nextChapter()
-                    DismissValue.DismissedToStart -> previousChapter()
+                    SwipeToDismissValue.StartToEnd -> nextChapter()
+                    SwipeToDismissValue.EndToStart -> previousChapter()
                     else -> Unit
                 }
                 false
@@ -837,25 +836,22 @@ fun ChangeChapterSwipe(
 
         SwipeToDismissBox(
             state = dismissState,
-            directions = if (isLoading)
-                emptySet()
-            else
-                setOfNotNull(
-                    if (currentChapter <= 0) null else DismissDirection.EndToStart,
-                    if (currentChapter >= lastChapter) null else DismissDirection.StartToEnd
-                ),
+            enableDismissFromStartToEnd = !isLoading && currentChapter < lastChapter,
+            enableDismissFromEndToStart = !isLoading && currentChapter > 0,
             backgroundContent = {
-                val direction = dismissState.dismissDirection ?: return@SwipeToDismissBox
-                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+                val direction = dismissState.dismissDirection
+                val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
                 val alignment = when (direction) {
-                    DismissDirection.StartToEnd -> Alignment.CenterStart
-                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                    SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                    SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                    else -> Alignment.Center
                 }
 
                 val icon = when (direction) {
-                    DismissDirection.StartToEnd -> Icons.Default.FastRewind
-                    DismissDirection.EndToStart -> Icons.Default.FastForward
+                    SwipeToDismissValue.StartToEnd -> Icons.Default.FastRewind
+                    SwipeToDismissValue.EndToStart -> Icons.Default.FastForward
+                    else -> Icons.Default.Pages
                 }
 
                 Box(

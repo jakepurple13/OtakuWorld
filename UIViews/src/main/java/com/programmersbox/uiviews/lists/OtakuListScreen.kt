@@ -58,7 +58,7 @@ fun OtakuListScreen(
     )
 
     val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
-        AnimatedPane(modifier = Modifier) { pane ->
+        AnimatedPane(modifier = Modifier) {
             AnimatedContent(
                 targetState = viewModel.customItem,
                 label = "",
@@ -73,7 +73,7 @@ fun OtakuListScreen(
                             viewModel.customItem = null
                             state.navigateBack()
                         },
-                        isHorizontal = pane == PaneAdaptedValue.Expanded
+                        isHorizontal = paneAdaptedValue == PaneAdaptedValue.Expanded
                     )
                     BackHandler {
                         viewModel.customItem = null

@@ -30,17 +30,16 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -269,9 +268,9 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     )
                 }
 
-                val dismissState = rememberDismissState(
+                val dismissState = rememberSwipeToDismissState(
                     confirmValueChange = {
-                        if (it == DismissValue.DismissedToStart) {
+                        if (it == SwipeToDismissValue.EndToStart) {
                             //delete
                             showPopup = true
                         }
@@ -282,17 +281,16 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                 SwipeToDismissBox(
                     modifier = Modifier.padding(start = 32.dp),
                     state = dismissState,
-                    directions = setOf(DismissDirection.EndToStart),
+                    enableDismissFromStartToEnd = false,
                     backgroundContent = {
                         val color by animateColorAsState(
                             when (dismissState.targetValue) {
-                                DismissValue.Default -> Color.Transparent
-                                DismissValue.DismissedToEnd -> Color.Transparent
-                                DismissValue.DismissedToStart -> Color.Red
+                                SwipeToDismissValue.EndToStart -> Color.Red
+                                else -> Color.Transparent
                             }, label = ""
                         )
 
-                        val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+                        val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
                         Box(
                             Modifier
