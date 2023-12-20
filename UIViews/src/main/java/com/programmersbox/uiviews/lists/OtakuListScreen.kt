@@ -49,6 +49,7 @@ fun OtakuListScreen(
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
     isHorizontal: Boolean = false,
 ) {
+    //TODO: Figure out why this is suddenly not working
     val showListDetail by LocalSettingsHandling.current
         .showListDetail
         .collectAsStateWithLifecycle(true)
@@ -58,7 +59,7 @@ fun OtakuListScreen(
     )
 
     val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
-        AnimatedPane(modifier = Modifier) {
+        AnimatedPane(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = viewModel.customItem,
                 label = "",
@@ -68,12 +69,23 @@ fun OtakuListScreen(
             ) { targetState ->
                 if (targetState != null) {
                     OtakuCustomListScreen(
-                        viewModel = viewModel,
+                        customItem = targetState,
+                        writeToFile = viewModel::writeToFile,
+                        isHorizontal = isHorizontal,
+                        deleteAll = viewModel::deleteAll,
+                        rename = viewModel::rename,
+                        listBySource = viewModel.listBySource,
+                        removeItems = viewModel::removeItems,
+                        items = viewModel.items,
+                        searchItems = viewModel.searchItems,
+                        searchQuery = viewModel.searchQuery,
+                        setQuery = viewModel::setQuery,
+                        searchBarActive = viewModel.searchBarActive,
+                        onSearchBarActiveChange = { viewModel.searchBarActive = it },
                         navigateBack = {
                             viewModel.customItem = null
                             state.navigateBack()
                         },
-                        isHorizontal = isHorizontal
                     )
                     BackHandler {
                         viewModel.customItem = null
@@ -91,8 +103,10 @@ fun OtakuListScreen(
         listPane = {
             AnimatedPane(modifier = Modifier.fillMaxSize()) {
                 OtakuListView(
-                    viewModel = viewModel,
+                    customItem = viewModel.customItem,
+                    customLists = viewModel.customLists,
                     navigateDetail = {
+                        viewModel.customItem = it
                         if (showListDetail)
                             state.navigateTo(ListDetailPaneScaffoldRole.Detail)
                         else

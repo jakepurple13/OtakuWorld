@@ -39,6 +39,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
@@ -55,8 +56,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuListView(
-    viewModel: OtakuListViewModel,
-    navigateDetail: () -> Unit,
+    customLists: List<CustomList>,
+    customItem: CustomList? = null,
+    navigateDetail: (CustomList) -> Unit,
 ) {
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -122,16 +124,15 @@ fun OtakuListView(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(viewModel.customLists) {
+            items(customLists) {
                 ElevatedCard(
                     onClick = {
-                        viewModel.customItem = it
-                        navigateDetail()
+                        navigateDetail(it)
                     },
                     modifier = Modifier
                         .animateItemPlacement()
                         .padding(horizontal = 4.dp)
-                        .thenIf(viewModel.customItem == it) {
+                        .thenIf(customItem == it) {
                             border(
                                 2.dp,
                                 color = MaterialTheme.colorScheme.primary,
@@ -164,7 +165,8 @@ fun OtakuListView(
 private fun ListScreenPreview() {
     PreviewTheme {
         OtakuListView(
-            viewModel = OtakuListViewModel(LocalCustomListDao.current),
+            customLists = emptyList(),
+            customItem = null,
             navigateDetail = {}
         )
     }

@@ -2,8 +2,10 @@
 
 package com.programmersbox.uiviews.lists
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -83,6 +85,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -124,20 +127,30 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuCustomListScreen(
-    viewModel: OtakuListViewModel,
+    customItem: CustomList?,
+    writeToFile: (Uri, Context) -> Unit,
+    deleteAll: suspend () -> Unit,
+    rename: suspend (String) -> Unit,
+    listBySource: Map<String, List<CustomListInfo>>,
+    removeItems: suspend (List<CustomListInfo>) -> Result<Boolean>,
+    items: List<Map.Entry<String, List<CustomListInfo>>>,
+    searchItems: List<CustomListInfo>,
+    searchQuery: String,
+    setQuery: (String) -> Unit,
+    searchBarActive: Boolean,
+    onSearchBarActiveChange: (Boolean) -> Unit,
     navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val customItem = viewModel.customItem
     val snackbarHostState = remember { SnackbarHostState() }
 
     val logoDrawable = koinInject<AppLogo>()
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { viewModel.writeToFile(it, context) } }
+    ) { document -> document?.let { writeToFile(it, context) } }
 
     val shareItem = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -166,7 +179,7 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            withContext(Dispatchers.IO) { viewModel.deleteAll() }
+                            withContext(Dispatchers.IO) { deleteAll() }
                             deleteList = false
                             navigateBack()
                         }
@@ -202,7 +215,7 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            viewModel.rename(name)
+                            rename(name)
                             showAdd = false
                         }
                     },
@@ -226,8 +239,8 @@ fun OtakuCustomListScreen(
 
     if (showDeleteModal) {
         DeleteItemsModal(
-            list = viewModel.listBySource,
-            onRemove = viewModel::removeItems,
+            list = listBySource,
+            onRemove = removeItems,
             onDismiss = { showDeleteModal = false },
             drawable = logoDrawable.logo
         )
@@ -272,12 +285,12 @@ fun OtakuCustomListScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 DynamicSearchBar(
-                    query = viewModel.searchQuery,
-                    onQueryChange = viewModel::setQuery,
+                    query = searchQuery,
+                    onQueryChange = setQuery,
                     isDocked = isHorizontal,
-                    onSearch = { viewModel.searchBarActive = false },
-                    active = viewModel.searchBarActive,
-                    onActiveChange = { viewModel.searchBarActive = it },
+                    onSearch = { onSearchBarActiveChange(false) },
+                    active = searchBarActive,
+                    onActiveChange = { onSearchBarActiveChange(it) },
                     placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
                     leadingIcon = {
                         IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
@@ -285,7 +298,7 @@ fun OtakuCustomListScreen(
                     colors = SearchBarDefaults.colors(
                         containerColor = animateColorAsState(
                             MaterialTheme.colorScheme.surface.copy(
-                                alpha = if (viewModel.searchBarActive) 1f else 0f
+                                alpha = if (searchBarActive) 1f else 0f
                             ),
                             label = ""
                         ).value,
@@ -294,8 +307,8 @@ fun OtakuCustomListScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AnimatedVisibility(viewModel.searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.setQuery("") }) {
+                            AnimatedVisibility(searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { setQuery("") }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             }
@@ -348,7 +361,7 @@ fun OtakuCustomListScreen(
                                 )
                             }
 
-                            AnimatedVisibility(!viewModel.searchBarActive) {
+                            AnimatedVisibility(!searchBarActive) {
                                 IconButton(
                                     onClick = {
                                         shareItem.launchCatching(
@@ -367,7 +380,7 @@ fun OtakuCustomListScreen(
                                     }
                                 ) { Icon(Icons.Default.Share, null) }
                             }
-                            AnimatedVisibility(!viewModel.searchBarActive) {
+                            AnimatedVisibility(!searchBarActive) {
                                 IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
                             }
                         }
@@ -381,14 +394,14 @@ fun OtakuCustomListScreen(
                             .padding(16.dp)
                             .fillMaxWidth(),
                     ) {
-                        itemsIndexed(items = viewModel.searchItems) { index, item ->
+                        itemsIndexed(items = searchItems) { index, item ->
                             ListItem(
                                 headlineContent = { Text(item.title) },
                                 leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
                                 modifier = Modifier
                                     .clickable {
-                                        viewModel.setQuery(item.title)
-                                        viewModel.searchBarActive = false
+                                        setQuery(item.title)
+                                        onSearchBarActiveChange(false)
                                     }
                                     .animateItemPlacement()
                             )
@@ -409,7 +422,7 @@ fun OtakuCustomListScreen(
                 modifier = Modifier.padding(vertical = 4.dp)
             ) {
                 items(
-                    items = viewModel.items,
+                    items = items,
                     key = { it.key },
                     contentType = { it }
                 ) { item ->
@@ -684,10 +697,22 @@ private fun DeleteItemsModal(
 private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
-        val vm: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
+        val viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
         OtakuCustomListScreen(
-            viewModel = vm,
-            navigateBack = {}
+            customItem = null,
+            writeToFile = viewModel::writeToFile,
+            navigateBack = {},
+            isHorizontal = false,
+            deleteAll = viewModel::deleteAll,
+            rename = viewModel::rename,
+            listBySource = viewModel.listBySource,
+            removeItems = viewModel::removeItems,
+            items = viewModel.items,
+            searchItems = viewModel.searchItems,
+            searchQuery = viewModel.searchQuery,
+            setQuery = viewModel::setQuery,
+            searchBarActive = viewModel.searchBarActive,
+            onSearchBarActiveChange = { viewModel.searchBarActive = it }
         )
     }
 }

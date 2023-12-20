@@ -499,7 +499,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
                     globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
                     listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } },
-                    debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } }
+                    debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } },
+                    extensionClick = { navController.navigate(Screen.ExtensionListScreen.route) { launchSingleTop = true } },
+                    notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings.route) },
+                    generalClick = { navController.navigate(Screen.GeneralSettings.route) },
+                    otherClick = { navController.navigate(Screen.OtherSettings.route) },
+                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) }
                 )
             }
 

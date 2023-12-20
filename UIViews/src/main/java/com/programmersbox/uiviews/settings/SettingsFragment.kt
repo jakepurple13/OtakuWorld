@@ -76,11 +76,9 @@ import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
-import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
@@ -94,9 +92,9 @@ import org.koin.compose.koinInject
 import java.util.Locale
 
 class ComposeSettingsDsl {
-    internal var generalSettings: (@Composable () -> Unit)? = null
-    internal var viewSettings: (@Composable () -> Unit)? = null
-    internal var playerSettings: (@Composable () -> Unit)? = null
+    internal var generalSettings: @Composable () -> Unit = {}
+    internal var viewSettings: @Composable () -> Unit = {}
+    internal var playerSettings: @Composable () -> Unit = {}
 
     fun generalSettings(block: @Composable () -> Unit) {
         generalSettings = block
@@ -121,7 +119,12 @@ fun SettingScreen(
     favoritesClick: () -> Unit = {},
     historyClick: () -> Unit = {},
     globalSearchClick: () -> Unit = {},
-    listClick: () -> Unit = {}
+    listClick: () -> Unit = {},
+    extensionClick: () -> Unit = {},
+    notificationSettingsClick: () -> Unit = {},
+    generalClick: () -> Unit = {},
+    otherClick: () -> Unit = {},
+    moreInfoClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -152,11 +155,103 @@ fun SettingScreen(
                 favoritesClick = favoritesClick,
                 historyClick = historyClick,
                 globalSearchClick = globalSearchClick,
-                listClick = listClick
+                listClick = listClick,
+                extensionClick = extensionClick,
+                notificationSettingsClick = notificationSettingsClick,
+                generalClick = generalClick,
+                otherClick = otherClick,
+                moreInfoClick = moreInfoClick
             )
         }
     }
 
+    //TODO: This will be for the future when this works again
+    /*val navigator = rememberListDetailPaneScaffoldNavigator()
+    var settingChoice by remember { mutableStateOf(SettingChoice.None) }
+
+    BackHandler(settingChoice != SettingChoice.None) {
+        navigator.navigateBack()
+        settingChoice = SettingChoice.None
+    }
+
+    fun ChangeSetting(choice: SettingChoice) {
+        settingChoice = choice
+        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+    }
+
+    ListDetailPaneScaffold(
+        scaffoldState = navigator.scaffoldState,
+        listPane = {
+            AnimatedPane(modifier = Modifier) {
+                val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+                OtakuScaffold(
+                    topBar = {
+                        InsetLargeTopAppBar(
+                            title = { Text(stringResource(R.string.settings)) },
+                            scrollBehavior = scrollBehavior,
+                            actions = {
+                                if (BuildConfig.FLAVOR != "noFirebase") {
+                                    AccountSettings()
+                                }
+                            }
+                        )
+                    },
+                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                ) { p ->
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(p)
+                    ) {
+                        SettingsScreen(
+                            notificationClick = notificationClick,
+                            composeSettingsDsl = composeSettingsDsl,
+                            debugMenuClick = debugMenuClick,
+                            favoritesClick = favoritesClick,
+                            historyClick = historyClick,
+                            globalSearchClick = globalSearchClick,
+                            listClick = listClick,
+                            extensionClick = extensionClick,
+                            notificationSettingsClick = { ChangeSetting(SettingChoice.Notification) },//notificationSettingsClick,
+                            generalClick = { ChangeSetting(SettingChoice.General) },//generalClick,
+                            otherClick = { ChangeSetting(SettingChoice.Other) },//otherClick,
+                            moreInfoClick = { ChangeSetting(SettingChoice.MoreInfo) }//moreInfoClick
+                        )
+                    }
+                }
+            }
+        }
+    ) {
+        AnimatedPane(modifier = Modifier.fillMaxSize()) {
+            AnimatedContent(
+                targetState = settingChoice,
+                label = "",
+                transitionSpec = {
+                    (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
+                },
+            ) { targetState ->
+                when (targetState) {
+                    SettingChoice.Notification -> NotificationSettings()
+                    SettingChoice.General -> GeneralSettings(composeSettingsDsl.generalSettings)
+                    SettingChoice.Other -> PlaySettings(composeSettingsDsl.playerSettings)
+                    SettingChoice.MoreInfo -> InfoSettings {
+                        //navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
+                    }
+
+                    SettingChoice.None -> {}
+                }
+            }
+        }
+    }*/
+}
+
+internal enum class SettingChoice {
+    Notification,
+    General,
+    Other,
+    MoreInfo,
+    None
 }
 
 @Composable
@@ -170,8 +265,12 @@ private fun SettingsScreen(
     historyClick: () -> Unit,
     globalSearchClick: () -> Unit,
     listClick: () -> Unit,
+    extensionClick: () -> Unit,
+    notificationSettingsClick: () -> Unit,
+    generalClick: () -> Unit,
+    otherClick: () -> Unit,
+    moreInfoClick: () -> Unit,
 ) {
-    val navController = LocalNavController.current
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
 
@@ -243,7 +342,7 @@ private fun SettingsScreen(
         )
     )
 
-    composeSettingsDsl.viewSettings?.invoke()
+    composeSettingsDsl.viewSettings()
 
     HorizontalDivider()
 
@@ -265,8 +364,9 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) { navController.navigate(Screen.ExtensionListScreen.route) }
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = extensionClick
+        )
     )
 
     ShowWhen(visibility = source != null) {
@@ -300,25 +400,25 @@ private fun SettingsScreen(
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.notifications_category_title)) },
         settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.NotificationsSettings.route) }
+        modifier = Modifier.click(notificationSettingsClick)
     )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.general_menu_title)) },
         settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.GeneralSettings.route) }
+        modifier = Modifier.click(generalClick)
     )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.playSettings)) },
         settingIcon = { Icon(Icons.Default.PlayCircleOutline, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.OtherSettings.route) }
+        modifier = Modifier.click(otherClick)
     )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.more_info_category)) },
         settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.MoreInfoSettings.route) }
+        modifier = Modifier.click(moreInfoClick)
     )
 
     PreferenceSetting(
@@ -347,6 +447,11 @@ private fun SettingsPreview() {
                 historyClick = {},
                 globalSearchClick = {},
                 listClick = {},
+                extensionClick = {},
+                notificationSettingsClick = {},
+                generalClick = {},
+                otherClick = {},
+                moreInfoClick = {}
             )
         }
     }
@@ -354,7 +459,7 @@ private fun SettingsPreview() {
 
 @Composable
 private fun AccountSettings(
-    viewModel: AccountViewModel = viewModel()
+    viewModel: AccountViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -501,7 +606,7 @@ internal fun SettingsScaffold(
             scrollBehavior = it,
         )
     },
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
