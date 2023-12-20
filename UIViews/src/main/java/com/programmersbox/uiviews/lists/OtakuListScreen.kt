@@ -4,6 +4,7 @@ package com.programmersbox.uiviews.lists
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -23,6 +24,7 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.HingePolicy
 import androidx.compose.material3.adaptive.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.PaneAdaptedValue
 import androidx.compose.material3.adaptive.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
@@ -48,7 +50,6 @@ fun OtakuListScreen(
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
     isHorizontal: Boolean = false,
 ) {
-    //TODO: Figure out why this is suddenly not working
     val showListDetail by LocalSettingsHandling.current
         .showListDetail
         .collectAsStateWithLifecycle(true)
@@ -58,7 +59,7 @@ fun OtakuListScreen(
     )
 
     val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
-        //AnimatedPane(modifier = Modifier.fillMaxSize()) {
+        AnimatedPanes(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = viewModel.customItem,
                 label = "",
@@ -94,13 +95,13 @@ fun OtakuListScreen(
                     NoDetailSelected()
                 }
             }
-        //}
+        }
     }
 
     ListDetailPaneScaffold(
         scaffoldState = state.scaffoldState,
         listPane = {
-            //AnimatedPane(modifier = Modifier.fillMaxSize()) {
+            AnimatedPanes(modifier = Modifier.fillMaxSize()) {
                 OtakuListView(
                     customItem = viewModel.customItem,
                     customLists = viewModel.customLists,
@@ -112,13 +113,52 @@ fun OtakuListScreen(
                             state.navigateTo(ListDetailPaneScaffoldRole.Extra)
                     }
                 )
-            //}
+            }
         },
         detailPane = { if (showListDetail) details() },
         extraPane = if (!showListDetail) {
             { details() }
         } else null
     )
+}
+
+/*
+ * TODO: Apparently this isn't just me! Woo!
+ *  https://issuetracker.google.com/issues/316376112
+ *  This will be removed when fixed.
+ */
+@ExperimentalMaterial3AdaptiveApi
+@Composable
+fun ThreePaneScaffoldScope.AnimatedPanes(
+    modifier: Modifier,
+    content: (@Composable ThreePaneScaffoldScope.() -> Unit),
+) {
+    AnimatedVisibility(
+        visible = paneAdaptedValue == PaneAdaptedValue.Expanded,
+        modifier = modifier
+        //.animatedPane()
+        //.clipToBounds(paneAdaptedValue)
+        /*.then(
+            if (paneAdaptedValue == PaneAdaptedValue.Expanded) {
+                Modifier.animateBounds(
+                    // TODO Figure out why we need to pass a non-null here to get the bounds
+                    //  animation going on the first navigation event that pass in the spec
+                    //  later on. To resolve this, we default to the paneSpringSpec().
+                    //  Otherwise, the first motion shows a snap instead of a smooth
+                    //  transition.
+                    positionAnimationSpec = positionAnimationSpec
+                        ?: ThreePaneScaffoldDefaults.PaneSpringSpec
+                )
+            } else {
+                Modifier
+            }
+        )*/,
+        enter = enterTransition,
+        exit = exitTransition,
+        label = "AnimatedVisibility: $animationToolingLabel"
+    ) {
+        content()
+    }
 }
 
 @ExperimentalMaterial3AdaptiveApi
