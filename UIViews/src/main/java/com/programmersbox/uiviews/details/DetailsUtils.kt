@@ -5,6 +5,9 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -20,16 +24,21 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -37,12 +46,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
@@ -54,6 +65,7 @@ import com.programmersbox.uiviews.lists.ListChoiceScreen
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.showErrorToast
+import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -112,7 +124,7 @@ internal fun AddToList(
     showListsChange: (Boolean) -> Unit,
     info: InfoModel,
     listDao: ListDao,
-    hostState: SnackbarHostState,
+    hostState: SnackbarHostState?,
     scope: CoroutineScope,
     context: Context,
 ) {
@@ -136,7 +148,7 @@ internal fun AddToList(
                             info.imageUrl,
                             info.source.serviceName
                         )
-                        hostState.showSnackbar(
+                        hostState?.showSnackbar(
                             context.getString(
                                 if (result) {
                                     R.string.added_to_list
@@ -293,4 +305,65 @@ internal fun DetailActions(
     IconButton(onClick = { showDropDown = true }) {
         Icon(Icons.Default.MoreVert, null, tint = topBarColor)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DetailBottomBar(
+    navController: NavController,
+    onShowLists: () -> Unit,
+    info: InfoModel,
+    customActions: @Composable () -> Unit,
+    removeFromSaved: () -> Unit,
+    isSaved: Boolean,
+    topBarColor: Color,
+    modifier: Modifier = Modifier,
+    containerColor: Color = Color.Transparent,
+    bottomAppBarScrollBehavior: BottomAppBarScrollBehavior? = null,
+    windowInsets: WindowInsets = WindowInsets(0.dp),
+) {
+    BottomAppBar(
+        actions = {
+            ToolTipWrapper(
+                info = { Text("Add to List") }
+            ) {
+                IconButton(
+                    onClick = onShowLists,
+                ) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) }
+            }
+
+            ToolTipWrapper(
+                info = { Text("Global Search by Name") }
+            ) {
+                IconButton(
+                    onClick = { Screen.GlobalSearchScreen.navigate(navController, info.title) },
+                ) { Icon(Icons.Default.Search, null) }
+            }
+
+            customActions()
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = isSaved,
+                enter = slideInHorizontally { it },
+                exit = slideOutHorizontally { it },
+                label = "",
+            ) {
+                val swatchInfo = LocalSwatchInfo.current.colors
+                ExtendedFloatingActionButton(
+                    onClick = removeFromSaved,
+                    text = { Text("Remove from Saved") },
+                    icon = { Icon(Icons.Default.BookmarkRemove, null) },
+                    containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
+                    contentColor = swatchInfo?.titleColor?.toComposeColor()
+                        ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
+                )
+            }
+        },
+        containerColor = containerColor,
+        contentColor = topBarColor,
+        scrollBehavior = bottomAppBarScrollBehavior,
+        windowInsets = windowInsets,
+        modifier = modifier
+    )
 }

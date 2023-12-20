@@ -1,22 +1,19 @@
 package com.programmersbox.uiviews.details
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -26,13 +23,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +39,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -58,6 +52,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -82,10 +78,11 @@ import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.animate
+import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
-import com.programmersbox.uiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -108,6 +105,7 @@ fun DetailsViewLandscape(
     logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
+    showDownloadButton: Boolean,
 ) {
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
@@ -214,33 +212,6 @@ fun DetailsViewLandscape(
                     )
                 }
             },
-            floatingActionButton = {
-                AnimatedVisibility(
-                    visible = isSaved,
-                    enter = fadeIn() + slideInHorizontally { it / 2 },
-                    exit = slideOutHorizontally { it / 2 } + fadeOut(),
-                    label = ""
-                ) {
-                    val notificationManager = LocalContext.current.notificationManager
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            scope.launch(Dispatchers.IO) {
-                                dao.getNotificationItemFlow(info.url)
-                                    .firstOrNull()
-                                    ?.let {
-                                        dao.deleteNotification(it)
-                                        notificationManager.cancelNotification(it)
-                                    }
-                            }
-                        },
-                        text = { Text("Remove from Saved") },
-                        icon = { Icon(Icons.Default.BookmarkRemove, null) },
-                        containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
-                        contentColor = swatchInfo?.titleColor?.toComposeColor() ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
-                        expanded = listState.isScrollingUp()
-                    )
-                }
-            },
             modifier = Modifier
                 .run {
                     val b = MaterialTheme.colorScheme.background
@@ -261,6 +232,8 @@ fun DetailsViewLandscape(
                 isFavorite = isFavorite,
                 onFavoriteClick = onFavoriteClick,
                 listState = listState,
+                isSaved = isSaved,
+                showDownloadButton = showDownloadButton,
                 modifier = Modifier.padding(p)
             )
         }
@@ -274,6 +247,7 @@ private fun DetailsLandscapeContent(
     shareChapter: Boolean,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
+    isSaved: Boolean,
     markAs: (ChapterModel, Boolean) -> Unit,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
@@ -281,51 +255,116 @@ private fun DetailsLandscapeContent(
     logo: NotificationLogo,
     reverseChapters: Boolean,
     listState: LazyListState,
+    showDownloadButton: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
+    val dao = LocalItemDao.current
+    var showLists by remember { mutableStateOf(false) }
+
+    AddToList(
+        showLists = showLists,
+        showListsChange = { showLists = it },
+        info = info,
+        listDao = LocalCustomListDao.current,
+        hostState = null,
+        scope = scope,
+        context = LocalContext.current
+    )
+
     TwoPane(
         modifier = modifier,
         first = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                DetailsHeader(
-                    model = info,
-                    logo = painterResource(id = logo.notificationId),
-                    isFavorite = isFavorite,
-                    favoriteClick = onFavoriteClick,
-                    possibleDescription = {
-                        if (info.description.isNotEmpty()) {
-                            var descriptionVisibility by remember { mutableStateOf(false) }
-                            Box {
-                                val progress = remember { mutableStateOf(false) }
-
-                                Text(
-                                    description,
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = rememberRipple(),
-                                            onClick = { descriptionVisibility = !descriptionVisibility },
-                                            onLongClick = { onTranslateDescription(progress) }
-                                        )
-                                        .padding(horizontal = 4.dp)
-                                        .fillMaxWidth()
-                                        .animateContentSize(),
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-
-                                if (progress.value) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.align(Alignment.Center)
+            val swatchInfo = LocalSwatchInfo.current.colors
+            val topBarColor by animateColorAsState(
+                swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface,
+                label = ""
+            )
+            val b = MaterialTheme.colorScheme.surface
+            val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
+            NormalOtakuScaffold(
+                bottomBar = {
+                    val notificationManager = LocalContext.current.notificationManager
+                    DetailBottomBar(
+                        navController = LocalNavController.current,
+                        onShowLists = { showLists = true },
+                        info = info,
+                        customActions = {},
+                        removeFromSaved = {
+                            scope.launch(Dispatchers.IO) {
+                                dao.getNotificationItemFlow(info.url)
+                                    .firstOrNull()
+                                    ?.let {
+                                        dao.deleteNotification(it)
+                                        notificationManager.cancelNotification(it)
+                                    }
+                            }
+                        },
+                        isSaved = isSaved,
+                        windowInsets = BottomAppBarDefaults.windowInsets,
+                        topBarColor = topBarColor,
+                        containerColor = c,
+                        modifier = Modifier
+                            .padding(LocalNavHostPadding.current)
+                            .drawWithCache {
+                                onDrawBehind {
+                                    drawLine(
+                                        b,
+                                        Offset(0f, 8f),
+                                        Offset(size.width, 8f),
+                                        4 * density
                                     )
                                 }
                             }
+                    )
+                },
+                contentWindowInsets = WindowInsets.navigationBars,
+                containerColor = Color.Transparent,
+                modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(it)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    DetailsHeader(
+                        model = info,
+                        logo = painterResource(id = logo.notificationId),
+                        isFavorite = isFavorite,
+                        favoriteClick = onFavoriteClick,
+                        possibleDescription = {
+                            if (info.description.isNotEmpty()) {
+                                var descriptionVisibility by remember { mutableStateOf(false) }
+                                Box {
+                                    val progress = remember { mutableStateOf(false) }
+
+                                    Text(
+                                        description,
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = rememberRipple(),
+                                                onClick = { descriptionVisibility = !descriptionVisibility },
+                                                onLongClick = { onTranslateDescription(progress) }
+                                            )
+                                            .padding(horizontal = 4.dp)
+                                            .fillMaxWidth()
+                                            .animateContentSize(),
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+
+                                    if (progress.value) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
+                                }
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         },
         second = {
@@ -340,9 +379,7 @@ private fun DetailsLandscapeContent(
             ) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxHeight(),
                     state = listState
                 ) {
                     items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
@@ -352,7 +389,8 @@ private fun DetailsLandscapeContent(
                             read = chapters,
                             chapters = info.chapters,
                             shareChapter = shareChapter,
-                            markAs = markAs
+                            markAs = markAs,
+                            showDownload = showDownloadButton
                         )
                     }
                 }

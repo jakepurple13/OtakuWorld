@@ -113,6 +113,7 @@ fun DetailsScreen(
     details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) },
 ) {
     val uriHandler = LocalUriHandler.current
+    val showDownload by LocalSettingsHandling.current.showDownload.flow.collectAsStateWithLifecycle(initialValue = true)
 
     if (details.info == null) {
         Scaffold(
@@ -180,7 +181,8 @@ fun DetailsScreen(
                     chapters = details.chapters,
                     markAs = details::markAs,
                     description = details.description,
-                    onTranslateDescription = details::translateDescription
+                    onTranslateDescription = details::translateDescription,
+                    showDownloadButton = showDownload
                 )
             } else {
                 DetailsView(
@@ -193,7 +195,8 @@ fun DetailsScreen(
                     chapters = details.chapters,
                     markAs = details::markAs,
                     description = details.description,
-                    onTranslateDescription = details::translateDescription
+                    onTranslateDescription = details::translateDescription,
+                    showDownloadButton = showDownload
                 )
             }
         }
@@ -291,12 +294,12 @@ fun ChapterItem(
     read: List<ChapterWatched>,
     chapters: List<ChapterModel>,
     shareChapter: Boolean,
+    showDownload: Boolean,
     markAs: (ChapterModel, Boolean) -> Unit,
 ) {
     val historyDao = LocalHistoryDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val navController = LocalNavController.current
-    val showDownload by LocalSettingsHandling.current.showDownload.flow.collectAsStateWithLifecycle(initialValue = true)
     val genericInfo = LocalGenericInfo.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()

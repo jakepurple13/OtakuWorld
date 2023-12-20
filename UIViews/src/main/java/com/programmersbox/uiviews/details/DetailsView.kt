@@ -3,12 +3,9 @@
 package com.programmersbox.uiviews.details
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
@@ -25,18 +22,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
-import androidx.compose.material.icons.filled.BookmarkRemove
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +43,6 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TooltipState
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.rememberTopAppBarState
@@ -93,7 +83,6 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.minus
@@ -124,6 +113,7 @@ fun DetailsView(
     logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
+    showDownloadButton: Boolean,
 ) {
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
@@ -258,24 +248,12 @@ fun DetailsView(
                 }
             },
             bottomBar = {
-                BottomAppBar(
-                    actions = {
-                        ToolTipWrapper(
-                            info = { Text("Add to List") }
-                        ) {
-                            IconButton(
-                                onClick = { showLists = true },
-                            ) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) }
-                        }
-
-                        ToolTipWrapper(
-                            info = { Text("Global Search by Name") }
-                        ) {
-                            IconButton(
-                                onClick = { Screen.GlobalSearchScreen.navigate(navController, info.title) },
-                            ) { Icon(Icons.Default.Search, null) }
-                        }
-
+                val notificationManager = LocalContext.current.notificationManager
+                DetailBottomBar(
+                    navController = navController,
+                    onShowLists = { showLists = true },
+                    info = info,
+                    customActions = {
                         val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
 
                         ToolTipWrapper(
@@ -297,37 +275,19 @@ fun DetailsView(
                             }
                         }
                     },
-                    floatingActionButton = {
-                        AnimatedVisibility(
-                            visible = isSaved,
-                            enter = slideInHorizontally { it },
-                            exit = slideOutHorizontally { it },
-                            label = "",
-                        ) {
-                            val notificationManager = LocalContext.current.notificationManager
-                            ExtendedFloatingActionButton(
-                                onClick = {
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.getNotificationItemFlow(info.url)
-                                            .firstOrNull()
-                                            ?.let {
-                                                dao.deleteNotification(it)
-                                                notificationManager.cancelNotification(it)
-                                            }
-                                    }
-                                },
-                                text = { Text("Remove from Saved") },
-                                icon = { Icon(Icons.Default.BookmarkRemove, null) },
-                                containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
-                                contentColor = swatchInfo?.titleColor?.toComposeColor()
-                                    ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
-                            )
+                    removeFromSaved = {
+                        scope.launch(Dispatchers.IO) {
+                            dao.getNotificationItemFlow(info.url)
+                                .firstOrNull()
+                                ?.let {
+                                    dao.deleteNotification(it)
+                                    notificationManager.cancelNotification(it)
+                                }
                         }
                     },
-                    containerColor = Color.Transparent,
-                    contentColor = topBarColor,
-                    scrollBehavior = bottomAppBarScrollBehavior,
-                    windowInsets = WindowInsets(0.dp),
+                    isSaved = isSaved,
+                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
+                    topBarColor = topBarColor,
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
                         .drawWithCache {
@@ -421,7 +381,8 @@ fun DetailsView(
                         read = chapters,
                         chapters = info.chapters,
                         shareChapter = shareChapter,
-                        markAs = markAs
+                        markAs = markAs,
+                        showDownload = showDownloadButton
                     )
                 }
             }
@@ -440,7 +401,7 @@ fun DetailsView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ToolTipWrapper(
+internal fun ToolTipWrapper(
     info: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     tooltipState: TooltipState = rememberTooltipState(),
