@@ -3,6 +3,7 @@
 
 package com.programmersbox.mangaworld.reader
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
 import android.widget.Toast
@@ -168,13 +169,12 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.bounds
+import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.dataStore
 import com.programmersbox.uiviews.utils.updatePref
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-import dev.chrisbanes.haze.haze
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import io.ktor.client.request.header
@@ -188,6 +188,7 @@ import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.koin.compose.koinInject
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
@@ -346,7 +347,7 @@ fun ReadView(
         },
         gesturesEnabled = readVm.list.size > 1
     ) {
-        Scaffold(
+        HazeScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 AnimatedVisibility(
@@ -375,12 +376,13 @@ fun ReadView(
                         vm = readVm
                     )
                 }
-            }
-        ) { paddingValues ->
-            BoxWithConstraints(
+            },
+            blurTopBar = true,
+            blurBottomBar = true
+        ) { _ ->
+            Box(
                 modifier = Modifier.pullRefresh(pullRefreshState)
             ) {
-                val bounds = bounds(paddingValues.animate())
                 val spacing = LocalContext.current.dpToPx(paddingPage).dp
                 Crossfade(targetState = listOrPager, label = "") {
                     if (it) {
@@ -389,7 +391,6 @@ fun ReadView(
                             pages = pages,
                             readVm = readVm,
                             itemSpacing = spacing,
-                            modifier = Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
                         ) { readVm.showInfo = !readVm.showInfo }
                     } else {
                         PagerView(
@@ -397,7 +398,6 @@ fun ReadView(
                             pages = pages,
                             vm = readVm,
                             itemSpacing = spacing,
-                            modifier = Modifier.haze(*bounds, backgroundColor = MaterialTheme.colorScheme.surface)
                         ) { readVm.showInfo = !readVm.showInfo }
                     }
                 }

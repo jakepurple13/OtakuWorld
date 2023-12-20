@@ -121,7 +121,7 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.chromeCustomTabs
-import com.programmersbox.uiviews.utils.components.GlassScaffold
+import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
@@ -213,7 +213,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         showAllItem = showAllItem,
                         currentDestination = currentDestination
                     )
-                    GlassScaffold(
+                    HazeScaffold(
                         bottomBar = {
                             BottomNav(
                                 navController = navController,
@@ -569,7 +569,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.CustomListScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
-            ) { OtakuListScreen() }
+            ) {
+                OtakuListScreen(
+                    isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+                )
+            }
 
             composable(
                 Screen.ImportListScreen.route + "?uri={uri}"
@@ -621,7 +625,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
             Screen.CustomListScreen.route + "_home",
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
-        ) { OtakuListScreen() }
+        ) {
+            OtakuListScreen(
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            )
+        }
 
         composable(
             Screen.NotificationScreen.route + "_home",

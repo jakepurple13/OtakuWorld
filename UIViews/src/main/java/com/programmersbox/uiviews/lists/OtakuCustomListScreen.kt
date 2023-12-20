@@ -18,7 +18,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -107,13 +106,11 @@ import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.navigateToDetails
-import com.programmersbox.uiviews.utils.topBounds
-import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -271,7 +268,7 @@ fun OtakuCustomListScreen(
             )
         },
     ) {
-        OtakuScaffold(
+        OtakuHazeScaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 DynamicSearchBar(
@@ -334,7 +331,7 @@ fun OtakuCustomListScreen(
                                         showDeleteModal = true
                                     },
                                     colors = MenuDefaults.itemColors(
-                                        textColor = Alizarin//MaterialTheme.colorScheme.error,
+                                        textColor = Alizarin
                                     ),
                                 )
 
@@ -401,47 +398,41 @@ fun OtakuCustomListScreen(
                         }
                     }
                 }
-            }
+            },
+            blurTopBar = true
         ) { padding ->
-            BoxWithConstraints {
-                LazyVerticalGrid(
-                    columns = adaptiveGridCell(),
-                    contentPadding = padding,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .haze(
-                            topBounds(padding),
-                            backgroundColor = MaterialTheme.colorScheme.surface
-                        )
-                ) {
-                    items(
-                        items = viewModel.items,
-                        key = { it.key },
-                        contentType = { it }
-                    ) { item ->
-                        CustomItemVertical(
-                            items = item.value,
-                            title = item.key,
-                            logo = logoDrawable.logo,
-                            showLoadingDialog = { showLoadingDialog = it },
-                            onError = {
-                                scope.launch {
-                                    snackbarHostState.currentSnackbarData?.dismiss()
-                                    snackbarHostState.showSnackbar(
-                                        "Something went wrong. Source might not be installed",
-                                        duration = SnackbarDuration.Short
-                                    )
-                                }
-                            },
-                            onShowBanner = {
-                                newItem(if (it) item.value.firstOrNull() else null)
-                                showBanner = it
-                            },
-                            modifier = Modifier.animateItemPlacement()
-                        )
-                    }
+            LazyVerticalGrid(
+                columns = adaptiveGridCell(),
+                contentPadding = padding,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                items(
+                    items = viewModel.items,
+                    key = { it.key },
+                    contentType = { it }
+                ) { item ->
+                    CustomItemVertical(
+                        items = item.value,
+                        title = item.key,
+                        logo = logoDrawable.logo,
+                        showLoadingDialog = { showLoadingDialog = it },
+                        onError = {
+                            scope.launch {
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        },
+                        onShowBanner = {
+                            newItem(if (it) item.value.firstOrNull() else null)
+                            showBanner = it
+                        },
+                        modifier = Modifier.animateItemPlacement()
+                    )
                 }
             }
         }

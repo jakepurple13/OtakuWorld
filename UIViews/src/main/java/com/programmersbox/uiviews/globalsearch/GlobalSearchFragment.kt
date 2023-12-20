@@ -12,7 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -110,8 +109,9 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.navigateToDetails
-import com.programmersbox.uiviews.utils.topBounds
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -135,6 +135,7 @@ fun GlobalSearchView(
         )
     },
 ) {
+    val hazeState = remember { HazeState() }
     val navController = LocalNavController.current
 
     val focusManager = LocalFocusManager.current
@@ -214,7 +215,9 @@ fun GlobalSearchView(
                                 label = ""
                             ).value,
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .hazeChild(hazeState)
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth(),
@@ -319,7 +322,7 @@ fun GlobalSearchView(
                     }
 
                     true -> {
-                        BoxWithConstraints(
+                        Box(
                             modifier = Modifier.pullRefresh(pullRefreshState, false)
                         ) {
                             LazyColumn(
@@ -329,7 +332,7 @@ fun GlobalSearchView(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
                                     .haze(
-                                        topBounds(padding),
+                                        hazeState,
                                         backgroundColor = MaterialTheme.colorScheme.surface
                                     )
                                     .fillMaxSize()

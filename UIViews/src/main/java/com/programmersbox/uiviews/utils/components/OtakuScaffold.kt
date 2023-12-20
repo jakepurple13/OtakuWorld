@@ -15,6 +15,37 @@ import com.programmersbox.uiviews.utils.LocalNavHostPadding
 
 @ExperimentalMaterial3Api
 @Composable
+fun OtakuHazeScaffold(
+    modifier: Modifier = Modifier,
+    topBar: @Composable () -> Unit = {},
+    bottomBar: @Composable () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
+    contentWindowInsets: WindowInsets = WindowInsets(0.dp),
+    floatingActionButton: @Composable () -> Unit = {},
+    floatingActionButtonPosition: FabPosition = FabPosition.End,
+    containerColor: Color = MaterialTheme.colorScheme.background,
+    contentColor: Color = contentColorFor(containerColor),
+    blurTopBar: Boolean = false,
+    blurBottomBar: Boolean = false,
+    content: @Composable (PaddingValues) -> Unit,
+) {
+    HazeScaffold(
+        modifier = modifier,
+        topBar = topBar,
+        bottomBar = bottomBar,
+        snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
+        floatingActionButtonPosition = floatingActionButtonPosition,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        contentWindowInsets = contentWindowInsets,
+        blurTopBar = blurTopBar,
+        blurBottomBar = blurBottomBar
+    ) { content(it + LocalNavHostPadding.current) }
+}
+
+@ExperimentalMaterial3Api
+@Composable
 fun OtakuScaffold(
     modifier: Modifier = Modifier,
     topBar: @Composable () -> Unit = {},

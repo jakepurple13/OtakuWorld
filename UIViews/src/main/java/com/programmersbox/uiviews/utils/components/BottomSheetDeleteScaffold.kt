@@ -81,13 +81,15 @@ fun <T> BottomSheetDeleteScaffold(
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
-    mainView: @Composable (PaddingValues, List<T>) -> Unit
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    mainView: @Composable (PaddingValues, List<T>) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     BottomSheetScaffold(
         scaffoldState = state,
+        containerColor = containerColor,
         modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
         topBar = topBar,
         sheetContent = {

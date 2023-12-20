@@ -19,7 +19,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -91,8 +90,9 @@ import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.PermissionRequest
-import com.programmersbox.uiviews.utils.topBounds
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -127,6 +127,7 @@ fun ViewVideoScreen() {
 @Composable
 private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
+    val hazeState = remember { HazeState() }
     val context = LocalContext.current
 
     val coilImageLoader = remember {
@@ -170,9 +171,11 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         )
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    modifier = Modifier.hazeChild(hazeState)
                 )
             },
+            containerColor = Color.Transparent,
             state = state,
             listOfItems = items,
             multipleTitle = stringResource(id = R.string.delete),
@@ -274,27 +277,25 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
             if (itemList.isEmpty()) {
                 EmptyState(p)
             } else {
-                BoxWithConstraints {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        contentPadding = p,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .haze(
-                                topBounds(p),
-                                backgroundColor = M3MaterialTheme.colorScheme.surface
-                            )
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = p,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .haze(
+                            hazeState,
+                            backgroundColor = M3MaterialTheme.colorScheme.surface
+                        )
+                ) {
+                    items(
+                        items = itemList,
+                        key = { it.videoId }
                     ) {
-                        items(
-                            items = itemList,
-                            key = { it.videoId }
-                        ) {
-                            VideoContentView(
-                                item = it,
-                                imageLoader = coilImageLoader,
-                                modifier = Modifier.animateItemPlacement()
-                            )
-                        }
+                        VideoContentView(
+                            item = it,
+                            imageLoader = coilImageLoader,
+                            modifier = Modifier.animateItemPlacement()
+                        )
                     }
                 }
             }

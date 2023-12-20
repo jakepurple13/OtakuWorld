@@ -15,7 +15,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -72,13 +71,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -101,8 +98,9 @@ import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.minus
 import com.programmersbox.uiviews.utils.toComposeColor
-import com.programmersbox.uiviews.utils.topBounds
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -127,6 +125,7 @@ fun DetailsView(
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
 ) {
+    val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
     val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
@@ -213,7 +212,9 @@ fun DetailsView(
                     behavior = collapsableBehavior
                 ) {
                     InsetSmallTopAppBar(
-                        modifier = Modifier.zIndex(2f),
+                        modifier = Modifier
+                            .zIndex(2f)
+                            .hazeChild(hazeState),
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
                             titleContentColor = topBarColor
@@ -339,6 +340,7 @@ fun DetailsView(
                                 )
                             }
                         }
+                        .hazeChild(hazeState)
                 )
             },
             snackbarHost = {
@@ -358,34 +360,6 @@ fun DetailsView(
                     )
                 }
             },
-            floatingActionButton = {
-                /*AnimatedVisibility(
-                    visible = isSaved,
-                    enter = fadeIn() + slideInHorizontally { it / 2 },
-                    exit = slideOutHorizontally { it / 2 } + fadeOut(),
-                    label = "",
-                ) {
-                    val notificationManager = LocalContext.current.notificationManager
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            scope.launch(Dispatchers.IO) {
-                                dao.getNotificationItemFlow(info.url)
-                                    .firstOrNull()
-                                    ?.let {
-                                        dao.deleteNotification(it)
-                                        notificationManager.cancelNotification(it)
-                                    }
-                            }
-                        },
-                        text = { Text("Remove from Saved") },
-                        icon = { Icon(Icons.Default.BookmarkRemove, null) },
-                        containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
-                        contentColor = swatchInfo?.titleColor?.toComposeColor()
-                            ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
-                        expanded = listState.isScrollingUp()
-                    )
-                }*/
-            },
             modifier = Modifier
                 .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -393,85 +367,72 @@ fun DetailsView(
                 .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
         ) { p ->
             val modifiedPaddingValues = p - LocalNavHostPadding.current
-            BoxWithConstraints {
-                var descriptionVisibility by remember { mutableStateOf(false) }
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    state = listState,
-                    contentPadding = modifiedPaddingValues,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(vertical = 4.dp)
-                        .haze(
-                            area = arrayOf(
-                                topBounds(p),
-                                with(LocalDensity.current) {
-                                    val bottomPaddingPx = modifiedPaddingValues
-                                        .calculateBottomPadding()
-                                        .toPx()
-                                    Rect(
-                                        Offset(0f, maxHeight.toPx() - bottomPaddingPx),
-                                        Offset(maxWidth.toPx(), maxHeight.toPx())
-                                    )
-                                }
-                            ),
-                            backgroundColor = swatchInfo?.rgb
-                                ?.toComposeColor()
-                                ?.animate()?.value ?: MaterialTheme.colorScheme.surface
-                        ),
-                ) {
-                    if (info.description.isNotEmpty()) {
-                        item {
-                            Box {
-                                val progress = remember { mutableStateOf(false) }
+            var descriptionVisibility by remember { mutableStateOf(false) }
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                state = listState,
+                contentPadding = modifiedPaddingValues,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 4.dp)
+                    .haze(
+                        hazeState,
+                        backgroundColor = swatchInfo?.rgb
+                            ?.toComposeColor()
+                            ?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                    ),
+            ) {
+                if (info.description.isNotEmpty()) {
+                    item {
+                        Box {
+                            val progress = remember { mutableStateOf(false) }
 
-                                Text(
-                                    description,
-                                    modifier = Modifier
-                                        .combinedClickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = rememberRipple(),
-                                            onClick = { descriptionVisibility = !descriptionVisibility },
-                                            onLongClick = { onTranslateDescription(progress) }
-                                        )
-                                        .padding(horizontal = 4.dp)
-                                        .fillMaxWidth()
-                                        .animateContentSize(),
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                            Text(
+                                description,
+                                modifier = Modifier
+                                    .combinedClickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = rememberRipple(),
+                                        onClick = { descriptionVisibility = !descriptionVisibility },
+                                        onLongClick = { onTranslateDescription(progress) }
+                                    )
+                                    .padding(horizontal = 4.dp)
+                                    .fillMaxWidth()
+                                    .animateContentSize(),
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            if (progress.value) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.align(Alignment.Center)
                                 )
-
-                                if (progress.value) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.align(Alignment.Center)
-                                    )
-                                }
                             }
                         }
                     }
-
-                    items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
-                        ChapterItem(
-                            infoModel = info,
-                            c = c,
-                            read = chapters,
-                            chapters = info.chapters,
-                            shareChapter = shareChapter,
-                            markAs = markAs
-                        )
-                    }
                 }
-                Box(Modifier.padding(modifiedPaddingValues)) {
-                    InternalLazyColumnScrollbar(
-                        thickness = 8.dp,
-                        padding = 2.dp,
-                        listState = listState,
-                        thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
-                        thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+
+                items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                    ChapterItem(
+                        infoModel = info,
+                        c = c,
+                        read = chapters,
+                        chapters = info.chapters,
+                        shareChapter = shareChapter,
+                        markAs = markAs
                     )
                 }
+            }
+            Box(Modifier.padding(modifiedPaddingValues)) {
+                InternalLazyColumnScrollbar(
+                    thickness = 8.dp,
+                    padding = 2.dp,
+                    listState = listState,
+                    thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
+                    thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+                )
             }
         }
     }

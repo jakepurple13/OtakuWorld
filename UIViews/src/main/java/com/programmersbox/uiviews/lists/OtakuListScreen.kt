@@ -24,7 +24,6 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.HingePolicy
 import androidx.compose.material3.adaptive.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.PaneAdaptedValue
 import androidx.compose.material3.adaptive.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
@@ -48,6 +47,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
+    isHorizontal: Boolean = false,
 ) {
     val showListDetail by LocalSettingsHandling.current
         .showListDetail
@@ -73,7 +73,7 @@ fun OtakuListScreen(
                             viewModel.customItem = null
                             state.navigateBack()
                         },
-                        isHorizontal = paneAdaptedValue == PaneAdaptedValue.Expanded
+                        isHorizontal = isHorizontal
                     )
                     BackHandler {
                         viewModel.customItem = null

@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -100,8 +99,9 @@ import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
-import com.programmersbox.uiviews.utils.topBounds
+import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -117,6 +117,7 @@ fun FavoriteUi(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) },
 ) {
+    val hazeState = remember { HazeState() }
     val navController = LocalNavController.current
     val context = LocalContext.current
 
@@ -234,7 +235,7 @@ fun FavoriteUi(
         OtakuScaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                Column {
+                Column(Modifier.hazeChild(hazeState)) {
                     var active by rememberSaveable { mutableStateOf(false) }
 
                     fun closeSearchBar() {
@@ -401,35 +402,33 @@ fun FavoriteUi(
                     }
                 }
             } else {
-                BoxWithConstraints {
-                    FavoritesGrid(
-                        paddingValues = p,
-                        groupedSources = viewModel.groupedSources,
-                        sourceRepository = sourceRepository,
-                        navController = navController,
-                        moreInfoClick = {
-                            scope.launch {
-                                snackbarHostState.currentSnackbarData?.dismiss()
-                                val result = snackbarHostState.showSnackbar(
-                                    "Something went wrong. Source might not be installed",
-                                    duration = SnackbarDuration.Long,
-                                    actionLabel = "More Options",
-                                    withDismissAction = true
-                                )
-                                showDbModel = when (result) {
-                                    SnackbarResult.Dismissed -> null
-                                    SnackbarResult.ActionPerformed -> it
-                                }
+                FavoritesGrid(
+                    paddingValues = p,
+                    groupedSources = viewModel.groupedSources,
+                    sourceRepository = sourceRepository,
+                    navController = navController,
+                    moreInfoClick = {
+                        scope.launch {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            val result = snackbarHostState.showSnackbar(
+                                "Something went wrong. Source might not be installed",
+                                duration = SnackbarDuration.Long,
+                                actionLabel = "More Options",
+                                withDismissAction = true
+                            )
+                            showDbModel = when (result) {
+                                SnackbarResult.Dismissed -> null
+                                SnackbarResult.ActionPerformed -> it
                             }
-                        },
-                        onShowBanner = { showBanner = it },
-                        logo = logo,
-                        modifier = Modifier.haze(
-                            topBounds(p),
-                            backgroundColor = MaterialTheme.colorScheme.surface
-                        )
+                        }
+                    },
+                    onShowBanner = { showBanner = it },
+                    logo = logo,
+                    modifier = Modifier.haze(
+                        hazeState,
+                        backgroundColor = MaterialTheme.colorScheme.surface
                     )
-                }
+                )
             }
         }
     }

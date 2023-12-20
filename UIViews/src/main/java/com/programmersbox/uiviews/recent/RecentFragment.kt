@@ -16,7 +16,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,12 +71,10 @@ import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
-import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
-import com.programmersbox.uiviews.utils.topBounds
-import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -129,7 +126,7 @@ fun RecentView(
 
     var showSourceChooser by showSourceChooser()
 
-    OtakuScaffold(
+    OtakuHazeScaffold(
         topBar = {
             InsetSmallTopAppBar(
                 title = {
@@ -166,9 +163,10 @@ fun RecentView(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             )
-        }
+        },
+        blurTopBar = true
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(
@@ -205,7 +203,7 @@ fun RecentView(
                                 sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
                                 recentVm.sourceList.isEmpty() -> Box(Modifier.padding(p)) { info.ComposeShimmerItem() }
                                 else -> {
-                                    BoxWithConstraints {
+                                    Box {
                                         info.ItemListView(
                                             list = recentVm.sourceList,
                                             listState = state,
@@ -215,10 +213,7 @@ fun RecentView(
                                                 newItemModel(if (c == ComponentState.Pressed) item else null)
                                                 showBanner = c == ComponentState.Pressed
                                             },
-                                            modifier = Modifier.haze(
-                                                topBounds(p),
-                                                backgroundColor = MaterialTheme.colorScheme.surface
-                                            )
+                                            modifier = Modifier
                                         ) { navController.navigateToDetails(it) }
                                     }
                                 }

@@ -44,7 +44,7 @@ import kotlinx.coroutines.runBlocking
 @ExperimentalComposeUiApi
 @Composable
 fun GeneralSettings(
-    customSettings: (@Composable () -> Unit)?,
+    customSettings: (@Composable () -> Unit)? = null,
 ) {
     SettingsScaffold(stringResource(R.string.general_menu_title)) {
         val scope = rememberCoroutineScope()

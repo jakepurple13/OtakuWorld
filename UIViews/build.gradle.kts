@@ -122,7 +122,7 @@ dependencies {
 
     implementation(libs.compose.collapsable)
 
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha01")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha02")
     implementation(libs.materialAdaptive)
 }
 
