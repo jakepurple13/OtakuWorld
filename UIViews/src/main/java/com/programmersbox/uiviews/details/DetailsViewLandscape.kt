@@ -304,6 +304,8 @@ private fun DetailsLandscapeContent(
                         windowInsets = BottomAppBarDefaults.windowInsets,
                         topBarColor = topBarColor,
                         containerColor = c,
+                        isFavorite = isFavorite,
+                        onFavoriteClick = onFavoriteClick,
                         modifier = Modifier
                             .padding(LocalNavHostPadding.current)
                             .drawWithCache {

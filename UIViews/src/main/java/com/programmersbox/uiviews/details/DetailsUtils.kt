@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Save
@@ -319,9 +321,12 @@ fun DetailBottomBar(
     topBarColor: Color,
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
+    isFavorite: Boolean,
+    onFavoriteClick: (Boolean) -> Unit,
     bottomAppBarScrollBehavior: BottomAppBarScrollBehavior? = null,
     windowInsets: WindowInsets = WindowInsets(0.dp),
 ) {
+    val swatchInfo = LocalSwatchInfo.current.colors
     BottomAppBar(
         actions = {
             ToolTipWrapper(
@@ -340,6 +345,15 @@ fun DetailBottomBar(
                 ) { Icon(Icons.Default.Search, null) }
             }
 
+            ToolTipWrapper(info = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) }) {
+                IconButton(onClick = { onFavoriteClick(isFavorite) }) {
+                    Icon(
+                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                    )
+                }
+            }
+
             customActions()
         },
         floatingActionButton = {
@@ -349,7 +363,6 @@ fun DetailBottomBar(
                 exit = slideOutHorizontally { it },
                 label = "",
             ) {
-                val swatchInfo = LocalSwatchInfo.current.colors
                 ExtendedFloatingActionButton(
                     onClick = removeFromSaved,
                     text = { Text("Remove from Saved") },

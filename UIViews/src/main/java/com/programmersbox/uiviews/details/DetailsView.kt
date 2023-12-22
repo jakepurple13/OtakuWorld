@@ -288,6 +288,8 @@ fun DetailsView(
                     isSaved = isSaved,
                     bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
                     topBarColor = topBarColor,
+                    isFavorite = isFavorite,
+                    onFavoriteClick = onFavoriteClick,
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
                         .drawWithCache {
