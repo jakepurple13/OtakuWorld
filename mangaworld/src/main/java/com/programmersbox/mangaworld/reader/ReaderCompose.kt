@@ -149,6 +149,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.ChapterHolder
@@ -158,11 +159,13 @@ import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.listOrPager
 import com.programmersbox.mangaworld.pagePadding
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -182,6 +185,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
@@ -198,25 +202,17 @@ fun ReadView(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     ch: ChapterHolder = koinInject(),
+    dao: ItemDao = LocalItemDao.current,
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
             handle = createSavedStateHandle(),
-            context = context,
             genericInfo = genericInfo,
-            chapterHolder = ch
+            chapterHolder = ch,
+            dao = dao
         )
     },
 ) {
     HideSystemBarsWhileOnScreen()
-
-    DisposableEffect(LocalContext.current) {
-        val batteryInfo = context.battery {
-            readVm.batteryPercent = it.percent
-            readVm.batteryInformation.batteryLevel.tryEmit(it.percent)
-            readVm.batteryInformation.batteryInfo.tryEmit(it)
-        }
-        onDispose { context.unregisterReceiver(batteryInfo) }
-    }
 
     val scope = rememberCoroutineScope()
     val pullRefreshState = rememberPullRefreshState(refreshing = readVm.isLoadingPages, onRefresh = readVm::refresh)
@@ -359,7 +355,6 @@ fun ReadView(
                         scrollBehavior = scrollBehavior,
                         pages = pages,
                         currentPage = currentPage,
-                        vm = readVm
                     )
                 }
             },
@@ -1024,7 +1019,6 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     pages: List<String>,
     currentPage: Int,
-    vm: ReadViewModel,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
@@ -1032,20 +1026,44 @@ private fun TopBar(
         scrollBehavior = scrollBehavior,
         modifier = modifier,
         navigationIcon = {
+            val context = LocalContext.current
+            var batteryColor by remember { mutableStateOf(Color.White) }
+            var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
+            var batteryPercent by remember { mutableFloatStateOf(0f) }
+            val batteryInformation = remember { BatteryInformation(context) }
+
+            LaunchedEffect(Unit) {
+                batteryInformation.composeSetupFlow(
+                    Color.White
+                ) {
+                    batteryColor = it.first
+                    batteryIcon = it.second
+                }
+                    .launchIn(this)
+            }
+
+            DisposableEffect(LocalContext.current) {
+                val batteryInfo = context.battery {
+                    batteryPercent = it.percent
+                    batteryInformation.batteryLevel.tryEmit(it.percent)
+                    batteryInformation.batteryInfo.tryEmit(it)
+                }
+                onDispose { context.unregisterReceiver(batteryInfo) }
+            }
             Row(
                 modifier = Modifier.padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    vm.batteryIcon.composeIcon,
+                    batteryIcon.composeIcon,
                     contentDescription = null,
                     tint = animateColorAsState(
-                        if (vm.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                        else vm.batteryColor, label = ""
+                        if (batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
+                        else batteryColor, label = ""
                     ).value
                 )
                 Text(
-                    "${vm.batteryPercent.toInt()}%",
+                    "${batteryPercent.toInt()}%",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }

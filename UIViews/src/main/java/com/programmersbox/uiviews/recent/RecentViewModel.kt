@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import okhttp3.internal.toImmutableList
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class RecentViewModel(
@@ -113,7 +112,7 @@ class RecentViewModel(
             }
             ?.onStart { isRefreshing = true }
             ?.onCompletion { isRefreshing = false }
-            ?.onEach { sourceList.addAll(it.toImmutableList()) }
+            ?.onEach { sourceList.addAll(it) }
             ?.launchIn(viewModelScope)
     }
 

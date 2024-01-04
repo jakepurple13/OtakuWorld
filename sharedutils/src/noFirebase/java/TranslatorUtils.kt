@@ -1,7 +1,8 @@
 package com.programmersbox.sharedutils
 
 class TranslateItems {
-    fun translateDescription(textToTranslate: String, progress: (Boolean) -> Unit, translatedText: (String) -> Unit) = Unit
+    fun translateDescription(textToTranslate: String, progress: (Boolean) -> Unit, translatedText: (String) -> Unit) =
+        translatedText(textToTranslate)
     fun clear() = Unit
 }
 

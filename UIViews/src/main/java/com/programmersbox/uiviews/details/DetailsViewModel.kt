@@ -68,7 +68,7 @@ class DetailsViewModel(
             ?.map { it.getOrThrow() }
             ?.onEach { item ->
                 info = item
-                description = item.description
+                description = item.description.ifEmpty { "No Description Found" }
                 setup(item)
                 Cached.cache[item.url] = item
             }

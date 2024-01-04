@@ -1,14 +1,11 @@
 package com.programmersbox.mangaworld.reader
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -16,13 +13,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.BatteryInformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -41,7 +37,7 @@ import java.io.File
 
 class ReadViewModel(
     handle: SavedStateHandle,
-    context: Context,
+    private val dao: ItemDao,
     val genericInfo: GenericInfo,
     private val chapterHolder: ChapterHolder,
     val headers: MutableMap<String, String> = mutableMapOf(),
@@ -92,33 +88,16 @@ class ReadViewModel(
 
     val title by lazy { handle.get<String>("mangaTitle") ?: "" }
 
-    private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
-
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
 
     var currentChapter: Int by mutableIntStateOf(0)
 
-    var batteryColor by mutableStateOf(Color.White)
-    var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
-    var batteryPercent by mutableFloatStateOf(0f)
-
-    val batteryInformation by lazy { BatteryInformation(context) }
-
     val pageList = mutableStateListOf<String>()
     var isLoadingPages by mutableStateOf(false)
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            batteryInformation.composeSetupFlow(
-                Color.White
-            ) {
-                batteryColor = it.first
-                batteryIcon = it.second
-            }
-        }
-
         val url = chapterHolder.chapterModel?.url ?: handle.get<String>("mangaUrl")
         list = chapterHolder.chapters.orEmpty()
         currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
