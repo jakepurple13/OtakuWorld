@@ -998,6 +998,7 @@ private fun ZoomableImage(
                     contentScale = contentScale,
                     modifier = Modifier
                         .fillMaxSize()
+                        .fillMaxWidth()
                         .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                         .clipToBounds()
                 )
