@@ -374,7 +374,7 @@ fun ReadView(
             },
             blurTopBar = true,
             blurBottomBar = true
-        ) { _ ->
+        ) { p ->
             Box(
                 modifier = Modifier.pullRefresh(pullRefreshState)
             ) {
@@ -386,6 +386,7 @@ fun ReadView(
                             pages = pages,
                             readVm = readVm,
                             itemSpacing = spacing,
+                            paddingValues = PaddingValues(bottom = p.calculateBottomPadding())
                         ) { readVm.showInfo = !readVm.showInfo }
                     } else {
                         PagerView(
@@ -587,6 +588,7 @@ fun ListView(
     pages: List<String>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
+    paddingValues: PaddingValues,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -594,6 +596,7 @@ fun ListView(
         modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
+        contentPadding = paddingValues,
     ) { reader(pages, readVm, onClick) }
 }
 
