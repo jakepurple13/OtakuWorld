@@ -87,7 +87,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworldtv:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign
         with:
@@ -97,7 +97,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: anime_sign
         with:
@@ -107,7 +107,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}    
           
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: novel_sign
         with:
@@ -117,7 +117,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: animetv_sign
         with:
@@ -127,7 +127,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign_no_firebase
         with:
@@ -137,7 +137,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: anime_sign_no_firebase
         with:
@@ -147,7 +147,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: novel_sign_no_firebase
         with:
@@ -157,7 +157,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: animetv_sign_no_firebase
         with:
@@ -167,7 +167,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      #      - uses: r0adkll/sign-android-release@v1
+      #      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
       #        name: Sign app APK
       #        id: otakumanager_sign
       #        with:
