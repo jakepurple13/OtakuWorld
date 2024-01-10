@@ -88,6 +88,16 @@ class SettingsHandling(context: Context) {
 
     suspend fun setShowListDetail(show: Boolean) = preferences.update { setShowListDetail(show) }
 
+    val customUrls = all.map { it.customUrlsList }
+
+    suspend fun addCustomUrl(url: String) = preferences.update { addCustomUrls(url) }
+    suspend fun removeCustomUrl(url: String) = preferences.update {
+        val l = customUrlsList.toMutableList()
+        l.remove(url)
+        clearCustomUrls()
+        addAllCustomUrls(l)
+    }
+
     val showDownload = SettingInfo(
         flow = all.map { it.showDownload },
         updateValue = { setShowDownload(it) }

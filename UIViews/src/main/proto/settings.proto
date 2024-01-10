@@ -13,6 +13,7 @@ message Settings {
   NotificationSortBy notificationSortBy = 7;
   bool showListDetail = 8;
   bool showDownload = 9;
+  repeated string customUrls = 10;
 }
 
 enum SystemThemeMode {
