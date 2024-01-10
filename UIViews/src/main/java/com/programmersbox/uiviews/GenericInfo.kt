@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
@@ -90,8 +89,8 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        modifier: Modifier = Modifier,
-        paddingValues: PaddingValues = PaddingValues(0.dp),
+        modifier: Modifier,
+        paddingValues: PaddingValues,
         onClick: (ItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
@@ -102,8 +101,8 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        modifier: Modifier = Modifier,
-        paddingValues: PaddingValues = PaddingValues(0.dp),
+        modifier: Modifier,
+        paddingValues: PaddingValues,
         onClick: (ItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 

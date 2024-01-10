@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -244,7 +245,9 @@ fun AllScreen(
                     onLongPress = { item, c ->
                         itemInfoChange(if (c == ComponentState.Pressed) item else null)
                         showBanner(c == ComponentState.Pressed)
-                    }
+                    },
+                    paddingValues = PaddingValues(0.dp),
+                    modifier = Modifier
                 ) { navController.navigateToDetails(it) }
             }
             PullRefreshIndicator(
@@ -332,7 +335,9 @@ fun SearchScreen(
                 onLongPress = { item, c ->
                     itemInfoChange(if (c == ComponentState.Pressed) item else null)
                     showBanner(c == ComponentState.Pressed)
-                }
+                },
+                paddingValues = PaddingValues(0.dp),
+                modifier = Modifier
             ) { navController.navigateToDetails(it) }
 
             PullRefreshIndicator(
