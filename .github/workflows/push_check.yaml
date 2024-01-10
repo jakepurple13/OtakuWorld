@@ -56,7 +56,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: mangaworld:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign
         with:
