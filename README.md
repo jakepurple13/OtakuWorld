@@ -149,5 +149,7 @@ If you want to add a new source or have a change that might make the app better
 - Push and create a new PR
 - Add me (@jakepurple13) as a reviewer
 
+Disclaimer: I am not affiliated with Tachiyomi app or any fork hosted on GitHub.
+
 [//]: # (Reference Links)
   [aa]: <https://www.androidauthority.com/sideloading-apps-on-android-tv-1189896/>
