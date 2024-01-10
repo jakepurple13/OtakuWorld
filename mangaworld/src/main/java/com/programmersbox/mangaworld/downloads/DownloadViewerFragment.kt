@@ -35,11 +35,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissValue
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSwipeToDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -268,9 +268,9 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     )
                 }
 
-                val dismissState = rememberSwipeToDismissState(
+                val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = {
-                        if (it == SwipeToDismissValue.EndToStart) {
+                        if (it == SwipeToDismissBoxValue.EndToStart) {
                             //delete
                             showPopup = true
                         }
@@ -285,12 +285,12 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     backgroundContent = {
                         val color by animateColorAsState(
                             when (dismissState.targetValue) {
-                                SwipeToDismissValue.EndToStart -> Color.Red
+                                SwipeToDismissBoxValue.EndToStart -> Color.Red
                                 else -> Color.Transparent
                             }, label = ""
                         )
 
-                        val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
+                        val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
 
                         Box(
                             Modifier

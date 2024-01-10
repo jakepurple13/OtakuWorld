@@ -4,7 +4,6 @@ package com.programmersbox.uiviews.lists
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -13,6 +12,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -20,16 +20,19 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.AnimatedPane
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.HingePolicy
 import androidx.compose.material3.adaptive.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.PaneAdaptedValue
 import androidx.compose.material3.adaptive.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
+import androidx.compose.material3.adaptive.allVerticalHingeBounds
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.occludingVerticalHingeBounds
 import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldNavigator
+import androidx.compose.material3.adaptive.separatingVerticalHingeBounds
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -100,6 +103,7 @@ fun OtakuListScreen(
 
     ListDetailPaneScaffold(
         scaffoldState = state.scaffoldState,
+        windowInsets = WindowInsets(0.dp),
         listPane = {
             AnimatedPanes(modifier = Modifier.fillMaxSize()) {
                 OtakuListView(
@@ -122,43 +126,16 @@ fun OtakuListScreen(
     )
 }
 
-/*
- * TODO: Apparently this isn't just me! Woo!
- *  https://issuetracker.google.com/issues/316376112
- *  This will be removed when fixed.
- */
 @ExperimentalMaterial3AdaptiveApi
 @Composable
 fun ThreePaneScaffoldScope.AnimatedPanes(
     modifier: Modifier,
     content: (@Composable ThreePaneScaffoldScope.() -> Unit),
 ) {
-    AnimatedVisibility(
-        visible = paneAdaptedValue == PaneAdaptedValue.Expanded,
-        modifier = modifier
-        //.animatedPane()
-        //.clipToBounds(paneAdaptedValue)
-        /*.then(
-            if (paneAdaptedValue == PaneAdaptedValue.Expanded) {
-                Modifier.animateBounds(
-                    // TODO Figure out why we need to pass a non-null here to get the bounds
-                    //  animation going on the first navigation event that pass in the spec
-                    //  later on. To resolve this, we default to the paneSpringSpec().
-                    //  Otherwise, the first motion shows a snap instead of a smooth
-                    //  transition.
-                    positionAnimationSpec = positionAnimationSpec
-                        ?: ThreePaneScaffoldDefaults.PaneSpringSpec
-                )
-            } else {
-                Modifier
-            }
-        )*/,
-        enter = enterTransition,
-        exit = exitTransition,
-        label = "AnimatedVisibility: $animationToolingLabel"
-    ) {
-        content()
-    }
+    AnimatedPane(
+        modifier = modifier,
+        content = content
+    )
 }
 
 @ExperimentalMaterial3AdaptiveApi

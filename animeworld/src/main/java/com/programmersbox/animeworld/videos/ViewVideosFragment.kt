@@ -43,11 +43,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissValue
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberSwipeToDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -360,9 +360,9 @@ private fun VideoContentView(
     val navController = LocalNavController.current
     val context = LocalContext.current
 
-    val dismissState = rememberSwipeToDismissState(
+    val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
-            if (it == SwipeToDismissValue.StartToEnd) {
+            if (it == SwipeToDismissBoxValue.StartToEnd) {
                 if (MainActivity.cast.isCastActive()) {
                     MainActivity.cast.loadMedia(
                         File(item.path!!),
@@ -378,7 +378,7 @@ private fun VideoContentView(
                         ""
                     )
                 }
-            } else if (it == SwipeToDismissValue.EndToStart) {
+            } else if (it == SwipeToDismissBoxValue.EndToStart) {
                 showDialog = true
             }
             false
@@ -391,22 +391,22 @@ private fun VideoContentView(
             val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    SwipeToDismissValue.Settled -> Color.Transparent
-                    SwipeToDismissValue.StartToEnd -> Emerald
-                    SwipeToDismissValue.EndToStart -> Color.Red
+                    SwipeToDismissBoxValue.Settled -> Color.Transparent
+                    SwipeToDismissBoxValue.StartToEnd -> Emerald
+                    SwipeToDismissBoxValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
-                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
                 else -> Alignment.Center
             }
             val icon = when (direction) {
-                SwipeToDismissValue.StartToEnd -> Icons.Default.PlayArrow
-                SwipeToDismissValue.EndToStart -> Icons.Default.Delete
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.PlayArrow
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
                 else -> Icons.Default.Pages
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier

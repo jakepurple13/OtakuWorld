@@ -100,14 +100,14 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissValue
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberSwipeToDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -821,11 +821,11 @@ fun ChangeChapterSwipe(
             .heightIn(min = 100.dp)
             .wrapContentHeight()
     ) {
-        val dismissState = rememberSwipeToDismissState(
+        val dismissState = rememberSwipeToDismissBoxState(
             confirmValueChange = {
                 when (it) {
-                    SwipeToDismissValue.StartToEnd -> nextChapter()
-                    SwipeToDismissValue.EndToStart -> previousChapter()
+                    SwipeToDismissBoxValue.StartToEnd -> nextChapter()
+                    SwipeToDismissBoxValue.EndToStart -> previousChapter()
                     else -> Unit
                 }
                 false
@@ -838,17 +838,17 @@ fun ChangeChapterSwipe(
             enableDismissFromEndToStart = !isLoading && currentChapter > 0,
             backgroundContent = {
                 val direction = dismissState.dismissDirection
-                val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
+                val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
 
                 val alignment = when (direction) {
-                    SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
-                    SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
                     else -> Alignment.Center
                 }
 
                 val icon = when (direction) {
-                    SwipeToDismissValue.StartToEnd -> Icons.Default.FastRewind
-                    SwipeToDismissValue.EndToStart -> Icons.Default.FastForward
+                    SwipeToDismissBoxValue.StartToEnd -> Icons.Default.FastRewind
+                    SwipeToDismissBoxValue.EndToStart -> Icons.Default.FastForward
                     else -> Icons.Default.Pages
                 }
 
