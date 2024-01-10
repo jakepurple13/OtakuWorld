@@ -15,18 +15,19 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChromeReaderMode
+import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatLineSpacing
-import androidx.compose.material.icons.filled.LibraryBooks
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,12 +70,12 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -98,7 +99,6 @@ import java.io.File
 val appModule = module {
     single<GenericInfo> { GenericManga(get(), get()) }
     single { NetworkHelper(get()) }
-    single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     single { ChapterHolder() }
 }
@@ -221,14 +221,17 @@ class GenericManga(
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
+        modifier: Modifier,
+        paddingValues: PaddingValues,
+        onClick: (ItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = modifier.fillMaxSize(),
         ) {
             itemsIndexed(
                 list,
@@ -263,12 +266,13 @@ class GenericManga(
     }
 
     @OptIn(com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
-    override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
+            val navController = LocalNavController.current
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
-                settingIcon = { Icon(Icons.Default.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = rememberRipple(),
                     interactionSource = remember { MutableInteractionSource() }
@@ -391,7 +395,7 @@ class GenericManga(
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.useNewReader)) },
                 summaryValue = { Text(stringResource(R.string.reader_summary_setting)) },
-                settingIcon = { Icon(Icons.Default.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
                 value = reader,
                 updateValue = { scope.launch { context.updatePref(USER_NEW_READER, it) } }
             )
@@ -404,7 +408,7 @@ class GenericManga(
                     summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                     value = listOrPager,
                     updateValue = { scope.launch { context.updatePref(LIST_OR_PAGER, it) } },
-                    settingIcon = { Icon(if (listOrPager) Icons.Default.List else Icons.Default.Pages, null) }
+                    settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
                 )
             }
         }

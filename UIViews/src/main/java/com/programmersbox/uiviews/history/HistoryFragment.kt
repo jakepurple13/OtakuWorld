@@ -1,6 +1,8 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.uiviews.history
 
-import androidx.appcompat.content.res.AppCompatResources
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -16,8 +18,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,12 +28,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.contentColorFor
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,10 +56,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -71,11 +69,13 @@ import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.MockAppIcon
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.components.GradientImage
+import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showErrorToast
@@ -86,11 +86,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
 @Composable
 fun HistoryUi(
-    logo: MainLogo,
     dao: HistoryDao = LocalHistoryDao.current,
     hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
 ) {
@@ -100,6 +100,8 @@ fun HistoryUi(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var clearAllDialog by remember { mutableStateOf(false) }
+
+    val logoDrawable = koinInject<AppLogo>().logo
 
     if (clearAllDialog) {
         val onDismissRequest = { clearAllDialog = false }
@@ -129,7 +131,7 @@ fun HistoryUi(
         source = showRecentModel?.source
     )
 
-    OtakuScaffold(
+    OtakuHazeScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -140,13 +142,16 @@ fun HistoryUi(
                 actions = {
                     Text("$recentSize")
                     IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
-                }
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.Transparent),
             )
-        }
+        },
+        blurTopBar = true
     ) { p ->
         LazyColumn(
             contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize()
         ) {
             items(
                 count = recentItems.itemCount,
@@ -158,7 +163,7 @@ fun HistoryUi(
                     HistoryItem(
                         item = item,
                         dao = dao,
-                        logo = logo,
+                        logoDrawable = logoDrawable,
                         scope = scope,
                         onError = {
                             scope.launch {
@@ -186,7 +191,13 @@ fun HistoryUi(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scope: CoroutineScope, onError: () -> Unit) {
+private fun HistoryItem(
+    item: RecentModel,
+    dao: HistoryDao,
+    logoDrawable: Drawable?,
+    scope: CoroutineScope,
+    onError: () -> Unit,
+) {
     var showPopup by remember { mutableStateOf(false) }
 
     if (showPopup) {
@@ -207,35 +218,37 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
         )
     }
 
-    val dismissState = rememberDismissState(
+    val dismissState = rememberSwipeToDismissState(
         confirmValueChange = {
-            if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+            if (it == SwipeToDismissValue.StartToEnd || it == SwipeToDismissValue.EndToStart) {
                 showPopup = true
             }
             false
         }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         state = dismissState,
-        background = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToEnd -> Color.Red
-                    DismissValue.DismissedToStart -> Color.Red
+                    SwipeToDismissValue.Settled -> Color.Transparent
+                    SwipeToDismissValue.StartToEnd -> Color.Red
+                    SwipeToDismissValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                DismissDirection.StartToEnd -> Alignment.CenterStart
-                DismissDirection.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
             }
             val icon = when (direction) {
-                DismissDirection.StartToEnd -> Icons.Default.Delete
-                DismissDirection.EndToStart -> Icons.Default.Delete
+                SwipeToDismissValue.StartToEnd -> Icons.Default.Delete
+                SwipeToDismissValue.EndToStart -> Icons.Default.Delete
+                else -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -251,7 +264,7 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
                 )
             }
         },
-        dismissContent = {
+        content = {
             var showLoadingDialog by remember { mutableStateOf(false) }
 
             LoadingDialog(
@@ -260,7 +273,6 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
             )
 
             val context = LocalContext.current
-            val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
 
             val info = LocalSourcesRepository.current
             val navController = LocalNavController.current
@@ -335,17 +347,15 @@ private fun HistoryItem(item: RecentModel, dao: HistoryDao, logo: MainLogo, scop
 
 @Composable
 private fun HistoryItemPlaceholder() {
-    val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-        .copy(0.1f)
-        .compositeOver(MaterialTheme.colorScheme.surface)
-
     Surface(
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.placeholder(true, color = placeholderColor)
+        modifier = Modifier.m3placeholder(
+            true,
+            highlight = PlaceholderHighlight.shimmer()
+        )
     ) {
         ListItem(
-            modifier = Modifier.placeholder(true, color = placeholderColor),
             headlineContent = { Text("Otaku") },
             overlineContent = { Text("Otaku") },
             supportingContent = { Text("Otaku") },
@@ -363,7 +373,11 @@ private fun HistoryItemPlaceholder() {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = null)
                     Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
                 }
-            }
+            },
+            modifier = Modifier.m3placeholder(
+                true,
+                highlight = PlaceholderHighlight.shimmer()
+            ),
         )
     }
 }
@@ -373,7 +387,7 @@ private fun HistoryItemPlaceholder() {
 @Composable
 private fun HistoryScreenPreview() {
     PreviewTheme {
-        HistoryUi(logo = MockAppIcon)
+        HistoryUi()
     }
 }
 
@@ -390,9 +404,9 @@ private fun HistoryItemPreview() {
                 source = "MANGA_READ"
             ),
             dao = LocalHistoryDao.current,
-            logo = MockAppIcon,
             scope = rememberCoroutineScope(),
-            onError = {}
+            onError = {},
+            logoDrawable = null
         )
     }
 }

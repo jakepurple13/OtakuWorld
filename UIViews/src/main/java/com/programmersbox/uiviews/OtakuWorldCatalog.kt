@@ -35,9 +35,13 @@ class OtakuWorldCatalog(
         }
     }
 
-    private suspend fun remoteSources() = client.get("${REPO_URL_PREFIX}index.min.json")
-        .bodyAsText()
-        .let { json.decodeFromString<List<ExtensionJsonObject>>(it) }
+    private suspend fun remoteSources() = runCatching {
+        client.get("${REPO_URL_PREFIX}index.min.json")
+            .bodyAsText()
+            .let { json.decodeFromString<List<ExtensionJsonObject>>(it) }
+    }
+        .getOrNull()
+        .orEmpty()
 
     override suspend fun initialize(app: Application) {}
 

@@ -11,6 +11,9 @@ message Settings {
   bool showAll = 5;
   int32 historySave = 6;
   NotificationSortBy notificationSortBy = 7;
+  bool showListDetail = 8;
+  bool showDownload = 9;
+  repeated string customUrls = 10;
 }
 
 enum SystemThemeMode {

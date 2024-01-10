@@ -58,6 +58,8 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             showAll = true
             shouldCheckUpdate = true
             themeSetting = SystemThemeMode.FollowSystem
+            showListDetail = true
+            showDownload = true
         }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -82,4 +84,29 @@ class SettingsHandling(context: Context) {
 
     suspend fun setNotificationSortBy(sort: NotificationSortBy) = preferences.update { setNotificationSortBy(sort) }
 
+    val showListDetail = all.map { it.showListDetail }
+
+    suspend fun setShowListDetail(show: Boolean) = preferences.update { setShowListDetail(show) }
+
+    val customUrls = all.map { it.customUrlsList }
+
+    suspend fun addCustomUrl(url: String) = preferences.update { addCustomUrls(url) }
+    suspend fun removeCustomUrl(url: String) = preferences.update {
+        val l = customUrlsList.toMutableList()
+        l.remove(url)
+        clearCustomUrls()
+        addAllCustomUrls(l)
+    }
+
+    val showDownload = SettingInfo(
+        flow = all.map { it.showDownload },
+        updateValue = { setShowDownload(it) }
+    )
+
+    inner class SettingInfo<T>(
+        val flow: Flow<T>,
+        private val updateValue: suspend Settings.Builder.(T) -> Settings.Builder,
+    ) {
+        suspend fun updateSetting(value: T) = preferences.update { updateValue(value) }
+    }
 }

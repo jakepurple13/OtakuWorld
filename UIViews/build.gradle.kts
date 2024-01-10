@@ -14,6 +14,7 @@ android {
         dataBinding = true
         viewBinding = true
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
@@ -42,8 +43,6 @@ dependencies {
     implementation(libs.androidBrowserHelper)
     implementation(libs.androidxBrowser)
 
-    implementation(libs.fastScroll)
-
     implementation(libs.reactiveNetwork)
 
     implementation(libs.bundles.koinLibs)
@@ -69,8 +68,6 @@ dependencies {
 
     implementation(libs.recyclerview)
     implementation(libs.palette)
-    implementation(libs.lottie)
-    implementation(libs.lottieCompose)
     implementation(libs.bundles.roomLibs)
 
     implementation(libs.showMoreLess)
@@ -113,15 +110,24 @@ dependencies {
 
     implementation(libs.bundles.ktorLibs)
 
+    implementation(libs.androidx.activity.ktx)
+
     //Multiplatform
     implementation(projects.imageloader)
 
     //Extension Loader
     api(projects.sharedutils.extensionloader)
+
+    api(libs.haze.jetpack.compose)
+
+    implementation(libs.compose.collapsable)
+
+    implementation(libs.material.adaptive.navigation.suite)
+    implementation(libs.materialAdaptive)
 }
 
 protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:3.23.4" }
+    protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobufVersion.get().toString()}" }
     plugins {
         id("javalite") { artifact = libs.protobufJava.get().toString() }
         id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }

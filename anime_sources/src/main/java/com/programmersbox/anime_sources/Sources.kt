@@ -5,9 +5,7 @@ import com.programmersbox.anime_sources.anime.AnimeFlick
 import com.programmersbox.anime_sources.anime.AnimeKisaDubbed
 import com.programmersbox.anime_sources.anime.AnimeKisaMovies
 import com.programmersbox.anime_sources.anime.AnimeKisaSubbed
-import com.programmersbox.anime_sources.anime.CrunchyRoll
 import com.programmersbox.anime_sources.anime.Dopebox
-import com.programmersbox.anime_sources.anime.GogoAnimeVC
 import com.programmersbox.anime_sources.anime.Hdm
 import com.programmersbox.anime_sources.anime.PutlockerAnime
 import com.programmersbox.anime_sources.anime.PutlockerCartoons
@@ -27,7 +25,7 @@ enum class Sources(private val api: ApiService, override val notWorking: Boolean
 
     ALLANIME(AllAnime),
 
-    GOGOANIME_VC(GogoAnimeVC),
+    //GOGOANIME_VC(GogoAnimeVC),
     HDM(Hdm, true),
     //ANIMESIMPLE_SUBBED(AnimeSimpleSubbed), ANIMESIMPLE_DUBBED(AnimeSimpleDubbed),
 
@@ -35,7 +33,6 @@ enum class Sources(private val api: ApiService, override val notWorking: Boolean
     DOPEBOX(Dopebox),
     SFLIX(SflixS),
 
-    CRUNCHYROLL(CrunchyRoll),
     ANIMEFLICK(AnimeFlick),
 
     PUTLOCKERTV(PutlockerTV, true),
@@ -63,12 +60,11 @@ enum class Sources(private val api: ApiService, override val notWorking: Boolean
                 DOPEBOX,
                 SFLIX,
                 WCOSTREAM,
-                GOGOANIME_VC,
+                //GOGOANIME_VC,
                 ANIMEFLICK,
                 ANIMEKISA_SUBBED,
                 //HDM,
                 WCOSTREAMCC,
-                CRUNCHYROLL
             )
     }
 }

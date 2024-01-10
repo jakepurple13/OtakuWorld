@@ -11,9 +11,12 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.models.ExternalApiServicesCatalog
+import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
+import com.programmersbox.uiviews.utils.SettingsHandling
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -21,9 +24,10 @@ class ExtensionListViewModel(
     sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
     otakuWorldCatalog: OtakuWorldCatalog,
+    settingsHandling: SettingsHandling,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<SourceInformation>()
-    val remoteSources = mutableStateMapOf<String, RemoteViewState>()
+    val remoteSources = mutableStateMapOf<String, RemoteState>()
 
     val installed by derivedStateOf {
         installedSources
@@ -32,7 +36,11 @@ class ExtensionListViewModel(
     }
 
     val remoteSourcesVersions by derivedStateOf {
-        remoteSources.values.flatMap { it.sources }
+        remoteSources.values.filterIsInstance<RemoteViewState>().flatMap { it.sources }
+    }
+
+    val hasCustomBridge by derivedStateOf {
+        installedSources.any { it.catalog is ExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
     init {
@@ -42,17 +50,35 @@ class ExtensionListViewModel(
                 installedSources.addAll(it)
             }
             .onEach { sources ->
-                remoteSources.clear()
                 remoteSources["${otakuWorldCatalog.name}World"] = RemoteViewState(otakuWorldCatalog.getRemoteSources())
-                remoteSources.putAll(
-                    sources.asSequence()
-                        .map { it.catalog }
-                        .filterIsInstance<ExternalApiServicesCatalog>()
-                        .filter { it.hasRemoteSources }
-                        .distinct()
-                        .toList()
-                        .associate { it.name to RemoteViewState(it.getRemoteSources()) }
-                )
+                sources.asSequence()
+                    .map { it.catalog }
+                    .filterIsInstance<ExternalApiServicesCatalog>()
+                    .filter { it.hasRemoteSources }
+                    .distinct()
+                    .toList()
+                    .forEach { c ->
+                        remoteSources[c.name] = runCatching { c.getRemoteSources() }
+                            .fold(
+                                onSuccess = { RemoteViewState(it) },
+                                onFailure = { RemoteErrorState() }
+                            )
+                    }
+            }
+            .combine(settingsHandling.customUrls) { sources, urls ->
+                sources.asSequence()
+                    .map { it.catalog }
+                    .filterIsInstance<ExternalCustomApiServicesCatalog>()
+                    .filter { it.hasRemoteSources }
+                    .distinct()
+                    .toList()
+                    .forEach { c ->
+                        remoteSources[c.name] = runCatching { c.getRemoteSources(urls) }
+                            .fold(
+                                onSuccess = { RemoteViewState(it) },
+                                onFailure = { RemoteErrorState() }
+                            )
+                    }
             }
             .launchIn(viewModelScope)
     }
@@ -63,13 +89,17 @@ class ExtensionListViewModel(
 }
 
 class InstalledViewState(
-    val sourceInformation: List<SourceInformation>
+    val sourceInformation: List<SourceInformation>,
 ) {
     var showItems by mutableStateOf(false)
 }
 
+sealed class RemoteState
+
 class RemoteViewState(
-    val sources: List<RemoteSources>
-) {
+    val sources: List<RemoteSources>,
+) : RemoteState() {
     var showItems by mutableStateOf(false)
 }
+
+class RemoteErrorState : RemoteState()

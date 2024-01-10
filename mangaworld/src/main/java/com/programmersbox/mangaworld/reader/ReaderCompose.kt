@@ -3,6 +3,7 @@
 
 package com.programmersbox.mangaworld.reader
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
 import android.widget.Toast
@@ -63,13 +64,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.GridOn
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -81,8 +82,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -100,14 +99,15 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -149,6 +149,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.ChapterHolder
@@ -157,20 +158,22 @@ import com.programmersbox.mangaworld.PAGE_PADDING
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.listOrPager
 import com.programmersbox.mangaworld.pagePadding
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.LifecycleHandle
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
+import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.HazeScaffold
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.dataStore
 import com.programmersbox.uiviews.utils.updatePref
 import com.skydoves.landscapist.ImageOptions
@@ -182,12 +185,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.koin.compose.koinInject
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
@@ -197,31 +202,17 @@ fun ReadView(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     ch: ChapterHolder = koinInject(),
+    dao: ItemDao = LocalItemDao.current,
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
             handle = createSavedStateHandle(),
-            context = context,
             genericInfo = genericInfo,
-            chapterHolder = ch
+            chapterHolder = ch,
+            dao = dao
         )
     },
 ) {
-    LifecycleHandle(
-        onStop = { BaseMainActivity.showNavBar = true },
-        onDestroy = { BaseMainActivity.showNavBar = true },
-        onCreate = { BaseMainActivity.showNavBar = false },
-        onStart = { BaseMainActivity.showNavBar = false },
-        onResume = { BaseMainActivity.showNavBar = false }
-    )
-
-    DisposableEffect(LocalContext.current) {
-        val batteryInfo = context.battery {
-            readVm.batteryPercent = it.percent
-            readVm.batteryInformation.batteryLevel.tryEmit(it.percent)
-            readVm.batteryInformation.batteryInfo.tryEmit(it)
-        }
-        onDispose { context.unregisterReceiver(batteryInfo) }
-    }
+    HideSystemBarsWhileOnScreen()
 
     val scope = rememberCoroutineScope()
     val pullRefreshState = rememberPullRefreshState(refreshing = readVm.isLoadingPages, onRefresh = readVm::refresh)
@@ -278,7 +269,7 @@ fun ReadView(
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                         value = listOrPager,
                         updateValue = { scope.launch { activity.updatePref(LIST_OR_PAGER, it) } },
-                        settingIcon = { Icon(if (listOrPager) Icons.Default.List else Icons.Default.Pages, null) }
+                        settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
                     )
                 }
             },
@@ -292,8 +283,16 @@ fun ReadView(
         activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
-    val listShowItems = (listState.isScrolledToTheEnd() || listState.isScrolledToTheBeginning()) && listOrPager
-    val pagerShowItems = (pagerState.currentPage == 0 || pagerState.currentPage >= pages.size) && !listOrPager
+    val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && listOrPager } }
+    val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && !listOrPager } }
+
+    val listIndex by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0 } }
+    LaunchedEffect(listIndex, pagerState.currentPage, readVm.showInfo) {
+        if (readVm.firstScroll && (listIndex > 0 || pagerState.currentPage > 0)) {
+            readVm.showInfo = false
+            readVm.firstScroll = false
+        }
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { listState.scrollToItem(it) }
@@ -303,7 +302,7 @@ fun ReadView(
         snapshotFlow { listState.firstVisibleItemIndex }.collect { pagerState.scrollToPage(it) }
     }
 
-    val showItems = readVm.showInfo || listShowItems || pagerShowItems
+    val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -344,7 +343,7 @@ fun ReadView(
         },
         gesturesEnabled = readVm.list.size > 1
     ) {
-        Scaffold(
+        HazeScaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 AnimatedVisibility(
@@ -356,7 +355,6 @@ fun ReadView(
                         scrollBehavior = scrollBehavior,
                         pages = pages,
                         currentPage = currentPage,
-                        vm = readVm
                     )
                 }
             },
@@ -373,17 +371,31 @@ fun ReadView(
                         vm = readVm
                     )
                 }
-            }
-        ) { paddingValues ->
+            },
+            blurTopBar = true,
+            blurBottomBar = true
+        ) { p ->
             Box(
-                modifier = Modifier
-                    .padding(paddingValues.animate())
-                    .pullRefresh(pullRefreshState)
+                modifier = Modifier.pullRefresh(pullRefreshState)
             ) {
                 val spacing = LocalContext.current.dpToPx(paddingPage).dp
                 Crossfade(targetState = listOrPager, label = "") {
-                    if (it) ListView(listState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
-                    else PagerView(pagerState, pages, readVm, spacing) { readVm.showInfo = !readVm.showInfo }
+                    if (it) {
+                        ListView(
+                            listState = listState,
+                            pages = pages,
+                            readVm = readVm,
+                            itemSpacing = spacing,
+                            paddingValues = PaddingValues(bottom = p.calculateBottomPadding())
+                        ) { readVm.showInfo = !readVm.showInfo }
+                    } else {
+                        PagerView(
+                            pagerState = pagerState,
+                            pages = pages,
+                            vm = readVm,
+                            itemSpacing = spacing,
+                        ) { readVm.showInfo = !readVm.showInfo }
+                    }
                 }
 
                 PullRefreshIndicator(
@@ -531,7 +543,7 @@ fun SheetView(
                 ) {
                     KamelImage(
                         resource = asyncPainterResource(it),
-                        onLoading = { CircularProgressIndicator(progress = it) },
+                        onLoading = { CircularProgressIndicator(progress = { it }) },
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -576,12 +588,15 @@ fun ListView(
     pages: List<String>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
+    paddingValues: PaddingValues,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
+        contentPadding = paddingValues,
     ) { reader(pages, readVm, onClick) }
 }
 
@@ -592,11 +607,12 @@ fun PagerView(
     pages: List<String>,
     vm: ReadViewModel,
     itemSpacing: Dp,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     VerticalPager(
         state = pagerState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
         beyondBoundsPageCount = 1,
         key = { it }
@@ -607,6 +623,7 @@ fun PagerView(
             LastPageReached(
                 isLoading = vm.isLoadingPages,
                 currentChapter = vm.currentChapter,
+                lastChapter = vm.list.lastIndex,
                 chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
                 nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
                 previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
@@ -620,6 +637,7 @@ fun PagerView(
 private fun LastPageReached(
     isLoading: Boolean,
     currentChapter: Int,
+    lastChapter: Int,
     chapterName: String,
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
@@ -632,6 +650,7 @@ private fun LastPageReached(
         previousChapter = previousChapter,
         isLoading = isLoading,
         currentChapter = currentChapter,
+        lastChapter = lastChapter,
         modifier = modifier
     ) {
         Box(Modifier.fillMaxSize()) {
@@ -791,6 +810,7 @@ fun ChangeChapterSwipe(
     nextChapter: () -> Unit,
     previousChapter: () -> Unit,
     currentChapter: Int,
+    lastChapter: Int,
     isLoading: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
@@ -801,38 +821,35 @@ fun ChangeChapterSwipe(
             .heightIn(min = 100.dp)
             .wrapContentHeight()
     ) {
-        val dismissState = rememberDismissState(
+        val dismissState = rememberSwipeToDismissState(
             confirmValueChange = {
                 when (it) {
-                    DismissValue.DismissedToEnd -> nextChapter()
-                    DismissValue.DismissedToStart -> previousChapter()
+                    SwipeToDismissValue.StartToEnd -> nextChapter()
+                    SwipeToDismissValue.EndToStart -> previousChapter()
                     else -> Unit
                 }
                 false
             }
         )
 
-        SwipeToDismiss(
+        SwipeToDismissBox(
             state = dismissState,
-            directions = if (isLoading)
-                emptySet()
-            else
-                setOfNotNull(
-                    if (currentChapter <= 0) null else DismissDirection.EndToStart,
-                    DismissDirection.StartToEnd
-                ),
-            background = {
-                val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-                val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+            enableDismissFromStartToEnd = !isLoading && currentChapter < lastChapter,
+            enableDismissFromEndToStart = !isLoading && currentChapter > 0,
+            backgroundContent = {
+                val direction = dismissState.dismissDirection
+                val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
                 val alignment = when (direction) {
-                    DismissDirection.StartToEnd -> Alignment.CenterStart
-                    DismissDirection.EndToStart -> Alignment.CenterEnd
+                    SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                    SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                    else -> Alignment.Center
                 }
 
                 val icon = when (direction) {
-                    DismissDirection.StartToEnd -> Icons.Default.FastRewind
-                    DismissDirection.EndToStart -> Icons.Default.FastForward
+                    SwipeToDismissValue.StartToEnd -> Icons.Default.FastRewind
+                    SwipeToDismissValue.EndToStart -> Icons.Default.FastForward
+                    else -> Icons.Default.Pages
                 }
 
                 Box(
@@ -849,7 +866,7 @@ fun ChangeChapterSwipe(
                     )
                 }
             },
-            dismissContent = {
+            content = {
                 OutlinedCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -866,6 +883,7 @@ private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick
         LastPageReached(
             isLoading = vm.isLoadingPages,
             currentChapter = vm.currentChapter,
+            lastChapter = vm.list.lastIndex,
             chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
             nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
             previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
@@ -919,7 +937,7 @@ private fun ZoomableImage(
             .zoomable(
                 rememberZoomState(),
                 enableOneFingerZoom = false,
-                onTap = onClick
+                onTap = { onClick() }
             )
     ) {
         val scope = rememberCoroutineScope()
@@ -959,7 +977,10 @@ private fun ZoomableImage(
                             headers.forEach { (t, u) -> header(t, u) }
                         }
                     },
-                    onLoading = { CircularProgressIndicator(progress = animateFloatAsState(targetValue = it, label = "").value) },
+                    onLoading = {
+                        val progress by animateFloatAsState(targetValue = it, label = "")
+                        CircularProgressIndicator(progress = { progress })
+                    },
                     onFailure = {
                         Text(
                             stringResource(R.string.pressToRefresh),
@@ -977,6 +998,7 @@ private fun ZoomableImage(
                     contentScale = contentScale,
                     modifier = Modifier
                         .fillMaxSize()
+                        .fillMaxWidth()
                         .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
                         .clipToBounds()
                 )
@@ -1001,7 +1023,6 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     pages: List<String>,
     currentPage: Int,
-    vm: ReadViewModel,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
@@ -1009,20 +1030,44 @@ private fun TopBar(
         scrollBehavior = scrollBehavior,
         modifier = modifier,
         navigationIcon = {
+            val context = LocalContext.current
+            var batteryColor by remember { mutableStateOf(Color.White) }
+            var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
+            var batteryPercent by remember { mutableFloatStateOf(0f) }
+            val batteryInformation = remember { BatteryInformation(context) }
+
+            LaunchedEffect(Unit) {
+                batteryInformation.composeSetupFlow(
+                    Color.White
+                ) {
+                    batteryColor = it.first
+                    batteryIcon = it.second
+                }
+                    .launchIn(this)
+            }
+
+            DisposableEffect(LocalContext.current) {
+                val batteryInfo = context.battery {
+                    batteryPercent = it.percent
+                    batteryInformation.batteryLevel.tryEmit(it.percent)
+                    batteryInformation.batteryInfo.tryEmit(it)
+                }
+                onDispose { context.unregisterReceiver(batteryInfo) }
+            }
             Row(
                 modifier = Modifier.padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    vm.batteryIcon.composeIcon,
+                    batteryIcon.composeIcon,
                     contentDescription = null,
                     tint = animateColorAsState(
-                        if (vm.batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                        else vm.batteryColor, label = ""
+                        if (batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
+                        else batteryColor, label = ""
                     ).value
                 )
                 Text(
-                    "${vm.batteryPercent.toInt()}%",
+                    "${batteryPercent.toInt()}%",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -1051,7 +1096,8 @@ private fun TopBar(
                     .padding(4.dp)
                     .align(Alignment.CenterVertically)
             )
-        }
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
     )
 }
 
@@ -1065,7 +1111,8 @@ private fun BottomBar(
 ) {
     BottomAppBar(
         modifier = modifier,
-        windowInsets = WindowInsets(0.dp)
+        windowInsets = WindowInsets(0.dp),
+        containerColor = Color.Transparent
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0
@@ -1270,6 +1317,7 @@ fun LastPagePreview() {
         LastPageReached(
             isLoading = true,
             currentChapter = 3,
+            lastChapter = 4,
             chapterName = "Name".repeat(100),
             nextChapter = {},
             previousChapter = {}

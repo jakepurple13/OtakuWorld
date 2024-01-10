@@ -1,13 +1,14 @@
 package com.programmersbox.uiviews.lists
 
 import android.content.Context
-import androidx.appcompat.content.res.AppCompatResources
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -53,7 +55,7 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -61,16 +63,16 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.MockAppIcon
-import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import java.util.UUID
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ImportListScreen(
-    logo: MainLogo,
     listDao: ListDao = LocalCustomListDao.current,
     context: Context = LocalContext.current,
     vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle(), context) }
@@ -78,6 +80,8 @@ fun ImportListScreen(
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    val logoDrawable = koinInject<AppLogo>().logo
 
     when (val status = vm.importStatus) {
         ImportListStatus.Loading -> {
@@ -87,7 +91,7 @@ fun ImportListScreen(
         }
 
         is ImportListStatus.Error -> {
-            OtakuScaffold(
+            NormalOtakuScaffold(
                 topBar = {
                     InsetSmallTopAppBar(
                         title = { Text(stringResource(R.string.importing_import_list)) },
@@ -116,8 +120,9 @@ fun ImportListScreen(
         }
 
         is ImportListStatus.Success -> {
+            val lists by listDao.getAllLists().collectAsStateWithLifecycle(emptyList())
             var name by remember(status.customList?.item) { mutableStateOf(status.customList?.item?.name.orEmpty()) }
-            OtakuScaffold(
+            NormalOtakuScaffold(
                 topBar = {
                     Column {
                         InsetSmallTopAppBar(
@@ -135,13 +140,16 @@ fun ImportListScreen(
                                 placeholder = { Text(status.customList?.item?.name.orEmpty()) },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                isError = lists.any { it.item.name == name },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                 },
                 bottomBar = {
-                    BottomAppBar {
+                    BottomAppBar(
+                        windowInsets = WindowInsets(0.dp)
+                    ) {
                         OutlinedButton(
                             onClick = {
                                 scope.launch {
@@ -149,11 +157,14 @@ fun ImportListScreen(
                                     navController.popBackStack()
                                 }
                             },
+                            enabled = lists.none { it.item.name == name },
                             modifier = Modifier.fillMaxWidth()
                         ) { Text(stringResource(R.string.import_import_list)) }
                     }
                 },
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                modifier = Modifier
+                    .padding(LocalNavHostPadding.current)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
             ) { padding ->
                 LazyColumn(
                     contentPadding = padding,
@@ -163,7 +174,7 @@ fun ImportListScreen(
                     items(status.customList?.list.orEmpty()) { item ->
                         CustomItem(
                             item = item,
-                            logo = logo,
+                            logoDrawable = logoDrawable,
                             modifier = Modifier.animateItemPlacement()
                         )
                     }
@@ -171,24 +182,20 @@ fun ImportListScreen(
             }
         }
     }
-
-
 }
 
 @Composable
 private fun CustomItem(
     item: CustomListInfo,
-    logo: MainLogo,
-    modifier: Modifier = Modifier
+    logoDrawable: Drawable?,
+    modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     ElevatedCard(
         modifier = modifier
             .height(ComposableUtils.IMAGE_HEIGHT)
             .padding(horizontal = 4.dp)
     ) {
         Row {
-            val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(item.imageUrl)
@@ -225,7 +232,6 @@ private fun ImportScreenPreview() {
         val context: Context = LocalContext.current
         val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, SavedStateHandle(), context) }
         ImportListScreen(
-            logo = MockAppIcon,
             listDao = listDao,
             context = context,
             vm = vm
@@ -246,7 +252,7 @@ private fun ImportItemPreview() {
                 imageUrl = "",
                 source = "MANGA_READ"
             ),
-            logo = MockAppIcon
+            logoDrawable = null
         )
     }
 }

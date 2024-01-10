@@ -1,240 +1,239 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.uiviews.lists
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.HingePolicy
+import androidx.compose.material3.adaptive.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.PaneAdaptedValue
+import androidx.compose.material3.adaptive.PaneScaffoldDirective
+import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldNavigator
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCustomListDao
-import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.OtakuScaffold
-import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.components.ListBottomScreen
-import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import kotlinx.coroutines.launch
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
-    vm: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
+    viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
+    isHorizontal: Boolean = false,
 ) {
-    val navController = LocalNavController.current
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val showListDetail by LocalSettingsHandling.current
+        .showListDetail
+        .collectAsStateWithLifecycle(true)
 
-    val dateTimeFormatter = LocalSystemDateTimeFormat.current
-    val dao = LocalCustomListDao.current
-    val scope = rememberCoroutineScope()
+    val state = rememberListDetailPaneScaffoldNavigator(
+        scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
+    )
 
-    val pickDocumentLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { document -> document?.let { Screen.ImportListScreen.navigate(navController, it) } }
-
-    var showAdd by remember { mutableStateOf(false) }
-
-    if (showAdd) {
-        var name by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showAdd = false },
-            title = { Text(stringResource(R.string.create_new_list)) },
-            text = {
-                TextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(id = R.string.list_name)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            dao.create(name)
-                            showAdd = false
-                        }
-                    },
-                    enabled = name.isNotEmpty()
-                ) { Text(stringResource(id = R.string.confirm)) }
-            },
-            dismissButton = { TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) } }
-        )
-    }
-
-    OtakuScaffold(
-        topBar = {
-            InsetSmallTopAppBar(
-                title = { Text(stringResource(R.string.custom_lists_title)) },
-                navigationIcon = { BackButton() },
-                actions = {
-                    IconButton(
-                        onClick = { pickDocumentLauncher.launch(arrayOf("application/json")) }
-                    ) { Icon(Icons.Default.FileDownload, null) }
-
-                    IconButton(onClick = { showAdd = true }) { Icon(Icons.Default.Add, null) }
-                },
-                scrollBehavior = scrollBehavior
-            )
-        },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-    ) { padding ->
-        LazyColumn(
-            contentPadding = padding,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(vm.customLists) {
-                ElevatedCard(
-                    onClick = { Screen.CustomListItemScreen.navigate(navController, it.item.uuid) },
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                ) {
-                    val time = remember { dateTimeFormatter.format(it.item.time) }
-                    ListItem(
-                        overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
-                        trailingContent = { Text("(${it.list.size})") },
-                        headlineContent = { Text(it.item.name) },
-                        supportingContent = {
-                            Column {
-                                it.list.take(3).forEach { info ->
-                                    Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                            }
-                        }
-                    )
+    val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
+        AnimatedPanes(modifier = Modifier.fillMaxSize()) {
+            AnimatedContent(
+                targetState = viewModel.customItem,
+                label = "",
+                transitionSpec = {
+                    (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
                 }
-                HorizontalDivider(Modifier.padding(top = 4.dp))
+            ) { targetState ->
+                if (targetState != null) {
+                    OtakuCustomListScreen(
+                        customItem = targetState,
+                        writeToFile = viewModel::writeToFile,
+                        isHorizontal = isHorizontal,
+                        deleteAll = viewModel::deleteAll,
+                        rename = viewModel::rename,
+                        listBySource = viewModel.listBySource,
+                        removeItems = viewModel::removeItems,
+                        items = viewModel.items,
+                        searchItems = viewModel.searchItems,
+                        searchQuery = viewModel.searchQuery,
+                        setQuery = viewModel::setQuery,
+                        searchBarActive = viewModel.searchBarActive,
+                        onSearchBarActiveChange = { viewModel.searchBarActive = it },
+                        navigateBack = {
+                            viewModel.customItem = null
+                            state.navigateBack()
+                        },
+                    )
+                    BackHandler {
+                        viewModel.customItem = null
+                        state.navigateBack()
+                    }
+                } else {
+                    NoDetailSelected()
+                }
             }
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ListChoiceScreen(
-    url: String? = null,
-    navigationIcon: @Composable () -> Unit = {
-        val navController = LocalNavController.current
-        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
-    },
-    onClick: (CustomList) -> Unit,
-) {
-    val dao = LocalCustomListDao.current
-    val scope = rememberCoroutineScope()
-    val list by dao.getAllLists().collectAsState(initial = emptyList())
-    ListBottomScreen(
-        title = stringResource(R.string.choose_list_title),
-        list = list,
-        navigationIcon = navigationIcon,
-        onClick = onClick,
-        lazyListContent = {
-            item {
-                var showAdd by remember { mutableStateOf(false) }
-                ElevatedCard(
-                    onClick = { showAdd = !showAdd }
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.create_new_list_option), style = MaterialTheme.typography.titleLarge) },
-                        trailingContent = { Icon(Icons.Default.Add, null) }
-                    )
-                }
-                if (showAdd) {
-                    var name by remember { mutableStateOf("") }
-                    AlertDialog(
-                        onDismissRequest = { showAdd = false },
-                        title = { Text(stringResource(R.string.create_new_list)) },
-                        text = {
-                            TextField(
-                                value = name,
-                                onValueChange = { name = it },
-                                label = { Text(stringResource(id = R.string.list_name)) },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    scope.launch {
-                                        dao.create(name)
-                                        showAdd = false
-                                    }
-                                },
-                                enabled = name.isNotEmpty()
-                            ) { Text(stringResource(id = R.string.confirm)) }
-                        },
-                        dismissButton = { TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) } }
-                    )
-                }
+    ListDetailPaneScaffold(
+        scaffoldState = state.scaffoldState,
+        listPane = {
+            AnimatedPanes(modifier = Modifier.fillMaxSize()) {
+                OtakuListView(
+                    customItem = viewModel.customItem,
+                    customLists = viewModel.customLists,
+                    navigateDetail = {
+                        viewModel.customItem = it
+                        if (showListDetail)
+                            state.navigateTo(ListDetailPaneScaffoldRole.Detail)
+                        else
+                            state.navigateTo(ListDetailPaneScaffoldRole.Extra)
+                    }
+                )
             }
         },
-        itemContent = {
-            ListBottomSheetItemModel(
-                primaryText = it.item.name,
-                trailingText = "(${it.list.size})",
-                icon = it.list.find { l -> l.url == url }?.let { Icons.Default.Check }
-            )
+        detailPane = { if (showListDetail) details() },
+        extraPane = if (!showListDetail) {
+            { details() }
+        } else null
+    )
+}
+
+/*
+ * TODO: Apparently this isn't just me! Woo!
+ *  https://issuetracker.google.com/issues/316376112
+ *  This will be removed when fixed.
+ */
+@ExperimentalMaterial3AdaptiveApi
+@Composable
+fun ThreePaneScaffoldScope.AnimatedPanes(
+    modifier: Modifier,
+    content: (@Composable ThreePaneScaffoldScope.() -> Unit),
+) {
+    AnimatedVisibility(
+        visible = paneAdaptedValue == PaneAdaptedValue.Expanded,
+        modifier = modifier
+        //.animatedPane()
+        //.clipToBounds(paneAdaptedValue)
+        /*.then(
+            if (paneAdaptedValue == PaneAdaptedValue.Expanded) {
+                Modifier.animateBounds(
+                    // TODO Figure out why we need to pass a non-null here to get the bounds
+                    //  animation going on the first navigation event that pass in the spec
+                    //  later on. To resolve this, we default to the paneSpringSpec().
+                    //  Otherwise, the first motion shows a snap instead of a smooth
+                    //  transition.
+                    positionAnimationSpec = positionAnimationSpec
+                        ?: ThreePaneScaffoldDefaults.PaneSpringSpec
+                )
+            } else {
+                Modifier
+            }
+        )*/,
+        enter = enterTransition,
+        exit = exitTransition,
+        label = "AnimatedVisibility: $animationToolingLabel"
+    ) {
+        content()
+    }
+}
+
+@ExperimentalMaterial3AdaptiveApi
+fun calculateStandardPaneScaffoldDirective(
+    windowAdaptiveInfo: WindowAdaptiveInfo,
+    verticalHingePolicy: HingePolicy = HingePolicy.AvoidSeparating,
+): PaneScaffoldDirective {
+    val maxHorizontalPartitions: Int
+    val contentPadding: PaddingValues
+    val verticalSpacerSize: Dp// = 0.dp
+    when (windowAdaptiveInfo.windowSizeClass.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            maxHorizontalPartitions = 1
+            contentPadding = PaddingValues(0.dp)
+            verticalSpacerSize = 0.dp
+        }
+
+        WindowWidthSizeClass.Medium -> {
+            maxHorizontalPartitions = 1
+            contentPadding = PaddingValues(horizontal = 0.dp)
+            verticalSpacerSize = 0.dp
+        }
+
+        else -> {
+            maxHorizontalPartitions = 2
+            contentPadding = PaddingValues(horizontal = 0.dp)
+            verticalSpacerSize = 24.dp
+        }
+    }
+    val maxVerticalPartitions: Int
+    val horizontalSpacerSize: Dp = 0.dp
+
+    // TODO(conradchen): Confirm the table top mode settings
+    if (windowAdaptiveInfo.windowPosture.isTabletop) {
+        maxVerticalPartitions = 2
+        //horizontalSpacerSize = 24.dp
+    } else {
+        maxVerticalPartitions = 1
+        //horizontalSpacerSize = 0.dp
+    }
+
+    val posture = windowAdaptiveInfo.windowPosture
+
+    return PaneScaffoldDirective(
+        maxHorizontalPartitions = maxHorizontalPartitions,
+        contentPadding = contentPadding,
+        verticalPartitionSpacerSize = verticalSpacerSize,
+        horizontalPartitionSpacerSize = horizontalSpacerSize,
+        maxVerticalPartitions = maxVerticalPartitions,
+        excludedBounds = when (verticalHingePolicy) {
+            HingePolicy.AvoidSeparating -> posture.separatingVerticalHingeBounds
+            HingePolicy.AvoidOccluding -> posture.occludingVerticalHingeBounds
+            HingePolicy.AlwaysAvoid -> posture.allVerticalHingeBounds
+            else -> emptyList()
         }
     )
 }
 
-@LightAndDarkPreviews
 @Composable
-private fun ListScreenPreview() {
-    PreviewTheme {
-        OtakuListScreen()
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun ListChoiceScreenPreview() {
-    PreviewTheme {
-        ListChoiceScreen(
-            url = "",
-            onClick = {}
-        )
+private fun NoDetailSelected() {
+    Surface {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.PlaylistPlay,
+                    contentDescription = null,
+                    modifier = Modifier.size(120.dp)
+                )
+                Text("Select a list to view!")
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         
       - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
         env:
@@ -34,7 +34,7 @@ jobs:
           OTAKU_MANAGER_GOOGLE_SERVICES_JSON: ${{ secrets.OTAKU_MANAGER_SERVICES }}
 
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: adopt
           java-version: 17
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/gradle-build-action@v2.7.0
+        uses: gradle/gradle-build-action@v2.11.1
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -62,7 +62,7 @@ jobs:
 
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2.7.0
+        uses: gradle/gradle-build-action@v2.11.1
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -71,7 +71,7 @@ jobs:
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/gradle-build-action@v2.7.0
+        uses: gradle/gradle-build-action@v2.11.1
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -80,14 +80,14 @@ jobs:
 
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2.7.0
+        uses: gradle/gradle-build-action@v2.11.1
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
           arguments: animeworldtv:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign
         with:
@@ -97,7 +97,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: anime_sign
         with:
@@ -107,7 +107,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}    
           
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: novel_sign
         with:
@@ -117,7 +117,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: animetv_sign
         with:
@@ -127,7 +127,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign_no_firebase
         with:
@@ -137,7 +137,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: anime_sign_no_firebase
         with:
@@ -147,7 +147,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: novel_sign_no_firebase
         with:
@@ -157,7 +157,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: animetv_sign_no_firebase
         with:
@@ -167,7 +167,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      #      - uses: r0adkll/sign-android-release@v1
+      #      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
       #        name: Sign app APK
       #        id: otakumanager_sign
       #        with:
@@ -190,22 +190,22 @@ jobs:
           cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
           cp ${{ steps.animetv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed Manga App
           path: mangaworld-release.apk
           
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed Anime App
           path: animeworld-release.apk
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed Novel App
           path: novelworld-release.apk
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed AnimeTV App
           path: animeworldtv-release.apk
@@ -216,22 +216,22 @@ jobs:
       #          path: otakumanager-release.apk
 
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed Manga No Firebase App
           path: mangaworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed Anime No Firebase App
           path: animeworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed Novel No Firebase App
           path: novelworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Signed AnimeTV No Firebase App
           path: animeworldtv-no-firebase-release.apk
@@ -260,36 +260,36 @@ jobs:
     steps:
 
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed Anime App
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed Manga App
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed Novel App
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed AnimeTV App
 
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed Anime No Firebase App
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed Manga No Firebase App
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed Novel No Firebase App
      - name: Download APK from build
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@v4
        with:
          name: Signed AnimeTV No Firebase App
       #     - name: Download APK from build

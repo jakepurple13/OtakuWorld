@@ -1,3 +1,5 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.animeworld.videos
 
 import android.Manifest
@@ -10,6 +12,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,28 +25,29 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberDismissState
-import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +63,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,16 +81,18 @@ import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.Emerald
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.OtakuScaffold
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.components.AnimatedLazyColumn
-import com.programmersbox.uiviews.utils.components.AnimatedLazyListItem
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.PermissionRequest
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -115,13 +120,14 @@ fun ViewVideoScreen() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
 private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
+    val hazeState = remember { HazeState() }
     val context = LocalContext.current
 
     val coilImageLoader = remember {
@@ -146,152 +152,153 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
     itemToDelete?.let { SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = it) }
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    BottomSheetDeleteScaffold(
-        bottomScrollBehavior = scrollBehavior,
-        topBar = {
-            InsetSmallTopAppBar(
-                scrollBehavior = scrollBehavior,
-                navigationIcon = { BackButton() },
-                title = { Text(stringResource(R.string.downloaded_videos)) },
-                actions = {
-                    AndroidView(
-                        factory = { context ->
-                            MediaRouteButton(context).apply {
-                                MainActivity.cast.showIntroductoryOverlay(this)
-                                MainActivity.cast.setMediaRouteMenu(context, this)
+    Box(
+        modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
+    ) {
+        BottomSheetDeleteScaffold(
+            topBar = {
+                InsetSmallTopAppBar(
+                    navigationIcon = { BackButton() },
+                    title = { Text(stringResource(R.string.downloaded_videos)) },
+                    actions = {
+                        AndroidView(
+                            factory = { context ->
+                                MediaRouteButton(context).apply {
+                                    MainActivity.cast.showIntroductoryOverlay(this)
+                                    MainActivity.cast.setMediaRouteMenu(context, this)
+                                }
                             }
+                        )
+                        IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    modifier = Modifier.hazeChild(hazeState)
+                )
+            },
+            containerColor = Color.Transparent,
+            state = state,
+            listOfItems = items,
+            multipleTitle = stringResource(id = R.string.delete),
+            deleteTitle = { it.videoName.orEmpty() },
+            onRemove = {
+                itemToDelete = it
+                showDialog = true
+            },
+            customSingleRemoveDialog = {
+                itemToDelete = it
+                showDialog = true
+                false
+            },
+            onMultipleRemove = { downloadedItems ->
+                downloadedItems.forEach {
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            it.assetFileStringUri?.toUri()?.let { it1 ->
+                                context.contentResolver.delete(
+                                    it1,
+                                    "${MediaStore.Video.Media._ID} = ?",
+                                    arrayOf(it.videoId.toString())
+                                )
+                            }
+                        } else {
+                            File(it.path!!).delete()
                         }
-                    )
-                    IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            )
-        },
-        state = state,
-        listOfItems = items,
-        multipleTitle = stringResource(id = R.string.delete),
-        deleteTitle = { it.videoName.orEmpty() },
-        onRemove = {
-            itemToDelete = it
-            showDialog = true
-        },
-        customSingleRemoveDialog = {
-            itemToDelete = it
-            showDialog = true
-            false
-        },
-        onMultipleRemove = { downloadedItems ->
-            downloadedItems.forEach {
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        it.assetFileStringUri?.toUri()?.let { it1 ->
-                            context.contentResolver.delete(
-                                it1,
-                                "${MediaStore.Video.Media._ID} = ?",
-                                arrayOf(it.videoId.toString())
+                downloadedItems.clear()
+            },
+            itemUi = { item ->
+                ImageFlushListItem(
+                    leadingContent = {
+                        Box {
+                            /*convert millis to appropriate time*/
+                            val runTimeString = remember {
+                                val duration = item.videoDuration
+                                if (duration > TimeUnit.HOURS.toMillis(1)) {
+                                    String.format(
+                                        "%02d:%02d:%02d",
+                                        TimeUnit.MILLISECONDS.toHours(duration),
+                                        TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(
+                                            TimeUnit.MILLISECONDS.toHours(duration)
+                                        ),
+                                        TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                            TimeUnit.MILLISECONDS.toMinutes(duration)
+                                        )
+                                    )
+                                } else {
+                                    String.format(
+                                        "%02d:%02d",
+                                        TimeUnit.MILLISECONDS.toMinutes(duration),
+                                        TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
+                                            TimeUnit.MILLISECONDS.toMinutes(duration)
+                                        )
+                                    )
+                                }
+                            }
+
+                            CoilGradientImage(
+                                model = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(item.assetFileStringUri.orEmpty())
+                                        .lifecycle(LocalLifecycleOwner.current)
+                                        .crossfade(true)
+                                        .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
+                                        .videoFramePercent(.1)
+                                        .build(),
+                                    imageLoader = coilImageLoader
+                                ),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH)
+                            )
+
+                            Text(
+                                runTimeString,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .background(Color(0x99000000))
+                                    .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(4.dp))
                             )
                         }
-                    } else {
-                        File(it.path!!).delete()
+                    },
+                    overlineContent = {
+                        if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path))
+                            Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime())
+                    },
+                    headlineContent = { Text(item.videoName.orEmpty()) },
+                    supportingContent = { Text(item.path.orEmpty()) }
+                )
+            },
+        ) { p, itemList ->
+            if (itemList.isEmpty()) {
+                EmptyState(p)
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = p,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .haze(
+                            hazeState,
+                            backgroundColor = M3MaterialTheme.colorScheme.surface
+                        )
+                ) {
+                    items(
+                        items = itemList,
+                        key = { it.videoId }
+                    ) {
+                        VideoContentView(
+                            item = it,
+                            imageLoader = coilImageLoader,
+                            modifier = Modifier.animateItemPlacement()
+                        )
                     }
-                } catch (e: Exception) {
-                    Toast.makeText(context, "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT).show()
                 }
             }
-            downloadedItems.clear()
-        },
-        itemUi = { item ->
-            ImageFlushListItem(
-                leadingContent = {
-                    Box {
-                        /*convert millis to appropriate time*/
-                        val runTimeString = remember {
-                            val duration = item.videoDuration
-                            if (duration > TimeUnit.HOURS.toMillis(1)) {
-                                String.format(
-                                    "%02d:%02d:%02d",
-                                    TimeUnit.MILLISECONDS.toHours(duration),
-                                    TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(
-                                        TimeUnit.MILLISECONDS.toHours(duration)
-                                    ),
-                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
-                                        TimeUnit.MILLISECONDS.toMinutes(duration)
-                                    )
-                                )
-                            } else {
-                                String.format(
-                                    "%02d:%02d",
-                                    TimeUnit.MILLISECONDS.toMinutes(duration),
-                                    TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(
-                                        TimeUnit.MILLISECONDS.toMinutes(duration)
-                                    )
-                                )
-                            }
-                        }
-
-                        CoilGradientImage(
-                            model = rememberAsyncImagePainter(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(item.assetFileStringUri.orEmpty())
-                                    .lifecycle(LocalLifecycleOwner.current)
-                                    .crossfade(true)
-                                    .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
-                                    .videoFramePercent(.1)
-                                    .build(),
-                                imageLoader = coilImageLoader
-                            ),
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(ComposableUtils.IMAGE_HEIGHT, ComposableUtils.IMAGE_WIDTH)
-                        )
-
-                        Text(
-                            runTimeString,
-                            color = Color.White,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .background(Color(0x99000000))
-                                .border(BorderStroke(1.dp, Color(0x00000000)), shape = RoundedCornerShape(4.dp))
-                        )
-                    }
-                },
-                overlineContent = if (context.getSharedPreferences("videos", Context.MODE_PRIVATE).contains(item.path)) {
-                    { Text(context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(item.path, 0).stringForTime()) }
-                } else null,
-                headlineContent = { Text(item.videoName.orEmpty()) },
-                supportingContent = { Text(item.path.orEmpty()) }
-            )
-        }
-    ) { p, itemList ->
-        OtakuScaffold(
-            modifier = Modifier.padding(p),
-            //bottomBar = { AndroidViewBinding(factory = MiniControllerBinding::inflate) }
-        ) { p1 ->
-            if (items.isEmpty()) {
-                EmptyState(p1)
-            } else {
-                AnimatedLazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = p1,
-                    items = itemList.fastMap { AnimatedLazyListItem(it.videoId.toString(), it) { VideoContentView(it, coilImageLoader) } }
-                )
-            }
-            //val videos by updateAnimatedItemsState(newList = itemList)
-
-            /*LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                contentPadding = p1,
-                state = rememberLazyListState(),
-                modifier = Modifier.padding(4.dp)
-            ) {
-                animatedItems(
-                    videos,
-                    enterTransition = slideInHorizontally(initialOffsetX = { x -> x / 2 }),
-                    exitTransition = slideOutHorizontally()
-                ) { i -> VideoContentView(i) }
-            }*/
         }
     }
 }
@@ -341,7 +348,11 @@ private fun EmptyState(paddingValues: PaddingValues) {
 @ExperimentalAnimationApi
 @ExperimentalMaterialApi
 @Composable
-private fun VideoContentView(item: VideoContent, imageLoader: ImageLoader) {
+private fun VideoContentView(
+    item: VideoContent,
+    imageLoader: ImageLoader,
+    modifier: Modifier = Modifier,
+) {
     var showDialog by remember { mutableStateOf(false) }
 
     SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = item)
@@ -349,9 +360,9 @@ private fun VideoContentView(item: VideoContent, imageLoader: ImageLoader) {
     val navController = LocalNavController.current
     val context = LocalContext.current
 
-    val dismissState = rememberDismissState(
+    val dismissState = rememberSwipeToDismissState(
         confirmValueChange = {
-            if (it == DismissValue.DismissedToEnd) {
+            if (it == SwipeToDismissValue.StartToEnd) {
                 if (MainActivity.cast.isCastActive()) {
                     MainActivity.cast.loadMedia(
                         File(item.path!!),
@@ -367,33 +378,35 @@ private fun VideoContentView(item: VideoContent, imageLoader: ImageLoader) {
                         ""
                     )
                 }
-            } else if (it == DismissValue.DismissedToStart) {
+            } else if (it == SwipeToDismissValue.EndToStart) {
                 showDialog = true
             }
             false
         }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         state = dismissState,
-        background = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToEnd -> Color.Green
-                    DismissValue.DismissedToStart -> Color.Red
+                    SwipeToDismissValue.Settled -> Color.Transparent
+                    SwipeToDismissValue.StartToEnd -> Emerald
+                    SwipeToDismissValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                DismissDirection.StartToEnd -> Alignment.CenterStart
-                DismissDirection.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
             }
             val icon = when (direction) {
-                DismissDirection.StartToEnd -> Icons.Default.PlayArrow
-                DismissDirection.EndToStart -> Icons.Default.Delete
+                SwipeToDismissValue.StartToEnd -> Icons.Default.PlayArrow
+                SwipeToDismissValue.EndToStart -> Icons.Default.Delete
+                else -> Icons.Default.Pages
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -409,7 +422,7 @@ private fun VideoContentView(item: VideoContent, imageLoader: ImageLoader) {
                 )
             }
         },
-        dismissContent = {
+        content = {
             ElevatedCard(
                 modifier = Modifier
                     .fillMaxSize()
@@ -526,6 +539,7 @@ private fun VideoContentView(item: VideoContent, imageLoader: ImageLoader) {
                     }
                 )
             }
-        }
+        },
+        modifier = modifier
     )
 }

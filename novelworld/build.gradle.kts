@@ -32,7 +32,6 @@ dependencies {
 
     implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
-    implementation(libs.googlePlayAds)
 
     implementation(projects.uiViews)
     implementation(projects.models)

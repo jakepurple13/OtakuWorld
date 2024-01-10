@@ -5,14 +5,24 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
@@ -112,13 +122,14 @@ fun Modifier.scaleRotateOffset(
     }
     val animScale = animateFloatAsState(scale.value, label = "").value
     val (x, y) = animateOffsetAsState(offset.value, label = "").value
-    return graphicsLayer(
-        scaleX = animScale,
-        scaleY = animScale,
-        rotationZ = animateFloatAsState(rotation.value, label = "").value,
-        translationX = x,
-        translationY = y
-    )
+    return this
+        .graphicsLayer(
+            scaleX = animScale,
+            scaleY = animScale,
+            rotationZ = animateFloatAsState(rotation.value, label = "").value,
+            translationX = x,
+            translationY = y
+        )
         // add transformable to listen to multitouch transformation events after offset
         .transformable(state = state)
 }
@@ -129,8 +140,8 @@ fun Modifier.scaleRotateOffsetReset(
     canRotate: Boolean = true,
     canOffset: Boolean = true,
     onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {}
-): Modifier = composed {
+    onLongClick: () -> Unit = {},
+): Modifier = this.composed {
     var scale by remember { mutableFloatStateOf(1f) }
     var rotation by remember { mutableFloatStateOf(0f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -203,7 +214,7 @@ fun Modifier.coloredShadow(
  */
 private enum class ButtonState { Pressed, Idle }
 
-fun Modifier.bounceClick(scaleAmount: Float = .7f) = composed {
+fun Modifier.bounceClick(scaleAmount: Float = .7f) = this.composed {
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
     val scale by animateFloatAsState(if (buttonState == ButtonState.Pressed) scaleAmount else 1f, label = "")
 
@@ -212,11 +223,6 @@ fun Modifier.bounceClick(scaleAmount: Float = .7f) = composed {
             scaleX = scale
             scaleY = scale
         }
-        .clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClick = { }
-        )
         .pointerInput(buttonState) {
             awaitPointerEventScope {
                 buttonState = if (buttonState == ButtonState.Pressed) {

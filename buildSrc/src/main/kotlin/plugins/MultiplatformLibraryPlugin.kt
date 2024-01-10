@@ -1,20 +1,11 @@
 package plugins
 
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getting
-import org.gradle.kotlin.dsl.provideDelegate
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
-import org.jetbrains.kotlin.gradle.plugin.sources.android.androidSourceSetInfo
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import javax.inject.Inject
-import kotlin.reflect.KClass
 
 class MultiplatformLibraryPlugin : Plugin<Project> {
 
@@ -43,12 +34,11 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
         }
     }
 
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
     ) {
-        targetHierarchy.default()
-        android {
+        applyDefaultHierarchyTemplate()
+        androidTarget {
             compilations.all {
                 kotlinOptions { jvmTarget = "1.8" }
             }

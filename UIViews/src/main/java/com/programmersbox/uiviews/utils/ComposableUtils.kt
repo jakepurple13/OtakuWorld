@@ -5,24 +5,69 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.ActivityResult
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
@@ -32,11 +77,20 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.app.ActivityOptionsCompat
+import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.settings.SourceChooserScreen
+import com.programmersbox.uiviews.settings.TranslationScreen
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import kotlin.properties.Delegates
 
 fun Int.toComposeColor() = Color(this)
@@ -52,7 +106,7 @@ fun <T : Any> rememberMutableStateListOf(vararg elements: T): SnapshotStateList<
 class CoordinatorModel(
     val height: Dp,
     val show: Boolean = true,
-    val content: @Composable BoxScope.(Float, CoordinatorModel) -> Unit
+    val content: @Composable BoxScope.(Float, CoordinatorModel) -> Unit,
 ) {
     var heightPx by Delegates.notNull<Float>()
     val offsetHeightPx = mutableFloatStateOf(0f)
@@ -63,7 +117,7 @@ class CoordinatorModel(
     }
 
     @Composable
-    fun Content(scope: BoxScope) = scope.content(offsetHeightPx.value, this)
+    fun Content(scope: BoxScope) = scope.content(offsetHeightPx.floatValue, this)
 }
 
 fun Modifier.coordinatorOffset(x: Int = 0, y: Int = 0) = offset { IntOffset(x = x, y = y) }
@@ -73,7 +127,7 @@ fun Coordinator(
     topBar: CoordinatorModel? = null,
     bottomBar: CoordinatorModel? = null,
     vararg otherCoords: CoordinatorModel,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) = Coordinator(topBar, bottomBar, otherCoords.toList(), content)
 
 @Composable
@@ -81,7 +135,7 @@ fun Coordinator(
     topBar: CoordinatorModel? = null,
     bottomBar: CoordinatorModel? = null,
     otherCoords: List<CoordinatorModel>,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     topBar?.Setup()
     bottomBar?.Setup()
@@ -93,19 +147,19 @@ fun Coordinator(
                 val delta = available.y
 
                 topBar?.let {
-                    val topBarOffset = it.offsetHeightPx.value + delta
-                    it.offsetHeightPx.value = topBarOffset.coerceIn(-it.heightPx, 0f)
+                    val topBarOffset = it.offsetHeightPx.floatValue + delta
+                    it.offsetHeightPx.floatValue = topBarOffset.coerceIn(-it.heightPx, 0f)
                 }
 
                 bottomBar?.let {
-                    val bottomBarOffset = it.offsetHeightPx.value + delta
-                    it.offsetHeightPx.value = bottomBarOffset.coerceIn(-it.heightPx, 0f)
+                    val bottomBarOffset = it.offsetHeightPx.floatValue + delta
+                    it.offsetHeightPx.floatValue = bottomBarOffset.coerceIn(-it.heightPx, 0f)
                 }
 
                 otherCoords.fastForEach { c ->
                     c.let {
-                        val offset = it.offsetHeightPx.value + delta
-                        it.offsetHeightPx.value = offset.coerceIn(-it.heightPx, 0f)
+                        val offset = it.offsetHeightPx.floatValue + delta
+                        it.offsetHeightPx.floatValue = offset.coerceIn(-it.heightPx, 0f)
                     }
                 }
 
@@ -138,6 +192,7 @@ val currentColorScheme: ColorScheme
                 primary = Color(0xff90CAF9),
                 secondary = Color(0xff90CAF9)
             )
+
             else -> lightColorScheme(
                 primary = Color(0xff2196F3),
                 secondary = Color(0xff90CAF9)
@@ -164,7 +219,7 @@ class CustomAdaptive(private val minSize: Dp) : GridCells {
 
     override fun Density.calculateCrossAxisCellSizes(
         availableSize: Int,
-        spacing: Int
+        spacing: Int,
     ): List<Int> {
         val count = maxOf((availableSize + spacing) / (minSize.roundToPx() + spacing), 1) + 1
         return calculateCellsCrossAxisSizeImpl(availableSize, count, spacing)
@@ -182,7 +237,7 @@ class CustomAdaptive(private val minSize: Dp) : GridCells {
 private fun calculateCellsCrossAxisSizeImpl(
     gridSize: Int,
     slotCount: Int,
-    spacing: Int
+    spacing: Int,
 ): List<Int> {
     val gridSizeWithoutSpacing = gridSize - spacing * (slotCount - 1)
     val slotSize = gridSizeWithoutSpacing / slotCount
@@ -245,7 +300,7 @@ fun <T : Any> broadcastReceiverNullable(defaultValue: T?, intentFilter: IntentFi
 @Composable
 fun BackButton() {
     val navController = LocalNavController.current
-    IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) }
+    IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -257,7 +312,7 @@ fun InsetSmallTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
         title = title,
@@ -279,7 +334,7 @@ fun InsetCenterAlignedTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier,
@@ -301,7 +356,7 @@ fun InsetMediumTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     MediumTopAppBar(
         modifier = modifier,
@@ -323,7 +378,7 @@ fun InsetLargeTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     LargeTopAppBar(
         modifier = modifier,
@@ -336,38 +391,10 @@ fun InsetLargeTopAppBar(
     )
 }
 
-@ExperimentalMaterial3Api
-@Composable
-fun OtakuScaffold(
-    modifier: Modifier = Modifier,
-    topBar: @Composable () -> Unit = {},
-    bottomBar: @Composable () -> Unit = {},
-    snackbarHost: @Composable () -> Unit = {},
-    contentWindowInsets: WindowInsets = WindowInsets(0.dp),
-    floatingActionButton: @Composable () -> Unit = {},
-    floatingActionButtonPosition: FabPosition = FabPosition.End,
-    containerColor: Color = MaterialTheme.colorScheme.background,
-    contentColor: Color = contentColorFor(containerColor),
-    content: @Composable (PaddingValues) -> Unit
-) {
-    Scaffold(
-        modifier,
-        topBar,
-        bottomBar,
-        snackbarHost,
-        floatingActionButton,
-        floatingActionButtonPosition,
-        containerColor,
-        contentColor,
-        contentWindowInsets,
-        content
-    )
-}
-
 @Composable
 fun LoadingDialog(
     showLoadingDialog: Boolean,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
 ) {
     if (showLoadingDialog) {
         Dialog(
@@ -415,3 +442,96 @@ fun LazyListState.isScrollingUp(): Boolean {
         }
     }.value
 }
+
+fun ManagedActivityResultLauncher<Intent, ActivityResult>.launchCatching(
+    intent: Intent,
+    options: ActivityOptionsCompat? = null,
+) = runCatching {
+    launch(
+        input = intent,
+        options = options
+    )
+}
+
+@Composable
+fun HideSystemBarsWhileOnScreen() {
+    val changingSettingsRepository: ChangingSettingsRepository = koinInject()
+
+    LifecycleHandle(
+        onStop = { changingSettingsRepository.showNavBar.tryEmit(true) },
+        onDestroy = { changingSettingsRepository.showNavBar.tryEmit(true) },
+        onCreate = { changingSettingsRepository.showNavBar.tryEmit(false) },
+        onStart = { changingSettingsRepository.showNavBar.tryEmit(false) },
+        onResume = { changingSettingsRepository.showNavBar.tryEmit(false) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun showSourceChooser(): MutableState<Boolean> {
+    val showSourceChooser = remember { mutableStateOf(false) }
+    val state = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    if (showSourceChooser.value) {
+        ModalBottomSheet(
+            onDismissRequest = { showSourceChooser.value = false },
+            sheetState = state
+        ) {
+            SourceChooserScreen(
+                onChosen = {
+                    scope.launch { state.hide() }
+                        .invokeOnCompletion { showSourceChooser.value = false }
+                }
+            )
+        }
+    }
+
+    return showSourceChooser
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun showTranslationScreen(): MutableState<Boolean> {
+    val showTranslationScreen = remember { mutableStateOf(false) }
+
+    if (showTranslationScreen.value) {
+        ModalBottomSheet(
+            onDismissRequest = { showTranslationScreen.value = false }
+        ) {
+            TranslationScreen()
+        }
+    }
+
+    return showTranslationScreen
+}
+
+@Composable
+fun BoxWithConstraintsScope.bounds(paddingValues: PaddingValues): Array<Rect> {
+    val topBarBounds = with(LocalDensity.current) {
+        Rect(
+            Offset(0f, 0f),
+            Offset(maxWidth.toPx(), paddingValues.calculateTopPadding().toPx())
+        )
+    }
+    val bottomBarBounds = with(LocalDensity.current) {
+        val bottomPaddingPx = paddingValues.calculateBottomPadding().toPx()
+        Rect(
+            Offset(0f, maxHeight.toPx() - bottomPaddingPx),
+            Offset(maxWidth.toPx(), maxHeight.toPx())
+        )
+    }
+    return arrayOf(topBarBounds, bottomBarBounds)
+}
+
+@Composable
+fun BoxWithConstraintsScope.topBounds(paddingValues: PaddingValues): Rect {
+    return with(LocalDensity.current) {
+        Rect(
+            Offset(0f, 0f),
+            Offset(maxWidth.toPx(), paddingValues.calculateTopPadding().toPx())
+        )
+    }
+}
+
+val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }

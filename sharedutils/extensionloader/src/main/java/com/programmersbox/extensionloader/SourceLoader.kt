@@ -10,6 +10,7 @@ import android.os.Build
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
+import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
 import kotlinx.coroutines.runBlocking
 
@@ -38,6 +39,11 @@ class SourceLoader(
                     packageName = p.packageName,
                 )
             )
+
+            is ExternalCustomApiServicesCatalog -> {
+                runBlocking { t.initialize(application) }
+                t.getSources().map { it.copy(catalog = t) }
+            }
 
             is ExternalApiServicesCatalog -> {
                 runBlocking { t.initialize(application) }

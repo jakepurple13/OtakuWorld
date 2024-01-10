@@ -102,6 +102,20 @@ interface ExternalApiServicesCatalog : ApiServicesCatalog {
     fun shouldReload(packageName: String, packageInfo: PackageInfo): Boolean = false
 }
 
+interface ExternalCustomApiServicesCatalog : ApiServicesCatalog {
+
+    suspend fun initialize(app: Application)
+
+    fun getSources(): List<SourceInformation>
+    override fun createSources(): List<ApiService> = getSources().map { it.apiService }
+
+    val hasRemoteSources: Boolean
+
+    fun shouldReload(packageName: String, packageInfo: PackageInfo): Boolean = false
+
+    suspend fun getRemoteSources(customUrls: List<String>): List<RemoteSources> = emptyList()
+}
+
 data class RemoteSources(
     val name: String,
     val packageName: String,

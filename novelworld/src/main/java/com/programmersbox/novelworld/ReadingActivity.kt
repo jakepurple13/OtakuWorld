@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,7 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
@@ -92,9 +93,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
 import com.google.android.material.textview.MaterialTextView
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -105,13 +103,12 @@ import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -158,8 +155,6 @@ class ReadViewModel(
             ) { launchSingleTop = true }
         }
     }
-
-    val ad by lazy { AdRequest.Builder().build() }
 
     private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
 
@@ -239,13 +234,7 @@ fun NovelReader(
     genericInfo: GenericInfo = LocalGenericInfo.current,
     readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
 ) {
-    LifecycleHandle(
-        onStop = { BaseMainActivity.showNavBar = true },
-        onDestroy = { BaseMainActivity.showNavBar = true },
-        onCreate = { BaseMainActivity.showNavBar = false },
-        onStart = { BaseMainActivity.showNavBar = false },
-        onResume = { BaseMainActivity.showNavBar = false }
-    )
+    HideSystemBarsWhileOnScreen()
 
     val context = LocalContext.current
 
@@ -335,22 +324,6 @@ fun NovelReader(
                             actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
                             scrollBehavior = scrollBehavior
                         )
-                    },
-                    bottomBar = {
-                        if (!BuildConfig.DEBUG) {
-                            AndroidView(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 4.dp),
-                                factory = {
-                                    AdView(it).apply {
-                                        setAdSize(AdSize.BANNER)
-                                        adUnitId = context.getString(R.string.ad_unit_id)
-                                        loadAd(readVm.ad)
-                                    }
-                                }
-                            )
-                        }
                     }
                 ) { p ->
                     if (drawerState.isOpen) {
@@ -396,7 +369,7 @@ fun NovelReader(
                                     ListItem(
                                         headlineContent = { Text(c.name) },
                                         leadingContent = if (readVm.currentChapter == i) {
-                                            { Icon(Icons.Default.ArrowRight, null) }
+                                            { Icon(Icons.AutoMirrored.Filled.ArrowRight, null) }
                                         } else null,
                                         modifier = Modifier.clickable { showChangeChapter = true }
                                     )
@@ -408,7 +381,6 @@ fun NovelReader(
             }
         }
     ) {
-
         Scaffold(
             modifier = Modifier.nestedScroll(contentScrollBehavior.nestedScrollConnection),
             topBar = {
@@ -463,19 +435,6 @@ fun NovelReader(
                                 .align(Alignment.CenterHorizontally)
                         )
                     }
-
-                    if (!BuildConfig.DEBUG) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxWidth(),
-                            factory = {
-                                AdView(it).apply {
-                                    setAdSize(AdSize.BANNER)
-                                    adUnitId = context.getString(R.string.ad_unit_id)
-                                    loadAd(readVm.ad)
-                                }
-                            }
-                        )
-                    }
                 }
 
                 PullRefreshIndicator(
@@ -507,6 +466,7 @@ fun TopBar(
     ) {
         CenterAlignedTopAppBar(
             scrollBehavior = contentScrollBehavior,
+            windowInsets = WindowInsets(0.dp),
             modifier = modifier,
             navigationIcon = {
                 Row(
@@ -585,6 +545,7 @@ fun BottomBar(
     ) {
         androidx.compose.material3.BottomAppBar(
             modifier = modifier,
+            windowInsets = WindowInsets(0.dp),
         ) {
 
             val prevShown = readVm.currentChapter < readVm.list.lastIndex

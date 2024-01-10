@@ -16,7 +16,8 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.ktx.toObjects
+import com.google.firebase.firestore.PersistentCacheSettings
+import com.google.firebase.firestore.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import kotlinx.coroutines.channels.awaitClose
@@ -30,7 +31,7 @@ object FirebaseAuthentication : KoinComponent {
 
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    private val logo: MainLogo by inject()
+    private val logo: AppLogo by inject()
     private val style: FirebaseUIStyle by inject()
 
     fun signIn(activity: Activity) {
@@ -100,7 +101,7 @@ object FirebaseDb {
     @SuppressLint("StaticFieldLeak")
     private val db = FirebaseFirestore.getInstance().apply {
         firestoreSettings = FirebaseFirestoreSettings.Builder()
-            .setPersistenceEnabled(true)
+            .setLocalCacheSettings(PersistentCacheSettings.newBuilder().build())
             /*.setHost("10.0.2.2:8080")
             .setSslEnabled(false)
             .setPersistenceEnabled(false)*/
@@ -111,8 +112,12 @@ object FirebaseDb {
 
     private fun <TResult> Task<TResult>.await(): TResult = Tasks.await(this)
 
-    private val showDoc2 get() = FirebaseAuthentication.currentUser?.let { db.collection(COLLECTION_ID).document(DOCUMENT_ID).collection(it.uid) }
-    private val episodeDoc2 get() = FirebaseAuthentication.currentUser?.let { db.collection(COLLECTION_ID).document(CHAPTERS_ID).collection(it.uid) }
+    private val showDoc2 get() = FirebaseAuthentication.currentUser?.let {
+        runCatching { db.collection(COLLECTION_ID).document(DOCUMENT_ID).collection(it.uid) }.getOrNull()
+    }
+    private val episodeDoc2 get() = FirebaseAuthentication.currentUser?.let {
+        runCatching { db.collection(COLLECTION_ID).document(CHAPTERS_ID).collection(it.uid) }.getOrNull()
+    }
 
     private data class FirebaseAllShows(val first: String = DOCUMENT_ID, val second: List<FirebaseDbModel> = emptyList())
 

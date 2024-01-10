@@ -3,6 +3,7 @@ package com.programmersbox.uiviews.utils.components
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SearchBar
@@ -43,7 +44,7 @@ fun DynamicSearchBar(
             onSearch,
             active,
             onActiveChange,
-            modifier,
+            modifier.windowInsetsPadding(windowInsets),
             enabled,
             placeholder,
             leadingIcon,

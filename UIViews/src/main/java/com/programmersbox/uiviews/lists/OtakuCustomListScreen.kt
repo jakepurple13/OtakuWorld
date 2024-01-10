@@ -1,40 +1,54 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.uiviews.lists
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,59 +56,63 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberDismissState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.Alizarin
 import com.programmersbox.uiviews.utils.Cached
+import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.CustomBannerBox
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.MockAppIcon
+import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
-import com.programmersbox.uiviews.utils.components.GradientImage
-import com.programmersbox.uiviews.utils.components.ImageFlushListItem
+import com.programmersbox.uiviews.utils.components.ListBottomScreen
+import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.launchCatching
+import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
@@ -104,28 +122,39 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.UUID
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuCustomListScreen(
-    logo: MainLogo,
+    customItem: CustomList?,
+    writeToFile: (Uri, Context) -> Unit,
+    deleteAll: suspend () -> Unit,
+    rename: suspend (String) -> Unit,
+    listBySource: Map<String, List<CustomListInfo>>,
+    removeItems: suspend (List<CustomListInfo>) -> Result<Boolean>,
+    items: List<Map.Entry<String, List<CustomListInfo>>>,
+    searchItems: List<CustomListInfo>,
+    searchQuery: String,
+    setQuery: (String) -> Unit,
+    searchBarActive: Boolean,
+    onSearchBarActiveChange: (Boolean) -> Unit,
+    navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
-    listDao: ListDao = LocalCustomListDao.current,
-    vm: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, createSavedStateHandle()) },
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    val customItem = vm.customItem
-    val state = rememberBottomSheetScaffoldState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    val logoDrawable = remember { AppCompatResources.getDrawable(context, logo.logoId) }
+    val logoDrawable = koinInject<AppLogo>()
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { vm.writeToFile(it, context) } }
+    ) { document -> document?.let { writeToFile(it, context) } }
+
+    val shareItem = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {}
 
     var deleteList by remember { mutableStateOf(false) }
 
@@ -150,9 +179,9 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            withContext(Dispatchers.IO) { vm.deleteAll() }
+                            withContext(Dispatchers.IO) { deleteAll() }
                             deleteList = false
-                            navController.popBackStack()
+                            navigateBack()
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -186,7 +215,7 @@ fun OtakuCustomListScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            vm.rename(name)
+                            rename(name)
                             showAdd = false
                         }
                     },
@@ -206,20 +235,86 @@ fun OtakuCustomListScreen(
         onDismissRequest = { showLoadingDialog = false }
     )
 
-    BottomSheetDeleteScaffold(
-        listOfItems = vm.items,
-        multipleTitle = stringResource(R.string.remove_items),
-        onRemove = { vm.removeItem(it) },
-        onMultipleRemove = { it.forEach { i -> vm.removeItem(i) } },
-        bottomScrollBehavior = scrollBehavior,
-        state = state,
-        topBar = {
-            Surface {
-                Column {
-                    InsetSmallTopAppBar(
-                        title = { Text(customItem?.item?.name.orEmpty()) },
-                        navigationIcon = { BackButton() },
-                        actions = {
+    var showDeleteModal by remember { mutableStateOf(false) }
+
+    if (showDeleteModal) {
+        DeleteItemsModal(
+            list = listBySource,
+            onRemove = removeItems,
+            onDismiss = { showDeleteModal = false },
+            drawable = logoDrawable.logo
+        )
+    }
+
+    var showBanner by remember { mutableStateOf(false) }
+
+    CustomBannerBox(
+        showBanner = showBanner,
+        bannerContent = {
+            ListItem(
+                leadingContent = {
+                    CoilGradientImage(
+                        model = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(it?.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .placeholder(logoDrawable.logoId)
+                                .error(logoDrawable.logoId)
+                                .build()
+                        ),
+                        modifier = Modifier
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            .clip(MaterialTheme.shapes.small)
+                    )
+                },
+                overlineContent = { Text(it?.source.orEmpty()) },
+                headlineContent = { Text(it?.title.orEmpty()) },
+                supportingContent = {
+                    Text(
+                        it?.description.orEmpty(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 5
+                    )
+                },
+                modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
+            )
+        },
+    ) {
+        OtakuHazeScaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                DynamicSearchBar(
+                    query = searchQuery,
+                    onQueryChange = setQuery,
+                    isDocked = isHorizontal,
+                    onSearch = { onSearchBarActiveChange(false) },
+                    active = searchBarActive,
+                    onActiveChange = { onSearchBarActiveChange(it) },
+                    placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
+                    leadingIcon = {
+                        IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    },
+                    colors = SearchBarDefaults.colors(
+                        containerColor = animateColorAsState(
+                            MaterialTheme.colorScheme.surface.copy(
+                                alpha = if (searchBarActive) 1f else 0f
+                            ),
+                            label = ""
+                        ).value,
+                    ),
+                    trailingIcon = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AnimatedVisibility(searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { setQuery("") }) {
+                                    Icon(Icons.Default.Cancel, null)
+                                }
+                            }
+
+                            Text("(${customItem?.list.orEmpty().size})")
+
                             var showMenu by remember { mutableStateOf(false) }
 
                             DropdownMenu(
@@ -243,6 +338,17 @@ fun OtakuCustomListScreen(
                                 )
 
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.remove_items)) },
+                                    onClick = {
+                                        showMenu = false
+                                        showDeleteModal = true
+                                    },
+                                    colors = MenuDefaults.itemColors(
+                                        textColor = Alizarin
+                                    ),
+                                )
+
+                                DropdownMenuItem(
                                     text = { Text(stringResource(R.string.delete_list_title)) },
                                     onClick = {
                                         showMenu = false
@@ -254,115 +360,93 @@ fun OtakuCustomListScreen(
                                     modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
                                 )
                             }
-                            IconButton(
-                                onClick = {
-                                    context.startActivity(
-                                        Intent.createChooser(
-                                            Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(
-                                                    Intent.EXTRA_TEXT,
-                                                    customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" })
-                                                putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
-                                            },
-                                            context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+
+                            AnimatedVisibility(!searchBarActive) {
+                                IconButton(
+                                    onClick = {
+                                        shareItem.launchCatching(
+                                            Intent.createChooser(
+                                                Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(
+                                                        Intent.EXTRA_TEXT,
+                                                        customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
+                                                    )
+                                                    putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                                },
+                                                context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                            )
                                         )
-                                    )
-                                }
-                            ) { Icon(Icons.Default.Share, null) }
-
-                            IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
-                            Text("(${customItem?.list.orEmpty().size})")
-                        },
-                        scrollBehavior = scrollBehavior
-                    )
-
-                    DynamicSearchBar(
-                        query = vm.searchQuery,
-                        onQueryChange = vm::setQuery,
-                        isDocked = isHorizontal,
-                        onSearch = { vm.searchBarActive = false },
-                        active = vm.searchBarActive,
-                        onActiveChange = { vm.searchBarActive = it },
-                        placeholder = { Text(stringResource(id = R.string.search)) },
-                        trailingIcon = {
-                            IconButton(onClick = { vm.setQuery("") }) {
-                                Icon(Icons.Default.Cancel, null)
-                            }
-                        },
-                        windowInsets = WindowInsets(0.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            itemsIndexed(vm.items) { index, item ->
-                                ListItem(
-                                    headlineContent = { Text(item.title) },
-                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                    modifier = Modifier.clickable {
-                                        vm.setQuery(item.title)
-                                        vm.searchBarActive = false
                                     }
-                                )
-                                if (index != vm.items.lastIndex) {
-                                    HorizontalDivider()
-                                }
+                                ) { Icon(Icons.Default.Share, null) }
+                            }
+                            AnimatedVisibility(!searchBarActive) {
+                                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(1),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                    ) {
+                        itemsIndexed(items = searchItems) { index, item ->
+                            ListItem(
+                                headlineContent = { Text(item.title) },
+                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                modifier = Modifier
+                                    .clickable {
+                                        setQuery(item.title)
+                                        onSearchBarActiveChange(false)
+                                    }
+                                    .animateItemPlacement()
+                            )
+                            if (index != 0) {
+                                HorizontalDivider()
                             }
                         }
                     }
                 }
-            }
-        },
-        itemUi = { item ->
-            ImageFlushListItem(
-                leadingContent = {
-                    GradientImage(
-                        model = item.imageUrl,
-                        placeholder = rememberDrawablePainter(logoDrawable),
-                        error = rememberDrawablePainter(logoDrawable),
-                        contentScale = ContentScale.FillBounds,
-                        contentDescription = item.title,
-                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+            },
+            blurTopBar = true
+        ) { padding ->
+            LazyVerticalGrid(
+                columns = adaptiveGridCell(),
+                contentPadding = padding,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                items(
+                    items = items,
+                    key = { it.key },
+                    contentType = { it }
+                ) { item ->
+                    CustomItemVertical(
+                        items = item.value,
+                        title = item.key,
+                        logo = logoDrawable.logo,
+                        showLoadingDialog = { showLoadingDialog = it },
+                        onError = {
+                            scope.launch {
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        },
+                        onShowBanner = {
+                            newItem(if (it) item.value.firstOrNull() else null)
+                            showBanner = it
+                        },
+                        modifier = Modifier.animateItemPlacement()
                     )
-                },
-                overlineContent = { Text(item.source) },
-                headlineContent = { Text(item.title) },
-                supportingContent = {
-                    Text(
-                        item.description,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 3
-                    )
-                },
-            )
-        }
-    ) { padding, ts ->
-        LazyColumn(
-            contentPadding = padding,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
-        ) {
-            items(ts) { item ->
-                CustomItem(
-                    item = item,
-                    logo = logoDrawable,
-                    showLoadingDialog = { showLoadingDialog = it },
-                    onDelete = { vm.removeItem(it) },
-                    onError = {
-                        scope.launch {
-                            state.snackbarHostState.currentSnackbarData?.dismiss()
-                            state.snackbarHostState.showSnackbar(
-                                "Something went wrong. Source might not be installed",
-                                duration = SnackbarDuration.Short
-                            )
-                        }
-                    },
-                    modifier = Modifier.animateItemPlacement()
-                )
+                }
             }
         }
     }
@@ -370,78 +454,34 @@ fun OtakuCustomListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CustomItem(
-    item: CustomListInfo,
+private fun CustomItemVertical(
+    items: List<CustomListInfo>,
+    title: String,
     logo: Drawable?,
-    onDelete: (CustomListInfo) -> Unit,
     showLoadingDialog: (Boolean) -> Unit,
     onError: () -> Unit,
+    onShowBanner: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
-    var showPopup by remember { mutableStateOf(false) }
 
-    if (showPopup) {
-        val onDismiss = { showPopup = false }
+    var showBottomSheet by remember { mutableStateOf(false) }
 
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.removeNoti, item.title)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDismiss()
-                        onDelete(item)
-                    }
-                ) { Text(stringResource(R.string.yes)) }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-        )
-    }
-
-    val dismissState = rememberDismissState(
-        confirmValueChange = {
-            if (it == DismissValue.DismissedToStart) {
-                showPopup = true
-            }
-            false
-        }
-    )
-
-    SwipeToDismiss(
-        modifier = modifier,
-        state = dismissState,
-        directions = setOf(DismissDirection.EndToStart),
-        background = {
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToStart -> Color.Red
-                    DismissValue.DismissedToEnd -> Color.Red
-                }, label = ""
-            )
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(color)
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = null,
-                    modifier = Modifier.scale(scale),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
-        dismissContent = {
-            ElevatedCard(
-                onClick = {
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false }
+        ) {
+            ListBottomScreen(
+                navigationIcon = {
+                    IconButton(onClick = { showBottomSheet = false }) { Icon(Icons.Default.Close, null) }
+                },
+                includeInsetPadding = false,
+                title = stringResource(R.string.chooseASource),
+                list = items,
+                onClick = { item ->
+                    showBottomSheet = false
                     sourceRepository
                         .toSourceByApiServiceName(item.source)
                         ?.apiService
@@ -464,65 +504,192 @@ private fun CustomItem(
                         }
                         ?.onCompletion { showLoadingDialog(false) }
                         ?.launchIn(scope) ?: onError()
-                },
-                modifier = Modifier
-                    .height(ComposableUtils.IMAGE_HEIGHT)
-                    .padding(horizontal = 4.dp)
+                }
             ) {
-                ImageFlushListItem(
-                    leadingContent = {
-                        GradientImage(
-                            model = item.imageUrl,
-                            placeholder = rememberDrawablePainter(logo),
-                            error = rememberDrawablePainter(logo),
-                            contentScale = ContentScale.FillBounds,
-                            contentDescription = item.title,
-                            modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                        )
-                    },
-                    overlineContent = { Text(item.source) },
-                    headlineContent = { Text(item.title) },
-                    supportingContent = {
-                        Text(
-                            item.description,
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = 3
-                        )
-                    },
-                    trailingContent = {
-                        var showDropDown by remember { mutableStateOf(false) }
-
-                        val dropDownDismiss = { showDropDown = false }
-
-                        DropdownMenu(
-                            expanded = showDropDown,
-                            onDismissRequest = dropDownDismiss
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.global_search_by_name)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    Screen.GlobalSearchScreen.navigate(navController, item.title)
-                                }
-                            )
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.remove)) },
-                                onClick = {
-                                    dropDownDismiss()
-                                    showPopup = true
-                                }
-                            )
-                        }
-
-                        IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
-                    }
+                ListBottomSheetItemModel(
+                    primaryText = it.title,
+                    overlineText = it.source
                 )
             }
         }
+    }
+
+    M3CoverCard(
+        onLongPress = { c -> onShowBanner(c == ComponentState.Pressed) },
+        imageUrl = remember(items) { items.firstOrNull()?.imageUrl.orEmpty() },
+        name = title,
+        placeHolder = logo,
+        favoriteIcon = {
+            if (items.size > 1) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Circle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                    Text(
+                        items.size.toString(),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+        },
+        onClick = {
+            if (items.size == 1) {
+                runCatching {
+                    val listItem = items.first()
+                    sourceRepository.loadItem(listItem.source, listItem.url)
+                        ?.onStart { showLoadingDialog(true) }
+                        ?.onEach {
+                            showLoadingDialog(false)
+                            navController.navigateToDetails(it)
+                        }
+                        ?.onCompletion { showLoadingDialog(false) }
+                        ?.launchIn(scope) ?: error("Nothing")
+                }.onFailure {
+                    it.printStackTrace()
+                    onError()
+                }
+            } else {
+                showBottomSheet = true
+            }
+        },
+        modifier = modifier
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DeleteItemsModal(
+    list: Map<String, List<CustomListInfo>>,
+    onRemove: suspend (List<CustomListInfo>) -> Result<Boolean>,
+    onDismiss: () -> Unit,
+    drawable: Drawable,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss
+    ) {
+        val itemsToDelete = remember { mutableStateListOf<CustomListInfo>() }
+        var showPopup by remember { mutableStateOf(false) }
+        var removing by remember { mutableStateOf(false) }
+
+        if (showPopup) {
+            val onPopupDismiss = { showPopup = false }
+
+            AlertDialog(
+                onDismissRequest = if (removing) {
+                    {}
+                } else onPopupDismiss,
+                title = { Text("Delete") },
+                text = {
+                    Text(
+                        context.resources.getQuantityString(
+                            R.plurals.areYouSureRemove,
+                            itemsToDelete.size,
+                            itemsToDelete.size
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            removing = true
+                            scope.launch {
+                                onRemove(itemsToDelete)
+                                    .onSuccess {
+                                        removing = false
+                                        itemsToDelete.clear()
+                                        onPopupDismiss()
+                                        onDismiss()
+                                    }
+                            }
+                        },
+                        enabled = !removing
+                    ) { Text(stringResource(R.string.yes)) }
+                },
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } },
+            )
+        }
+
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text(stringResource(R.string.delete_multiple)) },
+                    windowInsets = WindowInsets(0.dp),
+                )
+            },
+            bottomBar = {
+                BottomAppBar(
+                    contentPadding = PaddingValues(0.dp),
+                    windowInsets = WindowInsets(0.dp)
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    ) { Text(stringResource(id = R.string.cancel)) }
+
+                    Button(
+                        onClick = { showPopup = true },
+                        enabled = itemsToDelete.isNotEmpty(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    ) { Text(stringResource(id = R.string.remove)) }
+                }
+            }
+        ) { padding ->
+            LazyVerticalGrid(
+                columns = adaptiveGridCell(),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                contentPadding = padding,
+                modifier = Modifier.padding(4.dp),
+            ) {
+                list.forEach { (t, u) ->
+                    item(
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
+                        Column {
+                            HorizontalDivider()
+                            CenterAlignedTopAppBar(
+                                title = { Text(t) },
+                                windowInsets = WindowInsets(0.dp),
+                            )
+                        }
+                    }
+                    items(u) { item ->
+                        val transition = updateTransition(targetState = item in itemsToDelete, label = "")
+                        val outlineColor = MaterialTheme.colorScheme.outline
+                        M3CoverCard(
+                            imageUrl = item.imageUrl,
+                            name = item.title,
+                            placeHolder = drawable,
+                            onClick = {
+                                if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
+                            },
+                            modifier = Modifier.border(
+                                border = BorderStroke(
+                                    transition.animateDp(label = "border_width") { target -> if (target) 4.dp else 1.dp }.value,
+                                    transition.animateColor(label = "border_color") { target -> if (target) Color(0xfff44336) else outlineColor }.value
+                                ),
+                                shape = MaterialTheme.shapes.medium
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @LightAndDarkPreviews
@@ -530,34 +697,22 @@ private fun CustomItem(
 private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
-        val vm: OtakuCustomListViewModel = viewModel {
-            OtakuCustomListViewModel(listDao, SavedStateHandle())
-        }
+        val viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
         OtakuCustomListScreen(
-            logo = MockAppIcon,
-            listDao = listDao,
-            vm = vm
-        )
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun CustomItemPreview() {
-    PreviewTheme {
-        CustomItem(
-            item = CustomListInfo(
-                uuid = UUID.randomUUID(),
-                title = "Title",
-                description = "description",
-                url = "",
-                imageUrl = "",
-                source = "MANGA_READ"
-            ),
-            logo = null,
-            onDelete = {},
-            showLoadingDialog = {},
-            onError = {}
+            customItem = null,
+            writeToFile = viewModel::writeToFile,
+            navigateBack = {},
+            isHorizontal = false,
+            deleteAll = viewModel::deleteAll,
+            rename = viewModel::rename,
+            listBySource = viewModel.listBySource,
+            removeItems = viewModel::removeItems,
+            items = viewModel.items,
+            searchItems = viewModel.searchItems,
+            searchQuery = viewModel.searchQuery,
+            setQuery = viewModel::setQuery,
+            searchBarActive = viewModel.searchBarActive,
+            onSearchBarActiveChange = { viewModel.searchBarActive = it }
         )
     }
 }

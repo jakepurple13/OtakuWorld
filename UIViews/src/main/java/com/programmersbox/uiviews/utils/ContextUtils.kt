@@ -232,37 +232,34 @@ class BatteryInformation(val context: Context) : KoinComponent {
 
     suspend fun composeSetupFlow(
         normalBatteryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
-        subscribe: suspend (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit
-    ) {
+        subscribe: suspend (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit,
+    ) = combine(
         combine(
-            combine(
-                batteryLevel,
-                settingsHandling.batteryPercentage
-            ) { b, d -> b <= d }
-                .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
-            combine(
-                batteryInfo,
-                settingsHandling.batteryPercentage
-            ) { b, d -> b to d }
-                .map {
-                    when {
-                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.first.percent <= it.second -> BatteryViewType.ALERT
-                        it.first.percent >= 95 -> BatteryViewType.FULL
-                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
+            batteryLevel,
+            settingsHandling.batteryPercentage
+        ) { b, d -> b <= d }
+            .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
+        combine(
+            batteryInfo,
+            settingsHandling.batteryPercentage
+        ) { b, d -> b to d }
+            .map {
+                when {
+                    it.first.isCharging -> BatteryViewType.CHARGING_FULL
+                    it.first.percent <= it.second -> BatteryViewType.ALERT
+                    it.first.percent >= 95 -> BatteryViewType.FULL
+                    it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
+                    else -> BatteryViewType.DEFAULT
                 }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 },
-        ) { l, b -> l to b }
-            .onEach(subscribe)
-            .collect()
-    }
+            }
+            .distinctUntilChanged { t1, t2 -> t1 != t2 },
+    ) { l, b -> l to b }
+        .onEach(subscribe)
 
     suspend fun setupFlow(
         normalBatteryColor: Int = Color.WHITE,
         size: Int,
-        subscribe: (Pair<Int, IconicsDrawable>) -> Unit
+        subscribe: (Pair<Int, IconicsDrawable>) -> Unit,
     ) {
         combine(
             combine(
@@ -511,7 +508,7 @@ enum class Status { Available, Losing, Lost, Unavailable }
 fun connectivityStatus(
     initialValue: Status = Status.Unavailable,
     context: Context = LocalContext.current,
-    vararg key: Any
+    vararg key: Any,
 ): State<Status> = produceState(initialValue = initialValue, keys = key) {
     val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {

@@ -1,20 +1,7 @@
 package com.programmersbox.anime_sources.anime
 
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastMap
-import com.programmersbox.anime_sources.ShowApi
-import com.programmersbox.anime_sources.Sources
-import com.programmersbox.anime_sources.toJsoup
-import com.programmersbox.anime_sources.utilities.JsUnpacker
-import com.programmersbox.anime_sources.utilities.extractors
-import com.programmersbox.anime_sources.utilities.fixUrl
-import com.programmersbox.anime_sources.utilities.getQualityFromName
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
-import org.jsoup.Jsoup
 
+/*
 object GogoAnimeVC : ShowApi(
     baseUrl = "https://gogoanime.sk",
     recentPath = "",
@@ -22,11 +9,13 @@ object GogoAnimeVC : ShowApi(
 ) {
 
     override val serviceName: String get() = "GOGOANIME_VC"
-
+*/
+/**
     private val headers = mapOf(
         "authority" to "ajax.gogo-load.com",
         "sec-ch-ua" to "\"Google Chrome\";v=\"89\", \"Chromium\";v=\"89\", \";Not A Brand\";v=\"99\"",
-        "accept" to "text/html, */*; q=0.01",
+    "accept" to "text/html, */
+/**; q=0.01",
         "dnt" to "1",
         "sec-ch-ua-mobile" to "?0",
         "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36",
@@ -36,7 +25,8 @@ object GogoAnimeVC : ShowApi(
         "sec-fetch-dest" to "empty",
         "referer" to "$baseUrl/"
     )
-
+ **/
+/*
     private val parseRegex = Regex("""<li>\s*\n.*\n.*<a\s*href=["'](.*?-episode-(\d+))["']\s*title=["'](.*?)["']>\n.*?img src="(.*?)"""")
 
     override suspend fun recent(page: Int): List<ItemModel> {
@@ -200,29 +190,7 @@ object GogoAnimeVC : ShowApi(
                                 //println(url + "\t" + e.name)
                                 e.getUrl(url)
                             } else emptyList()
-                            /*listOf(
-                                Storage(
-                                    link = it.attr("href"),
-                                    source = link,
-                                    filename = "${chapterModel.name}.mp4",
-                                    quality = it.text(),
-                                    sub = it.text()
-                                )
-                            )*/
                         }
-                    //.distinctBy { it.link }
-                    /*if(url.startsWith(XStreamCdn.mainUrl))
-                        XStreamCdn.getUrl(url)
-                    else
-                        listOf(
-                            Storage(
-                                link = it.attr("href"),
-                                source = link,
-                                filename = "${chapterModel.name}.mp4",
-                                quality = it.text(),
-                                sub = it.text()
-                            )
-                        )*/
                 }
             }
             .flatten()
@@ -235,5 +203,5 @@ object GogoAnimeVC : ShowApi(
     private fun getAndUnpack(string: String): String? = JsUnpacker(getPacked(string)).unpack()
 
     private val qualityRegex = Regex("(\\d+)P")
-}
+}*/
 

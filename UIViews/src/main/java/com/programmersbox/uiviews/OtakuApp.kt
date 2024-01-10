@@ -20,6 +20,7 @@ import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
@@ -44,7 +45,6 @@ abstract class OtakuApp : Application() {
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 
-
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
@@ -66,6 +66,7 @@ abstract class OtakuApp : Application() {
                 module {
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
                     single { SettingsHandling(get()) }
+                    single { AppLogo(applicationInfo.loadIcon(packageManager), applicationInfo.icon) }
                 }
             )
         }
@@ -76,6 +77,7 @@ abstract class OtakuApp : Application() {
             module {
                 single { SourceRepository() }
                 single { CurrentSourceRepository() }
+                single { ChangingSettingsRepository() }
                 single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
                 single {
                     OtakuWorldCatalog(

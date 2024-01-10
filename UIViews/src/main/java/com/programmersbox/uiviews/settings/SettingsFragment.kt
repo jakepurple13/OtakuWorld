@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.settings
 
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Check
@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -39,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -51,24 +51,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.CategorySetting
+import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -76,27 +77,25 @@ import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
-import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.MockAppIcon
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.currentService
-import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.uiviews.utils.showSourceChooser
+import com.programmersbox.uiviews.utils.showTranslationScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Locale
 
 class ComposeSettingsDsl {
-    internal var generalSettings: (@Composable () -> Unit)? = null
-    internal var viewSettings: (@Composable () -> Unit)? = null
-    internal var playerSettings: (@Composable () -> Unit)? = null
+    internal var generalSettings: @Composable () -> Unit = {}
+    internal var viewSettings: @Composable () -> Unit = {}
+    internal var playerSettings: @Composable () -> Unit = {}
 
     fun generalSettings(block: @Composable () -> Unit) {
         generalSettings = block
@@ -111,6 +110,7 @@ class ComposeSettingsDsl {
     }
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @Composable
@@ -121,14 +121,18 @@ fun SettingScreen(
     favoritesClick: () -> Unit = {},
     historyClick: () -> Unit = {},
     globalSearchClick: () -> Unit = {},
-    listClick: () -> Unit = {}
+    listClick: () -> Unit = {},
+    extensionClick: () -> Unit = {},
+    notificationSettingsClick: () -> Unit = {},
+    generalClick: () -> Unit = {},
+    otherClick: () -> Unit = {},
+    moreInfoClick: () -> Unit = {},
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     OtakuScaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            InsetSmallTopAppBar(
+            InsetLargeTopAppBar(
                 title = { Text(stringResource(R.string.settings)) },
                 scrollBehavior = scrollBehavior,
                 actions = {
@@ -138,7 +142,8 @@ fun SettingScreen(
                 }
             )
         },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { p ->
         Column(
             modifier = Modifier
@@ -152,18 +157,111 @@ fun SettingScreen(
                 favoritesClick = favoritesClick,
                 historyClick = historyClick,
                 globalSearchClick = globalSearchClick,
-                listClick = listClick
+                listClick = listClick,
+                extensionClick = extensionClick,
+                notificationSettingsClick = notificationSettingsClick,
+                generalClick = generalClick,
+                otherClick = otherClick,
+                moreInfoClick = moreInfoClick
             )
         }
     }
 
+    //TODO: This will be for the future when this works again
+    /*val navigator = rememberListDetailPaneScaffoldNavigator(
+        scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
+    )
+    var settingChoice by remember { mutableStateOf(SettingChoice.General) }
+
+    BackHandler(settingChoice != SettingChoice.None) {
+        navigator.navigateBack()
+        settingChoice = SettingChoice.None
+    }
+
+    fun ChangeSetting(choice: SettingChoice) {
+        settingChoice = choice
+        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+    }
+
+    ListDetailPaneScaffold(
+        scaffoldState = navigator.scaffoldState,
+        listPane = {
+            //AnimatedPane(modifier = Modifier) {
+                val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+                OtakuScaffold(
+                    topBar = {
+                        InsetLargeTopAppBar(
+                            title = { Text(stringResource(R.string.settings)) },
+                            scrollBehavior = scrollBehavior,
+                            actions = {
+                                if (BuildConfig.FLAVOR != "noFirebase") {
+                                    AccountSettings()
+                                }
+                            }
+                        )
+                    },
+                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                ) { p ->
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(p)
+                    ) {
+                        SettingsScreen(
+                            notificationClick = notificationClick,
+                            composeSettingsDsl = composeSettingsDsl,
+                            debugMenuClick = debugMenuClick,
+                            favoritesClick = favoritesClick,
+                            historyClick = historyClick,
+                            globalSearchClick = globalSearchClick,
+                            listClick = listClick,
+                            extensionClick = extensionClick,
+                            notificationSettingsClick = { ChangeSetting(SettingChoice.Notification) },
+                            generalClick = { ChangeSetting(SettingChoice.General) },
+                            otherClick = { ChangeSetting(SettingChoice.Other) },
+                            moreInfoClick = { ChangeSetting(SettingChoice.MoreInfo) }
+                        )
+                    }
+                }
+            //}
+        }
+    ) {
+        //AnimatedPane(modifier = Modifier.fillMaxSize()) {
+            AnimatedContent(
+                targetState = settingChoice,
+                label = "",
+                transitionSpec = {
+                    (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
+                },
+            ) { targetState ->
+                when (targetState) {
+                    SettingChoice.Notification -> NotificationSettings()
+                    SettingChoice.General -> GeneralSettings(composeSettingsDsl.generalSettings)
+                    SettingChoice.Other -> PlaySettings(composeSettingsDsl.playerSettings)
+                    SettingChoice.MoreInfo -> InfoSettings {
+                        //navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
+                    }
+
+                    SettingChoice.None -> {}
+                }
+            }
+        //}
+    }*/
+}
+
+internal enum class SettingChoice {
+    Notification,
+    General,
+    Other,
+    MoreInfo,
+    None
 }
 
 @Composable
 private fun SettingsScreen(
     dao: ItemDao = LocalItemDao.current,
     vm: SettingsViewModel = viewModel { SettingsViewModel(dao) },
-    logo: MainLogo = koinInject(),
     notificationClick: () -> Unit,
     composeSettingsDsl: ComposeSettingsDsl,
     debugMenuClick: () -> Unit,
@@ -171,9 +269,13 @@ private fun SettingsScreen(
     historyClick: () -> Unit,
     globalSearchClick: () -> Unit,
     listClick: () -> Unit,
+    extensionClick: () -> Unit,
+    notificationSettingsClick: () -> Unit,
+    generalClick: () -> Unit,
+    otherClick: () -> Unit,
+    moreInfoClick: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val navController = LocalNavController.current
+    val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
 
     if (BuildConfig.DEBUG) {
@@ -213,7 +315,7 @@ private fun SettingsScreen(
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(id = R.string.custom_lists_title)) },
-        settingIcon = { Icon(Icons.Default.List, null, modifier = Modifier.fillMaxSize()) },
+        settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
@@ -244,11 +346,13 @@ private fun SettingsScreen(
         )
     )
 
-    composeSettingsDsl.viewSettings?.invoke()
+    composeSettingsDsl.viewSettings()
 
     HorizontalDivider()
 
     CategorySetting { Text(stringResource(R.string.general_menu_title)) }
+
+    var showSourceChooser by showSourceChooser()
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
@@ -256,7 +360,7 @@ private fun SettingsScreen(
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() }
-        ) { navController.navigate(Screen.SourceChooserScreen.route) }
+        ) { showSourceChooser = true }
     )
 
     PreferenceSetting(
@@ -264,8 +368,9 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = rememberRipple(),
-            interactionSource = remember { MutableInteractionSource() }
-        ) { navController.navigate(Screen.ExtensionListScreen.route) }
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = extensionClick
+        )
     )
 
     ShowWhen(visibility = source != null) {
@@ -276,23 +381,11 @@ private fun SettingsScreen(
                 enabled = source != null,
                 indication = rememberRipple(),
                 interactionSource = remember { MutableInteractionSource() }
-            ) {
-                source?.baseUrl?.let {
-                    navController.navigateChromeCustomTabs(
-                        it,
-                        {
-                            anim {
-                                enter = R.anim.slide_in_right
-                                popEnter = R.anim.slide_in_right
-                                exit = R.anim.slide_out_left
-                                popExit = R.anim.slide_out_left
-                            }
-                        }
-                    )
-                }
-            }
+            ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
         )
     }
+
+    var showTranslationScreen by showTranslationScreen()
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
@@ -300,7 +393,7 @@ private fun SettingsScreen(
         modifier = Modifier.clickable(
             indication = rememberRipple(),
             interactionSource = remember { MutableInteractionSource() },
-            onClick = { navController.navigate(Screen.TranslationScreen.route) }
+            onClick = { showTranslationScreen = true }
         )
     )
 
@@ -311,31 +404,31 @@ private fun SettingsScreen(
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.notifications_category_title)) },
         settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.NotificationsSettings.route) }
+        modifier = Modifier.click(notificationSettingsClick)
     )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.general_menu_title)) },
         settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.GeneralSettings.route) }
+        modifier = Modifier.click(generalClick)
     )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.playSettings)) },
         settingIcon = { Icon(Icons.Default.PlayCircleOutline, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.OtherSettings.route) }
+        modifier = Modifier.click(otherClick)
     )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.more_info_category)) },
         settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click { navController.navigate(Screen.MoreInfoSettings.route) }
+        modifier = Modifier.click(moreInfoClick)
     )
 
     PreferenceSetting(
         settingIcon = {
             Image(
-                bitmap = AppCompatResources.getDrawable(context, logo.logoId)!!.toBitmap().asImageBitmap(),
+                rememberDrawablePainter(drawable = koinInject<AppLogo>().logo),
                 null,
                 modifier = Modifier.fillMaxSize()
             )
@@ -358,7 +451,11 @@ private fun SettingsPreview() {
                 historyClick = {},
                 globalSearchClick = {},
                 listClick = {},
-                logo = MockAppIcon
+                extensionClick = {},
+                notificationSettingsClick = {},
+                generalClick = {},
+                otherClick = {},
+                moreInfoClick = {}
             )
         }
     }
@@ -366,7 +463,7 @@ private fun SettingsPreview() {
 
 @Composable
 private fun AccountSettings(
-    viewModel: AccountViewModel = viewModel()
+    viewModel: AccountViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -433,10 +530,11 @@ private fun AccountSettings(
 }
 
 @Composable
-fun SourceChooserScreen() {
+fun SourceChooserScreen(
+    onChosen: () -> Unit,
+) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val navController = LocalNavController.current
     val sourceRepository = LocalSourcesRepository.current
     val currentSourceRepository = LocalCurrentSource.current
 
@@ -445,7 +543,7 @@ fun SourceChooserScreen() {
         title = stringResource(R.string.chooseASource),
         list = sourceRepository.list.filterNot { it.apiService.notWorking },
         onClick = { service ->
-            navController.popBackStack()
+            onChosen()
             scope.launch {
                 service.let {
                     currentSourceRepository.emit(it.apiService)
@@ -465,7 +563,7 @@ fun SourceChooserScreen() {
 @Composable
 private fun SourceChooserPreview() {
     PreviewTheme {
-        SourceChooserScreen()
+        SourceChooserScreen {}
     }
 }
 
@@ -492,7 +590,7 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
     }
 }
 
-private fun Modifier.click(action: () -> Unit): Modifier = composed {
+private fun Modifier.click(action: () -> Unit): Modifier = this.composed {
     clickable(
         indication = rememberRipple(),
         interactionSource = remember { MutableInteractionSource() },
@@ -512,7 +610,7 @@ internal fun SettingsScaffold(
             scrollBehavior = it,
         )
     },
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

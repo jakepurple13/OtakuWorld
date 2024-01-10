@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,10 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.core.app.TaskStackBuilder
@@ -36,9 +35,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.shimmer
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
@@ -48,18 +44,19 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericNovel(get()) }
-    single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
@@ -119,10 +116,6 @@ class GenericNovel(val context: Context) : GenericInfo {
     @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
-        val placeholderColor = contentColorFor(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface)
-            .copy(0.1f)
-            .compositeOver(androidx.compose.material3.MaterialTheme.colorScheme.surface)
-
         LazyColumn {
             items(10) {
                 Surface(
@@ -136,10 +129,9 @@ class GenericNovel(val context: Context) : GenericInfo {
                         "",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .placeholder(
+                            .m3placeholder(
                                 true,
-                                color = placeholderColor,
-                                highlight = PlaceholderHighlight.shimmer(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                                highlight = PlaceholderHighlight.shimmer()
                             )
                             .padding(4.dp)
                     )
@@ -160,13 +152,16 @@ class GenericNovel(val context: Context) : GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
+        modifier: Modifier,
+        paddingValues: PaddingValues,
+        onClick: (ItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
+            modifier = modifier.fillMaxSize(),
         ) {
             items(list) {
                 Surface(

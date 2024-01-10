@@ -2,7 +2,13 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="SwipeButtonPreview">
+      <entry key="StudioProjects.OtakuWorld.anime_sources.defaultanimesources">
+        <State />
+      </entry>
+      <entry key="StudioProjects.OtakuWorld.animeworld">
+        <State />
+      </entry>
+      <entry key="StudioProjects.OtakuWorld.novel_sources.novelupdates">
         <State />
       </entry>
       <entry key="anime_sources.defaultanimesources">
@@ -21,7 +27,20 @@
         <State />
       </entry>
       <entry key="mangaworld">
-        <State />
+        <State>
+          <runningDeviceTargetSelectedWithDropDown>
+            <Target>
+              <type value="RUNNING_DEVICE_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="SERIAL_NUMBER" />
+                  <value value="1A011FDEE0091A" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </runningDeviceTargetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-01-10T16:03:55.232440Z" />
+        </State>
       </entry>
       <entry key="novel_sources.bestlightnovel">
         <State />

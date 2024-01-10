@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -96,7 +96,7 @@ private fun SlideToDeleteDialog(
                             iconCircleColor = MaterialTheme.colorScheme.background,
                             navigationIcon = {
                                 Icon(
-                                    Icons.Filled.ArrowForward,
+                                    Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = null,
                                     tint = colorResource(R.color.alizarin),
                                     modifier = Modifier

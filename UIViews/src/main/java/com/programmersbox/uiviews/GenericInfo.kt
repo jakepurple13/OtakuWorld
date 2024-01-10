@@ -4,10 +4,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
@@ -52,7 +55,7 @@ interface GenericInfo {
     fun sourceList(): List<ApiService>
     fun searchList(): List<ApiService> = sourceList()
     fun toSource(s: String): ApiService?
-    fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {}
+    fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}
     fun downloadChapter(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
@@ -75,7 +78,9 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
+        modifier: Modifier,
+        paddingValues: PaddingValues,
+        onClick: (ItemModel) -> Unit,
     )
 
     @ExperimentalFoundationApi
@@ -85,8 +90,10 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
-    ) = ItemListView(list, favorites, listState, onLongPress, onClick)
+        modifier: Modifier = Modifier,
+        paddingValues: PaddingValues = PaddingValues(0.dp),
+        onClick: (ItemModel) -> Unit,
+    ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
     @ExperimentalFoundationApi
     @Composable
@@ -95,12 +102,17 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
-    ) = ItemListView(list, favorites, listState, onLongPress, onClick)
+        modifier: Modifier = Modifier,
+        paddingValues: PaddingValues = PaddingValues(0.dp),
+        onClick: (ItemModel) -> Unit,
+    ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
     fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
     fun NavGraphBuilder.globalNavSetup() = Unit
 
     fun NavGraphBuilder.settingsNavSetup(): Unit = Unit
+
+    @Composable
+    fun DialogSetups() = Unit
 }

@@ -25,22 +25,21 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberStandardBottomSheetState
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,13 +81,15 @@ fun <T> BottomSheetDeleteScaffold(
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
-    mainView: @Composable (PaddingValues, List<T>) -> Unit
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    mainView: @Composable (PaddingValues, List<T>) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     BottomSheetScaffold(
         scaffoldState = state,
+        containerColor = containerColor,
         modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
         topBar = topBar,
         sheetContent = {
@@ -269,9 +270,9 @@ private fun <T> DeleteItemView(
         )
     }
 
-    val dismissState = rememberDismissState(
+    val dismissState = rememberSwipeToDismissState(
         confirmValueChange = {
-            if (it == DismissValue.DismissedToEnd || it == DismissValue.DismissedToStart) {
+            if (it == SwipeToDismissValue.StartToEnd || it == SwipeToDismissValue.EndToStart) {
                 if (customSingleRemoveDialog(item)) {
                     showPopup = true
                 }
@@ -280,22 +281,23 @@ private fun <T> DeleteItemView(
         }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         state = dismissState,
-        background = {
-            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.Transparent
-                    DismissValue.DismissedToEnd -> Color.Red
-                    DismissValue.DismissedToStart -> Color.Red
+                    SwipeToDismissValue.Settled -> Color.Transparent
+                    SwipeToDismissValue.StartToEnd -> Color.Red
+                    SwipeToDismissValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                DismissDirection.StartToEnd -> Alignment.CenterStart
-                DismissDirection.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -311,7 +313,7 @@ private fun <T> DeleteItemView(
                 )
             }
         },
-        dismissContent = {
+        content = {
             val transition = updateTransition(targetState = isInList, label = "")
             val outlineColor = MaterialTheme.colorScheme.outline
             OutlinedCard(

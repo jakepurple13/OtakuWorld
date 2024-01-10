@@ -20,6 +20,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,9 +44,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,7 +55,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -75,15 +73,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.material.placeholder
-import com.google.accompanist.placeholder.shimmer
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
-import com.programmersbox.animeworld.videochoice.VideoSourceViewModel
+import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
@@ -98,17 +93,19 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SwitchSetting
-import com.programmersbox.uiviews.utils.bottomSheet
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -120,7 +117,6 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<GenericInfo> { GenericAnime(get(), get()) }
-    single { MainLogo(R.mipmap.ic_launcher) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
 }
@@ -187,7 +183,7 @@ class GenericAnime(
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         /* if ((model.source as? ShowApi)?.canDownload == false) {
              Toast.makeText(
@@ -233,7 +229,7 @@ class GenericAnime(
         filter: (Storage) -> Boolean = { true },
         navController: NavController,
         isStreaming: Boolean,
-        onAction: (Storage) -> Unit
+        onAction: (Storage) -> Unit,
     ) {
         val dialog = MaterialAlertDialogBuilder(context)
             .setTitle(R.string.loading_please_wait)
@@ -262,7 +258,12 @@ class GenericAnime(
                         }
 
                         c.isNotEmpty() -> {
-                            navController.navigate(VideoSourceViewModel.createNavigationRoute(c, infoModel, isStreaming, model))
+                            VideoSourceModel.showVideoSources = VideoSourceModel(
+                                c = c,
+                                infoModel = infoModel,
+                                isStreaming = isStreaming,
+                                model = model
+                            )
                         }
 
                         else -> {
@@ -334,10 +335,6 @@ class GenericAnime(
 
     @Composable
     override fun ComposeShimmerItem() {
-        val placeholderColor = contentColorFor(backgroundColor = MaterialTheme.colorScheme.surface)
-            .copy(0.1f)
-            .compositeOver(MaterialTheme.colorScheme.surface)
-
         LazyColumn {
             items(10) {
                 Card(
@@ -348,10 +345,9 @@ class GenericAnime(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .placeholder(
+                            .m3placeholder(
                                 true,
-                                color = placeholderColor,
-                                highlight = PlaceholderHighlight.shimmer(MaterialTheme.colorScheme.surface.copy(alpha = .75f))
+                                highlight = PlaceholderHighlight.shimmer()
                             )
                     ) {
                         Icon(
@@ -381,13 +377,16 @@ class GenericAnime(
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        onClick: (ItemModel) -> Unit
+        modifier: Modifier,
+        paddingValues: PaddingValues,
+        onClick: (ItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
             state = listState,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxSize()
+            contentPadding = paddingValues,
+            modifier = modifier.fillMaxSize()
         ) {
             items(list) {
                 ElevatedCard(
@@ -428,9 +427,10 @@ class GenericAnime(
         }
     }
 
-    override fun composeCustomPreferences(navController: NavController): ComposeSettingsDsl.() -> Unit = {
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
             val context = LocalContext.current
+            val navController = LocalNavController.current
 
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.video_menu_title)) },
@@ -539,8 +539,6 @@ class GenericAnime(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) { VideoPlayerUi() }
-
-        bottomSheet(VideoSourceViewModel.route) { VideoChoiceScreen() }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -550,6 +548,18 @@ class GenericAnime(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
         ) { ViewVideoScreen() }
+    }
+
+    @Composable
+    override fun DialogSetups() {
+        VideoSourceModel.showVideoSources?.let {
+            VideoChoiceScreen(
+                items = it.c,
+                infoModel = it.infoModel,
+                isStreaming = it.isStreaming,
+                model = it.model
+            )
+        }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

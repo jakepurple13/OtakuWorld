@@ -11,6 +11,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
 
     override fun BaseAppModuleExtension.androidConfig(project: Project) {
         buildFeatures.compose = true
+        buildFeatures.buildConfig = true
 
         composeOptions {
             useLiveLiterals = true
@@ -33,6 +34,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
             ProductFlavorTypes.NoFirebase(this) {
                 versionNameSuffix = "-noFirebase"
                 applicationIdSuffix = ".noFirebase"
+                isDefault = true
             }
             ProductFlavorTypes.Full(this)
         }

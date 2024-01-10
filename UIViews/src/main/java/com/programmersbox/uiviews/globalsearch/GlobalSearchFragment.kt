@@ -1,9 +1,12 @@
+@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
+
 package com.programmersbox.uiviews.globalsearch
 
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +37,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,7 +44,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,7 +53,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,7 +66,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -78,35 +79,43 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.accompanist.placeholder.material.placeholder
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
-import com.programmersbox.uiviews.utils.MockAppIcon
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
+import com.programmersbox.uiviews.utils.components.LimitedBottomSheetScaffold
+import com.programmersbox.uiviews.utils.components.LimitedBottomSheetScaffoldDefaults
+import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
+import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.utils.components.placeholder.shimmer
+import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.navigateToDetails
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.contentColorFor as m3ContentColorFor
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -114,7 +123,6 @@ import androidx.compose.material3.contentColorFor as m3ContentColorFor
 )
 @Composable
 fun GlobalSearchView(
-    mainLogo: MainLogo,
     notificationLogo: NotificationLogo,
     isHorizontal: Boolean,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
@@ -127,14 +135,14 @@ fun GlobalSearchView(
         )
     },
 ) {
+    val hazeState = remember { HazeState() }
     val navController = LocalNavController.current
-    val context = LocalContext.current
 
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val pullRefreshState = rememberPullRefreshState(refreshing = viewModel.isRefreshing, onRefresh = {})
-    val mainLogoDrawable = remember { AppCompatResources.getDrawable(context, mainLogo.logoId) }
+    val mainLogoDrawable = koinInject<AppLogo>()
 
     val networkState by viewModel.observeNetwork.collectAsState(initial = true)
 
@@ -146,7 +154,7 @@ fun GlobalSearchView(
 
     OtakuBannerBox(
         showBanner = showBanner,
-        placeholder = mainLogo.logoId,
+        placeholder = mainLogoDrawable.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) {
         val bottomScaffold = rememberBottomSheetScaffoldState()
@@ -162,26 +170,17 @@ fun GlobalSearchView(
             }
         }
 
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-
-        BottomSheetScaffold(
+        LimitedBottomSheetScaffold(
             scaffoldState = bottomScaffold,
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                Column {
-                    InsetSmallTopAppBar(
-                        navigationIcon = { BackButton() },
-                        title = { Text(stringResource(R.string.global_search)) },
-                        scrollBehavior = scrollBehavior
-                    )
-                    var active by rememberSaveable { mutableStateOf(false) }
+                var active by rememberSaveable { mutableStateOf(false) }
 
-                    fun closeSearchBar() {
-                        focusManager.clearFocus()
-                        active = false
-                    }
+                fun closeSearchBar() {
+                    focusManager.clearFocus()
+                    active = false
+                }
+                Column {
                     DynamicSearchBar(
-                        windowInsets = WindowInsets(0.dp),
                         query = viewModel.searchText,
                         onQueryChange = { viewModel.searchText = it },
                         isDocked = isHorizontal,
@@ -199,14 +198,26 @@ fun GlobalSearchView(
                             active = it
                             if (!active) focusManager.clearFocus()
                         },
-                        placeholder = { Text(stringResource(id = R.string.search)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        placeholder = { Text(stringResource(R.string.global_search)) },
+                        leadingIcon = { BackButton() },
                         trailingIcon = {
-                            IconButton(onClick = { viewModel.searchText = "" }) {
-                                Icon(Icons.Default.Cancel, null)
+                            AnimatedVisibility(viewModel.searchText.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.searchText = "" }) {
+                                    Icon(Icons.Default.Cancel, null)
+                                }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        colors = SearchBarDefaults.colors(
+                            containerColor = animateColorAsState(
+                                MaterialTheme.colorScheme.surface.copy(
+                                    alpha = if (active) 1f else 0f
+                                ),
+                                label = ""
+                            ).value,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .hazeChild(hazeState)
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth(),
@@ -240,13 +251,13 @@ fun GlobalSearchView(
                             }
                         }
                     }
+                    HorizontalDivider()
                 }
             },
             sheetContent = searchModelBottom?.let { s ->
                 {
                     val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-                    Scaffold(
-                        modifier = Modifier.nestedScroll(sheetScrollBehavior.nestedScrollConnection),
+                    NormalOtakuScaffold(
                         topBar = {
                             TopAppBar(
                                 scrollBehavior = sheetScrollBehavior,
@@ -254,7 +265,10 @@ fun GlobalSearchView(
                                 actions = { Text(stringResource(id = R.string.search_found, s.data.size)) },
                                 windowInsets = WindowInsets(0.dp)
                             )
-                        }
+                        },
+                        modifier = Modifier
+                            .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
+                            .nestedScroll(sheetScrollBehavior.nestedScrollConnection),
                     ) { p ->
                         LazyVerticalGrid(
                             columns = adaptiveGridCell(),
@@ -265,7 +279,7 @@ fun GlobalSearchView(
                             items(s.data) { m ->
                                 SearchCoverCard(
                                     model = m,
-                                    placeHolder = mainLogoDrawable,
+                                    placeHolder = mainLogoDrawable.logo,
                                     onLongPress = { c ->
                                         newItemModel(if (c == ComponentState.Pressed) m else null)
                                         showBanner = c == ComponentState.Pressed
@@ -276,7 +290,12 @@ fun GlobalSearchView(
                     }
                 }
             } ?: {},
-            sheetPeekHeight = 0.dp,
+            bottomSheet = LimitedBottomSheetScaffoldDefaults.bottomSheet(
+                sheetPeekHeight = 0.dp
+            ),
+            colors = LimitedBottomSheetScaffoldDefaults.colors(
+                topAppBarContainerColor = Color.Transparent
+            )
         ) { padding ->
             Crossfade(targetState = networkState, label = "") { network ->
                 when (network) {
@@ -308,21 +327,24 @@ fun GlobalSearchView(
                         ) {
                             LazyColumn(
                                 state = listState,
-                                contentPadding = padding,
+                                contentPadding = padding + LocalNavHostPadding.current,
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
+                                    .haze(
+                                        hazeState,
+                                        backgroundColor = MaterialTheme.colorScheme.surface
+                                    )
                                     .fillMaxSize()
                                     .padding(top = 8.dp)
                             ) {
                                 if (viewModel.isRefreshing) {
                                     items(3) {
-                                        val placeholderColor =
-                                            m3ContentColorFor(backgroundColor = M3MaterialTheme.colorScheme.surface)
-                                                .copy(0.1f)
-                                                .compositeOver(M3MaterialTheme.colorScheme.surface)
                                         Surface(
-                                            modifier = Modifier.placeholder(true, color = placeholderColor),
+                                            modifier = Modifier.m3placeholder(
+                                                true,
+                                                highlight = PlaceholderHighlight.shimmer()
+                                            ),
                                             tonalElevation = 4.dp,
                                             shape = M3MaterialTheme.shapes.medium
                                         ) {
@@ -383,7 +405,7 @@ fun GlobalSearchView(
                                                     items(i.data) { m ->
                                                         SearchCoverCard(
                                                             model = m,
-                                                            placeHolder = mainLogoDrawable,
+                                                            placeHolder = mainLogoDrawable.logo,
                                                             onLongPress = { c ->
                                                                 newItemModel(if (c == ComponentState.Pressed) m else null)
                                                                 showBanner = c == ComponentState.Pressed
@@ -480,14 +502,12 @@ fun SearchCoverCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @LightAndDarkPreviews
 @Composable
 private fun GlobalScreenPreview() {
     PreviewTheme {
         val dao = LocalHistoryDao.current
         GlobalSearchView(
-            mainLogo = MockAppIcon,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
             isHorizontal = false,

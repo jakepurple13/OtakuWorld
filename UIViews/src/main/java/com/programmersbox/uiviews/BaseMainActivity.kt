@@ -6,11 +6,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -29,16 +28,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -47,7 +47,6 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
@@ -58,21 +57,21 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -88,15 +87,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.all.AllView
 import com.programmersbox.uiviews.details.DetailsScreen
@@ -104,7 +102,6 @@ import com.programmersbox.uiviews.favorite.FavoriteUi
 import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
 import com.programmersbox.uiviews.lists.ImportListScreen
-import com.programmersbox.uiviews.lists.OtakuCustomListScreen
 import com.programmersbox.uiviews.lists.OtakuListScreen
 import com.programmersbox.uiviews.notifications.NotificationsScreen
 import com.programmersbox.uiviews.notifications.cancelNotification
@@ -116,22 +113,18 @@ import com.programmersbox.uiviews.settings.InfoSettings
 import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
-import com.programmersbox.uiviews.settings.SourceChooserScreen
-import com.programmersbox.uiviews.settings.TranslationScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
-import com.programmersbox.uiviews.utils.ModalBottomSheetLayout
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuMaterialTheme
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.appVersion
-import com.programmersbox.uiviews.utils.bottomSheet
 import com.programmersbox.uiviews.utils.chromeCustomTabs
+import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.rememberBottomSheetNavigator
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -144,8 +137,10 @@ import org.koin.android.ext.android.inject
 abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val genericInfo: GenericInfo by inject()
-    private val logo: MainLogo by inject()
+    private val customPreferences = ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+    private val appLogo: AppLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
+    private val changingSettingsRepository: ChangingSettingsRepository by inject()
     protected lateinit var navController: NavHostController
 
     protected fun isNavInitialized() = ::navController.isInitialized
@@ -160,46 +155,36 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @Composable
     protected open fun BottomBarAdditions() = Unit
 
-    companion object {
-        var showNavBar by mutableStateOf(true)
-    }
-
     private var notificationCount by mutableIntStateOf(0)
 
     @OptIn(
-        ExperimentalMaterialNavigationApi::class,
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class,
-        ExperimentalMaterialApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setup()
         onCreate()
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        enableEdgeToEdge()
+
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        changingSettingsRepository
+            .showNavBar
+            .onEach {
+                if (it) {
+                    insetsController.show(WindowInsetsCompat.Type.systemBars())
+                } else {
+                    insetsController.hide(WindowInsetsCompat.Type.systemBars())
+                }
+            }
+            .launchIn(lifecycleScope)
 
         setContent {
-            val bottomSheetNavigator = rememberBottomSheetNavigator(skipHalfExpanded = true)
             navController = rememberNavController(
-                bottomSheetNavigator,
                 remember { ChromeCustomTabsNavigator(this) }
             )
-
-            val scope = rememberCoroutineScope()
-            BackHandler(bottomSheetNavigator.sheetState.isVisible) {
-                scope.launch { bottomSheetNavigator.sheetState.hide() }
-            }
-
-            val systemUiController = rememberSystemUiController()
-            val customPreferences = remember { ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences(navController)) }
-
-            if (showNavBar) {
-                systemUiController.isSystemBarsVisible = true
-                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            } else {
-                systemUiController.isSystemBarsVisible = false
-                systemUiController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
 
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 
@@ -208,43 +193,45 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                 val showAllItem by settingsHandling.showAll.collectAsStateWithLifecycle(false)
 
-                ModalBottomSheetLayout(
-                    bottomSheetNavigator = bottomSheetNavigator,
-                    sheetBackgroundColor = MaterialTheme.colorScheme.surface,
-                    sheetContentColor = MaterialTheme.colorScheme.onSurface,
-                    scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
-                ) {
-                    val navType = when (windowSize.widthSizeClass) {
-                        WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
-                        else -> NavigationBarType.Bottom
-                    }
+                val navType = when (windowSize.widthSizeClass) {
+                    WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
+                    else -> NavigationBarType.Bottom
+                }
 
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
 
-                    Row(Modifier.fillMaxSize()) {
-                        Rail(
-                            navController = navController,
-                            showNavBar = showNavBar,
-                            navType = navType,
-                            showAllItem = showAllItem,
-                            currentDestination = currentDestination
-                        )
-                        OtakuScaffold(
-                            bottomBar = {
-                                BottomNav(
-                                    navController = navController,
-                                    showNavBar = showNavBar,
-                                    navType = navType,
-                                    showAllItem = showAllItem,
-                                    currentDestination = currentDestination
-                                )
-                            }
-                        ) { innerPadding ->
+                val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
+
+                genericInfo.DialogSetups()
+
+                Row(Modifier.fillMaxSize()) {
+                    Rail(
+                        navController = navController,
+                        showNavBar = showNavBar,
+                        navType = navType,
+                        showAllItem = showAllItem,
+                        currentDestination = currentDestination
+                    )
+                    HazeScaffold(
+                        bottomBar = {
+                            BottomNav(
+                                navController = navController,
+                                showNavBar = showNavBar,
+                                navType = navType,
+                                showAllItem = showAllItem,
+                                currentDestination = currentDestination
+                            )
+                        },
+                        contentWindowInsets = WindowInsets(0.dp),
+                        blurBottomBar = true
+                    ) { innerPadding ->
+                        CompositionLocalProvider(
+                            LocalNavHostPadding provides innerPadding
+                        ) {
                             NavHost(
                                 navController = navController,
                                 startDestination = Screen.RecentScreen.route,
-                                modifier = Modifier.padding(innerPadding)
                             ) { navGraph(customPreferences, windowSize) }
                         }
                     }
@@ -269,7 +256,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
                 exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
             ) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = Color.Transparent
+                ) {
 
                     @Composable
                     fun ScreenBottomItem(
@@ -332,11 +321,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
             NavigationRail(
                 header = {
                     Image(
-                        AppCompatResources.getDrawable(this@BaseMainActivity, logo.logoId)!!.toBitmap().asImageBitmap(),
+                        rememberDrawablePainter(drawable = appLogo.logo),
                         null,
                     )
                 },
-                modifier = Modifier.verticalScroll(rememberScrollState())
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
             ) {
                 NavigationRailItem(
                     imageVector = Icons.Default.History,
@@ -368,7 +359,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
 
                 NavigationRailItem(
-                    imageVector = Icons.Default.List,
+                    imageVector = Icons.AutoMirrored.Default.List,
                     label = stringResource(R.string.custom_lists_title),
                     screen = Screen.CustomListScreen,
                     currentDestination = currentDestination,
@@ -455,8 +446,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         customPreferences: ComposeSettingsDsl,
         windowSize: WindowSizeClass,
     ) {
-        composable(Screen.RecentScreen.route) { RecentView(logo = logo) }
-        composable(Screen.AllScreen.route) { AllView(logo = logo) }
+        composable(Screen.RecentScreen.route) { RecentView() }
+        composable(Screen.AllScreen.route) { AllView() }
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
         composable(
@@ -474,10 +465,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 windowSize = windowSize
             )
         }
-
-        bottomSheet(Screen.TranslationScreen.route) { TranslationScreen() }
-
-        bottomSheet(Screen.SourceChooserScreen.route) { SourceChooserScreen() }
 
         chromeCustomTabs()
 
@@ -512,7 +499,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
                     globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
                     listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } },
-                    debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } }
+                    debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } },
+                    extensionClick = { navController.navigate(Screen.ExtensionListScreen.route) { launchSingleTop = true } },
+                    notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings.route) },
+                    generalClick = { navController.navigate(Screen.GeneralSettings.route) },
+                    otherClick = { navController.navigate(Screen.OtherSettings.route) },
+                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) }
                 )
             }
 
@@ -534,7 +526,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) {
                 InfoSettings(
-                    logo = logo,
                     usedLibraryClick = { navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true } }
                 )
             }
@@ -549,7 +540,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.HistoryScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-            ) { HistoryUi(logo = logo) }
+            ) { HistoryUi() }
 
             composable(
                 Screen.FavoriteScreen.route,
@@ -557,7 +548,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
                 FavoriteUi(
-                    logo = logo,
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
             }
@@ -566,7 +556,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.AboutScreen.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-            ) { AboutLibrariesScreen(logo) }
+            ) { AboutLibrariesScreen() }
 
             composable(
                 Screen.GlobalSearchScreen.route + "?searchFor={searchFor}",
@@ -575,25 +565,24 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
                 GlobalSearchView(
-                    mainLogo = logo,
                     notificationLogo = notificationLogo,
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
             }
 
-            composable(Screen.CustomListScreen.route) { OtakuListScreen() }
             composable(
-                Screen.CustomListItemScreen.route + "/{uuid}"
+                Screen.CustomListScreen.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
             ) {
-                OtakuCustomListScreen(
-                    logo = logo,
+                OtakuListScreen(
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
             }
 
             composable(
                 Screen.ImportListScreen.route + "?uri={uri}"
-            ) { ImportListScreen(logo) }
+            ) { ImportListScreen() }
 
             composable(
                 Screen.NotificationScreen.route,
@@ -603,7 +592,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             ) {
                 val notificationManager = remember { this@BaseMainActivity.notificationManager }
                 NotificationsScreen(
-                    logo = logo,
                     notificationLogo = notificationLogo,
                     cancelNotificationById = notificationManager::cancel,
                     cancelNotification = notificationManager::cancelNotification
@@ -633,13 +621,20 @@ abstract class BaseMainActivity : AppCompatActivity() {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             GlobalSearchView(
-                mainLogo = logo,
                 notificationLogo = notificationLogo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }
 
-        composable(Screen.CustomListScreen.route + "_home") { OtakuListScreen() }
+        composable(
+            Screen.CustomListScreen.route + "_home",
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
+        ) {
+            OtakuListScreen(
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            )
+        }
 
         composable(
             Screen.NotificationScreen.route + "_home",
@@ -649,7 +644,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
         ) {
             val notificationManager = remember { this@BaseMainActivity.notificationManager }
             NotificationsScreen(
-                logo = logo,
                 notificationLogo = notificationLogo,
                 cancelNotificationById = notificationManager::cancel,
                 cancelNotification = notificationManager::cancelNotification
@@ -662,7 +656,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             FavoriteUi(
-                logo = logo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }

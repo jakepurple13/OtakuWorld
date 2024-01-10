@@ -24,7 +24,9 @@ import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
+fun PlaySettings(
+    customSettings: @Composable () -> Unit = {},
+) {
     SettingsScaffold(stringResource(R.string.playSettings)) {
         val scope = rememberCoroutineScope()
         val settingsHandling = LocalSettingsHandling.current
@@ -41,7 +43,7 @@ fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
             onValueChangedFinished = { scope.launch { settingsHandling.setBatteryPercentage(sliderValue.toInt()) } }
         )
 
-        customSettings?.invoke()
+        customSettings()
     }
 }
 
@@ -49,6 +51,6 @@ fun PlaySettings(customSettings: (@Composable () -> Unit)?) {
 @Composable
 private fun PlaySettingsPreview() {
     PreviewTheme {
-        PlaySettings(null)
+        PlaySettings()
     }
 }

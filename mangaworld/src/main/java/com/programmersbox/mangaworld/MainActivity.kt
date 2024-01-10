@@ -4,7 +4,6 @@ import android.os.Build
 import android.view.WindowManager
 import com.github.piasy.biv.BigImageViewer
 import com.github.piasy.biv.loader.glide.GlideImageLoader
-import com.google.android.gms.ads.MobileAds
 import com.programmersbox.uiviews.BaseMainActivity
 
 class MainActivity : BaseMainActivity() {
@@ -14,6 +13,5 @@ class MainActivity : BaseMainActivity() {
         }
 
         BigImageViewer.initialize(GlideImageLoader.with(applicationContext))
-        MobileAds.initialize(this)
     }
 }

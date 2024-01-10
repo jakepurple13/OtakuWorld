@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,9 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LeadingIconTab
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TabPosition
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -55,20 +52,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.MainLogo
+import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
@@ -79,11 +73,13 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.OtakuBannerBox
-import com.programmersbox.uiviews.utils.OtakuScaffold
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
+import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
+import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
@@ -92,7 +88,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
-    logo: MainLogo,
     context: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
@@ -132,15 +127,9 @@ fun AllView(
                     scrollBehavior = scrollBehaviorTop
                 )
 
-                TabRow(
+                PrimaryTabRow(
                     // Our selected tab is our current page
                     selectedTabIndex = pagerState.currentPage,
-                    // Override the indicator, using the provided pagerTabIndicatorOffset modifier
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.pagerTabIndicatorOffset(pagerState, tabPositions)
-                        )
-                    }
                 ) {
                     // Add tabs for all of our pages
                     LeadingIconTab(
@@ -163,7 +152,7 @@ fun AllView(
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(
             showBanner = showBanner,
-            placeholder = logo.logoId,
+            placeholder = koinInject<AppLogo>().logoId,
             modifier = Modifier.padding(p1)
         ) {
             Crossfade(targetState = isConnected, label = "") { connected ->
@@ -232,14 +221,14 @@ fun AllScreen(
     onReset: (Context?, ApiService) -> Unit,
     itemInfoChange: (ItemModel?) -> Unit,
     state: LazyGridState,
-    showBanner: (Boolean) -> Unit
+    showBanner: (Boolean) -> Unit,
 ) {
     val info = LocalGenericInfo.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
     val pullRefreshState = rememberPullRefreshState(isRefreshing, onRefresh = { source?.let { onReset(context, it) } })
-    OtakuScaffold { p ->
+    NormalOtakuScaffold { p ->
         Box(
             modifier = Modifier
                 .padding(p)
@@ -286,7 +275,7 @@ fun SearchScreen(
     onSearchChange: (String) -> Unit,
     isSearching: Boolean,
     favoriteList: List<DbModel>,
-    search: () -> Unit
+    search: () -> Unit,
 ) {
     val info = LocalGenericInfo.current
     val focusManager = LocalFocusManager.current
@@ -294,7 +283,7 @@ fun SearchScreen(
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
 
-    OtakuScaffold(
+    NormalOtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             OutlinedTextField(
@@ -353,53 +342,6 @@ fun SearchScreen(
                 backgroundColor = M3MaterialTheme.colorScheme.background,
                 contentColor = M3MaterialTheme.colorScheme.onBackground,
                 scale = true
-            )
-        }
-    }
-}
-
-// This is because we can't get access to the library one
-@OptIn(ExperimentalFoundationApi::class)
-fun Modifier.pagerTabIndicatorOffset(
-    pagerState: PagerState,
-    tabPositions: List<TabPosition>,
-    pageIndexMapping: (Int) -> Int = { it },
-): Modifier = layout { measurable, constraints ->
-    if (tabPositions.isEmpty()) {
-        // If there are no pages, nothing to show
-        layout(constraints.maxWidth, 0) {}
-    } else {
-        val currentPage = minOf(tabPositions.lastIndex, pageIndexMapping(pagerState.currentPage))
-        val currentTab = tabPositions[currentPage]
-        val previousTab = tabPositions.getOrNull(currentPage - 1)
-        val nextTab = tabPositions.getOrNull(currentPage + 1)
-        val fraction = pagerState.currentPageOffsetFraction
-        val indicatorWidth = if (fraction > 0 && nextTab != null) {
-            lerp(currentTab.width, nextTab.width, fraction).roundToPx()
-        } else if (fraction < 0 && previousTab != null) {
-            lerp(currentTab.width, previousTab.width, -fraction).roundToPx()
-        } else {
-            currentTab.width.roundToPx()
-        }
-        val indicatorOffset = if (fraction > 0 && nextTab != null) {
-            lerp(currentTab.left, nextTab.left, fraction).roundToPx()
-        } else if (fraction < 0 && previousTab != null) {
-            lerp(currentTab.left, previousTab.left, -fraction).roundToPx()
-        } else {
-            currentTab.left.roundToPx()
-        }
-        val placeable = measurable.measure(
-            Constraints(
-                minWidth = indicatorWidth,
-                maxWidth = indicatorWidth,
-                minHeight = 0,
-                maxHeight = constraints.maxHeight
-            )
-        )
-        layout(constraints.maxWidth, maxOf(placeable.height, constraints.minHeight)) {
-            placeable.placeRelative(
-                indicatorOffset,
-                maxOf(constraints.minHeight - placeable.height, 0)
             )
         }
     }

@@ -2,7 +2,6 @@ package com.programmersbox.uiviews
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.util.fastMap
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.details.SwatchInfo
@@ -29,7 +28,7 @@ class ExampleUnitTest {
         println(timeNormal)
 
         val timeFast = measureNanoTime {
-            val f = list.fastMap { "#$it" }
+            val f = list.map { "#$it" }
             println(f)
         }
 
