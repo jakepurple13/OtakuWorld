@@ -23,7 +23,7 @@ class ExtensionListViewModel(
     otakuWorldCatalog: OtakuWorldCatalog,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<SourceInformation>()
-    val remoteSources = mutableStateMapOf<String, RemoteViewState>()
+    val remoteSources = mutableStateMapOf<String, RemoteState>()
 
     val installed by derivedStateOf {
         installedSources
@@ -32,7 +32,7 @@ class ExtensionListViewModel(
     }
 
     val remoteSourcesVersions by derivedStateOf {
-        remoteSources.values.flatMap { it.sources }
+        remoteSources.values.filterIsInstance<RemoteViewState>().flatMap { it.sources }
     }
 
     init {
@@ -51,7 +51,13 @@ class ExtensionListViewModel(
                         .filter { it.hasRemoteSources }
                         .distinct()
                         .toList()
-                        .associate { it.name to RemoteViewState(it.getRemoteSources()) }
+                        .associate { c ->
+                            c.name to runCatching { c.getRemoteSources() }
+                                .fold(
+                                    onSuccess = { RemoteViewState(it) },
+                                    onFailure = { RemoteErrorState() }
+                                )
+                        }
                 )
             }
             .launchIn(viewModelScope)
@@ -63,13 +69,17 @@ class ExtensionListViewModel(
 }
 
 class InstalledViewState(
-    val sourceInformation: List<SourceInformation>
+    val sourceInformation: List<SourceInformation>,
 ) {
     var showItems by mutableStateOf(false)
 }
 
+sealed class RemoteState
+
 class RemoteViewState(
-    val sources: List<RemoteSources>
-) {
+    val sources: List<RemoteSources>,
+) : RemoteState() {
     var showItems by mutableStateOf(false)
 }
+
+class RemoteErrorState : RemoteState()

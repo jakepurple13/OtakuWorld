@@ -145,7 +145,8 @@ fun HistoryUi(
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color.Transparent),
             )
-        }
+        },
+        blurTopBar = true
     ) { p ->
         LazyColumn(
             contentPadding = p,

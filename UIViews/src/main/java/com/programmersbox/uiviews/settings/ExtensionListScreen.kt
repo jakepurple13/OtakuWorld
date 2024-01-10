@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,9 +31,11 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SendTimeExtension
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -352,7 +353,7 @@ private fun InstalledExtensionItems(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun RemoteExtensionItems(
-    remoteSources: Map<String, RemoteViewState>,
+    remoteSources: Map<String, RemoteState>,
     onDownloadAndInstall: (String, String) -> Unit,
 ) {
     Column {
@@ -371,34 +372,55 @@ private fun RemoteExtensionItems(
             modifier = Modifier.fillMaxSize()
         ) {
             remoteSources.forEach { (t, u) ->
-                stickyHeader {
-                    InsetSmallTopAppBar(
-                        title = { Text(t) },
-                        insetPadding = WindowInsets(0.dp),
-                        navigationIcon = { Text("(${u.sources.size})") },
-                        actions = {
-                            IconButton(
+                when (u) {
+                    is RemoteViewState -> {
+                        stickyHeader {
+                            ElevatedCard(
                                 onClick = { u.showItems = !u.showItems }
                             ) {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    null,
-                                    modifier = Modifier.rotateWithBoolean(u.showItems)
+                                ListItem(
+                                    headlineContent = { Text(t) },
+                                    leadingContent = { Text("(${u.sources.size})") },
+                                    trailingContent = {
+                                        Icon(
+                                            Icons.Default.ArrowDropDown,
+                                            null,
+                                            modifier = Modifier.rotateWithBoolean(u.showItems)
+                                        )
+                                    }
                                 )
                             }
                         }
-                    )
-                }
 
-                if (u.showItems) {
-                    items(u.sources.filter { it.name.contains(search, true) }) {
-                        RemoteItem(
-                            remoteSource = it,
-                            onDownloadAndInstall = {
-                                onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
-                            },
-                            modifier = Modifier.animateItemPlacement()
-                        )
+                        if (u.showItems) {
+                            items(u.sources.filter { it.name.contains(search, true) }) {
+                                RemoteItem(
+                                    remoteSource = it,
+                                    onDownloadAndInstall = {
+                                        onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
+                                    },
+                                    modifier = Modifier.animateItemPlacement()
+                                )
+                            }
+                        }
+                    }
+
+                    is RemoteErrorState -> {
+                        item {
+                            ElevatedCard {
+                                ListItem(
+                                    headlineContent = { Text(t) },
+                                    supportingContent = { Text("Something went wrong") },
+                                    leadingContent = {
+                                        Icon(
+                                            Icons.Default.Warning,
+                                            null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
