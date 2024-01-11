@@ -45,7 +45,6 @@ import androidx.compose.material3.TooltipState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTooltipState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -151,7 +150,6 @@ fun DetailsView(
         label = ""
     )
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
     var showLists by remember { mutableStateOf(false) }
@@ -209,7 +207,6 @@ fun DetailsView(
                             containerColor = Color.Transparent,
                             titleContentColor = topBarColor
                         ),
-                        scrollBehavior = scrollBehavior,
                         title = {
                             Text(
                                 info.title,
@@ -324,7 +321,6 @@ fun DetailsView(
             },
             modifier = Modifier
                 .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
                 .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
         ) { p ->

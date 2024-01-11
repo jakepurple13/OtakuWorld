@@ -105,7 +105,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
@@ -304,8 +303,6 @@ fun ReadView(
 
     val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -344,7 +341,6 @@ fun ReadView(
         gesturesEnabled = readVm.list.size > 1
     ) {
         HazeScaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 AnimatedVisibility(
                     visible = showItems,
@@ -352,7 +348,6 @@ fun ReadView(
                     exit = slideOutVertically() + fadeOut()
                 ) {
                     TopBar(
-                        scrollBehavior = scrollBehavior,
                         pages = pages,
                         currentPage = currentPage,
                     )
@@ -1020,14 +1015,12 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
 @ExperimentalAnimationApi
 @Composable
 private fun TopBar(
-    scrollBehavior: TopAppBarScrollBehavior,
     pages: List<String>,
     currentPage: Int,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
-        scrollBehavior = scrollBehavior,
         modifier = modifier,
         navigationIcon = {
             val context = LocalContext.current

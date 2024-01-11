@@ -27,20 +27,7 @@
         <State />
       </entry>
       <entry key="mangaworld">
-        <State>
-          <runningDeviceTargetSelectedWithDropDown>
-            <Target>
-              <type value="RUNNING_DEVICE_TARGET" />
-              <deviceKey>
-                <Key>
-                  <type value="SERIAL_NUMBER" />
-                  <value value="1A011FDEE0091A" />
-                </Key>
-              </deviceKey>
-            </Target>
-          </runningDeviceTargetSelectedWithDropDown>
-          <timeTargetWasSelectedWithDropDown value="2024-01-10T16:03:55.232440Z" />
-        </State>
+        <State />
       </entry>
       <entry key="novel_sources.bestlightnovel">
         <State />

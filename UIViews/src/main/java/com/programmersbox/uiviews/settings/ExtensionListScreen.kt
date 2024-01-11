@@ -61,6 +61,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -135,6 +136,12 @@ fun ExtensionList(
         initialPage = 0,
         initialPageOffsetFraction = 0f
     ) { 2 }
+
+    LaunchedEffect(key1 = viewModel.installed) {
+        if (viewModel.installed.isEmpty()) {
+            pagerState.animateScrollToPage(1)
+        }
+    }
 
     val context = LocalContext.current
     val downloadAndInstall = remember { DownloadAndInstaller(context) }
