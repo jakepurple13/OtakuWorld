@@ -44,16 +44,18 @@ jobs:
           distribution: adopt
           java-version: 17
 
-      - name: Build MangaWorld artifacts
+      - name: Setup gradle
         id: buildMangaApks
         uses: gradle/gradle-build-action@v2.11.1
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
           configuration-cache-enabled: true
-          arguments: mangaworld:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - name: Build MangaWorld artifacts
+        run: ./gradle mangaworld:assembleRelease
+
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign
         with:
@@ -63,7 +65,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: manga_sign_no_firebase
         with:
@@ -115,7 +117,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworld:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: anime_sign
         with:
@@ -125,7 +127,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: anime_sign_no_firebase
         with:
@@ -177,7 +179,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: animeworldtv:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: animetv_sign
         with:
@@ -187,7 +189,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: animetv_sign_no_firebase
         with:
@@ -239,7 +241,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: novelworld:assembleRelease
 
-      - uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: novel_sign
         with:
@@ -249,8 +251,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - if: github.event.inputs.build_novelworld == 'true'
-        uses: r0adkll/sign-android-release@v1
+      - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
         id: novel_sign_no_firebase
         with:
