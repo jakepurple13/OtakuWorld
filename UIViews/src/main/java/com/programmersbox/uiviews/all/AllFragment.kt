@@ -294,7 +294,9 @@ fun AllScreen(
                 .pullRefresh(pullRefreshState)
         ) {
             if (sourceList.isEmpty()) {
-                info.ComposeShimmerItem()
+                Box(Modifier.padding(paddingValues)) {
+                    info.ComposeShimmerItem()
+                }
             } else {
                 info.AllListView(
                     list = sourceList,

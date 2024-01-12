@@ -53,7 +53,7 @@ jobs:
           configuration-cache-enabled: true
 
       - name: Build MangaWorld artifacts
-        run: ./gradle mangaworld:assembleRelease
+        run: ./gradlew mangaworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
