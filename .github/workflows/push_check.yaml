@@ -108,9 +108,6 @@ jobs:
         id: buildAnimeApks
         uses: gradle/gradle-build-action@v2.11.1
         with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
           arguments: animeworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
@@ -170,9 +167,6 @@ jobs:
         id: buildAnimeTvApks
         uses: gradle/gradle-build-action@v2.11.1
         with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
           arguments: animeworldtv:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
@@ -232,9 +226,6 @@ jobs:
         id: buildNovelApks
         uses: gradle/gradle-build-action@v2.11.1
         with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
           arguments: novelworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
