@@ -49,9 +49,6 @@ jobs:
         id: buildMangaApks
         uses: gradle/gradle-build-action@v2.11.1
         with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
           arguments: mangaworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
