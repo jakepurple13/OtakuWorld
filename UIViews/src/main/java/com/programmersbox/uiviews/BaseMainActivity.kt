@@ -447,7 +447,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
         windowSize: WindowSizeClass,
     ) {
         composable(Screen.RecentScreen.route) { RecentView() }
-        composable(Screen.AllScreen.route) { AllView() }
+        composable(Screen.AllScreen.route) {
+            AllView(
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            )
+        }
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
         composable(
