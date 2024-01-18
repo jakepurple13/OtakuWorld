@@ -51,6 +51,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -184,6 +185,7 @@ internal fun DetailActions(
     dao: ItemDao,
     onReverseChaptersClick: () -> Unit,
     onShowLists: () -> Unit,
+    customActions: @Composable () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
 
@@ -283,6 +285,26 @@ internal fun DetailActions(
         )
     }
 
+    customActions()
+
+    ShareButton(
+        info = info,
+        topBarColor = topBarColor
+    )
+
+    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
+
+    IconButton(onClick = { showDropDown = true }) {
+        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+    }
+}
+
+@Composable
+internal fun ShareButton(
+    info: InfoModel,
+    topBarColor: Color,
+) {
+    val context = LocalContext.current
     val shareItem = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {}
@@ -301,12 +323,6 @@ internal fun DetailActions(
             ).onFailure { context.showErrorToast() }
         }
     ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
-
-    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
-
-    IconButton(onClick = { showDropDown = true }) {
-        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

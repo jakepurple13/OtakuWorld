@@ -231,7 +231,28 @@ fun DetailsView(
                                 dao = dao,
                                 onReverseChaptersClick = { reverseChapters = !reverseChapters },
                                 onShowLists = { showLists = true }
-                            )
+                            ) {
+                                val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
+                                ToolTipWrapper(
+                                    info = { Text("${if (expanded) "Show" else "Hide"} Details") }
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            scope.launch {
+                                                if (expanded) collapsableBehavior.state.animateExpand()
+                                                else collapsableBehavior.state.animateCollapse()
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.ArrowDropDownCircle,
+                                            modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
+                                            contentDescription = if (expanded) "Expand" else "Collapse",
+                                            tint = topBarColor
+                                        )
+                                    }
+                                }
+                            }
                         }
                     )
 
@@ -250,28 +271,7 @@ fun DetailsView(
                     navController = navController,
                     onShowLists = { showLists = true },
                     info = info,
-                    customActions = {
-                        val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
-
-                        ToolTipWrapper(
-                            info = { Text("${if (expanded) "Show" else "Hide"} Details") }
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    scope.launch {
-                                        if (expanded) collapsableBehavior.state.animateExpand()
-                                        else collapsableBehavior.state.animateCollapse()
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    Icons.Default.ArrowDropDownCircle,
-                                    modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
-                                    contentDescription = if (expanded) "Expand" else "Collapse"
-                                )
-                            }
-                        }
-                    },
+                    customActions = {},
                     removeFromSaved = {
                         scope.launch(Dispatchers.IO) {
                             dao.getNotificationItemFlow(info.url)
