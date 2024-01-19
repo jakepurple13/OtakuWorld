@@ -12,9 +12,11 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,45 +27,53 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.mangasettings.PlayingMiddleAction
+import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadView
 import com.programmersbox.mangaworld.reader.ReadViewModel
+import com.programmersbox.mangaworld.reader.ReaderTopBar
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -73,6 +83,7 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.utils.CategorySetting
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -85,7 +96,6 @@ import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -97,10 +107,11 @@ import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get(), get()) }
+    single<GenericInfo> { GenericManga(get(), get(), get()) }
     single { NetworkHelper(get()) }
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     single { ChapterHolder() }
+    single { MangaSettingsHandling(get()) }
 }
 
 class ChapterHolder {
@@ -110,7 +121,8 @@ class ChapterHolder {
 
 class GenericManga(
     val context: Context,
-    val chapterHolder: ChapterHolder
+    val chapterHolder: ChapterHolder,
+    val mangaSettingsHandling: MangaSettingsHandling,
 ) : GenericInfo {
 
     override val sourceType: String get() = "manga"
@@ -126,10 +138,10 @@ class GenericManga(
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         chapterHolder.chapters = allChapters
-        if (runBlocking { context.useNewReaderFlow.first() }) {
+        if (runBlocking { mangaSettingsHandling.useNewReader.flow.first() }) {
             chapterHolder.chapterModel = model
             ReadViewModel.navigateToMangaReader(navController, infoModel.title, model.url, model.sourceUrl)
         } else {
@@ -188,7 +200,7 @@ class GenericManga(
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
@@ -265,7 +277,7 @@ class GenericManga(
         }
     }
 
-    @OptIn(com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
+    @OptIn(ExperimentalPermissionsApi::class, ExperimentalAnimationApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {
@@ -376,9 +388,12 @@ class GenericManga(
 
         playerSettings {
             val scope = rememberCoroutineScope()
-            val context = LocalContext.current
 
-            var padding by remember { mutableFloatStateOf(runBlocking { context.pagePadding.first().toFloat() }) }
+            var padding by remember {
+                mutableFloatStateOf(
+                    runBlocking { mangaSettingsHandling.pagePadding.flow.first().toFloat() }
+                )
+            }
 
             SliderSetting(
                 sliderValue = padding,
@@ -387,32 +402,127 @@ class GenericManga(
                 settingIcon = { Icon(Icons.Default.FormatLineSpacing, null) },
                 range = 0f..10f,
                 updateValue = { padding = it },
-                onValueChangedFinished = { scope.launch { context.updatePref(PAGE_PADDING, padding.toInt()) } }
+                onValueChangedFinished = { scope.launch { mangaSettingsHandling.pagePadding.updateSetting(padding.toInt()) } }
             )
 
-            val reader by context.useNewReaderFlow.collectAsState(true)
+            val reader by mangaSettingsHandling.useNewReader
+                .flow
+                .collectAsStateWithLifecycle(initialValue = true)
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.useNewReader)) },
                 summaryValue = { Text(stringResource(R.string.reader_summary_setting)) },
                 settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
                 value = reader,
-                updateValue = { scope.launch { context.updatePref(USER_NEW_READER, it) } }
+                updateValue = { scope.launch { mangaSettingsHandling.useNewReader.updateSetting(it) } }
             )
 
-            val listOrPager by context.listOrPager.collectAsState(initial = true)
+            val listOrPager by mangaSettingsHandling.listOrPager
+                .flow
+                .collectAsStateWithLifecycle(initialValue = true)
 
             ShowWhen(reader) {
-                SwitchSetting(
-                    settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
-                    summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
-                    value = listOrPager,
-                    updateValue = { scope.launch { context.updatePref(LIST_OR_PAGER, it) } },
-                    settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
-                )
+                Column {
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
+                        summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
+                        value = listOrPager,
+                        updateValue = { scope.launch { mangaSettingsHandling.listOrPager.updateSetting(it) } },
+                        settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
+                    )
+
+                    HorizontalDivider()
+
+                    CategorySetting { Text("Top Bar Settings") }
+
+                    val startAction by mangaSettingsHandling.playingStartAction
+                        .flow
+                        .collectAsStateWithLifecycle(initialValue = PlayingStartAction.CurrentChapter)
+
+                    val middleAction by mangaSettingsHandling.playingMiddleAction
+                        .flow
+                        .collectAsStateWithLifecycle(initialValue = PlayingMiddleAction.Nothing)
+
+                    var showStartDropdown by remember { mutableStateOf(false) }
+
+                    PreferenceSetting(
+                        settingTitle = { Text("Start Option") },
+                        endIcon = {
+                            DropdownMenu(
+                                expanded = showStartDropdown,
+                                onDismissRequest = { showStartDropdown = false }
+                            ) {
+                                PlayingStartAction.entries
+                                    .filter { it != PlayingStartAction.UNRECOGNIZED }
+                                    .forEach {
+                                        DropdownMenuItem(
+                                            text = { Text(it.name) },
+                                            leadingIcon = {
+                                                if (it == startAction) {
+                                                    Icon(Icons.Default.Check, null)
+                                                }
+                                            },
+                                            onClick = {
+                                                scope.launch {
+                                                    mangaSettingsHandling.playingStartAction.updateSetting(it)
+                                                    showStartDropdown = false
+                                                }
+                                            }
+                                        )
+                                    }
+                            }
+                            Text(startAction.name)
+                        },
+                        modifier = Modifier.clickable { showStartDropdown = true }
+                    )
+
+                    var showMiddleDropdown by remember { mutableStateOf(false) }
+
+                    PreferenceSetting(
+                        settingTitle = { Text("Middle Option") },
+                        endIcon = {
+                            DropdownMenu(
+                                expanded = showMiddleDropdown,
+                                onDismissRequest = { showMiddleDropdown = false }
+                            ) {
+                                PlayingMiddleAction.entries
+                                    .filter { it != PlayingMiddleAction.UNRECOGNIZED }
+                                    .forEach {
+                                        DropdownMenuItem(
+                                            text = { Text(it.name) },
+                                            leadingIcon = {
+                                                if (it == middleAction) {
+                                                    Icon(Icons.Default.Check, null)
+                                                }
+                                            },
+                                            onClick = {
+                                                scope.launch {
+                                                    mangaSettingsHandling.playingMiddleAction.updateSetting(it)
+                                                    showMiddleDropdown = false
+                                                }
+                                            }
+                                        )
+                                    }
+                            }
+                            Text(middleAction.name)
+                        },
+                        modifier = Modifier.clickable { showMiddleDropdown = true }
+                    )
+
+                    ReaderTopBar(
+                        pages = List(10) { "" },
+                        currentPage = 5,
+                        currentChapter = 10,
+                        playingStartAction = startAction,
+                        playingMiddleAction = middleAction,
+                        modifier = Modifier.border(
+                            2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
             }
         }
-
     }
 
     @OptIn(

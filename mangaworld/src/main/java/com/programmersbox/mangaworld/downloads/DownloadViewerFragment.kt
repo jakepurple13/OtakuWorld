@@ -58,14 +58,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
+import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.ReadViewModel
-import com.programmersbox.mangaworld.useNewReaderFlow
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -75,11 +76,10 @@ import com.programmersbox.uiviews.utils.components.PermissionRequest
 import com.programmersbox.uiviews.utils.components.animatedItems
 import com.programmersbox.uiviews.utils.components.updateAnimatedItemsState
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import org.koin.compose.koinInject
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -125,7 +125,15 @@ fun DownloadScreen() {
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @Composable
-private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
+private fun DownloadViewer(
+    viewModel: DownloadViewModel,
+    p1: PaddingValues,
+    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
+) {
+    val useNewReader by mangaSettingsHandling.useNewReader
+        .flow
+        .collectAsStateWithLifecycle(initialValue = true)
+
     val fileList = viewModel.fileList
 
     val f by updateAnimatedItemsState(newList = fileList.entries.toList())
@@ -142,7 +150,7 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
             f,
             enterTransition = fadeIn(),
             exitTransition = fadeOut()
-        ) { file -> ChapterItem(file) }
+        ) { file -> ChapterItem(file, useNewReader) }
     }
 }
 
@@ -188,7 +196,10 @@ private fun EmptyState(p1: PaddingValues) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>) {
+private fun ChapterItem(
+    file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>,
+    useNewReader: Boolean = true,
+) {
     val context = LocalContext.current
 
     var expanded by remember { mutableStateOf(false) }
@@ -317,7 +328,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                                     indication = rememberRipple(),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
-                                    if (runBlocking { context.useNewReaderFlow.first() }) {
+                                    if (useNewReader) {
                                         ReadViewModel.navigateToMangaReader(
                                             navController,
                                             filePath = c?.chapterFolder,

@@ -12,7 +12,6 @@ import android.provider.MediaStore
 import android.util.AttributeSet
 import android.view.View
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
@@ -24,9 +23,6 @@ import kotlinx.coroutines.launch
 
 val SHOW_ADULT = booleanPreferencesKey("showAdultSources")
 val Context.showAdultFlow get() = dataStore.data.map { it[SHOW_ADULT] ?: false }
-
-val USER_NEW_READER = booleanPreferencesKey("useNewReader")
-val Context.useNewReaderFlow get() = dataStore.data.map { it[USER_NEW_READER] ?: true }
 
 val DOWNLOAD_FILE_PATH get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
 
@@ -192,8 +188,3 @@ class ChaptersGet private constructor(private val chaptersContex: Context) {
     }
 }
 
-val PAGE_PADDING = intPreferencesKey("page_padding")
-val Context.pagePadding get() = dataStore.data.map { it[PAGE_PADDING] ?: 4 }
-
-val LIST_OR_PAGER = booleanPreferencesKey("list_or_padding")
-val Context.listOrPager get() = dataStore.data.map { it[LIST_OR_PAGER] ?: true }

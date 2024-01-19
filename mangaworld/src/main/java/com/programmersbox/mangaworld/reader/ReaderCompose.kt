@@ -5,6 +5,7 @@ package com.programmersbox.mangaworld.reader
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
@@ -65,6 +66,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
@@ -82,6 +84,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -109,11 +113,12 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -142,17 +147,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.helpfulutils.battery
+import com.programmersbox.helpfulutils.timeTick
+import com.programmersbox.mangasettings.PlayingMiddleAction
+import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.ChapterHolder
-import com.programmersbox.mangaworld.LIST_OR_PAGER
-import com.programmersbox.mangaworld.PAGE_PADDING
+import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
-import com.programmersbox.mangaworld.listOrPager
-import com.programmersbox.mangaworld.pagePadding
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -161,14 +169,13 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
-import com.programmersbox.uiviews.utils.dataStore
-import com.programmersbox.uiviews.utils.updatePref
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import io.kamel.image.KamelImage
@@ -176,8 +183,8 @@ import io.kamel.image.asyncPainterResource
 import io.ktor.client.request.header
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
@@ -194,6 +201,7 @@ fun ReadView(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     ch: ChapterHolder = koinInject(),
+    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
     dao: ItemDao = LocalItemDao.current,
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
@@ -211,7 +219,9 @@ fun ReadView(
 
     val pages = readVm.pageList
 
-    val listOrPager by context.listOrPager.collectAsState(initial = true)
+    val listOrPager by mangaSettingsHandling.listOrPager
+        .flow
+        .collectAsStateWithLifecycle(initialValue = true)
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -221,7 +231,18 @@ fun ReadView(
     val listState = rememberLazyListState()
     val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
 
-    val paddingPage by context.pagePadding.collectAsState(initial = 4)
+    val paddingPage by mangaSettingsHandling.pagePadding
+        .flow
+        .collectAsStateWithLifecycle(initialValue = 4)
+
+    val startAction by mangaSettingsHandling.playingStartAction
+        .flow
+        .collectAsStateWithLifecycle(initialValue = PlayingStartAction.CurrentChapter)
+
+    val middleAction by mangaSettingsHandling.playingMiddleAction
+        .flow
+        .collectAsStateWithLifecycle(initialValue = PlayingMiddleAction.Nothing)
+
     var settingsPopup by remember { mutableStateOf(false) }
     val settingsHandling = LocalSettingsHandling.current
 
@@ -245,14 +266,13 @@ fun ReadView(
                         range = 1f..100f
                     )
                     HorizontalDivider()
-                    val activity = LocalActivity.current
                     SliderSetting(
                         scope = scope,
                         settingIcon = Icons.Default.FormatLineSpacing,
                         settingTitle = R.string.reader_padding_between_pages,
                         settingSummary = R.string.default_padding_summary,
-                        preferenceUpdate = { activity.updatePref(PAGE_PADDING, it) },
-                        initialValue = runBlocking { context.dataStore.data.first()[PAGE_PADDING] ?: 4 },
+                        preferenceUpdate = { mangaSettingsHandling.pagePadding.updateSetting(it) },
+                        initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
                         range = 0f..10f
                     )
                     HorizontalDivider()
@@ -260,8 +280,75 @@ fun ReadView(
                         settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                         value = listOrPager,
-                        updateValue = { scope.launch { activity.updatePref(LIST_OR_PAGER, it) } },
+                        updateValue = { scope.launch { mangaSettingsHandling.listOrPager.updateSetting(it) } },
                         settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
+                    )
+                    HorizontalDivider()
+
+                    var showStartDropdown by remember { mutableStateOf(false) }
+
+                    PreferenceSetting(
+                        settingTitle = { Text("Start Option") },
+                        endIcon = {
+                            DropdownMenu(
+                                expanded = showStartDropdown,
+                                onDismissRequest = { showStartDropdown = false }
+                            ) {
+                                PlayingStartAction.entries
+                                    .filter { it != PlayingStartAction.UNRECOGNIZED }
+                                    .forEach {
+                                        DropdownMenuItem(
+                                            text = { Text(it.name) },
+                                            leadingIcon = {
+                                                if (it == startAction) {
+                                                    Icon(Icons.Default.Check, null)
+                                                }
+                                            },
+                                            onClick = {
+                                                scope.launch {
+                                                    mangaSettingsHandling.playingStartAction.updateSetting(it)
+                                                    showStartDropdown = false
+                                                }
+                                            }
+                                        )
+                                    }
+                            }
+                            Text(startAction.name)
+                        },
+                        modifier = Modifier.clickable { showStartDropdown = true }
+                    )
+
+                    var showMiddleDropdown by remember { mutableStateOf(false) }
+
+                    PreferenceSetting(
+                        settingTitle = { Text("Middle Option") },
+                        endIcon = {
+                            DropdownMenu(
+                                expanded = showMiddleDropdown,
+                                onDismissRequest = { showMiddleDropdown = false }
+                            ) {
+                                PlayingMiddleAction.entries
+                                    .filter { it != PlayingMiddleAction.UNRECOGNIZED }
+                                    .forEach {
+                                        DropdownMenuItem(
+                                            text = { Text(it.name) },
+                                            leadingIcon = {
+                                                if (it == middleAction) {
+                                                    Icon(Icons.Default.Check, null)
+                                                }
+                                            },
+                                            onClick = {
+                                                scope.launch {
+                                                    mangaSettingsHandling.playingMiddleAction.updateSetting(it)
+                                                    showMiddleDropdown = false
+                                                }
+                                            }
+                                        )
+                                    }
+                            }
+                            Text(middleAction.name)
+                        },
+                        modifier = Modifier.clickable { showMiddleDropdown = true }
                     )
                 }
             },
@@ -340,10 +427,12 @@ fun ReadView(
                     enter = slideInVertically() + fadeIn(),
                     exit = slideOutVertically() + fadeOut()
                 ) {
-                    TopBar(
+                    ReaderTopBar(
                         pages = pages,
                         currentPage = currentPage,
                         currentChapter = readVm.list.size - readVm.currentChapter,
+                        playingStartAction = startAction,
+                        playingMiddleAction = middleAction
                     )
                 }
             },
@@ -1008,79 +1097,106 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @Composable
-private fun TopBar(
+fun ReaderTopBar(
     pages: List<String>,
     currentPage: Int,
     currentChapter: Int,
+    playingStartAction: PlayingStartAction,
+    playingMiddleAction: PlayingMiddleAction,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
         modifier = modifier,
         navigationIcon = {
-            //TODO: Change this to being an option to let the user see the current chapter, battery, or nothing
-            // same with the middle but time or nothing
-            Text(
-                "Ch $currentChapter",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            /*val context = LocalContext.current
-            var batteryColor by remember { mutableStateOf(Color.White) }
-            var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
-            var batteryPercent by remember { mutableFloatStateOf(0f) }
-            val batteryInformation = remember { BatteryInformation(context) }
+            Crossfade(
+                targetState = playingStartAction,
+                label = "startAction"
+            ) { target ->
+                when (target) {
+                    PlayingStartAction.Battery -> {
+                        val context = LocalContext.current
+                        var batteryColor by remember { mutableStateOf(Color.White) }
+                        var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
+                        var batteryPercent by remember { mutableFloatStateOf(0f) }
+                        val batteryInformation = remember(context) { BatteryInformation(context) }
 
-            LaunchedEffect(Unit) {
-                batteryInformation.composeSetupFlow(
-                    Color.White
-                ) {
-                    batteryColor = it.first
-                    batteryIcon = it.second
-                }
-                    .launchIn(this)
-            }
+                        LaunchedEffect(context) {
+                            batteryInformation.composeSetupFlow(
+                                Color.White
+                            ) {
+                                batteryColor = it.first
+                                batteryIcon = it.second
+                            }
+                                .launchIn(this)
+                        }
 
-            DisposableEffect(LocalContext.current) {
-                val batteryInfo = context.battery {
-                    batteryPercent = it.percent
-                    batteryInformation.batteryLevel.tryEmit(it.percent)
-                    batteryInformation.batteryInfo.tryEmit(it)
+                        DisposableEffect(context) {
+                            val batteryInfo = context.battery {
+                                batteryPercent = it.percent
+                                batteryInformation.batteryLevel.tryEmit(it.percent)
+                                batteryInformation.batteryInfo.tryEmit(it)
+                            }
+                            onDispose { context.unregisterReceiver(batteryInfo) }
+                        }
+                        Row(
+                            modifier = Modifier.padding(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                batteryIcon.composeIcon,
+                                contentDescription = null,
+                                tint = animateColorAsState(
+                                    if (batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
+                                    else batteryColor, label = ""
+                                ).value
+                            )
+                            Text(
+                                "${batteryPercent.toInt()}%",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    PlayingStartAction.CurrentChapter -> {
+                        Text(
+                            "Ch $currentChapter",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+
+                    PlayingStartAction.None -> {}
+                    PlayingStartAction.UNRECOGNIZED -> {}
                 }
-                onDispose { context.unregisterReceiver(batteryInfo) }
             }
-            Row(
-                modifier = Modifier.padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    batteryIcon.composeIcon,
-                    contentDescription = null,
-                    tint = animateColorAsState(
-                        if (batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                        else batteryColor, label = ""
-                    ).value
-                )
-                Text(
-                    "${batteryPercent.toInt()}%",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }*/
         },
         title = {
-            /*var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
+            Crossfade(
+                targetState = playingMiddleAction,
+                label = "middleAction"
+            ) { target ->
+                when (target) {
+                    PlayingMiddleAction.Time -> {
+                        var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
-            val activity = LocalActivity.current
+                        val activity = LocalActivity.current
 
-            DisposableEffect(LocalContext.current) {
-                val timeReceiver = activity.timeTick { _, _ -> time = System.currentTimeMillis() }
-                onDispose { activity.unregisterReceiver(timeReceiver) }
+                        DisposableEffect(LocalContext.current) {
+                            val timeReceiver = activity.timeTick { _, _ -> time = System.currentTimeMillis() }
+                            onDispose { activity.unregisterReceiver(timeReceiver) }
+                        }
+
+                        Text(
+                            DateFormat.getTimeFormat(LocalContext.current).format(time).toString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(4.dp)
+                        )
+                    }
+
+                    PlayingMiddleAction.Nothing -> {}
+                    PlayingMiddleAction.UNRECOGNIZED -> {}
+                }
             }
-
-            Text(
-                DateFormat.getTimeFormat(LocalContext.current).format(time).toString(),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(4.dp)
-            )*/
         },
         actions = {
             PageIndicator(

@@ -1,11 +1,13 @@
+import com.google.protobuf.gradle.id
+
 plugins {
     id("otaku-application")
-    kotlin("kapt")
     id("androidx.navigation.safeargs.kotlin")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
     id("otaku-easylauncher")
+    id("com.google.protobuf") version "0.9.4"
     alias(libs.plugins.ksp)
     //id("androidx.baselineprofile")
 }
@@ -64,6 +66,8 @@ dependencies {
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)
 
+    implementation(libs.bundles.protobuf)
+
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
@@ -76,4 +80,20 @@ dependencies {
     implementation(libs.glideCompose)
 
     implementation(libs.zoomableModifier)
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobufVersion.get().toString()}" }
+    plugins {
+        id("javalite") { artifact = libs.protobufJava.get().toString() }
+        id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") { option("lite") }
+                create("kotlin") { option("lite") }
+            }
+        }
+    }
 }
