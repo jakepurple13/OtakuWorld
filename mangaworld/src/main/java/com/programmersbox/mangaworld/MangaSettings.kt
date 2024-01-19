@@ -21,7 +21,7 @@ val Context.mangaSettings: DataStore<MangaSettings> by dataStore(
 object MangaSettingsSerializer : GenericSerializer<MangaSettings, MangaSettings.Builder> {
     override val defaultValue: MangaSettings
         get() = mangaSettings {
-            playingStartAction = PlayingStartAction.Battery
+            playingStartAction = PlayingStartAction.CurrentChapter
             playingMiddleAction = PlayingMiddleAction.Nothing
             useNewReader = true
             pagePadding = 4
