@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.Manifest
+import android.app.UiModeManager
 import android.app.assist.AssistContent
 import android.content.Intent
 import android.net.Uri
@@ -93,6 +94,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
+import com.programmersbox.helpfulutils.uiModeManager
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
@@ -700,12 +702,25 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
         }
 
-        when (runBlocking { settingsHandling.systemThemeMode.firstOrNull() }) {
-            SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
-            SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
-            else -> null
-        }?.let(AppCompatDelegate::setDefaultNightMode)
+        runBlocking { settingsHandling.systemThemeMode.firstOrNull() }
+            ?.also {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    when (it) {
+                        SystemThemeMode.FollowSystem -> UiModeManager.MODE_NIGHT_AUTO
+                        SystemThemeMode.Day -> UiModeManager.MODE_NIGHT_NO
+                        SystemThemeMode.Night -> UiModeManager.MODE_NIGHT_YES
+                        else -> null
+                    }?.let(uiModeManager::setApplicationNightMode)
+                }
+            }
+            ?.also {
+                when (it) {
+                    SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
+                    SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
+                    else -> null
+                }?.let(AppCompatDelegate::setDefaultNightMode)
+            }
 
         flow { emit(AppUpdate.getUpdate()) }
             .catch { emit(null) }
