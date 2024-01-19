@@ -16,6 +16,9 @@ import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.HistoryDatabase
+import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
@@ -78,6 +81,9 @@ abstract class OtakuApp : Application() {
                 single { SourceRepository() }
                 single { CurrentSourceRepository() }
                 single { ChangingSettingsRepository() }
+                single { ItemDatabase.getInstance(get()) }
+                single { HistoryDatabase.getInstance(get()) }
+                single { ListDatabase.getInstance(get()) }
                 single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
                 single {
                     OtakuWorldCatalog(

@@ -143,6 +143,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private val appLogo: AppLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
     private val changingSettingsRepository: ChangingSettingsRepository by inject()
+    private val itemDatabase: ItemDatabase by inject()
     protected lateinit var navController: NavHostController
 
     protected fun isNavInitialized() = ::navController.isInitialized
@@ -728,7 +729,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .onEach(updateAppCheck::emit)
             .launchIn(lifecycleScope)
 
-        ItemDatabase.getInstance(this)
+        itemDatabase
             .itemDao()
             .getAllNotificationCount()
             .onEach { notificationCount = it }
