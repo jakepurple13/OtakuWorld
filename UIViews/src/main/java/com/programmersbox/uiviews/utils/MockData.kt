@@ -233,7 +233,8 @@ fun PreviewTheme(
                     LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                     LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
                     LocalSourcesRepository provides SourceRepository(),
-                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) }
+                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
+                    LocalNavHostPadding provides PaddingValues(0.dp)
                 ) { Surface { content() } }
             }
         }

@@ -5,7 +5,6 @@ package com.programmersbox.mangaworld.reader
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
@@ -110,13 +109,11 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -149,8 +146,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.helpfulutils.battery
-import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.mangaworld.LIST_OR_PAGER
 import com.programmersbox.mangaworld.PAGE_PADDING
@@ -158,7 +153,6 @@ import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.listOrPager
 import com.programmersbox.mangaworld.pagePadding
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -184,7 +178,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.engawapg.lib.zoomable.rememberZoomState
@@ -350,6 +343,7 @@ fun ReadView(
                     TopBar(
                         pages = pages,
                         currentPage = currentPage,
+                        currentChapter = readVm.list.size - readVm.currentChapter,
                     )
                 }
             },
@@ -1017,13 +1011,20 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
 private fun TopBar(
     pages: List<String>,
     currentPage: Int,
+    currentChapter: Int,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
         windowInsets = WindowInsets(0.dp),
         modifier = modifier,
         navigationIcon = {
-            val context = LocalContext.current
+            //TODO: Change this to being an option to let the user see the current chapter, battery, or nothing
+            // same with the middle but time or nothing
+            Text(
+                "Ch $currentChapter",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            /*val context = LocalContext.current
             var batteryColor by remember { mutableStateOf(Color.White) }
             var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
             var batteryPercent by remember { mutableFloatStateOf(0f) }
@@ -1063,10 +1064,10 @@ private fun TopBar(
                     "${batteryPercent.toInt()}%",
                     style = MaterialTheme.typography.bodyLarge
                 )
-            }
+            }*/
         },
         title = {
-            var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
+            /*var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
             val activity = LocalActivity.current
 
@@ -1079,7 +1080,7 @@ private fun TopBar(
                 DateFormat.getTimeFormat(LocalContext.current).format(time).toString(),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(4.dp)
-            )
+            )*/
         },
         actions = {
             PageIndicator(
