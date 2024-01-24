@@ -38,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -110,7 +109,6 @@ class ComposeSettingsDsl {
     }
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @Composable
@@ -166,9 +164,34 @@ fun SettingScreen(
             )
         }
     }
+}
 
-    //TODO: This will be for the future when this works again
-    /*val navigator = rememberListDetailPaneScaffoldNavigator(
+/*
+//TODO: This will be for the future when this works again
+internal enum class SettingChoice {
+    Notification,
+    General,
+    Other,
+    MoreInfo,
+    None
+}
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@ExperimentalComposeUiApi
+@ExperimentalMaterial3Api
+@Composable
+internal fun SettingScreen(
+    composeSettingsDsl: ComposeSettingsDsl,
+    debugMenuClick: () -> Unit = {},
+    notificationClick: () -> Unit = {},
+    favoritesClick: () -> Unit = {},
+    historyClick: () -> Unit = {},
+    globalSearchClick: () -> Unit = {},
+    listClick: () -> Unit = {},
+    extensionClick: () -> Unit = {},
+) {
+    val navController = LocalNavController.current
+    val navigator = rememberListDetailPaneScaffoldNavigator(
         scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
     )
     var settingChoice by remember { mutableStateOf(SettingChoice.General) }
@@ -186,7 +209,7 @@ fun SettingScreen(
     ListDetailPaneScaffold(
         scaffoldState = navigator.scaffoldState,
         listPane = {
-            //AnimatedPane(modifier = Modifier) {
+            AnimatedPane(modifier = Modifier) {
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
                 OtakuScaffold(
                     topBar = {
@@ -224,10 +247,10 @@ fun SettingScreen(
                         )
                     }
                 }
-            //}
+            }
         }
     ) {
-        //AnimatedPane(modifier = Modifier.fillMaxSize()) {
+        AnimatedPane(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = settingChoice,
                 label = "",
@@ -240,23 +263,15 @@ fun SettingScreen(
                     SettingChoice.General -> GeneralSettings(composeSettingsDsl.generalSettings)
                     SettingChoice.Other -> PlaySettings(composeSettingsDsl.playerSettings)
                     SettingChoice.MoreInfo -> InfoSettings {
-                        //navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
+                        navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
                     }
 
                     SettingChoice.None -> {}
                 }
             }
-        //}
-    }*/
-}
-
-internal enum class SettingChoice {
-    Notification,
-    General,
-    Other,
-    MoreInfo,
-    None
-}
+        }
+    }
+}*/
 
 @Composable
 private fun SettingsScreen(
