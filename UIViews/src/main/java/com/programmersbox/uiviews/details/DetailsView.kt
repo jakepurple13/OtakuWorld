@@ -33,18 +33,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TooltipState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -84,6 +79,7 @@ import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.components.minus
 import com.programmersbox.uiviews.utils.toComposeColor
 import dev.chrisbanes.haze.HazeState
@@ -395,21 +391,4 @@ fun DetailsView(
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun ToolTipWrapper(
-    info: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    tooltipState: TooltipState = rememberTooltipState(),
-    content: @Composable () -> Unit,
-) {
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = { RichTooltip { info() } },
-        state = tooltipState,
-        modifier = modifier,
-        content = content
-    )
 }
