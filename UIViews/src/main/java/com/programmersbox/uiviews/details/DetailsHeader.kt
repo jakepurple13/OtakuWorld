@@ -168,7 +168,9 @@ internal fun DetailsHeader(
                         component = rememberImageComponent {
                             +PalettePlugin { p ->
                                 if (latestSwatch == null) {
-                                    swatchChange(p.vibrantSwatch?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) })
+                                    p.vibrantSwatch
+                                        ?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
+                                        ?.let(swatchChange)
                                 }
                             }
                             +PlaceholderPlugin.Loading(logo)
