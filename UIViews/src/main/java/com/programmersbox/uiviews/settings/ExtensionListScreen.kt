@@ -28,10 +28,10 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SendTimeExtension
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -187,9 +187,9 @@ fun ExtensionList(
                     var showDropDown by remember { mutableStateOf(false) }
                     var checked by remember { mutableStateOf(false) }
 
-                    ToolTipWrapper(info = { Text("View Installed Extensions") }) {
+                    ToolTipWrapper(info = { Text("View Remote Extensions") }) {
                         IconButton(onClick = { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail) }) {
-                            Icon(Icons.Default.Extension, null)
+                            Icon(Icons.Default.SendTimeExtension, null)
                         }
                     }
 
