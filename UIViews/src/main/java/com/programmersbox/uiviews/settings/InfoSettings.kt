@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.SystemUpdateAlt
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -70,7 +70,7 @@ fun InfoSettings(
             settingTitle = { Text(stringResource(R.string.view_libraries_used)) },
             settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = usedLibraryClick
             )
@@ -80,7 +80,7 @@ fun InfoSettings(
             settingTitle = { Text(stringResource(R.string.view_on_github)) },
             settingIcon = { Icon(Icons.Github, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
         )
@@ -89,7 +89,7 @@ fun InfoSettings(
             settingTitle = { Text(stringResource(R.string.join_discord)) },
             settingIcon = { Icon(Icons.Discord, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { uriHandler.openUri("https://discord.gg/MhhHMWqryg") }
         )
@@ -99,7 +99,7 @@ fun InfoSettings(
             summaryValue = { Text(stringResource(R.string.support_summary)) },
             settingIcon = { Icon(Icons.Default.AttachMoney, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { uriHandler.openUri("https://ko-fi.com/V7V3D3JI") }
         )
@@ -173,7 +173,7 @@ fun InfoSettings(
                 settingTitle = { Text(stringResource(R.string.update_available)) },
                 summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
                 modifier = Modifier.clickable(
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) { showDialog = true },
                 settingIcon = {

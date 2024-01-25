@@ -5,7 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -86,7 +86,7 @@ fun NotificationSettings(
                 summaryValue = { Text(stringResource(R.string.delete_notifications_summary)) },
                 modifier = Modifier
                     .clickable(
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }
                     ) { showDialog = true }
                     .padding(bottom = 16.dp, top = 8.dp)
@@ -97,7 +97,7 @@ fun NotificationSettings(
             settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
             summaryValue = { Text(notiViewModel.time) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) {
                 WorkManager.getInstance(context)
@@ -163,7 +163,7 @@ fun NotificationSettings(
                     .alpha(if (notiViewModel.canCheck) 1f else .38f)
                     .clickable(
                         enabled = notiViewModel.canCheck,
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }
                     ) {
                         val work = WorkManager.getInstance(context)

@@ -27,7 +27,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -252,7 +252,7 @@ fun MarkAsScreen(
                         .fillMaxWidth()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
+                            indication = ripple()
                         ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
                     color = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
                 ) {
@@ -328,7 +328,7 @@ fun ChapterItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = interactionSource,
             ) { markAs(c, !read.fastAny { it.url == c.url }) },
         colors = CardDefaults.elevatedCardColors(

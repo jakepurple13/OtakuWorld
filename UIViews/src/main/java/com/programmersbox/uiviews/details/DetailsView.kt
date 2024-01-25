@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -346,7 +346,7 @@ fun DetailsView(
                                 modifier = Modifier
                                     .combinedClickable(
                                         interactionSource = remember { MutableInteractionSource() },
-                                        indication = rememberRipple(),
+                                        indication = ripple(),
                                         onClick = { descriptionVisibility = !descriptionVisibility },
                                         onLongClick = { onTranslateDescription(progress) }
                                     )

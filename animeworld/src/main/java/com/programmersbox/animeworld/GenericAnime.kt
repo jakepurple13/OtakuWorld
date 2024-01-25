@@ -39,7 +39,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PersonalVideo
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -436,7 +436,7 @@ class GenericAnime(
                 settingTitle = { Text(stringResource(R.string.video_menu_title)) },
                 settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
@@ -455,7 +455,7 @@ class GenericAnime(
                         )
                     },
                     modifier = Modifier.clickable(
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }
                     ) {
                         if (MainActivity.cast.isCastActive()) {
@@ -482,7 +482,7 @@ class GenericAnime(
                 summaryValue = { Text(folderLocation) },
                 settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     activity.requestPermissions(

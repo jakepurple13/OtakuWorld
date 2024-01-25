@@ -34,7 +34,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -427,7 +427,7 @@ private fun VideoContentView(
                 modifier = Modifier
                     .fillMaxSize()
                     .clickable(
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         interactionSource = remember { MutableInteractionSource() }
                     ) {
                         if (MainActivity.cast.isCastActive()) {

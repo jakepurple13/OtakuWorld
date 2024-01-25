@@ -27,7 +27,7 @@ import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -298,7 +298,7 @@ private fun SettingsScreen(
             settingTitle = { Text("Debug Menu") },
             settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = debugMenuClick
             )
@@ -311,7 +311,7 @@ private fun SettingsScreen(
             settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
             summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
             modifier = Modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = notificationClick
             )
@@ -322,7 +322,7 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.viewFavoritesMenu)) },
         settingIcon = { Icon(Icons.Default.Star, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = favoritesClick
         )
@@ -332,7 +332,7 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(id = R.string.custom_lists_title)) },
         settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = listClick
         )
@@ -342,7 +342,7 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.global_search)) },
         settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = globalSearchClick
         )
@@ -355,7 +355,7 @@ private fun SettingsScreen(
         summaryValue = { Text(historyCount.toString()) },
         settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = historyClick
         )
@@ -373,7 +373,7 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
         settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() }
         ) { showSourceChooser = true }
     )
@@ -382,7 +382,7 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.view_extensions)) },
         settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = extensionClick
         )
@@ -394,7 +394,7 @@ private fun SettingsScreen(
             settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 enabled = source != null,
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
         )
@@ -406,7 +406,7 @@ private fun SettingsScreen(
         settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
         settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() },
             onClick = { showTranslationScreen = true }
         )
@@ -607,7 +607,7 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
 
 private fun Modifier.click(action: () -> Unit): Modifier = this.composed {
     clickable(
-        indication = rememberRipple(),
+        indication = ripple(),
         interactionSource = remember { MutableInteractionSource() },
         onClick = action
     )

@@ -18,7 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
@@ -92,7 +92,7 @@ fun <T> ListSetting(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    indication = rememberRipple(),
+                                    indication = ripple(),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) { updateValue(it, dialogPopup) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
@@ -123,7 +123,7 @@ fun <T> ListSetting(
         settingIcon = settingIcon,
         modifier = Modifier
             .clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { dialogPopup.value = true }
             .then(modifier)
@@ -165,7 +165,7 @@ fun <T> MultiSelectListSetting(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    indication = rememberRipple(),
+                                    indication = ripple(),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) { updateValue(it, it !in values) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
@@ -196,7 +196,7 @@ fun <T> MultiSelectListSetting(
         settingIcon = settingIcon,
         modifier = Modifier
             .clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { dialogPopup.value = true }
             .then(modifier)
@@ -235,7 +235,7 @@ fun SwitchSetting(
                 onValueChange = updateValue
             )*/
             .clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { updateValue(!value) },
         settingIcon = settingIcon,
@@ -279,7 +279,7 @@ fun CheckBoxSetting(
 ) {
     DefaultPreferenceLayout(
         modifier = modifier.clickable(
-            indication = rememberRipple(),
+            indication = ripple(),
             interactionSource = remember { MutableInteractionSource() }
         ) { updateValue(!value) },
         settingIcon = settingIcon,
@@ -423,7 +423,7 @@ fun ShowMoreSetting(
         var showMore by remember { mutableStateOf(false) }
         DefaultPreferenceLayout(
             modifier = modifier.clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { showMore = !showMore },
             settingIcon = settingIcon,
@@ -596,7 +596,7 @@ fun <T> DynamicListSetting(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    indication = rememberRipple(),
+                                    indication = ripple(),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) { updateValue(it, dialogPopup) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
@@ -627,7 +627,7 @@ fun <T> DynamicListSetting(
         settingIcon = settingIcon,
         modifier = Modifier
             .clickable(
-                indication = rememberRipple(),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ) { dialogPopup.value = true }
             .then(modifier)

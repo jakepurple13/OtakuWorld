@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.utils.components
 
+import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -142,7 +143,8 @@ fun SwipeButtonPreview() {
                         initialValue = SwipeState.Unswiped,
                         positionalThreshold = { it },
                         velocityThreshold = { .9f },
-                        animationSpec = spring(),
+                        snapAnimationSpec = spring(),
+                        decayAnimationSpec = exponentialDecay(),
                     )
                 }
                 SwipeButton(
@@ -175,7 +177,8 @@ fun SwipeButtonPreview() {
                         initialValue = SwipeState.Swiped,
                         positionalThreshold = { it },
                         velocityThreshold = { .9f },
-                        animationSpec = spring(),
+                        snapAnimationSpec = spring(),
+                        decayAnimationSpec = exponentialDecay()
                     )
                 }
                 SwipeButton(

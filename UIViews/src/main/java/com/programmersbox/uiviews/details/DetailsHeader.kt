@@ -26,7 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -205,7 +205,7 @@ internal fun DetailsHeader(
                         modifier = Modifier
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
+                                indication = ripple()
                             ) { descriptionVisibility = !descriptionVisibility }
                             .fillMaxWidth(),
                         overflow = TextOverflow.Ellipsis,
@@ -217,7 +217,7 @@ internal fun DetailsHeader(
                         modifier = Modifier
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
+                                indication = ripple()
                             ) { favoriteClick(isFavorite) }
                             .semantics(true) {}
                             .fillMaxWidth(),

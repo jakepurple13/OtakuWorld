@@ -27,7 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -214,7 +214,7 @@ private fun ChapterItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     interactionSource = remember { MutableInteractionSource() }
                 ) { expanded = !expanded }
         ) {
@@ -325,7 +325,7 @@ private fun ChapterItem(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    indication = rememberRipple(),
+                                    indication = ripple(),
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) {
                                     if (useNewReader) {

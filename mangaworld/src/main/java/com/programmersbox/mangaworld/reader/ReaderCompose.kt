@@ -692,7 +692,7 @@ fun PagerView(
         state = pagerState,
         modifier = modifier.fillMaxSize(),
         pageSpacing = itemSpacing,
-        beyondBoundsPageCount = 1,
+        outOfBoundsPageCount = 1,
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {
