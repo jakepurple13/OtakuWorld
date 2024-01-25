@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -287,7 +286,7 @@ class GenericManga(
                 settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = ripple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    interactionSource = null
                 ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
             )
         }
@@ -347,7 +346,7 @@ class GenericManga(
                             settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                             modifier = Modifier.clickable(
                                 indication = rememberRipple(),
-                                interactionSource = remember { MutableInteractionSource() }
+                                interactionSource = null
                             ) { storagePermissions.launchMultiplePermissionRequest() }
                         )
                     },
@@ -373,7 +372,7 @@ class GenericManga(
                         settingIcon = { androidx.compose.material3.Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                         modifier = Modifier.clickable(
                             indication = rememberRipple(),
-                            interactionSource = remember { MutableInteractionSource() }
+                            interactionSource = null
                         ) {
                             if (storagePermissions.allPermissionsGranted) {
                                 folderIntent.launch(folderLocation.toUri())

@@ -1293,7 +1293,7 @@ fun SwipeButton(
     swipeButtonState: SwipeButtonState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    interactionSource: MutableInteractionSource = null,
     elevation: ButtonElevation? = ButtonDefaults.elevation(),
     shape: Shape = MaterialTheme.shapes.small,
     border: BorderStroke? = null,
@@ -1303,7 +1303,7 @@ fun SwipeButton(
     rotateIcon: Boolean = true,
     iconPadding: PaddingValues = PaddingValues(2.dp),
     loadingIndicator: @Composable BoxScope.() -> Unit = { HorizontalDottedProgressBar() },
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     val contentColor by colors.contentColor(enabled)
     val dragOffset = remember { mutableStateOf(0f) }

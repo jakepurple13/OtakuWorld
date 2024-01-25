@@ -18,7 +18,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -437,7 +436,7 @@ class GenericAnime(
                 settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = ripple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    interactionSource = null
                 ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
 
@@ -456,7 +455,7 @@ class GenericAnime(
                     },
                     modifier = Modifier.clickable(
                         indication = ripple(),
-                        interactionSource = remember { MutableInteractionSource() }
+                        interactionSource = null
                     ) {
                         if (MainActivity.cast.isCastActive()) {
                             context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
@@ -483,7 +482,7 @@ class GenericAnime(
                 settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
                     indication = ripple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    interactionSource = null
                 ) {
                     activity.requestPermissions(
                         Manifest.permission.READ_EXTERNAL_STORAGE,

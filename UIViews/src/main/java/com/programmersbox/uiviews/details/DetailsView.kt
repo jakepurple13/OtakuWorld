@@ -9,7 +9,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -345,7 +344,7 @@ fun DetailsView(
                                 description,
                                 modifier = Modifier
                                     .combinedClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
+                                        interactionSource = null,
                                         indication = ripple(),
                                         onClick = { descriptionVisibility = !descriptionVisibility },
                                         onLongClick = { onTranslateDescription(progress) }

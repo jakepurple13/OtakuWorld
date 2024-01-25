@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -215,7 +214,7 @@ private fun ChapterItem(
                 .fillMaxWidth()
                 .clickable(
                     indication = ripple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    interactionSource = null
                 ) { expanded = !expanded }
         ) {
             ListItem(
@@ -326,7 +325,7 @@ private fun ChapterItem(
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
-                                    interactionSource = remember { MutableInteractionSource() }
+                                    interactionSource = null
                                 ) {
                                     if (useNewReader) {
                                         ReadViewModel.navigateToMangaReader(

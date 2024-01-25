@@ -9,7 +9,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -251,7 +250,7 @@ fun MarkAsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
+                            interactionSource = null,
                             indication = ripple()
                         ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
                     color = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
@@ -321,19 +320,20 @@ fun ChapterItem(
         }
     }
 
-    val interactionSource = remember { MutableInteractionSource() }
-
     ElevatedCard(
         shape = RoundedCornerShape(2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = animateColorAsState(
+                swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface,
+                label = ""
+            ).value,
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
                 indication = ripple(),
-                interactionSource = interactionSource,
+                interactionSource = null,
             ) { markAs(c, !read.fastAny { it.url == c.url }) },
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface, label = "").value,
-        )
     ) {
         Column(modifier = Modifier.padding(vertical = 16.dp)) {
             if (shareChapter) {

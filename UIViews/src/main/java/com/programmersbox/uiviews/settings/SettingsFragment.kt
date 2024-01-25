@@ -2,7 +2,6 @@ package com.programmersbox.uiviews.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -299,7 +298,7 @@ private fun SettingsScreen(
             settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = null,
                 onClick = debugMenuClick
             )
         )
@@ -312,7 +311,7 @@ private fun SettingsScreen(
             summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = null,
                 onClick = notificationClick
             )
         )
@@ -323,7 +322,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Star, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = null,
             onClick = favoritesClick
         )
     )
@@ -333,7 +332,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = null,
             onClick = listClick
         )
     )
@@ -343,7 +342,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = null,
             onClick = globalSearchClick
         )
     )
@@ -356,7 +355,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = null,
             onClick = historyClick
         )
     )
@@ -374,7 +373,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() }
+            interactionSource = null
         ) { showSourceChooser = true }
     )
 
@@ -383,7 +382,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = null,
             onClick = extensionClick
         )
     )
@@ -395,7 +394,7 @@ private fun SettingsScreen(
             modifier = Modifier.clickable(
                 enabled = source != null,
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
         )
     }
@@ -407,7 +406,7 @@ private fun SettingsScreen(
         settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() },
+            interactionSource = null,
             onClick = { showTranslationScreen = true }
         )
     )
@@ -608,7 +607,7 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
 private fun Modifier.click(action: () -> Unit): Modifier = this.composed {
     clickable(
         indication = ripple(),
-        interactionSource = remember { MutableInteractionSource() },
+        interactionSource = null,
         onClick = action
     )
 }

@@ -4,7 +4,6 @@ import android.Manifest
 import android.os.Environment
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
@@ -71,7 +70,7 @@ fun InfoSettings(
             settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = null,
                 onClick = usedLibraryClick
             )
         )
@@ -81,7 +80,7 @@ fun InfoSettings(
             settingIcon = { Icon(Icons.Github, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
         )
 
@@ -90,7 +89,7 @@ fun InfoSettings(
             settingIcon = { Icon(Icons.Discord, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { uriHandler.openUri("https://discord.gg/MhhHMWqryg") }
         )
 
@@ -100,7 +99,7 @@ fun InfoSettings(
             settingIcon = { Icon(Icons.Default.AttachMoney, null, modifier = Modifier.fillMaxSize()) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { uriHandler.openUri("https://ko-fi.com/V7V3D3JI") }
         )
 
@@ -174,7 +173,7 @@ fun InfoSettings(
                 summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
                 modifier = Modifier.clickable(
                     indication = ripple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    interactionSource = null
                 ) { showDialog = true },
                 settingIcon = {
                     Icon(

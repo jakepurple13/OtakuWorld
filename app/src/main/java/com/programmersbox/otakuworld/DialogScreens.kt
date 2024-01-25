@@ -12,7 +12,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,7 +43,7 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.ViewArray
 import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ColorScheme
@@ -467,8 +466,8 @@ fun PagerView(closeClick: () -> Unit) {
                                                         modifier = Modifier
                                                             .fillMaxWidth()
                                                             .clickable(
-                                                                indication = rememberRipple(),
-                                                                interactionSource = remember { MutableInteractionSource() }
+                                                                indication = ripple(),
+                                                                interactionSource = null
                                                             ) { currentSelection = it }
                                                             .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                                                     ) {
@@ -614,7 +613,7 @@ fun Modifier.minimumTouchTargetSizeCustom(): Modifier = composed {
         val size = LocalViewConfiguration.current.minimumTouchTargetSize
         MinimumTouchTargetModifierCustom(size)
     } else {
-        Modifier
+        this@minimumTouchTargetSizeCustom
     }
 }
 

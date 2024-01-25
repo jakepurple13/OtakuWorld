@@ -4,7 +4,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -93,7 +92,7 @@ fun <T> ListSetting(
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
-                                    interactionSource = remember { MutableInteractionSource() }
+                                    interactionSource = null
                                 ) { updateValue(it, dialogPopup) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
@@ -124,7 +123,7 @@ fun <T> ListSetting(
         modifier = Modifier
             .clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { dialogPopup.value = true }
             .then(modifier)
     )
@@ -166,7 +165,7 @@ fun <T> MultiSelectListSetting(
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
-                                    interactionSource = remember { MutableInteractionSource() }
+                                    interactionSource = null
                                 ) { updateValue(it, it !in values) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
@@ -197,7 +196,7 @@ fun <T> MultiSelectListSetting(
         modifier = Modifier
             .clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { dialogPopup.value = true }
             .then(modifier)
     )
@@ -236,7 +235,7 @@ fun SwitchSetting(
             )*/
             .clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { updateValue(!value) },
         settingIcon = settingIcon,
         settingTitle = settingTitle,
@@ -280,7 +279,7 @@ fun CheckBoxSetting(
     DefaultPreferenceLayout(
         modifier = modifier.clickable(
             indication = ripple(),
-            interactionSource = remember { MutableInteractionSource() }
+            interactionSource = null
         ) { updateValue(!value) },
         settingIcon = settingIcon,
         settingTitle = settingTitle,
@@ -424,7 +423,7 @@ fun ShowMoreSetting(
         DefaultPreferenceLayout(
             modifier = modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { showMore = !showMore },
             settingIcon = settingIcon,
             settingTitle = settingTitle,
@@ -597,7 +596,7 @@ fun <T> DynamicListSetting(
                                 .fillMaxWidth()
                                 .clickable(
                                     indication = ripple(),
-                                    interactionSource = remember { MutableInteractionSource() }
+                                    interactionSource = null
                                 ) { updateValue(it, dialogPopup) }
                                 .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
                         ) {
@@ -628,7 +627,7 @@ fun <T> DynamicListSetting(
         modifier = Modifier
             .clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) { dialogPopup.value = true }
             .then(modifier)
     )

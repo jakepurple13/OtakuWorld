@@ -3,7 +3,6 @@ package com.programmersbox.uiviews.settings
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ripple
 import androidx.compose.material3.AlertDialog
@@ -87,7 +86,7 @@ fun NotificationSettings(
                 modifier = Modifier
                     .clickable(
                         indication = ripple(),
-                        interactionSource = remember { MutableInteractionSource() }
+                        interactionSource = null
                     ) { showDialog = true }
                     .padding(bottom = 16.dp, top = 8.dp)
             )
@@ -98,7 +97,7 @@ fun NotificationSettings(
             summaryValue = { Text(notiViewModel.time) },
             modifier = Modifier.clickable(
                 indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             ) {
                 WorkManager.getInstance(context)
                     .enqueueUniqueWork(
@@ -164,7 +163,7 @@ fun NotificationSettings(
                     .clickable(
                         enabled = notiViewModel.canCheck,
                         indication = ripple(),
-                        interactionSource = remember { MutableInteractionSource() }
+                        interactionSource = null
                     ) {
                         val work = WorkManager.getInstance(context)
                         work.cancelUniqueWork("updateFlowChecks")

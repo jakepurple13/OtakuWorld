@@ -1010,7 +1010,7 @@ private fun ZoomableImage(
             /*.clickable(
                 indication = null,
                 onClick = onClick,
-                interactionSource = remember { MutableInteractionSource() }
+                interactionSource = null
             )*/
             .zoomable(
                 rememberZoomState(),
@@ -1304,7 +1304,7 @@ private fun WrapHeightNavigationDrawerItem(
     badge: (@Composable () -> Unit)? = null,
     shape: Shape = CircleShape,
     colors: NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    interactionSource: MutableInteractionSource? = null,
 ) {
     Surface(
         shape = shape,

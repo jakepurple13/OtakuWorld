@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -101,7 +100,7 @@ fun DebugView() {
                         },
                         modifier = Modifier.clickable(
                             indication = ripple(),
-                            interactionSource = remember { MutableInteractionSource() }
+                            interactionSource = null
                         ) { currentSourceRepository.tryEmit(it.apiService) }
                     )
                 }
@@ -132,7 +131,7 @@ fun DebugView() {
                     settingIcon = { Icon(Icons.Default.Deck, null) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
-                        interactionSource = remember { MutableInteractionSource() }
+                        interactionSource = null
                     ) { println("Hello") }
                 )
 

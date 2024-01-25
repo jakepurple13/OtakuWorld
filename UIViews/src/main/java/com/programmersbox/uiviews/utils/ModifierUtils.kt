@@ -171,7 +171,7 @@ fun Modifier.scaleRotateOffsetReset(
             },
             onLongClick = onLongClick,
             indication = null,
-            interactionSource = remember { MutableInteractionSource() }
+            interactionSource = null
         )
 }
 
