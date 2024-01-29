@@ -105,6 +105,8 @@ fun DetailsViewLandscape(
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: Boolean,
+    canNotify: Boolean,
+    notifyAction: () -> Unit,
 ) {
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
@@ -195,7 +197,10 @@ fun DetailsViewLandscape(
                             isSaved = isSaved,
                             dao = dao,
                             onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                            onShowLists = { showLists = true }
+                            onShowLists = { showLists = true },
+                            isFavorite = isFavorite,
+                            canNotify = canNotify,
+                            notifyAction = notifyAction,
                         )
                     }
                 )
@@ -233,6 +238,8 @@ fun DetailsViewLandscape(
                 listState = listState,
                 isSaved = isSaved,
                 showDownloadButton = showDownloadButton,
+                canNotify = canNotify,
+                notifyAction = notifyAction,
                 modifier = Modifier.padding(p)
             )
         }
@@ -255,6 +262,8 @@ private fun DetailsLandscapeContent(
     reverseChapters: Boolean,
     listState: LazyListState,
     showDownloadButton: Boolean,
+    canNotify: Boolean,
+    notifyAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -305,6 +314,8 @@ private fun DetailsLandscapeContent(
                         containerColor = c,
                         isFavorite = isFavorite,
                         onFavoriteClick = onFavoriteClick,
+                        canNotify = canNotify,
+                        notifyAction = notifyAction,
                         modifier = Modifier
                             .padding(LocalNavHostPadding.current)
                             .drawWithCache {

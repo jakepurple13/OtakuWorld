@@ -90,6 +90,10 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
     private val sourceRepository: SourceRepository by inject()
     private val sourceLoader: SourceLoader by inject()
 
+    companion object {
+        const val CHECK_ALL = "check_all"
+    }
+
     override suspend fun doWork(): Result = try {
         update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
         Loged.fd("Starting check here")
@@ -97,11 +101,17 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
 
         Loged.fd("Start")
 
+        val checkAll = inputData.getBoolean(CHECK_ALL, false)
+
         //Getting all favorites
         val list = listOf(
-            dao.getAllFavoritesSync(),
+            if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync(),
             FirebaseDb.getAllShows().requireNoNulls()
-        ).flatten().groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! }
+                .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
+        )
+            .flatten()
+            .groupBy(DbModel::url)
+            .map { it.value.fastMaxBy(DbModel::numChapters)!! }
 
         //Making sure we have our sources
         if (sourceRepository.list.isEmpty()) {

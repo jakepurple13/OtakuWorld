@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -104,6 +105,13 @@ fun NotificationSettings(
                         "oneTimeUpdate",
                         ExistingWorkPolicy.KEEP,
                         OneTimeWorkRequestBuilder<UpdateFlowWorker>()
+                            .setInputData(
+                                Data.Builder()
+                                    .putAll(
+                                        mapOf(UpdateFlowWorker.CHECK_ALL to true)
+                                    )
+                                    .build()
+                            )
                             .setConstraints(
                                 Constraints.Builder()
                                     .setRequiredNetworkType(NetworkType.CONNECTED)

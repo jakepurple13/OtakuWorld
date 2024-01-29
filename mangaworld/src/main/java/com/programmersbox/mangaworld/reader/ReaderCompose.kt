@@ -57,11 +57,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -146,7 +144,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -161,6 +158,7 @@ import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
+import com.programmersbox.uiviews.utils.CategorySetting
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -171,6 +169,7 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -243,119 +242,6 @@ fun ReadView(
         .flow
         .collectAsStateWithLifecycle(initialValue = PlayingMiddleAction.Nothing)
 
-    var settingsPopup by remember { mutableStateOf(false) }
-    val settingsHandling = LocalSettingsHandling.current
-
-    if (settingsPopup) {
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            onDismissRequest = { settingsPopup = false },
-            title = { Text(stringResource(R.string.settings)) },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    SliderSetting(
-                        scope = scope,
-                        settingIcon = Icons.Default.BatteryAlert,
-                        settingTitle = R.string.battery_alert_percentage,
-                        settingSummary = R.string.battery_default,
-                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
-                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
-                        range = 1f..100f
-                    )
-                    HorizontalDivider()
-                    SliderSetting(
-                        scope = scope,
-                        settingIcon = Icons.Default.FormatLineSpacing,
-                        settingTitle = R.string.reader_padding_between_pages,
-                        settingSummary = R.string.default_padding_summary,
-                        preferenceUpdate = { mangaSettingsHandling.pagePadding.updateSetting(it) },
-                        initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
-                        range = 0f..10f
-                    )
-                    HorizontalDivider()
-                    SwitchSetting(
-                        settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
-                        summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
-                        value = listOrPager,
-                        updateValue = { scope.launch { mangaSettingsHandling.listOrPager.updateSetting(it) } },
-                        settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
-                    )
-                    HorizontalDivider()
-
-                    var showStartDropdown by remember { mutableStateOf(false) }
-
-                    PreferenceSetting(
-                        settingTitle = { Text("Start Option") },
-                        endIcon = {
-                            DropdownMenu(
-                                expanded = showStartDropdown,
-                                onDismissRequest = { showStartDropdown = false }
-                            ) {
-                                PlayingStartAction.entries
-                                    .filter { it != PlayingStartAction.UNRECOGNIZED }
-                                    .forEach {
-                                        DropdownMenuItem(
-                                            text = { Text(it.name) },
-                                            leadingIcon = {
-                                                if (it == startAction) {
-                                                    Icon(Icons.Default.Check, null)
-                                                }
-                                            },
-                                            onClick = {
-                                                scope.launch {
-                                                    mangaSettingsHandling.playingStartAction.updateSetting(it)
-                                                    showStartDropdown = false
-                                                }
-                                            }
-                                        )
-                                    }
-                            }
-                            Text(startAction.name)
-                        },
-                        modifier = Modifier.clickable { showStartDropdown = true }
-                    )
-
-                    var showMiddleDropdown by remember { mutableStateOf(false) }
-
-                    PreferenceSetting(
-                        settingTitle = { Text("Middle Option") },
-                        endIcon = {
-                            DropdownMenu(
-                                expanded = showMiddleDropdown,
-                                onDismissRequest = { showMiddleDropdown = false }
-                            ) {
-                                PlayingMiddleAction.entries
-                                    .filter { it != PlayingMiddleAction.UNRECOGNIZED }
-                                    .forEach {
-                                        DropdownMenuItem(
-                                            text = { Text(it.name) },
-                                            leadingIcon = {
-                                                if (it == middleAction) {
-                                                    Icon(Icons.Default.Check, null)
-                                                }
-                                            },
-                                            onClick = {
-                                                scope.launch {
-                                                    mangaSettingsHandling.playingMiddleAction.updateSetting(it)
-                                                    showMiddleDropdown = false
-                                                }
-                                            }
-                                        )
-                                    }
-                            }
-                            Text(middleAction.name)
-                        },
-                        modifier = Modifier.clickable { showMiddleDropdown = true }
-                    )
-                }
-            },
-            confirmButton = { TextButton(onClick = { settingsPopup = false }) { Text(stringResource(R.string.ok)) } }
-        )
-    }
-
     val activity = LocalActivity.current
 
     fun showToast() {
@@ -395,6 +281,18 @@ fun ReadView(
         }
     }
 
+    var settingsPopup by remember { mutableStateOf(false) }
+
+    if (settingsPopup) {
+        SettingsSheet(
+            onDismiss = { settingsPopup = false },
+            mangaSettingsHandling = mangaSettingsHandling,
+            listOrPager = listOrPager,
+            startAction = startAction,
+            middleAction = middleAction
+        )
+    }
+
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false },
@@ -430,7 +328,10 @@ fun ReadView(
                     ReaderTopBar(
                         pages = pages,
                         currentPage = currentPage,
-                        currentChapter = readVm.list.size - readVm.currentChapter,
+                        currentChapter = readVm
+                            .currentChapterModel
+                            ?.name
+                            ?: "Ch ${readVm.list.size - readVm.currentChapter}",
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction
                     )
@@ -1100,7 +1001,7 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
 fun ReaderTopBar(
     pages: List<String>,
     currentPage: Int,
-    currentChapter: Int,
+    currentChapter: String,
     playingStartAction: PlayingStartAction,
     playingMiddleAction: PlayingMiddleAction,
     modifier: Modifier = Modifier,
@@ -1160,7 +1061,7 @@ fun ReaderTopBar(
 
                     PlayingStartAction.CurrentChapter -> {
                         Text(
-                            "Ch $currentChapter",
+                            currentChapter,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -1420,9 +1321,131 @@ private fun SliderSetting(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsSheet(
+    onDismiss: () -> Unit,
+    mangaSettingsHandling: MangaSettingsHandling,
+    listOrPager: Boolean,
+    startAction: PlayingStartAction,
+    middleAction: PlayingMiddleAction,
+    modifier: Modifier = Modifier,
+    settingsHandling: SettingsHandling = LocalSettingsHandling.current,
+) {
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        content = {
+            CategorySetting(
+                settingIcon = {
+                    IconButton(
+                        onClick = onDismiss
+                    ) { Icon(Icons.Default.Close, null) }
+                },
+                settingTitle = { Text(stringResource(R.string.settings)) }
+            )
+            SliderSetting(
+                scope = scope,
+                settingIcon = Icons.Default.BatteryAlert,
+                settingTitle = R.string.battery_alert_percentage,
+                settingSummary = R.string.battery_default,
+                preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
+                initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
+                range = 1f..100f
+            )
+            HorizontalDivider()
+            SliderSetting(
+                scope = scope,
+                settingIcon = Icons.Default.FormatLineSpacing,
+                settingTitle = R.string.reader_padding_between_pages,
+                settingSummary = R.string.default_padding_summary,
+                preferenceUpdate = { mangaSettingsHandling.pagePadding.updateSetting(it) },
+                initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
+                range = 0f..10f
+            )
+            HorizontalDivider()
+            SwitchSetting(
+                settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
+                summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
+                value = listOrPager,
+                updateValue = { scope.launch { mangaSettingsHandling.listOrPager.updateSetting(it) } },
+                settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
+            )
+            HorizontalDivider()
+
+            var showStartDropdown by remember { mutableStateOf(false) }
+
+            PreferenceSetting(
+                settingTitle = { Text("Start Option") },
+                endIcon = {
+                    DropdownMenu(
+                        expanded = showStartDropdown,
+                        onDismissRequest = { showStartDropdown = false }
+                    ) {
+                        PlayingStartAction.entries
+                            .filter { it != PlayingStartAction.UNRECOGNIZED }
+                            .forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.name) },
+                                    leadingIcon = {
+                                        if (it == startAction) {
+                                            Icon(Icons.Default.Check, null)
+                                        }
+                                    },
+                                    onClick = {
+                                        scope.launch {
+                                            mangaSettingsHandling.playingStartAction.updateSetting(it)
+                                            showStartDropdown = false
+                                        }
+                                    }
+                                )
+                            }
+                    }
+                    Text(startAction.name)
+                },
+                modifier = Modifier.clickable { showStartDropdown = true }
+            )
+
+            var showMiddleDropdown by remember { mutableStateOf(false) }
+
+            PreferenceSetting(
+                settingTitle = { Text("Middle Option") },
+                endIcon = {
+                    DropdownMenu(
+                        expanded = showMiddleDropdown,
+                        onDismissRequest = { showMiddleDropdown = false }
+                    ) {
+                        PlayingMiddleAction.entries
+                            .filter { it != PlayingMiddleAction.UNRECOGNIZED }
+                            .forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.name) },
+                                    leadingIcon = {
+                                        if (it == middleAction) {
+                                            Icon(Icons.Default.Check, null)
+                                        }
+                                    },
+                                    onClick = {
+                                        scope.launch {
+                                            mangaSettingsHandling.playingMiddleAction.updateSetting(it)
+                                            showMiddleDropdown = false
+                                        }
+                                    }
+                                )
+                            }
+                    }
+                    Text(middleAction.name)
+                },
+                modifier = Modifier.clickable { showMiddleDropdown = true }
+            )
+        },
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
 @LightAndDarkPreviews
 @Composable
-fun LastPagePreview() {
+private fun LastPagePreview() {
     PreviewTheme {
         LastPageReached(
             isLoading = true,

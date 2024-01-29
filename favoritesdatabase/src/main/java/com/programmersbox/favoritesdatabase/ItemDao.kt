@@ -1,7 +1,12 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.paging.PagingSource
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -18,6 +23,18 @@ interface ItemDao {
 
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavoritesSync(): List<DbModel>
+
+    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
+    fun getAllNotifyingFavoritesSync(): List<DbModel>
+
+    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
+    fun getAllNotifyingFavorites(): Flow<List<DbModel>>
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateFavoriteItem(dbModel: DbModel)
+
+    @Query("SELECT * FROM FavoriteItem WHERE url=:url")
+    fun getDbModel(url: String): Flow<DbModel?>
 
     @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
     fun containsItem(url: String): Flow<Boolean>

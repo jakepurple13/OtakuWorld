@@ -103,6 +103,8 @@ fun DetailsView(
     chapters: List<ChapterWatched>,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
+    canNotify: Boolean,
+    notifyAction: () -> Unit,
     markAs: (ChapterModel, Boolean) -> Unit,
     logo: NotificationLogo,
     description: String,
@@ -225,7 +227,10 @@ fun DetailsView(
                                 isSaved = isSaved,
                                 dao = dao,
                                 onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                                onShowLists = { showLists = true }
+                                onShowLists = { showLists = true },
+                                isFavorite = isFavorite,
+                                canNotify = canNotify,
+                                notifyAction = notifyAction,
                             ) {
                                 val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
                                 ToolTipWrapper(
@@ -282,6 +287,8 @@ fun DetailsView(
                     topBarColor = topBarColor,
                     isFavorite = isFavorite,
                     onFavoriteClick = onFavoriteClick,
+                    canNotify = canNotify,
+                    notifyAction = notifyAction,
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
                         .drawWithCache {

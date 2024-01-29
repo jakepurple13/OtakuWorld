@@ -511,7 +511,7 @@ class GenericManga(
                     ReaderTopBar(
                         pages = List(10) { "" },
                         currentPage = 5,
-                        currentChapter = 10,
+                        currentChapter = "Ch 10",
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction,
                         modifier = Modifier.border(

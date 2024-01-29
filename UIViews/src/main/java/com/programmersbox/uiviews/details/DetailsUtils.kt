@@ -6,6 +6,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,6 +24,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
@@ -56,6 +60,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -68,6 +73,7 @@ import com.programmersbox.uiviews.lists.ListChoiceScreen
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.launchCatching
+import com.programmersbox.uiviews.utils.shouldCheckFlow
 import com.programmersbox.uiviews.utils.showErrorToast
 import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.CoroutineScope
@@ -184,6 +190,9 @@ internal fun DetailActions(
     topBarColor: Color,
     isSaved: Boolean,
     dao: ItemDao,
+    isFavorite: Boolean,
+    canNotify: Boolean,
+    notifyAction: () -> Unit,
     onReverseChaptersClick: () -> Unit,
     onShowLists: () -> Unit,
     customActions: @Composable () -> Unit = {},
@@ -267,6 +276,22 @@ internal fun DetailActions(
             )
         }
 
+        if (isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value) {
+            DropdownMenuItem(
+                onClick = {
+                    dropDownDismiss()
+                    notifyAction()
+                },
+                text = { Text(if (canNotify) "Check for updates" else "Do not check for updates") },
+                leadingIcon = {
+                    Icon(
+                        if (canNotify) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff,
+                        null
+                    )
+                }
+            )
+        }
+
         DropdownMenuItem(
             onClick = {
                 dropDownDismiss()
@@ -335,6 +360,8 @@ fun DetailBottomBar(
     customActions: @Composable () -> Unit,
     removeFromSaved: () -> Unit,
     isSaved: Boolean,
+    canNotify: Boolean,
+    notifyAction: () -> Unit,
     topBarColor: Color,
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
@@ -368,6 +395,23 @@ fun DetailBottomBar(
                         if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = null,
                     )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value,
+                enter = fadeIn() + slideInHorizontally(),
+                exit = slideOutHorizontally() + fadeOut()
+            ) {
+                ToolTipWrapper(info = { Text(if (canNotify) "Check for updates" else "Do not check for updates") }) {
+                    IconButton(
+                        onClick = notifyAction
+                    ) {
+                        Icon(
+                            if (canNotify) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff,
+                            null
+                        )
+                    }
                 }
             }
 

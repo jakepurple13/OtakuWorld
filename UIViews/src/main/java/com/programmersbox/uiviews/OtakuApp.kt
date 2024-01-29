@@ -7,6 +7,7 @@ import android.content.pm.ShortcutManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
@@ -182,6 +183,13 @@ abstract class OtakuApp : Application() {
                         1, TimeUnit.HOURS,
                         5, TimeUnit.MINUTES
                     )
+                        .setInputData(
+                            Data.Builder()
+                                .putAll(
+                                    mapOf(UpdateFlowWorker.CHECK_ALL to false)
+                                )
+                                .build()
+                        )
                         .setConstraints(
                             Constraints.Builder()
                                 .setRequiredNetworkType(NetworkType.CONNECTED)

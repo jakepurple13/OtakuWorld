@@ -1,6 +1,7 @@
 package com.programmersbox.mangaworld.reader
 
 import android.net.Uri
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -96,6 +97,8 @@ class ReadViewModel(
 
     val pageList = mutableStateListOf<String>()
     var isLoadingPages by mutableStateOf(false)
+
+    val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
     init {
         val url = chapterHolder.chapterModel?.url ?: handle.get<String>("mangaUrl")

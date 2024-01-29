@@ -113,6 +113,7 @@ fun DetailsScreen(
 ) {
     val uriHandler = LocalUriHandler.current
     val showDownload by LocalSettingsHandling.current.showDownload.flow.collectAsStateWithLifecycle(initialValue = true)
+    val scope = rememberCoroutineScope()
 
     if (details.info == null) {
         Scaffold(
@@ -181,7 +182,9 @@ fun DetailsScreen(
                     markAs = details::markAs,
                     description = details.description,
                     onTranslateDescription = details::translateDescription,
-                    showDownloadButton = showDownload
+                    showDownloadButton = showDownload,
+                    canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
+                    notifyAction = { scope.launch { details.toggleNotify() } }
                 )
             } else {
                 DetailsView(
@@ -195,7 +198,9 @@ fun DetailsScreen(
                     markAs = details::markAs,
                     description = details.description,
                     onTranslateDescription = details::translateDescription,
-                    showDownloadButton = showDownload
+                    showDownloadButton = showDownload,
+                    canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
+                    notifyAction = { scope.launch { details.toggleNotify() } }
                 )
             }
         }

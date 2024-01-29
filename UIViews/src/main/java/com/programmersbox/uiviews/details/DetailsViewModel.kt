@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.gsonutils.fromJson
@@ -48,12 +49,15 @@ class DetailsViewModel(
     private var addRemoveFavoriteJob: Job? = null
 
     private val itemListener = FirebaseDb.FirebaseListener()
+    private val dbModelListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
 
     var favoriteListener by mutableStateOf(false)
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
 
     var description: String by mutableStateOf("")
+
+    var dbModel by mutableStateOf<DbModel?>(null)
 
     init {
         itemModel?.url?.let { url ->
@@ -73,6 +77,15 @@ class DetailsViewModel(
                 Cached.cache[item.url] = item
             }
             ?.launchIn(viewModelScope)
+    }
+
+    suspend fun toggleNotify() {
+        dbModel
+            ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
+            ?.let {
+                dao.updateFavoriteItem(it)
+                FirebaseDb.toggleUpdateCheckShowFlow(it).collect()
+            }
     }
 
     private val englishTranslator = TranslateItems()
@@ -99,6 +112,13 @@ class DetailsViewModel(
             dao.getAllChapters(info.url)
         ) { f, d -> (f + d).distinctBy { it.url } }
             .onEach { chapters = it }
+            .launchIn(viewModelScope)
+
+        combine(
+            dao.getDbModel(info.url),
+            dbModelListener.getShowFlow(info.url)
+        ) { d, f -> f ?: d }
+            .onEach { dbModel = it }
             .launchIn(viewModelScope)
     }
 
@@ -133,6 +153,7 @@ class DetailsViewModel(
         super.onCleared()
         itemListener.unregister()
         chapterListener.unregister()
+        dbModelListener.unregister()
         englishTranslator.clear()
     }
 }
