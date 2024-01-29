@@ -121,12 +121,13 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.M3CoverCard
+import com.programmersbox.uiviews.utils.M3ImageCard
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
-import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.utils.components.BottomSheetDeleteGridScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.GradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
@@ -210,7 +211,7 @@ fun NotificationsScreen(
     Box(
         modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
     ) {
-        BottomSheetDeleteScaffold(
+        BottomSheetDeleteGridScaffold(
             listOfItems = items,
             state = state,
             multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
@@ -270,27 +271,14 @@ fun NotificationsScreen(
                             db.deleteNotification(it)
                         }
                     }
-                    d.clear()
                 }
             },
             deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
             itemUi = { item ->
-                NotificationDeleteItem(
-                    item = item,
-                    logoDrawable = logoDrawable,
-                    onRemoveAllWithSameName = {
-                        scope.launch {
-                            withContext(Dispatchers.Default) {
-                                items
-                                    .filter { it.notiTitle == item.notiTitle }
-                                    .forEach {
-                                        cancelNotification(it)
-                                        db.deleteNotification(it)
-                                    }
-                            }
-                            Toast.makeText(context, R.string.done, Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                M3ImageCard(
+                    imageUrl = item.imageUrl.orEmpty(),
+                    name = item.notiTitle,
+                    placeHolder = R.drawable.ic_site_settings
                 )
             },
         ) { p, _ ->

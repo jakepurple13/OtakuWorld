@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,9 +61,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
+import com.dragselectcompose.core.rememberDragSelectState
+import com.dragselectcompose.extensions.dragSelectToggleableItem
+import com.dragselectcompose.grid.LazyDragSelectVerticalGrid
+import com.dragselectcompose.grid.indicator.SelectedIcon
+import com.dragselectcompose.grid.indicator.UnselectedIcon
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -210,6 +217,148 @@ fun <T> BottomSheetDeleteScaffold(
     ) { mainView(it, listOfItems) }
 }
 
+@ExperimentalMaterial3Api
+@Composable
+fun <T> BottomSheetDeleteGridScaffold(
+    listOfItems: List<T>,
+    multipleTitle: String,
+    onRemove: (T) -> Unit,
+    onMultipleRemove: (List<T>) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    customSingleRemoveDialog: (T) -> Boolean = { true },
+    bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
+    topBar: @Composable (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    mainView: @Composable (PaddingValues, List<T>) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    BottomSheetScaffold(
+        scaffoldState = state,
+        containerColor = containerColor,
+        modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        topBar = topBar,
+        sheetContent = {
+            val dragState = rememberDragSelectState<T>()
+
+            LaunchedEffect(state) {
+                snapshotFlow { state.bottomSheetState.currentValue == SheetValue.PartiallyExpanded }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { dragState.disableSelectionMode() }
+            }
+
+            var showPopup by remember { mutableStateOf(false) }
+
+            if (showPopup) {
+                val onDismiss = { showPopup = false }
+
+                AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { Text(multipleTitle) },
+                    text = {
+                        Text(
+                            context.resources.getQuantityString(
+                                R.plurals.areYouSureRemove,
+                                dragState.selected.size,
+                                dragState.selected.size
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onDismiss()
+                                scope.launch { state.bottomSheetState.partialExpand() }
+                                onMultipleRemove(dragState.selected)
+                            }
+                        ) { Text(stringResource(R.string.yes)) }
+                    },
+                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                )
+            }
+
+            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        windowInsets = WindowInsets(0.dp),
+                        scrollBehavior = scrollBehavior
+                    )
+                },
+                bottomBar = {
+                    BottomAppBar(
+                        contentPadding = PaddingValues(0.dp),
+                        windowInsets = WindowInsets(0.dp)
+                    ) {
+                        Button(
+                            onClick = { scope.launch { state.bottomSheetState.partialExpand() } },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp)
+                        ) { Text(stringResource(id = R.string.cancel)) }
+
+                        Button(
+                            onClick = { showPopup = true },
+                            enabled = dragState.selected.isNotEmpty(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp)
+                        ) { Text(stringResource(id = R.string.remove)) }
+                    }
+                }
+            ) { p ->
+                LazyDragSelectVerticalGrid(
+                    columns = adaptiveGridCell(),
+                    items = listOfItems,
+                    contentPadding = p,
+                    state = dragState,
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items { m ->
+                        Box {
+                            DeleteItemDragSelectView(
+                                item = m,
+                                deleteTitle = deleteTitle,
+                                customSingleRemoveDialog = customSingleRemoveDialog,
+                                onRemove = onRemove,
+                                itemUi = itemUi,
+                                modifier = Modifier
+                                    .dragSelectToggleableItem(
+                                        state = dragState,
+                                        item = m,
+                                    )
+                                    .clickable {
+                                        if (dragState.isSelected(m)) dragState.removeSelected(m)
+                                        else dragState.addSelected(m)
+                                    }
+                            )
+                            if (dragState.inSelectionMode) {
+                                Box(modifier = Modifier.matchParentSize()) {
+                                    if (dragState.isSelected(m)) {
+                                        SelectedIcon()
+                                    } else {
+                                        UnselectedIcon()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ) { mainView(it, listOfItems) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @LightAndDarkPreviews
 @Composable
@@ -325,6 +474,86 @@ private fun <T> DeleteItemView(
                 )
             ) { itemUi(item) }
         },
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> DeleteItemDragSelectView(
+    item: T,
+    customSingleRemoveDialog: (T) -> Boolean,
+    onRemove: (T) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+) {
+    var showPopup by remember { mutableStateOf(false) }
+
+    if (showPopup) {
+        val onDismiss = { showPopup = false }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(deleteTitle(item)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onRemove(item)
+                    }
+                ) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+        )
+    }
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.StartToEnd || it == SwipeToDismissBoxValue.EndToStart) {
+                if (customSingleRemoveDialog(item)) {
+                    showPopup = true
+                }
+            }
+            false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.Settled -> Color.Transparent
+                    SwipeToDismissBoxValue.StartToEnd -> Color.Red
+                    SwipeToDismissBoxValue.EndToStart -> Color.Red
+                }, label = ""
+            )
+            val alignment = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
+            }
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        color,
+                        MaterialTheme.shapes.medium
+                    )
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale)
+                )
+            }
+        },
+        content = { itemUi(item) },
         modifier = modifier
     )
 }
