@@ -1,10 +1,7 @@
 package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -12,8 +9,8 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Deck
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.ripple
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,7 +33,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.uiviews.utils.CheckBoxSetting
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalCurrentSource
@@ -80,7 +76,7 @@ fun DebugView() {
     ) { p ->
         val moreSettings = remember { genericInfo.debugMenuItem(context) }
         LazyColumn(contentPadding = p) {
-            item {
+            /*item {
                 sources.forEach {
                     PreferenceSetting(
                         settingTitle = { Text(it.name) },
@@ -88,10 +84,6 @@ fun DebugView() {
                         endIcon = {
                             IconButton(
                                 onClick = {
-                                    /*context.packageManager.packageInstaller.uninstall(
-                                        it.packageName,
-                                        PendingIntent.getActivity(context, 0, activity.intent, PendingIntent.FLAG_IMMUTABLE).intentSender
-                                    )*/
                                     val uri = Uri.fromParts("package", it.packageName, null)
                                     val uninstall = Intent(Intent.ACTION_DELETE, uri)
                                     context.startActivity(uninstall)
@@ -104,6 +96,12 @@ fun DebugView() {
                         ) { currentSourceRepository.tryEmit(it.apiService) }
                     )
                 }
+            }*/
+
+            item {
+                Button(
+                    onClick = { error("Crash") }
+                ) { Text("Crash") }
             }
 
             item {

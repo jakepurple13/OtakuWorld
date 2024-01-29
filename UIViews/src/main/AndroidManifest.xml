@@ -21,5 +21,10 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".CrashActivity"
+            android:exported="false"
+            android:process=":error_handler" />
+
     </application>
 </manifest>

@@ -49,6 +49,8 @@ abstract class OtakuApp : Application() {
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 
+        GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
+
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
@@ -97,43 +99,45 @@ abstract class OtakuApp : Application() {
 
         get<SourceLoader>().load()
 
-        val work = WorkManager.getInstance(this)
+        runCatching {
+            val work = WorkManager.getInstance(this)
 
-        work.enqueueUniquePeriodicWork(
-            "appChecks",
-            ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequest.Builder(AppCheckWorker::class.java, 1, TimeUnit.DAYS)
-                .setConstraints(
-                    Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .setRequiresBatteryNotLow(false)
-                        .setRequiresCharging(false)
-                        .setRequiresDeviceIdle(false)
-                        .setRequiresStorageNotLow(false)
-                        .build()
-                )
-                .setInitialDelay(10, TimeUnit.SECONDS)
-                .build()
-        ).state.observeForever { println(it) }
+            work.enqueueUniquePeriodicWork(
+                "appChecks",
+                ExistingPeriodicWorkPolicy.KEEP,
+                PeriodicWorkRequest.Builder(AppCheckWorker::class.java, 1, TimeUnit.DAYS)
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .setRequiresBatteryNotLow(false)
+                            .setRequiresCharging(false)
+                            .setRequiresDeviceIdle(false)
+                            .setRequiresStorageNotLow(false)
+                            .build()
+                    )
+                    .setInitialDelay(10, TimeUnit.SECONDS)
+                    .build()
+            ).state.observeForever { println(it) }
 
-        work.enqueueUniquePeriodicWork(
-            "sourceChecks",
-            ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequest.Builder(SourceUpdateChecker::class.java, 1, TimeUnit.DAYS)
-                .setConstraints(
-                    Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .setRequiresBatteryNotLow(false)
-                        .setRequiresCharging(false)
-                        .setRequiresDeviceIdle(false)
-                        .setRequiresStorageNotLow(false)
-                        .build()
-                )
-                .setInitialDelay(10, TimeUnit.SECONDS)
-                .build()
-        ).state.observeForever { println(it) }
+            work.enqueueUniquePeriodicWork(
+                "sourceChecks",
+                ExistingPeriodicWorkPolicy.KEEP,
+                PeriodicWorkRequest.Builder(SourceUpdateChecker::class.java, 1, TimeUnit.DAYS)
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .setRequiresBatteryNotLow(false)
+                            .setRequiresCharging(false)
+                            .setRequiresDeviceIdle(false)
+                            .setRequiresStorageNotLow(false)
+                            .build()
+                    )
+                    .setInitialDelay(10, TimeUnit.SECONDS)
+                    .build()
+            ).state.observeForever { println(it) }
 
-        updateSetup(this)
+            updateSetup(this)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
 
