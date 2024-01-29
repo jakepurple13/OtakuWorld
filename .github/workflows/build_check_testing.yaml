@@ -45,14 +45,10 @@ jobs:
           java-version: 17
 
       - name: Setup gradle
-        id: buildMangaApks
-        uses: gradle/gradle-build-action@v2.11.1
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build MangaWorld artifacts
+        id: buildMangaApks
         run: ./gradlew mangaworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
@@ -110,7 +106,7 @@ jobs:
 
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/actions/setup-gradle@v3
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -172,7 +168,7 @@ jobs:
 
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/actions/setup-gradle@v3
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -234,7 +230,7 @@ jobs:
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/actions/setup-gradle@v3
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
