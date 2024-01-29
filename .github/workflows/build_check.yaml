@@ -49,14 +49,14 @@ jobs:
           distribution: adopt
           java-version: 17
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          add-job-summary-as-pr-comment: always
+
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/gradle-build-action@v2.11.1
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: mangaworld:assembleRelease
+        run: ./gradlew mangaworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
@@ -111,14 +111,14 @@ jobs:
           distribution: adopt
           java-version: 17
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          add-job-summary-as-pr-comment: always
+
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/gradle-build-action@v2.11.1
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: animeworld:assembleRelease
+        run: ./gradlew animeworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
@@ -173,14 +173,14 @@ jobs:
           distribution: adopt
           java-version: 17
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          add-job-summary-as-pr-comment: always
+
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/gradle-build-action@v2.11.1
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: animeworldtv:assembleRelease
+        run: ./gradlew animeworldtv:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
@@ -235,14 +235,14 @@ jobs:
           distribution: adopt
           java-version: 17
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          add-job-summary-as-pr-comment: always
+
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/gradle-build-action@v2.11.1
-        with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
-          configuration-cache-enabled: true
-          arguments: novelworld:assembleRelease
+        run: ./gradlew novelworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v1.1.1
         name: Sign app APK
