@@ -118,7 +118,7 @@ dependencies {
     //Extension Loader
     api(projects.sharedutils.extensionloader)
 
-    api(libs.haze.jetpack.compose)
+    api(libs.haze)
 
     implementation(libs.compose.collapsable)
 
