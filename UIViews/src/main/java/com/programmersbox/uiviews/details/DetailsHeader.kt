@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -110,7 +111,7 @@ internal fun DetailsHeader(
                 GlideImage(
                     imageModel = { imageUrl },
                     imageOptions = ImageOptions(contentScale = ContentScale.Fit),
-                    previewPlaceholder = R.drawable.ic_baseline_battery_alert_24,
+                    previewPlaceholder = painterResource(id = R.drawable.ic_baseline_battery_alert_24),
                     modifier = Modifier
                         .scaleRotateOffsetReset()
                         .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -140,7 +141,7 @@ internal fun DetailsHeader(
         GlideImage(
             imageModel = { imageUrl },
             imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-            previewPlaceholder = R.drawable.ic_baseline_battery_alert_24,
+            previewPlaceholder = painterResource(id = R.drawable.ic_baseline_battery_alert_24),
             modifier = Modifier
                 .matchParentSize()
                 .blur(4.dp)

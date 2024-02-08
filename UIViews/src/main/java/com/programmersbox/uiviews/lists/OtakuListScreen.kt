@@ -57,7 +57,7 @@ fun OtakuListScreen(
         .showListDetail
         .collectAsStateWithLifecycle(true)
 
-    val state = rememberListDetailPaneScaffoldNavigator(
+    val state = rememberListDetailPaneScaffoldNavigator<Int>(
         scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
     )
 

@@ -1,28 +1,12 @@
 package com.programmersbox.uiviews.utils.components
 
-import android.content.Context
 import android.util.LruCache
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import coil.Coil
-import coil.imageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
-import coil.size.Scale
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-
-@Composable
+/*@Composable
 fun rememberDominantColorState(
     context: Context = LocalContext.current,
     defaultColor: Color = MaterialTheme.colorScheme.primary,
@@ -40,7 +24,7 @@ fun rememberDynamicColorState(
     cacheSize: Int = 12
 ): DynamicColorState = remember {
     DynamicColorState(context, defaultColorScheme, cacheSize)
-}
+}*/
 
 //TODO: Try converting DetailsFragment to use this
 
@@ -66,7 +50,7 @@ DynamicThemePrimaryColorsFromImage(dominantColor) {
 /**
  * A composable which allows dynamic theming of the [androidx.compose.material.Colors.primary]
  * color from an image.
- */
+ *//*
 @Composable
 fun DynamicThemePrimaryColorsFromImage(
     dominantColorState: DominantColorState = rememberDominantColorState(),
@@ -125,7 +109,7 @@ fun FullDynamicThemePrimaryColorsFromImage(
         ).value,
     )
     MaterialTheme(colorScheme = colors, content = content)
-}
+}*/
 
 /**
  * A class which stores and caches the result of any calculated dominant colors
@@ -138,7 +122,7 @@ fun FullDynamicThemePrimaryColorsFromImage(
  * @param cacheSize The size of the [LruCache] used to store recent results. Pass `0` to
  * disable the cache.
  * @param isColorValid A lambda which allows filtering of the calculated image colors.
- */
+ *//*
 @Stable
 class DominantColorState(
     private val context: Context,
@@ -187,9 +171,10 @@ class DominantColorState(
             ?.also { result -> cache?.put(url, result) }
     }
 
-    /**
+    */
+/**
      * Reset the color values to [defaultColor].
-     */
+ *//*
     fun reset() {
         color = defaultColor
         onColor = defaultColor
@@ -238,19 +223,20 @@ class DynamicColorState(
             // Then we want to find the first valid color
             //.firstOrNull { swatch -> isColorValid(Color(swatch.rgb)) }
             // If we found a valid swatch, wrap it in a [DominantColors]
-            /*?.let { swatch ->
+            *//*?.let { swatch ->
                 DominantColors(
                     color = Color(swatch.rgb),
                     onColor = Color(swatch.bodyTextColor).copy(alpha = 1f)
                 )
-            }*/
+            }*//*
             // Cache the resulting [DominantColors]
             ?.also { result -> cache?.put(url, result) }
     }
 
-    /**
+    */
+/**
      * Reset the color values to [defaultColor].
-     */
+ *//*
     fun reset() {
         colorScheme = defaultColorScheme
     }
@@ -259,9 +245,10 @@ class DynamicColorState(
 @Immutable
 private data class DominantColors(val color: Color, val onColor: Color)
 
+*/
 /**
  * Fetches the given [imageUrl] with [Coil], then uses [Palette] to calculate the dominant color.
- */
+ *//*
 private suspend fun calculateSwatchesInImage(
     context: Context,
     imageUrl: String
@@ -333,4 +320,4 @@ private suspend fun calculateAllSwatchesInImage(
             palette
         }
     }
-}
+}*/

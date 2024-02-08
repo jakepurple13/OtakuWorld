@@ -169,7 +169,7 @@ fun ExtensionList(
         )
     }
 
-    val navigator = rememberListDetailPaneScaffoldNavigator(
+    val navigator = rememberListDetailPaneScaffoldNavigator<Int>(
         scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
     )
 

@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.gson)
 
     implementation(libs.recyclerview)
-    implementation(libs.palette)
+    //implementation(libs.palette)
     implementation(libs.bundles.roomLibs)
 
     implementation(libs.showMoreLess)
