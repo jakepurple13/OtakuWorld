@@ -28,7 +28,7 @@ dependencies {
     implementation(libs.bundles.firebaseCrashLibs)
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)
-    implementation(libs.palette)
+    //implementation(libs.palette)
     implementation(libs.bundles.media3)
     // For building media playback UIs for Android TV using the Jetpack Leanback library
     implementation(libs.exoplayerleanback)

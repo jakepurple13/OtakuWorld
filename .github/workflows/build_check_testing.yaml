@@ -29,7 +29,7 @@ on:
 jobs:
   mangaworld:
     name: Generate MangaWorld APK
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     if: github.event.inputs.build_mangaworld == 'true'
     steps:
       - name: Checkout
@@ -88,7 +88,7 @@ jobs:
 
   animeworld:
     name: Generate AnimeWorld APK
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     if: github.event.inputs.build_animeworld == 'true'
     steps:
       - name: Checkout
@@ -150,7 +150,7 @@ jobs:
 
   animeworldtv:
     name: Generate AnimeWorldTv APK
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     if: github.event.inputs.build_animeworldtv == 'true'
     steps:
       - name: Checkout
@@ -212,7 +212,7 @@ jobs:
 
   novelworld:
     name: Generate NovelWorld APK
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     if: github.event.inputs.build_novelworld == 'true'
     steps:
       - name: Checkout

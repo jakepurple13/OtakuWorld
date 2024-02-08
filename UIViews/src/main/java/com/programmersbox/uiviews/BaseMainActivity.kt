@@ -235,6 +235,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             NavHost(
                                 navController = navController,
                                 startDestination = Screen.RecentScreen.route,
+                                modifier = Modifier.fillMaxSize()
                             ) { navGraph(customPreferences, windowSize) }
                         }
                     }
