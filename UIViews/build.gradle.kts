@@ -122,7 +122,7 @@ dependencies {
 
     implementation(libs.compose.collapsable)
 
-    implementation(libs.material.adaptive.navigation.suite)
+    //implementation(libs.material.adaptive.navigation.suite)
     implementation(libs.materialAdaptive)
 
     implementation(libs.dragselect)
