@@ -22,11 +22,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -56,6 +58,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDatePickerState
@@ -212,7 +215,12 @@ fun NotificationsScreen(
         modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
     ) {
         BottomSheetDeleteGridScaffold(
-            listOfItems = items,
+            listOfItems = vm.groupedList.flatMap {
+                listOf(
+                    NotificationInfo.Source(it.first),
+                    *it.second.map { NotificationInfo.Noti(it) }.toTypedArray()
+                )
+            },//items,
             state = state,
             multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
             bottomScrollBehavior = scrollBehavior,
@@ -260,27 +268,45 @@ fun NotificationsScreen(
                 )
             },
             onRemove = { item ->
-                vm.deleteNotification(db, item)
-                cancelNotification(item)
+                if (item is NotificationInfo.Noti) {
+                    vm.deleteNotification(db, item.item)
+                    cancelNotification(item.item)
+                }
             },
             onMultipleRemove = { d ->
                 scope.launch {
                     withContext(Dispatchers.Default) {
-                        d.forEach {
-                            cancelNotification(it)
-                            db.deleteNotification(it)
-                        }
+                        d
+                            .filterIsInstance<NotificationInfo.Noti>()
+                            .forEach {
+                                cancelNotification(it.item)
+                                db.deleteNotification(it.item)
+                            }
                     }
                 }
             },
-            deleteTitle = { stringResource(R.string.removeNoti, it.notiTitle) },
+            deleteTitle = { stringResource(R.string.removeNoti, (it as NotificationInfo.Noti).item.notiTitle) },
             itemUi = { item ->
-                M3ImageCard(
-                    imageUrl = item.imageUrl.orEmpty(),
-                    name = item.notiTitle,
-                    placeHolder = R.drawable.ic_site_settings
-                )
+                when (item) {
+                    is NotificationInfo.Noti -> {
+                        M3ImageCard(
+                            imageUrl = item.item.imageUrl.orEmpty(),
+                            name = item.item.notiTitle,
+                            placeHolder = R.drawable.ic_site_settings
+                        )
+                    }
+
+                    is NotificationInfo.Source -> {
+                        TopAppBar(title = { Text(item.title) }, windowInsets = WindowInsets(0.dp))
+                    }
+                }
             },
+            span = {
+                when (it) {
+                    is NotificationInfo.Noti -> GridItemSpan(1)
+                    is NotificationInfo.Source -> GridItemSpan(maxLineSpan)
+                }
+            }
         ) { p, _ ->
             Crossfade(targetState = vm.sortedBy, label = "") { target ->
                 when (target) {
@@ -421,6 +447,11 @@ fun NotificationsScreen(
             ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
         }
     }
+}
+
+sealed class NotificationInfo {
+    data class Source(val title: String) : NotificationInfo()
+    data class Noti(val item: NotificationItem) : NotificationInfo()
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)

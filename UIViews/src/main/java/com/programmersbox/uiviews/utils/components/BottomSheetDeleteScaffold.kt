@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -348,6 +350,158 @@ fun <T> BottomSheetDeleteGridScaffold(
                                         SelectedIcon()
                                     } else {
                                         UnselectedIcon()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ) { mainView(it, listOfItems) }
+}
+
+//TODO: Try this out for a bit
+@ExperimentalMaterial3Api
+@Composable
+fun <T> BottomSheetDeleteGridScaffold(
+    listOfItems: List<T>,
+    multipleTitle: String,
+    onRemove: (T) -> Unit,
+    onMultipleRemove: (List<T>) -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier,
+    isTitle: (T) -> Boolean = { false },
+    titleUi: @Composable (T) -> Unit = {},
+    span: (LazyGridItemSpanScope.(item: T) -> GridItemSpan)? = null,
+    state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    customSingleRemoveDialog: (T) -> Boolean = { true },
+    bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
+    topBar: @Composable (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    mainView: @Composable (PaddingValues, List<T>) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    BottomSheetScaffold(
+        scaffoldState = state,
+        containerColor = containerColor,
+        modifier = modifier.nestedScroll(bottomScrollBehavior.nestedScrollConnection),
+        topBar = topBar,
+        sheetContent = {
+            val dragState = rememberDragSelectState<T>()
+
+            LaunchedEffect(state) {
+                snapshotFlow { state.bottomSheetState.currentValue == SheetValue.PartiallyExpanded }
+                    .distinctUntilChanged()
+                    .filter { it }
+                    .collect { dragState.disableSelectionMode() }
+            }
+
+            var showPopup by remember { mutableStateOf(false) }
+
+            if (showPopup) {
+                val onDismiss = { showPopup = false }
+
+                AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { Text(multipleTitle) },
+                    text = {
+                        Text(
+                            context.resources.getQuantityString(
+                                R.plurals.areYouSureRemove,
+                                dragState.selected.size,
+                                dragState.selected.size
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onDismiss()
+                                scope.launch { state.bottomSheetState.partialExpand() }
+                                onMultipleRemove(dragState.selected)
+                            }
+                        ) { Text(stringResource(R.string.yes)) }
+                    },
+                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                )
+            }
+
+            val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        windowInsets = WindowInsets(0.dp),
+                        scrollBehavior = scrollBehavior
+                    )
+                },
+                bottomBar = {
+                    BottomAppBar(
+                        contentPadding = PaddingValues(0.dp),
+                        windowInsets = WindowInsets(0.dp)
+                    ) {
+                        Button(
+                            onClick = { scope.launch { state.bottomSheetState.partialExpand() } },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp)
+                        ) { Text(stringResource(id = R.string.cancel)) }
+
+                        Button(
+                            onClick = { showPopup = true },
+                            enabled = dragState.selected.isNotEmpty(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp)
+                        ) { Text(stringResource(id = R.string.remove)) }
+                    }
+                }
+            ) { p ->
+                LazyDragSelectVerticalGrid(
+                    columns = adaptiveGridCell(),
+                    items = listOfItems,
+                    contentPadding = p,
+                    state = dragState,
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(
+                        span = span
+                    ) { m ->
+                        if (isTitle(m)) {
+                            titleUi(m)
+                        } else {
+                            Box {
+                                DeleteItemDragSelectView(
+                                    item = m,
+                                    deleteTitle = deleteTitle,
+                                    customSingleRemoveDialog = customSingleRemoveDialog,
+                                    onRemove = onRemove,
+                                    itemUi = itemUi,
+                                    modifier = Modifier
+                                        .dragSelectToggleableItem(
+                                            state = dragState,
+                                            item = m,
+                                        )
+                                        .clickable {
+                                            if (dragState.isSelected(m)) dragState.removeSelected(m)
+                                            else dragState.addSelected(m)
+                                        }
+                                )
+                                if (dragState.inSelectionMode) {
+                                    Box(modifier = Modifier.matchParentSize()) {
+                                        if (dragState.isSelected(m)) {
+                                            SelectedIcon()
+                                        } else {
+                                            UnselectedIcon()
+                                        }
                                     }
                                 }
                             }
