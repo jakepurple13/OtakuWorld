@@ -76,7 +76,6 @@ import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
@@ -259,7 +258,7 @@ fun AllView(
                             paddingValues = p1,
                             modifier = Modifier.haze(
                                 hazeState,
-                                HazeStyle(tint = MaterialTheme.colorScheme.surface)
+                                backgroundColor = MaterialTheme.colorScheme.surface
                             )
                         )
                     }
