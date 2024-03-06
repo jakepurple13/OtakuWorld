@@ -110,6 +110,7 @@ import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.Dispatchers
@@ -333,7 +334,7 @@ fun GlobalSearchView(
                                 modifier = Modifier
                                     .haze(
                                         hazeState,
-                                        backgroundColor = MaterialTheme.colorScheme.surface
+                                        HazeStyle(tint = MaterialTheme.colorScheme.surface)
                                     )
                                     .fillMaxSize()
                                     .padding(top = 8.dp)

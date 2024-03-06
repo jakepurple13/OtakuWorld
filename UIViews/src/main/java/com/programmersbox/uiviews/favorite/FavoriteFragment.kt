@@ -100,6 +100,7 @@ import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.flow.collect
@@ -426,7 +427,7 @@ fun FavoriteUi(
                     logo = logo,
                     modifier = Modifier.haze(
                         hazeState,
-                        backgroundColor = MaterialTheme.colorScheme.surface
+                        HazeStyle(tint = MaterialTheme.colorScheme.surface)
                     )
                 )
             }

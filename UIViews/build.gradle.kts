@@ -1,11 +1,10 @@
-import com.google.protobuf.gradle.id
 import plugins.ProductFlavorTypes
 
 plugins {
     id("otaku-library")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    id("com.google.protobuf") version "0.9.4"
+    id("otaku-protobuf")
     alias(libs.plugins.ksp)
 }
 
@@ -106,8 +105,6 @@ dependencies {
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
 
-    implementation(libs.bundles.protobuf)
-
     implementation(libs.bundles.ktorLibs)
 
     implementation(libs.androidx.activity.ktx)
@@ -126,20 +123,4 @@ dependencies {
     implementation(libs.materialAdaptive)
 
     implementation(libs.dragselect)
-}
-
-protobuf {
-    protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobufVersion.get().toString()}" }
-    plugins {
-        id("javalite") { artifact = libs.protobufJava.get().toString() }
-        id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
-    }
-    generateProtoTasks {
-        all().forEach { task ->
-            task.builtins {
-                create("java") { option("lite") }
-                create("kotlin") { option("lite") }
-            }
-        }
-    }
 }

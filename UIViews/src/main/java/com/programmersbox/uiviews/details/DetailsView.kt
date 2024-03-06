@@ -82,6 +82,7 @@ import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.components.minus
 import com.programmersbox.uiviews.utils.toComposeColor
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.Dispatchers
@@ -337,9 +338,11 @@ fun DetailsView(
                     .padding(vertical = 4.dp)
                     .haze(
                         hazeState,
-                        backgroundColor = swatchInfo?.rgb
-                            ?.toComposeColor()
-                            ?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                        HazeStyle(
+                            tint = swatchInfo?.rgb
+                                ?.toComposeColor()
+                                ?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                        )
                     ),
             ) {
                 if (info.description.isNotEmpty()) {
