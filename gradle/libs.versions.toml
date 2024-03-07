@@ -24,12 +24,12 @@ jetpackCompiler = "1.5.9"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.34.0"
 okhttpVersion = "4.12.0"
-ktorVersion = "2.3.8"
+ktorVersion = "2.3.9"
 tvCompose = "1.0.0-alpha10"
 workVersion = "2.9.0"
 ziplineVersion = "1.1.0"
 landscapist = "2.3.1"
-protobufVersion = "3.25.2"
+protobufVersion = "3.25.3"
 sketchVersion = "3.2.5"
 activity = "1.8.2"
 composeBomVersion = "2024.03.00-alpha01"
@@ -39,7 +39,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.2.1"
+media3Version = "1.3.0"
 
 junit = "1.1.5"
 espresso-core = "3.5.1"
@@ -172,7 +172,7 @@ fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
 androidxWindow = "androidx.window:window:1.2.0"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
-androidxBrowser = "androidx.browser:browser:1.7.0"
+androidxBrowser = "androidx.browser:browser:1.8.0"
 
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
@@ -266,7 +266,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
 androidxWebkit = "androidx.webkit:webkit:1.10.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.2"
