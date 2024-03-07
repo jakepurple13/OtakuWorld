@@ -172,7 +172,7 @@ fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
 androidxWindow = "androidx.window:window:1.2.0"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
-androidxBrowser = "androidx.browser:browser:1.7.0"
+androidxBrowser = "androidx.browser:browser:1.8.0"
 
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
