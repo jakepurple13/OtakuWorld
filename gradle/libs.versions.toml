@@ -7,7 +7,7 @@ dragselect = "2.2.6"
 easylauncher = "6.2.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.1"
-haze = "0.5.4"
+haze = "0.6.0"
 kamelImage = "0.9.3"
 kotlin = "1.9.22"
 latestAboutLibsRelease = "10.10.0"
@@ -17,7 +17,7 @@ pagingVersion = "3.2.1"
 roomVersion = "2.6.1"
 navVersion = "2.8.0-alpha04"
 koinVersion = "3.5.3"
-coil = "2.5.0"
+coil = "2.6.0"
 lifecycle = "2.7.0"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.9"
@@ -32,7 +32,7 @@ landscapist = "2.3.1"
 protobufVersion = "3.25.2"
 sketchVersion = "3.2.5"
 activity = "1.8.2"
-composeBomVersion = "2024.02.00-alpha02"
+composeBomVersion = "2024.03.00-alpha01"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -78,7 +78,7 @@ composeFoundation = { group = "androidx.compose.foundation", name = "foundation"
 composeMaterial = { group = "androidx.compose.material", name = "material" }
 materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
-materialAdaptive = { group = "androidx.compose.material3", name = "material3-adaptive" }
+materialAdaptive = { group = "androidx.compose.material3", name = "material3-adaptive", version = "1.0.0-alpha06" }
 material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
 composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }

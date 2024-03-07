@@ -287,19 +287,17 @@ fun NotificationsScreen(
             },
             deleteTitle = { stringResource(R.string.removeNoti, (it as NotificationInfo.Noti).item.notiTitle) },
             itemUi = { item ->
-                when (item) {
-                    is NotificationInfo.Noti -> {
-                        M3ImageCard(
-                            imageUrl = item.item.imageUrl.orEmpty(),
-                            name = item.item.notiTitle,
-                            placeHolder = R.drawable.ic_site_settings
-                        )
-                    }
-
-                    is NotificationInfo.Source -> {
-                        TopAppBar(title = { Text(item.title) }, windowInsets = WindowInsets(0.dp))
-                    }
-                }
+                if (item is NotificationInfo.Noti)
+                    M3ImageCard(
+                        imageUrl = item.item.imageUrl.orEmpty(),
+                        name = item.item.notiTitle,
+                        placeHolder = R.drawable.ic_site_settings
+                    )
+            },
+            isTitle = { it is NotificationInfo.Source },
+            titleUi = {
+                if (it is NotificationInfo.Source)
+                    TopAppBar(title = { Text(it.title) }, windowInsets = WindowInsets(0.dp))
             },
             span = {
                 when (it) {
