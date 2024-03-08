@@ -15,7 +15,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
 
         composeOptions {
             useLiveLiterals = true
-            kotlinCompilerExtensionVersion = project.libs.findVersion("jetpackCompiler").get().requiredVersion
+            kotlinCompilerExtensionVersion = project.libs.versions.jetpackCompiler.get()
         }
 
         buildTypes {

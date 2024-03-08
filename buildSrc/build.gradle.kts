@@ -56,5 +56,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
     implementation(libs.easylauncher)
     implementation(libs.androidx.baselineprofile.gradle.plugin)
-    implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
+    implementation(libs.protobuf.gradle.plugin)
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }

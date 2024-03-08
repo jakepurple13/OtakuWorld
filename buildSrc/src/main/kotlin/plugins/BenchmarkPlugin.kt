@@ -2,22 +2,14 @@ package plugins
 
 import AppInfo
 import androidx.baselineprofile.gradle.producer.BaselineProfileProducerExtension
-import com.android.build.api.dsl.BaselineProfile
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.TestExtension
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.findByType
-import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.plugins
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.Locale
-import kotlin.reflect.KClass
 
 class BenchmarkPlugin : Plugin<Project> {
 
@@ -54,10 +46,10 @@ class BenchmarkPlugin : Plugin<Project> {
             }
 
             dependencies {
-                implementation(libs.findLibrary("junit").get())
-                implementation(libs.findLibrary("uiautomator").get())
-                implementation(libs.findLibrary("espresso-core").get())
-                implementation(libs.findLibrary("benchmark-macro-junit4").get())
+                implementation(libs.junit.get())
+                implementation(libs.uiautomator.get())
+                implementation(libs.espresso.core.get())
+                implementation(libs.benchmark.macro.junit4.get())
             }
         }
         extensions.findByType(BaselineProfileProducerExtension::class)?.apply {

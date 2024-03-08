@@ -14,6 +14,7 @@ latestAboutLibsRelease = "10.10.0"
 coroutinesVersion = "1.8.0"
 glideVersion = "4.16.0"
 pagingVersion = "3.2.1"
+protobufGradlePlugin = "0.9.4"
 roomVersion = "2.6.1"
 navVersion = "2.8.0-alpha04"
 koinVersion = "3.5.3"
@@ -83,6 +84,7 @@ material-adaptive-navigation-suite = { group = "androidx.compose.material3", nam
 composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
+protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
 tv-material = { module = "androidx.tv:tv-material", version.ref = "tvCompose" }
 tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }

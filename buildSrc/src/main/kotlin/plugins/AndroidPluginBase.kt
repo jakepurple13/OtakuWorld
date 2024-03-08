@@ -66,9 +66,9 @@ abstract class AndroidPluginBase<T: BaseExtension>(
             }
 
             dependencies {
-                implementation(libs.findLibrary("kotlinStLib").get())
-                implementation(libs.findLibrary("androidCore").get())
-                implementation(libs.findLibrary("appCompat").get())
+                implementation(libs.kotlinStLib.get())
+                implementation(libs.androidCore.get())
+                implementation(libs.appCompat.get())
             }
         }
     }
