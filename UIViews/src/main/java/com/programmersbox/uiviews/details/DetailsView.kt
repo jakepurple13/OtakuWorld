@@ -328,6 +328,9 @@ fun DetailsView(
         ) { p ->
             val modifiedPaddingValues = p - LocalNavHostPadding.current
             var descriptionVisibility by remember { mutableStateOf(false) }
+            val listOfChapters = remember(reverseChapters) {
+                info.chapters.let { if (reverseChapters) it.reversed() else it }
+            }
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 state = listState,
@@ -374,7 +377,7 @@ fun DetailsView(
                     }
                 }
 
-                items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                items(listOfChapters) { c ->
                     ChapterItem(
                         infoModel = info,
                         c = c,

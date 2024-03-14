@@ -381,6 +381,9 @@ private fun DetailsLandscapeContent(
         },
         second = {
             val swatchInfo = LocalSwatchInfo.current.colors
+            val listOfChapters = remember(reverseChapters) {
+                info.chapters.let { if (reverseChapters) it.reversed() else it }
+            }
             LazyColumnScrollbar(
                 enabled = true,
                 thickness = 8.dp,
@@ -394,7 +397,7 @@ private fun DetailsLandscapeContent(
                     modifier = Modifier.fillMaxHeight(),
                     state = listState
                 ) {
-                    items(info.chapters.let { if (reverseChapters) it.reversed() else it }) { c ->
+                    items(listOfChapters) { c ->
                         ChapterItem(
                             infoModel = info,
                             c = c,
