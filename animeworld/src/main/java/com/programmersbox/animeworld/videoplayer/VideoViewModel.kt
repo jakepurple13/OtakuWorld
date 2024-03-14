@@ -56,7 +56,7 @@ class VideoViewModel(
             showPath: String,
             showName: String,
             downloadOrStream: Boolean,
-            referer: String
+            referer: String,
         ) {
             navController.navigate(
                 "video_player?showPath=$showPath&showName=$showName&downloadOrStream=$downloadOrStream&referer=$referer"
@@ -116,8 +116,8 @@ class VideoViewModel(
         }
     }
 
-    val currentTime get() = stringForTime(videoInfo.currentPosition)
-    val totalTime get() = stringForTime(videoInfo.duration)
+    val currentTime by derivedStateOf { stringForTime(videoInfo.currentPosition) }
+    val totalTime by derivedStateOf { stringForTime(videoInfo.duration) }
 
     private fun stringForTime(milliseconded: Long): String {
         var milliseconds = milliseconded
@@ -217,7 +217,7 @@ fun Context.getMediaSource(
     url: Uri,
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String
+    header: String,
 ): MediaSource =
     when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
         C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(
@@ -248,7 +248,7 @@ fun Context.getMediaSource(
 private fun Context.getDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String
+    header: String,
 ): DataSource.Factory =
     DefaultDataSource.Factory(
         this,
@@ -259,7 +259,7 @@ private fun Context.getDataSourceFactory(
 private fun Context.getHttpDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String
+    header: String,
 ): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
     setUserAgent(Util.getUserAgent(this@getHttpDataSourceFactory, "AnimeWorld"))
     //setTransferListener(if (preview) null else bandwidthMeter)
