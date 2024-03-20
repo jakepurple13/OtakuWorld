@@ -11,7 +11,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -20,25 +19,20 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.AnimatedPane
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.HingePolicy
-import androidx.compose.material3.adaptive.ListDetailPaneScaffold
-import androidx.compose.material3.adaptive.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.PaneScaffoldDirective
-import androidx.compose.material3.adaptive.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
-import androidx.compose.material3.adaptive.allVerticalHingeBounds
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.occludingVerticalHingeBounds
-import androidx.compose.material3.adaptive.rememberListDetailPaneScaffoldNavigator
-import androidx.compose.material3.adaptive.separatingVerticalHingeBounds
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.adaptive.layout.AnimatedPane
+import androidx.compose.material3.adaptive.layout.HingePolicy
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
+import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldScope
+import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -102,7 +96,8 @@ fun OtakuListScreen(
     }
 
     ListDetailPaneScaffold(
-        scaffoldState = state.scaffoldState,
+        directive = state.scaffoldDirective,
+        value = state.scaffoldValue,
         windowInsets = WindowInsets(0.dp),
         listPane = {
             AnimatedPanes(modifier = Modifier.fillMaxSize()) {
@@ -143,10 +138,11 @@ fun calculateStandardPaneScaffoldDirective(
     windowAdaptiveInfo: WindowAdaptiveInfo,
     verticalHingePolicy: HingePolicy = HingePolicy.AvoidSeparating,
 ): PaneScaffoldDirective {
-    val maxHorizontalPartitions: Int
+    return androidx.compose.material3.adaptive.layout.calculateStandardPaneScaffoldDirective(windowAdaptiveInfo, verticalHingePolicy)
+    /*val maxHorizontalPartitions: Int
     val contentPadding: PaddingValues
     val verticalSpacerSize: Dp// = 0.dp
-    when (windowAdaptiveInfo.windowSizeClass.widthSizeClass) {
+    when (windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass) {
         WindowWidthSizeClass.Compact -> {
             maxHorizontalPartitions = 1
             contentPadding = PaddingValues(0.dp)
@@ -191,7 +187,7 @@ fun calculateStandardPaneScaffoldDirective(
             HingePolicy.AlwaysAvoid -> posture.allVerticalHingeBounds
             else -> emptyList()
         }
-    )
+    )*/
 }
 
 @Composable

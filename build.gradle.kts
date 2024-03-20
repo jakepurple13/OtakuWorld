@@ -18,6 +18,18 @@ buildscript {
 }
 
 subprojects {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+        kotlinOptions.freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
+                    project.layout.buildDirectory.get().asFile.absolutePath + "/compose_metrics"
+        )
+        kotlinOptions.freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" +
+                    project.layout.buildDirectory.get().asFile.absolutePath + "/compose_metrics"
+        )
+    }
     afterEvaluate {
         when {
             plugins.hasPlugin("otaku-library") -> {

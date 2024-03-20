@@ -16,7 +16,7 @@ glideVersion = "4.16.0"
 pagingVersion = "3.2.1"
 protobufGradlePlugin = "0.9.4"
 roomVersion = "2.6.1"
-navVersion = "2.8.0-alpha04"
+navVersion = "2.8.0-alpha05"
 koinVersion = "3.5.3"
 coil = "2.6.0"
 lifecycle = "2.7.0"
@@ -33,7 +33,7 @@ landscapist = "2.3.1"
 protobufVersion = "4.26.0"
 sketchVersion = "3.2.5"
 activity = "1.8.2"
-composeBomVersion = "2024.03.00-alpha01"
+composeBomVersion = "2024.03.00-alpha02"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -79,7 +79,10 @@ composeFoundation = { group = "androidx.compose.foundation", name = "foundation"
 composeMaterial = { group = "androidx.compose.material", name = "material" }
 materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
-materialAdaptive = { group = "androidx.compose.material3", name = "material3-adaptive", version = "1.0.0-alpha06" }
+#materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
+materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
+adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
+adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
 material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
 composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }

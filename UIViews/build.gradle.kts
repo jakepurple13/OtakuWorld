@@ -121,6 +121,8 @@ dependencies {
 
     //implementation(libs.material.adaptive.navigation.suite)
     implementation(libs.materialAdaptive)
+    implementation(libs.adaptive.layout.android)
+    implementation(libs.adaptive.navigation.android)
 
     implementation(libs.dragselect)
 }
