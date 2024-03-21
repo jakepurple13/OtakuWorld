@@ -182,7 +182,7 @@ androidxBrowser = "androidx.browser:browser:1.8.0"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.9.0"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.10.0"
 
 datastore = "androidx.datastore:datastore:1.0.0"
 datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
@@ -269,8 +269,8 @@ kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
-retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
-retrofitGson = "com.squareup.retrofit2:converter-gson:2.9.0"
+retrofit = "com.squareup.retrofit2:retrofit:2.10.0"
+retrofitGson = "com.squareup.retrofit2:converter-gson:2.10.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
 androidxWebkit = "androidx.webkit:webkit:1.10.0"
 
