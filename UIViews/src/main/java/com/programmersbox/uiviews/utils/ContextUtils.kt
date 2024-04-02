@@ -32,9 +32,11 @@ import androidx.compose.material.icons.filled.BatteryUnknown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +52,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
@@ -83,6 +86,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.lang.reflect.Type
@@ -113,6 +117,40 @@ val UPDATE_CHECKING_END = longPreferencesKey("lastUpdateCheckEnd")
 val Context.updateCheckingEnd get() = dataStore.data.map { it[UPDATE_CHECKING_END] ?: System.currentTimeMillis() }
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
+
+@Composable
+fun rememberHistorySave() = rememberPreference(
+    key = HISTORY_SAVE,
+    defaultValue = 50
+)
+
+@Composable
+fun <T> rememberPreference(
+    key: Preferences.Key<T>,
+    defaultValue: T,
+): MutableState<T> {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val state by remember {
+        context.dataStore.data
+            .map { it[key] ?: defaultValue }
+    }.collectAsStateWithLifecycle(initialValue = defaultValue)
+
+    return remember(state) {
+        object : MutableState<T> {
+            override var value: T
+                get() = state
+                set(value) {
+                    coroutineScope.launch {
+                        context.dataStore.edit { it[key] = value }
+                    }
+                }
+
+            override fun component1() = value
+            override fun component2(): (T) -> Unit = { value = it }
+        }
+    }
+}
 
 @JvmInline
 value class NotificationLogo(val notificationId: Int)
