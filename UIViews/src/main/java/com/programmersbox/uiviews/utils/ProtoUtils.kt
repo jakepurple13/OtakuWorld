@@ -103,6 +103,11 @@ class SettingsHandling(context: Context) {
         updateValue = { setShowDownload(it) }
     )
 
+    val amoledMode = SettingInfo(
+        flow = all.map { it.amoledMode },
+        updateValue = { setAmoledMode(it) }
+    )
+
     inner class SettingInfo<T>(
         val flow: Flow<T>,
         private val updateValue: suspend Settings.Builder.(T) -> Settings.Builder,

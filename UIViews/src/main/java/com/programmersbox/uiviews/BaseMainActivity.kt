@@ -191,7 +191,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 
-            OtakuMaterialTheme(navController, genericInfo) {
+            val isAmoledMode by settingsHandling.amoledMode
+                .flow
+                .collectAsStateWithLifecycle(false)
+
+            OtakuMaterialTheme(
+                navController = navController,
+                genericInfo = genericInfo,
+                isAmoledMode = isAmoledMode
+            ) {
                 AskForNotificationPermissions()
 
                 val showAllItem by settingsHandling.showAll.collectAsStateWithLifecycle(false)

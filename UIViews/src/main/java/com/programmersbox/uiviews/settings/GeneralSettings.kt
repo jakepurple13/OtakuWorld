@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.ChangeHistory
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
@@ -86,6 +87,15 @@ fun GeneralSettings(
                     else -> null
                 }?.let(AppCompatDelegate::setDefaultNightMode)
             }
+        )
+
+        val isAmoledMode by handling.amoledMode.flow.collectAsStateWithLifecycle(false)
+
+        SwitchSetting(
+            settingTitle = { Text("AMOLED Mode") },
+            settingIcon = { Icon(Icons.Default.DarkMode, null, modifier = Modifier.fillMaxSize()) },
+            value = isAmoledMode,
+            updateValue = { scope.launch { handling.amoledMode.updateSetting(it) } }
         )
 
         val shareChapter by handling.shareChapter.collectAsStateWithLifecycle(true)

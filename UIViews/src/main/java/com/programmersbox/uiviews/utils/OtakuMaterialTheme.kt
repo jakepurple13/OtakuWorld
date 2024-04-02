@@ -1,13 +1,20 @@
 package com.programmersbox.uiviews.utils
 
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.Colors
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -37,6 +44,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 fun OtakuMaterialTheme(
     navController: NavHostController,
     genericInfo: GenericInfo,
+    isAmoledMode: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
@@ -60,18 +68,41 @@ fun OtakuMaterialTheme(
             onDispose {}
         }
 
-        MaterialTheme(currentColorScheme) {
+        var colorScheme = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+            darkTheme -> darkColorScheme(
+                primary = Color(0xff90CAF9),
+                secondary = Color(0xff90CAF9)
+            )
+
+            else -> lightColorScheme(
+                primary = Color(0xff2196F3),
+                secondary = Color(0xff90CAF9)
+            )
+        }
+
+        if (isAmoledMode && darkTheme) {
+            colorScheme = colorScheme.copy(
+                surface = Color.Black,
+                inverseSurface = Color.White,
+                background = Color.Black
+            )
+        }
+
+        MaterialTheme(colorScheme.animate()) {
             androidx.compose.material.MaterialTheme(
-                colors = if (darkTheme)
+                colors = if (darkTheme) {
                     darkColors(
                         primary = Color(0xff90CAF9),
                         secondary = Color(0xff90CAF9)
                     )
-                else
+                } else {
                     lightColors(
                         primary = Color(0xff2196F3),
                         secondary = Color(0xff90CAF9)
-                    ),
+                    )
+                }.animate(),
             ) {
                 CompositionLocalProvider(
                     LocalActivity provides remember { context.findActivity() },
@@ -114,3 +145,51 @@ val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
 val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
+
+@Composable
+private fun Colors.animate() = copy(
+    primary = primary.animate().value,
+    primaryVariant = primaryVariant.animate().value,
+    onPrimary = onPrimary.animate().value,
+    secondary = secondary.animate().value,
+    secondaryVariant = secondaryVariant.animate().value,
+    onSecondary = onSecondary.animate().value,
+    background = background.animate().value,
+    onBackground = onBackground.animate().value,
+    surface = surface.animate().value,
+    onSurface = onSurface.animate().value,
+    onError = onError.animate().value,
+    error = error.animate().value,
+    isLight = isLight
+)
+
+@Composable
+private fun ColorScheme.animate() = copy(
+    primary.animate().value,
+    onPrimary.animate().value,
+    primaryContainer.animate().value,
+    onPrimaryContainer.animate().value,
+    inversePrimary.animate().value,
+    secondary.animate().value,
+    onSecondary.animate().value,
+    secondaryContainer.animate().value,
+    onSecondaryContainer.animate().value,
+    tertiary.animate().value,
+    onTertiary.animate().value,
+    tertiaryContainer.animate().value,
+    onTertiaryContainer.animate().value,
+    background.animate().value,
+    onBackground.animate().value,
+    surface.animate().value,
+    onSurface.animate().value,
+    surfaceVariant.animate().value,
+    onSurfaceVariant.animate().value,
+    surfaceTint.animate().value,
+    inverseSurface.animate().value,
+    inverseOnSurface.animate().value,
+    error.animate().value,
+    onError.animate().value,
+    errorContainer.animate().value,
+    onErrorContainer.animate().value,
+    outline.animate().value,
+)
