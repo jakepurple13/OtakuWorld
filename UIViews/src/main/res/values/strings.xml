@@ -205,4 +205,5 @@
     <string name="extensions">Extensions</string>
     <string name="view_extensions">View Extensions</string>
     <string name="installed">Installed</string>
+    <string name="amoled_mode">AMOLED Mode</string>
 </resources>

@@ -46,7 +46,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.uiviews.utils.LocalCustomListDao
@@ -59,9 +58,7 @@ fun OtakuListScreen(
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
     isHorizontal: Boolean = false,
 ) {
-    val showListDetail by LocalSettingsHandling.current
-        .showListDetail
-        .collectAsStateWithLifecycle(true)
+    val showListDetail by LocalSettingsHandling.current.rememberShowListDetail()
 
     val windowSize = with(LocalDensity.current) {
         currentWindowSize().toSize().toDpSize()

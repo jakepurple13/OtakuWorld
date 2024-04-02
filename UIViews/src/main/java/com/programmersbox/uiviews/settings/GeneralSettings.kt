@@ -53,7 +53,7 @@ fun GeneralSettings(
 
         val handling = LocalSettingsHandling.current
 
-        val showDownload = remember(key1 = handling) { handling.showDownload }
+        var showDownload by handling.rememberShowDownload()
 
         val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
 
@@ -89,13 +89,13 @@ fun GeneralSettings(
             }
         )
 
-        val isAmoledMode by handling.amoledMode.flow.collectAsStateWithLifecycle(false)
+        var isAmoledMode by handling.rememberIsAmoledMode()
 
         SwitchSetting(
-            settingTitle = { Text("AMOLED Mode") },
+            settingTitle = { Text(stringResource(R.string.amoled_mode)) },
             settingIcon = { Icon(Icons.Default.DarkMode, null, modifier = Modifier.fillMaxSize()) },
             value = isAmoledMode,
-            updateValue = { scope.launch { handling.amoledMode.updateSetting(it) } }
+            updateValue = { isAmoledMode = it }
         )
 
         val shareChapter by handling.shareChapter.collectAsStateWithLifecycle(true)
@@ -116,7 +116,7 @@ fun GeneralSettings(
             updateValue = { scope.launch { handling.setShowAll(it) } }
         )
 
-        val showListDetail by handling.showListDetail.collectAsStateWithLifecycle(true)
+        var showListDetail by handling.rememberShowListDetail()
 
         SwitchSetting(
             value = showListDetail,
@@ -128,14 +128,14 @@ fun GeneralSettings(
                     modifier = Modifier.fillMaxSize()
                 )
             },
-            updateValue = { scope.launch { handling.setShowListDetail(it) } }
+            updateValue = { showListDetail = it }
         )
 
         SwitchSetting(
             settingTitle = { Text("Show Download Button") },
             settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
-            value = showDownload.flow.collectAsStateWithLifecycle(initialValue = true).value,
-            updateValue = { scope.launch { showDownload.updateSetting(it) } }
+            value = showDownload,
+            updateValue = { showDownload = it }
         )
 
         var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }

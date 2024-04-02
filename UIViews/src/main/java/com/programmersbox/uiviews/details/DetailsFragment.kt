@@ -112,7 +112,7 @@ fun DetailsScreen(
     details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) },
 ) {
     val uriHandler = LocalUriHandler.current
-    val showDownload by LocalSettingsHandling.current.showDownload.flow.collectAsStateWithLifecycle(initialValue = true)
+    val showDownload by LocalSettingsHandling.current.rememberShowDownload()
     val scope = rememberCoroutineScope()
 
     if (details.info == null) {
