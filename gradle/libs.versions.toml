@@ -269,7 +269,7 @@ kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
-retrofit = "com.squareup.retrofit2:retrofit:2.10.0"
+retrofit = "com.squareup.retrofit2:retrofit:2.11.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.10.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
 androidxWebkit = "androidx.webkit:webkit:1.10.0"
