@@ -51,6 +51,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.carousel.CarouselDefaults
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -396,13 +399,19 @@ fun GlobalSearchView(
                                                         }
                                                     }
                                                 }
-                                                LazyRow(
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+
+                                                val carouselState = rememberCarouselState { i.data.size }
+
+                                                HorizontalMultiBrowseCarousel(
+                                                    state = carouselState,
+                                                    preferredItemWidth = ComposableUtils.IMAGE_WIDTH,
+                                                    flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(state = carouselState),
+                                                    itemSpacing = 4.dp,
                                                     modifier = Modifier
                                                         .padding(horizontal = 4.dp)
                                                         .padding(bottom = 4.dp)
                                                 ) {
-                                                    items(i.data) { m ->
+                                                    i.data[it].let { m ->
                                                         SearchCoverCard(
                                                             model = m,
                                                             placeHolder = mainLogoDrawable.logo,
