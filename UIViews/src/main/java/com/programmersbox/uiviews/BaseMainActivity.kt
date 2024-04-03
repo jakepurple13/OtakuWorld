@@ -200,7 +200,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             ) {
                 AskForNotificationPermissions()
 
-                val showAllItem by settingsHandling.showAll.collectAsStateWithLifecycle(false)
+                val showAllItem by settingsHandling.rememberShowAll()
 
                 val navType = when (windowSize.widthSizeClass) {
                     WindowWidthSizeClass.Expanded -> NavigationBarType.Rail

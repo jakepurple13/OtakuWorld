@@ -15,6 +15,7 @@ message Settings {
   bool showDownload = 9;
   repeated string customUrls = 10;
   bool amoledMode = 11;
+  bool usePalette = 12;
 }
 
 enum SystemThemeMode {

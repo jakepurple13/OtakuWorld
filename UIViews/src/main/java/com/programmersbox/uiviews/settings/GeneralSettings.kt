@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -98,22 +99,34 @@ fun GeneralSettings(
             updateValue = { isAmoledMode = it }
         )
 
-        val shareChapter by handling.shareChapter.collectAsStateWithLifecycle(true)
+        var usePalette by handling.rememberUsePalette()
+
+        SwitchSetting(
+            settingTitle = { Text("Use Palette") },
+            summaryValue = {
+                Text("Use Palette to color the details screen if possible")
+            },
+            settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
+            value = usePalette,
+            updateValue = { usePalette = it }
+        )
+
+        var shareChapter by handling.rememberShareChapter()
 
         SwitchSetting(
             settingTitle = { Text(stringResource(R.string.share_chapters)) },
             settingIcon = { Icon(Icons.Default.Share, null, modifier = Modifier.fillMaxSize()) },
             value = shareChapter,
-            updateValue = { scope.launch { handling.setShareChapter(it) } }
+            updateValue = { shareChapter = it }
         )
 
-        val showAllScreen by handling.showAll.collectAsStateWithLifecycle(true)
+        var showAllScreen by handling.rememberShowAll()
 
         SwitchSetting(
             settingTitle = { Text(stringResource(R.string.show_all_screen)) },
             settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
             value = showAllScreen,
-            updateValue = { scope.launch { handling.setShowAll(it) } }
+            updateValue = { showAllScreen = it }
         )
 
         var showListDetail by handling.rememberShowListDetail()

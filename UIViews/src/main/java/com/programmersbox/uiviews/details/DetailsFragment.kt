@@ -49,7 +49,6 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -163,12 +162,15 @@ fun DetailsScreen(
 
         val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
 
-        val shareChapter by handling.shareChapter.collectAsState(initial = true)
-        var swatchInfo by remember { mutableStateOf<SwatchInfo?>(null) }
+        val shareChapter by handling.rememberShareChapter()
+        val usePalette by handling.rememberUsePalette()
+        var swatchInfo by remember(usePalette) { mutableStateOf<SwatchInfo?>(null) }
 
         CompositionLocalProvider(
             LocalSwatchInfo provides remember(swatchInfo) { SwatchInfoColors(swatchInfo) },
-            LocalSwatchChange provides rememberUpdatedState(newValue = { it: SwatchInfo? -> swatchInfo = it }).value
+            LocalSwatchChange provides rememberUpdatedState(
+                newValue = { it: SwatchInfo? -> if (usePalette) swatchInfo = it }
+            ).value
         ) {
             if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {
                 DetailsViewLandscape(

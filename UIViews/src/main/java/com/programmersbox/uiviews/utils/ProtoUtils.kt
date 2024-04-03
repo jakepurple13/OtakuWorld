@@ -67,6 +67,8 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             themeSetting = SystemThemeMode.FollowSystem
             showListDetail = true
             showDownload = true
+            amoledMode = false
+            usePalette = true
         }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -81,11 +83,19 @@ class SettingsHandling(context: Context) {
     val batteryPercentage = all.map { it.batteryPercent }
     suspend fun setBatteryPercentage(percent: Int) = preferences.update { setBatteryPercent(percent) }
 
-    val shareChapter = all.map { it.shareChapter }
-    suspend fun setShareChapter(share: Boolean) = preferences.update { setShareChapter(share) }
+    @Composable
+    fun rememberShareChapter() = rememberPreference(
+        key = { it.shareChapter },
+        update = { setShareChapter(it) },
+        defaultValue = true
+    )
 
-    val showAll = all.map { it.showAll }
-    suspend fun setShowAll(show: Boolean) = preferences.update { setShowAll(show) }
+    @Composable
+    fun rememberShowAll() = rememberPreference(
+        key = { it.showAll },
+        update = { setShowAll(it) },
+        defaultValue = false
+    )
 
     val notificationSortBy = all.map { it.notificationSortBy }
 
@@ -127,6 +137,13 @@ class SettingsHandling(context: Context) {
         key = { it.amoledMode },
         update = { setAmoledMode(it) },
         defaultValue = false
+    )
+
+    @Composable
+    fun rememberUsePalette() = rememberPreference(
+        key = { it.usePalette },
+        update = { setUsePalette(it) },
+        defaultValue = true
     )
 
     @Composable
