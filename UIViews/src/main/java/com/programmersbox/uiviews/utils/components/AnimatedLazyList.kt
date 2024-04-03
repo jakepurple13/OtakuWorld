@@ -414,7 +414,7 @@ internal fun <T> animatedLazyListScope(
                             it.padding(end = spacing)
                         }
                     }
-                    .animateItemPlacement()
+                    .animateItem()
             ) {
                 item.value.composable(this@itemsIndexed)
             }

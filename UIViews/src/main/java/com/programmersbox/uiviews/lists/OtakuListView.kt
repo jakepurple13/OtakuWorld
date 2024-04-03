@@ -130,7 +130,7 @@ fun OtakuListView(
                         navigateDetail(it)
                     },
                     modifier = Modifier
-                        .animateItemPlacement()
+                        .animateItem()
                         .padding(horizontal = 4.dp)
                         .thenIf(customItem == it) {
                             border(

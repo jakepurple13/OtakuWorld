@@ -255,7 +255,6 @@ fun ExtensionList(
         ListDetailPaneScaffold(
             directive = navigator.scaffoldDirective,
             value = navigator.scaffoldValue,
-            windowInsets = WindowInsets(0.dp),
             listPane = {
                 AnimatedPane(modifier = Modifier.fillMaxSize()) {
                     InstalledExtensionItems(
@@ -450,7 +449,7 @@ private fun RemoteExtensionItems(
                                     onDownloadAndInstall = {
                                         onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
                                     },
-                                    modifier = Modifier.animateItemPlacement()
+                                    modifier = Modifier.animateItem()
                                 )
                             }
                         }

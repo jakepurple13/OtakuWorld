@@ -5,7 +5,6 @@ import com.programmersbox.anime_sources.anime.AllAnime
 import com.programmersbox.anime_sources.anime.AnimeKisaSubbed
 import com.programmersbox.anime_sources.anime.AnimeSimpleSubbed
 import com.programmersbox.anime_sources.anime.AnimeToonDubbed
-import com.programmersbox.anime_sources.anime.GogoAnimeVC
 import com.programmersbox.anime_sources.anime.PutlockerTV
 import com.programmersbox.anime_sources.anime.Vidstreaming
 import com.programmersbox.gsonutils.getApi
@@ -77,12 +76,12 @@ class ExampleUnitTest {
 
         println(listOf(-1, -2, 1, 2, 3, 0).sortedByDescending { it })
 
-        val f = GogoAnimeVC.recent()
+        /*val f = GogoAnimeVC.recent()
         //println(f.joinToString("\n"))
         val e = f.random().toInfoModel().first().getOrThrow()
         println(e)
         val c = e.chapters.first().getChapterInfo().first()
-        println(c.joinToString("\n"))
+        println(c.joinToString("\n"))*/
 
         //val a = GogoAnimeVC.searchList("Mushi", 1, emptyList()).blockingGet()
         //println(a.joinToString("\n"))

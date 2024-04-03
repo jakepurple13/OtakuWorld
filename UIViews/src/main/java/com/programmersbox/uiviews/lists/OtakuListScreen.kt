@@ -12,7 +12,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -115,7 +114,6 @@ fun OtakuListScreen(
     ListDetailPaneScaffold(
         directive = state.scaffoldDirective,
         value = state.scaffoldValue,
-        windowInsets = WindowInsets(0.dp),
         listPane = {
             AnimatedPanes(modifier = Modifier.fillMaxSize()) {
                 OtakuListView(
@@ -195,9 +193,9 @@ fun calculateStandardPaneScaffoldDirective(
 
     return PaneScaffoldDirective(
         maxHorizontalPartitions = maxHorizontalPartitions,
-        contentPadding = contentPadding,
         verticalPartitionSpacerSize = verticalSpacerSize,
         horizontalPartitionSpacerSize = horizontalSpacerSize,
+        defaultPanePreferredWidth = 360.dp,
         maxVerticalPartitions = maxVerticalPartitions,
         excludedBounds = when (verticalHingePolicy) {
             HingePolicy.AvoidSeparating -> posture.separatingVerticalHingeBounds
