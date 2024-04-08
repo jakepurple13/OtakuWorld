@@ -46,6 +46,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -112,14 +113,18 @@ fun RecentView(
         initialPage = initSource.coerceAtLeast(0),
         initialPageOffsetFraction = 0f
     ) { sourceList.size }
+
     LaunchedEffect(initSource) {
         if (initSource != -1) pagerState.scrollToPage(initSource)
     }
-    LaunchedEffect(pagerState.currentPage, initSource) {
-        if (initSource != -1) {
-            sourceList.getOrNull(pagerState.currentPage)?.let { service ->
-                currentSourceRepository.emit(service.apiService)
-                context.currentService = service.apiService.serviceName
+
+    LaunchedEffect(pagerState, initSource) {
+        snapshotFlow { pagerState.settledPage }.collect {
+            if (initSource != -1) {
+                sourceList.getOrNull(it)?.let { service ->
+                    currentSourceRepository.emit(service.apiService)
+                    context.currentService = service.apiService.serviceName
+                }
             }
         }
     }
