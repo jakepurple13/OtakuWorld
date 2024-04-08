@@ -1,5 +1,5 @@
 [versions]
-gradle = "8.4.0-alpha07"
+gradle = "8.4.0-rc02"
 
 androidxBaselineprofileGradlePlugin = "1.2.0"
 composeCollapsable = "0.3.0"
