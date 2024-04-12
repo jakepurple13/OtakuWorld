@@ -48,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -164,7 +163,6 @@ fun SettingScreen(
         }
     }
 }
-
 /*
 //TODO: This will be for the future when this works again
 internal enum class SettingChoice {
@@ -188,10 +186,14 @@ internal fun SettingScreen(
     globalSearchClick: () -> Unit = {},
     listClick: () -> Unit = {},
     extensionClick: () -> Unit = {},
+    notificationSettingsClick: () -> Unit = {},
+    generalClick: () -> Unit = {},
+    otherClick: () -> Unit = {},
+    moreInfoClick: () -> Unit = {},
 ) {
     val navController = LocalNavController.current
     val navigator = rememberListDetailPaneScaffoldNavigator(
-        scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
+        //scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
     )
     var settingChoice by remember { mutableStateOf(SettingChoice.General) }
 
@@ -206,9 +208,10 @@ internal fun SettingScreen(
     }
 
     ListDetailPaneScaffold(
-        scaffoldState = navigator.scaffoldState,
+        directive = navigator.scaffoldDirective,
+        value = navigator.scaffoldValue,
         listPane = {
-            AnimatedPane(modifier = Modifier) {
+            AnimatedPane {
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
                 OtakuScaffold(
                     topBar = {
@@ -247,29 +250,31 @@ internal fun SettingScreen(
                     }
                 }
             }
-        }
-    ) {
-        AnimatedPane(modifier = Modifier.fillMaxSize()) {
-            AnimatedContent(
-                targetState = settingChoice,
-                label = "",
-                transitionSpec = {
-                    (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
-                },
-            ) { targetState ->
-                when (targetState) {
-                    SettingChoice.Notification -> NotificationSettings()
-                    SettingChoice.General -> GeneralSettings(composeSettingsDsl.generalSettings)
-                    SettingChoice.Other -> PlaySettings(composeSettingsDsl.playerSettings)
-                    SettingChoice.MoreInfo -> InfoSettings {
-                        navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
-                    }
+        },
+        detailPane = {
+            AnimatedPane(modifier = Modifier.fillMaxSize()) {
+                AnimatedContent(
+                    targetState = navigator.currentDestination?.content ?: SettingChoice.None,
+                    label = "",
+                    transitionSpec = {
+                        (slideInHorizontally { -it } + fadeIn()) togetherWith
+                                (fadeOut() + slideOutHorizontally { -it })
+                    },
+                ) { targetState ->
+                    when (targetState) {
+                        SettingChoice.Notification -> NotificationSettings()
+                        SettingChoice.General -> GeneralSettings(composeSettingsDsl.generalSettings)
+                        SettingChoice.Other -> PlaySettings(composeSettingsDsl.playerSettings)
+                        SettingChoice.MoreInfo -> InfoSettings {
+                            navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
+                        }
 
-                    SettingChoice.None -> {}
+                        SettingChoice.None -> {}
+                    }
                 }
             }
         }
-    }
+    )
 }*/
 
 @Composable
@@ -604,13 +609,11 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
     }
 }
 
-private fun Modifier.click(action: () -> Unit): Modifier = this.composed {
-    clickable(
-        indication = ripple(),
-        interactionSource = null,
-        onClick = action
-    )
-}
+private fun Modifier.click(action: () -> Unit): Modifier = clickable(
+    indication = ripple(),
+    interactionSource = null,
+    onClick = action
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

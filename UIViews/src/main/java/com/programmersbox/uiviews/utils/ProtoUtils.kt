@@ -84,14 +84,14 @@ class SettingsHandling(context: Context) {
     suspend fun setBatteryPercentage(percent: Int) = preferences.update { setBatteryPercent(percent) }
 
     @Composable
-    fun rememberShareChapter() = rememberPreference(
+    fun rememberShareChapter() = preferences.rememberPreference(
         key = { it.shareChapter },
         update = { setShareChapter(it) },
         defaultValue = true
     )
 
     @Composable
-    fun rememberShowAll() = rememberPreference(
+    fun rememberShowAll() = preferences.rememberPreference(
         key = { it.showAll },
         update = { setShowAll(it) },
         defaultValue = false
@@ -102,7 +102,7 @@ class SettingsHandling(context: Context) {
     suspend fun setNotificationSortBy(sort: NotificationSortBy) = preferences.update { setNotificationSortBy(sort) }
 
     @Composable
-    fun rememberShowListDetail() = rememberPreference(
+    fun rememberShowListDetail() = preferences.rememberPreference(
         key = { it.showListDetail },
         update = { setShowListDetail(it) },
         defaultValue = true
@@ -126,48 +126,50 @@ class SettingsHandling(context: Context) {
     }
 
     @Composable
-    fun rememberShowDownload() = rememberPreference(
+    fun rememberShowDownload() = preferences.rememberPreference(
         key = { it.showDownload },
         update = { setShowDownload(it) },
         defaultValue = true
     )
 
     @Composable
-    fun rememberIsAmoledMode() = rememberPreference(
+    fun rememberIsAmoledMode() = preferences.rememberPreference(
         key = { it.amoledMode },
         update = { setAmoledMode(it) },
         defaultValue = false
     )
 
     @Composable
-    fun rememberUsePalette() = rememberPreference(
+    fun rememberUsePalette() = preferences.rememberPreference(
         key = { it.usePalette },
         update = { setUsePalette(it) },
         defaultValue = true
     )
+}
 
-    @Composable
-    fun <T> rememberPreference(
-        key: (Settings) -> T,
-        update: Settings.Builder.(T) -> Settings.Builder,
-        defaultValue: T,
-    ): MutableState<T> {
-        val coroutineScope = rememberCoroutineScope()
-        val state by remember { all.map(key) }.collectAsStateWithLifecycle(initialValue = defaultValue)
+@Composable
+fun <T, DS, MessageType, BuilderType> DS.rememberPreference(
+    key: (MessageType) -> T,
+    update: BuilderType.(T) -> BuilderType,
+    defaultValue: T,
+): MutableState<T> where DS : DataStore<MessageType>,
+                         MessageType : GeneratedMessageLite<MessageType, BuilderType>,
+                         BuilderType : GeneratedMessageLite.Builder<MessageType, BuilderType> {
+    val coroutineScope = rememberCoroutineScope()
+    val state by remember { data.map(key) }.collectAsStateWithLifecycle(initialValue = defaultValue)
 
-        return remember(state) {
-            object : MutableState<T> {
-                override var value: T
-                    get() = state
-                    set(value) {
-                        coroutineScope.launch {
-                            preferences.update { update(value) }
-                        }
+    return remember(state) {
+        object : MutableState<T> {
+            override var value: T
+                get() = state
+                set(value) {
+                    coroutineScope.launch {
+                        update { update(value) }
                     }
+                }
 
-                override fun component1() = value
-                override fun component2(): (T) -> Unit = { value = it }
-            }
+            override fun component1() = value
+            override fun component2(): (T) -> Unit = { value = it }
         }
     }
 }

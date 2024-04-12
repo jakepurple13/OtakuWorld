@@ -1,6 +1,7 @@
 package com.programmersbox.mangaworld
 
 import android.content.Context
+import androidx.compose.runtime.Composable
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.programmersbox.mangasettings.MangaSettings
@@ -8,6 +9,7 @@ import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.mangaSettings
 import com.programmersbox.uiviews.utils.GenericSerializer
+import com.programmersbox.uiviews.utils.rememberPreference
 import com.programmersbox.uiviews.utils.update
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -39,14 +41,35 @@ class MangaSettingsHandling(context: Context) {
         updateValue = { setPlayingStartAction(it) }
     )
 
+    @Composable
+    fun rememberPlayingStartAction() = preferences.rememberPreference(
+        key = { it.playingStartAction },
+        update = { setPlayingStartAction(it) },
+        defaultValue = PlayingStartAction.CurrentChapter
+    )
+
     val playingMiddleAction = SettingInfo(
         flow = all.map { it.playingMiddleAction },
         updateValue = { setPlayingMiddleAction(it) }
     )
 
+    @Composable
+    fun rememberPlayingMiddleAction() = preferences.rememberPreference(
+        key = { it.playingMiddleAction },
+        update = { setPlayingMiddleAction(it) },
+        defaultValue = PlayingMiddleAction.Nothing
+    )
+
     val useNewReader = SettingInfo(
         flow = all.map { it.useNewReader },
         updateValue = { setUseNewReader(it) }
+    )
+
+    @Composable
+    fun rememberUseNewReader() = preferences.rememberPreference(
+        key = { it.useNewReader },
+        update = { setUseNewReader(it) },
+        defaultValue = true
     )
 
     val pagePadding = SettingInfo(
@@ -57,6 +80,13 @@ class MangaSettingsHandling(context: Context) {
     val listOrPager = SettingInfo(
         flow = all.map { it.listOrPager },
         updateValue = { setListOrPager(it) }
+    )
+
+    @Composable
+    fun rememberListOrPager() = preferences.rememberPreference(
+        key = { it.listOrPager },
+        update = { setListOrPager(it) },
+        defaultValue = true
     )
 
     inner class SettingInfo<T>(

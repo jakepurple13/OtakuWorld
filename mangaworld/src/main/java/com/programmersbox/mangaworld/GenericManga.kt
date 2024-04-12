@@ -55,7 +55,6 @@ import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -404,21 +403,17 @@ class GenericManga(
                 onValueChangedFinished = { scope.launch { mangaSettingsHandling.pagePadding.updateSetting(padding.toInt()) } }
             )
 
-            val reader by mangaSettingsHandling.useNewReader
-                .flow
-                .collectAsStateWithLifecycle(initialValue = true)
+            var reader by mangaSettingsHandling.rememberUseNewReader()
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.useNewReader)) },
                 summaryValue = { Text(stringResource(R.string.reader_summary_setting)) },
                 settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
                 value = reader,
-                updateValue = { scope.launch { mangaSettingsHandling.useNewReader.updateSetting(it) } }
+                updateValue = { reader = it }
             )
 
-            val listOrPager by mangaSettingsHandling.listOrPager
-                .flow
-                .collectAsStateWithLifecycle(initialValue = true)
+            var listOrPager by mangaSettingsHandling.rememberListOrPager()
 
             ShowWhen(reader) {
                 Column {
@@ -426,7 +421,7 @@ class GenericManga(
                         settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                         summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                         value = listOrPager,
-                        updateValue = { scope.launch { mangaSettingsHandling.listOrPager.updateSetting(it) } },
+                        updateValue = { listOrPager = it },
                         settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
                     )
 
@@ -434,13 +429,8 @@ class GenericManga(
 
                     CategorySetting { Text("Top Bar Settings") }
 
-                    val startAction by mangaSettingsHandling.playingStartAction
-                        .flow
-                        .collectAsStateWithLifecycle(initialValue = PlayingStartAction.CurrentChapter)
-
-                    val middleAction by mangaSettingsHandling.playingMiddleAction
-                        .flow
-                        .collectAsStateWithLifecycle(initialValue = PlayingMiddleAction.Nothing)
+                    var startAction by mangaSettingsHandling.rememberPlayingStartAction()
+                    var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
                     var showStartDropdown by remember { mutableStateOf(false) }
 
@@ -462,10 +452,8 @@ class GenericManga(
                                                 }
                                             },
                                             onClick = {
-                                                scope.launch {
-                                                    mangaSettingsHandling.playingStartAction.updateSetting(it)
-                                                    showStartDropdown = false
-                                                }
+                                                startAction = it
+                                                showStartDropdown = false
                                             }
                                         )
                                     }
@@ -495,10 +483,8 @@ class GenericManga(
                                                 }
                                             },
                                             onClick = {
-                                                scope.launch {
-                                                    mangaSettingsHandling.playingMiddleAction.updateSetting(it)
-                                                    showMiddleDropdown = false
-                                                }
+                                                middleAction = it
+                                                showMiddleDropdown = false
                                             }
                                         )
                                     }

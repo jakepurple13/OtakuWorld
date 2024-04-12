@@ -107,6 +107,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -218,9 +219,7 @@ fun ReadView(
 
     val pages = readVm.pageList
 
-    val listOrPager by mangaSettingsHandling.listOrPager
-        .flow
-        .collectAsStateWithLifecycle(initialValue = true)
+    var listOrPager by mangaSettingsHandling.rememberListOrPager()
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -234,13 +233,9 @@ fun ReadView(
         .flow
         .collectAsStateWithLifecycle(initialValue = 4)
 
-    val startAction by mangaSettingsHandling.playingStartAction
-        .flow
-        .collectAsStateWithLifecycle(initialValue = PlayingStartAction.CurrentChapter)
+    var startAction by mangaSettingsHandling.rememberPlayingStartAction()
 
-    val middleAction by mangaSettingsHandling.playingMiddleAction
-        .flow
-        .collectAsStateWithLifecycle(initialValue = PlayingMiddleAction.Nothing)
+    var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
     val activity = LocalActivity.current
 
@@ -288,8 +283,11 @@ fun ReadView(
             onDismiss = { settingsPopup = false },
             mangaSettingsHandling = mangaSettingsHandling,
             listOrPager = listOrPager,
+            listOrPagerChange = { listOrPager = it },
             startAction = startAction,
-            middleAction = middleAction
+            onStartActionChange = { startAction = it },
+            middleAction = middleAction,
+            onMiddleActionChange = { middleAction = it }
         )
     }
 
@@ -1327,19 +1325,27 @@ private fun SettingsSheet(
     onDismiss: () -> Unit,
     mangaSettingsHandling: MangaSettingsHandling,
     listOrPager: Boolean,
+    listOrPagerChange: (Boolean) -> Unit,
     startAction: PlayingStartAction,
+    onStartActionChange: (PlayingStartAction) -> Unit,
+    onMiddleActionChange: (PlayingMiddleAction) -> Unit,
     middleAction: PlayingMiddleAction,
     modifier: Modifier = Modifier,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
 ) {
     val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         content = {
             CategorySetting(
                 settingIcon = {
                     IconButton(
-                        onClick = onDismiss
+                        onClick = {
+                            scope.launch { sheetState.hide() }
+                                .invokeOnCompletion { onDismiss() }
+                        }
                     ) { Icon(Icons.Default.Close, null) }
                 },
                 settingTitle = { Text(stringResource(R.string.settings)) }
@@ -1368,8 +1374,9 @@ private fun SettingsSheet(
                 settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
                 summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
                 value = listOrPager,
-                updateValue = { scope.launch { mangaSettingsHandling.listOrPager.updateSetting(it) } },
-                settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
+                updateValue = listOrPagerChange,
+                settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) },
+                modifier = Modifier.padding(vertical = 4.dp)
             )
             HorizontalDivider()
 
@@ -1393,10 +1400,8 @@ private fun SettingsSheet(
                                         }
                                     },
                                     onClick = {
-                                        scope.launch {
-                                            mangaSettingsHandling.playingStartAction.updateSetting(it)
-                                            showStartDropdown = false
-                                        }
+                                        onStartActionChange(it)
+                                        showStartDropdown = false
                                     }
                                 )
                             }
@@ -1426,10 +1431,8 @@ private fun SettingsSheet(
                                         }
                                     },
                                     onClick = {
-                                        scope.launch {
-                                            mangaSettingsHandling.playingMiddleAction.updateSetting(it)
-                                            showMiddleDropdown = false
-                                        }
+                                        onMiddleActionChange(it)
+                                        showMiddleDropdown = false
                                     }
                                 )
                             }
