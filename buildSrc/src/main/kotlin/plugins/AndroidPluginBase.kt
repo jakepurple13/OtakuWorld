@@ -25,10 +25,9 @@ abstract class AndroidPluginBase<T: BaseExtension>(
         target.pluginManager.apply("kotlin-android")
         target.tasks.withType<KotlinCompile> { kotlinOptions { jvmTarget = "1.8" } }
         target.configureAndroidBase()
-        target.afterEvaluate { useGoogleType() }
     }
 
-    private fun Project.useGoogleType() {
+    protected fun Project.useGoogleType() {
         extensions.findByType<BaseAppModuleExtension>()?.apply {
             applicationVariants.forEach { variant ->
                 println(variant.name)

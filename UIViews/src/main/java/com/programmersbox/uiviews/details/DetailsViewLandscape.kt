@@ -135,7 +135,7 @@ fun DetailsViewLandscape(
         }
     }
 
-    val topBarColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.onSurface
+    val topBarColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value
 
     var showLists by remember { mutableStateOf(false) }
 
@@ -170,7 +170,7 @@ fun DetailsViewLandscape(
                     modifier = Modifier.zIndex(2f),
                     colors = TopAppBarDefaults.topAppBarColors(
                         titleContentColor = topBarColor,
-                        containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface,
+                        containerColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value,
                         scrolledContainerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value?.let {
                             MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
                         } ?: MaterialTheme.colorScheme.applyTonalElevation(

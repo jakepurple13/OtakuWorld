@@ -2,11 +2,16 @@ package plugins
 
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.apply
 
 class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModuleExtension::class) {
 
     override fun Project.projectSetup() {
         pluginManager.apply("com.android.application")
+        pluginManager.apply(EasyLauncherSetup::class)
+        pluginManager.apply("com.google.gms.google-services")
+        pluginManager.apply("com.google.firebase.crashlytics")
+        afterEvaluate { useGoogleType() }
     }
 
     override fun BaseAppModuleExtension.androidConfig(project: Project) {

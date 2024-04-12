@@ -426,6 +426,10 @@ val Alizarin = Color(0xFFe74c3c)
 fun Color.animate(label: String = "") = animateColorAsState(this, label = label)
 
 @Composable
+fun Color?.animate(default: Color, label: String = "") =
+    animateColorAsState(this ?: default, label = label)
+
+@Composable
 fun LazyListState.isScrollingUp(): Boolean {
     var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
     var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }

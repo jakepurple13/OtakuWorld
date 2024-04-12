@@ -89,6 +89,7 @@ import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.PermissionRequest
+import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -283,7 +284,9 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         .fillMaxSize()
                         .haze(
                             hazeState,
-                            backgroundColor = M3MaterialTheme.colorScheme.surface
+                            style = HazeDefaults.style(
+                                backgroundColor = M3MaterialTheme.colorScheme.surface
+                            )
                         )
                 ) {
                     items(

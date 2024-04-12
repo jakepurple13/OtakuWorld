@@ -226,8 +226,7 @@ internal fun DetailsHeader(
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
-                            tint = swatchInfo?.rgb?.toComposeColor()?.animate()?.value
-                                ?: MaterialTheme.colorScheme.onSurface,
+                            tint = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Crossfade(targetState = isFavorite, label = "") { target ->

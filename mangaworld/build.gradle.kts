@@ -1,11 +1,8 @@
 plugins {
-    id("otaku-application")
+    `otaku-application`
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
-    id("otaku-easylauncher")
-    id("otaku-protobuf")
+    `otaku-protobuf`
     alias(libs.plugins.ksp)
     //id("androidx.baselineprofile")
 }

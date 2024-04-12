@@ -227,7 +227,7 @@ fun MarkAsScreen(
             InsetSmallTopAppBar(
                 title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface,
+                    containerColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value,
                     scrolledContainerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value?.let {
                         MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
                     } ?: MaterialTheme.colorScheme.applyTonalElevation(
@@ -260,15 +260,17 @@ fun MarkAsScreen(
                             interactionSource = null,
                             indication = ripple()
                         ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
-                    color = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                    color = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
                 ) {
                     ListItem(
                         modifier = Modifier.padding(horizontal = 4.dp),
                         colors = ListItemDefaults.colors(
                             headlineColor = swatchInfo?.bodyColor
                                 ?.toComposeColor()
-                                ?.animate()?.value ?: MaterialTheme.colorScheme.onSurface,
-                            containerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                                .animate(MaterialTheme.colorScheme.onSurface).value,
+                            containerColor = swatchInfo?.rgb
+                                ?.toComposeColor()
+                                .animate(MaterialTheme.colorScheme.surface).value
                         ),
                         headlineContent = { Text(c.name) },
                         leadingContent = {
@@ -276,12 +278,10 @@ fun MarkAsScreen(
                                 checked = chapters.fastAny { it.url == c.url },
                                 onCheckedChange = { b -> markAs(c, b) },
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: MaterialTheme.colorScheme.secondary,
-                                    uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                        ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                    checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value
-                                        ?: MaterialTheme.colorScheme.surface
+                                    checkedColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.secondary).value,
+                                    uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()
+                                        .animate(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)).value,
+                                    checkmarkColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
                                 )
                             )
                         }
@@ -350,11 +350,10 @@ fun ChapterItem(
                             checked = read.fastAny { it.url == c.url },
                             onCheckedChange = { b -> markAs(c, b) },
                             colors = CheckboxDefaults.colors(
-                                checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: MaterialTheme.colorScheme.secondary,
-                                uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                                checkedColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.secondary).value,
+                                uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()
+                                    .animate(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)).value,
+                                checkmarkColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
                             )
                         )
                     },
@@ -386,7 +385,7 @@ fun ChapterItem(
                             Icon(
                                 Icons.Default.Share,
                                 null,
-                                tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current
+                                tint = swatchInfo?.bodyColor?.toComposeColor().animate(LocalContentColor.current).value
                             )
                         }
                     },
@@ -403,11 +402,10 @@ fun ChapterItem(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> markAs(c, b) },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                ?: MaterialTheme.colorScheme.secondary,
-                            uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            checkmarkColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                            checkedColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.secondary).value,
+                            uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()
+                                .animate(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)).value,
+                            checkmarkColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
                         )
                     )
 
@@ -446,15 +444,14 @@ fun ChapterItem(
                             .weight(1f, true)
                             .padding(horizontal = 4.dp),
                         //colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
-                        border = BorderStroke(1.dp, swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
+                        border = BorderStroke(1.dp, swatchInfo?.bodyColor?.toComposeColor().animate(LocalContentColor.current).value)
                     ) {
                         Column {
                             Icon(
                                 Icons.Default.PlayArrow,
                                 "Play",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: MaterialTheme.colorScheme.onSurface
+                                tint = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value
                             )
                             Text(
                                 stringResource(R.string.read),
@@ -477,15 +474,14 @@ fun ChapterItem(
                             .weight(1f, true)
                             .padding(horizontal = 4.dp),
                         //colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
-                        border = BorderStroke(1.dp, swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value ?: LocalContentColor.current)
+                        border = BorderStroke(1.dp, swatchInfo?.bodyColor?.toComposeColor().animate(LocalContentColor.current).value)
                     ) {
                         Column {
                             Icon(
                                 Icons.Default.Download,
                                 "Download",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = swatchInfo?.bodyColor?.toComposeColor()?.animate()?.value
-                                    ?: MaterialTheme.colorScheme.onSurface
+                                tint = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value
                             )
                             Text(
                                 stringResource(R.string.download_chapter),

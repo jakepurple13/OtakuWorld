@@ -75,6 +75,7 @@ import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
+import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -258,7 +259,7 @@ fun AllView(
                             paddingValues = p1,
                             modifier = Modifier.haze(
                                 hazeState,
-                                backgroundColor = MaterialTheme.colorScheme.surface
+                                style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.surface),
                             )
                         )
                     }

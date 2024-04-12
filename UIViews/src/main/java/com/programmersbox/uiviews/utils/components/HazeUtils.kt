@@ -28,6 +28,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -81,7 +82,7 @@ fun HazeScaffold(
         Box(
             modifier = Modifier.haze(
                 state = hazeState,
-                backgroundColor = containerColor,
+                style = HazeDefaults.style(backgroundColor = containerColor),
             ),
             content = { content(contentPadding) },
         )

@@ -1,11 +1,8 @@
 plugins {
-    id("otaku-application")
+    `otaku-application`
     kotlin("kapt")
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
-    id("otaku-easylauncher")
     alias(libs.plugins.ksp)
 }
 

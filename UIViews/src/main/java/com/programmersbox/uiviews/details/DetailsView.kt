@@ -76,11 +76,11 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.components.minus
 import com.programmersbox.uiviews.utils.toComposeColor
+import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -340,9 +340,12 @@ fun DetailsView(
                     .padding(vertical = 4.dp)
                     .haze(
                         hazeState,
-                        backgroundColor = swatchInfo?.rgb
-                            ?.toComposeColor()
-                            ?.animate()?.value ?: MaterialTheme.colorScheme.surface
+                        style = HazeDefaults.style(
+                            backgroundColor = animateColorAsState(
+                                targetValue = swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface,
+                                label = ""
+                            ).value
+                        ),
                     ),
             ) {
                 if (info.description.isNotEmpty()) {
