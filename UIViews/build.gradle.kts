@@ -125,4 +125,6 @@ dependencies {
     implementation(libs.adaptive.navigation.android)
 
     implementation(libs.dragselect)
+
+    implementation(libs.crashlytics)
 }
