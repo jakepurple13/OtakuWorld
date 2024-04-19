@@ -41,8 +41,9 @@ abstract class AndroidPluginBase<T: BaseExtension>(
                 val variantName = variant.name
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                 val googleTask = tasks.findByName("process${variantName}GoogleServices")
-                googleTask?.enabled = System.getenv("CI") != null
-                //ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
+                // Need to get the noFirebase packages in firebase first
+                // googleTask?.enabled = System.getenv("CI") != null
+                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
             }
         }
     }
