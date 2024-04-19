@@ -1,6 +1,10 @@
 package com.programmersbox.animeworld.videochoice
 
 import android.content.Context
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled._360
 import androidx.compose.material.icons.filled.DeviceUnknown
@@ -10,6 +14,7 @@ import androidx.compose.material.icons.filled._4k
 import androidx.compose.material.icons.filled._4mp
 import androidx.compose.material.icons.filled._7mp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -69,7 +74,9 @@ fun VideoChoiceScreen(
     }
 
     ModalBottomSheet(
-        onDismissRequest = { VideoSourceModel.showVideoSources = null }
+        onDismissRequest = { VideoSourceModel.showVideoSources = null },
+        containerColor = MaterialTheme.colorScheme.surface,
+        windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
     ) {
         ListBottomScreen(
             includeInsetPadding = false,

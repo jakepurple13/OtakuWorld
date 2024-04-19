@@ -24,11 +24,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -471,7 +474,9 @@ private fun CustomItemVertical(
 
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false }
+            onDismissRequest = { showBottomSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             ListBottomScreen(
                 navigationIcon = {
@@ -575,7 +580,9 @@ private fun DeleteItemsModal(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     ModalBottomSheet(
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
     ) {
         val itemsToDelete = remember { mutableStateListOf<CustomListInfo>() }
         var showPopup by remember { mutableStateOf(false) }

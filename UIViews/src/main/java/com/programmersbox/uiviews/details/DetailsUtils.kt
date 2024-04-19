@@ -41,6 +41,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -143,6 +144,7 @@ internal fun AddToList(
 
         ModalBottomSheet(
             onDismissRequest = { showListsChange(false) },
+            containerColor = MaterialTheme.colorScheme.surface,
             windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
         ) {
             ListChoiceScreen(

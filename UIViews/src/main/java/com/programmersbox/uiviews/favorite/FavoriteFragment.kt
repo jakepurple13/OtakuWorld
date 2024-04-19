@@ -17,11 +17,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -157,7 +160,9 @@ fun FavoriteUi(
 
     if (showSort) {
         ModalBottomSheet(
-            onDismissRequest = { showSort = false }
+            onDismissRequest = { showSort = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             InsetCenterAlignedTopAppBar(
                 title = { Text("Sort By") },
@@ -318,7 +323,11 @@ fun FavoriteUi(
                     if (showFilterBySourceModal) {
                         BackHandler { showFilterBySourceModal = false }
 
-                        ModalBottomSheet(onDismissRequest = { showFilterBySourceModal = false }) {
+                        ModalBottomSheet(
+                            onDismissRequest = { showFilterBySourceModal = false },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
+                        ) {
                             CenterAlignedTopAppBar(title = { Text("Filter by Source") })
                             FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -465,7 +474,9 @@ private fun BannerScope.FavoritesGrid(
 
             if (showBottomSheet) {
                 ModalBottomSheet(
-                    onDismissRequest = { showBottomSheet = false }
+                    onDismissRequest = { showBottomSheet = false },
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
                 ) {
                     ListBottomScreen(
                         navigationIcon = {

@@ -23,7 +23,14 @@ abstract class AndroidPluginBase<T: BaseExtension>(
     override fun apply(target: Project) {
         target.projectSetup()
         target.pluginManager.apply("kotlin-android")
-        target.tasks.withType<KotlinCompile> { kotlinOptions { jvmTarget = "1.8" } }
+        target.tasks.withType<KotlinCompile> {
+            kotlinOptions {
+                freeCompilerArgs = freeCompilerArgs + listOf(
+                    "-Xcontext-receivers",
+                )
+                jvmTarget = "1.8"
+            }
+        }
         target.configureAndroidBase()
     }
 
@@ -34,7 +41,8 @@ abstract class AndroidPluginBase<T: BaseExtension>(
                 val variantName = variant.name
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                 val googleTask = tasks.findByName("process${variantName}GoogleServices")
-                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
+                googleTask?.enabled = System.getenv("CI") != null
+                //ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
             }
         }
     }

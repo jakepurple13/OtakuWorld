@@ -35,15 +35,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -294,6 +297,8 @@ fun ReadView(
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             SheetView(
                 readVm = readVm,
@@ -1266,7 +1271,7 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
     OutlinedButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,
-        border = BorderStroke(ButtonDefaults.outlinedButtonBorder.width, MaterialTheme.colorScheme.primary)
+        border = BorderStroke(ButtonDefaults.outlinedButtonBorder(true).width, MaterialTheme.colorScheme.primary)
     ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
 }
 
@@ -1338,6 +1343,8 @@ private fun SettingsSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         content = {
             CategorySetting(
                 settingIcon = {

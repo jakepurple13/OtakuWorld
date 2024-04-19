@@ -49,7 +49,7 @@ abstract class OtakuApp : Application() {
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 
-        GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
+        //GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
 
         if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 

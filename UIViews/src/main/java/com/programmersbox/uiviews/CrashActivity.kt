@@ -54,6 +54,7 @@ class CrashActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val exception = GlobalExceptionHandler.getThrowableFromIntent(intent)
+        exception?.printStackTrace()
         exception?.let { Firebase.crashlytics.recordException(it) }
         setContent {
             val darkTheme = isSystemInDarkTheme()
