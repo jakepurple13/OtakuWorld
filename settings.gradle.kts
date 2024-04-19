@@ -21,19 +21,18 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("com.gradle.enterprise") version ("3.16.2")
+    id("com.gradle.enterprise") version ("3.17.2")
 }
 
-gradleEnterprise {
+develocity {
     if (System.getenv("CI") != null) {
         buildScan {
-            publishAlways()
-            termsOfServiceUrl = "https://gradle.com/terms-of-service"
-            termsOfServiceAgree = "yes"
+            publishing { onlyIf { true } }
+            termsOfUseAgree.set("yes")
+            termsOfUseUrl.set("https://gradle.com/terms-of-service")
         }
     }
 }
-
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
