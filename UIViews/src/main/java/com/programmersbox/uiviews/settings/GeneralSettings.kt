@@ -1,6 +1,10 @@
 package com.programmersbox.uiviews.settings
 
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -42,13 +46,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @Composable
-fun GeneralSettings(
+fun SharedTransitionScope.GeneralSettings(
+    animatedScope: AnimatedContentScope,
     customSettings: @Composable () -> Unit = {},
 ) {
-    SettingsScaffold(stringResource(R.string.general_menu_title)) {
+    SettingsScaffold(
+        stringResource(R.string.general_menu_title),
+        animatedContentScope = animatedScope
+    ) {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
 
@@ -169,11 +178,15 @@ fun GeneralSettings(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalSharedTransitionApi::class)
 @LightAndDarkPreviews
 @Composable
 private fun GeneralSettingsPreview() {
     PreviewTheme {
-        GeneralSettings()
+        SharedTransitionScope {
+            AnimatedContent(targetState = true) {
+                GeneralSettings(this)
+            }
+        }
     }
 }

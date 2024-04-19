@@ -23,7 +23,14 @@ abstract class AndroidPluginBase<T: BaseExtension>(
     override fun apply(target: Project) {
         target.projectSetup()
         target.pluginManager.apply("kotlin-android")
-        target.tasks.withType<KotlinCompile> { kotlinOptions { jvmTarget = "1.8" } }
+        target.tasks.withType<KotlinCompile> {
+            kotlinOptions {
+                freeCompilerArgs = freeCompilerArgs + listOf(
+                    "-Xcontext-receivers",
+                )
+                jvmTarget = "1.8"
+            }
+        }
         target.configureAndroidBase()
     }
 

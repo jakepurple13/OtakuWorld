@@ -14,6 +14,9 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -162,7 +165,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @OptIn(
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -235,14 +238,16 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         contentWindowInsets = WindowInsets(0.dp),
                         blurBottomBar = true
                     ) { innerPadding ->
-                        CompositionLocalProvider(
-                            LocalNavHostPadding provides innerPadding
-                        ) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = Screen.RecentScreen.route,
-                                modifier = Modifier.fillMaxSize()
-                            ) { navGraph(customPreferences, windowSize) }
+                        SharedTransitionLayout {
+                            CompositionLocalProvider(
+                                LocalNavHostPadding provides innerPadding,
+                            ) {
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = Screen.RecentScreen.route,
+                                    modifier = Modifier.fillMaxSize()
+                                ) { navGraph(customPreferences, windowSize) }
+                            }
                         }
                     }
                 }
@@ -448,9 +453,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
         )
     }
 
+    context(SharedTransitionScope)
     @OptIn(
         ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
+        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class
     )
     private fun NavGraphBuilder.navGraph(
         customPreferences: ComposeSettingsDsl,
@@ -485,11 +491,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
         with(genericInfo) { globalNavSetup() }
     }
 
+    context(SharedTransitionScope)
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalComposeUiApi::class,
         ExperimentalMaterialApi::class,
-        ExperimentalFoundationApi::class
+        ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class
     )
     private fun NavGraphBuilder.settings(
         customPreferences: ComposeSettingsDsl,
@@ -518,7 +525,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings.route) },
                     generalClick = { navController.navigate(Screen.GeneralSettings.route) },
                     otherClick = { navController.navigate(Screen.OtherSettings.route) },
-                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) }
+                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) },
+                    animatedContentScope = this@composable
                 )
             }
 
@@ -532,7 +540,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Screen.GeneralSettings.route,
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-            ) { GeneralSettings(customPreferences.generalSettings) }
+            ) {
+                GeneralSettings(
+                    this@composable,
+                    customPreferences.generalSettings,
+                )
+            }
 
             composable(
                 Screen.MoreInfoSettings.route,

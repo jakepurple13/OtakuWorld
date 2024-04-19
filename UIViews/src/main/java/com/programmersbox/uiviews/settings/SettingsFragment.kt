@@ -1,5 +1,9 @@
 package com.programmersbox.uiviews.settings
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -107,10 +111,11 @@ class ComposeSettingsDsl {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @Composable
-fun SettingScreen(
+fun SharedTransitionScope.SettingScreen(
     composeSettingsDsl: ComposeSettingsDsl,
     debugMenuClick: () -> Unit = {},
     notificationClick: () -> Unit = {},
@@ -123,6 +128,7 @@ fun SettingScreen(
     generalClick: () -> Unit = {},
     otherClick: () -> Unit = {},
     moreInfoClick: () -> Unit = {},
+    animatedContentScope: AnimatedContentScope,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -158,7 +164,8 @@ fun SettingScreen(
                 notificationSettingsClick = notificationSettingsClick,
                 generalClick = generalClick,
                 otherClick = otherClick,
-                moreInfoClick = moreInfoClick
+                moreInfoClick = moreInfoClick,
+                animatedContentScope = animatedContentScope
             )
         }
     }
@@ -277,8 +284,10 @@ internal fun SettingScreen(
     )
 }*/
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun SettingsScreen(
+private fun SharedTransitionScope.SettingsScreen(
+    animatedContentScope: AnimatedContentScope,
     dao: ItemDao = LocalItemDao.current,
     vm: SettingsViewModel = viewModel { SettingsViewModel(dao) },
     notificationClick: () -> Unit,
@@ -429,7 +438,12 @@ private fun SettingsScreen(
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.general_menu_title)) },
         settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click(generalClick)
+        modifier = Modifier
+            .click(generalClick)
+            .sharedElement(
+                rememberSharedContentState(key = "settingsTitle"),
+                animatedContentScope
+            )
     )
 
     PreferenceSetting(
@@ -456,26 +470,31 @@ private fun SettingsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @LightAndDarkPreviews
 @Composable
 private fun SettingsPreview() {
     PreviewTheme {
-        SettingsScaffold(title = "Settings") {
-            SettingsScreen(
-                composeSettingsDsl = ComposeSettingsDsl(),
-                notificationClick = {},
-                debugMenuClick = {},
-                favoritesClick = {},
-                historyClick = {},
-                globalSearchClick = {},
-                listClick = {},
-                extensionClick = {},
-                notificationSettingsClick = {},
-                generalClick = {},
-                otherClick = {},
-                moreInfoClick = {}
-            )
+        SharedTransitionScope {
+            AnimatedContent(targetState = true) {
+                SettingsScaffold(title = "Settings") {
+                    SettingsScreen(
+                        composeSettingsDsl = ComposeSettingsDsl(),
+                        notificationClick = {},
+                        debugMenuClick = {},
+                        favoritesClick = {},
+                        historyClick = {},
+                        globalSearchClick = {},
+                        listClick = {},
+                        extensionClick = {},
+                        notificationSettingsClick = {},
+                        generalClick = {},
+                        otherClick = {},
+                        moreInfoClick = {},
+                        animatedContentScope = this@AnimatedContent
+                    )
+                }
+            }
         }
     }
 }
@@ -623,6 +642,43 @@ internal fun SettingsScaffold(
     topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {
         InsetSmallTopAppBar(
             title = { Text(title) },
+            navigationIcon = { BackButton() },
+            scrollBehavior = it,
+        )
+    },
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    OtakuScaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = { topBar(scrollBehavior) },
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
+    ) { p ->
+        Column(
+            content = content,
+            modifier = Modifier
+                .padding(p)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun SharedTransitionScope.SettingsScaffold(
+    title: String,
+    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
+    animatedContentScope: AnimatedContentScope,
+    topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {
+        InsetSmallTopAppBar(
+            title = {
+                Text(
+                    title, modifier = Modifier.sharedElement(
+                        rememberSharedContentState(key = "settingsTitle"),
+                        animatedContentScope
+                    )
+                )
+            },
             navigationIcon = { BackButton() },
             scrollBehavior = it,
         )
