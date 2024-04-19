@@ -743,9 +743,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .launchIn(lifecycleScope)
     }
 
-    private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: Screen) = this?.hierarchy?.any {
-        it.route?.contains(destination.route, true) ?: false
-    } ?: false
+    private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: Screen) = isTopLevelDestinationInHierarchy(destination.route)
 
     private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: String) = this?.hierarchy?.any {
         it.route?.contains(destination, true) ?: false
@@ -756,7 +754,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         outContent?.webUri = Uri.parse(currentDetailsUrl)
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (isNavInitialized()) navController.handleDeepLink(intent)
     }

@@ -269,7 +269,8 @@ class GenericManga(
                                 modifier = Modifier.align(Alignment.TopStart)
                             )
                         }
-                    }
+                    },
+                    modifier = Modifier.animateItem()
                 ) { onClick(it) }
             }
         }

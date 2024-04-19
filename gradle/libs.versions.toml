@@ -17,10 +17,10 @@ glideVersion = "4.16.0"
 pagingVersion = "3.2.1"
 protobufGradlePlugin = "0.9.4"
 roomVersion = "2.6.1"
-navVersion = "2.8.0-alpha06"
+navVersion = "2.8.0-alpha07"
 koinVersion = "3.5.6"
 coil = "2.6.0"
-lifecycle = "2.8.0-alpha04"
+lifecycle = "2.8.0-beta01"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
@@ -30,11 +30,11 @@ ktorVersion = "2.3.10"
 tvCompose = "1.0.0-alpha10"
 workVersion = "2.9.0"
 ziplineVersion = "1.1.0"
-landscapist = "2.3.1"
+landscapist = "2.3.3"
 protobufVersion = "4.26.1"
 sketchVersion = "3.2.5"
-activity = "1.8.2"
-composeBomVersion = "2024.04.00-alpha01"
+activity = "1.9.0"
+composeBomVersion = "2024.04.00-alpha02"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -79,6 +79,7 @@ composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
 composeMaterial = { group = "androidx.compose.material", name = "material" }
 materialYou = { group = "androidx.compose.material3", name = "material3" }
+materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 #materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
@@ -185,14 +186,14 @@ showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:1.10.0"
 
-datastore = "androidx.datastore:datastore:1.0.0"
-datastorePref = "androidx.datastore:datastore-preferences:1.0.0"
+datastore = "androidx.datastore:datastore:1.1.0"
+datastorePref = "androidx.datastore:datastore-preferences:1.1.0"
 
 jsoup = "org.jsoup:jsoup:1.17.2"
 
 crashlytics = "com.google.firebase:firebase-crashlytics:18.6.4"
 analytics = "com.google.firebase:firebase-analytics:21.6.2"
-playServices = "com.google.android.gms:play-services-auth:21.0.0"
+playServices = "com.google.android.gms:play-services-auth:21.1.0"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
 
@@ -306,7 +307,8 @@ compose = [
     "coilCompose",
     "composeConstraintLayout", "permissions",
     "drawablePainter", "uiUtil",
-    "materialYou", "materialWindow",
+    "materialYou", "materialYou-common",
+    "materialWindow",
     "navCompose"
 ]
 composeTv = [

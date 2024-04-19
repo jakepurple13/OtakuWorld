@@ -532,7 +532,7 @@ private fun BannerScope.FavoritesGrid(
                         }
                     }
                 },
-                modifier = Modifier.animateItemPlacement()
+                modifier = Modifier.animateItem()
             ) {
                 if (info.value.size == 1) {
                     info.value

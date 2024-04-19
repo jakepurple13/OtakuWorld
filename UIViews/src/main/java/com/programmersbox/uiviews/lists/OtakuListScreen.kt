@@ -25,6 +25,7 @@ import androidx.compose.material3.adaptive.allVerticalHingeBounds
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowSize
 import androidx.compose.material3.adaptive.layout.AnimatedPane
+import androidx.compose.material3.adaptive.layout.AnimatedPaneScope
 import androidx.compose.material3.adaptive.layout.HingePolicy
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
@@ -140,7 +141,7 @@ fun OtakuListScreen(
 @Composable
 fun ThreePaneScaffoldScope.AnimatedPanes(
     modifier: Modifier,
-    content: (@Composable ThreePaneScaffoldScope.() -> Unit),
+    content: (@Composable AnimatedPaneScope.() -> Unit),
 ) {
     AnimatedPane(
         modifier = modifier,

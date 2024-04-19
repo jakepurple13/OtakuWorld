@@ -403,7 +403,7 @@ fun OtakuCustomListScreen(
                                         setQuery(item.title)
                                         onSearchBarActiveChange(false)
                                     }
-                                    .animateItemPlacement()
+                                    .animateItem()
                             )
                             if (index != 0) {
                                 HorizontalDivider()
@@ -444,7 +444,7 @@ fun OtakuCustomListScreen(
                             newItem(if (it) item.value.firstOrNull() else null)
                             showBanner = it
                         },
-                        modifier = Modifier.animateItemPlacement()
+                        modifier = Modifier.animateItem()
                     )
                 }
             }
@@ -677,13 +677,15 @@ private fun DeleteItemsModal(
                             onClick = {
                                 if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
                             },
-                            modifier = Modifier.border(
-                                border = BorderStroke(
-                                    transition.animateDp(label = "border_width") { target -> if (target) 4.dp else 1.dp }.value,
-                                    transition.animateColor(label = "border_color") { target -> if (target) Color(0xfff44336) else outlineColor }.value
-                                ),
-                                shape = MaterialTheme.shapes.medium
-                            )
+                            modifier = Modifier
+                                .animateItem()
+                                .border(
+                                    border = BorderStroke(
+                                        transition.animateDp(label = "border_width") { target -> if (target) 4.dp else 1.dp }.value,
+                                        transition.animateColor(label = "border_color") { target -> if (target) Color(0xfff44336) else outlineColor }.value
+                                    ),
+                                    shape = MaterialTheme.shapes.medium
+                                )
                         )
                     }
                 }

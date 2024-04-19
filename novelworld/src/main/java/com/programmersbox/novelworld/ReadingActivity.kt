@@ -78,13 +78,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.text.HtmlCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -92,7 +92,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.material.textview.MaterialTextView
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
@@ -133,7 +132,7 @@ class ReadViewModel(
     model: Flow<List<String>>? = handle.get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
         ?.getChapterInfo()
-        ?.map { it.mapNotNull(Storage::link) }
+        ?.map { it.mapNotNull(Storage::link) },
 ) : ViewModel() {
 
     companion object {
@@ -231,7 +230,7 @@ class ReadViewModel(
 fun NovelReader(
     activity: FragmentActivity = LocalActivity.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
+    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) },
 ) {
     HideSystemBarsWhileOnScreen()
 
@@ -410,7 +409,8 @@ fun NovelReader(
                         .verticalScroll(rememberScrollState())
                         .fillMaxSize()
                 ) {
-                    AndroidView(
+                    Text(
+                        AnnotatedString.fromHtml(readVm.pageList.value),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(4.dp)
@@ -419,8 +419,6 @@ fun NovelReader(
                                 interactionSource = null,
                                 onClick = { showInfo = !showInfo }
                             ),
-                        factory = { MaterialTextView(it) },
-                        update = { it.text = HtmlCompat.fromHtml(readVm.pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
                     )
 
                     if (readVm.currentChapter <= 0) {
@@ -455,7 +453,7 @@ fun TopBar(
     showItems: Boolean,
     contentScrollBehavior: TopAppBarScrollBehavior,
     readVm: ReadViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     AnimatedVisibility(
@@ -535,7 +533,7 @@ fun BottomBar(
     readVm: ReadViewModel,
     showToast: () -> Unit,
     settingsPopup: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         visible = showItems,
@@ -683,7 +681,7 @@ private fun SliderSetting(
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
-    steps: Int = 0
+    steps: Int = 0,
 ) {
     ConstraintLayout(
         modifier = Modifier
@@ -695,7 +693,7 @@ private fun SliderSetting(
             title,
             summary,
             slider,
-            value
+            value,
         ) = createRefs()
 
         Icon(

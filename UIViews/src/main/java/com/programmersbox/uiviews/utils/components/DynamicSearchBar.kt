@@ -39,42 +39,54 @@ fun DynamicSearchBar(
 ) {
     if (isDocked) {
         DockedSearchBar(
-            query,
-            onQueryChange,
-            onSearch,
-            active,
-            onActiveChange,
-            modifier.windowInsetsPadding(windowInsets),
-            enabled,
-            placeholder,
-            leadingIcon,
-            trailingIcon,
-            shape,
-            colors,
-            tonalElevation,
-            shadowElevation,
-            interactionSource,
-            content
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    onSearch = onSearch,
+                    expanded = active,
+                    onExpandedChange = onActiveChange,
+                    enabled = enabled,
+                    placeholder = placeholder,
+                    leadingIcon = leadingIcon,
+                    trailingIcon = trailingIcon,
+                    interactionSource = interactionSource,
+                )
+            },
+            expanded = active,
+            onExpandedChange = onActiveChange,
+            modifier = modifier.windowInsetsPadding(windowInsets),
+            shape = shape,
+            colors = colors,
+            tonalElevation = tonalElevation,
+            shadowElevation = shadowElevation,
+            content = content,
         )
     } else {
         SearchBar(
-            query,
-            onQueryChange,
-            onSearch,
-            active,
-            onActiveChange,
-            modifier,
-            enabled,
-            placeholder,
-            leadingIcon,
-            trailingIcon,
-            shape,
-            colors,
-            tonalElevation,
-            shadowElevation,
-            windowInsets,
-            interactionSource,
-            content
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    onSearch = onSearch,
+                    expanded = active,
+                    onExpandedChange = onActiveChange,
+                    enabled = enabled,
+                    placeholder = placeholder,
+                    leadingIcon = leadingIcon,
+                    trailingIcon = trailingIcon,
+                    interactionSource = interactionSource,
+                )
+            },
+            expanded = active,
+            onExpandedChange = onActiveChange,
+            modifier = modifier,
+            shape = shape,
+            colors = colors,
+            tonalElevation = tonalElevation,
+            shadowElevation = shadowElevation,
+            windowInsets = windowInsets,
+            content = content,
         )
     }
 }
