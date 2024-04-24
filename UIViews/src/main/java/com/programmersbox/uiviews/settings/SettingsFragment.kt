@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.ripple
@@ -123,6 +124,7 @@ fun SettingScreen(
     generalClick: () -> Unit = {},
     otherClick: () -> Unit = {},
     moreInfoClick: () -> Unit = {},
+    moreSettingsClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -158,7 +160,8 @@ fun SettingScreen(
                 notificationSettingsClick = notificationSettingsClick,
                 generalClick = generalClick,
                 otherClick = otherClick,
-                moreInfoClick = moreInfoClick
+                moreInfoClick = moreInfoClick,
+                moreSettingsClick = moreSettingsClick
             )
         }
     }
@@ -293,6 +296,7 @@ private fun SettingsScreen(
     generalClick: () -> Unit,
     otherClick: () -> Unit,
     moreInfoClick: () -> Unit,
+    moreSettingsClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
@@ -439,6 +443,12 @@ private fun SettingsScreen(
     )
 
     PreferenceSetting(
+        settingTitle = { Text("More Settings") },
+        settingIcon = { Icon(Icons.Default.Settings, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.click(moreSettingsClick)
+    )
+
+    PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.more_info_category)) },
         settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.click(moreInfoClick)
@@ -474,7 +484,8 @@ private fun SettingsPreview() {
                 notificationSettingsClick = {},
                 generalClick = {},
                 otherClick = {},
-                moreInfoClick = {}
+                moreInfoClick = {},
+                moreSettingsClick = {}
             )
         }
     }

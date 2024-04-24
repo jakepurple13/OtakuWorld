@@ -112,6 +112,7 @@ import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.settings.ExtensionList
 import com.programmersbox.uiviews.settings.GeneralSettings
 import com.programmersbox.uiviews.settings.InfoSettings
+import com.programmersbox.uiviews.settings.MoreSettingsScreen
 import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
@@ -518,7 +519,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings.route) },
                     generalClick = { navController.navigate(Screen.GeneralSettings.route) },
                     otherClick = { navController.navigate(Screen.OtherSettings.route) },
-                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) }
+                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) },
+                    moreSettingsClick = { navController.navigate(Screen.MoreSettings.route) }
                 )
             }
 
@@ -549,6 +551,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { PlaySettings(customPreferences.playerSettings) }
+
+            composable(
+                Screen.MoreSettings.route,
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { MoreSettingsScreen() }
 
             composable(
                 Screen.HistoryScreen.route,

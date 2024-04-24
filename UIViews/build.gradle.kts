@@ -127,4 +127,6 @@ dependencies {
     implementation(libs.dragselect)
 
     implementation(libs.crashlytics)
+
+    implementation(libs.sonner)
 }
