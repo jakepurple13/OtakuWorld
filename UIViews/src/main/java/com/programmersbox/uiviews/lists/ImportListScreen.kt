@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +53,8 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.dokar.sonner.ToastType
+import com.dokar.sonner.rememberToasterState
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -65,18 +68,22 @@ import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.ToasterSetup
+import com.programmersbox.uiviews.utils.ToasterUtils
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.UUID
+import kotlin.time.Duration
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ImportListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     context: Context = LocalContext.current,
-    vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle(), context) }
+    vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle(), context) },
 ) {
+    val toaster = rememberToasterState()
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -85,12 +92,24 @@ fun ImportListScreen(
 
     when (val status = vm.importStatus) {
         ImportListStatus.Loading -> {
+            LaunchedEffect(Unit) {
+                toaster.show(
+                    "Importing...",
+                    id = ToasterUtils.LOADING_TOAST_ID,
+                    icon = ToasterUtils.LOADING_TOAST_ID,
+                    duration = Duration.INFINITE,
+                )
+            }
             Box(Modifier.fillMaxSize()) {
                 CircularProgressIndicator()
             }
         }
 
         is ImportListStatus.Error -> {
+            LaunchedEffect(Unit) {
+                toaster.dismiss(ToasterUtils.LOADING_TOAST_ID)
+                toaster.show("Error", type = ToastType.Error)
+            }
             NormalOtakuScaffold(
                 topBar = {
                     InsetSmallTopAppBar(
@@ -120,6 +139,10 @@ fun ImportListScreen(
         }
 
         is ImportListStatus.Success -> {
+            LaunchedEffect(Unit) {
+                toaster.dismiss(ToasterUtils.LOADING_TOAST_ID)
+                toaster.show("Completed!", type = ToastType.Success)
+            }
             val lists by listDao.getAllLists().collectAsStateWithLifecycle(emptyList())
             var name by remember(status.customList?.item) { mutableStateOf(status.customList?.item?.name.orEmpty()) }
             NormalOtakuScaffold(
@@ -182,6 +205,8 @@ fun ImportListScreen(
             }
         }
     }
+
+    ToasterSetup(toaster = toaster)
 }
 
 @Composable

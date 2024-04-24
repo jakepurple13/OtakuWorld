@@ -33,6 +33,7 @@ class ImportListViewModel(
                 context.contentResolver.openInputStream(document!!)
                     ?.use { inputStream -> BufferedReader(InputStreamReader(inputStream)).readText() }
                     .fromJson<CustomList>()
+                    .let { requireNotNull(it) }
             }.fold(
                 onSuccess = { ImportListStatus.Success(it) },
                 onFailure = { ImportListStatus.Error(it) }

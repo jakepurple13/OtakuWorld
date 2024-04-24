@@ -443,7 +443,7 @@ private fun SettingsScreen(
     )
 
     PreferenceSetting(
-        settingTitle = { Text("More Settings") },
+        settingTitle = { Text(stringResource(R.string.more_settings)) },
         settingIcon = { Icon(Icons.Default.Settings, null, modifier = Modifier.fillMaxSize()) },
         modifier = Modifier.click(moreSettingsClick)
     )

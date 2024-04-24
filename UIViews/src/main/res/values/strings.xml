@@ -206,4 +206,7 @@
     <string name="view_extensions">View Extensions</string>
     <string name="installed">Installed</string>
     <string name="amoled_mode">AMOLED Mode</string>
+    <string name="import_favorites">Import Favorites</string>
+    <string name="export_favorites">Export Favorites</string>
+    <string name="more_settings">More Settings</string>
 </resources>

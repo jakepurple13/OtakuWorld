@@ -4,9 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.ripple
@@ -28,7 +26,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dokar.sonner.ToastType
-import com.dokar.sonner.Toaster
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -39,6 +36,8 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.CategorySetting
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.PreferenceSetting
+import com.programmersbox.uiviews.utils.ToasterSetup
+import com.programmersbox.uiviews.utils.ToasterUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -49,6 +48,7 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
+import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +63,7 @@ fun MoreSettingsScreen(
     LaunchedEffect(Unit) {
         snapshotFlow { viewModel.importExportListStatus }
             .onEach {
+                toaster.dismiss(ToasterUtils.LOADING_TOAST_ID)
                 when (it) {
                     is ImportExportListStatus.Error -> toaster.show(
                         "Error: ${it.throwable.message}",
@@ -71,7 +72,14 @@ fun MoreSettingsScreen(
 
                     ImportExportListStatus.Success -> toaster.show(
                         "Completed!",
-                        type = ToastType.Success
+                        type = ToastType.Success,
+                    )
+
+                    ImportExportListStatus.Loading -> toaster.show(
+                        "Working...",
+                        id = ToasterUtils.LOADING_TOAST_ID,
+                        icon = ToasterUtils.LOADING_TOAST_ID,
+                        duration = Duration.INFINITE,
                     )
 
                     else -> {}
@@ -90,7 +98,7 @@ fun MoreSettingsScreen(
         ActivityResultContracts.OpenDocument()
     ) { document -> document?.let { viewModel.importFavorites(it, context) } }
 
-    SettingsScaffold("More Settings") {
+    SettingsScaffold(stringResource(R.string.more_settings)) {
         CategorySetting(
             settingIcon = {
                 Icon(Icons.Default.Star, null)
@@ -98,7 +106,7 @@ fun MoreSettingsScreen(
         ) { Text(stringResource(R.string.viewFavoritesMenu)) }
 
         PreferenceSetting(
-            settingTitle = { Text("Export Favorites") },
+            settingTitle = { Text(stringResource(R.string.export_favorites)) },
             modifier = Modifier.clickable(
                 enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                 indication = ripple(),
@@ -107,7 +115,7 @@ fun MoreSettingsScreen(
         )
 
         PreferenceSetting(
-            settingTitle = { Text("Import Favorites") },
+            settingTitle = { Text(stringResource(R.string.import_favorites)) },
             modifier = Modifier.clickable(
                 enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                 indication = ripple(),
@@ -118,11 +126,7 @@ fun MoreSettingsScreen(
         HorizontalDivider()
     }
 
-    Toaster(
-        state = toaster,
-        darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
-                (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-    )
+    ToasterSetup(toaster = toaster)
 }
 
 class MoreSettingsViewModel(
