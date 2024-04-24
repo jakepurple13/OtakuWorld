@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalGlideComposeApi::class)
+
 package com.programmersbox.uiviews.utils
 
 import android.graphics.drawable.Drawable
@@ -41,7 +43,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,14 +50,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import com.bumptech.glide.integration.compose.CrossFade
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.components.BannerBox
-import com.programmersbox.uiviews.utils.components.CoilGradientImage
+import com.programmersbox.uiviews.utils.components.GlideGradientImage
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
@@ -111,17 +112,13 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            GlideImage(
+                model = imageUrl,
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
+                loading = placeholder(placeHolder),
+                failure = placeholder(error),
+                transition = CrossFade,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -179,17 +176,13 @@ fun M3ImageCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            GlideImage(
+                model = imageUrl,
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
+                loading = placeholder(placeHolder),
+                failure = placeholder(error),
+                transition = CrossFade,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -266,17 +259,13 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            GlideImage(
+                model = imageUrl,
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
+                loading = placeholder(placeHolder),
+                failure = placeholder(error),
+                transition = CrossFade,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -339,17 +328,13 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            GlideImage(
+                model = imageUrl,
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
+                loading = placeholder(placeHolder),
+                failure = placeholder(error),
+                transition = CrossFade,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -481,16 +466,9 @@ fun OtakuBannerBox(
             ) {
                 ListItem(
                     leadingContent = {
-                        CoilGradientImage(
-                            model = rememberAsyncImagePainter(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(itemInfo?.imageUrl.orEmpty())
-                                    .lifecycle(LocalLifecycleOwner.current)
-                                    .crossfade(true)
-                                    .placeholder(placeholder)
-                                    .error(placeholder)
-                                    .build()
-                            ),
+                        GlideGradientImage(
+                            model = itemInfo?.imageUrl.orEmpty(),
+                            placeholder = placeholder,
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

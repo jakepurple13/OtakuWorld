@@ -47,15 +47,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import com.bumptech.glide.integration.compose.CrossFade
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.sharedutils.AppLogo
@@ -209,6 +209,7 @@ fun ImportListScreen(
     ToasterSetup(toaster = toaster)
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun CustomItem(
     item: CustomListInfo,
@@ -221,16 +222,13 @@ private fun CustomItem(
             .padding(horizontal = 4.dp)
     ) {
         Row {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .build(),
-                placeholder = rememberDrawablePainter(logoDrawable),
-                error = rememberDrawablePainter(logoDrawable),
+            GlideImage(
+                model = item.imageUrl,
+                transition = CrossFade,
                 contentScale = ContentScale.Crop,
                 contentDescription = item.title,
+                loading = placeholder(logoDrawable),
+                failure = placeholder(logoDrawable),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

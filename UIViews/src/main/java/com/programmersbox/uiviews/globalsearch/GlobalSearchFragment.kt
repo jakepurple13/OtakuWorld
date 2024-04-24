@@ -71,17 +71,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.bumptech.glide.integration.compose.CrossFade
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
@@ -451,6 +450,7 @@ fun GlobalSearchView(
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun SearchCoverCard(
     model: ItemModel,
@@ -472,16 +472,13 @@ fun SearchCoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(model.imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .build(),
+            GlideImage(
+                model = model.imageUrl,
                 contentDescription = model.title,
-                placeholder = rememberDrawablePainter(placeHolder),
-                error = rememberDrawablePainter(error),
+                transition = CrossFade,
                 contentScale = ContentScale.FillBounds,
+                loading = placeholder(placeHolder),
+                failure = placeholder(error),
                 modifier = Modifier.matchParentSize()
             )
 

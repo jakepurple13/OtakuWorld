@@ -129,4 +129,5 @@ dependencies {
     implementation(libs.crashlytics)
 
     implementation(libs.sonner)
+    implementation(libs.glideCompose)
 }
