@@ -90,6 +90,7 @@ import kotlinx.coroutines.launch
 import me.tatarka.compose.collapsable.CollapsableColumn
 import me.tatarka.compose.collapsable.rememberCollapsableTopBehavior
 import my.nanihadesuka.compose.InternalLazyColumnScrollbar
+import my.nanihadesuka.compose.ScrollbarSettings
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
@@ -394,11 +395,13 @@ fun DetailsView(
             }
             Box(Modifier.padding(modifiedPaddingValues)) {
                 InternalLazyColumnScrollbar(
-                    thickness = 8.dp,
-                    padding = 2.dp,
-                    listState = listState,
-                    thumbColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
-                    thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+                    state = listState,
+                    settings = ScrollbarSettings.Default.copy(
+                        thumbThickness = 8.dp,
+                        scrollbarPadding = 2.dp,
+                        thumbUnselectedColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
+                        thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+                    ),
                 )
             }
         }
