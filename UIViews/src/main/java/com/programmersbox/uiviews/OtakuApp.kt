@@ -13,7 +13,6 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.ktx.analytics
@@ -64,8 +63,6 @@ abstract class OtakuApp : Application() {
         DynamicColors.applyToActivitiesIfAvailable(this)
 
         //GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
-
-        if (BuildConfig.DEBUG) Stetho.initializeWithDefaults(this)
 
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
         Loged.TAG = this::class.java.simpleName

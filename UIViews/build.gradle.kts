@@ -76,8 +76,6 @@ dependencies {
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(libs.stetho)
-
     implementation(libs.workRuntime)
 
     implementation(libs.kotlinxSerialization)
