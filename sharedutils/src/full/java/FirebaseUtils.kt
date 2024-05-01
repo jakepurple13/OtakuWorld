@@ -121,7 +121,7 @@ object FirebaseDbImpl : FirebaseConnection {
         ?.fastMap { it.toDbModel() }
         .orEmpty()
 
-    override fun insertShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun insertShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.set(showDbModel.toFirebaseDbModel())
             ?.addOnSuccessListener {
@@ -135,7 +135,7 @@ object FirebaseDbImpl : FirebaseConnection {
         awaitClose()
     }
 
-    override fun removeShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun removeShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.delete()
             ?.addOnSuccessListener {
@@ -149,7 +149,7 @@ object FirebaseDbImpl : FirebaseConnection {
         awaitClose()
     }
 
-    override fun updateShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun updateShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.update(FirebaseDb.READ_OR_WATCHED_ID, showDbModel.numChapters)
             ?.addOnSuccessListener {
@@ -163,7 +163,7 @@ object FirebaseDbImpl : FirebaseConnection {
         awaitClose()
     }
 
-    override fun toggleUpdateCheckShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun toggleUpdateCheckShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.update(FirebaseDb.SHOW_CHECK_FOR_UPDATE_ID, showDbModel.shouldCheckForUpdate)
             ?.addOnSuccessListener {
@@ -177,7 +177,7 @@ object FirebaseDbImpl : FirebaseConnection {
         awaitClose()
     }
 
-    override fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow {
+    override fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow<Unit> {
         episodeDoc2
             ?.document(episodeWatched.favoriteUrl.urlToPath())
             //?.set("create" to 1)
@@ -218,7 +218,7 @@ object FirebaseDbImpl : FirebaseConnection {
         awaitClose()
     }
 
-    override fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow {
+    override fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow<Unit> {
         episodeDoc2
             ?.document(episodeWatched.favoriteUrl.urlToPath())
             ?.update("watched", FieldValue.arrayRemove(episodeWatched.toFirebaseChapterWatched()))

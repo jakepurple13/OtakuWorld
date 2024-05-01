@@ -1,10 +1,10 @@
 import plugins.ProductFlavorTypes
 
 plugins {
-    id("otaku-library")
+    `otaku-library`
+    `otaku-protobuf`
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    id("otaku-protobuf")
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
 }

@@ -347,7 +347,9 @@ fun NotificationsScreen(
                                         shape = M3MaterialTheme.shapes.medium,
                                         tonalElevation = 4.dp,
                                         onClick = { vm.toggleGroupedState(item.first) },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateItem()
                                     ) {
                                         ListItem(
                                             modifier = Modifier.padding(4.dp),
@@ -400,7 +402,8 @@ fun NotificationsScreen(
                                                                 SnackbarResult.ActionPerformed -> it
                                                             }
                                                         }
-                                                    }
+                                                    },
+                                                    modifier = Modifier.animateItem()
                                                 )
                                             }
                                         }
@@ -502,7 +505,9 @@ private fun DateSort(
                         shape = M3MaterialTheme.shapes.medium,
                         tonalElevation = 4.dp,
                         onClick = { vm.toggleGroupedState(item.first) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateItem()
                     ) {
                         ListItem(
                             modifier = Modifier.padding(4.dp),
@@ -533,7 +538,9 @@ private fun DateSort(
                                 item.second.chunked(itemsInRow).forEach {
                                     Row(
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateItem()
                                     ) {
                                         it.forEach { i ->
                                             var showPopup by remember { mutableStateOf(false) }

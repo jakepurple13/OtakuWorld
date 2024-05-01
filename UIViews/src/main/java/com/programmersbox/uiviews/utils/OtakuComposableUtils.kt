@@ -492,6 +492,7 @@ fun OtakuBannerBox(
 }
 
 interface BannerScope {
+    //TODO: Maybe add a modifier into here for onLongClick?
     fun newItemModel(itemModel: ItemModel?)
 }
 

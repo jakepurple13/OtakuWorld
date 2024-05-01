@@ -2,7 +2,6 @@ import plugins.ProductFlavorTypes
 
 plugins {
     id("otaku-library")
-    kotlin("kapt")
 }
 
 android {
