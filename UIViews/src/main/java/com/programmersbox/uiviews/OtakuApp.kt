@@ -16,6 +16,10 @@ import androidx.work.WorkManager
 import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
 import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.crashlytics.setCustomKeys
+import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -48,6 +52,13 @@ abstract class OtakuApp : Application() {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
+
+        Firebase.crashlytics.setCustomKeys {
+            key("buildType", BuildConfig.BUILD_TYPE)
+            key("buildFlavor", BuildConfig.FLAVOR)
+        }
+        Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
+        Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
 
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
