@@ -188,7 +188,7 @@ toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.0.7"
 sonner = { module = "io.github.dokar3:sonner", version = "0.3.5" }
 
-datastore = "androidx.datastore:datastore:1.1.0"
+datastore = "androidx.datastore:datastore:1.1.1"
 datastorePref = "androidx.datastore:datastore-preferences:1.1.0"
 
 jsoup = "org.jsoup:jsoup:1.17.2"
