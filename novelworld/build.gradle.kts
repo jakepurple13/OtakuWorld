@@ -18,6 +18,10 @@ android {
     }
 }
 
+composeCompiler {
+    enableStrongSkippingMode = true
+}
+
 dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -49,4 +53,6 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
 
     implementation(libs.bundles.koinLibs)
+
+    implementation(libs.ktorAndroid)
 }

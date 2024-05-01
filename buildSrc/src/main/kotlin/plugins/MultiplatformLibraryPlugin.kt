@@ -3,6 +3,8 @@ package plugins
 import com.android.build.gradle.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 import javax.inject.Inject
@@ -34,13 +36,17 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
         }
     }
 
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
     ) {
         applyDefaultHierarchyTemplate()
         androidTarget {
             compilations.all {
-                kotlinOptions { jvmTarget = "1.8" }
+                this@androidTarget.compilerOptions {
+                    freeCompilerArgs.add("-Xcontext-receivers")
+                    jvmTarget.set(JvmTarget.JVM_1_8)
+                }
             }
         }
 

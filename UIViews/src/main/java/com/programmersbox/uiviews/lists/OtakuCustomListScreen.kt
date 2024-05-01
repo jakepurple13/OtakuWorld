@@ -248,7 +248,7 @@ fun OtakuCustomListScreen(
 
     var showBanner by remember { mutableStateOf(false) }
 
-    CustomBannerBox(
+    CustomBannerBox<CustomListInfo>(
         showBanner = showBanner,
         bannerContent = {
             ListItem(

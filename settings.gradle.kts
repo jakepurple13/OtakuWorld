@@ -21,15 +21,15 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("com.gradle.enterprise") version ("3.17.2")
+    id("com.gradle.develocity") version ("3.17.2")
 }
 
 develocity {
     if (System.getenv("CI") != null) {
         buildScan {
-            publishing { onlyIf { true } }
+            termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
             termsOfUseAgree.set("yes")
-            termsOfUseUrl.set("https://gradle.com/terms-of-service")
+            publishing { onlyIf { true } }
         }
     }
 }
@@ -50,7 +50,7 @@ include(
     ":animeworldtv",
     ":sharedutils",
     ":source_utilities",
-    ":imageloader",
+    //":imageloader",
     ":sharedutils:extensionloader"
     //":otakumanager",
 )

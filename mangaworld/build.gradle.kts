@@ -20,6 +20,10 @@ android {
     }
 }
 
+composeCompiler {
+    enableStrongSkippingMode = true
+}
+
 dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -39,9 +43,10 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
     implementation(projects.sourceUtilities)
-    implementation(projects.imageloader)
+    implementation(libs.kamel.image)
     implementation(libs.duktape)
     implementation(libs.bundles.ziplineLibs)
+    implementation(libs.ktorAndroid)
 
     implementation(libs.glide)
     //baselineProfile(projects.mangaWorldbaselineprofile)

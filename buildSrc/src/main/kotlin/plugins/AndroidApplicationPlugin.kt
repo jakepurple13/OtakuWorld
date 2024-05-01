@@ -11,6 +11,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         pluginManager.apply(EasyLauncherSetup::class)
         pluginManager.apply("com.google.gms.google-services")
         pluginManager.apply("com.google.firebase.crashlytics")
+        pluginManager.apply(libs.plugins.compose.compiler.get().pluginId)
         afterEvaluate { useGoogleType() }
     }
 
@@ -20,7 +21,6 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
 
         composeOptions {
             useLiveLiterals = true
-            kotlinCompilerExtensionVersion = project.libs.versions.jetpackCompiler.get()
         }
 
         buildTypes {

@@ -6,17 +6,14 @@ plugins {
     id("kotlinx-serialization")
     id("otaku-protobuf")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     buildFeatures {
         dataBinding = true
         viewBinding = true
-        compose = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.jetpackCompiler.get()
     }
 
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
@@ -110,7 +107,8 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
 
     //Multiplatform
-    implementation(projects.imageloader)
+    //implementation(projects.imageloader)
+    api(libs.kamel.image)
 
     //Extension Loader
     api(projects.sharedutils.extensionloader)

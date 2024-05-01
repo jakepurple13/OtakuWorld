@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 import kotlin.reflect.KClass
@@ -24,11 +25,9 @@ abstract class AndroidPluginBase<T: BaseExtension>(
         target.projectSetup()
         target.pluginManager.apply("kotlin-android")
         target.tasks.withType<KotlinCompile> {
-            kotlinOptions {
-                freeCompilerArgs = freeCompilerArgs + listOf(
-                    "-Xcontext-receivers",
-                )
-                jvmTarget = "1.8"
+            compilerOptions {
+                freeCompilerArgs.add("-Xcontext-receivers")
+                jvmTarget.set(JvmTarget.JVM_1_8)
             }
         }
         target.configureAndroidBase()

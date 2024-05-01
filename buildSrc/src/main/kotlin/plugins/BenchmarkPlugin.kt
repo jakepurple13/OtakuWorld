@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class BenchmarkPlugin : Plugin<Project> {
@@ -19,7 +20,11 @@ class BenchmarkPlugin : Plugin<Project> {
             apply("com.android.test")
             apply("androidx.baselineprofile")
         }
-        target.tasks.withType<KotlinCompile> { kotlinOptions { jvmTarget = "1.8" } }
+        target.tasks.withType<KotlinCompile> {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_1_8)
+            }
+        }
         target.configureAndroidBase()
     }
 

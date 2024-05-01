@@ -35,11 +35,10 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -65,15 +64,18 @@ import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 
 @Composable
 private fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
-    val libraries = remember { mutableStateOf<Libs?>(null) }
-
     val context = LocalContext.current
-    LaunchedEffect(libraries) { libraries.value = librariesBlock(context) }
-    return libraries
+    return produceState<Libs?>(null) {
+        value = withContext(Dispatchers.IO) {
+            librariesBlock(context)
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)

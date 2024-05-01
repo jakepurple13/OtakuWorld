@@ -19,16 +19,13 @@ buildscript {
 
 subprojects {
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
-        kotlinOptions.freeCompilerArgs += listOf(
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
-                    project.layout.buildDirectory.get().asFile.absolutePath + "/compose_metrics"
-        )
-        kotlinOptions.freeCompilerArgs += listOf(
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" +
-                    project.layout.buildDirectory.get().asFile.absolutePath + "/compose_metrics"
-        )
+        compilerOptions {
+            freeCompilerArgs.addAll(
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
+                        project.layout.buildDirectory.get().asFile.absolutePath + "/compose_metrics"
+            )
+        }
     }
     afterEvaluate {
         when {
@@ -64,7 +61,8 @@ tasks.register("clean").configure {
 
 plugins {
     id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
-    id("org.jetbrains.compose") version libs.versions.jetbrainsCompiler apply false
+    //id("org.jetbrains.compose") version libs.versions.jetbrainsCompiler apply false
+    alias(libs.plugins.compose.compiler) apply false
 }
 
 projectInfo {

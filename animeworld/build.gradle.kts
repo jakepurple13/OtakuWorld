@@ -19,6 +19,10 @@ android {
     }
 }
 
+composeCompiler {
+    enableStrongSkippingMode = true
+}
+
 dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -75,4 +79,6 @@ dependencies {
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.bundles.media3)
+
+    implementation(libs.ktorAndroid)
 }

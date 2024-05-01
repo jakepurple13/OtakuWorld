@@ -465,7 +465,7 @@ private fun DateSort(
     val scope = rememberCoroutineScope()
     var showBanner by remember { mutableStateOf(false) }
 
-    CustomBannerBox(
+    CustomBannerBox<NotificationItem>(
         showBanner = showBanner,
         bannerContent = { notiItem ->
             ListItem(

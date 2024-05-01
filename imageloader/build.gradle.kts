@@ -14,7 +14,8 @@ otakuDependencies {
 }
 
 compose {
-    kotlinCompilerPlugin.set("androidx.compose.compiler:compiler:${libs.versions.jetpackCompiler.get()}")
+    //kotlinCompilerPlugin.set("org.jetbrains.kotlin.plugin.compose:1.6.10-beta03"/*"androidx.compose.compiler:compiler:${libs.versions.jetpackCompiler.get()}"*/)
+    kotlinCompilerPlugin = "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.0.0-RC2"
 }
 
 android {
