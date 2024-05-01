@@ -38,7 +38,8 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         productFlavors {
             ProductFlavorTypes.NoFirebase(this) {
                 versionNameSuffix = "-noFirebase"
-                applicationIdSuffix = ".noFirebase"
+                if(System.getenv("CI") == null) //TODO: Testing
+                    applicationIdSuffix = ".noFirebase"
                 isDefault = true
             }
             ProductFlavorTypes.Full(this)

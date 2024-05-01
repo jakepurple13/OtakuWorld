@@ -1,9 +1,13 @@
 package com.programmersbox.uiviews.utils.components
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +38,7 @@ fun BannerBox(
             easing = LinearOutSlowInEasing
         )
     ) { -it },
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
         content()
@@ -53,7 +57,7 @@ fun BannerBox2(
     banner: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
         Modifier
