@@ -11,6 +11,8 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -109,6 +111,7 @@ class RecentViewModel(
                 it.printStackTrace()
                 context?.showErrorToast()
                 emit(emptyList())
+                Firebase.crashlytics.recordException(it)
             }
             ?.onStart { isRefreshing = true }
             ?.onCompletion { isRefreshing = false }

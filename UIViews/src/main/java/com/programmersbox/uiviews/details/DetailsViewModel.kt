@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -65,6 +67,7 @@ class DetailsViewModel(
         }
             ?.dispatchIo()
             ?.catch {
+                Firebase.crashlytics.recordException(it)
                 it.printStackTrace()
                 context.showErrorToast()
             }

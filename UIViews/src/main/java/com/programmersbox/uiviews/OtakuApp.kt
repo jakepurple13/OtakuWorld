@@ -15,6 +15,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.facebook.stetho.Stetho
 import com.google.android.material.color.DynamicColors
+import com.google.firebase.FirebaseApp
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -46,6 +47,8 @@ abstract class OtakuApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        FirebaseApp.initializeApp(this)
+
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 

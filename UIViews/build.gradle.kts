@@ -124,7 +124,7 @@ dependencies {
 
     implementation(libs.dragselect)
 
-    implementation(libs.crashlytics)
+    implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.sonner)
     implementation(libs.glideCompose)

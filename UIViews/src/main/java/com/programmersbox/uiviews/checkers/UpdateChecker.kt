@@ -16,6 +16,8 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
@@ -62,6 +64,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : Corouti
     override suspend fun doWork(): Result {
         return try {
             val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.update_real_version.orEmpty() }
+            Firebase.crashlytics.log("Current Version: $f")
             val appVersion = applicationContext.appVersion
             if (f != null && AppUpdate.checkForUpdate(appVersion, f)) {
                 val n = NotificationDslBuilder.builder(
@@ -76,6 +79,7 @@ class AppCheckWorker(context: Context, workerParams: WorkerParameters) : Corouti
             }
             Result.success()
         } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
             Result.success()
         }
     }
@@ -118,6 +122,8 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
             sourceLoader.blockingLoad()
         }
 
+        Firebase.crashlytics.log("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
+
         // Getting all recent updates
         val newList = list.intersect(
             sourceRepository.apiServiceList
@@ -130,7 +136,10 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
                                 .firstOrNull()
                         }
                     }
-                        .onFailure { it.printStackTrace() }
+                        .onFailure {
+                            Firebase.crashlytics.recordException(it)
+                            it.printStackTrace()
+                        }
                         .getOrNull()
                 }.flatten()
         ) { o, n -> o.url == n.url }
@@ -155,7 +164,10 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
                 Pair(newData, model)
                     .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
             }
-                .onFailure { it.printStackTrace() }
+                .onFailure {
+                    Firebase.crashlytics.recordException(it)
+                    it.printStackTrace()
+                }
                 .getOrNull()
         }
 
@@ -164,6 +176,11 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
         update.onEnd(update.mapDbModel(dao, items, genericInfo), info = genericInfo)
         Loged.fd("Finished!")
 
+        Result.success()
+    } catch (e: Exception) {
+        Firebase.crashlytics.recordException(e)
+        applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
+        update.sendFinishedNotification()
         Result.success()
     } finally {
         applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
@@ -181,7 +198,10 @@ class UpdateNotification(private val context: Context) : KoinComponent {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
             dao.insertFavorite(item)
-            FirebaseDb.updateShowFlow(item).catch { println("Something went wrong: ${it.message}") }.collect()
+            FirebaseDb.updateShowFlow(item).catch {
+                Firebase.crashlytics.recordException(it)
+                println("Something went wrong: ${it.message}")
+            }.collect()
         }
     }
 
@@ -481,5 +501,9 @@ private fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyM
     connection.connect()
     BitmapFactory.decodeStream(connection.inputStream)
 }
-    .onFailure { it.printStackTrace() }
+    .onFailure {
+        Firebase.crashlytics.log("Getting bitmap from $strURL")
+        Firebase.crashlytics.recordException(it)
+        it.printStackTrace()
+    }
     .getOrNull()

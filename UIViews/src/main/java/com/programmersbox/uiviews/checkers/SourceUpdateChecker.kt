@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.GroupBehavior
@@ -86,6 +88,7 @@ class SourceUpdateChecker(context: Context, workerParams: WorkerParameters) : Co
             Result.success()
         } catch (e: Exception) {
             e.printStackTrace()
+            Firebase.crashlytics.recordException(e)
             Result.success()
         }
     }
