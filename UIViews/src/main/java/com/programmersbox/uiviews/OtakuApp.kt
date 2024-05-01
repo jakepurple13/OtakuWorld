@@ -50,6 +50,7 @@ abstract class OtakuApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        //If firebase is giving issues, comment these lines out
         FirebaseApp.initializeApp(this)
 
         Firebase.crashlytics.setCustomKeys {
