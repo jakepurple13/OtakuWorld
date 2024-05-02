@@ -37,8 +37,13 @@ interface GenericInfo {
     fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
     fun deepLinkSettings(context: Context): PendingIntent?
 
-    fun deepLinkDetailsUri(itemModel: ItemModel?) =
-        "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri()
+    fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
+        //TODO: This needs to be fixed
+        // build details and try
+        val addon =
+            "&title=${itemModel?.title}&description=${itemModel?.description}&imageUrl=${itemModel?.imageUrl}&source=${itemModel?.source}&url=${itemModel?.url}"
+        return "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}$addon".toUri()
+    }
 
     fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
 
@@ -48,7 +53,7 @@ interface GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     )
 
     fun sourceList(): List<ApiService>

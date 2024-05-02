@@ -1,6 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-@file:OptIn(ExperimentalMaterialApi::class)
-
 package com.programmersbox.mangaworld.reader
 
 import android.annotation.SuppressLint
@@ -35,18 +32,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,7 +57,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BatteryAlert
@@ -75,9 +68,6 @@ import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -149,7 +139,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -178,6 +167,7 @@ import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.HazeScaffold
+import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -201,6 +191,7 @@ import org.koin.compose.koinInject
 @ExperimentalFoundationApi
 @Composable
 fun ReadView(
+    mangaReader: ReadViewModel.MangaReader,
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     ch: ChapterHolder = koinInject(),
@@ -208,7 +199,7 @@ fun ReadView(
     dao: ItemDao = LocalItemDao.current,
     readVm: ReadViewModel = viewModel {
         ReadViewModel(
-            handle = createSavedStateHandle(),
+            mangaReader = mangaReader,
             genericInfo = genericInfo,
             chapterHolder = ch,
             dao = dao
@@ -218,7 +209,6 @@ fun ReadView(
     HideSystemBarsWhileOnScreen()
 
     val scope = rememberCoroutineScope()
-    val pullRefreshState = rememberPullRefreshState(refreshing = readVm.isLoadingPages, onRefresh = readVm::refresh)
 
     val pages = readVm.pageList
 
@@ -298,7 +288,6 @@ fun ReadView(
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             SheetView(
                 readVm = readVm,
@@ -357,8 +346,10 @@ fun ReadView(
             blurTopBar = true,
             blurBottomBar = true
         ) { p ->
-            Box(
-                modifier = Modifier.pullRefresh(pullRefreshState)
+            OtakuPullToRefreshBox(
+                isRefreshing = readVm.isLoadingPages,
+                onRefresh = readVm::refresh,
+                paddingValues = p
             ) {
                 val spacing = LocalContext.current.dpToPx(paddingPage).dp
                 Crossfade(targetState = listOrPager, label = "") {
@@ -379,15 +370,6 @@ fun ReadView(
                         ) { readVm.showInfo = !readVm.showInfo }
                     }
                 }
-
-                PullRefreshIndicator(
-                    refreshing = readVm.isLoadingPages,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    backgroundColor = MaterialTheme.colorScheme.background,
-                    contentColor = MaterialTheme.colorScheme.onBackground,
-                    scale = true
-                )
             }
         }
     }
@@ -1344,7 +1326,6 @@ private fun SettingsSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
-        windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         content = {
             CategorySetting(
                 settingIcon = {

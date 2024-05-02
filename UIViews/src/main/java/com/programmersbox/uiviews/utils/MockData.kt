@@ -15,11 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.material.darkColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.lightColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -65,7 +63,6 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.text.SimpleDateFormat
 import java.util.Locale
-import androidx.compose.material.MaterialTheme as M2MaterialTheme
 
 val MockInfo = object : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
@@ -213,30 +210,17 @@ fun PreviewTheme(
                 )
             }
         ) {
-            M2MaterialTheme(
-                colors = if (darkTheme)
-                    darkColors(
-                        primary = Color(0xff90CAF9),
-                        secondary = Color(0xff90CAF9)
-                    )
-                else
-                    lightColors(
-                        primary = Color(0xff2196F3),
-                        secondary = Color(0xff90CAF9)
-                    ),
-            ) {
-                CompositionLocalProvider(
-                    LocalNavController provides navController,
-                    LocalGenericInfo provides genericInfo,
-                    LocalSettingsHandling provides remember { SettingsHandling(context) },
-                    LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
-                    LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
-                    LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
-                    LocalSourcesRepository provides SourceRepository(),
-                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
-                    LocalNavHostPadding provides PaddingValues(0.dp)
-                ) { Surface { content() } }
-            }
+            CompositionLocalProvider(
+                LocalNavController provides navController,
+                LocalGenericInfo provides genericInfo,
+                LocalSettingsHandling provides remember { SettingsHandling(context) },
+                LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
+                LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
+                LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                LocalSourcesRepository provides SourceRepository(),
+                LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
+                LocalNavHostPadding provides PaddingValues(0.dp)
+            ) { Surface { content() } }
         }
     }
 }

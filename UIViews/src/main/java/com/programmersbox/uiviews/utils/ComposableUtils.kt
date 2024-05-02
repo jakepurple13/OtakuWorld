@@ -18,13 +18,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -485,7 +482,6 @@ fun showSourceChooser(): MutableState<Boolean> {
             onDismissRequest = { showSourceChooser.value = false },
             sheetState = state,
             containerColor = MaterialTheme.colorScheme.surface,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             SourceChooserScreen(
                 onChosen = {
@@ -508,7 +504,6 @@ fun showTranslationScreen(): MutableState<Boolean> {
         ModalBottomSheet(
             onDismissRequest = { showTranslationScreen.value = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             TranslationScreen()
         }

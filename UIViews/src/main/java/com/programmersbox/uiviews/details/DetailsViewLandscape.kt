@@ -22,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.ripple
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -40,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -105,7 +105,7 @@ fun DetailsViewLandscape(
     logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
-    showDownloadButton: Boolean,
+    showDownloadButton: () -> Boolean,
     canNotify: Boolean,
     notifyAction: () -> Unit,
 ) {
@@ -262,7 +262,7 @@ private fun DetailsLandscapeContent(
     logo: NotificationLogo,
     reverseChapters: Boolean,
     listState: LazyListState,
-    showDownloadButton: Boolean,
+    showDownloadButton: () -> Boolean,
     canNotify: Boolean,
     notifyAction: () -> Unit,
     modifier: Modifier = Modifier,

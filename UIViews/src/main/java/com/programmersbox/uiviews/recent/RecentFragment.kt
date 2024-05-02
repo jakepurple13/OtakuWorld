@@ -23,20 +23,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Source
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -73,6 +70,7 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
+import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
@@ -82,7 +80,6 @@ import org.koin.compose.koinInject
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class
 )
 @Composable
 fun RecentView(
@@ -97,7 +94,7 @@ fun RecentView(
     val state = recentVm.gridState
     val scope = rememberCoroutineScope()
     val source = recentVm.currentSource
-    val pull = rememberPullRefreshState(refreshing = recentVm.isRefreshing, onRefresh = { recentVm.reset(context) })
+    val pull = rememberPullToRefreshState()
 
     val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
@@ -201,8 +198,11 @@ fun RecentView(
                     }
 
                     true -> {
-                        Box(
-                            modifier = Modifier.pullRefresh(pull)
+                        OtakuPullToRefreshBox(
+                            isRefreshing = recentVm.isRefreshing,
+                            onRefresh = { recentVm.reset(context) },
+                            state = pull,
+                            paddingValues = p
                         ) {
                             when {
                                 sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
@@ -223,16 +223,6 @@ fun RecentView(
                                     }
                                 }
                             }
-                            PullRefreshIndicator(
-                                refreshing = recentVm.isRefreshing,
-                                state = pull,
-                                modifier = Modifier
-                                    .padding(top = p.calculateTopPadding())
-                                    .align(Alignment.TopCenter),
-                                backgroundColor = MaterialTheme.colorScheme.background,
-                                contentColor = MaterialTheme.colorScheme.onBackground,
-                                scale = true
-                            )
                         }
 
                         if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {

@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BrowseGallery
@@ -85,9 +84,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
+import androidx.navigation.toRoute
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
@@ -241,7 +240,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         ) {
                             NavHost(
                                 navController = navController,
-                                startDestination = Screen.RecentScreen.route,
+                                startDestination = Screen.RecentScreen,
                                 modifier = Modifier.fillMaxSize()
                             ) { navGraph(customPreferences, windowSize) }
                         }
@@ -283,7 +282,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             label = { Text(stringResource(label)) },
                             selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
                             onClick = {
-                                navController.navigate(screen.route) {
+                                navController.navigate(screen) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
@@ -362,47 +361,42 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     NavigationRailItem(
                         imageVector = Icons.Default.Notifications,
                         label = stringResource(R.string.notifications),
-                        screen = Screen.NotificationScreen,
+                        screen = Screen.NotificationScreen.Home,
                         currentDestination = currentDestination,
                         navController = navController,
-                        customRoute = "_home"
                     )
                 }
 
                 NavigationRailItem(
                     imageVector = Icons.AutoMirrored.Default.List,
                     label = stringResource(R.string.custom_lists_title),
-                    screen = Screen.CustomListScreen,
+                    screen = Screen.CustomListScreen.Home,
                     currentDestination = currentDestination,
                     navController = navController,
-                    customRoute = "_home"
                 )
 
                 NavigationRailItem(
                     imageVector = Icons.Default.Search,
                     label = stringResource(R.string.global_search),
-                    screen = Screen.GlobalSearchScreen,
+                    screen = Screen.GlobalSearchScreen.Home(),
                     currentDestination = currentDestination,
                     navController = navController,
-                    customRoute = "_home"
                 )
 
                 NavigationRailItem(
                     imageVector = Icons.Default.Star,
                     label = stringResource(R.string.viewFavoritesMenu),
-                    screen = Screen.FavoriteScreen,
+                    screen = Screen.FavoriteScreen.Home,
                     currentDestination = currentDestination,
                     navController = navController,
-                    customRoute = "_home"
                 )
 
                 NavigationRailItem(
                     imageVector = Icons.Default.Extension,
                     label = stringResource(R.string.extensions),
-                    screen = Screen.ExtensionListScreen,
+                    screen = Screen.ExtensionListScreen.Home,
                     currentDestination = currentDestination,
                     navController = navController,
-                    customRoute = "_home"
                 )
 
                 NavigationRailItem(
@@ -414,7 +408,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     label = { Text(stringResource(R.string.settings)) },
                     selected = currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings),
                     onClick = {
-                        navController.navigate(Screen.Settings.route) {
+                        navController.navigate(Screen.Settings) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
@@ -432,9 +426,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         screen: Screen,
         currentDestination: NavDestination?,
         navController: NavHostController,
-        customRoute: String = "",
         onClick: () -> Unit = {
-            navController.navigate(screen.route + customRoute) {
+            navController.navigate(screen) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
                 restoreState = true
@@ -444,38 +437,38 @@ abstract class BaseMainActivity : AppCompatActivity() {
         NavigationRailItem(
             icon = { Icon(imageVector, null) },
             label = { Text(label) },
-            selected = currentDestination.isTopLevelDestinationInHierarchy(screen.route + customRoute),
+            selected = currentDestination.isTopLevelDestinationInHierarchy(screen.route),
             onClick = onClick
         )
     }
 
     @OptIn(
-        ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
+        ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class
     )
     private fun NavGraphBuilder.navGraph(
         customPreferences: ComposeSettingsDsl,
         windowSize: WindowSizeClass,
     ) {
-        composable(Screen.RecentScreen.route) { RecentView() }
-        composable(Screen.AllScreen.route) {
+        composable<Screen.RecentScreen> { RecentView() }
+        composable<Screen.AllScreen> {
             AllView(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
-        composable(
-            Screen.DetailsScreen.route + "/{model}",
+        composable<Screen.DetailsScreen.Details>(
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}"
+                    uriPattern =
+                        genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}&title={title}&description={description}&imageUrl={imageUrl}&source={source}&url={url}"
                 }
             ),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             DetailsScreen(
+                detailInfo = it.toRoute(),
                 logo = notificationLogo,
                 windowSize = windowSize
             )
@@ -489,7 +482,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalComposeUiApi::class,
-        ExperimentalMaterialApi::class,
         ExperimentalFoundationApi::class
     )
     private fun NavGraphBuilder.settings(
@@ -497,47 +489,42 @@ abstract class BaseMainActivity : AppCompatActivity() {
         windowSize: WindowSizeClass,
         additionalSettings: NavGraphBuilder.() -> Unit,
     ) {
-        navigation(
-            route = Screen.Settings.route,
-            startDestination = Screen.SettingsScreen.route,
+        navigation<Screen.Settings>(
+            startDestination = Screen.SettingsScreen,
         ) {
-            composable(
-                Screen.SettingsScreen.route,
+            composable<Screen.SettingsScreen>(
                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.SettingsScreen.route }),
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) {
                 SettingScreen(
                     composeSettingsDsl = customPreferences,
-                    notificationClick = { navController.navigate(Screen.NotificationScreen.route) { launchSingleTop = true } },
-                    favoritesClick = { navController.navigate(Screen.FavoriteScreen.route) { launchSingleTop = true } },
-                    historyClick = { navController.navigate(Screen.HistoryScreen.route) { launchSingleTop = true } },
-                    globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen.route) { launchSingleTop = true } },
-                    listClick = { navController.navigate(Screen.CustomListScreen.route) { launchSingleTop = true } },
-                    debugMenuClick = { navController.navigate(Screen.DebugScreen.route) { launchSingleTop = true } },
-                    extensionClick = { navController.navigate(Screen.ExtensionListScreen.route) { launchSingleTop = true } },
-                    notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings.route) },
-                    generalClick = { navController.navigate(Screen.GeneralSettings.route) },
-                    otherClick = { navController.navigate(Screen.OtherSettings.route) },
-                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings.route) },
-                    moreSettingsClick = { navController.navigate(Screen.MoreSettings.route) }
+                    notificationClick = { navController.navigate(Screen.NotificationScreen) { launchSingleTop = true } },
+                    favoritesClick = { navController.navigate(Screen.FavoriteScreen) { launchSingleTop = true } },
+                    historyClick = { navController.navigate(Screen.HistoryScreen) { launchSingleTop = true } },
+                    globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen()) { launchSingleTop = true } },
+                    listClick = { navController.navigate(Screen.CustomListScreen) { launchSingleTop = true } },
+                    debugMenuClick = { navController.navigate(Screen.DebugScreen) { launchSingleTop = true } },
+                    extensionClick = { navController.navigate(Screen.ExtensionListScreen) { launchSingleTop = true } },
+                    notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings) },
+                    generalClick = { navController.navigate(Screen.GeneralSettings) },
+                    otherClick = { navController.navigate(Screen.OtherSettings) },
+                    moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
+                    moreSettingsClick = { navController.navigate(Screen.MoreSettings) }
                 )
             }
 
-            composable(
-                Screen.NotificationsSettings.route,
+            composable<Screen.NotificationsSettings>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { NotificationSettings() }
 
-            composable(
-                Screen.GeneralSettings.route,
+            composable<Screen.GeneralSettings>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { GeneralSettings(customPreferences.generalSettings) }
 
-            composable(
-                Screen.MoreInfoSettings.route,
+            composable<Screen.MoreInfoSettings>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) {
@@ -546,26 +533,22 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
-            composable(
-                Screen.OtherSettings.route,
+            composable<Screen.OtherSettings>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { PlaySettings(customPreferences.playerSettings) }
 
-            composable(
-                Screen.MoreSettings.route,
+            composable<Screen.MoreSettings>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { MoreSettingsScreen() }
 
-            composable(
-                Screen.HistoryScreen.route,
+            composable<Screen.HistoryScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) { HistoryUi() }
 
-            composable(
-                Screen.FavoriteScreen.route,
+            composable<Screen.FavoriteScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
@@ -574,26 +557,23 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
-            composable(
-                Screen.AboutScreen.route,
+            composable<Screen.AboutScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) { AboutLibrariesScreen() }
 
-            composable(
-                Screen.GlobalSearchScreen.route + "?searchFor={searchFor}",
-                arguments = listOf(navArgument("searchFor") { nullable = true }),
+            composable<Screen.GlobalSearchScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
                 GlobalSearchView(
+                    globalSearchScreen = it.toRoute<Screen.GlobalSearchScreen>(),
                     notificationLogo = notificationLogo,
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
             }
 
-            composable(
-                Screen.CustomListScreen.route,
+            composable<Screen.CustomListScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
             ) {
@@ -602,12 +582,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
-            composable(
-                Screen.ImportListScreen.route + "?uri={uri}"
-            ) { ImportListScreen() }
+            composable<Screen.ImportListScreen> { ImportListScreen(it.toRoute()) }
 
-            composable(
-                Screen.NotificationScreen.route,
+            composable<Screen.NotificationScreen>(
                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
@@ -620,8 +597,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
-            composable(
-                Screen.ExtensionListScreen.route,
+            composable<Screen.ExtensionListScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { ExtensionList() }
@@ -629,27 +605,25 @@ abstract class BaseMainActivity : AppCompatActivity() {
             additionalSettings()
 
             if (BuildConfig.DEBUG) {
-                composable(Screen.DebugScreen.route) {
+                composable<Screen.DebugScreen> {
                     DebugView()
                 }
             }
         }
 
         //These few are specifically so Settings won't get highlighted when selecting these screens from navigation
-        composable(
-            Screen.GlobalSearchScreen.route + "_home" + "?searchFor={searchFor}",
-            arguments = listOf(navArgument("searchFor") { nullable = true }),
+        composable<Screen.GlobalSearchScreen.Home>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             GlobalSearchView(
+                globalSearchScreen = it.toRoute<Screen.GlobalSearchScreen>(),
                 notificationLogo = notificationLogo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }
 
-        composable(
-            Screen.CustomListScreen.route + "_home",
+        composable<Screen.CustomListScreen.Home>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
         ) {
@@ -658,8 +632,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable(
-            Screen.NotificationScreen.route + "_home",
+        composable<Screen.NotificationScreen.Home>(
             deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
@@ -672,8 +645,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable(
-            Screen.FavoriteScreen.route + "_home",
+        composable<Screen.FavoriteScreen.Home>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
@@ -682,8 +654,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable(
-            Screen.ExtensionListScreen.route + "_home",
+        composable<Screen.ExtensionListScreen.Home>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) { ExtensionList() }

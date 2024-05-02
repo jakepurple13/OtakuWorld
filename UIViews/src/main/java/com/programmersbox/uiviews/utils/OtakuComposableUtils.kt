@@ -11,14 +11,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -556,7 +552,6 @@ fun SourceNotInstalledModal(
         ModalBottomSheet(
             onDismissRequest = { onShowItemDismiss(null) },
             containerColor = MaterialTheme.colorScheme.surface,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
         ) {
             Text(
                 source.orEmpty(),
@@ -569,7 +564,7 @@ fun SourceNotInstalledModal(
                 leadingContent = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier.clickable {
                     onShowItemDismiss(null)
-                    Screen.GlobalSearchScreen.navigate(navController, showItem)
+                    navController.navigate(Screen.GlobalSearchScreen(showItem))
                 }
             )
             additionOptions()

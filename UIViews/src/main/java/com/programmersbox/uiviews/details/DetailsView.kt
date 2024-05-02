@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
-import androidx.compose.material.ripple
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -39,6 +38,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -110,7 +110,7 @@ fun DetailsView(
     logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
-    showDownloadButton: Boolean,
+    showDownloadButton: () -> Boolean,
 ) {
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current

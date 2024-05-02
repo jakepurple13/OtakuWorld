@@ -1,5 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.utils.components
 
 import androidx.compose.foundation.Image

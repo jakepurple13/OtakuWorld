@@ -7,39 +7,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,31 +32,19 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ButtonColors
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.ButtonElevation
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.ListItem
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ProvideTextStyle
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VerticalAlignBottom
 import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
@@ -82,7 +54,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -93,15 +64,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -131,7 +96,6 @@ class MainActivity : AppCompatActivity() {
     private val favorites = mutableStateListOf<DbModel>()
     @OptIn(
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
@@ -807,7 +771,6 @@ fun Random.nextColor(
     blue: Int = nextInt(0, 255)
 ) = Color(red, green, blue, alpha)
 
-@ExperimentalMaterialApi
 @Preview
 @Composable
 fun MaterialCardPreview() {
@@ -828,11 +791,11 @@ fun MaterialCardPreview() {
         TextButton(
             onClick = {},
             modifier = Modifier.weight(1f)
-        ) { Text("Action 1", style = MaterialTheme.typography.button) }
+        ) { Text("Action 1") }
         TextButton(
             onClick = {},
             modifier = Modifier.weight(1f)
-        ) { Text("Action 2", style = MaterialTheme.typography.button) }
+        ) { Text("Action 2") }
 
         Icon(
             Icons.Default.Favorite,
@@ -859,9 +822,9 @@ fun MaterialCardPreview() {
             supportingText = supportingText,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") },
-                    icon = { Icon(Icons.Default.Image, null) }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") },
+                    leadingContent = { Icon(Icons.Default.Image, null) }
                 )
             },
             media = media,
@@ -873,8 +836,8 @@ fun MaterialCardPreview() {
             supportingText = supportingText,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             },
             media = media,
@@ -885,8 +848,8 @@ fun MaterialCardPreview() {
             headerOnTop = false,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             },
             media = media,
@@ -904,8 +867,8 @@ fun MaterialCardPreview() {
             supportingText = supportingText,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             },
             actions = actions
@@ -916,8 +879,8 @@ fun MaterialCardPreview() {
             supportingText = supportingText,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             },
             media = media,
@@ -933,8 +896,8 @@ fun MaterialCardPreview() {
             supportingText = supportingText,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             }
         )
@@ -947,8 +910,8 @@ fun MaterialCardPreview() {
         MaterialCard(
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             },
             actions = actions
@@ -956,15 +919,13 @@ fun MaterialCardPreview() {
 
         MaterialCard(
             shape = RoundedCornerShape(16.dp),
-            backgroundColor = Color.Blue,
             border = BorderStroke(1.dp, Color.Red),
-            elevation = 4.dp,
             headerOnTop = false,
             supportingText = supportingText,
             header = {
                 ListItem(
-                    text = { Text("Title goes here") },
-                    secondaryText = { Text("Secondary text") }
+                    headlineContent = { Text("Title goes here") },
+                    supportingContent = { Text("Secondary text") }
                 )
             },
             media = media,
@@ -1284,9 +1245,8 @@ class CoordinatorModel1(
 
 @Composable
 fun TestData() = Column { repeat(10) { Text("Hello $it") } }
-
+/*
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 fun SwipeButton(
     onSwiped: () -> Unit,
@@ -1344,13 +1304,13 @@ fun SwipeButton(
                             .scale(animatedProgress.value)
                             .padding(iconPadding)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colors.onPrimary)
+                            .background(MaterialTheme.colorScheme.onPrimary)
                             .align(Alignment.Center)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Done,
                             contentDescription = "Done",
-                            tint = MaterialTheme.colors.primary
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -1475,9 +1435,8 @@ fun DrawCanvas(
             }
         }
     }
-}
+}*/
 
-@ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
 fun BannerBox(

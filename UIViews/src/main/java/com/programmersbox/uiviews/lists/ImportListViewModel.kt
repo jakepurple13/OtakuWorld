@@ -5,12 +5,12 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.uiviews.utils.Screen
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -18,11 +18,11 @@ import java.util.UUID
 
 class ImportListViewModel(
     private val listDao: ListDao,
-    savedStateHandle: SavedStateHandle,
-    context: Context
+    importListScreen: Screen.ImportListScreen,
+    context: Context,
 ) : ViewModel() {
 
-    private val document = savedStateHandle.get<String>("uri")?.let(Uri::parse)
+    private val document = importListScreen.uri.let(Uri::parse)
 
     var importStatus: ImportListStatus by mutableStateOf(ImportListStatus.Loading)
         private set

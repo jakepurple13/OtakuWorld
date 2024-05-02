@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -33,11 +32,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import java.io.File
 
 class ReadViewModel(
-    handle: SavedStateHandle,
+    mangaReader: MangaReader,
     private val dao: ItemDao,
     val genericInfo: GenericInfo,
     private val chapterHolder: ChapterHolder,
@@ -51,8 +51,8 @@ class ReadViewModel(
     /*?.subscribeOn(Schedulers.io())
     ?.observeOn(AndroidSchedulers.mainThread())*/
     //?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
-    val isDownloaded: Boolean = handle.get<String>("downloaded")?.toBoolean() ?: false,
-    filePath: File? = handle.get<String>("filePath")?.let { File(it) },
+    val isDownloaded: Boolean = mangaReader.downloaded,
+    filePath: File? = mangaReader.filePath?.let { File(it) },
     modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
         flow {
             filePath
@@ -70,9 +70,6 @@ class ReadViewModel(
 ) : ViewModel(), KoinComponent {
 
     companion object {
-        const val MangaReaderRoute =
-            "mangareader?mangaTitle={mangaTitle}&mangaUrl={mangaUrl}&mangaInfoUrl={mangaInfoUrl}&downloaded={downloaded}&filePath={filePath}"
-
         fun navigateToMangaReader(
             navController: NavController,
             mangaTitle: String? = null,
@@ -81,17 +78,24 @@ class ReadViewModel(
             downloaded: Boolean = false,
             filePath: String? = null
         ) {
-            navController.navigate(
-                "mangareader?mangaTitle=${mangaTitle}&mangaUrl=${mangaUrl}&mangaInfoUrl=${mangaInfoUrl}&downloaded=$downloaded&filePath=$filePath"
-            ) { launchSingleTop = true }
+            navController.navigate(MangaReader(mangaTitle, mangaUrl, mangaInfoUrl, downloaded, filePath)) { launchSingleTop = true }
         }
     }
 
-    val title by lazy { handle.get<String>("mangaTitle") ?: "" }
+    @Serializable
+    data class MangaReader(
+        val mangaTitle: String? = null,
+        val mangaUrl: String? = null,
+        val mangaInfoUrl: String? = null,
+        val downloaded: Boolean,
+        val filePath: String? = null,
+    )
+
+    val title by lazy { mangaReader.mangaTitle ?: "" }
 
     var list by mutableStateOf<List<ChapterModel>>(emptyList())
 
-    private val mangaUrl by lazy { handle.get<String>("mangaInfoUrl") ?: "" }
+    private val mangaUrl by lazy { mangaReader.mangaInfoUrl ?: "" }
 
     var currentChapter: Int by mutableIntStateOf(0)
 
@@ -101,7 +105,7 @@ class ReadViewModel(
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
     init {
-        val url = chapterHolder.chapterModel?.url ?: handle.get<String>("mangaUrl")
+        val url = chapterHolder.chapterModel?.url ?: mangaReader.mangaUrl
         list = chapterHolder.chapters.orEmpty()
         currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
 

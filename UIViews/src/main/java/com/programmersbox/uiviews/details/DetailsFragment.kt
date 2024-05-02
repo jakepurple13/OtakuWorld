@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.ripple
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -45,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -84,6 +84,7 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
@@ -103,12 +104,21 @@ import kotlinx.coroutines.runBlocking
 )
 @Composable
 fun DetailsScreen(
+    detailInfo: Screen.DetailsScreen.Details,
     logo: NotificationLogo,
     windowSize: WindowSizeClass,
     localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    details: DetailsViewModel = viewModel { DetailsViewModel(createSavedStateHandle(), genericInfo, dao = dao, context = localContext) },
+    details: DetailsViewModel = viewModel {
+        DetailsViewModel(
+            details = detailInfo,
+            handle = createSavedStateHandle(),
+            genericInfo = genericInfo,
+            dao = dao,
+            context = localContext
+        )
+    },
 ) {
     val uriHandler = LocalUriHandler.current
     val showDownload by LocalSettingsHandling.current.rememberShowDownload()
@@ -184,7 +194,7 @@ fun DetailsScreen(
                     markAs = details::markAs,
                     description = details.description,
                     onTranslateDescription = details::translateDescription,
-                    showDownloadButton = showDownload,
+                    showDownloadButton = { showDownload },
                     canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
                     notifyAction = { scope.launch { details.toggleNotify() } }
                 )
@@ -200,7 +210,7 @@ fun DetailsScreen(
                     markAs = details::markAs,
                     description = details.description,
                     onTranslateDescription = details::translateDescription,
-                    showDownloadButton = showDownload,
+                    showDownloadButton = { showDownload },
                     canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
                     notifyAction = { scope.launch { details.toggleNotify() } }
                 )
@@ -300,7 +310,7 @@ fun ChapterItem(
     read: List<ChapterWatched>,
     chapters: List<ChapterModel>,
     shareChapter: Boolean,
-    showDownload: Boolean,
+    showDownload: () -> Boolean,
     markAs: (ChapterModel, Boolean) -> Unit,
 ) {
     val historyDao = LocalHistoryDao.current
@@ -463,7 +473,7 @@ fun ChapterItem(
                     }
                 }
 
-                if (infoModel.source.canDownload && showDownload) {
+                if (infoModel.source.canDownload && showDownload()) {
                     OutlinedButton(
                         onClick = {
                             genericInfo.downloadChapter(c, chapters, infoModel, context, context.findActivity(), navController)

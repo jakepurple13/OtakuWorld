@@ -21,7 +21,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.CurrentSourceRepository
-import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
+import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -106,14 +106,14 @@ class RecentViewModel(
     private fun sourceLoadCompose(context: Context?) {
         currentSource
             ?.getRecentFlow(count)
-            ?.dispatchIoAndCatchList()
+            ?.onStart { isRefreshing = true }
+            ?.dispatchIo()
             ?.catch {
                 it.printStackTrace()
                 context?.showErrorToast()
                 emit(emptyList())
                 Firebase.crashlytics.recordException(it)
             }
-            ?.onStart { isRefreshing = true }
             ?.onCompletion { isRefreshing = false }
             ?.onEach { sourceList.addAll(it) }
             ?.launchIn(viewModelScope)

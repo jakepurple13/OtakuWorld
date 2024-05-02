@@ -417,6 +417,28 @@ object SavedNotifications {
                         ?.getSourceByUrlFlow(n.url)
                         ?.firstOrNull()
 
+                    /*val d = Screen.DetailsScreen.Details(
+                        title = itemModel?.title.orEmpty(),
+                        imageUrl = itemModel?.imageUrl.orEmpty(),
+                        source = itemModel?.source?.serviceName.orEmpty(),
+                        url = itemModel?.url.orEmpty(),
+                        description = itemModel?.description.orEmpty(),
+                    )
+
+                    val c = d.generateRouteWithArgs(
+                        mapOf<String, NavType<Any?>>(
+                            "title" to NavType.StringType,
+                            "imageUrl" to NavType.StringType,
+                            "source" to NavType.StringType,
+                            "url" to NavType.StringType,
+                            "description" to NavType.StringType
+                        )
+                    )
+
+                    NavDeepLinkBuilder(context)
+                        .addDestination(c)
+                        .createPendingIntent()*/
+
                     info.deepLinkDetails(context, itemModel)
                 }
             }

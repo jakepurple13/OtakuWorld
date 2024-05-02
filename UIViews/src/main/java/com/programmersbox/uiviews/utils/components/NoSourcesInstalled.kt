@@ -34,8 +34,8 @@ fun NoSourcesInstalled(modifier: Modifier = Modifier) {
             )
             Button(
                 onClick = {
-                    navController.navigate(Screen.ExtensionListScreen.route) {
-                        popUpTo(Screen.SettingsScreen.route)
+                    navController.navigate(Screen.ExtensionListScreen) {
+                        popUpTo(Screen.SettingsScreen)
                         launchSingleTop = true
                     }
                 }

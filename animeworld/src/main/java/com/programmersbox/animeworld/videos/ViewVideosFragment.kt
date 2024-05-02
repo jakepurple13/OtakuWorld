@@ -15,7 +15,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,13 +26,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.ripple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -100,7 +97,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
     ExperimentalAnimationApi::class,
     ExperimentalPermissionsApi::class
 )
@@ -120,10 +116,9 @@ fun ViewVideoScreen() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
@@ -348,7 +343,6 @@ private fun EmptyState(paddingValues: PaddingValues) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 private fun VideoContentView(
     item: VideoContent,
@@ -426,30 +420,26 @@ private fun VideoContentView(
         },
         content = {
             ElevatedCard(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) {
-                        if (MainActivity.cast.isCastActive()) {
-                            MainActivity.cast.loadMedia(
-                                File(item.path!!),
-                                context
-                                    .getSharedPreferences("videos", Context.MODE_PRIVATE)
-                                    .getLong(item.assetFileStringUri, 0),
-                                null, null
-                            )
-                        } else {
-                            context.navigateToVideoPlayer(
-                                navController,
-                                item.assetFileStringUri,
-                                item.videoName,
-                                true,
-                                ""
-                            )
-                        }
+                onClick = {
+                    if (MainActivity.cast.isCastActive()) {
+                        MainActivity.cast.loadMedia(
+                            File(item.path!!),
+                            context
+                                .getSharedPreferences("videos", Context.MODE_PRIVATE)
+                                .getLong(item.assetFileStringUri, 0),
+                            null, null
+                        )
+                    } else {
+                        context.navigateToVideoPlayer(
+                            navController,
+                            item.assetFileStringUri,
+                            item.videoName,
+                            true,
+                            ""
+                        )
                     }
+                },
+                modifier = Modifier.fillMaxSize()
             ) {
                 ImageFlushListItem(
                     leadingContent = {

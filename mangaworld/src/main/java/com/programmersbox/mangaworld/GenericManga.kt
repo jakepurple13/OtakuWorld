@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Pages
-import androidx.compose.material.ripple
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +38,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -58,7 +58,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
@@ -518,18 +518,10 @@ class GenericManga(
         ExperimentalFoundationApi::class
     )
     override fun NavGraphBuilder.globalNavSetup() {
-        composable(
-            ReadViewModel.MangaReaderRoute,
-            arguments = listOf(
-                navArgument("mangaTitle") { nullable = true },
-                navArgument("mangaUrl") { nullable = true },
-                navArgument("mangaInfoUrl") { nullable = true },
-                navArgument("downloaded") {},
-                navArgument("filePath") { nullable = true }
-            ),
+        composable<ReadViewModel.MangaReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
-        ) { ReadView() }
+        ) { ReadView(it.toRoute()) }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -567,5 +559,4 @@ class GenericManga(
             getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
-
 }

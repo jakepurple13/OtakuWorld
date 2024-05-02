@@ -1,5 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.globalsearch
 
 import android.graphics.drawable.Drawable
@@ -28,15 +26,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,6 +48,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -75,7 +70,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.CrossFade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -100,12 +94,14 @@ import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.LimitedBottomSheetScaffold
 import com.programmersbox.uiviews.utils.components.LimitedBottomSheetScaffoldDefaults
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
+import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
@@ -122,10 +118,10 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
 )
 @Composable
 fun GlobalSearchView(
+    globalSearchScreen: Screen.GlobalSearchScreen,
     notificationLogo: NotificationLogo,
     isHorizontal: Boolean,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
@@ -133,7 +129,7 @@ fun GlobalSearchView(
     viewModel: GlobalSearchViewModel = viewModel {
         GlobalSearchViewModel(
             sourceRepository = sourceRepository,
-            initialSearch = createSavedStateHandle().get<String>("searchFor") ?: "",
+            initialSearch = globalSearchScreen.title ?: "",
             dao = dao,
         )
     },
@@ -144,7 +140,7 @@ fun GlobalSearchView(
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    val pullRefreshState = rememberPullRefreshState(refreshing = viewModel.isRefreshing, onRefresh = {})
+    val pullRefreshState = rememberPullToRefreshState()
     val mainLogoDrawable = koinInject<AppLogo>()
 
     val networkState by viewModel.observeNetwork.collectAsState(initial = true)
@@ -325,8 +321,12 @@ fun GlobalSearchView(
                     }
 
                     true -> {
-                        Box(
-                            modifier = Modifier.pullRefresh(pullRefreshState, false)
+                        OtakuPullToRefreshBox(
+                            isRefreshing = viewModel.isRefreshing,
+                            state = pullRefreshState,
+                            onRefresh = {},
+                            enabled = { false },
+                            paddingValues = padding + LocalNavHostPadding.current
                         ) {
                             LazyColumn(
                                 state = listState,
@@ -433,15 +433,6 @@ fun GlobalSearchView(
                                     }
                                 }
                             }
-
-                            PullRefreshIndicator(
-                                refreshing = viewModel.isRefreshing,
-                                state = pullRefreshState,
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                backgroundColor = M3MaterialTheme.colorScheme.background,
-                                contentColor = M3MaterialTheme.colorScheme.onBackground,
-                                scale = true
-                            )
                         }
                     }
                 }
@@ -518,6 +509,7 @@ private fun GlobalScreenPreview() {
     PreviewTheme {
         val dao = LocalHistoryDao.current
         GlobalSearchView(
+            globalSearchScreen = Screen.GlobalSearchScreen(""),
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
             isHorizontal = false,

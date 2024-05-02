@@ -6,9 +6,6 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.Colors
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -91,51 +88,37 @@ fun OtakuMaterialTheme(
         }
 
         MaterialTheme(colorScheme.animate()) {
-            androidx.compose.material.MaterialTheme(
-                colors = if (darkTheme) {
-                    darkColors(
-                        primary = Color(0xff90CAF9),
-                        secondary = Color(0xff90CAF9)
-                    )
-                } else {
-                    lightColors(
-                        primary = Color(0xff2196F3),
-                        secondary = Color(0xff90CAF9)
-                    )
-                }.animate(),
-            ) {
-                CompositionLocalProvider(
-                    LocalActivity provides remember { context.findActivity() },
-                    LocalNavController provides navController,
-                    LocalGenericInfo provides genericInfo,
-                    LocalSettingsHandling provides koinInject(),
-                    LocalItemDao provides koinInject<ItemDatabase>().itemDao(),
-                    LocalHistoryDao provides koinInject<HistoryDatabase>().historyDao(),
-                    LocalCustomListDao provides koinInject<ListDatabase>().listDao(),
-                    LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
-                    LocalSourcesRepository provides koinInject(),
-                    LocalCurrentSource provides koinInject(),
-                    LocalUriHandler provides remember {
-                        object : UriHandler {
-                            override fun openUri(uri: String) {
-                                runCatching {
-                                    navController.navigateChromeCustomTabs(
-                                        uri,
-                                        {
-                                            anim {
-                                                enter = R.anim.slide_in_right
-                                                popEnter = R.anim.slide_in_right
-                                                exit = R.anim.slide_out_left
-                                                popExit = R.anim.slide_out_left
-                                            }
+            CompositionLocalProvider(
+                LocalActivity provides remember { context.findActivity() },
+                LocalNavController provides navController,
+                LocalGenericInfo provides genericInfo,
+                LocalSettingsHandling provides koinInject(),
+                LocalItemDao provides koinInject<ItemDatabase>().itemDao(),
+                LocalHistoryDao provides koinInject<HistoryDatabase>().historyDao(),
+                LocalCustomListDao provides koinInject<ListDatabase>().listDao(),
+                LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
+                LocalSourcesRepository provides koinInject(),
+                LocalCurrentSource provides koinInject(),
+                LocalUriHandler provides remember {
+                    object : UriHandler {
+                        override fun openUri(uri: String) {
+                            runCatching {
+                                navController.navigateChromeCustomTabs(
+                                    uri,
+                                    {
+                                        anim {
+                                            enter = R.anim.slide_in_right
+                                            popEnter = R.anim.slide_in_right
+                                            exit = R.anim.slide_out_left
+                                            popExit = R.anim.slide_out_left
                                         }
-                                    )
-                                }.onFailure { defaultUriHandler.openUri(uri) }
-                            }
+                                    }
+                                )
+                            }.onFailure { defaultUriHandler.openUri(uri) }
                         }
                     }
-                ) { content() }
-            }
+                }
+            ) { content() }
         }
     }
 }
@@ -145,23 +128,6 @@ val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
 val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
-
-@Composable
-private fun Colors.animate() = copy(
-    primary = primary.animate().value,
-    primaryVariant = primaryVariant.animate().value,
-    onPrimary = onPrimary.animate().value,
-    secondary = secondary.animate().value,
-    secondaryVariant = secondaryVariant.animate().value,
-    onSecondary = onSecondary.animate().value,
-    background = background.animate().value,
-    onBackground = onBackground.animate().value,
-    surface = surface.animate().value,
-    onSurface = onSurface.animate().value,
-    onError = onError.animate().value,
-    error = error.animate().value,
-    isLight = isLight
-)
 
 @Composable
 private fun ColorScheme.animate() = copy(

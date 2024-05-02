@@ -11,9 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -145,7 +142,6 @@ internal fun AddToList(
         ModalBottomSheet(
             onDismissRequest = { showListsChange(false) },
             containerColor = MaterialTheme.colorScheme.surface,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
         ) {
             ListChoiceScreen(
                 url = info.url,
@@ -297,7 +293,7 @@ internal fun DetailActions(
         DropdownMenuItem(
             onClick = {
                 dropDownDismiss()
-                Screen.GlobalSearchScreen.navigate(navController, info.title)
+                navController.navigate(Screen.GlobalSearchScreen(info.title))
             },
             text = { Text(stringResource(id = R.string.global_search_by_name)) },
             leadingIcon = { Icon(Icons.Default.Search, null) }
@@ -387,7 +383,7 @@ fun DetailBottomBar(
                 info = { Text("Global Search by Name") }
             ) {
                 IconButton(
-                    onClick = { Screen.GlobalSearchScreen.navigate(navController, info.title) },
+                    onClick = { navController.navigate(Screen.GlobalSearchScreen(info.title)) },
                 ) { Icon(Icons.Default.Search, null) }
             }
 

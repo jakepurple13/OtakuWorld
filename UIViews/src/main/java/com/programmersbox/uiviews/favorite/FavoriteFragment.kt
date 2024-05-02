@@ -1,5 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.favorite
 
 import androidx.activity.compose.BackHandler
@@ -162,7 +160,7 @@ fun FavoriteUi(
         ModalBottomSheet(
             onDismissRequest = { showSort = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
+            contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
         ) {
             InsetCenterAlignedTopAppBar(
                 title = { Text("Sort By") },
@@ -326,7 +324,7 @@ fun FavoriteUi(
                         ModalBottomSheet(
                             onDismissRequest = { showFilterBySourceModal = false },
                             containerColor = MaterialTheme.colorScheme.surface,
-                            windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
+                            contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
                         ) {
                             CenterAlignedTopAppBar(title = { Text("Filter by Source") })
                             FlowRow(
@@ -403,7 +401,7 @@ fun FavoriteUi(
                             )
 
                             Button(
-                                onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
+                                onClick = { navController.popBackStack(Screen.RecentScreen, false) },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
                                     .padding(vertical = 4.dp)
@@ -476,7 +474,6 @@ private fun BannerScope.FavoritesGrid(
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
                     containerColor = MaterialTheme.colorScheme.surface,
-                    windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
                 ) {
                     ListBottomScreen(
                         navigationIcon = {

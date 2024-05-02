@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -24,6 +25,7 @@ import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Job
@@ -36,15 +38,22 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class DetailsViewModel(
+    details: Screen.DetailsScreen.Details,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     context: Context,
     private val dao: ItemDao,
+) : ViewModel(), KoinComponent {
+
+    private val sourceRepository: SourceRepository by inject()
+
     val itemModel: ItemModel? = handle.get<String>("model")
         ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
-) : ViewModel() {
+        ?: details.toItemModel(sourceRepository, genericInfo)
 
     var info: InfoModel? by mutableStateOf(null)
 

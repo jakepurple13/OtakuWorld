@@ -22,21 +22,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -73,6 +71,8 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
+import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
+import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshDefaults
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeDefaults
@@ -85,7 +85,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
@@ -191,9 +190,10 @@ fun AllView(
                     showBanner = showBanner,
                     placeholder = koinInject<AppLogo>().logoId,
                 ) {
-                    val pullRefreshState = rememberPullRefreshState(allVm.isSearching, onRefresh = {})
-                    Box(
-                        modifier = Modifier.pullRefresh(pullRefreshState, false)
+                    OtakuPullToRefreshBox(
+                        isRefreshing = allVm.isSearching,
+                        onRefresh = {},
+                        enabled = { false },
                     ) {
                         info.SearchListView(
                             list = allVm.searchList,
@@ -206,15 +206,6 @@ fun AllView(
                             paddingValues = PaddingValues(0.dp),
                             modifier = Modifier
                         ) { navController.navigateToDetails(it) }
-
-                        PullRefreshIndicator(
-                            refreshing = allVm.isSearching,
-                            state = pullRefreshState,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            backgroundColor = M3MaterialTheme.colorScheme.background,
-                            contentColor = M3MaterialTheme.colorScheme.onBackground,
-                            scale = true
-                        )
                     }
                 }
             }
@@ -269,7 +260,7 @@ fun AllView(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AllScreen(
     isRefreshing: Boolean,
@@ -287,12 +278,16 @@ fun AllScreen(
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
     val context = LocalContext.current
-    val pullRefreshState = rememberPullRefreshState(isRefreshing, onRefresh = { source?.let { onReset(context, it) } })
+    val pullRefreshState = rememberPullToRefreshState()
     NormalOtakuScaffold { p ->
         Box(
             modifier = modifier
                 .padding(p)
-                .pullRefresh(pullRefreshState)
+                .pullToRefresh(
+                    state = pullRefreshState,
+                    isRefreshing = isRefreshing,
+                    onRefresh = { source?.let { onReset(context, it) } }
+                )
         ) {
             if (sourceList.isEmpty()) {
                 Box(Modifier.padding(paddingValues)) {
@@ -311,13 +306,10 @@ fun AllScreen(
                     modifier = Modifier
                 ) { navController.navigateToDetails(it) }
             }
-            PullRefreshIndicator(
-                refreshing = isRefreshing,
+            OtakuPullToRefreshDefaults.ScalingIndicator(
+                isRefreshing = isRefreshing,
                 state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter),
-                backgroundColor = M3MaterialTheme.colorScheme.background,
-                contentColor = M3MaterialTheme.colorScheme.onBackground,
-                scale = true
+                modifier = Modifier.align(Alignment.TopCenter)
             )
         }
 

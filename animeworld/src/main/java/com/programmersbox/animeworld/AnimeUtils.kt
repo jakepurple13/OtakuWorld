@@ -16,19 +16,32 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FractionalThreshold
-import androidx.compose.material.rememberSwipeableState
-import androidx.compose.material.swipeable
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -68,7 +81,7 @@ fun Context.navigateToVideoPlayer(
     assetFileStringUri: String?,
     videoName: String?,
     downloadOrStream: Boolean,
-    referer: String = ""
+    referer: String = "",
 ) {
     if (runBlocking { useNewPlayerFlow.first() }) {
         VideoViewModel.navigateToVideoPlayer(
@@ -185,7 +198,7 @@ class VideoGet private constructor(private val videoContex: Context) {
 
     private fun ContentResolver.registerObserver(
         uri: Uri,
-        observer: (selfChange: Boolean) -> Unit
+        observer: (selfChange: Boolean) -> Unit,
     ): ContentObserver {
         val contentObserver = object : ContentObserver(Handler()) {
             override fun onChange(selfChange: Boolean) {
@@ -295,7 +308,7 @@ class VideoGet private constructor(private val videoContex: Context) {
 
 enum class SlideState { Start, End }
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalFoundationApi::class)
 @ExperimentalAnimationApi
 @Composable
 fun SlideTo(
@@ -310,14 +323,26 @@ fun SlideTo(
     endIcon: @Composable () -> Unit,
     widthAnimationMillis: Int = 300,
     elevation: Dp = 0.dp,
-    content: @Composable (Float) -> Unit = {}
+    content: @Composable (Float) -> Unit = {},
 ) {
 
     val iconSize = slideHeight - 10.dp
 
     val slideDistance = with(LocalDensity.current) { (slideWidth - iconSize - 15.dp).toPx() }
 
-    val swipeableState = rememberSwipeableState(initialValue = SlideState.Start)
+    val swipeableState = remember {
+        AnchoredDraggableState(
+            initialValue = SlideState.Start,
+            anchors = DraggableAnchors {
+                SlideState.Start at 0f
+                SlideState.End at slideDistance
+            },
+            positionalThreshold = { distance: Float -> distance * 0.5f },
+            velocityThreshold = { 125f },
+            snapAnimationSpec = spring<Float>(),
+            decayAnimationSpec = exponentialDecay<Float>()
+        )
+    }
 
     var flag by remember { mutableStateOf(iconSize) }
 
@@ -326,8 +351,8 @@ fun SlideTo(
     }
 
     val contentAlpha by animateFloatAsState(
-        targetValue = if (swipeableState.offset.value != 0f && swipeableState.offset.value > 0f)
-            (1 - swipeableState.progress.fraction)
+        targetValue = if (swipeableState.offset != 0f && swipeableState.offset > 0f)
+            (1 - swipeableState.progress)
         else 1f, label = ""
     )
 
@@ -363,7 +388,7 @@ fun SlideTo(
                             .fillMaxSize()
                             .alpha(contentAlpha),
                         contentAlignment = Alignment.Center
-                    ) { content(swipeableState.offset.value) }
+                    ) { content(swipeableState.offset) }
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.CenterStart
@@ -374,17 +399,12 @@ fun SlideTo(
                             modifier = Modifier
                                 .size(iconSizeAnimation)
                                 .padding(navigationIconPadding)
-                                .swipeable(
+                                .anchoredDraggable(
                                     state = swipeableState,
-                                    anchors = mapOf(
-                                        0f to SlideState.Start,
-                                        slideDistance to SlideState.End
-                                    ),
-                                    thresholds = { _, _ -> FractionalThreshold(0.9f) },
                                     orientation = Orientation.Horizontal
                                 )
-                                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
-                        ) { navigationIcon(swipeableState.offset.value / slideWidth.value * 90f) }
+                                .offset { IntOffset(swipeableState.offset.roundToInt(), 0) },
+                        ) { navigationIcon(swipeableState.offset / slideWidth.value * 90f) }
                     }
                     AnimatedVisibility(
                         visible = width == slideHeight,

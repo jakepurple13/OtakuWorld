@@ -8,7 +8,7 @@ dragselect = "2.2.7"
 easylauncher = "6.3.0"
 firebaseCrashlyticsGradle = "2.9.9"
 googleServices = "4.4.1"
-haze = "0.7.0"
+haze = "0.7.1"
 kamelImage = "0.9.4"
 kotlin = "2.0.0-RC2"
 latestAboutLibsRelease = "11.1.4"
@@ -16,11 +16,11 @@ coroutinesVersion = "1.8.1-Beta"
 glideVersion = "4.16.0"
 pagingVersion = "3.2.1"
 protobufGradlePlugin = "0.9.4"
-roomVersion = "2.6.1"
-navVersion = "2.8.0-alpha07"
+roomVersion = "2.7.0-alpha01"
+navVersion = "2.8.0-alpha08"
 koinVersion = "3.5.6"
 coil = "2.6.0"
-lifecycle = "2.8.0-beta01"
+lifecycle = "2.8.0-rc01"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
@@ -34,7 +34,7 @@ landscapist = "2.3.3"
 protobufVersion = "4.26.1"
 sketchVersion = "3.2.5"
 activity = "1.9.0"
-composeBomVersion = "2024.04.00-alpha02"
+composeBomVersion = "2024.05.00-alpha01"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -79,11 +79,9 @@ composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref =
 composeUi = { group = "androidx.compose.ui", name = "ui" }
 composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
-composeMaterial = { group = "androidx.compose.material", name = "material" }
 materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
-#materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
 adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
@@ -125,7 +123,7 @@ glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glide
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta01"
 
-androidCore = "androidx.core:core-ktx:1.13.0"
+androidCore = "androidx.core:core-ktx:1.13.1"
 appCompat = "androidx.appcompat:appcompat:1.6.1"
 material = "com.google.android.material:material:1.11.0"
 
@@ -166,7 +164,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.6.2"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.7.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
@@ -188,8 +186,8 @@ toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.0.7"
 sonner = { module = "io.github.dokar3:sonner", version = "0.3.5" }
 
-datastore = "androidx.datastore:datastore:1.1.0"
-datastorePref = "androidx.datastore:datastore-preferences:1.1.0"
+datastore = "androidx.datastore:datastore:1.1.1"
+datastorePref = "androidx.datastore:datastore-preferences:1.1.1"
 
 jsoup = "org.jsoup:jsoup:1.17.2"
 
@@ -276,7 +274,7 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 retrofit = "com.squareup.retrofit2:retrofit:2.11.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
-androidxWebkit = "androidx.webkit:webkit:1.10.0"
+androidxWebkit = "androidx.webkit:webkit:1.11.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.2"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.5"
@@ -300,7 +298,7 @@ profileinstaller = { group = "androidx.profileinstaller", name = "profileinstall
 
 [bundles]
 compose = [
-    "composeUi", "composeUiTooling", "composeFoundation", "composeMaterial",
+    "composeUi", "composeUiTooling", "composeFoundation",
     "composeMaterialIconsCore", "composeMaterialIconsExtended",
     "composeAnimation",
     "composeActivity", "composeLifecycle", "composeLifecycleRuntime",

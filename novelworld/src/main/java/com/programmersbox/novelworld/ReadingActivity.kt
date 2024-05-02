@@ -22,7 +22,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -34,14 +33,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,6 +55,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -111,6 +107,7 @@ import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -223,7 +220,6 @@ class ReadViewModel(
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
     ExperimentalAnimationApi::class
 )
 @Composable
@@ -246,16 +242,7 @@ fun NovelReader(
     }
 
     val scope = rememberCoroutineScope()
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = readVm.isLoadingPages.value,
-        onRefresh = {
-            readVm.loadPages(
-                readVm.list.getOrNull(readVm.currentChapter)
-                    ?.getChapterInfo()
-                    ?.map { it.mapNotNull(Storage::link) }
-            )
-        }
-    )
+    val pullRefreshState = rememberPullToRefreshState()
 
     val settingsHandling = LocalSettingsHandling.current
 
@@ -361,7 +348,7 @@ fun NovelReader(
                                             else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), label = ""
                                         ).value
                                     ),
-                                    shape = MaterialTheme.shapes.medium,
+                                    shape = M3MaterialTheme.shapes.medium,
                                     tonalElevation = 4.dp
                                 ) {
                                     ListItem(
@@ -397,10 +384,16 @@ fun NovelReader(
                 )
             }
         ) { p ->
-            Box(
-                modifier = Modifier
-                    .padding(p)
-                    .pullRefresh(pullRefreshState)
+            OtakuPullToRefreshBox(
+                isRefreshing = readVm.isLoadingPages.value,
+                onRefresh = {
+                    readVm.loadPages(
+                        readVm.list.getOrNull(readVm.currentChapter)
+                            ?.getChapterInfo()
+                            ?.map { it.mapNotNull(Storage::link) }
+                    )
+                },
+                modifier = Modifier.padding(p)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -433,15 +426,6 @@ fun NovelReader(
                         )
                     }
                 }
-
-                PullRefreshIndicator(
-                    refreshing = readVm.isLoadingPages.value,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    backgroundColor = M3MaterialTheme.colorScheme.background,
-                    contentColor = M3MaterialTheme.colorScheme.onBackground,
-                    scale = true
-                )
             }
         }
     }

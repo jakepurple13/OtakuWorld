@@ -4,6 +4,7 @@ plugins {
     id("com.mikepenz.aboutlibraries.plugin")
     `otaku-protobuf`
     alias(libs.plugins.ksp)
+    id("kotlinx-serialization")
     //id("androidx.baselineprofile")
 }
 

@@ -129,7 +129,7 @@ class SettingsHandling(context: Context) {
     fun rememberShowDownload() = preferences.rememberPreference(
         key = { it.showDownload },
         update = { setShowDownload(it) },
-        defaultValue = true
+        defaultValue = false
     )
 
     @Composable

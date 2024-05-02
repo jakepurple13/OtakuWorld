@@ -15,14 +15,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -113,7 +112,6 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") novel_no_firebase_file else novel_file }
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
         LazyColumn {
@@ -141,7 +139,6 @@ class GenericNovel(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class,
         ExperimentalMaterial3Api::class

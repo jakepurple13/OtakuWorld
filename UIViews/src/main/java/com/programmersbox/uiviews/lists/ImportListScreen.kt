@@ -46,9 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.CrossFade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -68,6 +66,7 @@ import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.ToasterUtils
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
@@ -79,9 +78,10 @@ import kotlin.time.Duration
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ImportListScreen(
+    importList: Screen.ImportListScreen,
     listDao: ListDao = LocalCustomListDao.current,
     context: Context = LocalContext.current,
-    vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle(), context) },
+    vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, importList, context) },
 ) {
     val toaster = rememberToasterState()
     val scope = rememberCoroutineScope()
@@ -253,8 +253,9 @@ private fun ImportScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
         val context: Context = LocalContext.current
-        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, SavedStateHandle(), context) }
+        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, Screen.ImportListScreen(""), context) }
         ImportListScreen(
+            importList = Screen.ImportListScreen(""),
             listDao = listDao,
             context = context,
             vm = vm
