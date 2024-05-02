@@ -8,6 +8,8 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import kotlinx.serialization.Serializable
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Serializable
 sealed class Screen(val route: String) {
@@ -111,16 +113,16 @@ sealed class Screen(val route: String) {
     }
 }
 
-fun NavController.navigateToDetails(model: ItemModel) = navigate(
+fun NavController.navigateToDetails1(model: ItemModel) = navigate(
     Screen.DetailsScreen.route + "/${Uri.encode(model.toJson(ApiService::class.java to ApiServiceSerializer()))}"
 ) { launchSingleTop = true }
 
-/*fun NavController.navigateToDetails(model: ItemModel) = navigate(
+fun NavController.navigateToDetails(model: ItemModel) = navigate(
     Screen.DetailsScreen.Details(
-        title = Uri.encode(model.title),
-        description = Uri.encode(model.description),
-        url = Uri.encode(model.url),
-        imageUrl = Uri.encode(model.imageUrl),
-        source = Uri.encode(model.source.serviceName)
+        title = model.title.ifEmpty { "NA" },
+        description = model.description.ifEmpty { "NA" },
+        url = model.url.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) },
+        imageUrl = model.imageUrl.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) },
+        source = model.source.serviceName
     )
-) { launchSingleTop = true }*/
+) { launchSingleTop = true }

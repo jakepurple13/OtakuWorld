@@ -457,11 +457,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
         }
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
-        /*composable<Screen.DetailsScreen.Details>(
+        composable<Screen.DetailsScreen.Details>(
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern =
-                        genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}&title={title}&description={description}&imageUrl={imageUrl}&source={source}&url={url}"
+                    uriPattern = genericInfo.deepLinkUri +
+                            "com.programmersbox.uiviews.utils.Screen.DetailsScreen.Details/{title}/{description}/{url}/{imageUrl}/{source}"
                 }
             ),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
@@ -472,8 +472,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 logo = notificationLogo,
                 windowSize = windowSize
             )
-        }*/
+        }
 
+        //TODO: Test to see if this can be removed!
         composable(
             Screen.DetailsScreen.route + "/{model}",
             deepLinks = listOf(

@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
@@ -14,15 +15,15 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.ApiServiceSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.Screen
 
@@ -37,13 +38,26 @@ interface GenericInfo {
     fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
     fun deepLinkSettings(context: Context): PendingIntent?
 
+    @SuppressLint("RestrictedApi")
     fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
-        //TODO: This needs to be fixed
-        // build details and try
-        // { uri=android-app://androidx.navigation/com.programmersbox.uiviews.utils.Screen.DetailsScreen.Details/...
-        val addon =
-            "&title=${itemModel?.title}&description=${itemModel?.description}&imageUrl=${itemModel?.imageUrl}&source=${itemModel?.source}&url=${itemModel?.url}"
-        return "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}$addon".toUri()
+        @Suppress("UNCHECKED_CAST")
+        val route = Screen.DetailsScreen.Details(
+            title = itemModel?.title ?: "",
+            description = itemModel?.description ?: "",
+            url = itemModel?.url ?: "",
+            imageUrl = itemModel?.imageUrl ?: "",
+            source = itemModel?.source?.serviceName ?: "",
+        ).generateRouteWithArgs(
+            mapOf(
+                "title" to NavType.StringType as NavType<Any?>,
+                "description" to NavType.StringType as NavType<Any?>,
+                "url" to NavType.StringType as NavType<Any?>,
+                "imageUrl" to NavType.StringType as NavType<Any?>,
+                "source" to NavType.StringType as NavType<Any?>,
+            )
+        )
+
+        return "$deepLinkUri$route".toUri()
     }
 
     fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()

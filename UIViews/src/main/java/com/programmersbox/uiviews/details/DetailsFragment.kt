@@ -84,6 +84,7 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
@@ -94,6 +95,40 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class,
+    ExperimentalAnimationApi::class
+)
+@Composable
+fun DetailsScreen(
+    detailInfo: Screen.DetailsScreen.Details,
+    logo: NotificationLogo,
+    windowSize: WindowSizeClass,
+    localContext: Context = LocalContext.current,
+    dao: ItemDao = LocalItemDao.current,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    details: DetailsViewModel = viewModel {
+        DetailsViewModel(
+            details = detailInfo,
+            handle = createSavedStateHandle(),
+            genericInfo = genericInfo,
+            dao = dao,
+            context = localContext
+        )
+    },
+) {
+    DetailsScreen(
+        logo = logo,
+        windowSize = windowSize,
+        localContext = localContext,
+        dao = dao,
+        genericInfo = genericInfo,
+        details = details
+    )
+}
 
 @OptIn(
     ExperimentalMaterial3Api::class,
