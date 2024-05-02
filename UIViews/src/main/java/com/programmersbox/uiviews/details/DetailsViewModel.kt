@@ -25,7 +25,6 @@ import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Job
@@ -42,7 +41,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class DetailsViewModel(
-    details: Screen.DetailsScreen.Details,
+    //details: Screen.DetailsScreen.Details,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     context: Context,
@@ -53,7 +52,7 @@ class DetailsViewModel(
 
     val itemModel: ItemModel? = handle.get<String>("model")
         ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
-        ?: details.toItemModel(sourceRepository, genericInfo)
+    //?: details.toItemModel(sourceRepository, genericInfo)
 
     var info: InfoModel? by mutableStateOf(null)
 

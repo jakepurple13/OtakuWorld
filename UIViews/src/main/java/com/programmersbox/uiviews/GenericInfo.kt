@@ -40,6 +40,7 @@ interface GenericInfo {
     fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
         //TODO: This needs to be fixed
         // build details and try
+        // { uri=android-app://androidx.navigation/com.programmersbox.uiviews.utils.Screen.DetailsScreen.Details/...
         val addon =
             "&title=${itemModel?.title}&description=${itemModel?.description}&imageUrl=${itemModel?.imageUrl}&source=${itemModel?.source}&url=${itemModel?.url}"
         return "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}$addon".toUri()

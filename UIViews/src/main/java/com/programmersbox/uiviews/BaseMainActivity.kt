@@ -457,7 +457,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         }
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
-        composable<Screen.DetailsScreen.Details>(
+        /*composable<Screen.DetailsScreen.Details>(
             deepLinks = listOf(
                 navDeepLink {
                     uriPattern =
@@ -469,6 +469,22 @@ abstract class BaseMainActivity : AppCompatActivity() {
         ) {
             DetailsScreen(
                 detailInfo = it.toRoute(),
+                logo = notificationLogo,
+                windowSize = windowSize
+            )
+        }*/
+
+        composable(
+            Screen.DetailsScreen.route + "/{model}",
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}"
+                }
+            ),
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
+        ) {
+            DetailsScreen(
                 logo = notificationLogo,
                 windowSize = windowSize
             )

@@ -84,7 +84,6 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
@@ -104,7 +103,7 @@ import kotlinx.coroutines.runBlocking
 )
 @Composable
 fun DetailsScreen(
-    detailInfo: Screen.DetailsScreen.Details,
+    //detailInfo: Screen.DetailsScreen.Details,
     logo: NotificationLogo,
     windowSize: WindowSizeClass,
     localContext: Context = LocalContext.current,
@@ -112,7 +111,7 @@ fun DetailsScreen(
     genericInfo: GenericInfo = LocalGenericInfo.current,
     details: DetailsViewModel = viewModel {
         DetailsViewModel(
-            details = detailInfo,
+            //details = detailInfo,
             handle = createSavedStateHandle(),
             genericInfo = genericInfo,
             dao = dao,

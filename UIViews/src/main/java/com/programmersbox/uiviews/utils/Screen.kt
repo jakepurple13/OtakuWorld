@@ -1,7 +1,10 @@
 package com.programmersbox.uiviews.utils
 
+import android.net.Uri
 import androidx.navigation.NavController
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.gsonutils.toJson
+import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
 import kotlinx.serialization.Serializable
@@ -49,13 +52,14 @@ sealed class Screen(val route: String) {
             fun toItemModel(
                 sourceRepository: SourceRepository,
                 genericInfo: GenericInfo,
-            ): ItemModel? = (sourceRepository.toSourceByApiServiceName(source)?.apiService ?: genericInfo.toSource(source))
+            ): ItemModel? = Uri.decode(source)
+                .let { sourceRepository.toSourceByApiServiceName(it)?.apiService ?: genericInfo.toSource(it) }
                 ?.let {
                     ItemModel(
-                        title = title,
-                        description = description,
-                        url = url,
-                        imageUrl = imageUrl,
+                        title = Uri.decode(title),
+                        description = Uri.decode(description),
+                        url = Uri.decode(url),
+                        imageUrl = Uri.decode(imageUrl),
                         source = it
                     )
                 }
@@ -108,11 +112,15 @@ sealed class Screen(val route: String) {
 }
 
 fun NavController.navigateToDetails(model: ItemModel) = navigate(
-    Screen.DetailsScreen.Details(
-        title = model.title,
-        description = model.description,
-        url = model.url,
-        imageUrl = model.imageUrl,
-        source = model.source.serviceName
-    )
+    Screen.DetailsScreen.route + "/${Uri.encode(model.toJson(ApiService::class.java to ApiServiceSerializer()))}"
 ) { launchSingleTop = true }
+
+/*fun NavController.navigateToDetails(model: ItemModel) = navigate(
+    Screen.DetailsScreen.Details(
+        title = Uri.encode(model.title),
+        description = Uri.encode(model.description),
+        url = Uri.encode(model.url),
+        imageUrl = Uri.encode(model.imageUrl),
+        source = Uri.encode(model.source.serviceName)
+    )
+) { launchSingleTop = true }*/
