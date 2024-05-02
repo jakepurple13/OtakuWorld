@@ -34,7 +34,7 @@ landscapist = "2.3.3"
 protobufVersion = "4.26.1"
 sketchVersion = "3.2.5"
 activity = "1.9.0"
-composeBomVersion = "2024.05.00-alpha01"
+composeBomVersion = "2024.05.00-SNAPSHOT"
 
 ### MangaWorld
 piasy = "1.8.1"
