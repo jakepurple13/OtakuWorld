@@ -192,7 +192,7 @@ datastorePref = "androidx.datastore:datastore-preferences:1.1.1"
 jsoup = "org.jsoup:jsoup:1.17.2"
 
 crashlytics = "com.google.firebase:firebase-crashlytics:18.6.4"
-analytics = "com.google.firebase:firebase-analytics:21.6.2"
+analytics = "com.google.firebase:firebase-analytics:22.0.0"
 playServices = "com.google.android.gms:play-services-auth:21.1.0"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
