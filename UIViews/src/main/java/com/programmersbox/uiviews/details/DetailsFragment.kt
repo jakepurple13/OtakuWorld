@@ -50,11 +50,9 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -208,12 +206,11 @@ fun DetailsScreen(
 
         val shareChapter by handling.rememberShareChapter()
         val usePalette by handling.rememberUsePalette()
-        var swatchInfo by remember(usePalette) { mutableStateOf<SwatchInfo?>(null) }
 
         CompositionLocalProvider(
-            LocalSwatchInfo provides remember(swatchInfo) { SwatchInfoColors(swatchInfo) },
+            LocalSwatchInfo provides remember(details.swatchInfo, usePalette) { SwatchInfoColors(details.swatchInfo.takeIf { usePalette }) },
             LocalSwatchChange provides rememberUpdatedState(
-                newValue = { it: SwatchInfo? -> if (usePalette) swatchInfo = it }
+                newValue = { it: SwatchInfo? -> if (usePalette) details.swatchInfo = it }
             ).value
         ) {
             if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {

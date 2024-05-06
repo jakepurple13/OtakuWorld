@@ -459,10 +459,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
         composable<Screen.DetailsScreen.Details>(
             deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = genericInfo.deepLinkUri +
-                            "com.programmersbox.uiviews.utils.Screen.DetailsScreen.Details/{title}/{description}/{url}/{imageUrl}/{source}"
-                }
+                navDeepLink<Screen.DetailsScreen.Details>(
+                    basePath = genericInfo.deepLinkUri + Screen.DetailsScreen.Details::class.qualifiedName
+                )
             ),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
@@ -475,7 +474,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         }
 
         //TODO: Test to see if this can be removed!
-        composable(
+        /*composable(
             Screen.DetailsScreen.route + "/{model}",
             deepLinks = listOf(
                 navDeepLink {
@@ -489,7 +488,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 logo = notificationLogo,
                 windowSize = windowSize
             )
-        }
+        }*/
 
         chromeCustomTabs()
 

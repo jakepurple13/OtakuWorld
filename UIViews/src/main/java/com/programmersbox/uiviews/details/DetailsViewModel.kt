@@ -57,6 +57,8 @@ class DetailsViewModel(
 
     var info: InfoModel? by mutableStateOf(null)
 
+    var swatchInfo by mutableStateOf<SwatchInfo?>(null)
+
     private var addRemoveFavoriteJob: Job? = null
 
     private val itemListener = FirebaseDb.FirebaseListener()
