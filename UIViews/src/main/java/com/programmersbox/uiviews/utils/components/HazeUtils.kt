@@ -66,7 +66,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.regular()),
+                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.thin()),
                 ) { topBar() }
             } else {
                 topBar()
@@ -77,7 +77,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.regular()),
+                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.thin()),
                 ) { bottomBar() }
             } else {
                 bottomBar()
