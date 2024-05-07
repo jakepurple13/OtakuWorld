@@ -406,7 +406,6 @@ fun NotificationsScreen(
                                                             }
                                                         }
                                                     },
-                                                    modifier = Modifier.animateItem()
                                                 )
                                             }
                                         }
@@ -548,9 +547,7 @@ private fun DateSort(
                                 item.second.chunked(itemsInRow).forEach {
                                     Row(
                                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateItem()
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         it.forEach { i ->
                                             var showPopup by remember { mutableStateOf(false) }

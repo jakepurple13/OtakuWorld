@@ -30,6 +30,8 @@ import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 private val LocalScaffoldContentPadding = staticCompositionLocalOf { PaddingValues(0.dp) }
 
@@ -39,6 +41,7 @@ private val LocalScaffoldContentPadding = staticCompositionLocalOf { PaddingValu
  * Taken from https://github.com/chrisbanes/tivi/blob/main/common/ui/compose/src/commonMain/kotlin/app/tivi/common/compose/TiviScaffold.kt
  * Until Haze gets a GlassScaffold, I'll be using that
  */
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun HazeScaffold(
     modifier: Modifier = Modifier,
@@ -59,16 +62,26 @@ fun HazeScaffold(
     NestedScaffold(
         modifier = modifier,
         topBar = {
-            Box(
-                modifier = Modifier.thenIf(blurTopBar) { hazeChild(hazeState) },
-                content = { topBar() },
-            )
+            if (blurTopBar) {
+                // We explicitly only want to add a Box if we are blurring.
+                // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
+                Box(
+                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.regular()),
+                ) { topBar() }
+            } else {
+                topBar()
+            }
         },
         bottomBar = {
-            Box(
-                modifier = Modifier.thenIf(blurBottomBar) { hazeChild(hazeState) },
-                content = { bottomBar() },
-            )
+            if (blurBottomBar) {
+                // We explicitly only want to add a Box if we are blurring.
+                // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
+                Box(
+                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.regular()),
+                ) { bottomBar() }
+            } else {
+                bottomBar()
+            }
         },
         snackbarHost = snackbarHost,
         floatingActionButton = floatingActionButton,

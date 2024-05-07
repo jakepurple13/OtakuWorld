@@ -113,6 +113,7 @@ dependencies {
     api(projects.sharedutils.extensionloader)
 
     api(libs.haze)
+    api(libs.hazeMaterials)
 
     implementation(libs.compose.collapsable)
 

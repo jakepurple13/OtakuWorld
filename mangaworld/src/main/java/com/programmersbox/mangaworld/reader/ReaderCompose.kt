@@ -1,6 +1,5 @@
 package com.programmersbox.mangaworld.reader
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
 import android.widget.Toast
@@ -166,11 +165,14 @@ import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import io.ktor.client.request.header
@@ -184,7 +186,6 @@ import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.koin.compose.koinInject
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
@@ -301,6 +302,8 @@ fun ReadView(
         }
     }
 
+    val hazeState = remember { HazeState() }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -310,7 +313,7 @@ fun ReadView(
         },
         gesturesEnabled = readVm.list.size > 1
     ) {
-        HazeScaffold(
+        Scaffold(
             topBar = {
                 AnimatedVisibility(
                     visible = showItems,
@@ -325,7 +328,8 @@ fun ReadView(
                             ?.name
                             ?: "Ch ${readVm.list.size - readVm.currentChapter}",
                         playingStartAction = startAction,
-                        playingMiddleAction = middleAction
+                        playingMiddleAction = middleAction,
+                        modifier = Modifier.hazeChild(hazeState)
                     )
                 }
             },
@@ -339,35 +343,41 @@ fun ReadView(
                         onPageSelectClick = { showBottomSheet = true },
                         onSettingsClick = { settingsPopup = true },
                         chapterChange = ::showToast,
-                        vm = readVm
+                        vm = readVm,
+                        modifier = Modifier.hazeChild(hazeState)
                     )
                 }
             },
-            blurTopBar = true,
-            blurBottomBar = true
         ) { p ->
-            OtakuPullToRefreshBox(
-                isRefreshing = readVm.isLoadingPages,
-                onRefresh = readVm::refresh,
-                paddingValues = p
+            Box(
+                modifier = Modifier.haze(
+                    state = hazeState,
+                    style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.background),
+                ),
             ) {
-                val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                Crossfade(targetState = listOrPager, label = "") {
-                    if (it) {
-                        ListView(
-                            listState = listState,
-                            pages = pages,
-                            readVm = readVm,
-                            itemSpacing = spacing,
-                            paddingValues = PaddingValues(bottom = p.calculateBottomPadding())
-                        ) { readVm.showInfo = !readVm.showInfo }
-                    } else {
-                        PagerView(
-                            pagerState = pagerState,
-                            pages = pages,
-                            vm = readVm,
-                            itemSpacing = spacing,
-                        ) { readVm.showInfo = !readVm.showInfo }
+                OtakuPullToRefreshBox(
+                    isRefreshing = readVm.isLoadingPages,
+                    onRefresh = readVm::refresh,
+                    paddingValues = p
+                ) {
+                    val spacing = LocalContext.current.dpToPx(paddingPage).dp
+                    Crossfade(targetState = listOrPager, label = "") {
+                        if (it) {
+                            ListView(
+                                listState = listState,
+                                pages = pages,
+                                readVm = readVm,
+                                itemSpacing = spacing,
+                                paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
+                            ) { readVm.showInfo = !readVm.showInfo }
+                        } else {
+                            PagerView(
+                                pagerState = pagerState,
+                                pages = pages,
+                                vm = readVm,
+                                itemSpacing = spacing,
+                            ) { readVm.showInfo = !readVm.showInfo }
+                        }
                     }
                 }
             }

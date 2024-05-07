@@ -67,6 +67,7 @@ firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlyti
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+hazeMaterials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
 kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
