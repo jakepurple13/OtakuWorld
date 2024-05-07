@@ -81,7 +81,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -102,8 +105,8 @@ import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
-import com.programmersbox.uiviews.utils.components.GlideGradientImage
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
@@ -250,9 +253,16 @@ fun OtakuCustomListScreen(
         bannerContent = {
             ListItem(
                 leadingContent = {
-                    GlideGradientImage(
-                        model = it?.imageUrl,
-                        placeholder = logoDrawable.logoId,
+                    CoilGradientImage(
+                        model = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(it?.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .placeholder(logoDrawable.logoId)
+                                .error(logoDrawable.logoId)
+                                .build()
+                        ),
                         modifier = Modifier
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             .clip(MaterialTheme.shapes.small)

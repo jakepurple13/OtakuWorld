@@ -46,14 +46,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bumptech.glide.integration.compose.CrossFade
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.integration.compose.placeholder
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.sharedutils.AppLogo
@@ -222,13 +223,16 @@ private fun CustomItem(
             .padding(horizontal = 4.dp)
     ) {
         Row {
-            GlideImage(
-                model = item.imageUrl,
-                transition = CrossFade,
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(item.imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .crossfade(true)
+                    .build(),
+                placeholder = rememberDrawablePainter(logoDrawable),
+                error = rememberDrawablePainter(logoDrawable),
                 contentScale = ContentScale.Crop,
                 contentDescription = item.title,
-                loading = placeholder(logoDrawable),
-                failure = placeholder(logoDrawable),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
