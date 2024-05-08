@@ -317,8 +317,8 @@ fun ReadView(
             topBar = {
                 AnimatedVisibility(
                     visible = showItems,
-                    enter = slideInVertically() + fadeIn(),
-                    exit = slideOutVertically() + fadeOut()
+                    enter = slideInVertically { -it } + fadeIn(),
+                    exit = slideOutVertically { -it } + fadeOut()
                 ) {
                     ReaderTopBar(
                         pages = pages,
@@ -336,8 +336,8 @@ fun ReadView(
             bottomBar = {
                 AnimatedVisibility(
                     visible = showItems,
-                    enter = slideInVertically { it / 2 } + fadeIn(),
-                    exit = slideOutVertically { it / 2 } + fadeOut()
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut()
                 ) {
                     BottomBar(
                         onPageSelectClick = { showBottomSheet = true },

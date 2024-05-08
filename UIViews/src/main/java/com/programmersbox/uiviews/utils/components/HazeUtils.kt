@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -55,10 +56,11 @@ fun HazeScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     blurTopBar: Boolean = false,
     blurBottomBar: Boolean = false,
+    hazeState: HazeState = remember { HazeState() },
+    topBarStyle: HazeStyle = HazeMaterials.thin(),
+    bottomBarStyle: HazeStyle = topBarStyle,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val hazeState = remember { HazeState() }
-
     NestedScaffold(
         modifier = modifier,
         topBar = {
@@ -66,7 +68,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.thin()),
+                    modifier = Modifier.hazeChild(state = hazeState, style = topBarStyle),
                 ) { topBar() }
             } else {
                 topBar()
@@ -77,7 +79,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = HazeMaterials.thin()),
+                    modifier = Modifier.hazeChild(state = hazeState, style = bottomBarStyle),
                 ) { bottomBar() }
             } else {
                 bottomBar()
