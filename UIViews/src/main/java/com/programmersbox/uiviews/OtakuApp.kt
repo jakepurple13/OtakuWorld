@@ -51,14 +51,16 @@ abstract class OtakuApp : Application() {
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
-        FirebaseApp.initializeApp(this)
+        runCatching {
+            FirebaseApp.initializeApp(this)
 
-        Firebase.crashlytics.setCustomKeys {
-            key("buildType", BuildConfig.BUILD_TYPE)
-            key("buildFlavor", BuildConfig.FLAVOR)
+            Firebase.crashlytics.setCustomKeys {
+                key("buildType", BuildConfig.BUILD_TYPE)
+                key("buildFlavor", BuildConfig.FLAVOR)
+            }
+            Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
+            Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
         }
-        Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
-        Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
 
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)

@@ -206,21 +206,24 @@ fun RecentView(
                         ) {
                             when {
                                 sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
-                                recentVm.sourceList.isEmpty() -> Box(Modifier.padding(p)) { info.ComposeShimmerItem() }
+                                recentVm.sourceList.isEmpty() -> Box(
+                                    Modifier
+                                        .padding(p)
+                                        .fillMaxSize()
+                                ) { info.ComposeShimmerItem() }
+
                                 else -> {
-                                    Box {
-                                        info.ItemListView(
-                                            list = recentVm.sourceList,
-                                            listState = state,
-                                            favorites = recentVm.favoriteList,
-                                            paddingValues = p,
-                                            onLongPress = { item, c ->
-                                                newItemModel(if (c == ComponentState.Pressed) item else null)
-                                                showBanner = c == ComponentState.Pressed
-                                            },
-                                            modifier = Modifier.fillMaxSize()
-                                        ) { navController.navigateToDetails(it) }
-                                    }
+                                    info.ItemListView(
+                                        list = recentVm.sourceList,
+                                        listState = state,
+                                        favorites = recentVm.favoriteList,
+                                        paddingValues = p,
+                                        onLongPress = { item, c ->
+                                            newItemModel(if (c == ComponentState.Pressed) item else null)
+                                            showBanner = c == ComponentState.Pressed
+                                        },
+                                        modifier = Modifier.fillMaxSize()
+                                    ) { navController.navigateToDetails(it) }
                                 }
                             }
                         }

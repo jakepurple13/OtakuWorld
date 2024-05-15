@@ -38,8 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -55,7 +54,7 @@ class CrashActivity : ComponentActivity() {
         enableEdgeToEdge()
         val exception = GlobalExceptionHandler.getThrowableFromIntent(intent)
         exception?.printStackTrace()
-        exception?.let { Firebase.crashlytics.recordException(it) }
+        exception?.let { recordFirebaseException(it) }
         setContent {
             val darkTheme = isSystemInDarkTheme()
             val colorScheme = when {

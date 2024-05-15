@@ -8,8 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
@@ -27,6 +25,7 @@ import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
@@ -78,7 +77,7 @@ class DetailsViewModel(
         }
             ?.dispatchIo()
             ?.catch {
-                Firebase.crashlytics.recordException(it)
+                recordFirebaseException(it)
                 it.printStackTrace()
                 context.showErrorToast()
             }

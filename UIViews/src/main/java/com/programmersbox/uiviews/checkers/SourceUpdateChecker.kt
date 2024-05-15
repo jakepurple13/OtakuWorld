@@ -5,8 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.GroupBehavior
@@ -16,6 +14,7 @@ import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.recordFirebaseException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -88,7 +87,7 @@ class SourceUpdateChecker(context: Context, workerParams: WorkerParameters) : Co
             Result.success()
         } catch (e: Exception) {
             e.printStackTrace()
-            Firebase.crashlytics.recordException(e)
+            recordFirebaseException(e)
             Result.success()
         }
     }
