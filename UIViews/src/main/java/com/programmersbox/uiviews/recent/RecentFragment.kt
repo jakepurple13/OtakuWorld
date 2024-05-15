@@ -218,7 +218,7 @@ fun RecentView(
                                                 newItemModel(if (c == ComponentState.Pressed) item else null)
                                                 showBanner = c == ComponentState.Pressed
                                             },
-                                            modifier = Modifier
+                                            modifier = Modifier.fillMaxSize()
                                         ) { navController.navigateToDetails(it) }
                                     }
                                 }

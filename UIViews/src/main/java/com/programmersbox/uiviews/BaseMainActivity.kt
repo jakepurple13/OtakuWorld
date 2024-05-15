@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -127,6 +129,8 @@ import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
+import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -162,7 +166,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @OptIn(
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -235,14 +239,17 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         contentWindowInsets = WindowInsets(0.dp),
                         blurBottomBar = true
                     ) { innerPadding ->
-                        CompositionLocalProvider(
-                            LocalNavHostPadding provides innerPadding
-                        ) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = Screen.RecentScreen,
-                                modifier = Modifier.fillMaxSize()
-                            ) { navGraph(customPreferences, windowSize) }
+                        SharedTransitionLayout {
+                            CompositionLocalProvider(
+                                LocalNavHostPadding provides innerPadding,
+                                LocalSharedElementScope provides remember { this@SharedTransitionLayout }
+                            ) {
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = Screen.RecentScreen,
+                                    modifier = Modifier.fillMaxSize()
+                                ) { navGraph(customPreferences, windowSize) }
+                            }
                         }
                     }
                 }
@@ -449,15 +456,16 @@ abstract class BaseMainActivity : AppCompatActivity() {
         customPreferences: ComposeSettingsDsl,
         windowSize: WindowSizeClass,
     ) {
-        composable<Screen.RecentScreen> { RecentView() }
-        composable<Screen.AllScreen> {
+        animatedScopeComposable<Screen.RecentScreen> { RecentView() }
+        animatedScopeComposable<Screen.AllScreen> {
             AllView(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }
+
         settings(customPreferences, windowSize) { with(genericInfo) { settingsNavSetup() } }
 
-        composable<Screen.DetailsScreen.Details>(
+        animatedScopeComposable<Screen.DetailsScreen.Details>(
             deepLinks = listOf(
                 navDeepLink<Screen.DetailsScreen.Details>(
                     basePath = genericInfo.deepLinkUri + Screen.DetailsScreen.Details::class.qualifiedName
@@ -472,23 +480,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 windowSize = windowSize
             )
         }
-
-        //TODO: Test to see if this can be removed!
-        /*composable(
-            Screen.DetailsScreen.route + "/{model}",
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = genericInfo.deepLinkUri + "${Screen.DetailsScreen.route}/{model}"
-                }
-            ),
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-        ) {
-            DetailsScreen(
-                logo = notificationLogo,
-                windowSize = windowSize
-            )
-        }*/
 
         chromeCustomTabs()
 
@@ -559,12 +550,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { MoreSettingsScreen() }
 
-            composable<Screen.HistoryScreen>(
+            animatedScopeComposable<Screen.HistoryScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) { HistoryUi() }
 
-            composable<Screen.FavoriteScreen>(
+            animatedScopeComposable<Screen.FavoriteScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
             ) {
@@ -589,7 +580,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 )
             }
 
-            composable<Screen.CustomListScreen>(
+            animatedScopeComposable<Screen.CustomListScreen>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
             ) {
@@ -600,7 +591,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             composable<Screen.ImportListScreen> { ImportListScreen(it.toRoute()) }
 
-            composable<Screen.NotificationScreen>(
+            animatedScopeComposable<Screen.NotificationScreen>(
                 deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
@@ -639,7 +630,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable<Screen.CustomListScreen.Home>(
+        animatedScopeComposable<Screen.CustomListScreen.Home>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
         ) {
@@ -648,7 +639,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable<Screen.NotificationScreen.Home>(
+        animatedScopeComposable<Screen.NotificationScreen.Home>(
             deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
@@ -661,7 +652,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
-        composable<Screen.FavoriteScreen.Home>(
+        animatedScopeComposable<Screen.FavoriteScreen.Home>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {

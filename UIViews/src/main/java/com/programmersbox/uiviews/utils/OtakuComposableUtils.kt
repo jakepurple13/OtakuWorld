@@ -59,6 +59,9 @@ import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
+import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
+import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
+import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360
@@ -102,7 +105,13 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f),
+            .bounceClick(.9f)
+            .customSharedElement(
+                OtakuImageElement(
+                    origin = imageUrl,
+                    source = name
+                )
+            ),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -148,6 +157,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(name, name))
                 )
             }
 
@@ -276,7 +286,14 @@ fun M3CoverCard(
                     .build(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
+                    .customSharedElement(
+                        OtakuImageElement(
+                            origin = imageUrl,
+                            source = name
+                        )
+                    )
             )
 
             Box(
@@ -303,6 +320,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(name, name))
                 )
             }
 
@@ -349,7 +367,14 @@ fun M3CoverCard(
                     .build(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
+                    .customSharedElement(
+                        OtakuImageElement(
+                            origin = imageUrl,
+                            source = name
+                        )
+                    )
             )
 
             Box(
@@ -376,6 +401,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(name, name))
                 )
             }
 

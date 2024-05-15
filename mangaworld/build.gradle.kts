@@ -79,4 +79,6 @@ dependencies {
     implementation(libs.glideCompose)
 
     implementation(libs.zoomableModifier)
+
+    implementation("io.github.panpf.zoomimage:zoomimage-compose-glide:1.0.2")
 }

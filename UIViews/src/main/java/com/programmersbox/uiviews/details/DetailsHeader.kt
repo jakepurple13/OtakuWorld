@@ -67,6 +67,9 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.fadeInAnimation
 import com.programmersbox.uiviews.utils.scaleRotateOffsetReset
+import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
+import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
+import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
 import com.programmersbox.uiviews.utils.toComposeColor
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
@@ -159,7 +162,14 @@ internal fun DetailsHeader(
             Row {
                 Surface(
                     shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .customSharedElement(
+                            OtakuImageElement(
+                                origin = model.imageUrl,
+                                source = model.title,
+                            )
+                        )
                 ) {
                     val latestSwatch by rememberUpdatedState(newValue = swatchInfo)
                     GlideImage(
@@ -203,6 +213,12 @@ internal fun DetailsHeader(
                         model.title,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
+                            .customSharedElement(
+                                OtakuTitleElement(
+                                    origin = model.title,
+                                    source = model.title
+                                )
+                            )
                             .clickable(
                                 interactionSource = null,
                                 indication = ripple()
