@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.utils.sharedelements
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -21,18 +22,44 @@ import kotlin.reflect.KType
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedElementScope = staticCompositionLocalOf<SharedTransitionScope> { error("") }
-val LocalNavigationAnimatedScope = staticCompositionLocalOf<AnimatedContentScope?> { null }
+val LocalNavigationAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-fun Modifier.customSharedElement(key: Any?) = composed {
+fun Modifier.customSharedElement(
+    key: Any?,
+    /*boundsTransform: BoundsTransform = BoundsTransform { _, _ ->
+        spring(
+            stiffness = Spring.StiffnessMediumLow,
+            visibilityThreshold = Rect.VisibilityThreshold
+        )
+    },
+    placeHolderSize: PlaceHolderSize = contentSize,
+    renderInOverlayDuringTransition: Boolean = true,
+    zIndexInOverlay: Float = 0f,
+    clipInOverlayDuringTransition: OverlayClip = object : OverlayClip {
+        override fun getClipPath(
+            state: SharedContentState,
+            bounds: Rect,
+            layoutDirection: LayoutDirection,
+            density: Density,
+        ): Path? {
+            return state.parentSharedContentState?.clipPathInOverlay
+        }
+    },*/
+) = composed {
     val scope = LocalSharedElementScope.current
     val animatedScope = LocalNavigationAnimatedScope.current
 
     if (animatedScope != null && key != null) {
         with(scope) {
             sharedElement(
-                rememberSharedContentState(key), //TODO: Make this accept a class with more information!
-                animatedScope,
+                state = rememberSharedContentState(key = key),
+                animatedVisibilityScope = animatedScope,
+                /*boundsTransform = boundsTransform,
+                placeHolderSize = placeHolderSize,
+                renderInOverlayDuringTransition = renderInOverlayDuringTransition,
+                zIndexInOverlay = zIndexInOverlay,
+                clipInOverlayDuringTransition = clipInOverlayDuringTransition*/
             )
         }
     } else {
@@ -56,6 +83,32 @@ public inline fun <reified T : Any> NavGraphBuilder.animatedScopeComposable(
     noinline content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
 ) = composable<T>(
     typeMap = typeMap,
+    deepLinks = deepLinks,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    popEnterTransition = popEnterTransition,
+    popExitTransition = popExitTransition,
+    sizeTransform = sizeTransform,
+) {
+    CompositionLocalProvider(LocalNavigationAnimatedScope provides this) { content(it) }
+}
+
+public fun NavGraphBuilder.animatedScopeComposable(
+    route: String,
+    deepLinks: List<NavDeepLink> = emptyList(),
+    enterTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() ->
+    @JvmSuppressWildcards EnterTransition?)? = null,
+    exitTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() ->
+    @JvmSuppressWildcards ExitTransition?)? = null,
+    popEnterTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() ->
+    @JvmSuppressWildcards EnterTransition?)? = enterTransition,
+    popExitTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() ->
+    @JvmSuppressWildcards ExitTransition?)? = exitTransition,
+    sizeTransform: (AnimatedContentTransitionScope<NavBackStackEntry>.() ->
+    @JvmSuppressWildcards SizeTransform?)? = null,
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
+) = composable(
+    route = route,
     deepLinks = deepLinks,
     enterTransition = enterTransition,
     exitTransition = exitTransition,

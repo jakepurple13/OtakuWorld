@@ -242,7 +242,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         SharedTransitionLayout {
                             CompositionLocalProvider(
                                 LocalNavHostPadding provides innerPadding,
-                                LocalSharedElementScope provides remember { this@SharedTransitionLayout }
+                                LocalSharedElementScope provides this@SharedTransitionLayout
                             ) {
                                 NavHost(
                                     navController = navController,
