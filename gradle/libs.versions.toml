@@ -2,7 +2,7 @@
 #gradle = "8.5.0-alpha05"
 gradle = "8.4.0"
 
-kspVersion = "2.0.0-RC3-1.0.20"
+kspVersion = "2.0.0-RC3-1.0.21-SNAPSHOT"
 
 androidxBaselineprofileGradlePlugin = "1.2.0"
 composeCollapsable = "0.3.0"
