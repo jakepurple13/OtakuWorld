@@ -1,6 +1,6 @@
 [versions]
 #gradle = "8.5.0-alpha05"
-gradle = "8.4.0"
+gradle = "8.4.1"
 
 kspVersion = "2.0.0-RC3-1.0.20"
 
