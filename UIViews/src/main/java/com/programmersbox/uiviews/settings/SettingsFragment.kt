@@ -628,7 +628,7 @@ private fun Modifier.click(action: () -> Unit): Modifier = clickable(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SettingsScaffold(
+fun SettingsScaffold(
     title: String,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {

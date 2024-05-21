@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.MangaSettings
 import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
@@ -87,6 +88,13 @@ class MangaSettingsHandling(context: Context) {
         key = { it.listOrPager },
         update = { setListOrPager(it) },
         defaultValue = true
+    )
+
+    @Composable
+    fun rememberImageLoaderType() = preferences.rememberPreference(
+        key = { it.imageLoaderType },
+        update = { setImageLoaderType(it) },
+        defaultValue = ImageLoaderType.Kamel
     )
 
     inner class SettingInfo<T>(

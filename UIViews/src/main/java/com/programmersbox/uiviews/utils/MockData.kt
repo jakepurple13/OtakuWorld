@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
@@ -163,10 +164,16 @@ val MockApiService = object : ApiService {
     override val baseUrl: String = ""
 }
 
+class AmoledProvider : PreviewParameterProvider<Boolean> {
+    override val values: Sequence<Boolean> =
+        sequenceOf(true, false)
+}
+
 @Composable
 fun PreviewTheme(
     navController: NavHostController = rememberNavController(),
     genericInfo: GenericInfo = MockInfo,
+    isAmoledMode: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -208,6 +215,16 @@ fun PreviewTheme(
                     primary = Color(0xff2196F3),
                     secondary = Color(0xff90CAF9)
                 )
+            }.let {
+                if (isAmoledMode && darkTheme) {
+                    it.copy(
+                        surface = Color.Black,
+                        inverseSurface = Color.White,
+                        background = Color.Black
+                    )
+                } else {
+                    it
+                }
             }
         ) {
             CompositionLocalProvider(

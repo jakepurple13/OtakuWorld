@@ -65,6 +65,7 @@ import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -102,6 +103,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -143,11 +145,13 @@ import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
+import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
+import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.CategorySetting
@@ -175,7 +179,6 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import io.ktor.client.request.header
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
@@ -226,6 +229,8 @@ fun ReadView(
     val paddingPage by mangaSettingsHandling.pagePadding
         .flow
         .collectAsStateWithLifecycle(initialValue = 4)
+
+    val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
 
     var startAction by mangaSettingsHandling.rememberPlayingStartAction()
 
@@ -369,6 +374,7 @@ fun ReadView(
                                 readVm = readVm,
                                 itemSpacing = spacing,
                                 paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
+                                imageLoaderType = imageLoaderType,
                             ) { readVm.showInfo = !readVm.showInfo }
                         } else {
                             PagerView(
@@ -376,6 +382,7 @@ fun ReadView(
                                 pages = pages,
                                 vm = readVm,
                                 itemSpacing = spacing,
+                                imageLoaderType = imageLoaderType,
                             ) { readVm.showInfo = !readVm.showInfo }
                         }
                     }
@@ -563,6 +570,7 @@ fun ListView(
     readVm: ReadViewModel,
     itemSpacing: Dp,
     paddingValues: PaddingValues,
+    imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -571,7 +579,7 @@ fun ListView(
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pages, readVm, onClick) }
+    ) { reader(pages, readVm, onClick, imageLoaderType) }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -581,6 +589,7 @@ fun PagerView(
     pages: List<String>,
     vm: ReadViewModel,
     itemSpacing: Dp,
+    imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -592,7 +601,7 @@ fun PagerView(
         key = { it }
     ) { page ->
         pages.getOrNull(page)?.let {
-            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit)
+            ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.Fit, imageLoaderType)
         } ?: Box(modifier = Modifier.fillMaxSize()) {
             LastPageReached(
                 isLoading = vm.isLoadingPages,
@@ -851,8 +860,22 @@ fun ChangeChapterSwipe(
     }
 }
 
-private fun LazyListScope.reader(pages: List<String>, vm: ReadViewModel, onClick: () -> Unit) {
-    items(pages, key = { it }, contentType = { it }) { ChapterPage(it, vm.isDownloaded, onClick, vm.headers, ContentScale.FillWidth) }
+private fun LazyListScope.reader(
+    pages: List<String>,
+    vm: ReadViewModel,
+    onClick: () -> Unit,
+    imageLoaderType: ImageLoaderType,
+) {
+    items(pages, key = { it }, contentType = { it }) {
+        ChapterPage(
+            it,
+            vm.isDownloaded,
+            onClick,
+            vm.headers,
+            ContentScale.FillWidth,
+            imageLoaderType
+        )
+    }
     item {
         LastPageReached(
             isLoading = vm.isLoadingPages,
@@ -872,21 +895,33 @@ private fun ChapterPage(
     openCloseOverlay: () -> Unit,
     headers: Map<String, String>,
     contentScale: ContentScale,
+    imageLoaderType: ImageLoaderType,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .requiredHeightIn(min = 100.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        ZoomableImage(
+    if (imageLoaderType == ImageLoaderType.Panpf) {
+        Panpf(
             painter = chapterLink,
-            isDownloaded = isDownloaded,
             headers = headers,
             modifier = Modifier.fillMaxWidth(),
             contentScale = contentScale,
             onClick = openCloseOverlay
         )
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .requiredHeightIn(min = 100.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ZoomableImage(
+                painter = chapterLink,
+                isDownloaded = isDownloaded,
+                headers = headers,
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = contentScale,
+                onClick = openCloseOverlay,
+                imageLoaderType = imageLoaderType
+            )
+        }
     }
 }
 
@@ -897,6 +932,7 @@ private fun ZoomableImage(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    imageLoaderType: ImageLoaderType,
     onClick: () -> Unit = {},
 ) {
     Box(
@@ -945,36 +981,18 @@ private fun ZoomableImage(
                         .clipToBounds()
                 )
             } else {
-                KamelImage(
-                    resource = asyncPainterResource(painter) {
-                        requestBuilder {
-                            headers.forEach { (t, u) -> header(t, u) }
+                imageLoaderType.Composed(
+                    painter = painter,
+                    onRefresh = {
+                        scope.launch {
+                            showTheThing = false
+                            delay(1000)
+                            showTheThing = true
                         }
                     },
-                    onLoading = {
-                        val progress by animateFloatAsState(targetValue = it, label = "")
-                        CircularProgressIndicator(progress = { progress })
-                    },
-                    onFailure = {
-                        Text(
-                            stringResource(R.string.pressToRefresh),
-                            modifier = Modifier
-                                .clickable {
-                                    scope.launch {
-                                        showTheThing = false
-                                        delay(1000)
-                                        showTheThing = true
-                                    }
-                                }
-                        )
-                    },
-                    contentDescription = null,
                     contentScale = contentScale,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .fillMaxWidth()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .clipToBounds()
+                    headers = headers,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
         }
@@ -1376,6 +1394,44 @@ private fun SettingsSheet(
                 settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) },
                 modifier = Modifier.padding(vertical = 4.dp)
             )
+
+            HorizontalDivider()
+
+            val imageLoaderSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            var showImageLoaderSettings by remember { mutableStateOf(false) }
+
+            if (showImageLoaderSettings) {
+                ModalBottomSheet(
+                    onDismissRequest = { showImageLoaderSettings = false },
+                    sheetState = imageLoaderSheetState,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ) {
+                    CategorySetting(
+                        settingIcon = {
+                            IconButton(
+                                onClick = {
+                                    scope.launch { imageLoaderSheetState.hide() }
+                                        .invokeOnCompletion { showImageLoaderSettings = false }
+                                }
+                            ) { Icon(Icons.Default.Close, null) }
+                        },
+                        settingTitle = { Text("Image Loader Settings") }
+                    )
+                    ImageLoaderSettings(mangaSettingsHandling)
+                }
+            }
+
+            PreferenceSetting(
+                settingTitle = { Text("Image Loader Settings") },
+                settingIcon = { Icon(Icons.Default.Image, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = { showImageLoaderSettings = true }
+                )
+            )
+
             HorizontalDivider()
 
             var showStartDropdown by remember { mutableStateOf(false) }

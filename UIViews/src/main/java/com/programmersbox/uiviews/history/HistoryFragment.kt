@@ -78,9 +78,6 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
-import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
-import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
-import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -309,7 +306,7 @@ private fun HistoryItem(
                     headlineContent = {
                         Text(
                             item.title,
-                            modifier = Modifier.customSharedElement(OtakuTitleElement(source = item.title, origin = item.title))
+                            //modifier = Modifier.customSharedElement(OtakuTitleElement(source = item.title, origin = item.title))
                         )
                     },
                     overlineContent = { Text(item.source) },
@@ -323,12 +320,12 @@ private fun HistoryItem(
                             modifier = Modifier
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                 .clip(MaterialTheme.shapes.medium)
-                                .customSharedElement(
-                                    OtakuImageElement(
-                                        source = item.title,
-                                        origin = item.imageUrl
-                                    )
+                            /*.customSharedElement(
+                                OtakuImageElement(
+                                    source = item.title,
+                                    origin = item.imageUrl
                                 )
+                            )*/
                         )
                     },
                     trailingContent = {

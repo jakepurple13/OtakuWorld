@@ -9,6 +9,7 @@ message MangaSettings {
   bool useNewReader = 3;
   int32 pagePadding = 4;
   bool listOrPager = 5;
+  ImageLoaderType imageLoaderType = 6;
 }
 
 enum PlayingStartAction {
@@ -20,4 +21,11 @@ enum PlayingStartAction {
 enum PlayingMiddleAction {
   Time = 0;
   Nothing = 1;
+}
+
+enum ImageLoaderType {
+  Kamel = 0;
+  Glide = 1;
+  Coil = 2;
+  Panpf = 3;
 }
