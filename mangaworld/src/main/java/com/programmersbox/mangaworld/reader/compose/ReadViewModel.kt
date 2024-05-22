@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.reader
+package com.programmersbox.mangaworld.reader.compose
 
 import android.net.Uri
 import androidx.compose.runtime.derivedStateOf
@@ -48,9 +48,6 @@ class ReadViewModel(
             headers.putAll(it.flatMap { h -> h.headers.toList() })
             it.mapNotNull(Storage::link)
         },
-    /*?.subscribeOn(Schedulers.io())
-    ?.observeOn(AndroidSchedulers.mainThread())*/
-    //?.doOnError { Toast.makeText(context, it.localizedMessage, Toast.LENGTH_SHORT).show() },
     val isDownloaded: Boolean = mangaReader.downloaded,
     filePath: File? = mangaReader.filePath?.let { File(it) },
     modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
@@ -78,7 +75,15 @@ class ReadViewModel(
             downloaded: Boolean = false,
             filePath: String? = null
         ) {
-            navController.navigate(MangaReader(mangaTitle, mangaUrl, mangaInfoUrl, downloaded, filePath)) { launchSingleTop = true }
+            navController.navigate(
+                MangaReader(
+                    mangaTitle = mangaTitle,
+                    mangaUrl = mangaUrl,
+                    mangaInfoUrl = mangaInfoUrl,
+                    downloaded = downloaded,
+                    filePath = filePath
+                )
+            ) { launchSingleTop = true }
         }
     }
 

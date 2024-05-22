@@ -51,8 +51,7 @@ import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
-import com.programmersbox.mangaworld.reader.ReadView
-import com.programmersbox.mangaworld.reader.ReadViewModel
+import com.programmersbox.mangaworld.reader.compose.ReadView
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
@@ -121,7 +120,12 @@ class GenericManga(
         chapterHolder.chapters = allChapters
         if (runBlocking { mangaSettingsHandling.useNewReader.flow.first() }) {
             chapterHolder.chapterModel = model
-            ReadViewModel.navigateToMangaReader(navController, infoModel.title, model.url, model.sourceUrl)
+            com.programmersbox.mangaworld.reader.compose.ReadViewModel.navigateToMangaReader(
+                navController,
+                infoModel.title,
+                model.url,
+                model.sourceUrl
+            )
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
@@ -379,7 +383,7 @@ class GenericManga(
         ExperimentalFoundationApi::class
     )
     override fun NavGraphBuilder.globalNavSetup() {
-        composable<ReadViewModel.MangaReader>(
+        composable<com.programmersbox.mangaworld.reader.compose.ReadViewModel.MangaReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) { ReadView(it.toRoute()) }

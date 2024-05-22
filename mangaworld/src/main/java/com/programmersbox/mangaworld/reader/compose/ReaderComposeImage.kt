@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.reader
+package com.programmersbox.mangaworld.reader.compose
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image

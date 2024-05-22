@@ -33,7 +33,7 @@ import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
-import com.programmersbox.mangaworld.reader.ReaderTopBar
+import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
 import com.programmersbox.uiviews.utils.CategorySetting
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.ShowWhen

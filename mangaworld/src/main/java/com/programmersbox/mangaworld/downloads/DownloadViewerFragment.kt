@@ -65,7 +65,6 @@ import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
-import com.programmersbox.mangaworld.reader.ReadViewModel
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -328,7 +327,7 @@ private fun ChapterItem(
                                     interactionSource = null
                                 ) {
                                     if (useNewReader) {
-                                        ReadViewModel.navigateToMangaReader(
+                                        com.programmersbox.mangaworld.reader.compose.ReadViewModel.navigateToMangaReader(
                                             navController,
                                             filePath = c?.chapterFolder,
                                             downloaded = true
