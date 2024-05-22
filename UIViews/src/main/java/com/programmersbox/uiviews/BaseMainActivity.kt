@@ -536,7 +536,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) {
                 InfoSettings(
-                    usedLibraryClick = { navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true } }
+                    usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } }
                 )
             }
 

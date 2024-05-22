@@ -330,7 +330,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                 val navController = LocalNavController.current
 
                 Button(
-                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
+                    onClick = { navController.popBackStack(Screen.RecentScreen, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)
