@@ -30,10 +30,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -43,6 +45,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
@@ -52,6 +56,22 @@ internal fun DrawerView(
     showToast: () -> Unit,
 ) {
     val drawerScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val state = rememberLazyListState(
+        readVm.currentChapter.coerceIn(
+            minimumValue = 0,
+            maximumValue = readVm.list.lastIndex.coerceIn(minimumValue = 0, maximumValue = Int.MAX_VALUE)
+        )
+    )
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            readVm.currentChapter.coerceIn(
+                minimumValue = 0,
+                maximumValue = readVm.list.lastIndex.coerceIn(minimumValue = 0, maximumValue = Int.MAX_VALUE)
+            )
+        }
+            .onEach { state.animateScrollToItem(it) }
+            .launchIn(this)
+    }
     OtakuScaffold(
         modifier = Modifier.nestedScroll(drawerScrollBehavior.nestedScrollConnection),
         topBar = {
@@ -63,12 +83,7 @@ internal fun DrawerView(
         }
     ) { p ->
         LazyColumn(
-            state = rememberLazyListState(
-                readVm.currentChapter.coerceIn(
-                    0,
-                    readVm.list.lastIndex.coerceIn(minimumValue = 0, maximumValue = Int.MAX_VALUE)
-                )
-            ),
+            state = state,
             contentPadding = p,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
