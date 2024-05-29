@@ -41,13 +41,14 @@ interface GenericInfo {
     @SuppressLint("RestrictedApi")
     fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
         @Suppress("UNCHECKED_CAST")
-        val route = Screen.DetailsScreen.Details(
-            title = itemModel?.title ?: "",
-            description = itemModel?.description ?: "",
-            url = itemModel?.url ?: "",
-            imageUrl = itemModel?.imageUrl ?: "",
-            source = itemModel?.source?.serviceName ?: "",
-        ).generateRouteWithArgs(
+        val route = generateRouteWithArgs(
+            Screen.DetailsScreen.Details(
+                title = itemModel?.title ?: "",
+                description = itemModel?.description ?: "",
+                url = itemModel?.url ?: "",
+                imageUrl = itemModel?.imageUrl ?: "",
+                source = itemModel?.source?.serviceName ?: "",
+            ),
             mapOf(
                 "title" to NavType.StringType as NavType<Any?>,
                 "description" to NavType.StringType as NavType<Any?>,
