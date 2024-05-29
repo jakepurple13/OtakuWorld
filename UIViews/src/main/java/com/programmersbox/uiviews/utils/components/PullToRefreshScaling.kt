@@ -33,7 +33,7 @@ fun OtakuPullToRefreshBox(
             state = state,
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
-            enabled = enabled
+            enabled = enabled()
         )
     ) {
         content()
@@ -66,7 +66,7 @@ fun OtakuPullToRefreshBox(
             state = state,
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
-            enabled = enabled
+            enabled = enabled()
         )
     ) {
         content()
