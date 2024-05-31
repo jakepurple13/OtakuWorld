@@ -17,6 +17,13 @@ dependencyResolutionManagement {
         maven("https://www.jitpack.io")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven(url = "https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
+    }
+    //TODO: Remove current ones and replace with this!
+    versionCatalogs {
+        create("androidx") {
+            from("androidx.gradle:gradle-version-catalog:2024.05.00")
+        }
     }
 }
 

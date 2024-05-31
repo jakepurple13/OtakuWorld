@@ -32,11 +32,17 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import io.kamel.core.ExperimentalKamelApi
+import io.kamel.core.config.KamelConfig
+import io.kamel.core.config.takeFrom
+import io.kamel.image.config.Default
+import io.kamel.image.config.LocalKamelConfig
+import io.kamel.image.config.resourcesFetcher
 import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(KoinExperimentalAPI::class)
+@OptIn(KoinExperimentalAPI::class, ExperimentalKamelApi::class)
 @Composable
 fun OtakuMaterialTheme(
     navController: NavHostController,
@@ -99,6 +105,12 @@ fun OtakuMaterialTheme(
                 LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
                 LocalSourcesRepository provides koinInject(),
                 LocalCurrentSource provides koinInject(),
+                LocalKamelConfig provides KamelConfig {
+                    takeFrom(KamelConfig.Default)
+                    //imageBitmapResizingDecoder()
+                    //animatedImageDecoder()
+                    resourcesFetcher(context)
+                },
                 LocalUriHandler provides remember {
                     object : UriHandler {
                         override fun openUri(uri: String) {

@@ -108,6 +108,7 @@ dependencies {
     //Multiplatform
     //implementation(projects.imageloader)
     api(libs.kamel.image)
+    //api(libs.kamel.image.decoder)
 
     //Extension Loader
     api(projects.sharedutils.extensionloader)

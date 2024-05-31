@@ -402,7 +402,6 @@ fun GlobalSearchView(
                                                     }
                                                 }
 
-                                                //TODO: Trying this out
                                                 val carouselState = rememberCarouselState { i.data.size }
 
                                                 HorizontalMultiBrowseCarousel(
@@ -414,7 +413,7 @@ fun GlobalSearchView(
                                                         .padding(horizontal = 4.dp)
                                                         .padding(bottom = 4.dp)
                                                 ) {
-                                                    i.data[it].let { m ->
+                                                    i.data.getOrNull(it)?.let { m ->
                                                         SearchCoverCard(
                                                             model = m,
                                                             placeHolder = mainLogoDrawable.logo,
