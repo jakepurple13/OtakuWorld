@@ -9,11 +9,11 @@ composeCollapsable = "0.3.0"
 dragselect = "2.3.0"
 easylauncher = "6.4.0"
 firebaseCrashlyticsGradle = "2.9.9"
-googleServices = "4.4.1"
+googleServices = "4.4.2"
 haze = "0.7.1"
 kamelImage = "0.9.5"
 kotlin = "2.0.0"
-latestAboutLibsRelease = "11.2.0"
+latestAboutLibsRelease = "11.2.1"
 coroutinesVersion = "1.8.1"
 glideVersion = "4.16.0"
 pagingVersion = "3.3.0"
@@ -127,7 +127,7 @@ glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integrati
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta01"
 
 androidCore = "androidx.core:core-ktx:1.13.1"
-appCompat = "androidx.appcompat:appcompat:1.6.1"
+appCompat = "androidx.appcompat:appcompat:1.7.0"
 material = "com.google.android.material:material:1.12.0"
 
 coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
@@ -179,7 +179,7 @@ pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagi
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
-androidxWindow = "androidx.window:window:1.2.0"
+androidxWindow = "androidx.window:window:1.3.0"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
 androidxBrowser = "androidx.browser:browser:1.8.0"
 
@@ -217,7 +217,7 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 slideToAct = "com.ncorti:slidetoact:0.11.0"
 mediaRouter = "androidx.mediarouter:mediarouter:1.7.0"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
-castFramework = "com.google.android.gms:play-services-cast-framework:21.4.0"
+castFramework = "com.google.android.gms:play-services-cast-framework:21.5.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
 
