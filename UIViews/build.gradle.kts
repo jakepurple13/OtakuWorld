@@ -27,9 +27,9 @@ android {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.androidxLegacySupport)
-    implementation(libs.preference)
-    implementation(libs.androidxWindow)
+    implementation(androidx.legacy.legacySupportV4)
+    implementation(androidx.preference.preferenceKtx)
+    implementation(androidx.window.window)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -37,8 +37,8 @@ dependencies {
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)
 
+    implementation(androidx.browser.browser)
     implementation(libs.androidBrowserHelper)
-    implementation(libs.androidxBrowser)
 
     implementation(libs.reactiveNetwork)
 
@@ -48,14 +48,14 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
 
-    implementation(libs.constraintlayout)
+    implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)
     implementation(libs.coroutinesAndroid)
-    implementation(libs.fragmentKtx)
-    implementation(libs.lifecycleExtensions)
-    implementation(libs.lifecycleRuntime)
-    implementation(libs.lifecycleLivedata)
-    implementation(libs.lifecycleViewModel)
+    implementation(androidx.fragment.fragmentKtx)
+    implementation(androidx.lifecycle.lifecycleExtensions)
+    implementation(androidx.lifecycle.lifecycleRuntimeKtx)
+    implementation(androidx.lifecycle.lifecycleLivedataKtx)
+    implementation(androidx.lifecycle.lifecycleViewmodelKtx)
 
     implementation(libs.iconicsCore)
     implementation(Deps.materialTypeface)
@@ -82,8 +82,8 @@ dependencies {
     implementation(libs.kotlinxSerialization)
 
     // Kotlin
-    api(libs.navFragment)
-    api(libs.navUiKtx)
+    api(androidx.navigation.navigationUiKtx)
+    api(androidx.navigation.navigationFragmentKtx)
 
     // Testing Navigation
     androidTestImplementation(libs.navTesting)
@@ -103,7 +103,7 @@ dependencies {
 
     implementation(libs.bundles.ktorLibs)
 
-    implementation(libs.androidx.activity.ktx)
+    implementation(androidx.activity.activityKtx)
 
     //Multiplatform
     //implementation(projects.imageloader)

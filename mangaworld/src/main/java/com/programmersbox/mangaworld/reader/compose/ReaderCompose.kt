@@ -59,6 +59,7 @@ import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
@@ -93,6 +94,8 @@ fun ReadView(
     val scope = rememberCoroutineScope()
 
     val pages = readVm.pageList
+
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     var listOrPager by mangaSettingsHandling.rememberListOrPager()
 
@@ -213,7 +216,8 @@ fun ReadView(
                             ?: "Ch ${readVm.list.size - readVm.currentChapter}",
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction,
-                        modifier = Modifier.hazeChild(hazeState)
+                        showBlur = showBlur,
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState) else Modifier
                     )
                 }
             },
@@ -228,16 +232,18 @@ fun ReadView(
                         onSettingsClick = { settingsPopup = true },
                         chapterChange = ::showToast,
                         vm = readVm,
-                        modifier = Modifier.hazeChild(hazeState)
+                        showBlur = showBlur,
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState) else Modifier
                     )
                 }
             },
         ) { p ->
             Box(
-                modifier = Modifier.haze(
-                    state = hazeState,
-                    style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.background),
-                ),
+                modifier = if (showBlur)
+                    Modifier.haze(
+                        state = hazeState,
+                        style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.background),
+                    ) else Modifier,
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = readVm.isLoadingPages,

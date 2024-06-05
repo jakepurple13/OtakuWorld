@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.BlurOff
+import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Menu
@@ -97,6 +99,24 @@ fun GeneralSettings(
             settingIcon = { Icon(Icons.Default.DarkMode, null, modifier = Modifier.fillMaxSize()) },
             value = isAmoledMode,
             updateValue = { isAmoledMode = it }
+        )
+
+        var showBlur by handling.rememberShowBlur()
+
+        SwitchSetting(
+            settingTitle = { Text("Show Blur") },
+            summaryValue = {
+                Text("Use blurring to get a glassmorphic look")
+            },
+            settingIcon = {
+                Icon(
+                    imageVector = if (showBlur) Icons.Default.BlurOn else Icons.Default.BlurOff,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize()
+                )
+            },
+            value = showBlur,
+            updateValue = { showBlur = it }
         )
 
         var usePalette by handling.rememberUsePalette()

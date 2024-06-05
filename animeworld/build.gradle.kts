@@ -25,10 +25,10 @@ composeCompiler {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.preference)
+    implementation(androidx.constraintlayout.constraintlayout)
+    implementation(androidx.preference.preferenceKtx)
     implementation(libs.bundles.firebaseCrashLibs)
-    implementation(libs.recyclerview)
+    implementation(androidx.recyclerview.recyclerview)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -36,7 +36,7 @@ dependencies {
     implementation(libs.fileChooser)
     implementation(libs.slideToAct)
 
-    implementation(libs.mediaRouter)
+    implementation(androidx.mediarouter.mediarouter)
 
     implementation(libs.torrentStream)
 

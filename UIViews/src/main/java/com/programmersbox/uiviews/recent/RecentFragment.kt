@@ -64,6 +64,7 @@ import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -95,6 +96,8 @@ fun RecentView(
     val scope = rememberCoroutineScope()
     val source = recentVm.currentSource
     val pull = rememberPullToRefreshState()
+
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
@@ -165,10 +168,10 @@ fun RecentView(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified),
             )
         },
-        blurTopBar = true
+        blurTopBar = showBlur
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(

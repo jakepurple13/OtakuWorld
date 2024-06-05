@@ -24,9 +24,9 @@ composeCompiler {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.recyclerview)
-    implementation(libs.preference)
+    implementation(androidx.preference.preference)
+    implementation(androidx.recyclerview.recyclerview)
+    implementation(androidx.constraintlayout.constraintlayout)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -47,7 +47,8 @@ dependencies {
     implementation(composeBom)
     implementation(libs.bundles.compose)
 
-    implementation(libs.bundles.datastoreLibs)
+    implementation(androidx.datastore.datastore)
+    implementation(androidx.datastore.datastorePreferences)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)

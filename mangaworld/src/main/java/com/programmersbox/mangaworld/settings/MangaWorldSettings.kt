@@ -176,6 +176,7 @@ fun PlayerSettings(
                 currentChapter = "Ch 10",
                 playingStartAction = startAction,
                 playingMiddleAction = middleAction,
+                showBlur = false,
                 modifier = Modifier.border(
                     2.dp,
                     color = MaterialTheme.colorScheme.primary

@@ -88,6 +88,7 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
@@ -135,6 +136,7 @@ fun GlobalSearchView(
     },
 ) {
     val hazeState = remember { HazeState() }
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val navController = LocalNavController.current
 
     val focusManager = LocalFocusManager.current
@@ -209,14 +211,18 @@ fun GlobalSearchView(
                         colors = SearchBarDefaults.colors(
                             containerColor = animateColorAsState(
                                 MaterialTheme.colorScheme.surface.copy(
-                                    alpha = if (active) 1f else 0f
+                                    alpha = if (active) {
+                                        1f
+                                    } else {
+                                        if (showBlur) 0f else 1f
+                                    }
                                 ),
                                 label = ""
                             ).value,
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .hazeChild(hazeState)
+                            .let { if (showBlur) it.hazeChild(hazeState) else it }
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth(),
@@ -334,12 +340,15 @@ fun GlobalSearchView(
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
-                                    .haze(
-                                        hazeState,
-                                        style = HazeDefaults.style(
-                                            backgroundColor = MaterialTheme.colorScheme.surface
-                                        )
-                                    )
+                                    .let {
+                                        if (showBlur)
+                                            it.haze(
+                                                hazeState,
+                                                style = HazeDefaults.style(
+                                                    backgroundColor = MaterialTheme.colorScheme.surface
+                                                )
+                                            ) else it
+                                    }
                                     .fillMaxSize()
                                     .padding(top = 8.dp)
                             ) {

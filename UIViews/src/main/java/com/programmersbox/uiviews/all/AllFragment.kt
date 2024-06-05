@@ -66,6 +66,7 @@ import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
@@ -111,6 +112,7 @@ fun AllView(
     val navController = LocalNavController.current
 
     val focusManager = LocalFocusManager.current
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val hazeState = remember { HazeState() }
 
     OtakuScaffold(
@@ -176,14 +178,18 @@ fun AllView(
                 colors = SearchBarDefaults.colors(
                     containerColor = animateColorAsState(
                         MaterialTheme.colorScheme.surface.copy(
-                            alpha = if (active) 1f else 0f
+                            alpha = if (active) {
+                                1f
+                            } else {
+                                if (showBlur) 0f else 1f
+                            }
                         ),
                         label = ""
                     ).value,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .hazeChild(hazeState)
+                    .let { if (showBlur) it.hazeChild(hazeState) else it }
             ) {
                 var showBanner by remember { mutableStateOf(false) }
                 OtakuBannerBox(
@@ -248,10 +254,11 @@ fun AllView(
                             onLoadMore = allVm::loadMore,
                             onReset = allVm::reset,
                             paddingValues = p1,
-                            modifier = Modifier.haze(
-                                hazeState,
-                                style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.surface),
-                            )
+                            modifier = if (showBlur)
+                                Modifier.haze(
+                                    hazeState,
+                                    style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.surface),
+                                ) else Modifier
                         )
                     }
                 }

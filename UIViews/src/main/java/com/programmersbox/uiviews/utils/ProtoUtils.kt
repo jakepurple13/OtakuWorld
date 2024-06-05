@@ -69,6 +69,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             showDownload = true
             amoledMode = false
             usePalette = true
+            showBlur = true
         }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -143,6 +144,13 @@ class SettingsHandling(context: Context) {
     fun rememberUsePalette() = preferences.rememberPreference(
         key = { it.usePalette },
         update = { setUsePalette(it) },
+        defaultValue = true
+    )
+
+    @Composable
+    fun rememberShowBlur() = preferences.rememberPreference(
+        key = { it.showBlur },
+        update = { setShowBlur(it) },
         defaultValue = true
     )
 }

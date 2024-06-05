@@ -89,6 +89,10 @@ import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates
@@ -541,3 +545,8 @@ fun BoxWithConstraintsScope.topBounds(paddingValues: PaddingValues): Rect {
 }
 
 val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
+
+fun Modifier.hazeChoice(
+    state: HazeState,
+    style: HazeStyle = HazeDefaults.style(),
+): Modifier = this.haze(state, style)

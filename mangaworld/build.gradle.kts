@@ -27,14 +27,14 @@ composeCompiler {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.swiperefresh)
-    implementation(libs.recyclerview)
-    implementation(libs.profileinstaller)
+    implementation(androidx.constraintlayout.constraintlayout)
+    implementation(androidx.swiperefreshlayout.swiperefreshlayout)
+    implementation(androidx.recyclerview.recyclerview)
+    implementation(androidx.preference.preferenceKtx)
+    implementation(androidx.profileinstaller.profileinstaller)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-    implementation(libs.preference)
     implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.fileChooser)
@@ -74,7 +74,9 @@ dependencies {
     implementation(platform(libs.composePlatform))
     implementation(libs.bundles.compose)
     implementation(libs.coilGif)
-    implementation(libs.bundles.datastoreLibs)
+
+    implementation(androidx.datastore.datastore)
+    implementation(androidx.datastore.datastorePreferences)
 
     implementation(libs.glideCompose)
 

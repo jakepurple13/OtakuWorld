@@ -101,6 +101,8 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -145,6 +147,8 @@ fun OtakuCustomListScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     val logoDrawable = koinInject<AppLogo>()
 
@@ -282,7 +286,12 @@ fun OtakuCustomListScreen(
         },
     ) {
         OtakuHazeScaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(
+                    snackbarHostState,
+                    modifier = Modifier.padding(LocalNavHostPadding.current)
+                )
+            },
             topBar = {
                 DynamicSearchBar(
                     query = searchQuery,
@@ -298,7 +307,11 @@ fun OtakuCustomListScreen(
                     colors = SearchBarDefaults.colors(
                         containerColor = animateColorAsState(
                             MaterialTheme.colorScheme.surface.copy(
-                                alpha = if (searchBarActive) 1f else 0f
+                                alpha = if (searchBarActive) {
+                                    1f
+                                } else {
+                                    if (showBlur) 0f else 1f
+                                }
                             ),
                             label = ""
                         ).value,
@@ -412,7 +425,7 @@ fun OtakuCustomListScreen(
                     }
                 }
             },
-            blurTopBar = true
+            blurTopBar = showBlur
         ) { padding ->
             LazyVerticalGrid(
                 columns = adaptiveGridCell(),

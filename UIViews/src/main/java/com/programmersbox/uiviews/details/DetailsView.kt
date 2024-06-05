@@ -75,6 +75,7 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
@@ -118,6 +119,8 @@ fun DetailsView(
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     var reverseChapters by remember { mutableStateOf(false) }
+
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     val hostState = remember { SnackbarHostState() }
 
@@ -200,9 +203,10 @@ fun DetailsView(
                     InsetSmallTopAppBar(
                         modifier = Modifier
                             .zIndex(2f)
-                            .hazeChild(hazeState),
+                            .let { if (showBlur) it.hazeChild(hazeState) else it },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
+                            containerColor = if (showBlur) Color.Transparent else
+                                swatchInfo?.rgb?.toComposeColor() ?: TopAppBarDefaults.topAppBarColors().containerColor,
                             titleContentColor = topBarColor
                         ),
                         title = {
@@ -271,6 +275,11 @@ fun DetailsView(
                 DetailBottomBar(
                     navController = navController,
                     onShowLists = { showLists = true },
+                    containerColor = if (showBlur) {
+                        Color.Transparent
+                    } else {
+                        swatchInfo?.rgb?.toComposeColor() ?: BottomAppBarDefaults.containerColor
+                    },
                     info = info,
                     customActions = {},
                     removeFromSaved = {
@@ -302,7 +311,7 @@ fun DetailsView(
                                 )
                             }
                         }
-                        .hazeChild(hazeState)
+                        .let { if (showBlur) it.hazeChild(hazeState) else it }
                 )
             },
             snackbarHost = {
@@ -339,15 +348,18 @@ fun DetailsView(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 4.dp)
-                    .haze(
-                        hazeState,
-                        style = HazeDefaults.style(
-                            backgroundColor = animateColorAsState(
-                                targetValue = swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface,
-                                label = ""
-                            ).value
-                        ),
-                    ),
+                    .let {
+                        if (showBlur)
+                            it.haze(
+                                hazeState,
+                                style = HazeDefaults.style(
+                                    backgroundColor = animateColorAsState(
+                                        targetValue = swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface,
+                                        label = ""
+                                    ).value
+                                ),
+                            ) else it
+                    },
             ) {
                 if (info.description.isNotEmpty()) {
                     item {

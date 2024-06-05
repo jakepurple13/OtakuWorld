@@ -49,7 +49,9 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -197,6 +199,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val isAmoledMode by settingsHandling.rememberIsAmoledMode()
 
+            val showBlur by settingsHandling.rememberShowBlur()
+
             OtakuMaterialTheme(
                 navController = navController,
                 genericInfo = genericInfo,
@@ -233,11 +237,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 showNavBar = showNavBar,
                                 navType = navType,
                                 showAllItem = showAllItem,
-                                currentDestination = currentDestination
+                                currentDestination = currentDestination,
+                                showBlur = showBlur,
+                                isAmoledMode = isAmoledMode
                             )
                         },
                         contentWindowInsets = WindowInsets(0.dp),
-                        blurBottomBar = true
+                        blurBottomBar = showBlur
                     ) { innerPadding ->
                         SharedTransitionLayout {
                             CompositionLocalProvider(
@@ -265,6 +271,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         navType: NavigationBarType,
         showAllItem: Boolean,
         currentDestination: NavDestination?,
+        showBlur: Boolean,
+        isAmoledMode: Boolean,
     ) {
         Column {
             BottomBarAdditions()
@@ -274,7 +282,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
             ) {
                 NavigationBar(
-                    containerColor = Color.Transparent
+                    containerColor = when {
+                        showBlur -> Color.Transparent
+                        isAmoledMode -> MaterialTheme.colorScheme.surface
+                        else -> NavigationBarDefaults.containerColor
+                    }
                 ) {
 
                     @Composable

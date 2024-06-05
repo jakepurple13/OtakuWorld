@@ -67,6 +67,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -88,6 +89,8 @@ import com.programmersbox.uiviews.utils.InsetCenterAlignedTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.OtakuBannerBox
@@ -122,6 +125,8 @@ fun FavoriteUi(
     val hazeState = remember { HazeState() }
     val navController = LocalNavController.current
     val context = LocalContext.current
+
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     val focusManager = LocalFocusManager.current
 
@@ -237,139 +242,154 @@ fun FavoriteUi(
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) {
         OtakuScaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(
+                    snackbarHostState,
+                    modifier = Modifier.padding(LocalNavHostPadding.current)
+                )
+            },
             topBar = {
-                Column(Modifier.hazeChild(hazeState)) {
-                    var active by rememberSaveable { mutableStateOf(false) }
-
-                    fun closeSearchBar() {
-                        focusManager.clearFocus()
-                        active = false
-                    }
-                    DynamicSearchBar(
-                        isDocked = isHorizontal,
-                        query = viewModel.searchText,
-                        onQueryChange = { viewModel.searchText = it },
-                        onSearch = { closeSearchBar() },
-                        active = active,
-                        onActiveChange = {
-                            active = it
-                            if (!active) focusManager.clearFocus()
-                        },
-                        placeholder = {
-                            Text(
-                                context.resources.getQuantityString(
-                                    R.plurals.numFavorites,
-                                    viewModel.listSources.size,
-                                    viewModel.listSources.size
-                                )
-                            )
-                        },
-                        leadingIcon = { BackButton() },
-                        trailingIcon = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AnimatedVisibility(viewModel.searchText.isNotEmpty()) {
-                                    IconButton(onClick = { viewModel.searchText = "" }) {
-                                        Icon(Icons.Default.Cancel, null)
-                                    }
-                                }
-
-                                AnimatedVisibility(!active) {
-                                    IconButton(onClick = { showSort = true }) {
-                                        Icon(Icons.AutoMirrored.Filled.Sort, null)
-                                    }
-                                }
-                            }
-                        },
-                        colors = SearchBarDefaults.colors(
-                            containerColor = animateColorAsState(
-                                MaterialTheme.colorScheme.surface.copy(
-                                    alpha = if (active) 1f else 0f
-                                ),
-                                label = ""
-                            ).value,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
+                Surface(
+                    color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface
+                ) {
+                    Column(
+                        if (showBlur) Modifier.hazeChild(hazeState) else Modifier
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
-                                ListItem(
-                                    headlineContent = { Text(dbModel.title) },
-                                    supportingContent = { Text(dbModel.source) },
-                                    leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
-                                    modifier = Modifier.clickable {
-                                        viewModel.searchText = dbModel.title
-                                        closeSearchBar()
-                                    }
-                                )
-                                if (index != 3) {
-                                    HorizontalDivider()
-                                }
-                            }
+                        var active by rememberSaveable { mutableStateOf(false) }
+
+                        fun closeSearchBar() {
+                            focusManager.clearFocus()
+                            active = false
                         }
-                    }
-
-                    var showFilterBySourceModal by remember { mutableStateOf(false) }
-
-                    if (showFilterBySourceModal) {
-                        BackHandler { showFilterBySourceModal = false }
-
-                        ModalBottomSheet(
-                            onDismissRequest = { showFilterBySourceModal = false },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
-                        ) {
-                            CenterAlignedTopAppBar(title = { Text("Filter by Source") })
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                            ) {
-                                FilterChip(
-                                    selected = true,
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = { viewModel.resetSources() },
-                                        onLongClick = { viewModel.selectedSources.clear() }
-                                    ),
-                                    label = { Text("ALL") },
-                                    onClick = { viewModel.allClick() }
-                                )
-
-                                viewModel.allSources.forEach {
-                                    FilterChip(
-                                        selected = it.first in viewModel.selectedSources,
-                                        onClick = { viewModel.newSource(it.first) },
-                                        label = { Text(it.first) },
-                                        leadingIcon = { Text("${it.second.size - 1}") },
-                                        modifier = Modifier.combinedClickable(
-                                            onClick = { viewModel.newSource(it.first) },
-                                            onLongClick = { viewModel.singleSource(it.first) }
-                                        )
+                        DynamicSearchBar(
+                            isDocked = isHorizontal,
+                            query = viewModel.searchText,
+                            onQueryChange = { viewModel.searchText = it },
+                            onSearch = { closeSearchBar() },
+                            active = active,
+                            onActiveChange = {
+                                active = it
+                                if (!active) focusManager.clearFocus()
+                            },
+                            placeholder = {
+                                Text(
+                                    context.resources.getQuantityString(
+                                        R.plurals.numFavorites,
+                                        viewModel.listSources.size,
+                                        viewModel.listSources.size
                                     )
+                                )
+                            },
+                            leadingIcon = { BackButton() },
+                            trailingIcon = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AnimatedVisibility(viewModel.searchText.isNotEmpty()) {
+                                        IconButton(onClick = { viewModel.searchText = "" }) {
+                                            Icon(Icons.Default.Cancel, null)
+                                        }
+                                    }
+
+                                    AnimatedVisibility(!active) {
+                                        IconButton(onClick = { showSort = true }) {
+                                            Icon(Icons.AutoMirrored.Filled.Sort, null)
+                                        }
+                                    }
+                                }
+                            },
+                            colors = SearchBarDefaults.colors(
+                                containerColor = animateColorAsState(
+                                    MaterialTheme.colorScheme.surface.copy(
+                                        alpha = if (active) {
+                                            1f
+                                        } else {
+                                            if (showBlur) 0f else 1f
+                                        }
+                                    ),
+                                    label = ""
+                                ).value,
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
+                                    ListItem(
+                                        headlineContent = { Text(dbModel.title) },
+                                        supportingContent = { Text(dbModel.source) },
+                                        leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                                        modifier = Modifier.clickable {
+                                            viewModel.searchText = dbModel.title
+                                            closeSearchBar()
+                                        }
+                                    )
+                                    if (index != 3) {
+                                        HorizontalDivider()
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                    ) {
-                        SuggestionChip(
-                            onClick = { showFilterBySourceModal = true },
-                            label = { Text("Filter By Source") }
-                        )
+                        var showFilterBySourceModal by remember { mutableStateOf(false) }
 
-                        SuggestionChip(
-                            label = { Text("ALL") },
-                            onClick = { viewModel.resetSources() }
-                        )
+                        if (showFilterBySourceModal) {
+                            BackHandler { showFilterBySourceModal = false }
+
+                            ModalBottomSheet(
+                                onDismissRequest = { showFilterBySourceModal = false },
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
+                            ) {
+                                CenterAlignedTopAppBar(title = { Text("Filter by Source") })
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = true,
+                                        modifier = Modifier.combinedClickable(
+                                            onClick = { viewModel.resetSources() },
+                                            onLongClick = { viewModel.selectedSources.clear() }
+                                        ),
+                                        label = { Text("ALL") },
+                                        onClick = { viewModel.allClick() }
+                                    )
+
+                                    viewModel.allSources.forEach {
+                                        FilterChip(
+                                            selected = it.first in viewModel.selectedSources,
+                                            onClick = { viewModel.newSource(it.first) },
+                                            label = { Text(it.first) },
+                                            leadingIcon = { Text("${it.second.size - 1}") },
+                                            modifier = Modifier.combinedClickable(
+                                                onClick = { viewModel.newSource(it.first) },
+                                                onLongClick = { viewModel.singleSource(it.first) }
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                        ) {
+                            SuggestionChip(
+                                onClick = { showFilterBySourceModal = true },
+                                label = { Text("Filter By Source") }
+                            )
+
+                            SuggestionChip(
+                                label = { Text("ALL") },
+                                onClick = { viewModel.resetSources() }
+                            )
+                        }
                     }
                 }
             }
@@ -432,12 +452,14 @@ fun FavoriteUi(
                     },
                     onShowBanner = { showBanner = it },
                     logo = logo,
-                    modifier = Modifier.haze(
-                        hazeState,
-                        style = HazeDefaults.style(
-                            backgroundColor = MaterialTheme.colorScheme.surface
+                    modifier = if (showBlur)
+                        Modifier.haze(
+                            hazeState,
+                            style = HazeDefaults.style(
+                                backgroundColor = MaterialTheme.colorScheme.surface
+                            )
                         )
-                    )
+                    else Modifier
                 )
             }
         }

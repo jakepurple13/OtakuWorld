@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -61,6 +62,7 @@ internal fun ReaderTopBar(
     currentChapter: String,
     playingStartAction: PlayingStartAction,
     playingMiddleAction: PlayingMiddleAction,
+    showBlur: Boolean,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
@@ -165,7 +167,7 @@ internal fun ReaderTopBar(
                     .align(Alignment.CenterVertically)
             )
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
     )
 }
 
@@ -175,12 +177,13 @@ internal fun BottomBar(
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit,
+    showBlur: Boolean,
     modifier: Modifier = Modifier,
 ) {
     BottomAppBar(
         modifier = modifier,
         windowInsets = WindowInsets(0.dp),
-        containerColor = Color.Transparent
+        containerColor = if (showBlur) Color.Transparent else BottomAppBarDefaults.containerColor
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0

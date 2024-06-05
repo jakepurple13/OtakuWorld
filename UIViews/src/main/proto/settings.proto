@@ -16,6 +16,7 @@ message Settings {
   repeated string customUrls = 10;
   bool amoledMode = 11;
   bool usePalette = 12;
+  bool showBlur = 13;
 }
 
 enum SystemThemeMode {

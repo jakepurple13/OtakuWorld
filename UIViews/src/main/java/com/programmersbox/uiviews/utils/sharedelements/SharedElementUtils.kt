@@ -21,7 +21,7 @@ import androidx.navigation.compose.composable
 import kotlin.reflect.KType
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-val LocalSharedElementScope = staticCompositionLocalOf<SharedTransitionScope> { error("") }
+val LocalSharedElementScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
 val LocalNavigationAnimatedScope = staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -50,7 +50,7 @@ fun Modifier.customSharedElement(
     val scope = LocalSharedElementScope.current
     val animatedScope = LocalNavigationAnimatedScope.current
 
-    if (animatedScope != null && key != null) {
+    if (animatedScope != null && key != null && scope != null) {
         with(scope) {
             sharedElement(
                 state = rememberSharedContentState(key = key),
