@@ -8,6 +8,7 @@ import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.MangaSettings
 import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
+import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangasettings.mangaSettings
 import com.programmersbox.uiviews.utils.GenericSerializer
 import com.programmersbox.uiviews.utils.rememberPreference
@@ -28,7 +29,7 @@ object MangaSettingsSerializer : GenericSerializer<MangaSettings, MangaSettings.
             playingMiddleAction = PlayingMiddleAction.Nothing
             useNewReader = true
             pagePadding = 4
-            listOrPager = true
+            readerType = ReaderType.List
         }
     override val parseFrom: (input: InputStream) -> MangaSettings get() = MangaSettings::parseFrom
 }
@@ -78,16 +79,16 @@ class MangaSettingsHandling(context: Context) {
         updateValue = { setPagePadding(it) }
     )
 
-    val listOrPager = SettingInfo(
-        flow = all.map { it.listOrPager },
-        updateValue = { setListOrPager(it) }
+    val readerType = SettingInfo(
+        flow = all.map { it.readerType },
+        updateValue = { setReaderType(it) }
     )
 
     @Composable
-    fun rememberListOrPager() = preferences.rememberPreference(
-        key = { it.listOrPager },
-        update = { setListOrPager(it) },
-        defaultValue = true
+    fun rememberReaderType() = preferences.rememberPreference(
+        key = { it.readerType },
+        update = { setReaderType(it) },
+        defaultValue = ReaderType.List
     )
 
     @Composable

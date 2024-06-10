@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -31,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
+import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
@@ -77,16 +76,39 @@ fun PlayerSettings(
         updateValue = { reader = it }
     )
 
-    var listOrPager by mangaSettingsHandling.rememberListOrPager()
+    var readerType by mangaSettingsHandling.rememberReaderType()
 
     ShowWhen(reader) {
         Column {
-            SwitchSetting(
-                settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
-                summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
-                value = listOrPager,
-                updateValue = { listOrPager = it },
-                settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) }
+            var showReaderTypeDropdown by remember { mutableStateOf(false) }
+
+            PreferenceSetting(
+                settingTitle = { Text("Reader Type") },
+                endIcon = {
+                    DropdownMenu(
+                        expanded = showReaderTypeDropdown,
+                        onDismissRequest = { showReaderTypeDropdown = false }
+                    ) {
+                        ReaderType.entries
+                            .filter { it != ReaderType.UNRECOGNIZED }
+                            .forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.name) },
+                                    leadingIcon = {
+                                        if (it == readerType) {
+                                            Icon(Icons.Default.Check, null)
+                                        }
+                                    },
+                                    onClick = {
+                                        readerType = it
+                                        showReaderTypeDropdown = false
+                                    }
+                                )
+                            }
+                    }
+                    Text(readerType.name)
+                },
+                modifier = Modifier.clickable { showReaderTypeDropdown = true }
             )
 
             HorizontalDivider()

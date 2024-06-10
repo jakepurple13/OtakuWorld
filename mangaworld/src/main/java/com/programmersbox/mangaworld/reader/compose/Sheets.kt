@@ -19,13 +19,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FormatLineSpacing
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -61,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
+import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
@@ -70,7 +69,6 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.ShowWhen
-import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -84,8 +82,8 @@ import kotlinx.coroutines.runBlocking
 internal fun SettingsSheet(
     onDismiss: () -> Unit,
     mangaSettingsHandling: MangaSettingsHandling,
-    listOrPager: Boolean,
-    listOrPagerChange: (Boolean) -> Unit,
+    readerType: ReaderType,
+    readerTypeChange: (ReaderType) -> Unit,
     startAction: PlayingStartAction,
     onStartActionChange: (PlayingStartAction) -> Unit,
     onMiddleActionChange: (PlayingMiddleAction) -> Unit,
@@ -133,13 +131,37 @@ internal fun SettingsSheet(
                 range = 0f..10f
             )
             HorizontalDivider()
-            SwitchSetting(
-                settingTitle = { Text(stringResource(R.string.list_or_pager_title)) },
-                summaryValue = { Text(stringResource(R.string.list_or_pager_description)) },
-                value = listOrPager,
-                updateValue = listOrPagerChange,
-                settingIcon = { Icon(if (listOrPager) Icons.AutoMirrored.Filled.List else Icons.Default.Pages, null) },
-                modifier = Modifier.padding(vertical = 4.dp)
+            var showReaderTypeDropdown by remember { mutableStateOf(false) }
+
+            PreferenceSetting(
+                settingTitle = { Text("Reader Type") },
+                endIcon = {
+                    DropdownMenu(
+                        expanded = showReaderTypeDropdown,
+                        onDismissRequest = { showReaderTypeDropdown = false }
+                    ) {
+                        ReaderType.entries
+                            .filter { it != ReaderType.UNRECOGNIZED }
+                            .forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.name) },
+                                    leadingIcon = {
+                                        if (it == readerType) {
+                                            Icon(Icons.Default.Check, null)
+                                        }
+                                    },
+                                    onClick = {
+                                        readerTypeChange(it)
+                                        showReaderTypeDropdown = false
+                                    }
+                                )
+                            }
+                    }
+                    Text(readerType.name)
+                },
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .clickable { showReaderTypeDropdown = true }
             )
 
             HorizontalDivider()

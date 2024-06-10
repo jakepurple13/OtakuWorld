@@ -8,8 +8,9 @@ message MangaSettings {
   PlayingMiddleAction playingMiddleAction = 2;
   bool useNewReader = 3;
   int32 pagePadding = 4;
-  bool listOrPager = 5;
+  ReaderType readerType = 5;
   ImageLoaderType imageLoaderType = 6;
+  bool useFlipPager = 7;
 }
 
 enum PlayingStartAction {
@@ -28,4 +29,10 @@ enum ImageLoaderType {
   Glide = 1;
   Coil = 2;
   Panpf = 3;
+}
+
+enum ReaderType {
+  List = 0;
+  Pager = 1;
+  FlipPager = 2;
 }

@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.mangasettings.ImageLoaderType
+import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
@@ -97,7 +98,7 @@ fun ReadView(
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
-    var listOrPager by mangaSettingsHandling.rememberListOrPager()
+    var readerType by mangaSettingsHandling.rememberReaderType()
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -105,7 +106,9 @@ fun ReadView(
     ) { pages.size + 1 }
 
     val listState = rememberLazyListState()
-    val currentPage by remember { derivedStateOf { if (listOrPager) listState.firstVisibleItemIndex else pagerState.currentPage } }
+    val currentPage by remember {
+        derivedStateOf { if (readerType == ReaderType.List) listState.firstVisibleItemIndex else pagerState.currentPage }
+    }
 
     val paddingPage by mangaSettingsHandling.pagePadding
         .flow
@@ -121,8 +124,8 @@ fun ReadView(
         activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
-    val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && listOrPager } }
-    val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && !listOrPager } }
+    val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
+    val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && readerType != ReaderType.List } }
 
     val listIndex by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0 } }
     LaunchedEffect(listIndex, pagerState.currentPage, readVm.showInfo) {
@@ -160,8 +163,8 @@ fun ReadView(
         SettingsSheet(
             onDismiss = { settingsPopup = false },
             mangaSettingsHandling = mangaSettingsHandling,
-            listOrPager = listOrPager,
-            listOrPagerChange = { listOrPager = it },
+            readerType = readerType,
+            readerTypeChange = { readerType = it },
             startAction = startAction,
             onStartActionChange = { startAction = it },
             middleAction = middleAction,
@@ -179,7 +182,7 @@ fun ReadView(
                 onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = pages,
-                listOrPager = listOrPager,
+                listOrPager = readerType == ReaderType.List,
                 pagerState = pagerState,
                 listState = listState
             )
@@ -251,24 +254,39 @@ fun ReadView(
                     paddingValues = p
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                    Crossfade(targetState = listOrPager, label = "") {
-                        if (it) {
-                            ListView(
-                                listState = listState,
-                                pages = pages,
-                                readVm = readVm,
-                                itemSpacing = spacing,
-                                paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
-                                imageLoaderType = imageLoaderType,
-                            ) { readVm.showInfo = !readVm.showInfo }
-                        } else {
-                            PagerView(
-                                pagerState = pagerState,
-                                pages = pages,
-                                vm = readVm,
-                                itemSpacing = spacing,
-                                imageLoaderType = imageLoaderType,
-                            ) { readVm.showInfo = !readVm.showInfo }
+                    Crossfade(targetState = readerType, label = "") {
+                        when (it) {
+                            ReaderType.List -> {
+                                ListView(
+                                    listState = listState,
+                                    pages = pages,
+                                    readVm = readVm,
+                                    itemSpacing = spacing,
+                                    paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
+                                    imageLoaderType = imageLoaderType,
+                                ) { readVm.showInfo = !readVm.showInfo }
+                            }
+
+                            ReaderType.Pager -> {
+                                PagerView(
+                                    pagerState = pagerState,
+                                    pages = pages,
+                                    vm = readVm,
+                                    itemSpacing = spacing,
+                                    imageLoaderType = imageLoaderType,
+                                ) { readVm.showInfo = !readVm.showInfo }
+                            }
+
+                            ReaderType.FlipPager -> {
+                                FlipPagerView(
+                                    pagerState = pagerState,
+                                    pages = pages,
+                                    vm = readVm,
+                                    imageLoaderType = imageLoaderType,
+                                ) { readVm.showInfo = !readVm.showInfo }
+                            }
+
+                            else -> {}
                         }
                     }
                 }
@@ -312,6 +330,44 @@ fun PagerView(
         pageSpacing = itemSpacing,
         beyondViewportPageCount = 1,
         key = { it }
+    ) { page ->
+        pages.getOrNull(page)?.let {
+            ChapterPage(
+                chapterLink = { it },
+                isDownloaded = vm.isDownloaded,
+                openCloseOverlay = onClick,
+                headers = vm.headers,
+                contentScale = ContentScale.Fit,
+                imageLoaderType = imageLoaderType
+            )
+        } ?: Box(modifier = Modifier.fillMaxSize()) {
+            LastPageReached(
+                isLoading = vm.isLoadingPages,
+                currentChapter = vm.currentChapter,
+                lastChapter = vm.list.lastIndex,
+                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+}
+
+@Composable
+fun FlipPagerView(
+    pagerState: PagerState,
+    pages: List<String>,
+    vm: ReadViewModel,
+    imageLoaderType: ImageLoaderType,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    FlipPager(
+        state = pagerState,
+        orientation = FlipPagerOrientation.Vertical,
+        key = { it },
+        modifier = modifier.fillMaxSize(),
     ) { page ->
         pages.getOrNull(page)?.let {
             ChapterPage(
