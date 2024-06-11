@@ -550,3 +550,77 @@ fun Modifier.hazeChoice(
     state: HazeState,
     style: HazeStyle = HazeDefaults.style(),
 ): Modifier = this.haze(state, style)
+
+/*
+// Need `implementation("com.mutualmobile:composesensors:1.1.2")` to make this work
+@Composable
+fun HingeDetection(
+    locationAlignment: Alignment = Alignment.TopCenter,
+    timeoutDurationMillis: Long = 2000
+) {
+    val hingeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        rememberHingeAngleSensorState()
+    } else {
+        null
+    }
+
+    hingeState?.let { hinge ->
+        val alphaHinge = remember { Animatable(0f) }
+        var firstCount by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(hinge.angle) {
+            alphaHinge.animateTo(1f)
+            delay(timeoutDurationMillis)
+            alphaHinge.animateTo(0f)
+        }
+
+        Box(
+            contentAlignment = locationAlignment,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = alphaHinge.value }
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(WindowInsets.systemBars.asPaddingValues())
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.Black.copy(alpha = .75f))
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    Icons.Default.DevicesFold,
+                    null,
+                    tint = Color.White,
+                    modifier = Modifier.weight(1f, false)
+                )
+
+                Text(
+                    "${hinge.angle}°",
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Canvas(
+                    Modifier
+                        .size(24.dp)
+                        .weight(1f, false)
+                ) {
+                    drawArc(
+                        Color.White,
+                        270f,
+                        hinge.angle,
+                        true
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        style = Stroke()
+                    )
+                }
+            }
+        }
+    }
+}
+*/

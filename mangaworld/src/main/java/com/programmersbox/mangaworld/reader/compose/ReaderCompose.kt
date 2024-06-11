@@ -66,9 +66,15 @@ import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import eu.wewox.pagecurl.ExperimentalPageCurlApi
+import eu.wewox.pagecurl.config.rememberPageCurlConfig
+import eu.wewox.pagecurl.page.PageCurl
+import eu.wewox.pagecurl.page.PageCurlState
+import eu.wewox.pagecurl.page.rememberPageCurlState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalPageCurlApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
@@ -106,8 +112,16 @@ fun ReadView(
     ) { pages.size + 1 }
 
     val listState = rememberLazyListState()
+    val curlState = rememberPageCurlState(initialCurrent = 0)
     val currentPage by remember {
-        derivedStateOf { if (readerType == ReaderType.List) listState.firstVisibleItemIndex else pagerState.currentPage }
+        derivedStateOf {
+            when (readerType) {
+                ReaderType.List, ReaderType.FlipPager -> listState.firstVisibleItemIndex
+                ReaderType.Pager -> pagerState.currentPage
+                ReaderType.CurlPager -> curlState.current
+                else -> 0
+            }
+        }
     }
 
     val paddingPage by mangaSettingsHandling.pagePadding
@@ -136,11 +150,24 @@ fun ReadView(
     }
 
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { listState.scrollToItem(it) }
+        snapshotFlow { pagerState.currentPage }.collect {
+            listState.scrollToItem(it)
+            runCatching { curlState.snapTo(it) }
+        }
     }
 
     LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex }.collect { pagerState.scrollToPage(it) }
+        snapshotFlow { listState.firstVisibleItemIndex }.collect {
+            pagerState.scrollToPage(it)
+            runCatching { curlState.snapTo(it) }
+        }
+    }
+
+    LaunchedEffect(curlState) {
+        snapshotFlow { curlState.current }.collect {
+            pagerState.scrollToPage(it)
+            listState.scrollToItem(it)
+        }
     }
 
     val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
@@ -182,9 +209,14 @@ fun ReadView(
                 onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = pages,
-                listOrPager = readerType == ReaderType.List,
-                pagerState = pagerState,
-                listState = listState
+                onPageChange = {
+                    when (readerType) {
+                        ReaderType.List, ReaderType.FlipPager -> listState.animateScrollToItem(it)
+                        ReaderType.Pager -> pagerState.animateScrollToPage(it)
+                        ReaderType.CurlPager -> curlState.snapTo(it)
+                        else -> {}
+                    }
+                },
             )
         }
     }
@@ -286,6 +318,15 @@ fun ReadView(
                                 ) { readVm.showInfo = !readVm.showInfo }
                             }
 
+                            ReaderType.CurlPager -> {
+                                CurlPagerView(
+                                    pagerState = curlState,
+                                    pages = pages,
+                                    vm = readVm,
+                                    imageLoaderType = imageLoaderType,
+                                ) { readVm.showInfo = !readVm.showInfo }
+                            }
+
                             else -> {}
                         }
                     }
@@ -367,6 +408,53 @@ fun FlipPagerView(
         state = pagerState,
         orientation = FlipPagerOrientation.Vertical,
         key = { it },
+        modifier = modifier.fillMaxSize(),
+    ) { page ->
+        pages.getOrNull(page)?.let {
+            ChapterPage(
+                chapterLink = { it },
+                isDownloaded = vm.isDownloaded,
+                openCloseOverlay = onClick,
+                headers = vm.headers,
+                contentScale = ContentScale.Fit,
+                imageLoaderType = imageLoaderType
+            )
+        } ?: Box(modifier = Modifier.fillMaxSize()) {
+            LastPageReached(
+                isLoading = vm.isLoadingPages,
+                currentChapter = vm.currentChapter,
+                lastChapter = vm.list.lastIndex,
+                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
+                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
+                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalPageCurlApi::class)
+@Composable
+fun CurlPagerView(
+    pagerState: PageCurlState,
+    pages: List<String>,
+    vm: ReadViewModel,
+    imageLoaderType: ImageLoaderType,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    PageCurl(
+        state = pagerState,
+        key = { it },
+        count = pages.size.coerceAtLeast(2),
+        config = rememberPageCurlConfig(
+            dragForwardEnabled = true,
+            dragBackwardEnabled = true,
+            tapForwardEnabled = false,
+            tapBackwardEnabled = false,
+            backPageColor = MaterialTheme.colorScheme.surface,
+            onCustomTap = { _, _ -> true }
+        ),
         modifier = modifier.fillMaxSize(),
     ) { page ->
         pages.getOrNull(page)?.let {

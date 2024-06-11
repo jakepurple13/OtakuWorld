@@ -35,4 +35,5 @@ enum ReaderType {
   List = 0;
   Pager = 1;
   FlipPager = 2;
+  CurlPager = 3;
 }

@@ -82,5 +82,7 @@ dependencies {
 
     implementation(libs.zoomableModifier)
 
+    implementation("io.github.oleksandrbalan:pagecurl:1.5.1")
+
     implementation("io.github.panpf.zoomimage:zoomimage-compose-glide:1.0.2")
 }

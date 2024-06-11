@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Check
@@ -301,9 +299,7 @@ internal fun SheetView(
     onSheetHide: () -> Unit,
     currentPage: Int,
     pages: List<String>,
-    listOrPager: Boolean,
-    pagerState: PagerState,
-    listState: LazyListState,
+    onPageChange: suspend (Int) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -343,7 +339,7 @@ internal fun SheetView(
                         .clickable {
                             scope.launch {
                                 if (currentPage == i) onSheetHide()
-                                if (listOrPager) listState.animateScrollToItem(i) else pagerState.animateScrollToPage(i)
+                                onPageChange(i)
                             }
                         }
                 ) {
