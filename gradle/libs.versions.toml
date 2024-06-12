@@ -167,7 +167,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.7.1"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.8.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
