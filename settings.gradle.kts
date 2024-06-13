@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     //TODO: Remove current ones and replace with this!
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2024.05.00")
+            from("androidx.gradle:gradle-version-catalog:2024.06.00")
         }
     }
 }
