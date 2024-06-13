@@ -102,7 +102,10 @@ fun ReadView(
 
     val pages = readVm.pageList
 
-    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+    val settings = LocalSettingsHandling.current
+
+    val showBlur by settings.rememberShowBlur()
+    val isAmoledMode by settings.rememberIsAmoledMode()
 
     var readerType by mangaSettingsHandling.rememberReaderType()
 
@@ -268,6 +271,7 @@ fun ReadView(
                         chapterChange = ::showToast,
                         vm = readVm,
                         showBlur = showBlur,
+                        isAmoledMode = isAmoledMode,
                         modifier = if (showBlur) Modifier.hazeChild(hazeState) else Modifier
                     )
                 }

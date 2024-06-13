@@ -178,12 +178,17 @@ internal fun BottomBar(
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit,
     showBlur: Boolean,
+    isAmoledMode: Boolean,
     modifier: Modifier = Modifier,
 ) {
     BottomAppBar(
         modifier = modifier,
         windowInsets = WindowInsets(0.dp),
-        containerColor = if (showBlur) Color.Transparent else BottomAppBarDefaults.containerColor
+        containerColor = when {
+            showBlur -> Color.Transparent
+            isAmoledMode -> MaterialTheme.colorScheme.surface
+            else -> BottomAppBarDefaults.containerColor
+        }
     ) {
         val prevShown = vm.currentChapter < vm.list.lastIndex
         val nextShown = vm.currentChapter > 0
