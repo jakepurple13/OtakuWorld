@@ -1,6 +1,6 @@
 [versions]
 #gradle = "8.5.0-alpha05"
-gradle = "8.4.1"
+gradle = "8.4.2"
 
 kspVersion = "2.0.0-1.0.22"
 
@@ -18,11 +18,11 @@ coroutinesVersion = "1.8.1"
 glideVersion = "4.16.0"
 pagingVersion = "3.3.0"
 protobufGradlePlugin = "0.9.4"
-roomVersion = "2.7.0-alpha03"
-navVersion = "2.8.0-beta02"
+roomVersion = "2.7.0-alpha04"
+navVersion = "2.8.0-beta03"
 koinVersion = "3.5.6"
 coil = "2.6.0"
-lifecycle = "2.8.1"
+lifecycle = "2.8.2"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
@@ -36,7 +36,7 @@ landscapist = "2.3.4"
 protobufVersion = "4.26.1"
 sketchVersion = "3.2.5"
 activity = "1.9.0"
-composeBomVersion = "2024.05.00-alpha03"
+composeBomVersion = "2024.05.00-SNAPSHOT"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -167,7 +167,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.7.1"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.8.0"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
