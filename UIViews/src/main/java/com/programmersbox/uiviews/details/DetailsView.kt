@@ -120,7 +120,9 @@ fun DetailsView(
     val navController = LocalNavController.current
     var reverseChapters by remember { mutableStateOf(false) }
 
-    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+    val settings = LocalSettingsHandling.current
+    val showBlur by settings.rememberShowBlur()
+    val isAmoledMode by settings.rememberIsAmoledMode()
 
     val hostState = remember { SnackbarHostState() }
 
@@ -275,10 +277,10 @@ fun DetailsView(
                 DetailBottomBar(
                     navController = navController,
                     onShowLists = { showLists = true },
-                    containerColor = if (showBlur) {
-                        Color.Transparent
-                    } else {
-                        swatchInfo?.rgb?.toComposeColor() ?: BottomAppBarDefaults.containerColor
+                    containerColor = when {
+                        showBlur -> Color.Transparent
+                        isAmoledMode -> swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface
+                        else -> swatchInfo?.rgb?.toComposeColor() ?: BottomAppBarDefaults.containerColor
                     },
                     info = info,
                     customActions = {},
