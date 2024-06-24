@@ -29,6 +29,7 @@ enum ImageLoaderType {
   Glide = 1;
   Coil = 2;
   Panpf = 3;
+  Telephoto = 4;
 }
 
 enum ReaderType {

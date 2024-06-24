@@ -42,6 +42,7 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import me.saket.telephoto.zoomable.glide.ZoomableGlideImage
 
 const val ImageLoaderSettingsRoute = "imageLoaderSettings"
 
@@ -116,6 +117,7 @@ private fun ImageLoaderType.Composed(
         ImageLoaderType.Glide -> Glide(url, modifier, contentScale)
         ImageLoaderType.Coil -> Coil(url, modifier, contentScale)
         ImageLoaderType.Panpf -> Panpf(url, modifier, contentScale)
+        ImageLoaderType.Telephoto -> Telephoto(url, modifier, contentScale)
         ImageLoaderType.UNRECOGNIZED -> Image(
             imageVector = Icons.Default.Image,
             contentDescription = null,
@@ -182,6 +184,20 @@ private fun Panpf(
     contentScale: ContentScale = ContentScale.Fit,
 ) {
     GlideZoomAsyncImage(
+        model = url,
+        contentDescription = null,
+        contentScale = contentScale,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun Telephoto(
+    url: String,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+) {
+    ZoomableGlideImage(
         model = url,
         contentDescription = null,
         contentScale = contentScale,

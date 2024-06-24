@@ -85,4 +85,6 @@ dependencies {
     implementation("io.github.oleksandrbalan:pagecurl:1.5.1")
 
     implementation("io.github.panpf.zoomimage:zoomimage-compose-glide:1.0.2")
+
+    implementation("me.saket.telephoto:zoomable-image-glide:0.11.2")
 }

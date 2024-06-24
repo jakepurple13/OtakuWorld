@@ -41,6 +41,8 @@ import com.skydoves.landscapist.glide.GlideImage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import io.ktor.client.request.header
+import me.saket.telephoto.zoomable.glide.ZoomableGlideImage
+import me.saket.telephoto.zoomable.rememberZoomableImageState
 
 @Composable
 internal fun ImageLoaderType.Composed(
@@ -54,6 +56,7 @@ internal fun ImageLoaderType.Composed(
         ImageLoaderType.Kamel -> Kamel(painter, headers, modifier, contentScale, onRefresh)
         ImageLoaderType.Glide -> Glide(painter, headers, modifier, contentScale, onRefresh)
         ImageLoaderType.Coil -> Coil(painter, headers, modifier, contentScale, onRefresh)
+        ImageLoaderType.Telephoto -> Telephoto(painter, headers, modifier, contentScale, onRefresh)
         else -> Image(
             imageVector = Icons.Default.Image,
             contentDescription = null,
@@ -192,4 +195,43 @@ internal fun Panpf(
             modifier = Modifier.fillMaxWidth()
         )
     }
+}
+
+@Composable
+internal fun Telephoto(
+    painter: String,
+    headers: Map<String, String>,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+    onRefresh: () -> Unit,
+) {
+    val url = remember(painter) { GlideUrl(painter) { headers } }
+
+    val state = rememberZoomableImageState()
+
+    if (state.isImageDisplayed) {
+        CircularProgressIndicator()
+    }
+
+    /*SubSamplingImage(
+        state = rememberSubSamplingImageState(
+            imageSource = SubSamplingImageSource.file(""),
+            zoomableState = rememberZoomableState()
+        ),
+        contentDescription = null,
+        modifier = modifier
+            .fillMaxSize()
+            .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+    )*/
+
+    ZoomableGlideImage(
+        model = url,
+        state = state,
+        contentDescription = null,
+        contentScale = contentScale,
+        gesturesEnabled = false,
+        modifier = modifier
+            .fillMaxSize()
+            .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
+    )
 }
