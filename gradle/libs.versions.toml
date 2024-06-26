@@ -31,10 +31,14 @@ ktorVersion = "2.3.12"
 tvCompose = "1.0.0-alpha10"
 workVersion = "2.9.0"
 ziplineVersion = "1.1.0"
-landscapist = "2.3.4"
+landscapist = "2.3.5"
 protobufVersion = "4.26.1"
 sketchVersion = "3.2.5"
 activity = "1.9.0"
+composeVerion = "1.7.0-beta04"
+compose3Verion = "1.3.0-beta04"
+compose3CommonVerion = "1.0.0-alpha01"
+compose3AdaptiveVerion = "1.0.0-beta04"
 composeBomVersion = "2024.05.00-SNAPSHOT"
 
 ### MangaWorld
@@ -78,25 +82,25 @@ androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref
 
 #Compose
 composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "composeBomVersion" }
-composeUi = { group = "androidx.compose.ui", name = "ui" }
-composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
-materialYou = { group = "androidx.compose.material3", name = "material3" }
-materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
-materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
-materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
-adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
-adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
-material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
-composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
-composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
-composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
+composeUi = { group = "androidx.compose.ui", name = "ui", version.ref = "composeVerion" }
+composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composeVerion" }
+composeFoundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "composeVerion" }
+materialYou = { group = "androidx.compose.material3", name = "material3", version.ref = "compose3Verion" }
+materialYou-common = { group = "androidx.compose.material3", name = "material3-common", version.ref = "compose3CommonVerion" }
+materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "compose3Verion" }
+materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive", version.ref = "compose3AdaptiveVerion" }
+adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android", version.ref = "compose3AdaptiveVerion" }
+adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android", version.ref = "compose3AdaptiveVerion" }
+material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "compose3AdaptiveVerion" }
+composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "composeVerion" }
+composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeVerion" }
+composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding", version.ref = "composeVerion" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
 tv-material = { module = "androidx.tv:tv-material", version.ref = "tvCompose" }
 tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose" }
-uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
-composeAnimation = { group = "androidx.compose.animation", name = "animation" }
-composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
+uiUtil = { group = "androidx.compose.ui", name = "ui-util", version.ref = "composeVerion" }
+composeAnimation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeVerion" }
+composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "composeVerion" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 composeLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
@@ -166,7 +170,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.8.0"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.8.1"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
@@ -275,7 +279,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.11.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1"
 androidxWebkit = "androidx.webkit:webkit:1.11.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.2"
