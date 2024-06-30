@@ -189,7 +189,7 @@ androidxBrowser = "androidx.browser:browser:1.8.0"
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
-lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.1.0"
+lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.2.0"
 sonner = { module = "io.github.dokar3:sonner", version = "0.3.8" }
 
 datastore = "androidx.datastore:datastore:1.1.1"
