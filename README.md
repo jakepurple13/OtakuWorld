@@ -119,7 +119,7 @@
 
 3.
 ```sh
-adb 安装 animeworldtv-release.apk
+adb install animeworldtv-release.apk
 ```
 
  如果不使用"`adb`:
