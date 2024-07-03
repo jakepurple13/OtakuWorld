@@ -1,32 +1,34 @@
-# OtakuWorld
+# 御宅族世界
  ![visitors](https://page-views.glitch.me/badge?page_id=jakepurple13.OtakuWorld)
  ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
  
- [Discord Link](https://discord.gg/MhhHMWqryg) There's a discord now!!! This is something that will probably be changed and modified since it's the first time I've done this.
- 
-A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld) apps. This was created because there were a ton of shared elements between the two apps so I combined them, allowing two separate apps but a lot of the same base logic.
+ [Discord 链接](https://discord.gg/MhhHMWqryg) 现在有一个 discord 了！！！由于这是我第一次这样做，所以可能会有一些变动和修改。
 
-## Contents
-   * [Screenshots](#screenshots)
-      * [MangaWorld](#mangaworld)
-      * [AnimeWorld](#animeworld)
-      * [AnimeWorldTV](#animeworldtv)
-      * [NovelWorld](#novelworld)
-      * [Otaku Manager](#otaku-manager)
-   * [Features](#features)
-      * [Shared](#shared)
-      * [MangaWorld](#mangaworld-1)
-      * [AnimeWorld](#animeworld-1)
-      * [AnimeWorldTV](#animeworldtv-1)
-      * [NovelWorld](#novelworld-1)
-      * [Otaku Manager](#otaku-manager-1)
-   * [AnimeWorldTV Install/Update Instructions](#instructions-to-installupdate-animeworldtv)
-   * [Issues](#issues)
-   * [Contributing](#pull-requests)
+我的作品的综合版本
+ [MangaWorld](https://github.com/jakepurple13/MangaWorld) and [AnimeWorld](https://github.com/jakepurple13/AnimeWorld)
+ 应用程序。这是因为两个应用程序之间有大量的共享元素，所以我将它们合并在一起，这样就有了两个独立的应用程序，但有很多相同的基本逻辑。
 
-## [Latest Release](https://github.com/jakepurple13/OtakuWorld/releases/latest)
+## 目 录
+   * [截图](#screenshots)
+      * [漫画世界](#mangaworld)
+      * [动漫世界](#animeworld)
+      * [动漫世界电视](#animeworldtv)
+      * [小说世界](#novelworld)
+      * [宅文化管理者](#otaku-manager)
+   * [特征](#features)
+      * [共享的](#shared)
+      * [漫画世界](#mangaworld-1)
+      * [动漫世界](#animeworld-1)
+      * [动漫世界电视](#animeworldtv-1)
+      * [小说世界](#novelworld-1)
+      * [宅文化管理者](#otaku-manager-1)
+   * [AnimeWorldTV 安装 更新说明](#装 更新 AnimeWorldTV 的指南)
+   * [问题](#Issues)
+   * [拉取请求](#pull-requests)
 
-# Screenshots
+## [最新版本](https://github.com/jakepurple13/OtakuWorld/releases/latest)
+
+# 截图
 <p align="center">
   <img src="/mangaworld/src/main/ic_launcher-playstore.png" width="32%"/>
   <img src="/animeworld/src/main/ic_launcher-playstore.png" width="32%"/>
@@ -34,7 +36,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/otakumanager/src/main/ic_launcher-playstore.png" width="32%"/>
 </p>
 
-### MangaWorld
+### 漫画世界
 <p align="center">
   <img src="/ss/mw_recent.png" width="32%"/>
   <img src="/ss/mw_all.png" width="32%"/>
@@ -44,7 +46,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/mw_more_settings.png" width="32%"/>
 </p>
 
-### AnimeWorld
+### 动漫世界
 <p align="center">
   <img src="/ss/aw_recent.png" width="32%"/>
   <img src="/ss/aw_all.png" width="32%"/>
@@ -54,7 +56,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/aw_more_settings.png" width="32%"/>
 </p>
 
-### AnimeWorldTV
+### 动漫世界电视
 <p align="center">
   <img src="/ss/tv_ss_homescreen.png" width="32%"/>
   <img src="/ss/tv_ss_details.png" width="32%"/>
@@ -64,7 +66,7 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/tv_ss_favorites.png" width="32%"/>
 </p>
 
-### NovelWorld
+### 小说世界
 <p align="center">
   <img src="/ss/nw_recent.png" width="32%"/>
   <img src="/ss/nw_all.png" width="32%"/>
@@ -74,82 +76,82 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
   <img src="/ss/nw_settings.png" width="32%"/>
 </p>
 
-### Otaku Manager
+### 宅文化管理者
 <p align="center">
   <img src="/ss/otakumanager_ss_1.png" width="32%"/>
   <img src="/ss/otakumanager_ss_2.png" width="32%"/>
   <img src="/ss/otakumanager_ss_3.png" width="32%"/>
 </p>
 
-# Features
+# 特征
 
-### Shared Features
-- Log in to save your favorites and watched episodes from device to device
-- Favorite to be alerted of any updates
-- Share Anime/Manga and open in app!
+###  特征
+- 登录以将您的收藏和已观看的剧集从一个设备保存到另一个设备
+- 将其加入收藏以接收任何更新的提醒
+- 分享动漫 漫画并在应用程序中打开!
 
-### AnimeWorld
-- Stream and download Anime from various different video sites
-- Watch in a built-in video player
-- Cast Videos to Chromecast Enabled Devices!
+### 动漫世界
+- 从各种不同的视频网站上观看和下载动漫
+- 在内置视频播放器中观看
+- 将视频投放到支持Chromecast的设备
 
-### AnimeWorldTV
-- Stream Anime/TV/Movies from various different video sites
-- Watch in a built-in video player
-- Sync favorites with AnimeWorld
-- Includes an opening skipper (just skips ahead 90 seconds)
-- Available only on Android TV devices
+### 动漫世界电视
+- 从多个不同的视频网站上播放动漫、电视剧和电影
+- 在内置视频播放器中观看
+- 将收藏夹与AnimeWorld同步
+- 包含跳过片头（直接跳过90秒）
+- 仅适用于Android TV设备
 
-### MangaWorld
-- Read Manga from various different manga sites
+### 漫画世界
+- 从多个不同的漫画网站阅读漫画
 
-### NovelWorld
-- Read Novels from various different novel sites
+### 小说世界
+- 从多个不同的小说网站阅读小说
 
-### Otaku Manager
-- View all favorites across all OtakuWorld applications. Requires you to login.
-- Made using pure Jetpack Compose. No Xml for any views.
+### 宅文化管理者
+- 查看所有OtakuWorld应用程序中的所有收藏夹。需要您登录
+- 使用纯粹的Jetpack Compose编写。没有任何视图的XML
 
-#### Instructions to Install/Update AnimeWorldTV
-1. Download animeworldtv-release.apk
+#### 询问如何获取有关安装或更新AnimeWorldTV的指导
+1. 下载 animeworldtv-release.apk
 
-If using `adb`:
+ 如果使用 `adb`:
 
-2.
+3.
 ```sh
-adb install animeworldtv-release.apk
+adb 安装 animeworldtv-release.apk
 ```
 
-If not using `adb`:
+ 如果不使用"`adb`:
 
-2. Follow [Android Authority][aa]'s steps
+2. 建议或要求按照Android Authority提供的步骤或指导进行操作或行动
 
-# Building Locally
-Be sure to change the build variant to a `noFirebase` variant. Other than that, nothing needs to change to run/build locally!
+# 本地构建
+"确保将构建变体更改为 noFirebase 变体。除此之外，在进行本地运行或构建时不需要做任何其他更改！"
 
-# Issues
+# 问题
+如果遇到任何问题，请使用以下详细信息创建一个问题请求
 
-If you run into any issues, please create an issue request with the following details:
 
-- Small description
-- Steps taken
-- Device
-- Version of Android
-- Expected behavior
-- Actual behavior
-- If the issue is a breaking issue or not
-- Any other additional information you might think will help
+- 简短描述
+- 所采取的步骤
+- 设备
+- Android版本
+- 预期行为
+- 实际行为
+- 问题是否严重影响使用
+- 其他可能有助于解决问题的额外信息
+# 拉取请求
 
-# Pull Requests
+果你想为应用程序添加新的信息源或者有改进建议时应该采取的步骤
 
-If you want to add a new source or have a change that might make the app better
+- 创建一个新的分支
+- 进行修改
+- 推送修改并创建新的PR（Pull Request）
+- 将我（@jakepurple13）添加为审查者
+- 这些步骤通常用于开发团队协作，帮助提升应用程序的功能和质量
 
-- Make a new branch
-- Make changes
-- Push and create a new PR
-- Add me (@jakepurple13) as a reviewer
-
-Disclaimer: I am not affiliated with Tachiyomi app or any fork hosted on GitHub.
-
-[//]: # (Reference Links)
+[//]: # (参考链接)
   [aa]: <https://www.androidauthority.com/sideloading-apps-on-android-tv-1189896/>
+
+- 本翻译由ChatGPT 3.5提供翻译支持,如果翻译错误，请(@kwxmxb) 进行更改或者变更翻译
