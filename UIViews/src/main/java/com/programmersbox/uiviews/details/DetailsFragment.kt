@@ -86,6 +86,7 @@ import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.launchCatching
+import com.programmersbox.uiviews.utils.rememberSwatchStyle
 import com.programmersbox.uiviews.utils.rememberSwatchType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -201,6 +202,7 @@ fun DetailsScreen(
         val isAmoledMode by handling.rememberIsAmoledMode()
         val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
         val paletteSwatchType by rememberSwatchType()
+        val paletteStyle by rememberSwatchStyle()
 
         val dynamicColor = rememberDynamicMaterialThemeState(
             seedColor = details.palette?.let(paletteSwatchType.swatch)?.color?.takeIf { usePalette } ?: MaterialTheme.colorScheme.primary,
@@ -210,7 +212,8 @@ fun DetailsScreen(
                 SystemThemeMode.Night -> true
                 else -> isSystemInDarkTheme()
             },
-            isAmoled = isAmoledMode && (!usePalette || details.palette == null)
+            isAmoled = isAmoledMode && (!usePalette || details.palette == null),
+            style = paletteStyle
         )
 
         val shareChapter by handling.rememberShareChapter()

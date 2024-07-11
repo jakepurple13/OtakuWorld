@@ -67,6 +67,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import com.materialkolor.PaletteStyle
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
@@ -128,6 +129,16 @@ fun rememberSwatchType() = rememberPreference(
     mapToType = { runCatching { PaletteSwatchType.valueOf(it) }.getOrDefault(PaletteSwatchType.Vibrant) },
     mapToKey = { it.name },
     defaultValue = PaletteSwatchType.Vibrant
+)
+
+val SWATCH_STYLE = stringPreferencesKey("swatchStyle")
+
+@Composable
+fun rememberSwatchStyle() = rememberPreference(
+    key = SWATCH_STYLE,
+    mapToType = { runCatching { PaletteStyle.valueOf(it) }.getOrDefault(PaletteStyle.TonalSpot) },
+    mapToKey = { it.name },
+    defaultValue = PaletteStyle.TonalSpot
 )
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }

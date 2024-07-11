@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.materialkolor.PaletteStyle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.details.PaletteSwatchType
@@ -42,6 +43,7 @@ import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.historySave
+import com.programmersbox.uiviews.utils.rememberSwatchStyle
 import com.programmersbox.uiviews.utils.rememberSwatchType
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.flow.first
@@ -151,6 +153,22 @@ fun GeneralSettings(
                 updateValue = { it, d ->
                     d.value = false
                     paletteSwatchType = it
+                }
+            )
+
+            var paletteStyle by rememberSwatchStyle()
+            ListSetting(
+                settingTitle = { Text("Swatch Style") },
+                dialogIcon = { Icon(Icons.Default.Palette, null) },
+                settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose a Swatch Style to use") },
+                summaryValue = { Text(paletteStyle.name) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+                value = paletteStyle,
+                options = PaletteStyle.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    paletteStyle = it
                 }
             )
         }
