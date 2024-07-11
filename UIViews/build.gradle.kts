@@ -129,4 +129,6 @@ dependencies {
 
     implementation(libs.sonner)
     implementation(libs.glideCompose)
+
+    implementation(libs.material.kolor)
 }

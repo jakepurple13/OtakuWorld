@@ -4,7 +4,6 @@ package com.programmersbox.uiviews.details
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
@@ -64,6 +63,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
+import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
@@ -80,7 +80,6 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.components.minus
-import com.programmersbox.uiviews.utils.toComposeColor
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
@@ -112,10 +111,10 @@ fun DetailsView(
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: () -> Boolean,
+    onPaletteSet: (Palette) -> Unit,
 ) {
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
-    val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     var reverseChapters by remember { mutableStateOf(false) }
@@ -148,10 +147,7 @@ fun DetailsView(
         }
     }
 
-    val topBarColor by animateColorAsState(
-        swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface,
-        label = ""
-    )
+    val topBarColor = MaterialTheme.colorScheme.primary
 
     val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
@@ -180,7 +176,6 @@ fun DetailsView(
                 windowInsets = WindowInsets(0.dp)
             ) {
                 MarkAsScreen(
-                    topBarColor = topBarColor,
                     drawerState = scaffoldState,
                     info = info,
                     chapters = chapters,
@@ -189,8 +184,8 @@ fun DetailsView(
             }
         }
     ) {
-        val b = MaterialTheme.colorScheme.background
-        val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
+        val backgroundColor = MaterialTheme.colorScheme.background
+        val primaryColor = MaterialTheme.colorScheme.primary
 
         val collapsableBehavior = rememberCollapsableTopBehavior(
             enterAlways = false
@@ -207,8 +202,10 @@ fun DetailsView(
                             .zIndex(2f)
                             .let { if (showBlur) it.hazeChild(hazeState) else it },
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = if (showBlur) Color.Transparent else
-                                swatchInfo?.rgb?.toComposeColor() ?: TopAppBarDefaults.topAppBarColors().containerColor,
+                            containerColor = if (showBlur)
+                                Color.Transparent
+                            else
+                                Color.Unspecified,
                             titleContentColor = topBarColor
                         ),
                         title = {
@@ -268,6 +265,7 @@ fun DetailsView(
                         logo = painterResource(id = logo.notificationId),
                         isFavorite = isFavorite,
                         favoriteClick = onFavoriteClick,
+                        onPaletteSet = onPaletteSet,
                         modifier = Modifier.collapse()
                     )
                 }
@@ -279,8 +277,8 @@ fun DetailsView(
                     onShowLists = { showLists = true },
                     containerColor = when {
                         showBlur -> Color.Transparent
-                        isAmoledMode -> swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface
-                        else -> swatchInfo?.rgb?.toComposeColor() ?: BottomAppBarDefaults.containerColor
+                        isAmoledMode -> MaterialTheme.colorScheme.surface
+                        else -> BottomAppBarDefaults.containerColor
                     },
                     info = info,
                     customActions = {},
@@ -306,7 +304,7 @@ fun DetailsView(
                         .drawWithCache {
                             onDrawBehind {
                                 drawLine(
-                                    b,
+                                    backgroundColor,
                                     Offset(0f, 8f),
                                     Offset(size.width, 8f),
                                     4 * density
@@ -318,8 +316,8 @@ fun DetailsView(
             },
             snackbarHost = {
                 SnackbarHost(hostState) { data ->
-                    val background = swatchInfo?.rgb?.toComposeColor() ?: SnackbarDefaults.color
-                    val font = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.surface
+                    val background = SnackbarDefaults.color
+                    val font = SnackbarDefaults.contentColor
                     Snackbar(
                         containerColor = Color(
                             ColorUtils.blendARGB(
@@ -334,7 +332,7 @@ fun DetailsView(
                 }
             },
             modifier = Modifier
-                .drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
+                .drawBehind { drawRect(Brush.verticalGradient(listOf(primaryColor, backgroundColor))) }
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
                 .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
         ) { p ->
@@ -354,12 +352,7 @@ fun DetailsView(
                         if (showBlur)
                             it.haze(
                                 hazeState,
-                                style = HazeDefaults.style(
-                                    backgroundColor = animateColorAsState(
-                                        targetValue = swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface,
-                                        label = ""
-                                    ).value
-                                ),
+                                style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.surface),
                             ) else it
                     },
             ) {
@@ -413,8 +406,8 @@ fun DetailsView(
                     settings = ScrollbarSettings.Default.copy(
                         thumbThickness = 8.dp,
                         scrollbarPadding = 2.dp,
-                        thumbUnselectedColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
-                        thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+                        thumbUnselectedColor = MaterialTheme.colorScheme.primary,
+                        thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
                     ),
                 )
             }

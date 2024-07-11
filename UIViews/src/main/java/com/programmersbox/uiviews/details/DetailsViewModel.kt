@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
@@ -56,7 +57,7 @@ class DetailsViewModel(
 
     var info: InfoModel? by mutableStateOf(null)
 
-    var swatchInfo by mutableStateOf<SwatchInfo?>(null)
+    var palette by mutableStateOf<Palette?>(null)
 
     private var addRemoveFavoriteJob: Job? = null
 

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,14 +32,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.HISTORY_SAVE
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.ListSetting
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.historySave
+import com.programmersbox.uiviews.utils.rememberSwatchType
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -119,6 +123,8 @@ fun GeneralSettings(
             updateValue = { showBlur = it }
         )
 
+        HorizontalDivider()
+
         var usePalette by handling.rememberUsePalette()
 
         SwitchSetting(
@@ -130,6 +136,26 @@ fun GeneralSettings(
             value = usePalette,
             updateValue = { usePalette = it }
         )
+
+        ShowWhen(usePalette) {
+            var paletteSwatchType by rememberSwatchType()
+            ListSetting(
+                settingTitle = { Text("Swatch Type") },
+                dialogIcon = { Icon(Icons.Default.Palette, null) },
+                settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose a Swatch Type to use") },
+                summaryValue = { Text(paletteSwatchType.name) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+                value = paletteSwatchType,
+                options = PaletteSwatchType.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    paletteSwatchType = it
+                }
+            )
+        }
+
+        HorizontalDivider()
 
         var shareChapter by handling.rememberShareChapter()
 

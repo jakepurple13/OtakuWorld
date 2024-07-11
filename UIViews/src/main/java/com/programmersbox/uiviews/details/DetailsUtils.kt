@@ -29,38 +29,32 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarScrollBehavior
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -73,56 +67,19 @@ import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import com.programmersbox.uiviews.utils.showErrorToast
-import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import kotlin.math.ln
 
-
-data class SwatchInfo(val rgb: Int?, val titleColor: Int?, val bodyColor: Int?)
-
-internal data class SwatchInfoColors(val colors: SwatchInfo? = null)
-
-internal val LocalSwatchInfo = compositionLocalOf { SwatchInfoColors() }
-internal val LocalSwatchChange = staticCompositionLocalOf<(SwatchInfo?) -> Unit> { {} }
-
-/**
- * Returns the new background [Color] to use, representing the original background [color] with an
- * overlay corresponding to [elevation] applied. The overlay will only be applied to
- * [ColorScheme.surface].
- */
-internal fun ColorScheme.applyTonalElevation(backgroundColor: Color, elevation: Dp): Color {
-    return if (backgroundColor == surface) {
-        surfaceColorAtElevation(elevation)
-    } else {
-        backgroundColor
-    }
-}
-
-/**
- * Returns the [ColorScheme.surface] color with an alpha of the [ColorScheme.primary] color overlaid
- * on top of it.
- * Computes the surface tonal color at different elevation levels e.g. surface1 through surface5.
- *
- * @param elevation Elevation value used to compute alpha of the color overlay layer.
- */
-internal fun ColorScheme.surfaceColorAtElevation(
-    elevation: Dp,
-): Color {
-    if (elevation == 0.dp) return surface
-    val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
-    return primary.copy(alpha = alpha).compositeOver(surface)
-}
-
-internal fun Color.surfaceColorAtElevation(
-    elevation: Dp,
-    surface: Color,
-): Color {
-    if (elevation == 0.dp) return surface
-    val alpha = ((4.5f * ln(elevation.value + 1)) + 2f) / 100f
-    return copy(alpha = alpha).compositeOver(surface)
+enum class PaletteSwatchType(val swatch: (Palette) -> Palette.Swatch?) {
+    Vibrant(Palette::vibrantSwatch),
+    Muted(Palette::mutedSwatch),
+    Dominant(Palette::dominantSwatch),
+    LightVibrant(Palette::lightVibrantSwatch),
+    DarkVibrant(Palette::darkVibrantSwatch),
+    LightMuted(Palette::lightMutedSwatch),
+    DarkMuted(Palette::darkMutedSwatch),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -311,22 +268,18 @@ internal fun DetailActions(
 
     customActions()
 
-    ShareButton(
-        info = info,
-        topBarColor = topBarColor
-    )
+    ShareButton(info = info)
 
     genericInfo.DetailActions(infoModel = info, tint = topBarColor)
 
     IconButton(onClick = { showDropDown = true }) {
-        Icon(Icons.Default.MoreVert, null, tint = topBarColor)
+        Icon(Icons.Default.MoreVert, null)
     }
 }
 
 @Composable
 internal fun ShareButton(
     info: InfoModel,
-    topBarColor: Color,
 ) {
     val context = LocalContext.current
     val shareItem = rememberLauncherForActivityResult(
@@ -346,7 +299,7 @@ internal fun ShareButton(
                 )
             ).onFailure { context.showErrorToast() }
         }
-    ) { Icon(Icons.Default.Share, null, tint = topBarColor) }
+    ) { Icon(Icons.Default.Share, null) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -368,7 +321,6 @@ fun DetailBottomBar(
     bottomAppBarScrollBehavior: BottomAppBarScrollBehavior? = null,
     windowInsets: WindowInsets = WindowInsets(0.dp),
 ) {
-    val swatchInfo = LocalSwatchInfo.current.colors
     BottomAppBar(
         actions = {
             ToolTipWrapper(
@@ -426,9 +378,6 @@ fun DetailBottomBar(
                     onClick = removeFromSaved,
                     text = { Text("Remove from Saved") },
                     icon = { Icon(Icons.Default.BookmarkRemove, null) },
-                    containerColor = swatchInfo?.rgb?.toComposeColor() ?: FloatingActionButtonDefaults.containerColor,
-                    contentColor = swatchInfo?.titleColor?.toComposeColor()
-                        ?: contentColorFor(FloatingActionButtonDefaults.containerColor),
                 )
             }
         },
