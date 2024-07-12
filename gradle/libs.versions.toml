@@ -1,5 +1,5 @@
 [versions]
-gradle = "8.5.0"
+gradle = "8.5.1"
 
 kspVersion = "2.0.0-1.0.22"
 
