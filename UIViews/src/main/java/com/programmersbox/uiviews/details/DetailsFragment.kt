@@ -481,7 +481,6 @@ fun ChapterItem(
                                 Icons.Default.Download,
                                 "Download",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 stringResource(R.string.download_chapter),
