@@ -190,11 +190,9 @@ internal fun DetailsHeader(
                     modifier = Modifier.padding(start = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-
                     Text(
                         model.source.serviceName,
                         style = MaterialTheme.typography.labelSmall,
-                        //color = MaterialTheme.colorScheme.onSurface
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
@@ -216,7 +214,6 @@ internal fun DetailsHeader(
                             .fillMaxWidth(),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                        //color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Row(
@@ -240,7 +237,6 @@ internal fun DetailsHeader(
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontSize = 20.sp,
                                 modifier = Modifier.align(Alignment.CenterVertically),
-                                //color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -248,7 +244,6 @@ internal fun DetailsHeader(
                     Text(
                         stringResource(R.string.chapter_count, model.chapters.size),
                         style = MaterialTheme.typography.bodyMedium,
-                        //color = MaterialTheme.colorScheme.onSurface
                     )
 
                     /*if(model.alternativeNames.isNotEmpty()) {

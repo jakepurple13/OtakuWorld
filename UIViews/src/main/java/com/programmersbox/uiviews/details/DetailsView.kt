@@ -49,11 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -150,6 +148,7 @@ fun DetailsView(
     val topBarColor = MaterialTheme.colorScheme.primary
 
     val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     var showLists by remember { mutableStateOf(false) }
 
@@ -185,14 +184,12 @@ fun DetailsView(
         }
     ) {
         val backgroundColor = MaterialTheme.colorScheme.background
-        val primaryColor = MaterialTheme.colorScheme.primary
 
         val collapsableBehavior = rememberCollapsableTopBehavior(
             enterAlways = false
         )
 
         OtakuScaffold(
-            containerColor = Color.Transparent,
             topBar = {
                 CollapsableColumn(
                     behavior = collapsableBehavior
@@ -257,7 +254,8 @@ fun DetailsView(
                                     }
                                 }
                             }
-                        }
+                        },
+                        scrollBehavior = scrollBehavior
                     )
 
                     DetailsHeader(
@@ -332,8 +330,8 @@ fun DetailsView(
                 }
             },
             modifier = Modifier
-                .drawBehind { drawRect(Brush.verticalGradient(listOf(primaryColor, backgroundColor))) }
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
         ) { p ->
             val modifiedPaddingValues = p - LocalNavHostPadding.current

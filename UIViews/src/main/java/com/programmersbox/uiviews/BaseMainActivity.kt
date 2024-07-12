@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews
 
 import android.Manifest
-import android.app.UiModeManager
 import android.app.assist.AssistContent
 import android.content.Intent
 import android.net.Uri
@@ -10,7 +9,6 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -97,7 +95,6 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.helpfulutils.uiModeManager
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
@@ -134,12 +131,10 @@ import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 
 abstract class BaseMainActivity : AppCompatActivity() {
@@ -197,6 +192,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 
+            val themeSetting by settingsHandling.rememberSystemThemeMode()
+
             val isAmoledMode by settingsHandling.rememberIsAmoledMode()
 
             val showBlur by settingsHandling.rememberShowBlur()
@@ -204,6 +201,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             OtakuMaterialTheme(
                 navController = navController,
                 genericInfo = genericInfo,
+                themeSetting = themeSetting,
                 isAmoledMode = isAmoledMode
             ) {
                 AskForNotificationPermissions()
@@ -707,26 +705,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 sourceRepository.toSourceByApiServiceName(currentService.orEmpty())?.let { currentSourceRepository.emit(it.apiService) }
             }
         }
-
-        runBlocking { settingsHandling.systemThemeMode.firstOrNull() }
-            ?.also {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    when (it) {
-                        SystemThemeMode.FollowSystem -> UiModeManager.MODE_NIGHT_AUTO
-                        SystemThemeMode.Day -> UiModeManager.MODE_NIGHT_NO
-                        SystemThemeMode.Night -> UiModeManager.MODE_NIGHT_YES
-                        else -> null
-                    }?.let(uiModeManager::setApplicationNightMode)
-                }
-            }
-            ?.also {
-                when (it) {
-                    SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                    SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
-                    SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
-                    else -> null
-                }?.let(AppCompatDelegate::setDefaultNightMode)
-            }
 
         flow { emit(AppUpdate.getUpdate()) }
             .catch { emit(null) }

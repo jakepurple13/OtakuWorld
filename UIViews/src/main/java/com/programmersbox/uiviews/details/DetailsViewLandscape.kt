@@ -162,7 +162,6 @@ fun DetailsViewLandscape(
         }
     ) {
         OtakuScaffold(
-            containerColor = Color.Transparent,
             topBar = {
                 InsetSmallTopAppBar(
                     modifier = Modifier.zIndex(2f),
@@ -204,13 +203,7 @@ fun DetailsViewLandscape(
                     )
                 }
             },
-            modifier = Modifier
-                .run {
-                    val b = MaterialTheme.colorScheme.background
-                    val c = MaterialTheme.colorScheme.primary
-                    drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
-                }
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
             DetailsLandscapeContent(
                 info = info,

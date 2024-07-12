@@ -200,7 +200,7 @@ fun DetailsScreen(
         val usePalette by handling.rememberUsePalette()
 
         val isAmoledMode by handling.rememberIsAmoledMode()
-        val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
+        val themeSetting by handling.rememberSystemThemeMode()
         val paletteSwatchType by rememberSwatchType()
         val paletteStyle by rememberSwatchStyle()
 

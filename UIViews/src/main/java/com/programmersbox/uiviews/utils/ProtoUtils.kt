@@ -78,8 +78,12 @@ class SettingsHandling(context: Context) {
     private val preferences by lazy { context.settings }
     private val all: Flow<Settings> get() = preferences.data
 
-    val systemThemeMode = all.map { it.themeSetting }
-    suspend fun setSystemThemeMode(mode: SystemThemeMode) = preferences.update { setThemeSetting(mode) }
+    @Composable
+    fun rememberSystemThemeMode() = preferences.rememberPreference(
+        key = { it.themeSetting },
+        update = { setThemeSetting(it) },
+        defaultValue = SystemThemeMode.FollowSystem
+    )
 
     val batteryPercentage = all.map { it.batteryPercent }
     suspend fun setBatteryPercentage(percent: Int) = preferences.update { setBatteryPercent(percent) }

@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.settings
 
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -29,7 +28,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.materialkolor.PaletteStyle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
@@ -64,7 +62,7 @@ fun GeneralSettings(
 
         var showDownload by handling.rememberShowDownload()
 
-        val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
+        var themeSetting by handling.rememberSystemThemeMode()
 
         val themeText by remember {
             derivedStateOf {
@@ -88,13 +86,7 @@ fun GeneralSettings(
             options = listOf(SystemThemeMode.FollowSystem, SystemThemeMode.Day, SystemThemeMode.Night),
             updateValue = { it, d ->
                 d.value = false
-                scope.launch { handling.setSystemThemeMode(it) }
-                when (it) {
-                    SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                    SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
-                    SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
-                    else -> null
-                }?.let(AppCompatDelegate::setDefaultNightMode)
+                themeSetting = it
             }
         )
 

@@ -4,7 +4,6 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +31,7 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.SystemThemeMode
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -48,14 +48,19 @@ fun OtakuMaterialTheme(
     navController: NavHostController,
     genericInfo: GenericInfo,
     isAmoledMode: Boolean = false,
+    themeSetting: SystemThemeMode,
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
 
     KoinAndroidContext {
         val context = LocalContext.current
-        val darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
-                (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        val darkTheme = when (themeSetting) {
+            SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
+            SystemThemeMode.Day -> false
+            SystemThemeMode.Night -> true
+            SystemThemeMode.UNRECOGNIZED -> isSystemInDarkTheme()
+        }
 
         DisposableEffect(darkTheme) {
             (context as? ComponentActivity)?.enableEdgeToEdge(
