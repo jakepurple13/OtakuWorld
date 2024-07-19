@@ -3,6 +3,7 @@ package com.programmersbox.mangaworld.settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
@@ -38,6 +39,7 @@ import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.uiviews.settings.SettingsScaffold
 import com.programmersbox.uiviews.utils.AmoledProvider
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.kamel.image.KamelImage
@@ -58,7 +60,14 @@ fun ImageLoaderSettings(
     }
 
     SettingsScaffold(
-        title = "Image Loader Settings"
+        title = "Image Loader Settings",
+        topBar = {
+            InsetSmallTopAppBar(
+                title = { Text("Image Loader Settings") },
+                scrollBehavior = it,
+                insetPadding = WindowInsets(0.dp)
+            )
+        }
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -135,7 +144,7 @@ private fun Kamel(
 ) {
     if (!LocalInspectionMode.current) {
         KamelImage(
-            resource = asyncPainterResource(url),
+            resource = { asyncPainterResource(url) },
             contentDescription = null,
             contentScale = contentScale,
             modifier = modifier

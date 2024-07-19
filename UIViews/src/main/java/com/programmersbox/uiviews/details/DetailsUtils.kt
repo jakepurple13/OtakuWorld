@@ -36,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
@@ -142,7 +143,6 @@ internal fun DetailActions(
     scope: CoroutineScope,
     context: Context,
     info: InfoModel,
-    topBarColor: Color,
     isSaved: Boolean,
     dao: ItemDao,
     isFavorite: Boolean,
@@ -270,7 +270,7 @@ internal fun DetailActions(
 
     ShareButton(info = info)
 
-    genericInfo.DetailActions(infoModel = info, tint = topBarColor)
+    genericInfo.DetailActions(infoModel = info, tint = LocalContentColor.current)
 
     IconButton(onClick = { showDropDown = true }) {
         Icon(Icons.Default.MoreVert, null)
@@ -313,7 +313,6 @@ fun DetailBottomBar(
     isSaved: Boolean,
     canNotify: Boolean,
     notifyAction: () -> Unit,
-    topBarColor: Color,
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
     isFavorite: Boolean,
@@ -382,7 +381,6 @@ fun DetailBottomBar(
             }
         },
         containerColor = containerColor,
-        contentColor = topBarColor,
         scrollBehavior = bottomAppBarScrollBehavior,
         windowInsets = windowInsets,
         modifier = modifier

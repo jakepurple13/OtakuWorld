@@ -75,9 +75,11 @@ internal fun Kamel(
     onRefresh: () -> Unit,
 ) {
     KamelImage(
-        resource = asyncPainterResource(painter) {
-            requestBuilder {
-                headers.forEach { (t, u) -> header(t, u) }
+        resource = {
+            asyncPainterResource(painter) {
+                requestBuilder {
+                    headers.forEach { (t, u) -> header(t, u) }
+                }
             }
         },
         onLoading = {

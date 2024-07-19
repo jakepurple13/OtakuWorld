@@ -70,6 +70,12 @@ abstract class AndroidPluginBase<T: BaseExtension>(
             packagingOptions {
                 resources {
                     excludes += "/META-INF/{AL2.0,LGPL2.1}:"
+                    excludes += "license/README.dom.txt"
+                    excludes += "license/LICENSE.dom-documentation.txt"
+                    excludes += "license/NOTICE"
+                    excludes += "license/LICENSE.dom-software.txt"
+                    excludes += "license/LICENSE*"
+                    excludes += "license/LICENSE"
                 }
             }
 

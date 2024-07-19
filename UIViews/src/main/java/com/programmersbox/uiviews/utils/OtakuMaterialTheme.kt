@@ -37,6 +37,8 @@ import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
 import io.kamel.image.config.Default
 import io.kamel.image.config.LocalKamelConfig
+import io.kamel.image.config.animatedImageDecoder
+import io.kamel.image.config.imageBitmapResizingDecoder
 import io.kamel.image.config.resourcesFetcher
 import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
@@ -112,8 +114,8 @@ fun OtakuMaterialTheme(
                 LocalCurrentSource provides koinInject(),
                 LocalKamelConfig provides KamelConfig {
                     takeFrom(KamelConfig.Default)
-                    //imageBitmapResizingDecoder()
-                    //animatedImageDecoder()
+                    imageBitmapResizingDecoder()
+                    animatedImageDecoder()
                     resourcesFetcher(context)
                 },
                 LocalUriHandler provides remember {

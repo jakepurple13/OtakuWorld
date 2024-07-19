@@ -145,8 +145,6 @@ fun DetailsView(
         }
     }
 
-    val topBarColor = MaterialTheme.colorScheme.primary
-
     val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -203,7 +201,6 @@ fun DetailsView(
                                 Color.Transparent
                             else
                                 Color.Unspecified,
-                            titleContentColor = topBarColor
                         ),
                         title = {
                             Text(
@@ -213,7 +210,7 @@ fun DetailsView(
                         },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = topBarColor)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                             }
                         },
                         actions = {
@@ -224,14 +221,13 @@ fun DetailsView(
                                 scope = scope,
                                 context = context,
                                 info = info,
-                                topBarColor = topBarColor,
                                 isSaved = isSaved,
                                 dao = dao,
-                                onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                                onShowLists = { showLists = true },
                                 isFavorite = isFavorite,
                                 canNotify = canNotify,
                                 notifyAction = notifyAction,
+                                onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                                onShowLists = { showLists = true },
                             ) {
                                 val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
                                 ToolTipWrapper(
@@ -249,7 +245,6 @@ fun DetailsView(
                                             Icons.Default.ArrowDropDownCircle,
                                             modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
                                             contentDescription = if (expanded) "Expand" else "Collapse",
-                                            tint = topBarColor
                                         )
                                     }
                                 }
@@ -273,11 +268,6 @@ fun DetailsView(
                 DetailBottomBar(
                     navController = navController,
                     onShowLists = { showLists = true },
-                    containerColor = when {
-                        showBlur -> Color.Transparent
-                        isAmoledMode -> MaterialTheme.colorScheme.surface
-                        else -> BottomAppBarDefaults.containerColor
-                    },
                     info = info,
                     customActions = {},
                     removeFromSaved = {
@@ -291,10 +281,6 @@ fun DetailsView(
                         }
                     },
                     isSaved = isSaved,
-                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
-                    topBarColor = topBarColor,
-                    isFavorite = isFavorite,
-                    onFavoriteClick = onFavoriteClick,
                     canNotify = canNotify,
                     notifyAction = notifyAction,
                     modifier = Modifier
@@ -309,7 +295,15 @@ fun DetailsView(
                                 )
                             }
                         }
-                        .let { if (showBlur) it.hazeChild(hazeState) else it }
+                        .let { if (showBlur) it.hazeChild(hazeState) else it },
+                    containerColor = when {
+                        showBlur -> Color.Transparent
+                        isAmoledMode -> MaterialTheme.colorScheme.surface
+                        else -> BottomAppBarDefaults.containerColor
+                    },
+                    isFavorite = isFavorite,
+                    onFavoriteClick = onFavoriteClick,
+                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior
                 )
             },
             snackbarHost = {

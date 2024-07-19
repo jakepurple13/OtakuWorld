@@ -31,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -54,14 +53,12 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.core.graphics.ColorUtils
 import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
 import com.google.accompanist.adaptive.TwoPane
 import com.google.accompanist.adaptive.calculateDisplayFeatures
@@ -134,8 +131,6 @@ fun DetailsViewLandscape(
         }
     }
 
-    val topBarColor = MaterialTheme.colorScheme.primary
-
     var showLists by remember { mutableStateOf(false) }
 
     AddToList(
@@ -180,27 +175,20 @@ fun DetailsViewLandscape(
                             scope = scope,
                             context = context,
                             info = info,
-                            topBarColor = topBarColor,
                             isSaved = isSaved,
                             dao = dao,
-                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                            onShowLists = { showLists = true },
                             isFavorite = isFavorite,
                             canNotify = canNotify,
                             notifyAction = notifyAction,
+                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                            onShowLists = { showLists = true },
                         )
                     }
                 )
             },
             snackbarHost = {
                 SnackbarHost(hostState) { data ->
-                    val background = SnackbarDefaults.color
-                    val font = SnackbarDefaults.contentColor
-                    Snackbar(
-                        containerColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
-                        contentColor = font,
-                        snackbarData = data
-                    )
+                    Snackbar(snackbarData = data)
                 }
             },
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -266,7 +254,6 @@ private fun DetailsLandscapeContent(
     TwoPane(
         modifier = modifier,
         first = {
-            val topBarColor = MaterialTheme.colorScheme.primary
             val b = MaterialTheme.colorScheme.surface
             val c = MaterialTheme.colorScheme.primary
             NormalOtakuScaffold(
@@ -288,11 +275,6 @@ private fun DetailsLandscapeContent(
                             }
                         },
                         isSaved = isSaved,
-                        windowInsets = BottomAppBarDefaults.windowInsets,
-                        topBarColor = topBarColor,
-                        containerColor = c,
-                        isFavorite = isFavorite,
-                        onFavoriteClick = onFavoriteClick,
                         canNotify = canNotify,
                         notifyAction = notifyAction,
                         modifier = Modifier
@@ -306,7 +288,11 @@ private fun DetailsLandscapeContent(
                                         4 * density
                                     )
                                 }
-                            }
+                            },
+                        containerColor = c,
+                        isFavorite = isFavorite,
+                        onFavoriteClick = onFavoriteClick,
+                        windowInsets = BottomAppBarDefaults.windowInsets
                     )
                 },
                 contentWindowInsets = WindowInsets.navigationBars,

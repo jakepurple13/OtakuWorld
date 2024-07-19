@@ -344,7 +344,7 @@ internal fun SheetView(
                         }
                 ) {
                     KamelImage(
-                        resource = asyncPainterResource(it),
+                        resource = { asyncPainterResource(it) },
                         onLoading = { CircularProgressIndicator(progress = { it }) },
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
