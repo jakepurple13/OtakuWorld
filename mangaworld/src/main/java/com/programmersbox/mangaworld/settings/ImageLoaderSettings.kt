@@ -16,6 +16,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +39,7 @@ import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.uiviews.settings.SettingsScaffold
 import com.programmersbox.uiviews.utils.AmoledProvider
+import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -52,6 +54,8 @@ const val ImageLoaderSettingsRoute = "imageLoaderSettings"
 @Composable
 fun ImageLoaderSettings(
     mangaSettingsHandling: MangaSettingsHandling,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
+    navigationButton: @Composable () -> Unit = { BackButton() },
 ) {
     var imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
 
@@ -65,7 +69,8 @@ fun ImageLoaderSettings(
             InsetSmallTopAppBar(
                 title = { Text("Image Loader Settings") },
                 scrollBehavior = it,
-                insetPadding = WindowInsets(0.dp)
+                navigationIcon = navigationButton,
+                insetPadding = windowInsets
             )
         }
     ) {
