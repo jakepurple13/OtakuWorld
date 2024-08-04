@@ -53,25 +53,25 @@ jobs:
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           arguments: mangaworld:assembleRelease
 
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           arguments: animeworld:assembleRelease
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           arguments: novelworld:assembleRelease
 
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           arguments: animeworldtv:assembleRelease
 

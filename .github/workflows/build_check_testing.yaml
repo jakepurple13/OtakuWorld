@@ -45,7 +45,7 @@ jobs:
           java-version: 17
 
       - name: Setup gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
@@ -106,7 +106,7 @@ jobs:
 
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -168,7 +168,7 @@ jobs:
 
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
@@ -230,7 +230,7 @@ jobs:
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           wrapper-cache-enabled: true
           dependencies-cache-enabled: true
