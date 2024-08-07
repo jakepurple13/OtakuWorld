@@ -1,7 +1,7 @@
 [versions]
 gradle = "8.5.1"
 
-kspVersion = "2.0.0-1.0.23"
+kspVersion = "2.0.10-1.0.24"
 
 androidxBaselineprofileGradlePlugin = "1.2.0"
 composeCollapsable = "0.3.0"
@@ -47,7 +47,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.3.1"
+media3Version = "1.4.0"
 
 junit = "1.1.5"
 espresso-core = "3.5.1"
@@ -291,8 +291,8 @@ retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1"
 androidxWebkit = "androidx.webkit:webkit:1.11.0"
 
-mlkitTranslate = "com.google.mlkit:translate:17.0.2"
-mlkitLanguage = "com.google.mlkit:language-id:17.0.5"
+mlkitTranslate = "com.google.mlkit:translate:17.0.3"
+mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
 firebasePlatform = "com.google.firebase:firebase-bom:32.8.1"
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database" }
 firebaseFirestore = { group = "com.google.firebase", name = "firebase-firestore" }
