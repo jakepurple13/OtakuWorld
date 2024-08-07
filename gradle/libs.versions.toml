@@ -291,7 +291,7 @@ retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1"
 androidxWebkit = "androidx.webkit:webkit:1.11.0"
 
-mlkitTranslate = "com.google.mlkit:translate:17.0.2"
+mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.5"
 firebasePlatform = "com.google.firebase:firebase-bom:32.8.1"
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database" }
