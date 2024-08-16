@@ -219,7 +219,10 @@ fun Color.contrastAgainst(background: Color): Float {
 }
 
 @Composable
-fun adaptiveGridCell(): GridCells = CustomAdaptive(ComposableUtils.IMAGE_WIDTH)
+fun adaptiveGridCell(): GridCells {
+    val width = ComposableUtils.IMAGE_WIDTH
+    return remember(width) { CustomAdaptive(width) }
+}
 
 class CustomAdaptive(private val minSize: Dp) : GridCells {
     init {
