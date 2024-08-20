@@ -44,7 +44,7 @@ fun GradientImage(
         when (val painter = asyncPainterResource(data = model)) {
             is Resource.Success -> {
                 KamelImage(
-                    resource = painter,
+                    resource = { painter },
                     contentDescription = contentDescription,
                     contentScale = contentScale,
                     colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }),
@@ -54,7 +54,7 @@ fun GradientImage(
                 )
 
                 KamelImage(
-                    resource = painter,
+                    resource = { painter },
                     contentDescription = contentDescription,
                     contentScale = contentScale,
                     modifier = modifier

@@ -5,10 +5,10 @@ import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,9 +26,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,11 +46,8 @@ import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -67,6 +62,9 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kmpalette.color
+import com.materialkolor.DynamicMaterialTheme
+import com.materialkolor.rememberDynamicMaterialThemeState
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
@@ -74,6 +72,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -83,23 +82,17 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.toComposeColor
+import com.programmersbox.uiviews.utils.rememberSwatchStyle
+import com.programmersbox.uiviews.utils.rememberSwatchType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class,
-    ExperimentalComposeUiApi::class,
-    ExperimentalAnimationApi::class
-)
 @Composable
 fun DetailsScreen(
     detailInfo: Screen.DetailsScreen.Details,
@@ -204,14 +197,30 @@ fun DetailsScreen(
 
         val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
 
-        val shareChapter by handling.rememberShareChapter()
         val usePalette by handling.rememberUsePalette()
 
-        CompositionLocalProvider(
-            LocalSwatchInfo provides remember(details.swatchInfo, usePalette) { SwatchInfoColors(details.swatchInfo.takeIf { usePalette }) },
-            LocalSwatchChange provides rememberUpdatedState(
-                newValue = { it: SwatchInfo? -> if (usePalette) details.swatchInfo = it }
-            ).value
+        val isAmoledMode by handling.rememberIsAmoledMode()
+        val themeSetting by handling.rememberSystemThemeMode()
+        val paletteSwatchType by rememberSwatchType()
+        val paletteStyle by rememberSwatchStyle()
+
+        val dynamicColor = rememberDynamicMaterialThemeState(
+            seedColor = details.palette?.let(paletteSwatchType.swatch)?.color?.takeIf { usePalette } ?: MaterialTheme.colorScheme.primary,
+            isDark = when (themeSetting) {
+                SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
+                SystemThemeMode.Day -> false
+                SystemThemeMode.Night -> true
+                else -> isSystemInDarkTheme()
+            },
+            isAmoled = isAmoledMode && (!usePalette || details.palette == null),
+            style = paletteStyle
+        )
+
+        val shareChapter by handling.rememberShareChapter()
+
+        DynamicMaterialTheme(
+            state = dynamicColor,
+            animate = true
         ) {
             if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {
                 DetailsViewLandscape(
@@ -227,7 +236,8 @@ fun DetailsScreen(
                     onTranslateDescription = details::translateDescription,
                     showDownloadButton = { showDownload },
                     canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
-                    notifyAction = { scope.launch { details.toggleNotify() } }
+                    notifyAction = { scope.launch { details.toggleNotify() } },
+                    onPaletteSet = { details.palette = it }
                 )
             } else {
                 DetailsView(
@@ -243,7 +253,8 @@ fun DetailsScreen(
                     onTranslateDescription = details::translateDescription,
                     showDownloadButton = { showDownload },
                     canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
-                    notifyAction = { scope.launch { details.toggleNotify() } }
+                    notifyAction = { scope.launch { details.toggleNotify() } },
+                    onPaletteSet = { details.palette = it }
                 )
             }
         }
@@ -253,32 +264,22 @@ fun DetailsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarkAsScreen(
-    topBarColor: Color,
     drawerState: DrawerState,
     info: InfoModel,
     chapters: List<ChapterWatched>,
     markAs: (ChapterModel, Boolean) -> Unit,
 ) {
-    val swatchInfo = LocalSwatchInfo.current.colors
     val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val scope = rememberCoroutineScope()
 
     OtakuScaffold(
         topBar = {
             InsetSmallTopAppBar(
-                title = { Text(stringResource(id = R.string.markAs), color = topBarColor) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value,
-                    scrolledContainerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value?.let {
-                        MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
-                    } ?: MaterialTheme.colorScheme.applyTonalElevation(
-                        backgroundColor = MaterialTheme.colorScheme.surface,
-                        elevation = 1.dp
-                    )
-                ),
+                title = { Text(stringResource(id = R.string.markAs)) },
+
                 navigationIcon = {
                     IconButton(onClick = { scope.launch { drawerState.close() } }) {
-                        Icon(Icons.Default.Close, null, tint = topBarColor)
+                        Icon(Icons.Default.Close, null)
                     }
                 },
                 scrollBehavior = scrollBehaviorMarkAs
@@ -301,29 +302,14 @@ fun MarkAsScreen(
                             interactionSource = null,
                             indication = ripple()
                         ) { markAs(c, !chapters.fastAny { it.url == c.url }) },
-                    color = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
                 ) {
                     ListItem(
                         modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ListItemDefaults.colors(
-                            headlineColor = swatchInfo?.bodyColor
-                                ?.toComposeColor()
-                                .animate(MaterialTheme.colorScheme.onSurface).value,
-                            containerColor = swatchInfo?.rgb
-                                ?.toComposeColor()
-                                .animate(MaterialTheme.colorScheme.surface).value
-                        ),
                         headlineContent = { Text(c.name) },
                         leadingContent = {
                             Checkbox(
                                 checked = chapters.fastAny { it.url == c.url },
                                 onCheckedChange = { b -> markAs(c, b) },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.secondary).value,
-                                    uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()
-                                        .animate(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)).value,
-                                    checkmarkColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
-                                )
                             )
                         }
                     )
@@ -345,7 +331,6 @@ fun ChapterItem(
     markAs: (ChapterModel, Boolean) -> Unit,
 ) {
     val historyDao = LocalHistoryDao.current
-    val swatchInfo = LocalSwatchInfo.current.colors
     val navController = LocalNavController.current
     val genericInfo = LocalGenericInfo.current
     val context = LocalContext.current
@@ -370,12 +355,6 @@ fun ChapterItem(
 
     ElevatedCard(
         shape = RoundedCornerShape(2.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = animateColorAsState(
-                swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.surface,
-                label = ""
-            ).value,
-        ),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
@@ -390,19 +369,12 @@ fun ChapterItem(
                         Checkbox(
                             checked = read.fastAny { it.url == c.url },
                             onCheckedChange = { b -> markAs(c, b) },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.secondary).value,
-                                uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()
-                                    .animate(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)).value,
-                                checkmarkColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
-                            )
                         )
                     },
                     headlineContent = {
                         Text(
                             c.name,
                             style = MaterialTheme.typography.bodyLarge
-                                .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
                         )
                     },
                     trailingContent = {
@@ -426,7 +398,6 @@ fun ChapterItem(
                             Icon(
                                 Icons.Default.Share,
                                 null,
-                                tint = swatchInfo?.bodyColor?.toComposeColor().animate(LocalContentColor.current).value
                             )
                         }
                     },
@@ -442,18 +413,11 @@ fun ChapterItem(
                     Checkbox(
                         checked = read.fastAny { it.url == c.url },
                         onCheckedChange = { b -> markAs(c, b) },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.secondary).value,
-                            uncheckedColor = swatchInfo?.bodyColor?.toComposeColor()
-                                .animate(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)).value,
-                            checkmarkColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value
-                        )
                     )
 
                     Text(
                         c.name,
-                        style = MaterialTheme.typography.bodyLarge
-                            .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                        style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
@@ -461,8 +425,7 @@ fun ChapterItem(
 
             Text(
                 c.uploaded,
-                style = MaterialTheme.typography.titleSmall
-                    .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(horizontal = 16.dp)
@@ -484,20 +447,17 @@ fun ChapterItem(
                         modifier = Modifier
                             .weight(1f, true)
                             .padding(horizontal = 4.dp),
-                        //colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
-                        border = BorderStroke(1.dp, swatchInfo?.bodyColor?.toComposeColor().animate(LocalContentColor.current).value)
+                        border = BorderStroke(1.dp, LocalContentColor.current)
                     ) {
                         Column {
                             Icon(
                                 Icons.Default.PlayArrow,
                                 "Play",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value
                             )
                             Text(
                                 stringResource(R.string.read),
-                                style = MaterialTheme.typography.labelLarge
-                                    .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                                style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                         }
@@ -514,20 +474,17 @@ fun ChapterItem(
                         modifier = Modifier
                             .weight(1f, true)
                             .padding(horizontal = 4.dp),
-                        //colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.Transparent),
-                        border = BorderStroke(1.dp, swatchInfo?.bodyColor?.toComposeColor().animate(LocalContentColor.current).value)
+                        border = BorderStroke(1.dp, LocalContentColor.current)
                     ) {
                         Column {
                             Icon(
                                 Icons.Default.Download,
                                 "Download",
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                                tint = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value
                             )
                             Text(
                                 stringResource(R.string.download_chapter),
-                                style = MaterialTheme.typography.labelLarge
-                                    .let { b -> swatchInfo?.bodyColor?.let { b.copy(color = Color(it).animate().value) } ?: b },
+                                style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
                         }

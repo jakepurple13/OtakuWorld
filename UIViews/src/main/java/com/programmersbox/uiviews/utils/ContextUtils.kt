@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.BatteryUnknown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -47,6 +48,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
@@ -65,6 +67,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import com.materialkolor.PaletteStyle
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
@@ -79,12 +82,14 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.details.PaletteSwatchType
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -115,6 +120,26 @@ val Context.updateCheckingStart get() = dataStore.data.map { it[UPDATE_CHECKING_
 
 val UPDATE_CHECKING_END = longPreferencesKey("lastUpdateCheckEnd")
 val Context.updateCheckingEnd get() = dataStore.data.map { it[UPDATE_CHECKING_END] ?: System.currentTimeMillis() }
+
+val SWATCH_TYPE = stringPreferencesKey("swatchType")
+
+@Composable
+fun rememberSwatchType() = rememberPreference(
+    key = SWATCH_TYPE,
+    mapToType = { runCatching { PaletteSwatchType.valueOf(it) }.getOrDefault(PaletteSwatchType.Vibrant) },
+    mapToKey = { it.name },
+    defaultValue = PaletteSwatchType.Vibrant
+)
+
+val SWATCH_STYLE = stringPreferencesKey("swatchStyle")
+
+@Composable
+fun rememberSwatchStyle() = rememberPreference(
+    key = SWATCH_STYLE,
+    mapToType = { runCatching { PaletteStyle.valueOf(it) }.getOrDefault(PaletteStyle.TonalSpot) },
+    mapToKey = { it.name },
+    defaultValue = PaletteStyle.TonalSpot
+)
 
 suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
@@ -148,6 +173,38 @@ fun <T> rememberPreference(
 
             override fun component1() = value
             override fun component2(): (T) -> Unit = { value = it }
+        }
+    }
+}
+
+@Composable
+fun <T, R> rememberPreference(
+    key: Preferences.Key<T>,
+    mapToType: (T) -> R?,
+    mapToKey: (R) -> T,
+    defaultValue: R,
+): MutableState<R> {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val state by remember {
+        context.dataStore
+            .data
+            .mapNotNull { it[key]?.let(mapToType) ?: defaultValue }
+            .distinctUntilChanged()
+    }.collectAsState(defaultValue)
+
+    return remember(state) {
+        object : MutableState<R> {
+            override var value: R
+                get() = state
+                set(value) {
+                    coroutineScope.launch {
+                        context.dataStore.edit { it[key] = value.let(mapToKey) }
+                    }
+                }
+
+            override fun component1() = value
+            override fun component2(): (R) -> Unit = { value = it }
         }
     }
 }

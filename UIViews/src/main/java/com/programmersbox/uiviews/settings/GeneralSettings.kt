@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.settings
 
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -14,6 +13,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,17 +28,21 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.materialkolor.PaletteStyle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.HISTORY_SAVE
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.ListSetting
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.historySave
+import com.programmersbox.uiviews.utils.rememberSwatchStyle
+import com.programmersbox.uiviews.utils.rememberSwatchType
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -58,7 +62,7 @@ fun GeneralSettings(
 
         var showDownload by handling.rememberShowDownload()
 
-        val themeSetting by handling.systemThemeMode.collectAsStateWithLifecycle(SystemThemeMode.FollowSystem)
+        var themeSetting by handling.rememberSystemThemeMode()
 
         val themeText by remember {
             derivedStateOf {
@@ -82,13 +86,7 @@ fun GeneralSettings(
             options = listOf(SystemThemeMode.FollowSystem, SystemThemeMode.Day, SystemThemeMode.Night),
             updateValue = { it, d ->
                 d.value = false
-                scope.launch { handling.setSystemThemeMode(it) }
-                when (it) {
-                    SystemThemeMode.FollowSystem -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                    SystemThemeMode.Day -> AppCompatDelegate.MODE_NIGHT_NO
-                    SystemThemeMode.Night -> AppCompatDelegate.MODE_NIGHT_YES
-                    else -> null
-                }?.let(AppCompatDelegate::setDefaultNightMode)
+                themeSetting = it
             }
         )
 
@@ -119,6 +117,8 @@ fun GeneralSettings(
             updateValue = { showBlur = it }
         )
 
+        HorizontalDivider()
+
         var usePalette by handling.rememberUsePalette()
 
         SwitchSetting(
@@ -130,6 +130,42 @@ fun GeneralSettings(
             value = usePalette,
             updateValue = { usePalette = it }
         )
+
+        ShowWhen(usePalette) {
+            var paletteSwatchType by rememberSwatchType()
+            ListSetting(
+                settingTitle = { Text("Swatch Type") },
+                dialogIcon = { Icon(Icons.Default.Palette, null) },
+                settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose a Swatch Type to use") },
+                summaryValue = { Text(paletteSwatchType.name) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+                value = paletteSwatchType,
+                options = PaletteSwatchType.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    paletteSwatchType = it
+                }
+            )
+
+            var paletteStyle by rememberSwatchStyle()
+            ListSetting(
+                settingTitle = { Text("Swatch Style") },
+                dialogIcon = { Icon(Icons.Default.Palette, null) },
+                settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose a Swatch Style to use") },
+                summaryValue = { Text(paletteStyle.name) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+                value = paletteStyle,
+                options = PaletteStyle.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    paletteStyle = it
+                }
+            )
+        }
+
+        HorizontalDivider()
 
         var shareChapter by handling.rememberShareChapter()
 

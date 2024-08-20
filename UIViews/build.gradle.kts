@@ -107,8 +107,7 @@ dependencies {
 
     //Multiplatform
     //implementation(projects.imageloader)
-    api(libs.kamel.image)
-    //api(libs.kamel.image.decoder)
+    api(libs.bundles.kamel)
 
     //Extension Loader
     api(projects.sharedutils.extensionloader)
@@ -129,4 +128,6 @@ dependencies {
 
     implementation(libs.sonner)
     implementation(libs.glideCompose)
+
+    implementation(libs.material.kolor)
 }

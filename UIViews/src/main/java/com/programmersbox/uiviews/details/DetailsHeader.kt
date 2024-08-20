@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,14 +38,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -58,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.ColorUtils
 import com.bumptech.glide.load.model.GlideUrl
+import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -88,9 +86,8 @@ internal fun DetailsHeader(
     favoriteClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     possibleDescription: @Composable () -> Unit = {},
+    onPaletteSet: (Palette) -> Unit,
 ) {
-    val swatchChange = LocalSwatchChange.current
-    val swatchInfo = LocalSwatchInfo.current.colors
     val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
         try {
@@ -133,7 +130,7 @@ internal fun DetailsHeader(
             .setAlphaComponent(
                 ColorUtils.blendARGB(
                     MaterialTheme.colorScheme.surface.toArgb(),
-                    swatchInfo?.rgb ?: Color.Transparent.toArgb(),
+                    MaterialTheme.colorScheme.primary.toArgb(),
                     0.25f
                 ),
                 200
@@ -171,18 +168,11 @@ internal fun DetailsHeader(
                             )
                         )
                 ) {
-                    val latestSwatch by rememberUpdatedState(newValue = swatchInfo)
                     GlideImage(
                         imageModel = { imageUrl },
                         imageOptions = ImageOptions(contentScale = ContentScale.FillBounds),
                         component = rememberImageComponent {
-                            +PalettePlugin { p ->
-                                if (latestSwatch == null) {
-                                    p.vibrantSwatch
-                                        ?.let { s -> SwatchInfo(s.rgb, s.titleTextColor, s.bodyTextColor) }
-                                        ?.let(swatchChange)
-                                }
-                            }
+                            +PalettePlugin { p -> onPaletteSet(p) }
                             +PlaceholderPlugin.Loading(logo)
                             +PlaceholderPlugin.Failure(logo)
                         },
@@ -200,11 +190,9 @@ internal fun DetailsHeader(
                     modifier = Modifier.padding(start = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-
                     Text(
                         model.source.serviceName,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
@@ -226,7 +214,6 @@ internal fun DetailsHeader(
                             .fillMaxWidth(),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Row(
@@ -242,7 +229,6 @@ internal fun DetailsHeader(
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
-                            tint = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Crossfade(targetState = isFavorite, label = "") { target ->
@@ -251,7 +237,6 @@ internal fun DetailsHeader(
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontSize = 20.sp,
                                 modifier = Modifier.align(Alignment.CenterVertically),
-                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -259,7 +244,6 @@ internal fun DetailsHeader(
                     Text(
                         stringResource(R.string.chapter_count, model.chapters.size),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     /*if(model.alternativeNames.isNotEmpty()) {
@@ -284,25 +268,16 @@ internal fun DetailsHeader(
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
                         style = MaterialTheme.typography.body2,
                     )*/
-
                 }
             }
 
             FlowRow(
-                //mainAxisSpacing = 4.dp,
-                //crossAxisSpacing = 2.dp,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 model.genres.forEach {
                     AssistChip(
                         onClick = {},
                         modifier = Modifier.fadeInAnimation(),
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = (swatchInfo?.rgb?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface)
-                                .animate().value,
-                            labelColor = (swatchInfo?.bodyColor?.toComposeColor()?.copy(1f) ?: MaterialTheme.colorScheme.surface)
-                                .animate().value
-                        ),
                         label = { Text(it) }
                     )
                 }

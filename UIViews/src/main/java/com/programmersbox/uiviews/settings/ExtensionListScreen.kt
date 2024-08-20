@@ -5,20 +5,24 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -41,7 +45,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -65,7 +68,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,7 +77,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -84,6 +88,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.core.net.toUri
@@ -108,7 +113,6 @@ import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.lists.calculateStandardPaneScaffoldDirective
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
-import com.programmersbox.uiviews.utils.InsetCenterAlignedTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCurrentSource
@@ -194,15 +198,34 @@ fun ExtensionList(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             InsetSmallTopAppBar(
-                title = { Text(stringResource(R.string.extensions)) },
+                title = {
+                    Text(
+                        if (navigator.currentDestination?.content == 1) {
+                            "Remote Extensions"
+                        } else {
+                            "Installed Extensions"
+                        }
+                    )
+                },
                 navigationIcon = { BackButton() },
                 actions = {
                     var showDropDown by remember { mutableStateOf(false) }
                     var checked by remember { mutableStateOf(false) }
 
-                    ToolTipWrapper(info = { Text("View Remote Extensions") }) {
-                        IconButton(onClick = { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail) }) {
-                            Icon(Icons.Default.SendTimeExtension, null)
+                    if (navigator.currentDestination?.content == 1) {
+                        ToolTipWrapper(info = { Text("View Installed Extensions") }) {
+                            IconButton(onClick = { navigator.navigateBack() }) {
+                                Icon(
+                                    Icons.Default.SendTimeExtension, null,
+                                    modifier = Modifier.scale(scaleX = -1f, scaleY = 1f)
+                                )
+                            }
+                        }
+                    } else {
+                        ToolTipWrapper(info = { Text("View Remote Extensions") }) {
+                            IconButton(onClick = { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 1) }) {
+                                Icon(Icons.Default.SendTimeExtension, null)
+                            }
                         }
                     }
 
@@ -281,7 +304,6 @@ fun ExtensionList(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun InstalledExtensionItems(
     installedSources: Map<ApiServicesCatalog?, InstalledViewState>,
@@ -299,22 +321,22 @@ private fun InstalledExtensionItems(
     Column(
         modifier = modifier
     ) {
-        InsetCenterAlignedTopAppBar(
-            title = { Text("Installed Extensions") },
-            insetPadding = WindowInsets(0.dp)
-        )
         ListItem(
             headlineContent = {
-                val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
+                val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(initialValue = null)
                 Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty()))
             }
         )
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
             verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             installedSources.forEach { (t, u) ->
-                stickyHeader {
+                item(
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     Surface(
                         shape = MaterialTheme.shapes.medium,
                         tonalElevation = 4.dp,
@@ -339,11 +361,11 @@ private fun InstalledExtensionItems(
                 }
 
                 if (u.showItems) {
-                    items(
+                    itemsIndexed(
                         u.sourceInformation,
-                        key = { it.apiService.serviceName },
-                        contentType = { it }
-                    ) { source ->
+                        key = { i, it -> it.apiService.serviceName + i },
+                        contentType = { _, it -> it }
+                    ) { _, source ->
                         val version = remember(context) {
                             runCatching {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -364,22 +386,24 @@ private fun InstalledExtensionItems(
                             version = version,
                             onClick = { currentSourceRepository.tryEmit(source.apiService) },
                             trailingIcon = {
-                                Row {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
                                     sourcesList.find {
                                         it.sources.any { s -> s.baseUrl == source.apiService.baseUrl }
-                                    }
-                                        ?.let { r ->
-                                            if (AppUpdate.checkForUpdate(version, r.version)) {
-                                                IconButton(
-                                                    onClick = {
-                                                        onDownloadAndInstall(
-                                                            r.downloadLink,
-                                                            r.downloadLink.toUri().lastPathSegment ?: "${r.name}.apk"
-                                                        )
-                                                    }
-                                                ) { Icon(Icons.Default.Update, null) }
-                                            }
+                                    }?.let { r ->
+                                        if (AppUpdate.checkForUpdate(version, r.version)) {
+                                            IconButton(
+                                                onClick = {
+                                                    onDownloadAndInstall(
+                                                        r.downloadLink,
+                                                        r.downloadLink.toUri().lastPathSegment ?: "${r.name}.apk"
+                                                    )
+                                                }
+                                            ) { Icon(Icons.Default.Update, null) }
                                         }
+                                    }
+
                                     IconButton(
                                         onClick = { uninstall(source.packageName) }
                                     ) { Icon(Icons.Default.Delete, null) }
@@ -393,7 +417,6 @@ private fun InstalledExtensionItems(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RemoteExtensionItems(
     remoteSources: Map<String, RemoteState>,
@@ -417,14 +440,18 @@ private fun RemoteExtensionItems(
             ),
             modifier = Modifier.fillMaxWidth()
         )
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
             verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             remoteSources.forEach { (t, u) ->
                 when (u) {
                     is RemoteViewState -> {
-                        stickyHeader {
+                        item(
+                            span = { GridItemSpan(maxLineSpan) }
+                        ) {
                             ElevatedCard(
                                 onClick = { u.showItems = !u.showItems }
                             ) {
@@ -456,7 +483,9 @@ private fun RemoteExtensionItems(
                     }
 
                     is RemoteErrorState -> {
-                        item {
+                        item(
+                            span = { GridItemSpan(maxLineSpan) }
+                        ) {
                             ElevatedCard {
                                 ListItem(
                                     headlineContent = { Text(t) },
@@ -478,7 +507,6 @@ private fun RemoteExtensionItems(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExtensionItem(
     sourceInformation: SourceInformation,
@@ -489,18 +517,39 @@ private fun ExtensionItem(
 ) {
     OutlinedCard(
         onClick = onClick,
-        modifier = modifier
+        modifier = modifier.heightIn(min = 150.dp)
     ) {
-        ListItem(
-            overlineContent = { Text("Version: $version") },
-            headlineContent = { Text(sourceInformation.apiService.serviceName) },
-            leadingContent = { Image(rememberDrawablePainter(drawable = sourceInformation.icon), null) },
-            trailingContent = trailingIcon
-        )
+        Column(
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize()
+                .heightIn(min = 150.dp)
+        ) {
+            Image(
+                rememberDrawablePainter(drawable = sourceInformation.icon),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(64.dp)
+            )
+
+            Text(
+                sourceInformation.apiService.serviceName,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                "Version: $version",
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center
+            )
+
+            trailingIcon?.invoke()
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RemoteItem(
     remoteSource: RemoteSources,
@@ -512,7 +561,7 @@ private fun RemoteItem(
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text("Download and Install ${remoteSource.name}?") },
-            //icon = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
+            icon = { Icon(Icons.Default.InstallMobile, null) },
             text = { Text("Are you sure?") },
             confirmButton = {
                 TextButton(
@@ -529,47 +578,50 @@ private fun RemoteItem(
             }
         )
     }
-    var showSources by remember { mutableStateOf(false) }
-    OutlinedCard(
-        onClick = { showSources = !showSources },
-        modifier = modifier.animateContentSize()
-    ) {
-        ListItem(
-            headlineContent = { Text(remoteSource.name) },
-            leadingContent = { AsyncImage(model = remoteSource.iconUrl, contentDescription = null) },
-            overlineContent = { Text("Version: ${remoteSource.version}") },
-            supportingContent = {
-                AnimatedVisibility(visible = showSources) {
-                    Column {
-                        remoteSource.sources.forEach {
-                            ListItem(
-                                headlineContent = { Text(it.name) },
-                                overlineContent = { Text("Version: ${it.version}") }
-                            )
-                            HorizontalDivider()
-                        }
-                    }
-                }
-            },
-            trailingContent = {
-                Row {
-                    IconButton(
-                        onClick = { showSources = !showSources }
-                    ) {
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            null,
-                            modifier = Modifier.rotateWithBoolean(showSources)
-                        )
-                    }
 
-                    IconButton(
-                        onClick = { showDialog = true }
-                    ) { Icon(Icons.Default.InstallMobile, null) }
-                }
-            },
-            modifier = Modifier.animateContentSize()
-        )
+    RemoteSourceItem(
+        remoteSource = remoteSource,
+        onExtensionClick = { showDialog = true },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun RemoteSourceItem(
+    remoteSource: RemoteSources,
+    onExtensionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedCard(
+        onClick = onExtensionClick,
+        modifier = modifier.heightIn(min = 150.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize()
+                .heightIn(min = 150.dp)
+        ) {
+            AsyncImage(
+                model = remoteSource.iconUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(64.dp)
+            )
+
+            Text(
+                remoteSource.name,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                "Version: ${remoteSource.version}",
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

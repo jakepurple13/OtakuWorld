@@ -2,7 +2,6 @@ package com.programmersbox.uiviews.details
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -32,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -55,17 +53,16 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.core.graphics.ColorUtils
 import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
 import com.google.accompanist.adaptive.TwoPane
 import com.google.accompanist.adaptive.calculateDisplayFeatures
+import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
@@ -79,10 +76,8 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
-import com.programmersbox.uiviews.utils.toComposeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -108,10 +103,10 @@ fun DetailsViewLandscape(
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
     notifyAction: () -> Unit,
+    onPaletteSet: (Palette) -> Unit,
 ) {
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
-    val swatchInfo = LocalSwatchInfo.current.colors
     val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -136,8 +131,6 @@ fun DetailsViewLandscape(
         }
     }
 
-    val topBarColor = swatchInfo?.bodyColor?.toComposeColor().animate(MaterialTheme.colorScheme.onSurface).value
-
     var showLists by remember { mutableStateOf(false) }
 
     AddToList(
@@ -155,7 +148,6 @@ fun DetailsViewLandscape(
         drawerContent = {
             ModalDrawerSheet {
                 MarkAsScreen(
-                    topBarColor = topBarColor,
                     drawerState = scaffoldState,
                     info = info,
                     chapters = chapters,
@@ -165,25 +157,14 @@ fun DetailsViewLandscape(
         }
     ) {
         OtakuScaffold(
-            containerColor = Color.Transparent,
             topBar = {
                 InsetSmallTopAppBar(
                     modifier = Modifier.zIndex(2f),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        titleContentColor = topBarColor,
-                        containerColor = swatchInfo?.rgb?.toComposeColor().animate(MaterialTheme.colorScheme.surface).value,
-                        scrolledContainerColor = swatchInfo?.rgb?.toComposeColor()?.animate()?.value?.let {
-                            MaterialTheme.colorScheme.surface.surfaceColorAtElevation(1.dp, it)
-                        } ?: MaterialTheme.colorScheme.applyTonalElevation(
-                            backgroundColor = MaterialTheme.colorScheme.surface,
-                            elevation = 1.dp
-                        )
-                    ),
                     scrollBehavior = scrollBehavior,
                     title = { Text(info.title) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = topBarColor)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                         }
                     },
                     actions = {
@@ -194,36 +175,23 @@ fun DetailsViewLandscape(
                             scope = scope,
                             context = context,
                             info = info,
-                            topBarColor = topBarColor,
                             isSaved = isSaved,
                             dao = dao,
-                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                            onShowLists = { showLists = true },
                             isFavorite = isFavorite,
                             canNotify = canNotify,
                             notifyAction = notifyAction,
+                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                            onShowLists = { showLists = true },
                         )
                     }
                 )
             },
             snackbarHost = {
                 SnackbarHost(hostState) { data ->
-                    val background = swatchInfo?.rgb?.toComposeColor() ?: SnackbarDefaults.color
-                    val font = swatchInfo?.titleColor?.toComposeColor() ?: MaterialTheme.colorScheme.surface
-                    Snackbar(
-                        containerColor = Color(ColorUtils.blendARGB(background.toArgb(), MaterialTheme.colorScheme.onSurface.toArgb(), .25f)),
-                        contentColor = font,
-                        snackbarData = data
-                    )
+                    Snackbar(snackbarData = data)
                 }
             },
-            modifier = Modifier
-                .run {
-                    val b = MaterialTheme.colorScheme.background
-                    val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
-                    drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
-                }
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
             DetailsLandscapeContent(
                 info = info,
@@ -241,6 +209,7 @@ fun DetailsViewLandscape(
                 showDownloadButton = showDownloadButton,
                 canNotify = canNotify,
                 notifyAction = notifyAction,
+                onPaletteSet = onPaletteSet,
                 modifier = Modifier.padding(p)
             )
         }
@@ -265,6 +234,7 @@ private fun DetailsLandscapeContent(
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
     notifyAction: () -> Unit,
+    onPaletteSet: (Palette) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -284,13 +254,8 @@ private fun DetailsLandscapeContent(
     TwoPane(
         modifier = modifier,
         first = {
-            val swatchInfo = LocalSwatchInfo.current.colors
-            val topBarColor by animateColorAsState(
-                swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.onSurface,
-                label = ""
-            )
             val b = MaterialTheme.colorScheme.surface
-            val c by animateColorAsState(swatchInfo?.rgb?.toComposeColor() ?: b, label = "")
+            val c = MaterialTheme.colorScheme.primary
             NormalOtakuScaffold(
                 bottomBar = {
                     val notificationManager = LocalContext.current.notificationManager
@@ -310,11 +275,6 @@ private fun DetailsLandscapeContent(
                             }
                         },
                         isSaved = isSaved,
-                        windowInsets = BottomAppBarDefaults.windowInsets,
-                        topBarColor = topBarColor,
-                        containerColor = c,
-                        isFavorite = isFavorite,
-                        onFavoriteClick = onFavoriteClick,
                         canNotify = canNotify,
                         notifyAction = notifyAction,
                         modifier = Modifier
@@ -328,7 +288,11 @@ private fun DetailsLandscapeContent(
                                         4 * density
                                     )
                                 }
-                            }
+                            },
+                        containerColor = c,
+                        isFavorite = isFavorite,
+                        onFavoriteClick = onFavoriteClick,
+                        windowInsets = BottomAppBarDefaults.windowInsets
                     )
                 },
                 contentWindowInsets = WindowInsets.navigationBars,
@@ -345,6 +309,7 @@ private fun DetailsLandscapeContent(
                         logo = painterResource(id = logo.notificationId),
                         isFavorite = isFavorite,
                         favoriteClick = onFavoriteClick,
+                        onPaletteSet = onPaletteSet,
                         possibleDescription = {
                             if (info.description.isNotEmpty()) {
                                 var descriptionVisibility by remember { mutableStateOf(false) }
@@ -381,7 +346,6 @@ private fun DetailsLandscapeContent(
             }
         },
         second = {
-            val swatchInfo = LocalSwatchInfo.current.colors
             val listOfChapters = remember(reverseChapters) {
                 info.chapters.let { if (reverseChapters) it.reversed() else it }
             }
@@ -390,8 +354,8 @@ private fun DetailsLandscapeContent(
                 settings = ScrollbarSettings.Default.copy(
                     thumbThickness = 8.dp,
                     scrollbarPadding = 2.dp,
-                    thumbUnselectedColor = swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary,
-                    thumbSelectedColor = (swatchInfo?.bodyColor?.toComposeColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = .6f),
+                    thumbUnselectedColor = MaterialTheme.colorScheme.primary,
+                    thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
                 ),
             ) {
                 LazyColumn(

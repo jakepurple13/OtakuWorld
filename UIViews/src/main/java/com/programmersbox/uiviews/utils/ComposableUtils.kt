@@ -10,6 +10,8 @@ import androidx.activity.result.ActivityResult
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -49,6 +51,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -71,11 +74,13 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -214,7 +219,10 @@ fun Color.contrastAgainst(background: Color): Float {
 }
 
 @Composable
-fun adaptiveGridCell(): GridCells = CustomAdaptive(ComposableUtils.IMAGE_WIDTH)
+fun adaptiveGridCell(): GridCells {
+    val width = ComposableUtils.IMAGE_WIDTH
+    return remember(width) { CustomAdaptive(width) }
+}
 
 class CustomAdaptive(private val minSize: Dp) : GridCells {
     init {
@@ -550,6 +558,24 @@ fun Modifier.hazeChoice(
     state: HazeState,
     style: HazeStyle = HazeDefaults.style(),
 ): Modifier = this.haze(state, style)
+
+@Composable
+fun hapticInteractionSource(
+    hapticFeedbackType: HapticFeedbackType = HapticFeedbackType.LongPress,
+    enabled: Boolean = true,
+): MutableInteractionSource {
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    LaunchedEffect(isPressed) {
+        if (isPressed && enabled) {
+            haptic.performHapticFeedback(hapticFeedbackType)
+        }
+    }
+
+    return interactionSource
+}
 
 /*
 // Need `implementation("com.mutualmobile:composesensors:1.1.2")` to make this work

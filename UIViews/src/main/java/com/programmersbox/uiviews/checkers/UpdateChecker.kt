@@ -323,9 +323,11 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
         val id = intent?.getIntExtra("id", -1)
         println(url)
         GlobalScope.launch {
-            url?.let { dao?.getNotificationItem(it) }
-                .also { println(it) }
-                ?.let { dao?.deleteNotification(it) }
+            runCatching {
+                url?.let { dao?.getNotificationItem(it) }
+                    .also { println(it) }
+                    ?.let { dao?.deleteNotification(it) }
+            }.onFailure { recordFirebaseException(it) }
             id?.let { if (it != -1) context?.notificationManager?.cancel(it) }
             val g = context?.notificationManager?.activeNotifications?.map { it.notification }?.filter { it.group == "otakuGroup" }.orEmpty()
             if (g.size == 1) context?.notificationManager?.cancel(42)

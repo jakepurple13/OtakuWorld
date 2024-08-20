@@ -447,6 +447,7 @@ fun CurlPagerView(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    //TODO: Make go reverse
     PageCurl(
         state = pagerState,
         key = { it },
