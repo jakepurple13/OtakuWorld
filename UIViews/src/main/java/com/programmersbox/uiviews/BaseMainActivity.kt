@@ -118,6 +118,7 @@ import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
+import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.Screen
@@ -198,61 +199,65 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val showBlur by settingsHandling.rememberShowBlur()
 
-            OtakuMaterialTheme(
-                navController = navController,
-                genericInfo = genericInfo,
-                themeSetting = themeSetting,
-                isAmoledMode = isAmoledMode
+            CompositionLocalProvider(
+                LocalWindowSizeClass provides windowSize
             ) {
-                AskForNotificationPermissions()
+                OtakuMaterialTheme(
+                    navController = navController,
+                    genericInfo = genericInfo,
+                    themeSetting = themeSetting,
+                    isAmoledMode = isAmoledMode,
+                ) {
+                    AskForNotificationPermissions()
 
-                val showAllItem by settingsHandling.rememberShowAll()
+                    val showAllItem by settingsHandling.rememberShowAll()
 
-                val navType = when (windowSize.widthSizeClass) {
-                    WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
-                    else -> NavigationBarType.Bottom
-                }
+                    val navType = when (windowSize.widthSizeClass) {
+                        WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
+                        else -> NavigationBarType.Bottom
+                    }
 
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentDestination = navBackStackEntry?.destination
 
-                val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
+                    val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
 
-                genericInfo.DialogSetups()
+                    genericInfo.DialogSetups()
 
-                Row(Modifier.fillMaxSize()) {
-                    Rail(
-                        navController = navController,
-                        showNavBar = showNavBar,
-                        navType = navType,
-                        showAllItem = showAllItem,
-                        currentDestination = currentDestination
-                    )
-                    HazeScaffold(
-                        bottomBar = {
-                            BottomNav(
-                                navController = navController,
-                                showNavBar = showNavBar,
-                                navType = navType,
-                                showAllItem = showAllItem,
-                                currentDestination = currentDestination,
-                                showBlur = showBlur,
-                                isAmoledMode = isAmoledMode
-                            )
-                        },
-                        contentWindowInsets = WindowInsets(0.dp),
-                        blurBottomBar = showBlur
-                    ) { innerPadding ->
-                        SharedTransitionLayout {
-                            CompositionLocalProvider(
-                                LocalNavHostPadding provides innerPadding,
-                                LocalSharedElementScope provides this@SharedTransitionLayout
-                            ) {
-                                NavHost(
+                    Row(Modifier.fillMaxSize()) {
+                        Rail(
+                            navController = navController,
+                            showNavBar = showNavBar,
+                            navType = navType,
+                            showAllItem = showAllItem,
+                            currentDestination = currentDestination
+                        )
+                        HazeScaffold(
+                            bottomBar = {
+                                BottomNav(
                                     navController = navController,
-                                    startDestination = Screen.RecentScreen,
-                                    modifier = Modifier.fillMaxSize()
-                                ) { navGraph(customPreferences, windowSize) }
+                                    showNavBar = showNavBar,
+                                    navType = navType,
+                                    showAllItem = showAllItem,
+                                    currentDestination = currentDestination,
+                                    showBlur = showBlur,
+                                    isAmoledMode = isAmoledMode
+                                )
+                            },
+                            contentWindowInsets = WindowInsets(0.dp),
+                            blurBottomBar = showBlur
+                        ) { innerPadding ->
+                            SharedTransitionLayout {
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides innerPadding,
+                                    LocalSharedElementScope provides this@SharedTransitionLayout
+                                ) {
+                                    NavHost(
+                                        navController = navController,
+                                        startDestination = Screen.RecentScreen,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) { navGraph(customPreferences, windowSize) }
+                                }
                             }
                         }
                     }

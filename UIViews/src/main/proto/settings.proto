@@ -17,6 +17,7 @@ message Settings {
   bool amoledMode = 11;
   bool usePalette = 12;
   bool showBlur = 13;
+  GridChoice gridChoice = 15;
 }
 
 enum SystemThemeMode {
@@ -28,4 +29,10 @@ enum SystemThemeMode {
 enum NotificationSortBy {
     Date = 0;
     Grouped = 1;
+}
+
+enum GridChoice {
+  FullAdaptive = 0;
+  Adaptive = 1;
+  Fixed = 2;
 }

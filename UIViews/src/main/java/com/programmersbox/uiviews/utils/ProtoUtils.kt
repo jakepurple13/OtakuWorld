@@ -13,6 +13,7 @@ import androidx.datastore.dataStore
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.protobuf.GeneratedMessageLite
 import com.google.protobuf.InvalidProtocolBufferException
+import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.Settings
 import com.programmersbox.uiviews.SystemThemeMode
@@ -156,6 +157,13 @@ class SettingsHandling(context: Context) {
         key = { it.showBlur },
         update = { setShowBlur(it) },
         defaultValue = true
+    )
+
+    @Composable
+    fun rememberGridChoice() = preferences.rememberPreference(
+        key = { it.gridChoice },
+        update = { setGridChoice(it) },
+        defaultValue = GridChoice.FullAdaptive
     )
 }
 

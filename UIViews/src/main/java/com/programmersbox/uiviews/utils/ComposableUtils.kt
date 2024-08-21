@@ -49,6 +49,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -91,6 +93,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
 import com.programmersbox.uiviews.ChangingSettingsRepository
+import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.settings.SourceChooserScreen
 import com.programmersbox.uiviews.settings.TranslationScreen
@@ -218,10 +221,27 @@ fun Color.contrastAgainst(background: Color): Float {
     return kotlin.math.max(fgLuminance, bgLuminance) / kotlin.math.min(fgLuminance, bgLuminance)
 }
 
+val LocalWindowSizeClass = staticCompositionLocalOf<WindowSizeClass> {
+    error("No WindowSizeClass available")
+}
+
+val gridColumns: Int
+    @Composable get() = when (LocalWindowSizeClass.current.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 3
+        WindowWidthSizeClass.Medium -> 5
+        else -> 6
+    }
+
 @Composable
 fun adaptiveGridCell(): GridCells {
+    val gridChoice by LocalSettingsHandling.current.rememberGridChoice()
     val width = ComposableUtils.IMAGE_WIDTH
-    return remember(width) { CustomAdaptive(width) }
+    return when (gridChoice) {
+        GridChoice.FullAdaptive -> remember { CustomAdaptive(width) }
+        GridChoice.Adaptive -> remember { GridCells.Adaptive(width) }
+        GridChoice.Fixed -> GridCells.Fixed(gridColumns)
+        else -> GridCells.Fixed(gridColumns)
+    }
 }
 
 class CustomAdaptive(private val minSize: Dp) : GridCells {

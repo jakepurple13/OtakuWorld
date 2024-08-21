@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.BlurOff
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.materialkolor.PaletteStyle
+import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.details.PaletteSwatchType
@@ -166,6 +168,36 @@ fun GeneralSettings(
         }
 
         HorizontalDivider()
+
+        var gridChoice by handling.rememberGridChoice()
+
+        ListSetting(
+            settingTitle = { Text("Grid Type") },
+            settingIcon = { Icon(Icons.Default.GridView, null, modifier = Modifier.fillMaxSize()) },
+            value = gridChoice,
+            updateValue = { it, d ->
+                d.value = false
+                gridChoice = it
+            },
+            options = listOf(
+                GridChoice.FullAdaptive,
+                GridChoice.Adaptive,
+                GridChoice.Fixed
+            ),
+            summaryValue = {
+                Text(
+                    when (gridChoice) {
+                        GridChoice.FullAdaptive -> "Full Adaptive: This will have a dynamic number of columns."
+                        GridChoice.Adaptive -> "Adaptive: This will be adaptive as best it can."
+                        GridChoice.Fixed -> "Fixed: Have a fixed amount of columns. This will be 3 for compact, 5 for medium, and 6 for large."
+                        else -> "None selected"
+                    }
+                )
+            },
+            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+            dialogTitle = { Text("Grid Type") },
+            dialogIcon = { Icon(Icons.Default.GridView, null) },
+        )
 
         var shareChapter by handling.rememberShareChapter()
 

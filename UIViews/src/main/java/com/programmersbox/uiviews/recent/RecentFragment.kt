@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -148,7 +150,15 @@ fun RecentView(
                         },
                         label = ""
                     ) { targetState ->
-                        Text(stringResource(R.string.currentSource, sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty()))
+                        ListItem(
+                            overlineContent = { Text("Current Source:") },
+                            headlineContent = {
+                                Text(sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty())
+                            },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            )
+                        )
                     }
                 },
                 actions = {
