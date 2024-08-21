@@ -7,7 +7,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
@@ -44,12 +45,15 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -168,6 +172,8 @@ internal fun DetailsHeader(
                             )
                         )
                 ) {
+                    var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
+
                     GlideImage(
                         imageModel = { imageUrl },
                         imageOptions = ImageOptions(contentScale = ContentScale.FillBounds),
@@ -178,10 +184,28 @@ internal fun DetailsHeader(
                         },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .combinedClickable(
+                            /*.combinedClickable(
                                 onClick = {},
                                 onDoubleClick = { imagePopup = true }
+                            )*/
+                            .magnifier(
+                                sourceCenter = { magnifierCenter },
+                                magnifierCenter = { magnifierCenter.copy(y = magnifierCenter.y - 100) },
+                                zoom = 3f,
+                                size = DpSize(100.dp, 100.dp),
+                                cornerRadius = 8.dp
                             )
+                            .pointerInput(Unit) {
+                                detectDragGestures(
+                                    // Show the magnifier at the original pointer position.
+                                    onDragStart = { magnifierCenter = it },
+                                    // Make the magnifier follow the finger while dragging.
+                                    onDrag = { _, delta -> magnifierCenter += delta },
+                                    // Hide the magnifier when the finger lifts.
+                                    onDragEnd = { magnifierCenter = Offset.Unspecified },
+                                    onDragCancel = { magnifierCenter = Offset.Unspecified }
+                                )
+                            }
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     )
                 }
