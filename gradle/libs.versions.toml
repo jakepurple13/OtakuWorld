@@ -15,6 +15,7 @@ kamelImage = "1.0.0-beta.7"
 latestAboutLibsRelease = "11.2.2"
 coroutinesVersion = "1.8.1"
 glideVersion = "4.16.0"
+pagecurl = "1.5.1"
 pagingVersion = "3.3.2"
 protobufGradlePlugin = "0.9.4"
 roomVersion = "2.7.0-alpha07"
@@ -52,9 +53,11 @@ media3Version = "1.4.0"
 junit = "1.2.1"
 espresso-core = "3.6.1"
 uiautomator = "2.3.0"
-benchmark-macro-junit4 = "1.2.4"
-androidx-baselineprofile = "1.2.4"
+benchmark-macro-junit4 = "1.3.0"
+androidx-baselineprofile = "1.3.0"
 profileinstaller = "1.3.1"
+zoomableImageGlide = "0.13.0"
+zoomimageComposeGlide = "1.0.2"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
@@ -83,6 +86,7 @@ kamel-decoder-image-bitmap = { module = "media.kamel:kamel-decoder-image-bitmap"
 kamel-image = { module = "media.kamel:kamel-image-default", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
+pagecurl = { module = "io.github.oleksandrbalan:pagecurl", version.ref = "pagecurl" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.11.0"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
@@ -216,6 +220,7 @@ recyclerview = "androidx.recyclerview:recyclerview:1.3.2"
 constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
+telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "zoomableImageGlide" }
 zoomableModifier = "net.engawapg.lib:zoomable:1.6.1"
 
 ### MangaWorld
@@ -310,6 +315,7 @@ espresso-core = { group = "androidx.test.espresso", name = "espresso-core", vers
 uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark-macro-junit4" }
 profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
+panpf-zoomimage-compose-glide = { module = "io.github.panpf.zoomimage:zoomimage-compose-glide", version.ref = "zoomimageComposeGlide" }
 
 [bundles]
 compose = [
