@@ -140,7 +140,7 @@ coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-pl
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
-glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta01"
+glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta02-SNAPSHOT"
 
 androidCore = "androidx.core:core-ktx:1.13.1"
 appCompat = "androidx.appcompat:appcompat:1.7.0"
