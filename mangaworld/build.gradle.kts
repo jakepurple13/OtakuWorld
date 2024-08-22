@@ -86,5 +86,5 @@ dependencies {
 
     implementation("io.github.panpf.zoomimage:zoomimage-compose-glide:1.0.2")
 
-    implementation("me.saket.telephoto:zoomable-image-glide:0.12.1")
+    implementation("me.saket.telephoto:zoomable-image-glide:0.13.0")
 }
