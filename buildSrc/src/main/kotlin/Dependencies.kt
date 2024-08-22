@@ -17,6 +17,6 @@ object Deps {
         funutils
     )
 
-    const val materialTypeface = "com.mikepenz:google-material-typeface:4.0.0.2-kotlin@aar"
+    const val materialTypeface = "com.mikepenz:google-material-typeface:4.0.0.3-kotlin@aar"
     const val fontawesomeTypeface = "com.mikepenz:fontawesome-typeface:5.13.3.0-kotlin@aar"
 }
