@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.details
 
-import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dokar.sonner.ToasterState
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
@@ -45,9 +45,10 @@ class DetailsViewModel(
     details: Screen.DetailsScreen.Details? = null,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
-    context: Context,
     private val dao: ItemDao,
 ) : ViewModel(), KoinComponent {
+
+    val toastState = ToasterState(viewModelScope)
 
     private val sourceRepository: SourceRepository by inject()
 
@@ -80,7 +81,8 @@ class DetailsViewModel(
             ?.catch {
                 recordFirebaseException(it)
                 it.printStackTrace()
-                context.showErrorToast()
+                toastState.showErrorToast()
+                emit(Result.failure(it))
             }
             ?.filter { it.isSuccess }
             ?.map { it.getOrThrow() }

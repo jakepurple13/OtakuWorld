@@ -1,7 +1,6 @@
 package com.programmersbox.mangaworld.reader.compose
 
 import android.content.Context
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -49,6 +49,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dokar.sonner.ToastType
+import com.dokar.sonner.ToasterDefaults
+import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.ReaderType
@@ -57,10 +60,10 @@ import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
@@ -96,7 +99,10 @@ fun ReadView(
         )
     },
 ) {
+    //TODO: ADD SONNER FOR THE ADDED CHAPTER
     HideSystemBarsWhileOnScreen()
+
+    val toaster = rememberToasterState()
 
     val scope = rememberCoroutineScope()
 
@@ -135,10 +141,13 @@ fun ReadView(
     var startAction by mangaSettingsHandling.rememberPlayingStartAction()
     var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
-    val activity = LocalActivity.current
-
     fun showToast() {
-        activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
+        toaster.show(
+            message = context.getString(R.string.addedChapterItem),
+            icon = R.mipmap.ic_launcher,
+            type = ToastType.Success,
+            duration = ToasterDefaults.DurationShort
+        )
     }
 
     val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
@@ -336,6 +345,10 @@ fun ReadView(
                     }
                 }
             }
+            ToasterSetup(
+                toaster = toaster,
+                modifier = Modifier.padding(p)
+            )
         }
     }
 }

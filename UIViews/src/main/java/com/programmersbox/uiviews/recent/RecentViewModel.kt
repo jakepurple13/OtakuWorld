@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.recent
 
-import android.content.Context
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -11,6 +10,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dokar.sonner.ToasterState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -36,10 +36,11 @@ import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class RecentViewModel(
     dao: ItemDao,
-    context: Context? = null,
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
 ) : ViewModel() {
+
+    val toastState = ToasterState(viewModelScope)
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
@@ -80,7 +81,7 @@ class RecentViewModel(
                 currentSource = it
                 count = 1
                 sourceList.clear()
-                sourceLoadCompose(context)
+                sourceLoadCompose()
             }
             .launchIn(viewModelScope)
 
@@ -91,25 +92,25 @@ class RecentViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun reset(context: Context?) {
+    fun reset() {
         count = 1
         sourceList.clear()
-        sourceLoadCompose(context)
+        sourceLoadCompose()
     }
 
-    fun loadMore(context: Context?) {
+    fun loadMore() {
         count++
-        sourceLoadCompose(context)
+        sourceLoadCompose()
     }
 
-    private fun sourceLoadCompose(context: Context?) {
+    private fun sourceLoadCompose() {
         currentSource
             ?.getRecentFlow(count)
             ?.onStart { isRefreshing = true }
             ?.dispatchIo()
             ?.catch {
                 it.printStackTrace()
-                context?.showErrorToast()
+                toastState.showErrorToast()
                 emit(emptyList())
                 recordFirebaseException(it)
             }

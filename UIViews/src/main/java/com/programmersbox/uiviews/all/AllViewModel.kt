@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.all
 
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +8,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dokar.sonner.ToasterState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
@@ -30,9 +30,10 @@ import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class AllViewModel(
     dao: ItemDao,
-    context: Context? = null,
     private val currentSourceRepository: CurrentSourceRepository,
 ) : ViewModel() {
+
+    val toastState = ToasterState(viewModelScope)
 
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
@@ -64,26 +65,26 @@ class AllViewModel(
             .onEach {
                 count = 1
                 sourceList.clear()
-                sourceLoadCompose(context, it)
+                sourceLoadCompose(it)
             }
             .launchIn(viewModelScope)
     }
 
-    fun reset(context: Context?, sources: ApiService) {
+    fun reset(sources: ApiService) {
         count = 1
         sourceList.clear()
-        sourceLoadCompose(context, sources)
+        sourceLoadCompose(sources)
     }
 
-    fun loadMore(context: Context?, sources: ApiService) {
+    fun loadMore(sources: ApiService) {
         count++
-        sourceLoadCompose(context, sources)
+        sourceLoadCompose(sources)
     }
 
-    private fun sourceLoadCompose(context: Context?, sources: ApiService) {
+    private fun sourceLoadCompose(sources: ApiService) {
         sources
             .getListFlow(count)
-            .dispatchIoAndCatchList { context?.showErrorToast() }
+            .dispatchIoAndCatchList { toastState.showErrorToast() }
             .onStart { isRefreshing = true }
             .onEach { sourceList.addAll(it) }
             .onCompletion { isRefreshing = false }

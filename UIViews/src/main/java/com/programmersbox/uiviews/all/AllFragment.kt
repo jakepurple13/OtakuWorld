@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.all
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -48,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -69,6 +67,7 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
@@ -89,10 +88,9 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
-    context: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
-    allVm: AllViewModel = viewModel { AllViewModel(dao, context, currentSourceRepository) },
+    allVm: AllViewModel = viewModel { AllViewModel(dao, currentSourceRepository) },
     isHorizontal: Boolean = false,
 ) {
     val isConnected by allVm.observeNetwork.collectAsState(initial = true)
@@ -101,7 +99,7 @@ fun AllView(
         .collectAsState(initial = null)
 
     LaunchedEffect(isConnected) {
-        if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(context, source!!)
+        if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(source!!)
     }
 
     val info = LocalGenericInfo.current
@@ -264,6 +262,11 @@ fun AllView(
                 }
             }
         }
+        ToasterSetup(
+            toaster = allVm.toastState,
+            alignment = Alignment.TopCenter,
+            modifier = Modifier.padding(p1)
+        )
     }
 }
 
@@ -273,8 +276,8 @@ fun AllScreen(
     isRefreshing: Boolean,
     sourceList: List<ItemModel>,
     favoriteList: List<DbModel>,
-    onLoadMore: (Context?, ApiService) -> Unit,
-    onReset: (Context?, ApiService) -> Unit,
+    onLoadMore: (ApiService) -> Unit,
+    onReset: (ApiService) -> Unit,
     itemInfoChange: (ItemModel?) -> Unit,
     state: LazyGridState,
     showBanner: (Boolean) -> Unit,
@@ -284,7 +287,6 @@ fun AllScreen(
     val info = LocalGenericInfo.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val pullRefreshState = rememberPullToRefreshState()
     NormalOtakuScaffold { p ->
         Box(
@@ -293,7 +295,7 @@ fun AllScreen(
                 .pullToRefresh(
                     state = pullRefreshState,
                     isRefreshing = isRefreshing,
-                    onRefresh = { source?.let { onReset(context, it) } }
+                    onRefresh = { source?.let { onReset(it) } }
                 )
         ) {
             if (sourceList.isEmpty()) {
@@ -322,7 +324,7 @@ fun AllScreen(
 
         if (source?.canScrollAll == true && sourceList.isNotEmpty()) {
             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                source?.let { onLoadMore(context, it) }
+                source?.let { onLoadMore(it) }
             }
         }
     }
@@ -339,8 +341,8 @@ private fun AllScreenPreview() {
             isRefreshing = true,
             sourceList = emptyList(),
             favoriteList = emptyList(),
-            onLoadMore = { _, _ -> },
-            onReset = { _, _ -> },
+            onLoadMore = {},
+            onReset = {},
             paddingValues = PaddingValues(0.dp)
         )
     }

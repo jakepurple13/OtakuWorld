@@ -48,7 +48,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,7 +77,6 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
-import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -192,7 +190,6 @@ fun HistoryUi(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HistoryItem(
     item: RecentModel,
@@ -275,8 +272,6 @@ private fun HistoryItem(
                 onDismissRequest = { showLoadingDialog = false }
             )
 
-            val context = LocalContext.current
-
             val info = LocalSourcesRepository.current
             val navController = LocalNavController.current
 
@@ -292,7 +287,7 @@ private fun HistoryItem(
                             ?.onStart { showLoadingDialog = true }
                             ?.catch {
                                 showLoadingDialog = false
-                                context.showErrorToast()
+                                onError()
                             }
                             ?.onEach { m ->
                                 showLoadingDialog = false
@@ -341,7 +336,7 @@ private fun HistoryItem(
                                             ?.onStart { showLoadingDialog = true }
                                             ?.catch {
                                                 showLoadingDialog = false
-                                                context.showErrorToast()
+                                                onError()
                                             }
                                             ?.onEach { m ->
                                                 showLoadingDialog = false

@@ -82,6 +82,7 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
@@ -107,7 +108,6 @@ fun DetailsScreen(
             handle = createSavedStateHandle(),
             genericInfo = genericInfo,
             dao = dao,
-            context = localContext
         )
     },
 ) {
@@ -141,7 +141,6 @@ fun DetailsScreen(
             handle = createSavedStateHandle(),
             genericInfo = genericInfo,
             dao = dao,
-            context = localContext
         )
     },
 ) {
@@ -259,6 +258,7 @@ fun DetailsScreen(
             }
         }
     }
+    ToasterSetup(toaster = details.toastState)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

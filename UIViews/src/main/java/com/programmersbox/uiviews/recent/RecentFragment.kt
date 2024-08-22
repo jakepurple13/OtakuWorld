@@ -70,6 +70,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
@@ -90,7 +91,7 @@ fun RecentView(
     context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
-    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, context, sourceRepository, currentSourceRepository) },
+    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, sourceRepository, currentSourceRepository) },
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
@@ -104,7 +105,7 @@ fun RecentView(
     val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
     LaunchedEffect(isConnected) {
-        if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset(context)
+        if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset()
     }
 
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
@@ -213,17 +214,14 @@ fun RecentView(
                     true -> {
                         OtakuPullToRefreshBox(
                             isRefreshing = recentVm.isRefreshing,
-                            onRefresh = { recentVm.reset(context) },
+                            onRefresh = { recentVm.reset() },
                             state = pull,
                             paddingValues = p
                         ) {
                             when {
                                 sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
-                                recentVm.sourceList.isEmpty() -> Box(
-                                    Modifier
-                                        .padding(p)
-                                        .fillMaxSize()
-                                ) { info.ComposeShimmerItem() }
+
+                                recentVm.sourceList.isEmpty() -> Box(Modifier.fillMaxSize()) { info.ComposeShimmerItem() }
 
                                 else -> {
                                     info.ItemListView(
@@ -243,13 +241,18 @@ fun RecentView(
 
                         if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
                             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                recentVm.loadMore(context)
+                                recentVm.loadMore()
                             }
                         }
                     }
                 }
             }
         }
+        ToasterSetup(
+            toaster = recentVm.toastState,
+            alignment = Alignment.TopCenter,
+            modifier = Modifier.padding(p)
+        )
     }
 }
 

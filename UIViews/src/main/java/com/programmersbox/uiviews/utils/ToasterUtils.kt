@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.dokar.sonner.ToastType
 import com.dokar.sonner.Toaster
 import com.dokar.sonner.ToasterDefaults
 import com.dokar.sonner.ToasterState
-
 
 object ToasterUtils {
     const val LOADING_TOAST_ID = 1234
@@ -21,6 +22,8 @@ object ToasterUtils {
 @Composable
 fun ToasterSetup(
     toaster: ToasterState,
+    modifier: Modifier = Modifier,
+    alignment: Alignment = Alignment.BottomEnd,
 ) {
     Toaster(
         state = toaster,
@@ -39,6 +42,16 @@ fun ToasterSetup(
             }
         },
         darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
-                (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
+        alignment = alignment,
+        modifier = modifier
+    )
+}
+
+fun ToasterState.showErrorToast() {
+    show(
+        message = "Something went wrong",
+        type = ToastType.Error,
+        duration = ToasterDefaults.DurationShort
     )
 }
