@@ -82,7 +82,7 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.ToasterSetup
+import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
@@ -258,7 +258,7 @@ fun DetailsScreen(
             }
         }
     }
-    ToasterSetup(toaster = details.toastState)
+    ToasterItemsSetup(toastItems = details)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

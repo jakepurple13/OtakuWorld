@@ -70,7 +70,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.ToasterSetup
+import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
@@ -248,8 +248,9 @@ fun RecentView(
                 }
             }
         }
-        ToasterSetup(
-            toaster = recentVm.toastState,
+
+        ToasterItemsSetup(
+            toastItems = recentVm,
             alignment = Alignment.TopCenter,
             modifier = Modifier.padding(p)
         )

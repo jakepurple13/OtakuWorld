@@ -99,7 +99,6 @@ fun ReadView(
         )
     },
 ) {
-    //TODO: ADD SONNER FOR THE ADDED CHAPTER
     HideSystemBarsWhileOnScreen()
 
     val toaster = rememberToasterState()

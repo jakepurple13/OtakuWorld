@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dokar.sonner.ToasterState
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
@@ -24,10 +23,11 @@ import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
+import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.recordFirebaseException
-import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -46,9 +46,7 @@ class DetailsViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     private val dao: ItemDao,
-) : ViewModel(), KoinComponent {
-
-    val toastState = ToasterState(viewModelScope)
+) : ViewModel(), KoinComponent, ToastItems by DefaultToastItems() {
 
     private val sourceRepository: SourceRepository by inject()
 
@@ -81,7 +79,7 @@ class DetailsViewModel(
             ?.catch {
                 recordFirebaseException(it)
                 it.printStackTrace()
-                toastState.showErrorToast()
+                showError()
                 emit(Result.failure(it))
             }
             ?.filter { it.isSuccess }

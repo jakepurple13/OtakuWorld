@@ -10,7 +10,6 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dokar.sonner.ToasterState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -19,9 +18,10 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.CurrentSourceRepository
+import com.programmersbox.uiviews.utils.DefaultToastItems
+import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.recordFirebaseException
-import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -38,9 +38,7 @@ class RecentViewModel(
     dao: ItemDao,
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
-) : ViewModel() {
-
-    val toastState = ToasterState(viewModelScope)
+) : ViewModel(), ToastItems by DefaultToastItems() {
 
     var isRefreshing by mutableStateOf(false)
     val sourceList = mutableStateListOf<ItemModel>()
@@ -110,7 +108,7 @@ class RecentViewModel(
             ?.dispatchIo()
             ?.catch {
                 it.printStackTrace()
-                toastState.showErrorToast()
+                showError()
                 emit(emptyList())
                 recordFirebaseException(it)
             }

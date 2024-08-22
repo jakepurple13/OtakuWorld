@@ -67,7 +67,7 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.ToasterSetup
+import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
@@ -262,8 +262,8 @@ fun AllView(
                 }
             }
         }
-        ToasterSetup(
-            toaster = allVm.toastState,
+        ToasterItemsSetup(
+            toastItems = allVm,
             alignment = Alignment.TopCenter,
             modifier = Modifier.padding(p1)
         )

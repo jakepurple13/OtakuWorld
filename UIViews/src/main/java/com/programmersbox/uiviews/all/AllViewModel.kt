@@ -8,15 +8,15 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dokar.sonner.ToasterState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.CurrentSourceRepository
+import com.programmersbox.uiviews.utils.DefaultToastItems
+import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
-import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -31,9 +31,7 @@ import ru.beryukhov.reactivenetwork.ReactiveNetwork
 class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
-) : ViewModel() {
-
-    val toastState = ToasterState(viewModelScope)
+) : ViewModel(), ToastItems by DefaultToastItems() {
 
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
@@ -84,7 +82,7 @@ class AllViewModel(
     private fun sourceLoadCompose(sources: ApiService) {
         sources
             .getListFlow(count)
-            .dispatchIoAndCatchList { toastState.showErrorToast() }
+            .dispatchIoAndCatchList { showError() }
             .onStart { isRefreshing = true }
             .onEach { sourceList.addAll(it) }
             .onCompletion { isRefreshing = false }
