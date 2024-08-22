@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -43,6 +46,7 @@ subprojects {
 }
 
 fun Project.configureAndroidBasePlugin() {
+    composeFeatureFlags()
     extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
         compileOptions {
             isCoreLibraryDesugaringEnabled = true
@@ -52,6 +56,12 @@ fun Project.configureAndroidBasePlugin() {
             val coreLibraryDesugaring by configurations
             coreLibraryDesugaring(libs.coreLibraryDesugaring)
         }
+    }
+}
+
+fun Project.composeFeatureFlags() {
+    extensions.findByType(ComposeCompilerGradlePluginExtension::class.java)?.apply {
+        featureFlags.add(ComposeFeatureFlag.StrongSkipping)
     }
 }
 

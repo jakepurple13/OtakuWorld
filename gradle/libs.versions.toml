@@ -1,9 +1,10 @@
 [versions]
 gradle = "8.5.2"
 
+kotlin = "2.0.20"
 kspVersion = "2.0.10-1.0.24"
 
-androidxBaselineprofileGradlePlugin = "1.2.0"
+androidxBaselineprofileGradlePlugin = "1.3.0"
 composeCollapsable = "0.3.0"
 dragselect = "2.3.0"
 easylauncher = "6.4.0"
@@ -11,7 +12,6 @@ firebaseCrashlyticsGradle = "3.0.2"
 googleServices = "4.4.2"
 haze = "0.9.0-alpha08"
 kamelImage = "1.0.0-beta.7"
-kotlin = "2.0.10"
 latestAboutLibsRelease = "11.2.2"
 coroutinesVersion = "1.8.1"
 glideVersion = "4.16.0"
@@ -49,11 +49,11 @@ piasy = "1.8.1"
 autoBinding = "1.1-beta04"
 media3Version = "1.4.0"
 
-junit = "1.1.5"
-espresso-core = "3.5.1"
-uiautomator = "2.2.0"
-benchmark-macro-junit4 = "1.2.2"
-androidx-baselineprofile = "1.2.2"
+junit = "1.2.1"
+espresso-core = "3.6.1"
+uiautomator = "2.3.0"
+benchmark-macro-junit4 = "1.2.4"
+androidx-baselineprofile = "1.2.4"
 profileinstaller = "1.3.1"
 
 [plugins]

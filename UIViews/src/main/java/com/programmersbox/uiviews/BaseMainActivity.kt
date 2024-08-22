@@ -471,8 +471,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
         customPreferences: ComposeSettingsDsl,
         windowSize: WindowSizeClass,
     ) {
-        animatedScopeComposable<Screen.RecentScreen> { RecentView() }
-        animatedScopeComposable<Screen.AllScreen> {
+        animatedScopeComposable<Screen.RecentScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start) }
+        ) { RecentView() }
+
+        animatedScopeComposable<Screen.AllScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
+        ) {
             AllView(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )

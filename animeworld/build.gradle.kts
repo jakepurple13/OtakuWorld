@@ -19,10 +19,6 @@ android {
     }
 }
 
-composeCompiler {
-    enableStrongSkippingMode = true
-}
-
 dependencies {
     implementation(libs.material)
     implementation(androidx.constraintlayout.constraintlayout)

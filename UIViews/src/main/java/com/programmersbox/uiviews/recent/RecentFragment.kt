@@ -137,29 +137,29 @@ fun RecentView(
         topBar = {
             InsetSmallTopAppBar(
                 title = {
-                    AnimatedContent(
-                        targetState = pagerState.targetPage,
-                        transitionSpec = {
-                            if (targetState > initialState) {
-                                slideInVertically { height -> height } + fadeIn() togetherWith
-                                        slideOutVertically { height -> -height } + fadeOut()
-                            } else {
-                                slideInVertically { height -> -height } + fadeIn() togetherWith
-                                        slideOutVertically { height -> height } + fadeOut()
-                            }.using(SizeTransform(clip = false))
-                        },
-                        label = ""
-                    ) { targetState ->
-                        ListItem(
-                            overlineContent = { Text("Current Source:") },
-                            headlineContent = {
+                    ListItem(
+                        overlineContent = { Text("Current Source:") },
+                        headlineContent = {
+                            AnimatedContent(
+                                targetState = pagerState.targetPage,
+                                transitionSpec = {
+                                    if (targetState > initialState) {
+                                        slideInVertically { height -> height } + fadeIn() togetherWith
+                                                slideOutVertically { height -> -height } + fadeOut()
+                                    } else {
+                                        slideInVertically { height -> -height } + fadeIn() togetherWith
+                                                slideOutVertically { height -> height } + fadeOut()
+                                    }.using(SizeTransform(clip = false))
+                                },
+                                label = ""
+                            ) { targetState ->
                                 Text(sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty())
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = Color.Transparent
-                            )
+                            }
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
                         )
-                    }
+                    )
                 },
                 actions = {
                     VerticalPager(
