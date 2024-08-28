@@ -48,7 +48,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.4.0"
+media3Version = "1.4.1"
 
 junit = "1.2.1"
 espresso-core = "3.6.1"
