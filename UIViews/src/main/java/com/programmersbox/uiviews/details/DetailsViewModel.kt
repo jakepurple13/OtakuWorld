@@ -1,9 +1,13 @@
 package com.programmersbox.uiviews.details
 
+import android.graphics.Bitmap
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,19 +27,25 @@ import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
+import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.ToastItems
+import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
+import com.programmersbox.uiviews.utils.blurhash.BlurHashItem
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.recordFirebaseException
+import com.vanniktech.blurhash.BlurHash
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -46,6 +56,7 @@ class DetailsViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     private val dao: ItemDao,
+    private val blurHashDao: BlurHashDao,
 ) : ViewModel(), KoinComponent, ToastItems by DefaultToastItems() {
 
     private val sourceRepository: SourceRepository by inject()
@@ -71,6 +82,10 @@ class DetailsViewModel(
 
     var dbModel by mutableStateOf<DbModel?>(null)
 
+    var imageBitmap: Bitmap? by mutableStateOf(null)
+    var blurHash by mutableStateOf<BitmapPainter?>(null)
+    private var blurHashItem: BlurHashItem? = null
+
     init {
         itemModel?.url?.let { url ->
             Cached.cache[url]?.let { flow { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
@@ -91,7 +106,50 @@ class DetailsViewModel(
                 Cached.cache[item.url] = item
             }
             ?.launchIn(viewModelScope)
+
+        blurHashDao
+            .getHash(itemModel?.imageUrl)
+            .onEach { blurHashItem = it }
+            .filterNotNull()
+            .mapNotNull {
+                BlurHash.decode(
+                    it.blurHash,
+                    width = ComposableUtils.IMAGE_WIDTH_PX,
+                    height = ComposableUtils.IMAGE_HEIGHT_PX
+                )?.asImageBitmap()
+            }
+            .onEach { blurHash = BitmapPainter(it) }
+            .onEach { if (palette == null) palette = Palette.from(it).generate() }
+            .launchIn(viewModelScope)
+
+        combine(
+            snapshotFlow { favoriteListener },
+            snapshotFlow { imageBitmap },
+            blurHashDao.getHash(itemModel?.imageUrl)
+        ) { f, i, b ->
+            BlurAdd(
+                bitmap = i,
+                isFavorite = f,
+                blurHashItem = b
+            )
+        }.onEach {
+            if (it.blurHashItem == null && it.bitmap != null && it.isFavorite) {
+                blurHashDao.insertHash(
+                    BlurHashItem(
+                        info!!.imageUrl,
+                        BlurHash.encode(it.bitmap, 4, 3)
+                    )
+                )
+            }
+        }
+            .launchIn(viewModelScope)
     }
+
+    class BlurAdd(
+        val bitmap: Bitmap?,
+        val isFavorite: Boolean,
+        val blurHashItem: BlurHashItem?,
+    )
 
     suspend fun toggleNotify() {
         dbModel
@@ -152,6 +210,17 @@ class DetailsViewModel(
             dao.insertFavorite(db)
             FirebaseDb.insertShowFlow(db).collect()
         }
+
+        imageBitmap?.let {
+            viewModelScope.launch {
+                blurHashDao.insertHash(
+                    BlurHashItem(
+                        info!!.imageUrl,
+                        BlurHash.encode(it, 4, 3)
+                    )
+                )
+            }
+        }
     }
 
     fun removeItem() {
@@ -160,6 +229,10 @@ class DetailsViewModel(
         addRemoveFavoriteJob = viewModelScope.launch {
             dao.deleteFavorite(db)
             FirebaseDb.removeShowFlow(db).collect()
+        }
+
+        viewModelScope.launch {
+            blurHashItem?.let { blurHashDao.deleteHash(it) }
         }
     }
 

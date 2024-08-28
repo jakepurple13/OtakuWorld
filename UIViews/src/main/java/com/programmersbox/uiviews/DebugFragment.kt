@@ -43,7 +43,6 @@ import com.programmersbox.uiviews.utils.ShowMoreSetting
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SwitchSetting
 
-
 @SuppressLint("ComposeContentEmitterReturningValues")
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api

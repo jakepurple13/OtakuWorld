@@ -75,6 +75,7 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalBlurDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
@@ -83,6 +84,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.ToasterItemsSetup
+import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
@@ -102,12 +104,14 @@ fun DetailsScreen(
     localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
+    blurHashDao: BlurHashDao = LocalBlurDao.current,
     details: DetailsViewModel = viewModel {
         DetailsViewModel(
             details = detailInfo,
             handle = createSavedStateHandle(),
             genericInfo = genericInfo,
             dao = dao,
+            blurHashDao = blurHashDao
         )
     },
 ) {
@@ -135,92 +139,97 @@ fun DetailsScreen(
     localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
+    blurHashDao: BlurHashDao = LocalBlurDao.current,
     details: DetailsViewModel = viewModel {
         DetailsViewModel(
             //details = detailInfo,
             handle = createSavedStateHandle(),
             genericInfo = genericInfo,
             dao = dao,
+            blurHashDao = blurHashDao
         )
     },
 ) {
     val uriHandler = LocalUriHandler.current
     val showDownload by LocalSettingsHandling.current.rememberShowDownload()
     val scope = rememberCoroutineScope()
+    val handling = LocalSettingsHandling.current
 
-    if (details.info == null) {
-        Scaffold(
-            topBar = {
-                InsetSmallTopAppBar(
-                    modifier = Modifier.zIndex(2f),
-                    title = {
-                        Text(
-                            details.itemModel?.title.orEmpty(),
-                            maxLines = 1
-                        )
-                    },
-                    navigationIcon = { BackButton() },
-                    actions = {
-                        val shareItem = rememberLauncherForActivityResult(
-                            ActivityResultContracts.StartActivityForResult()
-                        ) {}
-                        IconButton(
-                            onClick = {
-                                shareItem.launchCatching(
-                                    Intent.createChooser(
-                                        Intent(Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
-                                            putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
-                                        },
-                                        localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+    val usePalette by handling.rememberUsePalette()
+
+    val isAmoledMode by handling.rememberIsAmoledMode()
+    val themeSetting by handling.rememberSystemThemeMode()
+    val paletteSwatchType by rememberSwatchType()
+    val paletteStyle by rememberSwatchStyle()
+
+    val dynamicColor = rememberDynamicMaterialThemeState(
+        seedColor = details.palette
+            ?.let(paletteSwatchType.swatch)
+            ?.color
+            ?.takeIf { usePalette }
+            ?: MaterialTheme.colorScheme.primary,
+        isDark = when (themeSetting) {
+            SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
+            SystemThemeMode.Day -> false
+            SystemThemeMode.Night -> true
+            else -> isSystemInDarkTheme()
+        },
+        isAmoled = isAmoledMode && (!usePalette || details.palette == null),
+        style = paletteStyle
+    )
+
+    val shareChapter by handling.rememberShareChapter()
+
+    DynamicMaterialTheme(
+        state = dynamicColor,
+        animate = true
+    ) {
+        if (details.info == null) {
+            Scaffold(
+                topBar = {
+                    InsetSmallTopAppBar(
+                        modifier = Modifier.zIndex(2f),
+                        title = {
+                            Text(
+                                details.itemModel?.title.orEmpty(),
+                                maxLines = 1
+                            )
+                        },
+                        navigationIcon = { BackButton() },
+                        actions = {
+                            val shareItem = rememberLauncherForActivityResult(
+                                ActivityResultContracts.StartActivityForResult()
+                            ) {}
+                            IconButton(
+                                onClick = {
+                                    shareItem.launchCatching(
+                                        Intent.createChooser(
+                                            Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
+                                                putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
+                                            },
+                                            localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+                                        )
                                     )
-                                )
-                            }
-                        ) { Icon(Icons.Default.Share, null) }
+                                }
+                            ) { Icon(Icons.Default.Share, null) }
 
-                        IconButton(
-                            onClick = {
-                                details.itemModel?.url?.let { uriHandler.openUri(it) }
-                            }
-                        ) { Icon(Icons.Default.OpenInBrowser, null) }
+                            IconButton(
+                                onClick = {
+                                    details.itemModel?.url?.let { uriHandler.openUri(it) }
+                                }
+                            ) { Icon(Icons.Default.OpenInBrowser, null) }
 
-                        IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
-                    },
-                )
-            }
-        ) { PlaceHolderHeader(it) }
-    } else if (details.info != null) {
+                            IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
+                        },
+                    )
+                }
+            ) { PlaceHolderHeader(it, details.blurHash) }
+        } else if (details.info != null) {
 
-        val handling = LocalSettingsHandling.current
+            val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
 
-        val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
-
-        val usePalette by handling.rememberUsePalette()
-
-        val isAmoledMode by handling.rememberIsAmoledMode()
-        val themeSetting by handling.rememberSystemThemeMode()
-        val paletteSwatchType by rememberSwatchType()
-        val paletteStyle by rememberSwatchStyle()
-
-        val dynamicColor = rememberDynamicMaterialThemeState(
-            seedColor = details.palette?.let(paletteSwatchType.swatch)?.color?.takeIf { usePalette } ?: MaterialTheme.colorScheme.primary,
-            isDark = when (themeSetting) {
-                SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
-                SystemThemeMode.Day -> false
-                SystemThemeMode.Night -> true
-                else -> isSystemInDarkTheme()
-            },
-            isAmoled = isAmoledMode && (!usePalette || details.palette == null),
-            style = paletteStyle
-        )
-
-        val shareChapter by handling.rememberShareChapter()
-
-        DynamicMaterialTheme(
-            state = dynamicColor,
-            animate = true
-        ) {
             if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {
                 DetailsViewLandscape(
                     info = details.info!!,
@@ -253,7 +262,9 @@ fun DetailsScreen(
                     showDownloadButton = { showDownload },
                     canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
                     notifyAction = { scope.launch { details.toggleNotify() } },
-                    onPaletteSet = { details.palette = it }
+                    onPaletteSet = { details.palette = it },
+                    onBitmapSet = { details.imageBitmap = it },
+                    blurHash = details.blurHash
                 )
             }
         }

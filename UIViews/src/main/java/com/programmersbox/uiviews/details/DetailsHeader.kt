@@ -44,8 +44,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -76,6 +79,7 @@ import com.programmersbox.uiviews.utils.toComposeColor
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.glide.GlideImage
+import com.skydoves.landscapist.glide.GlideImageState
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.placeholder.placeholder.PlaceholderPlugin
 
@@ -91,6 +95,8 @@ internal fun DetailsHeader(
     modifier: Modifier = Modifier,
     possibleDescription: @Composable () -> Unit = {},
     onPaletteSet: (Palette) -> Unit,
+    blurHash: BitmapPainter? = null,
+    onBitmapSet: (Bitmap) -> Unit = {},
 ) {
     val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
@@ -146,6 +152,9 @@ internal fun DetailsHeader(
             imageModel = { imageUrl },
             imageOptions = ImageOptions(contentScale = ContentScale.Crop),
             previewPlaceholder = painterResource(id = R.drawable.ic_baseline_battery_alert_24),
+            component = rememberImageComponent {
+                +PlaceholderPlugin.Loading(blurHash ?: logo)
+            },
             modifier = Modifier
                 .matchParentSize()
                 .blur(4.dp)
@@ -179,8 +188,13 @@ internal fun DetailsHeader(
                         imageOptions = ImageOptions(contentScale = ContentScale.FillBounds),
                         component = rememberImageComponent {
                             +PalettePlugin { p -> onPaletteSet(p) }
-                            +PlaceholderPlugin.Loading(logo)
+                            +PlaceholderPlugin.Loading(blurHash ?: logo)
                             +PlaceholderPlugin.Failure(logo)
+                        },
+                        onImageStateChanged = {
+                            if (it is GlideImageState.Success) {
+                                it.imageBitmap?.asAndroidBitmap()?.let { it1 -> onBitmapSet(it1) }
+                            }
                         },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
@@ -314,7 +328,10 @@ internal fun DetailsHeader(
 
 @ExperimentalFoundationApi
 @Composable
-internal fun PlaceHolderHeader(paddingValues: PaddingValues) {
+internal fun PlaceHolderHeader(
+    paddingValues: PaddingValues,
+    bitmapPainter: BitmapPainter? = null,
+) {
     val placeholderModifier = Modifier.m3placeholder(
         true,
         highlight = PlaceholderHighlight.shimmer()
@@ -326,64 +343,85 @@ internal fun PlaceHolderHeader(paddingValues: PaddingValues) {
             .padding(paddingValues)
     ) {
 
-        Row(modifier = Modifier.padding(4.dp)) {
-
-            Card(
-                shape = RoundedCornerShape(4.dp),
-                modifier = Modifier
-                    .then(placeholderModifier)
-                    .padding(4.dp)
-            ) {
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (bitmapPainter != null) {
                 Image(
-                    imageVector = Icons.Default.CloudOff,
+                    painter = bitmapPainter,
                     contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.matchParentSize()
                 )
             }
 
-            Column(
-                modifier = Modifier.padding(start = 4.dp)
-            ) {
+            Row(modifier = Modifier.padding(4.dp)) {
 
-                Row(
+                Card(
+                    shape = RoundedCornerShape(4.dp),
                     modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .then(placeholderModifier)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) { Text("") }
-
-                Row(
-                    modifier = Modifier
-                        .then(placeholderModifier)
-                        .semantics(true) {}
-                        .padding(vertical = 4.dp)
-                        .fillMaxWidth()
+                        .then(if (bitmapPainter != null) Modifier else placeholderModifier)
+                        .padding(4.dp)
                 ) {
-
-                    Icon(
-                        Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                    Text(
-                        stringResource(R.string.addToFavorites),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
+                    if (bitmapPainter != null) {
+                        Image(
+                            painter = bitmapPainter,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                .clip(RoundedCornerShape(4.dp))
+                        )
+                    } else {
+                        Image(
+                            imageVector = Icons.Default.CloudOff,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                        )
+                    }
                 }
 
-                Text(
-                    "Otaku".repeat(50),
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .fillMaxWidth()
-                        .then(placeholderModifier),
-                    maxLines = 2
-                )
+                Column(
+                    modifier = Modifier.padding(start = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .then(placeholderModifier)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) { Text("") }
+
+                    Row(
+                        modifier = Modifier
+                            .then(placeholderModifier)
+                            .semantics(true) {}
+                            .padding(vertical = 4.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Text(
+                            stringResource(R.string.addToFavorites),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+
+                    Text(
+                        "Otaku".repeat(50),
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .fillMaxWidth()
+                            .then(placeholderModifier),
+                        maxLines = 2
+                    )
+                }
             }
         }
     }
