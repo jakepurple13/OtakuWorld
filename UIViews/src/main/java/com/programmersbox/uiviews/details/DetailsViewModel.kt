@@ -125,23 +125,26 @@ class DetailsViewModel(
         combine(
             snapshotFlow { favoriteListener },
             snapshotFlow { imageBitmap },
-            blurHashDao.getHash(itemModel?.imageUrl)
-        ) { f, i, b ->
+            blurHashDao.getHash(itemModel?.imageUrl),
+            snapshotFlow { itemModel?.imageUrl }
+        ) { f, i, b, image ->
             BlurAdd(
                 bitmap = i,
                 isFavorite = f,
-                blurHashItem = b
+                blurHashItem = b,
+                imageUrl = image
             )
-        }.onEach {
-            if (it.blurHashItem == null && it.bitmap != null && it.isFavorite) {
-                blurHashDao.insertHash(
-                    BlurHashItem(
-                        info!!.imageUrl,
-                        BlurHash.encode(it.bitmap, 4, 3)
-                    )
-                )
-            }
         }
+            .onEach {
+                if (it.blurHashItem == null && it.bitmap != null && it.isFavorite && it.imageUrl != null) {
+                    blurHashDao.insertHash(
+                        BlurHashItem(
+                            it.imageUrl,
+                            BlurHash.encode(it.bitmap, 4, 3)
+                        )
+                    )
+                }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -149,6 +152,7 @@ class DetailsViewModel(
         val bitmap: Bitmap?,
         val isFavorite: Boolean,
         val blurHashItem: BlurHashItem?,
+        val imageUrl: String?,
     )
 
     suspend fun toggleNotify() {
