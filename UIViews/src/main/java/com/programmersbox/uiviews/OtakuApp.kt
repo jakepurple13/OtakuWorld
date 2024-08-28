@@ -34,6 +34,7 @@ import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.SettingsHandling
+import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -99,6 +100,7 @@ abstract class OtakuApp : Application() {
                 single { CurrentSourceRepository() }
                 single { ChangingSettingsRepository() }
                 single { ItemDatabase.getInstance(get()) }
+                single { BlurHashDatabase.getInstance(get()) }
                 single { HistoryDatabase.getInstance(get()) }
                 single { ListDatabase.getInstance(get()) }
                 single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }

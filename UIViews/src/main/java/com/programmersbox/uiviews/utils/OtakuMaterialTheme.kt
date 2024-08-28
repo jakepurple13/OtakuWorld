@@ -32,6 +32,8 @@ import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
+import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -107,6 +109,7 @@ fun OtakuMaterialTheme(
                 LocalGenericInfo provides genericInfo,
                 LocalSettingsHandling provides koinInject(),
                 LocalItemDao provides koinInject<ItemDatabase>().itemDao(),
+                LocalBlurDao provides koinInject<BlurHashDatabase>().blurDao(),
                 LocalHistoryDao provides koinInject<HistoryDatabase>().historyDao(),
                 LocalCustomListDao provides koinInject<ListDatabase>().listDao(),
                 LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
@@ -143,6 +146,7 @@ fun OtakuMaterialTheme(
 }
 
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
+val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }

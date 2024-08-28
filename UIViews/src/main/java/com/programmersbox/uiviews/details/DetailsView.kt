@@ -2,6 +2,7 @@
 
 package com.programmersbox.uiviews.details
 
+import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
@@ -53,6 +54,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -110,6 +112,8 @@ fun DetailsView(
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: () -> Boolean,
     onPaletteSet: (Palette) -> Unit,
+    blurHash: BitmapPainter?,
+    onBitmapSet: (Bitmap) -> Unit,
 ) {
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
@@ -259,6 +263,8 @@ fun DetailsView(
                         isFavorite = isFavorite,
                         favoriteClick = onFavoriteClick,
                         onPaletteSet = onPaletteSet,
+                        onBitmapSet = onBitmapSet,
+                        blurHash = blurHash,
                         modifier = Modifier.collapse()
                     )
                 }
