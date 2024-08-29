@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
@@ -40,10 +43,6 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.foundation.ExperimentalTvFoundationApi
-import androidx.tv.foundation.PivotOffsets
-import androidx.tv.foundation.lazy.list.TvLazyColumn
-import androidx.tv.foundation.lazy.list.TvLazyRow
-import androidx.tv.foundation.lazy.list.items
 import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
@@ -69,7 +68,7 @@ fun DetailView() {
 
     BackHandler { navController.popBackStack() }
 
-    TvLazyColumn(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .animateContentSize()
@@ -85,9 +84,7 @@ fun DetailView() {
 
         item {
             FocusGroup {
-                TvLazyRow(
-                    pivotOffsets = PivotOffsets(parentFraction = 0.07f)
-                ) {
+                LazyRow {
 
                     items(vm.info?.chapters.orEmpty()) {
                         Card(onClick = {}) {

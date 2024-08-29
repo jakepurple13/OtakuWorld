@@ -29,7 +29,6 @@ jetbrainsCompiler = "1.5.1"
 accompanist = "0.34.0"
 okhttpVersion = "4.12.0"
 ktorVersion = "3.0.0-beta-2"
-tvCompose = "1.0.0-alpha10"
 workVersion = "2.9.1"
 ziplineVersion = "1.1.0"
 landscapist = "2.3.6"
@@ -107,8 +106,8 @@ composeMaterialIconsCore = { group = "androidx.compose.material", name = "materi
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeVersion" }
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding", version.ref = "composeVersion" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvCompose" }
-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose" }
+tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
+tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha11" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util", version.ref = "composeVersion" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeVersion" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "composeVersion" }
