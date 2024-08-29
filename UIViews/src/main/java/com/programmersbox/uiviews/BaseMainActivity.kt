@@ -503,6 +503,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
             )
         }
 
+        composable<Screen.GeminiRecommendationScreen> {
+            GeminiRecommendationScreen()
+        }
+
         chromeCustomTabs()
 
         with(genericInfo) { globalNavSetup() }
@@ -539,7 +543,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     generalClick = { navController.navigate(Screen.GeneralSettings) },
                     otherClick = { navController.navigate(Screen.OtherSettings) },
                     moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
-                    moreSettingsClick = { navController.navigate(Screen.MoreSettings) }
+                    moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
+                    recommendationClick = { navController.navigate(Screen.GeminiRecommendationScreen) }
                 )
             }
 

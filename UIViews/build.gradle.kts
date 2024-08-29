@@ -101,6 +101,9 @@ dependencies {
     implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
 
+    implementation(libs.generativeai)
+    implementation("com.google.ai.client.generativeai:common:0.10.0")
+    //implementation("dev.shreyaspatil.generativeai:generativeai-google:0.5.0-1.0.0")
     implementation(libs.bundles.ktorLibs)
 
     implementation(androidx.activity.activityKtx)

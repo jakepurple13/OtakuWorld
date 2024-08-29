@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
@@ -125,6 +126,7 @@ fun SettingScreen(
     otherClick: () -> Unit = {},
     moreInfoClick: () -> Unit = {},
     moreSettingsClick: () -> Unit = {},
+    recommendationClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -161,7 +163,8 @@ fun SettingScreen(
                 generalClick = generalClick,
                 otherClick = otherClick,
                 moreInfoClick = moreInfoClick,
-                moreSettingsClick = moreSettingsClick
+                moreSettingsClick = moreSettingsClick,
+                recommendationClick = recommendationClick
             )
         }
     }
@@ -297,6 +300,7 @@ private fun SettingsScreen(
     otherClick: () -> Unit,
     moreInfoClick: () -> Unit,
     moreSettingsClick: () -> Unit,
+    recommendationClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
@@ -420,6 +424,16 @@ private fun SettingsScreen(
         )
     )
 
+    PreferenceSetting(
+        settingTitle = { Text("Gemini Ai Recommendations") },
+        settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = ripple(),
+            interactionSource = null,
+            onClick = recommendationClick
+        )
+    )
+
     HorizontalDivider()
 
     CategorySetting { Text(stringResource(R.string.additional_settings)) }
@@ -485,7 +499,8 @@ private fun SettingsPreview() {
                 generalClick = {},
                 otherClick = {},
                 moreInfoClick = {},
-                moreSettingsClick = {}
+                moreSettingsClick = {},
+                recommendationClick = {}
             )
         }
     }
