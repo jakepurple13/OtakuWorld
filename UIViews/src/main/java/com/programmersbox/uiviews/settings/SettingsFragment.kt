@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
@@ -125,6 +126,7 @@ fun SettingScreen(
     otherClick: () -> Unit = {},
     moreInfoClick: () -> Unit = {},
     moreSettingsClick: () -> Unit = {},
+    geminiClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -161,7 +163,8 @@ fun SettingScreen(
                 generalClick = generalClick,
                 otherClick = otherClick,
                 moreInfoClick = moreInfoClick,
-                moreSettingsClick = moreSettingsClick
+                moreSettingsClick = moreSettingsClick,
+                geminiClick = geminiClick
             )
         }
     }
@@ -297,6 +300,7 @@ private fun SettingsScreen(
     otherClick: () -> Unit,
     moreInfoClick: () -> Unit,
     moreSettingsClick: () -> Unit,
+    geminiClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
@@ -420,6 +424,21 @@ private fun SettingsScreen(
         )
     )
 
+    //TODO: This will be for the future when this works again
+    // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
+    // once it doesn't, this will be fully implemented
+    if (false) {
+        PreferenceSetting(
+            settingTitle = { Text("Gemini Recommendations") },
+            settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
+            modifier = Modifier.clickable(
+                indication = ripple(),
+                interactionSource = null,
+                onClick = geminiClick
+            )
+        )
+    }
+
     HorizontalDivider()
 
     CategorySetting { Text(stringResource(R.string.additional_settings)) }
@@ -485,7 +504,8 @@ private fun SettingsPreview() {
                 generalClick = {},
                 otherClick = {},
                 moreInfoClick = {},
-                moreSettingsClick = {}
+                moreSettingsClick = {},
+                geminiClick = {}
             )
         }
     }

@@ -111,6 +111,9 @@ sealed class Screen(val route: String) {
         @Serializable
         data object Home : Screen("home")
     }
+
+    @Serializable
+    data object GeminiScreen : Screen("gemini")
 }
 
 fun NavController.navigateToDetails1(model: ItemModel) = navigate(

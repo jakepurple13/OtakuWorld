@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.Extension
@@ -47,6 +48,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -94,6 +96,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.gemini.GeminiRecommendationScreen
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
@@ -539,7 +542,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     generalClick = { navController.navigate(Screen.GeneralSettings) },
                     otherClick = { navController.navigate(Screen.OtherSettings) },
                     moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
-                    moreSettingsClick = { navController.navigate(Screen.MoreSettings) }
+                    moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
+                    geminiClick = { navController.navigate(Screen.GeminiScreen) }
                 )
             }
 
@@ -630,6 +634,17 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
                 exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
             ) { ExtensionList() }
+
+
+            composable<Screen.GeminiScreen> {
+                GeminiRecommendationScreen(
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                        }
+                    }
+                )
+            }
 
             additionalSettings()
 

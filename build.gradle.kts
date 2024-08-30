@@ -73,6 +73,7 @@ plugins {
     id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
     //id("org.jetbrains.compose") version libs.versions.jetbrainsCompiler apply false
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
 }
 
 projectInfo {

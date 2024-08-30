@@ -70,3 +70,4 @@ include(
 include(":manga_sources:defaultmangasources")
 include(":anime_sources:defaultanimesources")
 //include(":MangaWorldbaselineprofile")
+include(":gemini")
