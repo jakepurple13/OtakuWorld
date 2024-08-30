@@ -195,7 +195,17 @@ private fun GeminiRecommendationScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("OtakuBot: Powered by Gemini") },
+                    title = {
+                        ListItem(
+                            headlineContent = {
+                                Text(
+                                    "OtakuBot",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            },
+                            overlineContent = { Text("Powered by Gemini") }
+                        )
+                    },
                     scrollBehavior = topBarScrollBehavior
                 )
             },
