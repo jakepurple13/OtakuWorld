@@ -225,7 +225,7 @@ constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "zoomableImageGlide" }
-zoomableModifier = "net.engawapg.lib:zoomable:1.6.1"
+zoomableModifier = "net.engawapg.lib:zoomable:1.6.2"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
