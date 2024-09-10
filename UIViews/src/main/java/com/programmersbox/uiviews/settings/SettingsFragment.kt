@@ -427,7 +427,7 @@ private fun SettingsScreen(
     //TODO: This will be for the future when this works again
     // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
     // once it doesn't, this will be fully implemented
-    if (false) {
+    if (BuildConfig.DEBUG) {
         PreferenceSetting(
             settingTitle = { Text("Gemini Recommendations") },
             settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
