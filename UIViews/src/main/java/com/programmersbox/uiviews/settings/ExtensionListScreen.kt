@@ -200,7 +200,7 @@ fun ExtensionList(
             InsetSmallTopAppBar(
                 title = {
                     Text(
-                        if (navigator.currentDestination?.content == 1) {
+                        if (navigator.currentDestination?.contentKey == 1) {
                             "Remote Extensions"
                         } else {
                             "Installed Extensions"
@@ -212,7 +212,7 @@ fun ExtensionList(
                     var showDropDown by remember { mutableStateOf(false) }
                     var checked by remember { mutableStateOf(false) }
 
-                    if (navigator.currentDestination?.content == 1) {
+                    if (navigator.currentDestination?.contentKey == 1) {
                         ToolTipWrapper(info = { Text("View Installed Extensions") }) {
                             IconButton(onClick = { navigator.navigateBack() }) {
                                 Icon(

@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -32,8 +33,10 @@ import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
+import com.programmersbox.uiviews.utils.components.seedColor
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -53,6 +56,7 @@ fun OtakuMaterialTheme(
     genericInfo: GenericInfo,
     isAmoledMode: Boolean = false,
     themeSetting: SystemThemeMode,
+    themeColor: ThemeColor = ThemeColor.Dynamic,
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
@@ -80,25 +84,35 @@ fun OtakuMaterialTheme(
             onDispose {}
         }
 
-        var colorScheme = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
-            darkTheme -> darkColorScheme(
-                primary = Color(0xff90CAF9),
-                secondary = Color(0xff90CAF9)
-            )
+        val colorScheme = if (themeColor == ThemeColor.Dynamic) {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+                darkTheme -> darkColorScheme(
+                    primary = Color(0xff90CAF9),
+                    secondary = Color(0xff90CAF9)
+                )
 
-            else -> lightColorScheme(
-                primary = Color(0xff2196F3),
-                secondary = Color(0xff90CAF9)
-            )
-        }
-
-        if (isAmoledMode && darkTheme) {
-            colorScheme = colorScheme.copy(
-                surface = Color.Black,
-                inverseSurface = Color.White,
-                background = Color.Black
+                else -> lightColorScheme(
+                    primary = Color(0xff2196F3),
+                    secondary = Color(0xff90CAF9)
+                )
+            }.let {
+                if (isAmoledMode && darkTheme) {
+                    it.copy(
+                        surface = Color.Black,
+                        inverseSurface = Color.White,
+                        background = Color.Black
+                    )
+                } else {
+                    it
+                }
+            }
+        } else {
+            rememberDynamicColorScheme(
+                seedColor = themeColor.seedColor,
+                isAmoled = isAmoledMode,
+                isDark = darkTheme,
             )
         }
 

@@ -200,6 +200,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val isAmoledMode by settingsHandling.rememberIsAmoledMode()
 
+            val themeColor by settingsHandling.rememberThemeColor()
+
             val showBlur by settingsHandling.rememberShowBlur()
 
             CompositionLocalProvider(
@@ -210,6 +212,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     genericInfo = genericInfo,
                     themeSetting = themeSetting,
                     isAmoledMode = isAmoledMode,
+                    themeColor = themeColor
                 ) {
                     AskForNotificationPermissions()
 

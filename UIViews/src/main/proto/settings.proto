@@ -18,12 +18,24 @@ message Settings {
   bool usePalette = 12;
   bool showBlur = 13;
   GridChoice gridChoice = 15;
+  ThemeColor themeColor = 16;
 }
 
 enum SystemThemeMode {
   FollowSystem = 0;
   Day = 1;
   Night = 2;
+}
+
+enum ThemeColor {
+  Dynamic = 0;
+  Blue = 1;
+  Red = 2;
+  Green = 3;
+  Yellow = 4;
+  Cyan = 6;
+  Magenta = 7;
+  Custom = 8;
 }
 
 enum NotificationSortBy {

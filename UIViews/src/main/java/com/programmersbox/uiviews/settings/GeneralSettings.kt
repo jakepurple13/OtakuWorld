@@ -1,6 +1,11 @@
 package com.programmersbox.uiviews.settings
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -16,6 +21,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,23 +31,30 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
+import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.HISTORY_SAVE
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.ListSetting
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.ShowMoreSetting
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.components.ThemeItem
+import com.programmersbox.uiviews.utils.components.seedColor
 import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.rememberSwatchStyle
 import com.programmersbox.uiviews.utils.rememberSwatchType
@@ -50,6 +63,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
+@OptIn(ExperimentalLayoutApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @Composable
@@ -93,6 +107,44 @@ fun GeneralSettings(
         )
 
         var isAmoledMode by handling.rememberIsAmoledMode()
+
+        var themeColor by handling.rememberThemeColor()
+
+        ShowMoreSetting(
+            settingTitle = { Text("Theme Color") },
+            settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
+            summaryValue = { Text(themeColor.name) },
+        ) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                ThemeColor.entries
+                    //TODO: For later
+                    .filter { it != ThemeColor.Custom && it != ThemeColor.UNRECOGNIZED }
+                    .forEach {
+                        ThemeItem(
+                            themeColor = it,
+                            onClick = { themeColor = it },
+                            selected = it == themeColor,
+                            colorScheme = if (it == ThemeColor.Dynamic)
+                                MaterialTheme.colorScheme
+                            else
+                                rememberDynamicColorScheme(
+                                    it.seedColor,
+                                    isDark = when (themeSetting) {
+                                        SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
+                                        SystemThemeMode.Day -> false
+                                        SystemThemeMode.Night -> true
+                                        else -> isSystemInDarkTheme()
+                                    },
+                                    isAmoled = isAmoledMode
+                                )
+                        )
+                    }
+            }
+        }
 
         SwitchSetting(
             settingTitle = { Text(stringResource(R.string.amoled_mode)) },

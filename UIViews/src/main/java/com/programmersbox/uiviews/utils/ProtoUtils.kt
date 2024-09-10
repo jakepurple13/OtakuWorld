@@ -17,6 +17,7 @@ import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.Settings
 import com.programmersbox.uiviews.SystemThemeMode
+import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -164,6 +165,13 @@ class SettingsHandling(context: Context) {
         key = { it.gridChoice },
         update = { setGridChoice(it) },
         defaultValue = GridChoice.FullAdaptive
+    )
+
+    @Composable
+    fun rememberThemeColor() = preferences.rememberPreference(
+        key = { it.themeColor },
+        update = { setThemeColor(it) },
+        defaultValue = ThemeColor.Dynamic
     )
 }
 

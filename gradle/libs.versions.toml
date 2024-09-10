@@ -20,27 +20,27 @@ pagecurl = "1.5.1"
 pagingVersion = "3.3.2"
 protobufGradlePlugin = "0.9.4"
 roomVersion = "2.7.0-alpha07"
-navVersion = "2.8.0-rc01"
+navVersion = "2.8.0"
 koinVersion = "3.5.6"
 coil = "2.7.0"
-lifecycle = "2.8.4"
+lifecycle = "2.9.0-alpha02"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
-accompanist = "0.34.0"
+accompanist = "0.36.0"
 okhttpVersion = "4.12.0"
 ktorVersion = "3.0.0-beta-2"
-workVersion = "2.9.1"
+workVersion = "2.10.0-alpha03"
 ziplineVersion = "1.1.0"
 landscapist = "2.3.6"
 protobufVersion = "4.26.1"
 sketchVersion = "3.3.2"
-activity = "1.9.1"
-composeVersion = "1.7.0-rc01"
-compose3Version = "1.3.0-rc01"
+activity = "1.9.2"
+composeVersion = "1.8.0-alpha01"
+compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
-compose3AdaptiveVersion = "1.1.0-alpha01"
-composeBomVersion = "2024.06.00-alpha01"
+compose3AdaptiveVersion = "1.1.0-alpha02"
+composeBomVersion = "2024.09.00-alpha"
 materialKolor = "1.7.0"
 
 ### MangaWorld
@@ -96,26 +96,26 @@ gson = "com.google.code.gson:gson:2.11.0"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 
 #Compose
-composePlatform = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "composeBomVersion" }
-composeUi = { group = "androidx.compose.ui", name = "ui", version.ref = "composeVersion" }
-composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composeVersion" }
-composeFoundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "composeVersion" }
-materialYou = { group = "androidx.compose.material3", name = "material3", version.ref = "compose3Version" }
-materialYou-common = { group = "androidx.compose.material3", name = "material3-common", version.ref = "compose3CommonVersion" }
-materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "compose3Version" }
-materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive", version.ref = "compose3AdaptiveVersion" }
-adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android", version.ref = "compose3AdaptiveVersion" }
-adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android", version.ref = "compose3AdaptiveVersion" }
-material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "compose3AdaptiveVersion" }
-composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "composeVersion" }
-composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeVersion" }
-composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding", version.ref = "composeVersion" }
+composePlatform = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
+composeUi = { group = "androidx.compose.ui", name = "ui" }
+composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
+materialYou = { group = "androidx.compose.material3", name = "material3" }
+materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
+materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
+materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
+adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
+adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
+material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
+composeMaterialIconsCore = { group = "androidx.compose.material", name = "material-icons-core" }
+composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
+composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
 tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
 tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha11" }
-uiUtil = { group = "androidx.compose.ui", name = "ui-util", version.ref = "composeVersion" }
-composeAnimation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeVersion" }
-composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "composeVersion" }
+uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
+composeAnimation = { group = "androidx.compose.animation", name = "animation" }
+composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 composeLifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 composeActivity = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 composeLifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
@@ -150,7 +150,7 @@ androidCore = "androidx.core:core-ktx:1.13.1"
 appCompat = "androidx.appcompat:appcompat:1.7.0"
 material = "com.google.android.material:material:1.12.0"
 
-coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
+coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.2" }
 
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
 lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -187,7 +187,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.8.2"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.8.3"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
@@ -225,7 +225,7 @@ constraintlayout = "androidx.constraintlayout:constraintlayout:2.1.4"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "zoomableImageGlide" }
-zoomableModifier = "net.engawapg.lib:zoomable:1.6.1"
+zoomableModifier = "net.engawapg.lib:zoomable:1.6.2"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
