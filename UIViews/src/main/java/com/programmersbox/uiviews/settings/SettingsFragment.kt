@@ -79,6 +79,7 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
@@ -486,7 +487,7 @@ private fun SettingsScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@LightAndDarkPreviews
+@PreviewThemeColorsSizes
 @Composable
 private fun SettingsPreview() {
     PreviewTheme {

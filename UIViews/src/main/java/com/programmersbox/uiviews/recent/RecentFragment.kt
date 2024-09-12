@@ -61,7 +61,6 @@ import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
@@ -70,6 +69,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
@@ -253,7 +253,7 @@ fun RecentView(
     }
 }
 
-@LightAndDarkPreviews
+@PreviewThemeColorsSizes
 @Composable
 private fun RecentPreview() {
     PreviewTheme {
