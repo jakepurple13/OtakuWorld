@@ -1,12 +1,12 @@
 package com.programmersbox.uiviews.recent
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,8 +41,10 @@ class RecentViewModel(
 ) : ViewModel(), ToastItems by DefaultToastItems() {
 
     var isRefreshing by mutableStateOf(false)
-    val sourceList = mutableStateListOf<ItemModel>()
-    var favoriteList = mutableStateListOf<DbModel>()
+    private val sourceList = mutableStateListOf<ItemModel>()
+    val favoriteList = mutableStateListOf<DbModel>()
+
+    val filteredSourceList by derivedStateOf { sourceList.distinctBy { it.url } }
 
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
@@ -70,7 +72,10 @@ class RecentViewModel(
             itemListener.getAllShowsFlow(),
             dao.getAllFavorites()
         ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-            .onEach { favoriteList = it.toMutableStateList() }
+            .onEach {
+                favoriteList.clear()
+                favoriteList.addAll(it)
+            }
             .launchIn(viewModelScope)
 
         currentSourceRepository.asFlow()
@@ -87,6 +92,10 @@ class RecentViewModel(
             .filterNotNull()
             .distinctUntilChanged()
             .onEach { gridState.scrollToItem(0) }
+            .launchIn(viewModelScope)
+
+        observeNetwork
+            .onEach { if (sourceList.isEmpty() && currentSource != null && it && count != 1) reset() }
             .launchIn(viewModelScope)
     }
 

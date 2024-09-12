@@ -104,10 +104,6 @@ fun RecentView(
 
     val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
 
-    LaunchedEffect(isConnected) {
-        if (recentVm.sourceList.isEmpty() && source != null && isConnected && recentVm.count != 1) recentVm.reset()
-    }
-
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
     val sourceList = recentVm.sources
@@ -221,11 +217,11 @@ fun RecentView(
                             when {
                                 sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
 
-                                recentVm.sourceList.isEmpty() -> Box(Modifier.fillMaxSize()) { info.ComposeShimmerItem() }
+                                recentVm.filteredSourceList.isEmpty() -> Box(Modifier.fillMaxSize()) { info.ComposeShimmerItem() }
 
                                 else -> {
                                     info.ItemListView(
-                                        list = recentVm.sourceList,
+                                        list = recentVm.filteredSourceList,
                                         listState = state,
                                         favorites = recentVm.favoriteList,
                                         paddingValues = p,
@@ -239,7 +235,7 @@ fun RecentView(
                             }
                         }
 
-                        if (source?.canScroll == true && recentVm.sourceList.isNotEmpty()) {
+                        if (source?.canScroll == true && recentVm.filteredSourceList.isNotEmpty()) {
                             InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
                                 recentVm.loadMore()
                             }
