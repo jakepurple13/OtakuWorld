@@ -34,6 +34,7 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)
 

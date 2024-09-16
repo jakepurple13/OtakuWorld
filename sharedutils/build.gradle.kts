@@ -42,6 +42,7 @@ dependencies {
     fullImplementation(libs.firebaseUiAuth)
     fullImplementation(libs.playServices)
     fullImplementation(libs.coroutinesPlayServices)
+    fullImplementation(libs.firebase.database.ktx)
 
     implementation(libs.coroutinesCore)
     implementation(libs.coroutinesAndroid)

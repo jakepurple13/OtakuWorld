@@ -31,6 +31,7 @@ dependencies {
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.fileChooser)

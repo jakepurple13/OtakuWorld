@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.androidxLegacySupport)
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)

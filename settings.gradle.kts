@@ -22,13 +22,13 @@ dependencyResolutionManagement {
     //TODO: Remove current ones and replace with this!
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2024.08.01")
+            from("androidx.gradle:gradle-version-catalog:2024.09.00")
         }
     }
 }
 
 plugins {
-    id("com.gradle.develocity") version ("3.17.5")
+    id("com.gradle.develocity") version ("3.18.1")
 }
 
 develocity {

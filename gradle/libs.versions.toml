@@ -42,6 +42,7 @@ compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2024.09.00-alpha"
 materialKolor = "1.7.0"
+firebaseKtx = "0.2.0"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -193,8 +194,6 @@ iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
-firebaseAuth = "com.google.firebase:firebase-auth:22.3.1"
-
 pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagingVersion" }
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
@@ -213,10 +212,6 @@ datastore = "androidx.datastore:datastore:1.1.1"
 datastorePref = "androidx.datastore:datastore-preferences:1.1.1"
 
 jsoup = "org.jsoup:jsoup:1.18.1"
-
-crashlytics = "com.google.firebase:firebase-crashlytics:18.6.4"
-analytics = "com.google.firebase:firebase-analytics:21.6.2"
-playServices = "com.google.android.gms:play-services-auth:21.2.0"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
 
@@ -302,10 +297,16 @@ androidxWebkit = "androidx.webkit:webkit:1.11.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
-firebasePlatform = "com.google.firebase:firebase-bom:33.2.0"
+firebasePlatform = "com.google.firebase:firebase-bom:33.3.0"
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database" }
 firebaseFirestore = { group = "com.google.firebase", name = "firebase-firestore" }
+firebaseAuth = { group = "com.google.firebase", name = "firebase-auth" }
+crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
+playServices = "com.google.android.gms:play-services-auth:21.2.0"
+
+firebase-database-ktx = { module = "com.github.skydoves:firebase-database-ktx", version.ref = "firebaseKtx" }
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
 protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }

@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.material)
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(androidx.preference.preferenceKtx)
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
     implementation(androidx.recyclerview.recyclerview)
     testImplementation(TestDeps.junit)

@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)
 
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
     val composeBom = platform(libs.composePlatform)
     implementation(composeBom)
