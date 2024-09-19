@@ -59,6 +59,7 @@ class ExtensionListViewModel(
                     .toList()
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources() }
+                            .onFailure { it.printStackTrace() }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }
@@ -74,6 +75,7 @@ class ExtensionListViewModel(
                     .toList()
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources(urls) }
+                            .onFailure { it.printStackTrace() }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }

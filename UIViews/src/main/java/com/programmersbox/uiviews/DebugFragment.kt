@@ -2,6 +2,8 @@ package com.programmersbox.uiviews
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,12 +18,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -256,6 +260,24 @@ fun DebugView() {
             itemsIndexed(moreSettings) { index, build ->
                 build()
                 if (index < moreSettings.size - 1) HorizontalDivider()
+            }
+
+            item {
+                var pauseComposition by remember { mutableStateOf(false) }
+                var count by remember { mutableIntStateOf(0) }
+                Column {
+                    Row {
+                        Text("Pause Composition")
+                        Switch(
+                            checked = pauseComposition,
+                            onCheckedChange = { pauseComposition = it }
+                        )
+                    }
+
+                    Text(count.toString())
+
+                    Button(onClick = { count++ }) { Text("Count") }
+                }
             }
         }
     }
