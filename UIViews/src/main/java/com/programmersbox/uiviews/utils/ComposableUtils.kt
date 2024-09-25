@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
@@ -104,6 +105,9 @@ import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates
+
+@OptIn(ExperimentalMaterial3Api::class)
+val LocalBottomAppBarScrollBehavior = staticCompositionLocalOf<BottomAppBarScrollBehavior> { error("") }
 
 fun Int.toComposeColor() = Color(this)
 

@@ -70,6 +70,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
+import com.programmersbox.uiviews.utils.LocalBottomAppBarScrollBehavior
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
@@ -149,7 +150,8 @@ fun DetailsView(
         }
     }
 
-    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+    //val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+    val bottomAppBarScrollBehavior = LocalBottomAppBarScrollBehavior.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     var showLists by remember { mutableStateOf(false) }
@@ -289,6 +291,14 @@ fun DetailsView(
                     isSaved = isSaved,
                     canNotify = canNotify,
                     notifyAction = notifyAction,
+                    containerColor = when {
+                        showBlur -> Color.Transparent
+                        isAmoledMode -> MaterialTheme.colorScheme.surface
+                        else -> BottomAppBarDefaults.containerColor
+                    },
+                    isFavorite = isFavorite,
+                    onFavoriteClick = onFavoriteClick,
+                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
                         .drawWithCache {
@@ -301,15 +311,7 @@ fun DetailsView(
                                 )
                             }
                         }
-                        .let { if (showBlur) it.hazeChild(hazeState) else it },
-                    containerColor = when {
-                        showBlur -> Color.Transparent
-                        isAmoledMode -> MaterialTheme.colorScheme.surface
-                        else -> BottomAppBarDefaults.containerColor
-                    },
-                    isFavorite = isFavorite,
-                    onFavoriteClick = onFavoriteClick,
-                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior
+                        .let { if (showBlur) it.hazeChild(hazeState) else it }
                 )
             },
             snackbarHost = {

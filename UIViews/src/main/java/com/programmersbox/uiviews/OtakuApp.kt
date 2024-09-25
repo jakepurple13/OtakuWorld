@@ -4,8 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -71,14 +69,12 @@ abstract class OtakuApp : Application() {
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
         Loged.TAG = this::class.java.simpleName
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel("otakuChannel", importance = NotificationChannelImportance.HIGH)
-            createNotificationGroup("otakuGroup")
-            createNotificationChannel("updateCheckChannel", importance = NotificationChannelImportance.MIN)
-            createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
-            createNotificationChannel("sourceUpdate", importance = NotificationChannelImportance.DEFAULT)
-            createNotificationGroup("sources")
-        }
+        createNotificationChannel("otakuChannel", importance = NotificationChannelImportance.HIGH)
+        createNotificationGroup("otakuGroup")
+        createNotificationChannel("updateCheckChannel", importance = NotificationChannelImportance.MIN)
+        createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
+        createNotificationChannel("sourceUpdate", importance = NotificationChannelImportance.DEFAULT)
+        createNotificationGroup("sources")
 
         startKoin {
             androidLogger()
@@ -87,7 +83,12 @@ abstract class OtakuApp : Application() {
                 module {
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
                     single { SettingsHandling(get()) }
-                    single { AppLogo(applicationInfo.loadIcon(packageManager), applicationInfo.icon) }
+                    single {
+                        AppLogo(
+                            logo = applicationInfo.loadIcon(packageManager),
+                            logoId = applicationInfo.icon
+                        )
+                    }
                 }
             )
         }
@@ -155,16 +156,14 @@ abstract class OtakuApp : Application() {
             updateSetup(this)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) shortcutSetup()
+        shortcutSetup()
 
     }
 
     abstract fun onCreated()
 
-    @RequiresApi(Build.VERSION_CODES.N_MR1)
     protected open fun shortcuts(): List<ShortcutInfo> = emptyList()
 
-    @RequiresApi(Build.VERSION_CODES.N_MR1)
     private fun shortcutSetup() {
         val manager = getSystemService(ShortcutManager::class.java)
         if (manager.dynamicShortcuts.size == 0) {

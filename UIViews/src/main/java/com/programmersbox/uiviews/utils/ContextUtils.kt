@@ -24,11 +24,11 @@ import androidx.annotation.RequiresPermission
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.BatteryUnknown
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.BatteryStd
-import androidx.compose.material.icons.filled.BatteryUnknown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -147,6 +147,12 @@ suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStor
 fun rememberHistorySave() = rememberPreference(
     key = HISTORY_SAVE,
     defaultValue = 50
+)
+
+@Composable
+fun rememberFloatingNavigation() = rememberPreference(
+    key = booleanPreferencesKey("floatingNavigation"),
+    defaultValue = true
 )
 
 @Composable
@@ -322,7 +328,7 @@ class BatteryInformation(val context: Context) : KoinComponent {
         DEFAULT(GoogleMaterial.Icon.gmd_battery_std, Icons.Default.BatteryStd),
         FULL(GoogleMaterial.Icon.gmd_battery_full, Icons.Default.BatteryFull),
         ALERT(GoogleMaterial.Icon.gmd_battery_alert, Icons.Default.BatteryAlert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.Default.BatteryUnknown)
+        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.AutoMirrored.Filled.BatteryUnknown)
     }
 
     suspend fun composeSetupFlow(

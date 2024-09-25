@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
@@ -27,7 +28,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -44,7 +44,6 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.details.PaletteSwatchType
-import com.programmersbox.uiviews.utils.HISTORY_SAVE
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.ListSetting
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -55,13 +54,10 @@ import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.components.ThemeItem
 import com.programmersbox.uiviews.utils.components.seedColor
-import com.programmersbox.uiviews.utils.historySave
+import com.programmersbox.uiviews.utils.rememberFloatingNavigation
+import com.programmersbox.uiviews.utils.rememberHistorySave
 import com.programmersbox.uiviews.utils.rememberSwatchStyle
 import com.programmersbox.uiviews.utils.rememberSwatchType
-import com.programmersbox.uiviews.utils.updatePref
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalMaterial3Api
@@ -221,6 +217,15 @@ fun GeneralSettings(
 
         HorizontalDivider()
 
+        var floatingNavigation by rememberFloatingNavigation()
+
+        SwitchSetting(
+            settingTitle = { Text("Floating Navigation") },
+            settingIcon = { Icon(Icons.Default.Navigation, null, modifier = Modifier.fillMaxSize()) },
+            value = floatingNavigation,
+            updateValue = { floatingNavigation = it }
+        )
+
         var gridChoice by handling.rememberGridChoice()
 
         ListSetting(
@@ -291,18 +296,15 @@ fun GeneralSettings(
             updateValue = { showDownload = it }
         )
 
-        var sliderValue by remember { mutableFloatStateOf(runBlocking { context.historySave.first().toFloat() }) }
+        var sliderValue by rememberHistorySave()
 
         SliderSetting(
-            sliderValue = sliderValue,
+            sliderValue = sliderValue.toFloat(),
             settingTitle = { Text(stringResource(R.string.history_save_title)) },
             settingSummary = { Text(stringResource(R.string.history_save_summary)) },
             settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
             range = -1f..100f,
-            updateValue = {
-                sliderValue = it
-                scope.launch { context.updatePref(HISTORY_SAVE, sliderValue.toInt()) }
-            }
+            updateValue = { sliderValue = it.toInt() }
         )
 
         customSettings()
