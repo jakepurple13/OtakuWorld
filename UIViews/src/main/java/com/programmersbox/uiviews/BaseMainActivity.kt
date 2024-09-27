@@ -98,7 +98,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -315,7 +314,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             },
                             contentWindowInsets = WindowInsets(0.dp),
                             blurBottomBar = showBlur && !floatingNavigation,
-                            modifier = Modifier.nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
                         ) { innerPadding ->
                             SharedTransitionLayout {
                                 CompositionLocalProvider(
@@ -410,6 +408,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
 
             FloatingNavigationBar(
+                containerColor = when {
+                    showBlur -> Color.Transparent
+                    isAmoledMode -> MaterialTheme.colorScheme.surface
+                    else -> NavigationBarDefaults.containerColor
+                },
                 modifier = modifier
                     .layout { measurable, constraints ->
                         // Sets the app bar's height offset to collapse the entire bar's height when
@@ -422,11 +425,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         layout(placeable.width, height.roundToInt()) { placeable.place(0, 0) }
                     }
                     .then(appBarDragModifier),
-                containerColor = when {
-                    showBlur -> Color.Transparent
-                    isAmoledMode -> MaterialTheme.colorScheme.surface
-                    else -> NavigationBarDefaults.containerColor
-                },
             ) {
                 val colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -972,57 +970,57 @@ abstract class BaseMainActivity : AppCompatActivity() {
     }
 
     enum class NavigationBarType { Rail, Bottom }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-private suspend fun settleAppBarBottom(
-    state: BottomAppBarState,
-    velocity: Float,
-    flingAnimationSpec: DecayAnimationSpec<Float>?,
-    snapAnimationSpec: AnimationSpec<Float>?,
-): Velocity {
-    // Check if the app bar is completely collapsed/expanded. If so, no need to settle the app bar,
-    // and just return Zero Velocity.
-    // Note that we don't check for 0f due to float precision with the collapsedFraction
-    // calculation.
-    if (state.collapsedFraction < 0.01f || state.collapsedFraction == 1f) {
-        return Velocity.Zero
-    }
-    var remainingVelocity = velocity
-    // In case there is an initial velocity that was left after a previous user fling, animate to
-    // continue the motion to expand or collapse the app bar.
-    if (flingAnimationSpec != null && abs(velocity) > 1f) {
-        var lastValue = 0f
-        AnimationState(
-            initialValue = 0f,
-            initialVelocity = velocity,
-        )
-            .animateDecay(flingAnimationSpec) {
-                val delta = value - lastValue
-                val initialHeightOffset = state.heightOffset
-                state.heightOffset = initialHeightOffset + delta
-                val consumed = abs(initialHeightOffset - state.heightOffset)
-                lastValue = value
-                remainingVelocity = this.velocity
-                // avoid rounding errors and stop if anything is unconsumed
-                if (abs(delta - consumed) > 0.5f) this.cancelAnimation()
-            }
-    }
-    // Snap if animation specs were provided.
-    if (snapAnimationSpec != null) {
-        if (state.heightOffset < 0 && state.heightOffset > state.heightOffsetLimit) {
-            AnimationState(initialValue = state.heightOffset).animateTo(
-                if (state.collapsedFraction < 0.5f) {
-                    0f
-                } else {
-                    state.heightOffsetLimit
-                },
-                animationSpec = snapAnimationSpec
-            ) {
-                state.heightOffset = value
+    @OptIn(ExperimentalMaterial3Api::class)
+    private suspend fun settleAppBarBottom(
+        state: BottomAppBarState,
+        velocity: Float,
+        flingAnimationSpec: DecayAnimationSpec<Float>?,
+        snapAnimationSpec: AnimationSpec<Float>?,
+    ): Velocity {
+        // Check if the app bar is completely collapsed/expanded. If so, no need to settle the app bar,
+        // and just return Zero Velocity.
+        // Note that we don't check for 0f due to float precision with the collapsedFraction
+        // calculation.
+        if (state.collapsedFraction < 0.01f || state.collapsedFraction == 1f) {
+            return Velocity.Zero
+        }
+        var remainingVelocity = velocity
+        // In case there is an initial velocity that was left after a previous user fling, animate to
+        // continue the motion to expand or collapse the app bar.
+        if (flingAnimationSpec != null && abs(velocity) > 1f) {
+            var lastValue = 0f
+            AnimationState(
+                initialValue = 0f,
+                initialVelocity = velocity,
+            )
+                .animateDecay(flingAnimationSpec) {
+                    val delta = value - lastValue
+                    val initialHeightOffset = state.heightOffset
+                    state.heightOffset = initialHeightOffset + delta
+                    val consumed = abs(initialHeightOffset - state.heightOffset)
+                    lastValue = value
+                    remainingVelocity = this.velocity
+                    // avoid rounding errors and stop if anything is unconsumed
+                    if (abs(delta - consumed) > 0.5f) this.cancelAnimation()
+                }
+        }
+        // Snap if animation specs were provided.
+        if (snapAnimationSpec != null) {
+            if (state.heightOffset < 0 && state.heightOffset > state.heightOffsetLimit) {
+                AnimationState(initialValue = state.heightOffset).animateTo(
+                    if (state.collapsedFraction < 0.5f) {
+                        0f
+                    } else {
+                        state.heightOffsetLimit
+                    },
+                    animationSpec = snapAnimationSpec
+                ) {
+                    state.heightOffset = value
+                }
             }
         }
-    }
 
-    return Velocity(0f, remainingVelocity)
+        return Velocity(0f, remainingVelocity)
+    }
 }
