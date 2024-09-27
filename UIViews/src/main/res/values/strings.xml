@@ -209,4 +209,6 @@
     <string name="import_favorites">Import Favorites</string>
     <string name="export_favorites">Export Favorites</string>
     <string name="more_settings">More Settings</string>
+    <string name="for_later">For Later</string>
+    <string name="add_to_for_later_list">Add to For Later list</string>
 </resources>

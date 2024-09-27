@@ -19,6 +19,7 @@ import com.google.firebase.crashlytics.setCustomKeys
 import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.ListDatabase
@@ -33,8 +34,12 @@ import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
+import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.programmersbox.uiviews.utils.shouldCheckFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
@@ -43,6 +48,7 @@ import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
@@ -116,6 +122,26 @@ abstract class OtakuApp : Application() {
 
         get<SourceLoader>().load()
 
+        GlobalScope.launch(Dispatchers.IO) {
+            val forLaterName = getString(R.string.for_later)
+            val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray()).also { forLaterUuid = it }
+            runCatching {
+                get<ListDatabase>()
+                    .listDao()
+                    .createList(
+                        CustomListItem(
+                            uuid = forLaterUUID,
+                            name = forLaterName,
+                        )
+                    )
+            }
+                .onSuccess { println("For later list id: $it") }
+                .onFailure {
+                    recordFirebaseException(it)
+                    it.printStackTrace()
+                }
+        }
+
         runCatching {
             val work = WorkManager.getInstance(this)
 
@@ -184,6 +210,8 @@ abstract class OtakuApp : Application() {
     }
 
     companion object {
+
+        var forLaterUuid: UUID? = null
 
         fun updateSetup(context: Context) {
             updateSetupNow(context, runBlocking { context.shouldCheckFlow.first() })

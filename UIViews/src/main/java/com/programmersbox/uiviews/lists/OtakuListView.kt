@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -40,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
@@ -145,6 +147,9 @@ fun OtakuListView(
                         overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
                         trailingContent = { Text("(${it.list.size})") },
                         headlineContent = { Text(it.item.name) },
+                        leadingContent = if (it.item.uuid == OtakuApp.forLaterUuid) {
+                            { Icon(Icons.Default.WatchLater, null) }
+                        } else null,
                         supportingContent = {
                             Column {
                                 it.list.take(3).forEach { info ->

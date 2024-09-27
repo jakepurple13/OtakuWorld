@@ -93,6 +93,9 @@ sealed class Screen(val route: String) {
     data object CustomListScreen : Screen("custom_list") {
         @Serializable
         data object Home : Screen("home")
+
+        @Serializable
+        data class DeleteFromList(val uuid: String)
     }
 
     @Serializable

@@ -67,6 +67,8 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
+import com.programmersbox.uiviews.OtakuApp
+import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalActivity
@@ -182,6 +184,32 @@ fun DetailsViewLandscape(
                             notifyAction = notifyAction,
                             onReverseChaptersClick = { reverseChapters = !reverseChapters },
                             onShowLists = { showLists = true },
+                            addToForLater = {
+                                scope.launch {
+                                    val result = OtakuApp.forLaterUuid?.let {
+                                        listDao.addToList(
+                                            it,
+                                            info.title,
+                                            info.description,
+                                            info.url,
+                                            info.imageUrl,
+                                            info.source.serviceName
+                                        )
+                                    } ?: false
+
+                                    hostState.showSnackbar(
+                                        context.getString(
+                                            if (result) {
+                                                R.string.added_to_list
+                                            } else {
+                                                R.string.already_in_list
+                                            },
+                                            context.getString(R.string.for_later)
+                                        ),
+                                        withDismissAction = true
+                                    )
+                                }
+                            }
                         )
                     }
                 )

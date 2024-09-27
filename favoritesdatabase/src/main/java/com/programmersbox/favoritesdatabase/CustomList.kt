@@ -10,6 +10,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
@@ -59,8 +60,8 @@ interface ListDao {
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
     fun getCustomListItemFlow(uuid: UUID): Flow<CustomList>
 
-    @Insert
-    suspend fun createList(listItem: CustomListItem)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun createList(listItem: CustomListItem): Long
 
     @Insert
     suspend fun addItem(listItem: CustomListInfo)

@@ -63,7 +63,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.BottomAppBarState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -116,6 +115,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
@@ -135,6 +135,7 @@ import com.programmersbox.uiviews.details.DetailsScreen
 import com.programmersbox.uiviews.favorite.FavoriteUi
 import com.programmersbox.uiviews.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.history.HistoryUi
+import com.programmersbox.uiviews.lists.DeleteFromListScreen
 import com.programmersbox.uiviews.lists.ImportListScreen
 import com.programmersbox.uiviews.lists.OtakuListScreen
 import com.programmersbox.uiviews.notifications.NotificationsScreen
@@ -149,7 +150,6 @@ import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
-import com.programmersbox.uiviews.utils.LocalBottomAppBarScrollBehavior
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -266,7 +266,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     val floatingNavigation by rememberFloatingNavigation()
                     val hazeState = remember { HazeState() }
 
-                    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+                    //val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
                     genericInfo.DialogSetups()
 
@@ -299,7 +299,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                         currentDestination = currentDestination,
                                         showBlur = showBlur,
                                         isAmoledMode = isAmoledMode,
-                                        scrollBehavior = bottomAppBarScrollBehavior,
+                                        scrollBehavior = null,
                                         modifier = Modifier
                                             .padding(horizontal = 24.dp)
                                             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -319,7 +319,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 CompositionLocalProvider(
                                     LocalNavHostPadding provides innerPadding,
                                     LocalSharedElementScope provides this@SharedTransitionLayout,
-                                    LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
+                                    //For later maybe
+                                    //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                                 ) {
                                     NavHost(
                                         navController = navController,
@@ -820,6 +821,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 OtakuListScreen(
                     isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
                 )
+            }
+
+            dialog<Screen.CustomListScreen.DeleteFromList> {
+                DeleteFromListScreen(
+                    deleteFromList = it.toRoute(),
+
+                    )
             }
 
             composable<Screen.ImportListScreen> { ImportListScreen(it.toRoute()) }

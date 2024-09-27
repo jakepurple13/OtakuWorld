@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.DrawerState
@@ -150,6 +151,7 @@ internal fun DetailActions(
     notifyAction: () -> Unit,
     onReverseChaptersClick: () -> Unit,
     onShowLists: () -> Unit,
+    addToForLater: () -> Unit,
     customActions: @Composable () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
@@ -179,6 +181,15 @@ internal fun DetailActions(
             },
             text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
             leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
+        )
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                addToForLater()
+            },
+            text = { Text(stringResource(R.string.add_to_for_later_list)) },
+            leadingIcon = { Icon(Icons.Default.WatchLater, null) }
         )
 
         DropdownMenuItem(

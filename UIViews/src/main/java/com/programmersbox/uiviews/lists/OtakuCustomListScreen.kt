@@ -58,6 +58,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -104,6 +105,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
@@ -142,6 +144,7 @@ fun OtakuCustomListScreen(
     navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
 ) {
+    val navController = LocalNavController.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -237,16 +240,21 @@ fun OtakuCustomListScreen(
         onDismissRequest = { showLoadingDialog = false }
     )
 
+    /*val modalSheetState = rememberModalBottomSheetState()
     var showDeleteModal by remember { mutableStateOf(false) }
 
     if (showDeleteModal) {
         DeleteItemsModal(
             list = listBySource,
             onRemove = removeItems,
-            onDismiss = { showDeleteModal = false },
-            drawable = logoDrawable.logo
+            onDismiss = {
+                scope.launch { modalSheetState.hide() }
+                    .invokeOnCompletion { showDeleteModal = false }
+            },
+            drawable = logoDrawable.logo,
+            state = modalSheetState
         )
-    }
+    }*/
 
     var showBanner by remember { mutableStateOf(false) }
 
@@ -352,7 +360,11 @@ fun OtakuCustomListScreen(
                                     text = { Text(stringResource(R.string.remove_items)) },
                                     onClick = {
                                         showMenu = false
-                                        showDeleteModal = true
+                                        customItem
+                                            ?.item
+                                            ?.uuid
+                                            ?.toString()
+                                            ?.let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
                                     },
                                     colors = MenuDefaults.itemColors(
                                         textColor = Alizarin
@@ -583,12 +595,14 @@ private fun DeleteItemsModal(
     onRemove: suspend (List<CustomListInfo>) -> Result<Boolean>,
     onDismiss: () -> Unit,
     drawable: Drawable,
+    state: SheetState,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
+        sheetState = state
     ) {
         val itemsToDelete = remember { mutableStateListOf<CustomListInfo>() }
         var showPopup by remember { mutableStateOf(false) }
