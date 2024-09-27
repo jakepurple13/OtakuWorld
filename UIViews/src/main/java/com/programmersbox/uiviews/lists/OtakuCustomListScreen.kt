@@ -90,6 +90,7 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.AppLogo
+import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.Alizarin
 import com.programmersbox.uiviews.utils.Cached
@@ -371,17 +372,19 @@ fun OtakuCustomListScreen(
                                     ),
                                 )
 
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.delete_list_title)) },
-                                    onClick = {
-                                        showMenu = false
-                                        deleteList = true
-                                    },
-                                    colors = MenuDefaults.itemColors(
-                                        textColor = MaterialTheme.colorScheme.onErrorContainer,
-                                    ),
-                                    modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
-                                )
+                                if (customItem?.item?.uuid != OtakuApp.forLaterUuid) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.delete_list_title)) },
+                                        onClick = {
+                                            showMenu = false
+                                            deleteList = true
+                                        },
+                                        colors = MenuDefaults.itemColors(
+                                            textColor = MaterialTheme.colorScheme.onErrorContainer,
+                                        ),
+                                        modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
+                                    )
+                                }
                             }
 
                             AnimatedVisibility(!searchBarActive) {
