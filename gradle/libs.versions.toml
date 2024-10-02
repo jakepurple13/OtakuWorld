@@ -41,7 +41,7 @@ compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2024.09.02"
-materialKolor = "1.7.1"
+materialKolor = "2.0.0"
 firebaseKtx = "0.2.0"
 
 ### MangaWorld
