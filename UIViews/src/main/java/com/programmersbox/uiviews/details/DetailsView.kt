@@ -256,7 +256,7 @@ fun DetailsView(
                                                 } else {
                                                     R.string.already_in_list
                                                 },
-                                                info.title
+                                                context.getString(R.string.for_later)
                                             ),
                                             withDismissAction = true
                                         )

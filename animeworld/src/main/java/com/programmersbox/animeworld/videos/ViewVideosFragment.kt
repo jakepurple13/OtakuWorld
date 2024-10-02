@@ -36,6 +36,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -86,14 +87,12 @@ import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.ImageFlushListItem
 import com.programmersbox.uiviews.utils.components.PermissionRequest
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -142,6 +141,8 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
         scope.launch { state.bottomSheetState.partialExpand() }
     }
 
+    val surface = MaterialTheme.colorScheme.surface
+
     var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
     var showDialog by remember { mutableStateOf(false) }
 
@@ -167,7 +168,9 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                    modifier = Modifier.hazeChild(hazeState)
+                    modifier = Modifier.hazeChild(hazeState) {
+                        backgroundColor = surface
+                    }
                 )
             },
             containerColor = Color.Transparent,
@@ -277,12 +280,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                     contentPadding = p,
                     modifier = Modifier
                         .fillMaxSize()
-                        .haze(
-                            hazeState,
-                            style = HazeDefaults.style(
-                                backgroundColor = M3MaterialTheme.colorScheme.surface
-                            )
-                        )
+                        .haze(hazeState)
                 ) {
                     items(
                         items = itemList,
@@ -317,13 +315,13 @@ private fun EmptyState(paddingValues: PaddingValues) {
             Column(modifier = Modifier) {
                 Text(
                     text = stringResource(id = R.string.get_started),
-                    style = M3MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 Text(
                     text = stringResource(id = R.string.download_a_video),
-                    style = M3MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
