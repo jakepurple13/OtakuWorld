@@ -26,7 +26,6 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
@@ -57,7 +56,7 @@ fun HazeScaffold(
     blurTopBar: Boolean = false,
     blurBottomBar: Boolean = false,
     hazeState: HazeState = remember { HazeState() },
-    topBarStyle: HazeStyle = HazeMaterials.thin(),
+    topBarStyle: HazeStyle = HazeMaterials.thin(containerColor),
     bottomBarStyle: HazeStyle = topBarStyle,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -93,10 +92,7 @@ fun HazeScaffold(
         contentWindowInsets = contentWindowInsets,
     ) { contentPadding ->
         Box(
-            modifier = Modifier.haze(
-                state = hazeState,
-                style = HazeDefaults.style(backgroundColor = containerColor),
-            ),
+            modifier = Modifier.haze(state = hazeState),
             content = { content(contentPadding) },
         )
     }

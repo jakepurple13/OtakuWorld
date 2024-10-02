@@ -52,7 +52,7 @@ val ThemeColor.seedColor
 @Composable
 fun ThemeItem(
     themeColor: ThemeColor,
-    colorScheme: ColorScheme = rememberDynamicColorScheme(themeColor.seedColor, isDark = isSystemInDarkTheme()),
+    colorScheme: ColorScheme = rememberDynamicColorScheme(themeColor.seedColor, isDark = isSystemInDarkTheme(), isAmoled = false),
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
@@ -77,7 +77,7 @@ fun ThemeItem(
     onClick: () -> Unit,
     selected: Boolean,
     themeColor: ThemeColor,
-    colorScheme: ColorScheme = rememberDynamicColorScheme(themeColor.seedColor, isDark = isSystemInDarkTheme()),
+    colorScheme: ColorScheme = rememberDynamicColorScheme(themeColor.seedColor, isDark = isSystemInDarkTheme(), isAmoled = false),
 ) {
     Surface(
         onClick = onClick,

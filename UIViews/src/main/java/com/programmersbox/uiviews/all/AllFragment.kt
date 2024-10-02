@@ -75,7 +75,6 @@ import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshDefaults
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -187,7 +186,14 @@ fun AllView(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .let { if (showBlur) it.hazeChild(hazeState) else it }
+                    .let {
+                        if (showBlur) {
+                            val surface = MaterialTheme.colorScheme.surface
+                            it.hazeChild(hazeState) {
+                                backgroundColor = surface
+                            }
+                        } else it
+                    }
             ) {
                 var showBanner by remember { mutableStateOf(false) }
                 OtakuBannerBox(
@@ -253,10 +259,9 @@ fun AllView(
                             onReset = allVm::reset,
                             paddingValues = p1,
                             modifier = if (showBlur)
-                                Modifier.haze(
-                                    hazeState,
-                                    style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.surface),
-                                ) else Modifier
+                                Modifier.haze(hazeState)
+                            else
+                                Modifier
                         )
                     }
                 }

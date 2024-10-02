@@ -108,7 +108,6 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.navigateToDetails
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -222,7 +221,14 @@ fun GlobalSearchView(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .let { if (showBlur) it.hazeChild(hazeState) else it }
+                            .let {
+                                if (showBlur) {
+                                    val surface = MaterialTheme.colorScheme.surface
+                                    it.hazeChild(hazeState) {
+                                        backgroundColor = surface
+                                    }
+                                } else it
+                            }
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth(),
@@ -342,12 +348,9 @@ fun GlobalSearchView(
                                 modifier = Modifier
                                     .let {
                                         if (showBlur)
-                                            it.haze(
-                                                hazeState,
-                                                style = HazeDefaults.style(
-                                                    backgroundColor = MaterialTheme.colorScheme.surface
-                                                )
-                                            ) else it
+                                            it.haze(hazeState)
+                                        else
+                                            it
                                     }
                                     .fillMaxSize()
                                     .padding(top = 8.dp)

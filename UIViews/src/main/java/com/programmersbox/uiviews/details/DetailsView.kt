@@ -82,7 +82,6 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.components.minus
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -190,6 +189,8 @@ fun DetailsView(
     ) {
         val backgroundColor = MaterialTheme.colorScheme.background
 
+        val surface = MaterialTheme.colorScheme.surface
+
         val collapsableBehavior = rememberCollapsableTopBehavior(
             enterAlways = false
         )
@@ -202,7 +203,7 @@ fun DetailsView(
                     InsetSmallTopAppBar(
                         modifier = Modifier
                             .zIndex(2f)
-                            .let { if (showBlur) it.hazeChild(hazeState) else it },
+                            .let { if (showBlur) it.hazeChild(hazeState) { this.backgroundColor = surface } else it },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = if (showBlur)
                                 Color.Transparent
@@ -338,7 +339,7 @@ fun DetailsView(
                                 )
                             }
                         }
-                        .let { if (showBlur) it.hazeChild(hazeState) else it }
+                        .let { if (showBlur) it.hazeChild(hazeState) { this.backgroundColor = surface } else it }
                 )
             },
             snackbarHost = {
@@ -377,10 +378,9 @@ fun DetailsView(
                     .padding(vertical = 4.dp)
                     .let {
                         if (showBlur)
-                            it.haze(
-                                hazeState,
-                                style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.surface),
-                            ) else it
+                            it.haze(hazeState)
+                        else
+                            it
                     },
             ) {
                 if (info.description.isNotEmpty()) {

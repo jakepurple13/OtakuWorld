@@ -65,7 +65,6 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -233,6 +232,7 @@ fun ReadView(
     }
 
     val hazeState = remember { HazeState() }
+    val background = MaterialTheme.colorScheme.background
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -263,7 +263,7 @@ fun ReadView(
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction,
                         showBlur = showBlur,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState) else Modifier
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState) { backgroundColor = background } else Modifier
                     )
                 }
             },
@@ -280,17 +280,16 @@ fun ReadView(
                         vm = readVm,
                         showBlur = showBlur,
                         isAmoledMode = isAmoledMode,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState) else Modifier
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState) { backgroundColor = background } else Modifier
                     )
                 }
             },
         ) { p ->
             Box(
                 modifier = if (showBlur)
-                    Modifier.haze(
-                        state = hazeState,
-                        style = HazeDefaults.style(backgroundColor = MaterialTheme.colorScheme.background),
-                    ) else Modifier,
+                    Modifier.haze(state = hazeState)
+                else
+                    Modifier,
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = readVm.isLoadingPages,

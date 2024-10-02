@@ -103,7 +103,6 @@ import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -249,11 +248,12 @@ fun FavoriteUi(
                 )
             },
             topBar = {
+                val surface = MaterialTheme.colorScheme.surface
                 Surface(
                     color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface
                 ) {
                     Column(
-                        if (showBlur) Modifier.hazeChild(hazeState) else Modifier
+                        if (showBlur) Modifier.hazeChild(hazeState) { backgroundColor = surface } else Modifier
                     ) {
                         var active by rememberSaveable { mutableStateOf(false) }
 
@@ -453,13 +453,9 @@ fun FavoriteUi(
                     onShowBanner = { showBanner = it },
                     logo = logo,
                     modifier = if (showBlur)
-                        Modifier.haze(
-                            hazeState,
-                            style = HazeDefaults.style(
-                                backgroundColor = MaterialTheme.colorScheme.surface
-                            )
-                        )
-                    else Modifier
+                        Modifier.haze(hazeState)
+                    else
+                        Modifier
                 )
             }
         }
