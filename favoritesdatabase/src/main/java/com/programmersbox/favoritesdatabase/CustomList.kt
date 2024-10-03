@@ -22,11 +22,11 @@ import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Database(
-    entities = [CustomListItem::class, CustomListInfo::class, SecurityItem::class],
-    version = 3,
+    entities = [CustomListItem::class, CustomListInfo::class],
+    version = 7,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
-        AutoMigration(from = 2, to = 3)
+        AutoMigration(from = 2, to = 7),
     ]
 )
 abstract class ListDatabase : RoomDatabase() {
@@ -111,14 +111,8 @@ interface ListDao {
         }
     }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addSecurityItem(item: SecurityItem)
-
-    @Delete
-    suspend fun removeSecurityItem(item: SecurityItem)
-
-    @Query("SELECT * FROM SecurityItem")
-    fun getSecurityItems(): Flow<List<SecurityItem>>
+    @Query("UPDATE CustomListItem SET useBiometric = :useBiometric WHERE uuid = :uuid")
+    suspend fun updateBiometric(uuid: UUID, useBiometric: Boolean)
 }
 
 data class CustomList(
@@ -128,7 +122,7 @@ data class CustomList(
         parentColumn = "uuid",
         entityColumn = "uuid"
     )
-    val list: List<CustomListInfo>
+    val list: List<CustomListInfo>,
 )
 
 @Entity(tableName = "CustomListItem")
@@ -140,6 +134,8 @@ data class CustomListItem(
     val name: String,
     @ColumnInfo(name = "time")
     val time: Long = System.currentTimeMillis(),
+    @ColumnInfo(defaultValue = "0")
+    val useBiometric: Boolean = false,
 )
 
 @Entity(tableName = "CustomListInfo")
@@ -159,10 +155,4 @@ data class CustomListInfo(
     val imageUrl: String,
     @ColumnInfo(name = "sources")
     val source: String,
-)
-
-@Entity(tableName = "SecurityItem")
-data class SecurityItem(
-    @PrimaryKey
-    val uuid: UUID,
 )

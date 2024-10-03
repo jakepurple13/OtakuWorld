@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.favoritesdatabase.SecurityItem
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.biometricPrompting
@@ -66,7 +65,6 @@ fun OtakuListScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val securityItems = viewModel.securityItems
     val showListDetail by LocalSettingsHandling.current.rememberShowListDetail()
 
     val windowSize = with(LocalDensity.current) {
@@ -110,12 +108,12 @@ fun OtakuListScreen(
                             state.navigateBack()
                         },
                         addSecurityItem = {
-                            scope.launch { listDao.addSecurityItem(SecurityItem(it)) }
+                            scope.launch { listDao.updateBiometric(it, true) }
                         },
                         removeSecurityItem = {
-                            scope.launch { listDao.removeSecurityItem(SecurityItem(it)) }
+                            scope.launch { listDao.updateBiometric(it, false) }
                         },
-                        hasAuthentication = securityItems.any { s -> s.uuid == targetState.item.uuid }
+                        hasAuthentication = targetState.item.useBiometric
                     )
                     BackHandler {
                         viewModel.customItem = null
@@ -150,7 +148,7 @@ fun OtakuListScreen(
                     customLists = viewModel.customLists,
                     navigateDetail = {
                         viewModel.customItem = it
-                        if (securityItems.any { s -> s.uuid == it.item.uuid }) {
+                        if (it.item.useBiometric) {
                             biometricPrompting(
                                 context.findActivity(),
                                 biometricPrompt
