@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
@@ -108,6 +109,7 @@ import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
@@ -117,6 +119,7 @@ import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.navigateToDetails
+import com.programmersbox.uiviews.utils.rememberBiometricPrompt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -126,6 +129,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -144,7 +148,21 @@ fun OtakuCustomListScreen(
     onSearchBarActiveChange: (Boolean) -> Unit,
     navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
+    addSecurityItem: (UUID) -> Unit,
+    removeSecurityItem: (UUID) -> Unit,
+    hasAuthentication: Boolean = false,
 ) {
+    val biometricPrompt = rememberBiometricPrompt(
+        onAuthenticationSucceeded = {
+            customItem?.item?.uuid?.let { addSecurityItem(it) }
+        },
+    )
+
+    val removeBiometricPrompt = rememberBiometricPrompt(
+        onAuthenticationSucceeded = {
+            customItem?.item?.uuid?.let { removeSecurityItem(it) }
+        },
+    )
     val navController = LocalNavController.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -198,6 +216,70 @@ fun OtakuCustomListScreen(
                 ) { Text(stringResource(id = R.string.confirm)) }
             },
             dismissButton = { TextButton(onClick = { deleteList = false }) { Text(stringResource(id = R.string.cancel)) } }
+        )
+    }
+
+    var showSecurityDialog by remember { mutableStateOf(false) }
+
+    if (showSecurityDialog) {
+        AlertDialog(
+            onDismissRequest = { showSecurityDialog = false },
+            title = { Text("Require Authentication to View this list?") },
+            text = { Text("This will require phone authentication to view this list") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSecurityDialog = false
+                        biometricPrompting(
+                            context,
+                            biometricPrompt
+                        ).authenticate(
+                            BiometricPrompt.PromptInfo.Builder()
+                                .setTitle("Add Authentication for ${customItem?.item?.name}")
+                                .setSubtitle("Enter Authentication to add")
+                                .setNegativeButtonText("Never Mind")
+                                .build()
+                        )
+                    }
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSecurityDialog = false }
+                ) { Text(stringResource(id = R.string.cancel)) }
+            }
+        )
+    }
+
+    var showRemoveSecurityDialog by remember { mutableStateOf(false) }
+
+    if (showRemoveSecurityDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveSecurityDialog = false },
+            title = { Text("Remove Authentication?") },
+            text = { Text("This will remove the phone authentication to view this list") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showRemoveSecurityDialog = false
+                        biometricPrompting(
+                            context,
+                            removeBiometricPrompt
+                        ).authenticate(
+                            BiometricPrompt.PromptInfo.Builder()
+                                .setTitle("Remove Authentication for ${customItem?.item?.name}")
+                                .setSubtitle("Enter Authentication to remove")
+                                .setNegativeButtonText("Never Mind")
+                                .build()
+                        )
+                    }
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showRemoveSecurityDialog = false }
+                ) { Text(stringResource(id = R.string.cancel)) }
+            }
         )
     }
 
@@ -356,6 +438,24 @@ fun OtakuCustomListScreen(
                                         showAdd = true
                                     }
                                 )
+
+                                if (hasAuthentication) {
+                                    DropdownMenuItem(
+                                        text = { Text("Remove Authentication") },
+                                        onClick = {
+                                            showRemoveSecurityDialog = true
+                                            showMenu = false
+                                        },
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = { Text("Require Authentication") },
+                                        onClick = {
+                                            showSecurityDialog = true
+                                            showMenu = false
+                                        },
+                                    )
+                                }
 
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.remove_items)) },
@@ -744,7 +844,9 @@ private fun CustomListScreenPreview() {
             searchQuery = viewModel.searchQuery,
             setQuery = viewModel::setQuery,
             searchBarActive = viewModel.searchBarActive,
-            onSearchBarActiveChange = { viewModel.searchBarActive = it }
+            onSearchBarActiveChange = { viewModel.searchBarActive = it },
+            addSecurityItem = {},
+            removeSecurityItem = {},
         )
     }
 }

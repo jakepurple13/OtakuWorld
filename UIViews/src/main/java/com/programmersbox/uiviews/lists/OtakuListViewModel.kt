@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.SecurityItem
 import com.programmersbox.gsonutils.toJson
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -52,11 +53,21 @@ class OtakuListViewModel(
             .toList()
     }
 
+    val securityItems = mutableStateListOf<SecurityItem>()
+
     init {
         listDao.getAllLists()
             .onEach {
                 customLists.clear()
                 customLists.addAll(it)
+            }
+            .launchIn(viewModelScope)
+
+        listDao.getSecurityItems()
+            .onEach {
+                println(it)
+                securityItems.clear()
+                securityItems.addAll(it)
             }
             .launchIn(viewModelScope)
     }

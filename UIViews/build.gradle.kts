@@ -135,6 +135,8 @@ dependencies {
     implementation("com.vanniktech:blurhash:0.4.0-SNAPSHOT")
     ksp(libs.roomCompiler)
 
+    implementation("androidx.biometric:biometric:1.4.0-alpha02")
+
     implementation(projects.gemini)
 
     //TODO: Use this to check recomposition count on every screen

@@ -22,9 +22,12 @@ import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Database(
-    entities = [CustomListItem::class, CustomListInfo::class],
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)]
+    entities = [CustomListItem::class, CustomListInfo::class, SecurityItem::class],
+    version = 3,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3)
+    ]
 )
 abstract class ListDatabase : RoomDatabase() {
 
@@ -107,6 +110,15 @@ interface ListDao {
             true
         }
     }
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addSecurityItem(item: SecurityItem)
+
+    @Delete
+    suspend fun removeSecurityItem(item: SecurityItem)
+
+    @Query("SELECT * FROM SecurityItem")
+    fun getSecurityItems(): Flow<List<SecurityItem>>
 }
 
 data class CustomList(
@@ -146,5 +158,11 @@ data class CustomListInfo(
     @ColumnInfo(name = "imageUrl")
     val imageUrl: String,
     @ColumnInfo(name = "sources")
-    val source: String
+    val source: String,
+)
+
+@Entity(tableName = "SecurityItem")
+data class SecurityItem(
+    @PrimaryKey
+    val uuid: UUID,
 )

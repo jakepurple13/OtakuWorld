@@ -3,6 +3,7 @@
 package com.programmersbox.uiviews.lists
 
 import androidx.activity.compose.BackHandler
+import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -38,16 +39,23 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.SecurityItem
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.biometricPrompting
+import com.programmersbox.uiviews.utils.findActivity
+import com.programmersbox.uiviews.utils.rememberBiometricPrompt
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -56,6 +64,9 @@ fun OtakuListScreen(
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
     isHorizontal: Boolean = false,
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val securityItems = viewModel.securityItems
     val showListDetail by LocalSettingsHandling.current.rememberShowListDetail()
 
     val windowSize = with(LocalDensity.current) {
@@ -98,6 +109,13 @@ fun OtakuListScreen(
                             viewModel.customItem = null
                             state.navigateBack()
                         },
+                        addSecurityItem = {
+                            scope.launch { listDao.addSecurityItem(SecurityItem(it)) }
+                        },
+                        removeSecurityItem = {
+                            scope.launch { listDao.removeSecurityItem(SecurityItem(it)) }
+                        },
+                        hasAuthentication = securityItems.any { s -> s.uuid == targetState.item.uuid }
                     )
                     BackHandler {
                         viewModel.customItem = null
@@ -110,6 +128,18 @@ fun OtakuListScreen(
         }
     }
 
+    val navigate = {
+        if (showListDetail)
+            state.navigateTo(ListDetailPaneScaffoldRole.Detail)
+        else
+            state.navigateTo(ListDetailPaneScaffoldRole.Extra)
+    }
+
+    val biometricPrompt = rememberBiometricPrompt(
+        onAuthenticationSucceeded = { navigate() },
+        onAuthenticationFailed = { viewModel.customItem = null }
+    )
+
     ListDetailPaneScaffold(
         directive = state.scaffoldDirective,
         value = state.scaffoldValue,
@@ -120,10 +150,20 @@ fun OtakuListScreen(
                     customLists = viewModel.customLists,
                     navigateDetail = {
                         viewModel.customItem = it
-                        if (showListDetail)
-                            state.navigateTo(ListDetailPaneScaffoldRole.Detail)
-                        else
-                            state.navigateTo(ListDetailPaneScaffoldRole.Extra)
+                        if (securityItems.any { s -> s.uuid == it.item.uuid }) {
+                            biometricPrompting(
+                                context.findActivity(),
+                                biometricPrompt
+                            ).authenticate(
+                                BiometricPrompt.PromptInfo.Builder()
+                                    .setTitle("Authentication required")
+                                    .setSubtitle("In order to view ${it.item.name}, please authenticate")
+                                    .setNegativeButtonText("Never Mind")
+                                    .build()
+                            )
+                        } else {
+                            navigate()
+                        }
                     }
                 )
             }
