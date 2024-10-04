@@ -61,6 +61,9 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.BrowseGallery
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBarScrollBehavior
@@ -458,19 +461,19 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                 ScreenBottomItem(
                     screen = Screen.RecentScreen,
-                    icon = Icons.Default.History,
+                    icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                     label = R.string.recent
                 )
                 if (showAllItem) {
                     ScreenBottomItem(
                         screen = Screen.AllScreen,
-                        icon = Icons.Default.BrowseGallery,
+                        icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.AllScreen)) Icons.Default.BrowseGallery else Icons.Outlined.BrowseGallery,
                         label = R.string.all
                     )
                 }
                 ScreenBottomItem(
                     screen = Screen.Settings,
-                    icon = Icons.Default.Settings,
+                    icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
                     label = R.string.settings,
                     badge = { if (updateCheck()) Badge { Text("") } }
                 )
@@ -526,19 +529,19 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                     ScreenBottomItem(
                         screen = Screen.RecentScreen,
-                        icon = Icons.Default.History,
+                        icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                         label = R.string.recent
                     )
                     if (showAllItem) {
                         ScreenBottomItem(
                             screen = Screen.AllScreen,
-                            icon = Icons.Default.BrowseGallery,
+                            icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.AllScreen)) Icons.Default.BrowseGallery else Icons.Outlined.BrowseGallery,
                             label = R.string.all
                         )
                     }
                     ScreenBottomItem(
                         screen = Screen.Settings,
-                        icon = Icons.Default.Settings,
+                        icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
                         label = R.string.settings,
                         badge = { if (updateCheck()) Badge { Text("") } }
                     )

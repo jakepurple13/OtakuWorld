@@ -105,7 +105,7 @@ fun OtakuListScreen(
                         onSearchBarActiveChange = { viewModel.searchBarActive = it },
                         navigateBack = {
                             viewModel.customItem = null
-                            state.navigateBack()
+                            scope.launch { state.navigateBack() }
                         },
                         addSecurityItem = {
                             scope.launch { listDao.updateBiometric(it, true) }
@@ -117,7 +117,7 @@ fun OtakuListScreen(
                     )
                     BackHandler {
                         viewModel.customItem = null
-                        state.navigateBack()
+                        scope.launch { state.navigateBack() }
                     }
                 } else {
                     NoDetailSelected()
@@ -127,10 +127,12 @@ fun OtakuListScreen(
     }
 
     val navigate = {
-        if (showListDetail)
-            state.navigateTo(ListDetailPaneScaffoldRole.Detail)
-        else
-            state.navigateTo(ListDetailPaneScaffoldRole.Extra)
+        scope.launch {
+            if (showListDetail)
+                state.navigateTo(ListDetailPaneScaffoldRole.Detail)
+            else
+                state.navigateTo(ListDetailPaneScaffoldRole.Extra)
+        }
     }
 
     val biometricPrompt = rememberBiometricPrompt(

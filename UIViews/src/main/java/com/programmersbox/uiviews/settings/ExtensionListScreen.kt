@@ -191,7 +191,7 @@ fun ExtensionList(
     )
 
     BackHandler(navigator.canNavigateBack()) {
-        navigator.navigateBack()
+        scope.launch { navigator.navigateBack() }
     }
 
     OtakuScaffold(
@@ -214,7 +214,7 @@ fun ExtensionList(
 
                     if (navigator.currentDestination?.contentKey == 1) {
                         ToolTipWrapper(info = { Text("View Installed Extensions") }) {
-                            IconButton(onClick = { navigator.navigateBack() }) {
+                            IconButton(onClick = { scope.launch { navigator.navigateBack() } }) {
                                 Icon(
                                     Icons.Default.SendTimeExtension, null,
                                     modifier = Modifier.scale(scaleX = -1f, scaleY = 1f)
@@ -223,7 +223,7 @@ fun ExtensionList(
                         }
                     } else {
                         ToolTipWrapper(info = { Text("View Remote Extensions") }) {
-                            IconButton(onClick = { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 1) }) {
+                            IconButton(onClick = { scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 1) } }) {
                                 Icon(Icons.Default.SendTimeExtension, null)
                             }
                         }

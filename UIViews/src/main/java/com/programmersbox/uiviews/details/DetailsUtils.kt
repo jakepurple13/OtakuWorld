@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -34,7 +35,10 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -42,16 +46,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -396,4 +411,117 @@ fun DetailBottomBar(
         windowInsets = windowInsets,
         modifier = modifier
     )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun DetailFloatingActionButtonMenu(
+    navController: NavController,
+    isVisible: Boolean,
+    onShowLists: () -> Unit,
+    info: InfoModel,
+    removeFromSaved: () -> Unit,
+    isSaved: Boolean,
+    canNotify: Boolean,
+    notifyAction: () -> Unit,
+    modifier: Modifier = Modifier,
+    isFavorite: Boolean,
+    onFavoriteClick: (Boolean) -> Unit,
+) {
+    var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
+
+    FloatingActionButtonMenu(
+        expanded = fabMenuExpanded,
+        button = {
+            ToggleFloatingActionButton(
+                modifier = Modifier
+                    .semantics {
+                        traversalIndex = -1f
+                        stateDescription = if (fabMenuExpanded) "Expanded" else "Collapsed"
+                        contentDescription = "Toggle menu"
+                    }
+                    .animateFloatingActionButton(
+                        visible = isVisible || fabMenuExpanded,
+                        alignment = Alignment.BottomEnd,
+                        scaleAnimationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                        alphaAnimationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    ),
+                checked = fabMenuExpanded,
+                onCheckedChange = { fabMenuExpanded = !fabMenuExpanded }
+            ) {
+                val imageVector by remember {
+                    derivedStateOf {
+                        if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.Add
+                    }
+                }
+                Icon(
+                    painter = rememberVectorPainter(imageVector),
+                    contentDescription = null,
+                    modifier = Modifier.animateIcon({ checkedProgress })
+                )
+            }
+        },
+        modifier = modifier,
+    ) {
+        if (isSaved) {
+            FloatingActionButtonMenuItem(
+                onClick = {
+                    fabMenuExpanded = false
+                    removeFromSaved()
+                },
+                icon = { Icon(Icons.Default.BookmarkRemove, contentDescription = null) },
+                text = { Text(text = "Remove from Saved") },
+            )
+        }
+
+        FloatingActionButtonMenuItem(
+            onClick = {
+                fabMenuExpanded = false
+                onShowLists()
+            },
+            icon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = null) },
+            text = { Text(text = "Add to List") },
+        )
+
+        FloatingActionButtonMenuItem(
+            onClick = {
+                fabMenuExpanded = false
+                navController.navigate(Screen.GlobalSearchScreen(info.title))
+            },
+            icon = { Icon(Icons.Default.Search, contentDescription = null) },
+            text = { Text(text = "Global Search by Name") },
+        )
+
+        FloatingActionButtonMenuItem(
+            onClick = {
+                fabMenuExpanded = false
+                onFavoriteClick(isFavorite)
+            },
+            icon = {
+                Icon(
+                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                )
+            },
+            text = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) },
+        )
+
+        if (isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value) {
+            FloatingActionButtonMenuItem(
+                onClick = {
+                    fabMenuExpanded = false
+                    notifyAction()
+                },
+                icon = {
+                    Icon(
+                        if (canNotify) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff,
+                        null
+                    )
+                },
+                text = { Text(if (canNotify) "Check for updates" else "Do not check for updates") },
+            )
+        }
+    }
 }

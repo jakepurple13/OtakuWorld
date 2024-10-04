@@ -68,6 +68,7 @@ import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.HazeMaterials
 import eu.wewox.pagecurl.ExperimentalPageCurlApi
 import eu.wewox.pagecurl.config.rememberPageCurlConfig
 import eu.wewox.pagecurl.page.PageCurl
@@ -263,7 +264,7 @@ fun ReadView(
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction,
                         showBlur = showBlur,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState) { backgroundColor = background } else Modifier
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) else Modifier
                     )
                 }
             },
@@ -280,7 +281,7 @@ fun ReadView(
                         vm = readVm,
                         showBlur = showBlur,
                         isAmoledMode = isAmoledMode,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState) { backgroundColor = background } else Modifier
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) else Modifier
                     )
                 }
             },

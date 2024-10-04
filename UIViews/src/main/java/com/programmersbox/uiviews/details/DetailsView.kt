@@ -22,10 +22,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,9 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
@@ -82,9 +80,11 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
 import com.programmersbox.uiviews.utils.components.minus
+import com.programmersbox.uiviews.utils.isScrollingUp
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -93,6 +93,7 @@ import me.tatarka.compose.collapsable.rememberCollapsableTopBehavior
 import my.nanihadesuka.compose.InternalLazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
@@ -124,11 +125,14 @@ fun DetailsView(
 
     val settings = LocalSettingsHandling.current
     val showBlur by settings.rememberShowBlur()
-    val isAmoledMode by settings.rememberIsAmoledMode()
 
     val hostState = remember { SnackbarHostState() }
 
+    val notificationManager = LocalContext.current.notificationManager
+
     val listState = rememberLazyListState()
+
+    val fabVisible = listState.isScrollingUp()//remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
 
     val listDao = LocalCustomListDao.current
 
@@ -150,7 +154,6 @@ fun DetailsView(
         }
     }
 
-    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
     //val bottomAppBarScrollBehavior = LocalBottomAppBarScrollBehavior.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -187,9 +190,6 @@ fun DetailsView(
             }
         }
     ) {
-        val backgroundColor = MaterialTheme.colorScheme.background
-
-        val surface = MaterialTheme.colorScheme.surface
 
         val collapsableBehavior = rememberCollapsableTopBehavior(
             enterAlways = false
@@ -203,7 +203,7 @@ fun DetailsView(
                     InsetSmallTopAppBar(
                         modifier = Modifier
                             .zIndex(2f)
-                            .let { if (showBlur) it.hazeChild(hazeState) { this.backgroundColor = surface } else it },
+                            .let { if (showBlur) it.hazeChild(hazeState, HazeMaterials.thin()) else it },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = if (showBlur)
                                 Color.Transparent
@@ -299,13 +299,12 @@ fun DetailsView(
                     )
                 }
             },
-            bottomBar = {
-                val notificationManager = LocalContext.current.notificationManager
-                DetailBottomBar(
+            floatingActionButton = {
+                DetailFloatingActionButtonMenu(
                     navController = navController,
+                    isVisible = fabVisible,
                     onShowLists = { showLists = true },
                     info = info,
-                    customActions = {},
                     removeFromSaved = {
                         scope.launch(Dispatchers.IO) {
                             dao.getNotificationItemFlow(info.url)
@@ -319,27 +318,9 @@ fun DetailsView(
                     isSaved = isSaved,
                     canNotify = canNotify,
                     notifyAction = notifyAction,
-                    containerColor = when {
-                        showBlur -> Color.Transparent
-                        isAmoledMode -> MaterialTheme.colorScheme.surface
-                        else -> BottomAppBarDefaults.containerColor
-                    },
                     isFavorite = isFavorite,
                     onFavoriteClick = onFavoriteClick,
-                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
-                    modifier = Modifier
-                        .padding(LocalNavHostPadding.current)
-                        .drawWithCache {
-                            onDrawBehind {
-                                drawLine(
-                                    backgroundColor,
-                                    Offset(0f, 8f),
-                                    Offset(size.width, 8f),
-                                    4 * density
-                                )
-                            }
-                        }
-                        .let { if (showBlur) it.hazeChild(hazeState) { this.backgroundColor = surface } else it }
+                    modifier = Modifier.padding(LocalNavHostPadding.current)
                 )
             },
             snackbarHost = {
@@ -362,7 +343,6 @@ fun DetailsView(
             modifier = Modifier
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
         ) { p ->
             val modifiedPaddingValues = p - LocalNavHostPadding.current
             var descriptionVisibility by remember { mutableStateOf(false) }

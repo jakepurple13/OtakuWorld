@@ -6,11 +6,12 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -50,7 +51,7 @@ import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.KoinExperimentalAPI
 
-@OptIn(KoinExperimentalAPI::class, ExperimentalKamelApi::class)
+@OptIn(KoinExperimentalAPI::class, ExperimentalKamelApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OtakuMaterialTheme(
     navController: NavHostController,
@@ -94,9 +95,9 @@ fun OtakuMaterialTheme(
                     secondary = Color(0xff90CAF9)
                 )
 
-                else -> lightColorScheme(
-                    primary = Color(0xff2196F3),
-                    secondary = Color(0xff90CAF9)
+                else -> expressiveLightColorScheme(
+                    //primary = Color(0xff2196F3),
+                    //secondary = Color(0xff90CAF9)
                 )
             }.let {
                 if (isAmoledMode && darkTheme) {
@@ -120,7 +121,7 @@ fun OtakuMaterialTheme(
             )
         }
 
-        MaterialTheme(colorScheme.animate()) {
+        MaterialExpressiveTheme(colorScheme.animate()) {
             CompositionLocalProvider(
                 LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,

@@ -31,9 +31,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -423,6 +424,7 @@ fun InsetLargeTopAppBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LoadingDialog(
     showLoadingDialog: Boolean,
@@ -440,7 +442,7 @@ fun LoadingDialog(
                     .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
             ) {
                 Column {
-                    CircularProgressIndicator(
+                    ContainedLoadingIndicator(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
