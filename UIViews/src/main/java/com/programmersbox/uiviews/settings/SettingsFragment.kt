@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.Reorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
@@ -56,6 +57,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
@@ -88,6 +90,7 @@ import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Locale
@@ -128,6 +131,7 @@ fun SettingScreen(
     moreInfoClick: () -> Unit = {},
     moreSettingsClick: () -> Unit = {},
     geminiClick: () -> Unit = {},
+    sourcesOrderClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -165,7 +169,8 @@ fun SettingScreen(
                 otherClick = otherClick,
                 moreInfoClick = moreInfoClick,
                 moreSettingsClick = moreSettingsClick,
-                geminiClick = geminiClick
+                geminiClick = geminiClick,
+                sourcesOrderClick = sourcesOrderClick
             )
         }
     }
@@ -302,6 +307,7 @@ private fun SettingsScreen(
     moreInfoClick: () -> Unit,
     moreSettingsClick: () -> Unit,
     geminiClick: () -> Unit,
+    sourcesOrderClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
@@ -389,6 +395,16 @@ private fun SettingsScreen(
             indication = ripple(),
             interactionSource = null
         ) { showSourceChooser = true }
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text("Sources Order") },
+        settingIcon = { Icon(Icons.Default.Reorder, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = ripple(),
+            interactionSource = null,
+            onClick = sourcesOrderClick
+        )
     )
 
     PreferenceSetting(
@@ -506,7 +522,8 @@ private fun SettingsPreview() {
                 otherClick = {},
                 moreInfoClick = {},
                 moreSettingsClick = {},
-                geminiClick = {}
+                geminiClick = {},
+                sourcesOrderClick = {}
             )
         }
     }
@@ -588,11 +605,23 @@ fun SourceChooserScreen(
     val context = LocalContext.current
     val sourceRepository = LocalSourcesRepository.current
     val currentSourceRepository = LocalCurrentSource.current
+    val itemDao = LocalItemDao.current
 
     ListBottomScreen(
         includeInsetPadding = true,
         title = stringResource(R.string.chooseASource),
-        list = sourceRepository.list.filterNot { it.apiService.notWorking },
+        list = remember {
+            combine(
+                sourceRepository.sources,
+                itemDao.getSourceOrder()
+            ) { list, order ->
+                list
+                    .filterNot { it.apiService.notWorking }
+                    .sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
+            }
+        }
+            .collectAsStateWithLifecycle(emptyList())
+            .value,
         onClick = { service ->
             onChosen()
             scope.launch {

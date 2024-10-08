@@ -132,12 +132,14 @@ dependencies {
 
     implementation(libs.material.kolor)
 
-    implementation("com.vanniktech:blurhash:0.4.0-SNAPSHOT")
+    implementation(libs.blurhash)
     ksp(libs.roomCompiler)
 
-    implementation("androidx.biometric:biometric:1.4.0-alpha02")
+    implementation(libs.biometric)
 
     implementation(projects.gemini)
+
+    implementation(libs.reorderable)
 
     //TODO: Use this to check recomposition count on every screen
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")

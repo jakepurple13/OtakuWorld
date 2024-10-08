@@ -128,6 +128,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.gemini.GeminiRecommendationScreen
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.sharedutils.AppLogo
@@ -152,6 +153,7 @@ import com.programmersbox.uiviews.settings.MoreSettingsScreen
 import com.programmersbox.uiviews.settings.NotificationSettings
 import com.programmersbox.uiviews.settings.PlaySettings
 import com.programmersbox.uiviews.settings.SettingScreen
+import com.programmersbox.uiviews.settings.SourceOrderScreen
 import com.programmersbox.uiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
@@ -224,6 +226,21 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     insetsController.show(WindowInsetsCompat.Type.systemBars())
                 } else {
                     insetsController.hide(WindowInsetsCompat.Type.systemBars())
+                }
+            }
+            .launchIn(lifecycleScope)
+
+        sourceRepository.sources
+            .onEach {
+                val itemDao = itemDatabase.itemDao()
+                it.forEachIndexed { index, sourceInformation ->
+                    itemDao.insertSourceOrder(
+                        SourceOrder(
+                            source = sourceInformation.packageName,
+                            name = sourceInformation.apiService.serviceName,
+                            order = index
+                        )
+                    )
                 }
             }
             .launchIn(lifecycleScope)
@@ -754,9 +771,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     otherClick = { navController.navigate(Screen.OtherSettings) },
                     moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
                     moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
-                    geminiClick = { navController.navigate(Screen.GeminiScreen) }
+                    geminiClick = { navController.navigate(Screen.GeminiScreen) },
+                    sourcesOrderClick = { navController.navigate(Screen.OrderScreen) }
                 )
             }
+
+            composable<Screen.OrderScreen>(
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+            ) { SourceOrderScreen() }
 
             composable<Screen.NotificationsSettings>(
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },

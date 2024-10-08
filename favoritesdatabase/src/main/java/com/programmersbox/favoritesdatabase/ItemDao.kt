@@ -78,4 +78,24 @@ interface ItemDao {
     @Query("SELECT COUNT(id) FROM Notifications")
     fun getAllNotificationCount(): Flow<Int>
 
+    @Query("SELECT * FROM SourceOrder ORDER BY `order` ASC")
+    fun getSourceOrder(): Flow<List<SourceOrder>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSourceOrder(sourceOrder: SourceOrder)
+
+    @Query("SELECT * FROM SourceOrder ORDER BY `order` ASC")
+    suspend fun getSourceOrderSync(): List<SourceOrder>
+
+    @Query("DELETE FROM SourceOrder")
+    suspend fun deleteAllSourceOrder()
+
+    @Query("DELETE FROM SourceOrder where source = :source")
+    suspend fun deleteSourceOrder(source: String)
+
+    @Query("UPDATE SourceOrder SET `order` = :order WHERE source = :source")
+    suspend fun updateSourceOrder(source: String, order: Int)
+
+    @Update
+    suspend fun updateSourceOrder(sourceOrder: SourceOrder)
 }

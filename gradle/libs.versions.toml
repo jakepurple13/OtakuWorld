@@ -1,4 +1,6 @@
 [versions]
+biometricVersion = "1.4.0-alpha02"
+blurhash = "0.4.0-SNAPSHOT"
 generativeai = "0.9.0"
 gradle = "8.7.0"
 
@@ -19,6 +21,7 @@ glideVersion = "4.16.0"
 pagecurl = "1.5.1"
 pagingVersion = "3.3.2"
 protobufGradlePlugin = "0.9.4"
+reorderable = "2.4.0-beta01"
 roomVersion = "2.7.0-alpha09"
 navVersion = "2.8.2"
 koinVersion = "4.0.0"
@@ -73,6 +76,8 @@ google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google
 
 [libraries]
 androidx-baselineprofile-gradle-plugin = { module = "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin", version.ref = "androidx-baselineprofile" }
+biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
+blurhash = { module = "com.vanniktech:blurhash", version.ref = "blurhash" }
 compose-collapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }
 dragselect = { module = "com.dragselectcompose:dragselect", version.ref = "dragselect" }
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
@@ -112,6 +117,7 @@ composeMaterialIconsCore = { group = "androidx.compose.material", name = "materi
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
 tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha11" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }

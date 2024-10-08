@@ -52,5 +52,16 @@ data class NotificationItem(
     @ColumnInfo(name = "source")
     val source: String,
     @ColumnInfo(name = "contentTitle")
-    val contentTitle: String
+    val contentTitle: String,
+)
+
+@Entity("SourceOrder")
+data class SourceOrder(
+    @PrimaryKey
+    @ColumnInfo(name = "source")
+    val source: String,
+    @ColumnInfo(name = "name")
+    val name: String,
+    @ColumnInfo(name = "order")
+    val order: Int,
 )

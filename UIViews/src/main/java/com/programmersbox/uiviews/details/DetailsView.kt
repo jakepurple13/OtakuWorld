@@ -79,7 +79,6 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
-import com.programmersbox.uiviews.utils.components.minus
 import com.programmersbox.uiviews.utils.isScrollingUp
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
@@ -344,7 +343,7 @@ fun DetailsView(
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
-            val modifiedPaddingValues = p - LocalNavHostPadding.current
+            val modifiedPaddingValues = p// - LocalNavHostPadding.current
             var descriptionVisibility by remember { mutableStateOf(false) }
             val listOfChapters = remember(reverseChapters) {
                 info.chapters.let { if (reverseChapters) it.reversed() else it }

@@ -495,10 +495,7 @@ fun DetailFloatingActionButtonMenu(
         )
 
         FloatingActionButtonMenuItem(
-            onClick = {
-                fabMenuExpanded = false
-                onFavoriteClick(isFavorite)
-            },
+            onClick = { onFavoriteClick(isFavorite) },
             icon = {
                 Icon(
                     if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -510,10 +507,7 @@ fun DetailFloatingActionButtonMenu(
 
         if (isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value) {
             FloatingActionButtonMenuItem(
-                onClick = {
-                    fabMenuExpanded = false
-                    notifyAction()
-                },
+                onClick = notifyAction,
                 icon = {
                     Icon(
                         if (canNotify) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff,

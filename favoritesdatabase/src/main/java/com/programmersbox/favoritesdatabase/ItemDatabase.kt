@@ -10,12 +10,16 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [DbModel::class, ChapterWatched::class, NotificationItem::class],
-    version = 3,
+    entities = [DbModel::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class],
+    version = 4,
     autoMigrations = [
         AutoMigration(
             from = 2,
             to = 3
+        ),
+        AutoMigration(
+            from = 3,
+            to = 4
         )
     ]
 )

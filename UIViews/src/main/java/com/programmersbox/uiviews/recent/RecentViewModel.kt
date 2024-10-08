@@ -20,6 +20,7 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.ToastItems
+import com.programmersbox.uiviews.utils.combineSources
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +62,7 @@ class RecentViewModel(
     val sources = mutableStateListOf<SourceInformation>()
 
     init {
-        sourceRepository.sources
+        combineSources(sourceRepository, dao)
             .onEach {
                 sources.clear()
                 sources.addAll(it)
