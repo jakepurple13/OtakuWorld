@@ -10,10 +10,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedSplitButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -30,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
@@ -46,6 +52,7 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.components.plus
+import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -55,15 +62,17 @@ fun SourceOrderScreen(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     itemDao: ItemDao = LocalItemDao.current,
 ) {
+    val scope = rememberCoroutineScope()
+
     val sourcesInOrder by sourceRepository
         .sources
         .collectAsStateWithLifecycle(emptyList())
 
-    //var showSourceChooser by showSourceChooser()
-
     val sourceOrder by itemDao
         .getSourceOrder()
         .collectAsStateWithLifecycle(emptyList())
+
+    var sourceSortOrder by remember { mutableStateOf(SourceSort.Custom) }
 
     val modifiedOrder = remember(sourceOrder.isNotEmpty()) {
         sourceOrder
@@ -87,6 +96,7 @@ fun SourceOrderScreen(
 
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        sourceSortOrder = SourceSort.Custom
         runCatching {
             val tmp = modifiedOrder[to.index].copy(order = from.index)
             modifiedOrder[to.index] = modifiedOrder[from.index].copy(order = to.index)
@@ -101,29 +111,27 @@ fun SourceOrderScreen(
         }
     }
 
-    var checked by remember { mutableStateOf(false) }
-
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = { BackButton() },
                 title = { Text("Source Order") },
                 actions = {
-                    //TODO: Add preset sorts
+                    var checked by remember { mutableStateOf(false) }
                     ElevatedSplitButton(
                         onLeadingButtonClick = {
-                            //showSourceChooser = true
+                            scope.launch { sourceSortOrder.sorting(sourceOrder, itemDao, modifiedOrder) }
                         },
                         checked = checked,
                         onTrailingButtonClick = { checked = !checked },
                         leadingContent = {
                             Icon(
-                                Icons.Filled.Edit,
+                                Icons.AutoMirrored.Filled.Sort,
                                 modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
                                 contentDescription = "Localized description"
                             )
                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text("Custom")
+                            Text(sourceSortOrder.name)
                         },
                         trailingContent = {
                             val rotation: Float by animateFloatAsState(
@@ -142,6 +150,44 @@ fun SourceOrderScreen(
                             )
                         }
                     )
+
+                    DropdownMenu(
+                        expanded = checked,
+                        onDismissRequest = { checked = false },
+                    ) {
+                        @Composable
+                        fun SortDropDownMenuItem(
+                            sourceSort: SourceSort,
+                            leadingIcon: @Composable () -> Unit,
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(sourceSort.name) },
+                                onClick = {
+                                    checked = false
+                                    sourceSortOrder = sourceSort
+                                    scope.launch {
+                                        sourceSort.sorting(sourceOrder, itemDao, modifiedOrder)
+                                    }
+                                },
+                                leadingIcon = leadingIcon
+                            )
+                        }
+
+                        SortDropDownMenuItem(
+                            sourceSort = SourceSort.Alphabetical,
+                            leadingIcon = { Icon(Icons.Filled.SortByAlpha, contentDescription = "Sort By Alpha") }
+                        )
+
+                        SortDropDownMenuItem(
+                            sourceSort = SourceSort.Custom,
+                            leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = "Custom") }
+                        )
+
+                        SortDropDownMenuItem(
+                            sourceSort = SourceSort.Random,
+                            leadingIcon = { Icon(Icons.Filled.Shuffle, contentDescription = "Random") }
+                        )
+                    }
                 }
             )
         }
@@ -191,4 +237,35 @@ fun SourceOrderScreen(
             }
         }
     }
+}
+
+//TODO: put this into datastore
+enum class SourceSort {
+    Alphabetical {
+        override suspend fun sorting(sourceOrder: List<SourceOrder>, itemDao: ItemDao, modifiedOrder: MutableList<SourceOrder>) {
+            sourceOrder
+                .sortedBy { it.name }
+                .mapIndexed { index, so -> so.copy(order = index) }
+                .onEach { itemDao.updateSourceOrder(it) }
+                .let {
+                    modifiedOrder.clear()
+                    modifiedOrder.addAll(it)
+                }
+        }
+    },
+    Custom,
+    Random {
+        override suspend fun sorting(sourceOrder: List<SourceOrder>, itemDao: ItemDao, modifiedOrder: MutableList<SourceOrder>) {
+            sourceOrder
+                .shuffled()
+                .mapIndexed { index, so -> so.copy(order = index) }
+                .onEach { itemDao.updateSourceOrder(it) }
+                .let {
+                    modifiedOrder.clear()
+                    modifiedOrder.addAll(it)
+                }
+        }
+    };
+
+    open suspend fun sorting(sourceOrder: List<SourceOrder>, itemDao: ItemDao, modifiedOrder: MutableList<SourceOrder>) {}
 }
