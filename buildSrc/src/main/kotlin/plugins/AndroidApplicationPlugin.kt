@@ -20,7 +20,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         buildFeatures.buildConfig = true
 
         composeOptions {
-            useLiveLiterals = true
+
         }
 
         buildTypes {
