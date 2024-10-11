@@ -309,6 +309,13 @@ fun FavoriteUi(
                                     ),
                                     label = ""
                                 ).value,
+                                inputFieldColors = if (showBlur)
+                                    SearchBarDefaults.inputFieldColors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                    )
+                                else
+                                    SearchBarDefaults.inputFieldColors()
                             ),
                             modifier = Modifier.fillMaxWidth(),
                         ) {

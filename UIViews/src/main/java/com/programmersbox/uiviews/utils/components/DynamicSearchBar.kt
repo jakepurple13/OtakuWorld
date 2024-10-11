@@ -51,6 +51,7 @@ fun DynamicSearchBar(
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon,
                     interactionSource = interactionSource,
+                    colors = colors.inputFieldColors
                 )
             },
             expanded = active,
@@ -76,6 +77,7 @@ fun DynamicSearchBar(
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon,
                     interactionSource = interactionSource,
+                    colors = colors.inputFieldColors
                 )
             },
             expanded = active,

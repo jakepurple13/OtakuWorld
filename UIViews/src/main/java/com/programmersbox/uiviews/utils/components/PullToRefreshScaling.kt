@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.pullToRefresh
@@ -75,7 +77,7 @@ fun OtakuPullToRefreshBox(
 }
 
 object OtakuPullToRefreshDefaults {
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     fun ScalingIndicator(
         isRefreshing: Boolean,
@@ -84,13 +86,23 @@ object OtakuPullToRefreshDefaults {
     ) {
         val scaleFraction =
             { if (isRefreshing) 1f else LinearOutSlowInEasing.transform(state.distanceFraction).coerceIn(0f, 1f) }
-        PullToRefreshDefaults.Indicator(
+        /*PullToRefreshDefaults.Indicator(
             modifier = modifier.graphicsLayer {
                 scaleX = scaleFraction()
                 scaleY = scaleFraction()
             },
             isRefreshing = isRefreshing,
             state = state
-        )
+        )*/
+        PullToRefreshDefaults.IndicatorBox(
+            modifier = modifier.graphicsLayer {
+                scaleX = scaleFraction()
+                scaleY = scaleFraction()
+            },
+            isRefreshing = isRefreshing,
+            state = state
+        ) {
+            ContainedLoadingIndicator()
+        }
     }
 }
