@@ -65,6 +65,7 @@ import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -264,7 +265,9 @@ fun ReadView(
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction,
                         showBlur = showBlur,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) else Modifier
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
+                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                        } else Modifier
                     )
                 }
             },
@@ -281,7 +284,9 @@ fun ReadView(
                         vm = readVm,
                         showBlur = showBlur,
                         isAmoledMode = isAmoledMode,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) else Modifier
+                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
+                            //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f)
+                        } else Modifier
                     )
                 }
             },

@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import dev.chrisbanes.haze.HazeChildScope
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.haze
@@ -58,6 +59,8 @@ fun HazeScaffold(
     hazeState: HazeState = remember { HazeState() },
     topBarStyle: HazeStyle = HazeMaterials.thin(containerColor),
     bottomBarStyle: HazeStyle = topBarStyle,
+    topBarBlur: (HazeChildScope.() -> Unit)? = null,
+    bottomBarBlur: (HazeChildScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     NestedScaffold(
@@ -67,7 +70,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = topBarStyle),
+                    modifier = Modifier.hazeChild(state = hazeState, style = topBarStyle, block = topBarBlur),
                 ) { topBar() }
             } else {
                 topBar()
@@ -78,7 +81,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = bottomBarStyle),
+                    modifier = Modifier.hazeChild(state = hazeState, style = bottomBarStyle, block = bottomBarBlur),
                 ) { bottomBar() }
             } else {
                 bottomBar()

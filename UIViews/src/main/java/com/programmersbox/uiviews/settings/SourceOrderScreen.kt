@@ -19,7 +19,6 @@ import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedSplitButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -28,6 +27,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -118,36 +118,42 @@ fun SourceOrderScreen(
                 title = { Text("Source Order") },
                 actions = {
                     var checked by remember { mutableStateOf(false) }
-                    ElevatedSplitButton(
-                        onLeadingButtonClick = {
-                            scope.launch { sourceSortOrder.sorting(sourceOrder, itemDao, modifiedOrder) }
+                    SplitButtonLayout(
+                        leadingButton = {
+                            SplitButtonDefaults.ElevatedLeadingButton(
+                                onClick = {
+                                    scope.launch { sourceSortOrder.sorting(sourceOrder, itemDao, modifiedOrder) }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Sort,
+                                    modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
+                                    contentDescription = "Localized description"
+                                )
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text(sourceSortOrder.name)
+                            }
                         },
-                        checked = checked,
-                        onTrailingButtonClick = { checked = !checked },
-                        leadingContent = {
-                            Icon(
-                                Icons.AutoMirrored.Filled.Sort,
-                                modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize),
-                                contentDescription = "Localized description"
-                            )
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text(sourceSortOrder.name)
-                        },
-                        trailingContent = {
-                            val rotation: Float by animateFloatAsState(
-                                targetValue = if (checked) 180f else 0f,
-                                label = "Trailing Icon Rotation"
-                            )
-                            Icon(
-                                Icons.Filled.KeyboardArrowDown,
-                                modifier =
-                                Modifier
-                                    .size(SplitButtonDefaults.TrailingIconSize)
-                                    .graphicsLayer {
-                                        this.rotationZ = rotation
-                                    },
-                                contentDescription = "Localized description"
-                            )
+                        trailingButton = {
+                            SplitButtonDefaults.ElevatedTrailingButton(
+                                checked = checked,
+                                onCheckedChange = { checked = it }
+                            ) {
+                                val rotation: Float by animateFloatAsState(
+                                    targetValue = if (checked) 180f else 0f,
+                                    label = "Trailing Icon Rotation"
+                                )
+                                Icon(
+                                    Icons.Filled.KeyboardArrowDown,
+                                    modifier =
+                                    Modifier
+                                        .size(SplitButtonDefaults.TrailingIconSize)
+                                        .graphicsLayer {
+                                            this.rotationZ = rotation
+                                        },
+                                    contentDescription = "Localized description"
+                                )
+                            }
                         }
                     )
 

@@ -15,6 +15,7 @@
             </builds>
           </compositeBuild>
         </compositeConfiguration>
+        <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleHome" value="/usr/local/Cellar/gradle/6.7.1/libexec" />
         <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
@@ -30,7 +31,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/favoritesdatabase" />
-            <option value="$PROJECT_DIR$/imageloader" />
+            <option value="$PROJECT_DIR$/gemini" />
             <option value="$PROJECT_DIR$/manga_sources" />
             <option value="$PROJECT_DIR$/manga_sources/defaultmangasources" />
             <option value="$PROJECT_DIR$/mangaworld" />

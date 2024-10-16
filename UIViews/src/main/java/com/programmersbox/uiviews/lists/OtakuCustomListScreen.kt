@@ -114,12 +114,17 @@ import com.programmersbox.uiviews.utils.components.CoilGradientImage
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
+import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
+import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -152,6 +157,7 @@ fun OtakuCustomListScreen(
     removeSecurityItem: (UUID) -> Unit,
     hasAuthentication: Boolean = false,
 ) {
+    val hazeState = remember { HazeState() }
     val biometricPrompt = rememberBiometricPrompt(
         onAuthenticationSucceeded = {
             customItem?.item?.uuid?.let { addSecurityItem(it) }
@@ -374,7 +380,7 @@ fun OtakuCustomListScreen(
             )
         },
     ) {
-        OtakuHazeScaffold(
+        Scaffold(
             snackbarHost = {
                 SnackbarHost(
                     snackbarHostState,
@@ -511,14 +517,24 @@ fun OtakuCustomListScreen(
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .let {
+                            if (showBlur)
+                                it.hazeChild(
+                                    hazeState,
+                                    HazeMaterials.regular(MaterialTheme.colorScheme.surface)
+                                ) {
+                                    progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                                } else it
+                        },
                 ) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(1),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .padding(16.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
                     ) {
                         itemsIndexed(items = searchItems) { index, item ->
                             ListItem(
@@ -538,14 +554,15 @@ fun OtakuCustomListScreen(
                     }
                 }
             },
-            blurTopBar = showBlur
         ) { padding ->
             LazyVerticalGrid(
                 columns = adaptiveGridCell(),
-                contentPadding = padding,
+                contentPadding = padding + LocalNavHostPadding.current,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .haze(state = hazeState)
             ) {
                 items(
                     items = items,
