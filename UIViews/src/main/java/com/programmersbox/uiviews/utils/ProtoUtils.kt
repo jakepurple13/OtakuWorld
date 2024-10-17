@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.protobuf.GeneratedMessageLite
 import com.google.protobuf.InvalidProtocolBufferException
 import com.programmersbox.uiviews.GridChoice
+import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.Settings
 import com.programmersbox.uiviews.SystemThemeMode
@@ -172,6 +173,13 @@ class SettingsHandling(context: Context) {
         key = { it.themeColor },
         update = { setThemeColor(it) },
         defaultValue = ThemeColor.Dynamic
+    )
+
+    @Composable
+    fun rememberMiddleNavigationAction() = preferences.rememberPreference(
+        key = { it.middleNavigationAction },
+        update = { setMiddleNavigationAction(it) },
+        defaultValue = MiddleNavigationAction.All,
     )
 }
 

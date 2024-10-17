@@ -77,6 +77,7 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.navigateToDetails
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -147,7 +148,10 @@ fun HistoryUi(
                 ),
             )
         },
-        blurTopBar = true
+        blurTopBar = true,
+        topBarBlur = {
+            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+        }
     ) { p ->
         LazyColumn(
             contentPadding = p,

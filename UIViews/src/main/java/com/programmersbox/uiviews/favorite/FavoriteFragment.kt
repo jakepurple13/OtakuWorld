@@ -103,6 +103,7 @@ import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -253,7 +254,10 @@ fun FavoriteUi(
                     color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface
                 ) {
                     Column(
-                        if (showBlur) Modifier.hazeChild(hazeState) { backgroundColor = surface } else Modifier
+                        if (showBlur) Modifier.hazeChild(hazeState) {
+                            backgroundColor = surface
+                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                        } else Modifier
                     ) {
                         var active by rememberSaveable { mutableStateOf(false) }
 

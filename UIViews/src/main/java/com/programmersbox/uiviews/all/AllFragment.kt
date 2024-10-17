@@ -65,6 +65,7 @@ import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -76,6 +77,7 @@ import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshDefaults
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
@@ -199,6 +201,7 @@ fun AllView(
                             val surface = MaterialTheme.colorScheme.surface
                             it.hazeChild(hazeState) {
                                 backgroundColor = surface
+                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
                             }
                         } else it
                     }
@@ -221,7 +224,7 @@ fun AllView(
                                 newItemModel(if (c == ComponentState.Pressed) item else null)
                                 showBanner = c == ComponentState.Pressed
                             },
-                            paddingValues = PaddingValues(0.dp),
+                            paddingValues = LocalNavHostPadding.current,
                             modifier = Modifier
                         ) { navController.navigateToDetails(it) }
                     }

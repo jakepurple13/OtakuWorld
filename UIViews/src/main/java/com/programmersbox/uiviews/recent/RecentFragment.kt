@@ -78,6 +78,7 @@ import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
+import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -178,7 +179,10 @@ fun RecentView(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified),
             )
         },
-        blurTopBar = showBlur
+        blurTopBar = showBlur,
+        topBarBlur = {
+            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+        }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
@@ -25,21 +26,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.uiviews.GridChoice
+import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.ThemeColor
@@ -47,6 +48,7 @@ import com.programmersbox.uiviews.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.ListSetting
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ShowMoreSetting
 import com.programmersbox.uiviews.utils.ShowWhen
@@ -54,6 +56,7 @@ import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.components.ThemeItem
 import com.programmersbox.uiviews.utils.components.seedColor
+import com.programmersbox.uiviews.utils.customsettings.visibleName
 import com.programmersbox.uiviews.utils.rememberFloatingNavigation
 import com.programmersbox.uiviews.utils.rememberHistorySave
 import com.programmersbox.uiviews.utils.rememberSwatchStyle
@@ -67,9 +70,6 @@ fun GeneralSettings(
     customSettings: @Composable () -> Unit = {},
 ) {
     SettingsScaffold(stringResource(R.string.general_menu_title)) {
-        val scope = rememberCoroutineScope()
-        val context = LocalContext.current
-
         val handling = LocalSettingsHandling.current
 
         var showDownload by handling.rememberShowDownload()
@@ -265,14 +265,32 @@ fun GeneralSettings(
             updateValue = { shareChapter = it }
         )
 
-        var showAllScreen by handling.rememberShowAll()
+        if (LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Expanded) {
+            var showAllScreen by handling.rememberShowAll()
 
-        SwitchSetting(
-            settingTitle = { Text(stringResource(R.string.show_all_screen)) },
-            settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
-            value = showAllScreen,
-            updateValue = { showAllScreen = it }
-        )
+            SwitchSetting(
+                settingTitle = { Text(stringResource(R.string.show_all_screen)) },
+                settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
+                value = showAllScreen,
+                updateValue = { showAllScreen = it }
+            )
+        } else {
+            var middleNavigationAction by handling.rememberMiddleNavigationAction()
+            ListSetting(
+                settingTitle = { Text("Middle Navigation Destination") },
+                dialogIcon = { Icon(Icons.Default.LocationOn, null) },
+                settingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose a middle navigation destination") },
+                summaryValue = { Text(middleNavigationAction.visibleName) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
+                value = middleNavigationAction,
+                options = MiddleNavigationAction.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    middleNavigationAction = it
+                }
+            )
+        }
 
         var showListDetail by handling.rememberShowListDetail()
 

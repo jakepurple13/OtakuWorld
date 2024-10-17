@@ -61,7 +61,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.BrowseGallery
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Badge
@@ -166,6 +165,8 @@ import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
+import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
+import com.programmersbox.uiviews.utils.customsettings.item
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.rememberFloatingNavigation
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
@@ -273,6 +274,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     AskForNotificationPermissions()
 
                     val showAllItem by settingsHandling.rememberShowAll()
+                    val middleNavItem by settingsHandling.rememberMiddleNavigationAction()
 
                     val navType = when (windowSize.widthSizeClass) {
                         WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
@@ -306,20 +308,20 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                         navController = navController,
                                         showNavBar = showNavBar,
                                         navType = navType,
-                                        showAllItem = showAllItem,
                                         currentDestination = currentDestination,
                                         showBlur = showBlur,
-                                        isAmoledMode = isAmoledMode
+                                        isAmoledMode = isAmoledMode,
+                                        middleNavItem = middleNavItem
                                     )
                                 } else {
                                     HomeNavigationBar(
                                         showNavBar = showNavBar,
                                         navType = navType,
-                                        showAllItem = showAllItem,
                                         currentDestination = currentDestination,
                                         showBlur = showBlur,
                                         isAmoledMode = isAmoledMode,
-                                        scrollBehavior = null,
+                                        middleNavItem = middleNavItem,
+                                        //scrollBehavior = null,
                                         modifier = Modifier
                                             .padding(horizontal = 24.dp)
                                             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -398,12 +400,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private fun HomeNavigationBar(
         showNavBar: Boolean,
         navType: NavigationBarType,
-        showAllItem: Boolean,
         currentDestination: NavDestination?,
         showBlur: Boolean,
         isAmoledMode: Boolean,
-        scrollBehavior: BottomAppBarScrollBehavior? = null,
+        middleNavItem: MiddleNavigationAction,
         modifier: Modifier = Modifier,
+        scrollBehavior: BottomAppBarScrollBehavior? = null,
     ) {
         AnimatedVisibility(
             visible = showNavBar && navType == NavigationBarType.Bottom,
@@ -481,13 +483,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                     label = R.string.recent
                 )
-                if (showAllItem) {
-                    ScreenBottomItem(
-                        screen = Screen.AllScreen,
-                        icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.AllScreen)) Icons.Default.BrowseGallery else Icons.Outlined.BrowseGallery,
-                        label = R.string.all
-                    )
-                }
+                middleNavItem.item?.ScreenBottomItem(
+                    rowScope = this,
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    colors = colors
+                )
                 ScreenBottomItem(
                     screen = Screen.Settings,
                     icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
@@ -503,10 +504,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
         navController: NavHostController,
         showNavBar: Boolean,
         navType: NavigationBarType,
-        showAllItem: Boolean,
         currentDestination: NavDestination?,
         showBlur: Boolean,
         isAmoledMode: Boolean,
+        middleNavItem: MiddleNavigationAction,
     ) {
         Column {
             BottomBarAdditions()
@@ -549,13 +550,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                         label = R.string.recent
                     )
-                    if (showAllItem) {
-                        ScreenBottomItem(
-                            screen = Screen.AllScreen,
-                            icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.AllScreen)) Icons.Default.BrowseGallery else Icons.Outlined.BrowseGallery,
-                            label = R.string.all
-                        )
-                    }
+                    middleNavItem.item?.ScreenBottomItem(
+                        rowScope = this,
+                        currentDestination = currentDestination,
+                        navController = navController
+                    )
                     ScreenBottomItem(
                         screen = Screen.Settings,
                         icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,

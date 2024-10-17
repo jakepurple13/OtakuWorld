@@ -19,6 +19,7 @@ message Settings {
   bool showBlur = 13;
   GridChoice gridChoice = 15;
   ThemeColor themeColor = 16;
+  MiddleNavigationAction middleNavigationAction = 17;
 }
 
 enum SystemThemeMode {
@@ -47,4 +48,12 @@ enum GridChoice {
   FullAdaptive = 0;
   Adaptive = 1;
   Fixed = 2;
+}
+
+enum MiddleNavigationAction {
+  All = 0;
+  Notifications = 1;
+  Lists = 2;
+  Favorites = 3;
+  Search = 4;
 }
