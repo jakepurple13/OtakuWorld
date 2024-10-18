@@ -190,7 +190,7 @@ fun NotificationsScreen(
             .filter { it == 0 }
             .collect {
                 cancelNotificationById(42)
-                navController.popBackStack()
+                //navController.popBackStack()
             }
     }
 

@@ -147,6 +147,7 @@
     <string name="add_a_favorite">Add a Favorite</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="global_search">Global Search</string>
+    <string name="more">More</string>
     <string name="search">Search</string>
     <string name="global_search_by_name">Global Search by Name</string>
     <string name="are_you_sure_delete_notifications">Are you sure you want to delete all notifications?</string>
@@ -211,4 +212,6 @@
     <string name="more_settings">More Settings</string>
     <string name="for_later">For Later</string>
     <string name="add_to_for_later_list">Add to For Later list</string>
+    <string name="show_download_button">Show Download Button</string>
+    <string name="show_list_detail_pane_for_lists">Show List Detail Pane for Lists</string>
 </resources>

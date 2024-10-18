@@ -36,6 +36,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +47,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -61,6 +64,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.UnfoldLess
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Badge
@@ -68,6 +73,10 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.BottomAppBarState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingAppBarDefaults
+import androidx.compose.material3.HorizontalFloatingAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -90,8 +99,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -174,6 +186,7 @@ import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -275,6 +288,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                     val showAllItem by settingsHandling.rememberShowAll()
                     val middleNavItem by settingsHandling.rememberMiddleNavigationAction()
+                    val multipleActions by settingsHandling.rememberMiddleMultipleActions()
 
                     val navType = when (windowSize.widthSizeClass) {
                         WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
@@ -311,7 +325,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                         currentDestination = currentDestination,
                                         showBlur = showBlur,
                                         isAmoledMode = isAmoledMode,
-                                        middleNavItem = middleNavItem
+                                        middleNavItem = middleNavItem,
+                                        multipleActions = multipleActions,
                                     )
                                 } else {
                                     HomeNavigationBar(
@@ -322,6 +337,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                         isAmoledMode = isAmoledMode,
                                         middleNavItem = middleNavItem,
                                         //scrollBehavior = null,
+                                        multipleActions = multipleActions,
                                         modifier = Modifier
                                             .padding(horizontal = 24.dp)
                                             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -395,7 +411,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     private fun HomeNavigationBar(
         showNavBar: Boolean,
@@ -406,7 +422,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
         middleNavItem: MiddleNavigationAction,
         modifier: Modifier = Modifier,
         scrollBehavior: BottomAppBarScrollBehavior? = null,
+        multipleActions: MiddleMultipleActions,
     ) {
+        val scope = rememberCoroutineScope()
         AnimatedVisibility(
             visible = showNavBar && navType == NavigationBarType.Bottom,
             enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
@@ -430,99 +448,43 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Modifier
             }
 
-            FloatingNavigationBar(
-                containerColor = when {
-                    showBlur -> Color.Transparent
-                    isAmoledMode -> MaterialTheme.colorScheme.surface
-                    else -> NavigationBarDefaults.containerColor
-                },
-                modifier = modifier
-                    .layout { measurable, constraints ->
-                        // Sets the app bar's height offset to collapse the entire bar's height when
-                        // content
-                        // is scrolled.
-                        scrollBehavior?.state?.heightOffsetLimit = -80.dp.toPx()
+            var showHorizontalBar by remember { mutableStateOf(false) }
+            var expanded by remember { mutableStateOf(false) }
 
-                        val placeable = measurable.measure(constraints)
-                        val height = placeable.height + (scrollBehavior?.state?.heightOffset ?: 0f)
-                        layout(placeable.width, height.roundToInt()) { placeable.place(0, 0) }
-                    }
-                    .then(appBarDragModifier),
-            ) {
-                val colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-
-                @Composable
-                fun ScreenBottomItem(
-                    screen: Screen,
-                    icon: ImageVector,
-                    label: Int,
-                    badge: @Composable BoxScope.() -> Unit = {},
-                ) {
-                    NavigationBarItem(
-                        icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
-                        label = { Text(stringResource(label)) },
-                        selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
-                        colors = colors,
-                        onClick = {
-                            navController.navigate(screen) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
+            val closeMultipleBar: () -> Unit = {
+                scope.launch {
+                    expanded = false
+                    delay(250)
+                    showHorizontalBar = false
                 }
-
-                ScreenBottomItem(
-                    screen = Screen.RecentScreen,
-                    icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
-                    label = R.string.recent
-                )
-                middleNavItem.item?.ScreenBottomItem(
-                    rowScope = this,
-                    currentDestination = currentDestination,
-                    navController = navController,
-                    colors = colors
-                )
-                ScreenBottomItem(
-                    screen = Screen.Settings,
-                    icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
-                    label = R.string.settings,
-                    badge = { if (updateCheck()) Badge { Text("") } }
-                )
             }
-        }
-    }
 
-    @Composable
-    private fun BottomNav(
-        navController: NavHostController,
-        showNavBar: Boolean,
-        navType: NavigationBarType,
-        currentDestination: NavDestination?,
-        showBlur: Boolean,
-        isAmoledMode: Boolean,
-        middleNavItem: MiddleNavigationAction,
-    ) {
-        Column {
-            BottomBarAdditions()
-            AnimatedVisibility(
-                visible = showNavBar && navType == NavigationBarType.Bottom,
-                enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
-                exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
-            ) {
-                NavigationBar(
+            Box(modifier = Modifier.fillMaxWidth()) {
+                FloatingNavigationBar(
                     containerColor = when {
                         showBlur -> Color.Transparent
                         isAmoledMode -> MaterialTheme.colorScheme.surface
                         else -> NavigationBarDefaults.containerColor
-                    }
+                    },
+                    modifier = modifier
+                        .layout { measurable, constraints ->
+                            // Sets the app bar's height offset to collapse the entire bar's height when
+                            // content
+                            // is scrolled.
+                            scrollBehavior?.state?.heightOffsetLimit = -80.dp.toPx()
+
+                            val placeable = measurable.measure(constraints)
+                            val height = placeable.height + (scrollBehavior?.state?.heightOffset ?: 0f)
+                            layout(placeable.width, height.roundToInt()) { placeable.place(0, 0) }
+                        }
+                        .then(appBarDragModifier),
                 ) {
+                    val colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
 
                     @Composable
                     fun ScreenBottomItem(
@@ -535,6 +497,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
                             label = { Text(stringResource(label)) },
                             selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                            colors = colors,
                             onClick = {
                                 navController.navigate(screen) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -550,17 +513,225 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                         label = R.string.recent
                     )
-                    middleNavItem.item?.ScreenBottomItem(
+
+                    middleNavItem.ScreenBottomItem(
                         rowScope = this,
                         currentDestination = currentDestination,
-                        navController = navController
+                        navController = navController,
+                        colors = colors,
+                        multipleClick = {
+                            if (showHorizontalBar) {
+                                closeMultipleBar()
+                            } else {
+                                showHorizontalBar = true
+                            }
+                        }
                     )
+
                     ScreenBottomItem(
                         screen = Screen.Settings,
                         icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
                         label = R.string.settings,
                         badge = { if (updateCheck()) Badge { Text("") } }
                     )
+                }
+
+                if (middleNavItem == MiddleNavigationAction.Multiple) {
+                    AnimatedVisibility(
+                        visible = showHorizontalBar,
+                        enter = slideInVertically(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ) { it / 2 } + fadeIn(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ),
+                        exit = slideOutVertically(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ) { it / 2 } + fadeOut(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+                    ) {
+                        LaunchedEffect(Unit) {
+                            delay(250)
+                            expanded = true
+                        }
+
+                        HorizontalFloatingAppBar(
+                            expanded = expanded,
+                            leadingContent = {
+                                multipleActions.startAction.item?.ScreenBottomItem(
+                                    currentDestination = currentDestination,
+                                    navController = navController,
+                                    additionalOnClick = closeMultipleBar
+                                )
+                            },
+                            trailingContent = {
+                                multipleActions.endAction.item?.ScreenBottomItem(
+                                    currentDestination = currentDestination,
+                                    navController = navController,
+                                    additionalOnClick = closeMultipleBar
+                                )
+                            },
+                        ) {
+                            FilledIconButton(
+                                modifier = Modifier.width(64.dp),
+                                onClick = closeMultipleBar
+                            ) {
+                                Icon(
+                                    if (expanded) Icons.Default.UnfoldLess else Icons.Filled.UnfoldMore,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    @Composable
+    private fun BottomNav(
+        navController: NavHostController,
+        showNavBar: Boolean,
+        navType: NavigationBarType,
+        currentDestination: NavDestination?,
+        showBlur: Boolean,
+        isAmoledMode: Boolean,
+        middleNavItem: MiddleNavigationAction,
+        multipleActions: MiddleMultipleActions,
+    ) {
+        val scope = rememberCoroutineScope()
+
+        var showHorizontalBar by remember { mutableStateOf(false) }
+        var expanded by remember { mutableStateOf(false) }
+
+        val closeMultipleBar: () -> Unit = {
+            scope.launch {
+                expanded = false
+                delay(250)
+                showHorizontalBar = false
+            }
+        }
+        Box {
+            Column {
+                BottomBarAdditions()
+                AnimatedVisibility(
+                    visible = showNavBar && navType == NavigationBarType.Bottom,
+                    enter = slideInVertically { it / 2 } + expandVertically() + fadeIn(),
+                    exit = slideOutVertically { it / 2 } + shrinkVertically() + fadeOut(),
+                ) {
+                    NavigationBar(
+                        containerColor = when {
+                            showBlur -> Color.Transparent
+                            isAmoledMode -> MaterialTheme.colorScheme.surface
+                            else -> NavigationBarDefaults.containerColor
+                        }
+                    ) {
+
+                        @Composable
+                        fun ScreenBottomItem(
+                            screen: Screen,
+                            icon: ImageVector,
+                            label: Int,
+                            badge: @Composable BoxScope.() -> Unit = {},
+                        ) {
+                            NavigationBarItem(
+                                icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
+                                label = { Text(stringResource(label)) },
+                                selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                                onClick = {
+                                    navController.navigate(screen) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            )
+                        }
+
+                        ScreenBottomItem(
+                            screen = Screen.RecentScreen,
+                            icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
+                            label = R.string.recent
+                        )
+
+                        middleNavItem.ScreenBottomItem(
+                            rowScope = this,
+                            currentDestination = currentDestination,
+                            navController = navController,
+                            multipleClick = {
+                                if (showHorizontalBar) {
+                                    closeMultipleBar()
+                                } else {
+                                    showHorizontalBar = true
+                                }
+                            }
+                        )
+
+                        ScreenBottomItem(
+                            screen = Screen.Settings,
+                            icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
+                            label = R.string.settings,
+                            badge = { if (updateCheck()) Badge { Text("") } }
+                        )
+                    }
+                }
+            }
+
+            if (middleNavItem == MiddleNavigationAction.Multiple) {
+                AnimatedVisibility(
+                    visible = showHorizontalBar,
+                    enter = slideInVertically(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ) { it / 2 } + fadeIn(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ),
+                    exit = slideOutVertically(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ) { it / 2 } + fadeOut(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+                ) {
+                    LaunchedEffect(Unit) {
+                        delay(250)
+                        expanded = true
+                    }
+
+                    HorizontalFloatingAppBar(
+                        expanded = expanded,
+                        leadingContent = {
+                            multipleActions.startAction.item?.ScreenBottomItem(
+                                currentDestination = currentDestination,
+                                navController = navController,
+                                additionalOnClick = closeMultipleBar
+                            )
+                        },
+                        trailingContent = {
+                            multipleActions.endAction.item?.ScreenBottomItem(
+                                currentDestination = currentDestination,
+                                navController = navController,
+                                additionalOnClick = closeMultipleBar
+                            )
+                        },
+                    ) {
+                        FilledIconButton(
+                            modifier = Modifier.width(64.dp),
+                            onClick = closeMultipleBar
+                        ) {
+                            Icon(
+                                if (expanded) Icons.Default.UnfoldLess else Icons.Filled.UnfoldMore,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    }
                 }
             }
         }

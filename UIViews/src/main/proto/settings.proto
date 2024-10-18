@@ -20,6 +20,7 @@ message Settings {
   GridChoice gridChoice = 15;
   ThemeColor themeColor = 16;
   MiddleNavigationAction middleNavigationAction = 17;
+  MiddleMultipleActions multipleActions = 18;
 }
 
 enum SystemThemeMode {
@@ -56,4 +57,10 @@ enum MiddleNavigationAction {
   Lists = 2;
   Favorites = 3;
   Search = 4;
+  Multiple = 5;
+}
+
+message MiddleMultipleActions {
+  MiddleNavigationAction startAction = 1;
+  MiddleNavigationAction endAction = 2;
 }

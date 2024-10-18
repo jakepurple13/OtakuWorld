@@ -19,6 +19,7 @@ import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.Settings
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.ThemeColor
+import com.programmersbox.uiviews.middleMultipleActions
 import com.programmersbox.uiviews.settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -73,6 +74,10 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             amoledMode = false
             usePalette = true
             showBlur = true
+            multipleActions = middleMultipleActions {
+                startAction = MiddleNavigationAction.All
+                endAction = MiddleNavigationAction.Notifications
+            }
         }
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
@@ -180,6 +185,16 @@ class SettingsHandling(context: Context) {
         key = { it.middleNavigationAction },
         update = { setMiddleNavigationAction(it) },
         defaultValue = MiddleNavigationAction.All,
+    )
+
+    @Composable
+    fun rememberMiddleMultipleActions() = preferences.rememberPreference(
+        key = { it.multipleActions },
+        update = { setMultipleActions(it) },
+        defaultValue = middleMultipleActions {
+            startAction = MiddleNavigationAction.All
+            endAction = MiddleNavigationAction.Notifications
+        },
     )
 }
 

@@ -8,11 +8,13 @@ import androidx.compose.material.icons.filled.BrowseGallery
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.outlined.BrowseGallery
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -69,7 +71,13 @@ val MiddleNavigationAction.item: MiddleNavigationItem?
             screen = Screen.GlobalSearchScreen.Home(),
         )
 
-        MiddleNavigationAction.UNRECOGNIZED -> null
+        MiddleNavigationAction.Multiple -> MiddleNavigationItem(
+            icon = { Icons.Default.UnfoldMore },
+            label = R.string.more,
+            screen = Screen.MoreSettings,
+        )
+
+        else -> null
     }
 
 @Composable
@@ -95,6 +103,50 @@ fun MiddleNavigationItem.ScreenBottomItem(
             },
             modifier = modifier
         )
+    }
+}
+
+@Composable
+fun MiddleNavigationItem.ScreenBottomItem(
+    currentDestination: NavDestination?,
+    navController: NavHostController,
+    additionalOnClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = {
+            additionalOnClick()
+            navController.navigate(screen) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        },
+        modifier = modifier
+    ) { Icon(icon(currentDestination.isTopLevelDestinationInHierarchy(screen)), null) }
+}
+
+@Composable
+fun MiddleNavigationAction.ScreenBottomItem(
+    rowScope: RowScope,
+    currentDestination: NavDestination?,
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    colors: NavigationBarItemColors = NavigationBarItemDefaults.colors(),
+    multipleClick: () -> Unit,
+) {
+    if (this == MiddleNavigationAction.Multiple) {
+        with(rowScope) {
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.UnfoldMore, null) },
+                label = { Text("More") },
+                selected = false,
+                colors = colors,
+                onClick = multipleClick
+            )
+        }
+    } else {
+        item?.ScreenBottomItem(rowScope, currentDestination, navController, modifier, colors)
     }
 }
 
