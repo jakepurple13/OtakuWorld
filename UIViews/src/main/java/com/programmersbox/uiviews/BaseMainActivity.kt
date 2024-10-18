@@ -47,9 +47,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -64,8 +62,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.UnfoldLess
-import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Badge
@@ -74,9 +70,6 @@ import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.BottomAppBarState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingAppBarDefaults
-import androidx.compose.material3.HorizontalFloatingAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -99,11 +92,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -175,10 +166,11 @@ import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.components.HazeScaffold
+import com.programmersbox.uiviews.utils.components.MultipleActions
+import com.programmersbox.uiviews.utils.components.rememberMultipleBarState
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
-import com.programmersbox.uiviews.utils.customsettings.item
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.rememberFloatingNavigation
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
@@ -186,7 +178,6 @@ import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -448,16 +439,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Modifier
             }
 
-            var showHorizontalBar by remember { mutableStateOf(false) }
-            var expanded by remember { mutableStateOf(false) }
-
-            val closeMultipleBar: () -> Unit = {
-                scope.launch {
-                    expanded = false
-                    delay(250)
-                    showHorizontalBar = false
-                }
-            }
+            val multipleBarState = rememberMultipleBarState()
 
             Box(modifier = Modifier.fillMaxWidth()) {
                 FloatingNavigationBar(
@@ -520,10 +502,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         navController = navController,
                         colors = colors,
                         multipleClick = {
-                            if (showHorizontalBar) {
-                                closeMultipleBar()
-                            } else {
-                                showHorizontalBar = true
+                            scope.launch {
+                                if (multipleBarState.showHorizontalBar) {
+                                    multipleBarState.hide()
+                                } else {
+                                    multipleBarState.show()
+                                }
                             }
                         }
                     )
@@ -536,63 +520,17 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     )
                 }
 
-                if (middleNavItem == MiddleNavigationAction.Multiple) {
-                    AnimatedVisibility(
-                        visible = showHorizontalBar,
-                        enter = slideInVertically(
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                        ) { it / 2 } + fadeIn(
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                        ),
-                        exit = slideOutVertically(
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                        ) { it / 2 } + fadeOut(
-                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                        ),
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .offset(y = -FloatingAppBarDefaults.ScreenOffset),
-                    ) {
-                        LaunchedEffect(Unit) {
-                            delay(250)
-                            expanded = true
-                        }
-
-                        HorizontalFloatingAppBar(
-                            expanded = expanded,
-                            leadingContent = {
-                                multipleActions.startAction.item?.ScreenBottomItem(
-                                    currentDestination = currentDestination,
-                                    navController = navController,
-                                    additionalOnClick = closeMultipleBar
-                                )
-                            },
-                            trailingContent = {
-                                multipleActions.endAction.item?.ScreenBottomItem(
-                                    currentDestination = currentDestination,
-                                    navController = navController,
-                                    additionalOnClick = closeMultipleBar
-                                )
-                            },
-                        ) {
-                            FilledIconButton(
-                                modifier = Modifier.width(64.dp),
-                                onClick = closeMultipleBar
-                            ) {
-                                Icon(
-                                    if (expanded) Icons.Default.UnfoldLess else Icons.Filled.UnfoldMore,
-                                    contentDescription = "Localized description"
-                                )
-                            }
-                        }
-                    }
-                }
+                MultipleActions(
+                    state = multipleBarState,
+                    middleNavItem = middleNavItem,
+                    multipleActions = multipleActions,
+                    currentDestination = currentDestination,
+                    navController = navController
+                )
             }
         }
     }
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     private fun BottomNav(
         navController: NavHostController,
@@ -605,17 +543,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         multipleActions: MiddleMultipleActions,
     ) {
         val scope = rememberCoroutineScope()
-
-        var showHorizontalBar by remember { mutableStateOf(false) }
-        var expanded by remember { mutableStateOf(false) }
-
-        val closeMultipleBar: () -> Unit = {
-            scope.launch {
-                expanded = false
-                delay(250)
-                showHorizontalBar = false
-            }
-        }
+        val multipleBarState = rememberMultipleBarState()
         Box {
             Column {
                 BottomBarAdditions()
@@ -664,10 +592,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             currentDestination = currentDestination,
                             navController = navController,
                             multipleClick = {
-                                if (showHorizontalBar) {
-                                    closeMultipleBar()
-                                } else {
-                                    showHorizontalBar = true
+                                scope.launch {
+                                    if (multipleBarState.showHorizontalBar) {
+                                        multipleBarState.hide()
+                                    } else {
+                                        multipleBarState.show()
+                                    }
                                 }
                             }
                         )
@@ -682,58 +612,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
             }
 
-            if (middleNavItem == MiddleNavigationAction.Multiple) {
-                AnimatedVisibility(
-                    visible = showHorizontalBar,
-                    enter = slideInVertically(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ) { it / 2 } + fadeIn(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ),
-                    exit = slideOutVertically(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ) { it / 2 } + fadeOut(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .offset(y = -FloatingAppBarDefaults.ScreenOffset),
-                ) {
-                    LaunchedEffect(Unit) {
-                        delay(250)
-                        expanded = true
-                    }
-
-                    HorizontalFloatingAppBar(
-                        expanded = expanded,
-                        leadingContent = {
-                            multipleActions.startAction.item?.ScreenBottomItem(
-                                currentDestination = currentDestination,
-                                navController = navController,
-                                additionalOnClick = closeMultipleBar
-                            )
-                        },
-                        trailingContent = {
-                            multipleActions.endAction.item?.ScreenBottomItem(
-                                currentDestination = currentDestination,
-                                navController = navController,
-                                additionalOnClick = closeMultipleBar
-                            )
-                        },
-                    ) {
-                        FilledIconButton(
-                            modifier = Modifier.width(64.dp),
-                            onClick = closeMultipleBar
-                        ) {
-                            Icon(
-                                if (expanded) Icons.Default.UnfoldLess else Icons.Filled.UnfoldMore,
-                                contentDescription = "Localized description"
-                            )
-                        }
-                    }
-                }
-            }
+            MultipleActions(
+                state = multipleBarState,
+                middleNavItem = middleNavItem,
+                multipleActions = multipleActions,
+                currentDestination = currentDestination,
+                navController = navController
+            )
         }
     }
 
