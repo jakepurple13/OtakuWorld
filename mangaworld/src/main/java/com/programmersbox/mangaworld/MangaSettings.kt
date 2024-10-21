@@ -105,6 +105,13 @@ class MangaSettingsHandling(context: Context) {
         defaultValue = true
     )
 
+    @Composable
+    fun rememberUseFloatingReaderBottomBar() = preferences.rememberPreference(
+        key = { it.useFloatingReaderBottomBar },
+        update = { setUseFloatingReaderBottomBar(it) },
+        defaultValue = true
+    )
+
     inner class SettingInfo<T>(
         val flow: Flow<T>,
         private val updateValue: suspend MangaSettings.Builder.(T) -> MangaSettings.Builder,

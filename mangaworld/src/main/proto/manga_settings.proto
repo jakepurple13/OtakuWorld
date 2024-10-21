@@ -12,6 +12,7 @@ message MangaSettings {
   ImageLoaderType imageLoaderType = 6;
   bool useFlipPager = 7;
   bool allowUserDrawerGesture = 8;
+  bool useFloatingReaderBottomBar = 9;
 }
 
 enum PlayingStartAction {

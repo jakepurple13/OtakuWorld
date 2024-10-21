@@ -9,11 +9,22 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
@@ -22,10 +33,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingAppBarDefaults
+import androidx.compose.material3.FloatingAppBarScrollBehavior
+import androidx.compose.material3.HorizontalFloatingAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -172,6 +189,87 @@ internal fun ReaderTopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun FloatingBottomBar(
+    vm: ReadViewModel,
+    onPageSelectClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    chapterChange: () -> Unit,
+    onChapterShow: () -> Unit,
+    modifier: Modifier = Modifier,
+    exitAlwaysScrollBehavior: FloatingAppBarScrollBehavior? = null,
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        var showFloatBar by remember { mutableStateOf(false) }
+        HorizontalFloatingAppBar(
+            modifier = modifier
+                .align(Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+            expanded = showFloatBar,
+            leadingContent = {
+                val prevShown = vm.currentChapter < vm.list.lastIndex
+                val nextShown = vm.currentChapter > 0
+
+                AnimatedVisibility(
+                    visible = prevShown && vm.list.size > 1,
+                    enter = expandHorizontally(expandFrom = Alignment.Start),
+                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                ) {
+                    PreviousIconButton(
+                        previousChapter = chapterChange,
+                        vm = vm,
+                    )
+                }
+
+                GoBackIconButton()
+
+                AnimatedVisibility(
+                    visible = nextShown && vm.list.size > 1,
+                    enter = expandHorizontally(),
+                    exit = shrinkHorizontally()
+                ) {
+                    NextIconButton(
+                        nextChapter = chapterChange,
+                        vm = vm,
+                    )
+                }
+
+                IconButton(
+                    onClick = onPageSelectClick,
+                ) { Icon(Icons.Default.GridOn, null) }
+
+                IconButton(
+                    onClick = onChapterShow,
+                ) { Icon(Icons.Default.Numbers, null) }
+            },
+            trailingContent = {
+                IconButton(
+                    onClick = onSettingsClick,
+                    //modifier = Modifier.weight(1f)
+                ) { Icon(Icons.Default.Settings, null) }
+            },
+            scrollBehavior = exitAlwaysScrollBehavior,
+            content = {
+                FilledIconButton(
+                    onClick = { showFloatBar = !showFloatBar },
+                    modifier = Modifier
+                        .width(64.dp)
+                ) {
+                    Icon(
+                        if (showFloatBar) Icons.Default.ChevronRight else Icons.Default.ChevronLeft,
+                        contentDescription = "Localized description"
+                    )
+                }
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun BottomBar(
     vm: ReadViewModel,
@@ -298,4 +396,38 @@ private fun PreviousButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
         modifier = modifier
     ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
+}
+
+@Composable
+private fun PreviousIconButton(
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier,
+    previousChapter: () -> Unit,
+) {
+    IconButton(
+        onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
+        modifier = modifier
+    ) { Icon(Icons.Default.ArrowBack, null) }
+}
+
+@Composable
+private fun GoBackIconButton(modifier: Modifier = Modifier) {
+    val navController = LocalNavController.current
+    OutlinedIconButton(
+        onClick = { navController.popBackStack() },
+        modifier = modifier,
+        border = BorderStroke(ButtonDefaults.outlinedButtonBorder(true).width, MaterialTheme.colorScheme.primary)
+    ) { Icon(Icons.Default.Home, null) }
+}
+
+@Composable
+private fun NextIconButton(
+    vm: ReadViewModel,
+    modifier: Modifier = Modifier,
+    nextChapter: () -> Unit,
+) {
+    FilledIconButton(
+        onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
+        modifier = modifier
+    ) { Icon(Icons.Default.ArrowForward, null) }
 }

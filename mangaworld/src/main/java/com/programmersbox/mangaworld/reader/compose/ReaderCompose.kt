@@ -26,6 +26,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingAppBarDefaults
+import androidx.compose.material3.FloatingAppBarExitDirection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
@@ -44,6 +46,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -190,6 +193,10 @@ fun ReadView(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showBottomSheet by remember { mutableStateOf(false) }
 
+    val floatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
+
+    val exitAlwaysScrollBehavior = FloatingAppBarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingAppBarExitDirection.Bottom)
+
     BackHandler(drawerState.isOpen || showBottomSheet) {
         scope.launch {
             when {
@@ -274,25 +281,37 @@ fun ReadView(
                 }
             },
             bottomBar = {
-                AnimatedVisibility(
-                    visible = showItems,
-                    enter = slideInVertically { it } + fadeIn(),
-                    exit = slideOutVertically { it } + fadeOut()
-                ) {
-                    BottomBar(
+                if (floatingBottomBar) {
+                    FloatingBottomBar(
                         onPageSelectClick = { showBottomSheet = true },
                         onSettingsClick = { settingsPopup = true },
                         chapterChange = ::showToast,
                         onChapterShow = { scope.launch { drawerState.open() } },
                         vm = readVm,
-                        showBlur = showBlur,
-                        isAmoledMode = isAmoledMode,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
-                            //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f)
-                        } else Modifier
+                        exitAlwaysScrollBehavior = exitAlwaysScrollBehavior
                     )
+                } else {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically { it } + fadeIn(),
+                        exit = slideOutVertically { it } + fadeOut()
+                    ) {
+                        BottomBar(
+                            onPageSelectClick = { showBottomSheet = true },
+                            onSettingsClick = { settingsPopup = true },
+                            chapterChange = ::showToast,
+                            onChapterShow = { scope.launch { drawerState.open() } },
+                            vm = readVm,
+                            showBlur = showBlur,
+                            isAmoledMode = isAmoledMode,
+                            modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
+                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f)
+                            } else Modifier,
+                        )
+                    }
                 }
             },
+            modifier = Modifier.nestedScroll(exitAlwaysScrollBehavior)
         ) { p ->
             Box(
                 modifier = if (showBlur)

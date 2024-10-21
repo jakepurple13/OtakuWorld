@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.BorderBottom
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FormatLineSpacing
@@ -139,6 +140,14 @@ internal fun SettingsSheet(
                 updateValue = { userGestureAllowed = it },
                 settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
                 settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
+            )
+
+            var useFloatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
+            SwitchSetting(
+                value = useFloatingBottomBar,
+                updateValue = { useFloatingBottomBar = it },
+                settingTitle = { Text("Use a Floating Bottom Bar in Reader") },
+                settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) }
             )
 
             HorizontalDivider()

@@ -95,6 +95,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
@@ -496,13 +497,10 @@ fun ManagedActivityResultLauncher<Intent, ActivityResult>.launchCatching(
 fun HideSystemBarsWhileOnScreen() {
     val changingSettingsRepository: ChangingSettingsRepository = koinInject()
 
-    LifecycleHandle(
-        onStop = { changingSettingsRepository.showNavBar.tryEmit(true) },
-        onDestroy = { changingSettingsRepository.showNavBar.tryEmit(true) },
-        onCreate = { changingSettingsRepository.showNavBar.tryEmit(false) },
-        onStart = { changingSettingsRepository.showNavBar.tryEmit(false) },
-        onResume = { changingSettingsRepository.showNavBar.tryEmit(false) }
-    )
+    LifecycleResumeEffect(Unit) {
+        changingSettingsRepository.showNavBar.tryEmit(false)
+        onPauseOrDispose { changingSettingsRepository.showNavBar.tryEmit(true) }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

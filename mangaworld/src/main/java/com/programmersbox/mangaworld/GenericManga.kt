@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.filled.BorderBottom
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Gesture
@@ -384,6 +385,14 @@ class GenericManga(
                 updateValue = { userGestureAllowed = it },
                 settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
                 settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
+            )
+
+            var useFloatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
+            SwitchSetting(
+                value = useFloatingBottomBar,
+                updateValue = { useFloatingBottomBar = it },
+                settingTitle = { Text("Use a Floating Bottom Bar in Reader") },
+                settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) }
             )
         }
     }
