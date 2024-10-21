@@ -98,6 +98,13 @@ class MangaSettingsHandling(context: Context) {
         defaultValue = ImageLoaderType.Kamel
     )
 
+    @Composable
+    fun rememberUserGestureEnabled() = preferences.rememberPreference(
+        key = { it.allowUserDrawerGesture },
+        update = { setAllowUserDrawerGesture(it) },
+        defaultValue = true
+    )
+
     inner class SettingInfo<T>(
         val flow: Flow<T>,
         private val updateValue: suspend MangaSettings.Builder.(T) -> MangaSettings.Builder,

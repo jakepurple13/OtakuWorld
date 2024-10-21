@@ -25,6 +25,7 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
@@ -78,7 +79,7 @@ import eu.wewox.pagecurl.page.rememberPageCurlState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalPageCurlApi::class)
+@OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
@@ -114,6 +115,8 @@ fun ReadView(
     val isAmoledMode by settings.rememberIsAmoledMode()
 
     var readerType by mangaSettingsHandling.rememberReaderType()
+
+    val userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -234,7 +237,6 @@ fun ReadView(
     }
 
     val hazeState = remember { HazeState() }
-    val background = MaterialTheme.colorScheme.background
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -246,7 +248,7 @@ fun ReadView(
                 )
             }
         },
-        gesturesEnabled = readVm.list.size > 1
+        gesturesEnabled = (readVm.list.size > 1 && userGestureAllowed) || drawerState.isOpen
     ) {
         Scaffold(
             topBar = {
@@ -281,6 +283,7 @@ fun ReadView(
                         onPageSelectClick = { showBottomSheet = true },
                         onSettingsClick = { settingsPopup = true },
                         chapterChange = ::showToast,
+                        onChapterShow = { scope.launch { drawerState.open() } },
                         vm = readVm,
                         showBlur = showBlur,
                         isAmoledMode = isAmoledMode,

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -177,6 +178,7 @@ internal fun BottomBar(
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     chapterChange: () -> Unit,
+    onChapterShow: () -> Unit,
     showBlur: Boolean,
     isAmoledMode: Boolean,
     modifier: Modifier = Modifier,
@@ -251,6 +253,11 @@ internal fun BottomBar(
             onClick = onPageSelectClick,
             modifier = Modifier.weight(1f)
         ) { Icon(Icons.Default.GridOn, null) }
+
+        IconButton(
+            onClick = onChapterShow,
+            modifier = Modifier.weight(1f)
+        ) { Icon(Icons.Default.Numbers, null) }
 
         IconButton(
             onClick = onSettingsClick,

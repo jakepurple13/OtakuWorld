@@ -11,6 +11,7 @@ message MangaSettings {
   ReaderType readerType = 5;
   ImageLoaderType imageLoaderType = 6;
   bool useFlipPager = 7;
+  bool allowUserDrawerGesture = 8;
 }
 
 enum PlayingStartAction {

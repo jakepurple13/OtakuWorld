@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
@@ -67,7 +68,6 @@ class MultipleBarState(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BoxScope.MultipleActions(
     state: MultipleBarState,
@@ -79,49 +79,66 @@ fun BoxScope.MultipleActions(
 ) {
     val scope = rememberCoroutineScope()
     if (middleNavItem == MiddleNavigationAction.Multiple) {
-        AnimatedVisibility(
-            visible = state.showHorizontalBar,
-            enter = slideInVertically(
-                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-            ) { it / 2 } + fadeIn(
-                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-            ),
-            exit = slideOutVertically(
-                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-            ) { it / 2 } + fadeOut(
-                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-            ),
+        MultipleActions(
+            state = state,
+            leadingContent = {
+                multipleActions.startAction.item?.ScreenBottomItem(
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    additionalOnClick = { scope.launch { if (state.hideOnClick) state.hide() } }
+                )
+            },
+            trailingContent = {
+                multipleActions.endAction.item?.ScreenBottomItem(
+                    currentDestination = currentDestination,
+                    navController = navController,
+                    additionalOnClick = { scope.launch { if (state.hideOnClick) state.hide() } }
+                )
+            },
             modifier = modifier
-                .align(Alignment.BottomCenter)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun BoxScope.MultipleActions(
+    state: MultipleBarState,
+    leadingContent: @Composable RowScope.() -> Unit,
+    trailingContent: @Composable RowScope.() -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scope = rememberCoroutineScope()
+    AnimatedVisibility(
+        visible = state.showHorizontalBar,
+        enter = slideInVertically(
+            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+        ) { it / 2 } + fadeIn(
+            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+        ),
+        exit = slideOutVertically(
+            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+        ) { it / 2 } + fadeOut(
+            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+        ),
+        modifier = modifier
+            .align(Alignment.BottomCenter)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+    ) {
+        HorizontalFloatingAppBar(
+            expanded = state.expanded,
+            leadingContent = leadingContent,
+            trailingContent = trailingContent,
         ) {
-            HorizontalFloatingAppBar(
-                expanded = state.expanded,
-                leadingContent = {
-                    multipleActions.startAction.item?.ScreenBottomItem(
-                        currentDestination = currentDestination,
-                        navController = navController,
-                        additionalOnClick = { scope.launch { if (state.hideOnClick) state.hide() } }
-                    )
-                },
-                trailingContent = {
-                    multipleActions.endAction.item?.ScreenBottomItem(
-                        currentDestination = currentDestination,
-                        navController = navController,
-                        additionalOnClick = { scope.launch { if (state.hideOnClick) state.hide() } }
-                    )
-                },
+            FilledIconButton(
+                modifier = Modifier.width(64.dp),
+                onClick = { scope.launch { state.hide() } }
             ) {
-                FilledIconButton(
-                    modifier = Modifier.width(64.dp),
-                    onClick = { scope.launch { state.hide() } }
-                ) {
-                    Icon(
-                        if (state.expanded) Icons.Default.UnfoldLess else Icons.Filled.UnfoldMore,
-                        contentDescription = "Localized description"
-                    )
-                }
+                Icon(
+                    if (state.expanded) Icons.Default.UnfoldLess else Icons.Filled.UnfoldMore,
+                    contentDescription = "Localized description"
+                )
             }
         }
     }

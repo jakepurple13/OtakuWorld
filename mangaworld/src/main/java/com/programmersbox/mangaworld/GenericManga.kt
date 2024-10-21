@@ -24,12 +24,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -71,6 +74,7 @@ import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreferenceSetting
+import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.GlobalScope
@@ -372,6 +376,14 @@ class GenericManga(
             PlayerSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
                 onImageLoaderClick = { navController.navigate(ImageLoaderSettingsRoute) { launchSingleTop = true } }
+            )
+
+            var userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
+            SwitchSetting(
+                value = userGestureAllowed,
+                updateValue = { userGestureAllowed = it },
+                settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
+                settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
             )
         }
     }

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FormatLineSpacing
+import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -68,6 +69,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.ShowWhen
+import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -130,6 +132,17 @@ internal fun SettingsSheet(
                 range = 0f..10f
             )
             HorizontalDivider()
+
+            var userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
+            SwitchSetting(
+                value = userGestureAllowed,
+                updateValue = { userGestureAllowed = it },
+                settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
+                settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
+            )
+
+            HorizontalDivider()
+
             var showReaderTypeDropdown by remember { mutableStateOf(false) }
 
             PreferenceSetting(
