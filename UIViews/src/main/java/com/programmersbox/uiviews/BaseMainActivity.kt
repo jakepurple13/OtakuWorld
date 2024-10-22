@@ -297,54 +297,56 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
                     genericInfo.DialogSetups()
 
-                    Row(Modifier.fillMaxSize()) {
-                        Rail(
-                            navController = navController,
-                            showNavBar = showNavBar,
-                            navType = navType,
-                            showAllItem = showAllItem,
-                            currentDestination = currentDestination
-                        )
-                        HazeScaffold(
-                            hazeState = hazeState,
-                            bottomBar = {
-                                if (!floatingNavigation) {
-                                    BottomNav(
-                                        navController = navController,
-                                        showNavBar = showNavBar,
-                                        navType = navType,
-                                        currentDestination = currentDestination,
-                                        showBlur = showBlur,
-                                        isAmoledMode = isAmoledMode,
-                                        middleNavItem = middleNavItem,
-                                        multipleActions = multipleActions,
-                                    )
-                                } else {
-                                    HomeNavigationBar(
-                                        showNavBar = showNavBar,
-                                        navType = navType,
-                                        currentDestination = currentDestination,
-                                        showBlur = showBlur,
-                                        isAmoledMode = isAmoledMode,
-                                        middleNavItem = middleNavItem,
-                                        //scrollBehavior = null,
-                                        multipleActions = multipleActions,
-                                        modifier = Modifier
-                                            .padding(horizontal = 24.dp)
-                                            .windowInsetsPadding(WindowInsets.navigationBars)
-                                            .clip(MaterialTheme.shapes.extraLarge)
-                                            .hazeChild(
-                                                state = hazeState,
-                                                style = HazeMaterials.ultraThin(),
-                                            )
-                                            .fillMaxWidth()
-                                    )
-                                }
-                            },
-                            contentWindowInsets = WindowInsets(0.dp),
-                            blurBottomBar = showBlur && !floatingNavigation,
-                        ) { innerPadding ->
-                            SharedTransitionLayout {
+                    SharedTransitionLayout {
+                        Row(Modifier.fillMaxSize()) {
+                            Rail(
+                                navController = navController,
+                                showNavBar = showNavBar,
+                                navType = navType,
+                                showAllItem = showAllItem,
+                                currentDestination = currentDestination
+                            )
+                            HazeScaffold(
+                                hazeState = hazeState,
+                                bottomBar = {
+                                    if (!floatingNavigation) {
+                                        BottomNav(
+                                            navController = navController,
+                                            showNavBar = showNavBar,
+                                            navType = navType,
+                                            currentDestination = currentDestination,
+                                            showBlur = showBlur,
+                                            isAmoledMode = isAmoledMode,
+                                            middleNavItem = middleNavItem,
+                                            multipleActions = multipleActions,
+                                            modifier = Modifier.renderInSharedTransitionScopeOverlay()
+                                        )
+                                    } else {
+                                        HomeNavigationBar(
+                                            showNavBar = showNavBar,
+                                            navType = navType,
+                                            currentDestination = currentDestination,
+                                            showBlur = showBlur,
+                                            isAmoledMode = isAmoledMode,
+                                            middleNavItem = middleNavItem,
+                                            //scrollBehavior = null,
+                                            multipleActions = multipleActions,
+                                            modifier = Modifier
+                                                .padding(horizontal = 24.dp)
+                                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                                .clip(MaterialTheme.shapes.extraLarge)
+                                                .hazeChild(
+                                                    state = hazeState,
+                                                    style = HazeMaterials.ultraThin(),
+                                                )
+                                                .fillMaxWidth()
+                                                .renderInSharedTransitionScopeOverlay()
+                                        )
+                                    }
+                                },
+                                contentWindowInsets = WindowInsets(0.dp),
+                                blurBottomBar = showBlur && !floatingNavigation,
+                            ) { innerPadding ->
                                 CompositionLocalProvider(
                                     LocalNavHostPadding provides innerPadding,
                                     LocalSharedElementScope provides this@SharedTransitionLayout,
@@ -541,10 +543,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
         isAmoledMode: Boolean,
         middleNavItem: MiddleNavigationAction,
         multipleActions: MiddleMultipleActions,
+        modifier: Modifier = Modifier,
     ) {
         val scope = rememberCoroutineScope()
         val multipleBarState = rememberMultipleBarState()
-        Box {
+        Box(modifier = modifier) {
             Column {
                 BottomBarAdditions()
                 AnimatedVisibility(
