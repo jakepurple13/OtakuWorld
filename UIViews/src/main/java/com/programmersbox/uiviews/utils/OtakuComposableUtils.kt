@@ -483,16 +483,12 @@ fun OtakuBannerBox(
 ) {
     var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
 
-    var bannerScope by remember { mutableStateOf<BannerScope?>(null) }
+    val bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
 
-    DisposableEffect(Unit) {
-        bannerScope = object : BannerScope {
-            override fun newItemModel(itemModel: ItemModel?) {
-                itemInfo = itemModel
-            }
-        }
+    /*DisposableEffect(Unit) {
+        bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
         onDispose { bannerScope = null }
-    }
+    }*/
 
     BannerBox(
         modifier = modifier,
@@ -534,11 +530,11 @@ fun OtakuBannerBox(
                 )
             }
         },
-        content = { bannerScope?.content() }
+        content = { bannerScope.content() }
     )
 }
 
-interface BannerScope {
+fun interface BannerScope {
     //TODO: Maybe add a modifier into here for onLongClick?
     fun newItemModel(itemModel: ItemModel?)
 }

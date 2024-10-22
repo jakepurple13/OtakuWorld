@@ -197,6 +197,12 @@ fun ReadView(
 
     val exitAlwaysScrollBehavior = FloatingAppBarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingAppBarExitDirection.Bottom)
 
+    LaunchedEffect(showItems) {
+        if (showItems) {
+            exitAlwaysScrollBehavior.state.offset = 0f
+        }
+    }
+
     BackHandler(drawerState.isOpen || showBottomSheet) {
         scope.launch {
             when {
@@ -281,21 +287,21 @@ fun ReadView(
                 }
             },
             bottomBar = {
-                if (floatingBottomBar) {
-                    FloatingBottomBar(
-                        onPageSelectClick = { showBottomSheet = true },
-                        onSettingsClick = { settingsPopup = true },
-                        chapterChange = ::showToast,
-                        onChapterShow = { scope.launch { drawerState.open() } },
-                        vm = readVm,
-                        exitAlwaysScrollBehavior = exitAlwaysScrollBehavior
-                    )
-                } else {
-                    AnimatedVisibility(
-                        visible = showItems,
-                        enter = slideInVertically { it } + fadeIn(),
-                        exit = slideOutVertically { it } + fadeOut()
-                    ) {
+                AnimatedVisibility(
+                    visible = showItems,
+                    enter = slideInVertically { it } + fadeIn(),
+                    exit = slideOutVertically { it } + fadeOut()
+                ) {
+                    if (floatingBottomBar) {
+                        FloatingBottomBar(
+                            onPageSelectClick = { showBottomSheet = true },
+                            onSettingsClick = { settingsPopup = true },
+                            chapterChange = ::showToast,
+                            onChapterShow = { scope.launch { drawerState.open() } },
+                            vm = readVm,
+                            exitAlwaysScrollBehavior = exitAlwaysScrollBehavior.takeIf { showItems }
+                        )
+                    } else {
                         BottomBar(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
