@@ -198,12 +198,13 @@ internal fun FloatingBottomBar(
     chapterChange: () -> Unit,
     onChapterShow: () -> Unit,
     modifier: Modifier = Modifier,
+    showFloatBar: Boolean = true,
+    onShowFloatBarChange: (Boolean) -> Unit = {},
     exitAlwaysScrollBehavior: FloatingAppBarScrollBehavior? = null,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
-        var showFloatBar by remember { mutableStateOf(false) }
         HorizontalFloatingAppBar(
             modifier = modifier
                 .align(Alignment.BottomEnd)
@@ -255,7 +256,7 @@ internal fun FloatingBottomBar(
             scrollBehavior = exitAlwaysScrollBehavior,
             content = {
                 FilledIconButton(
-                    onClick = { showFloatBar = !showFloatBar },
+                    onClick = { onShowFloatBarChange(!showFloatBar) },
                     modifier = Modifier
                         .width(64.dp)
                 ) {

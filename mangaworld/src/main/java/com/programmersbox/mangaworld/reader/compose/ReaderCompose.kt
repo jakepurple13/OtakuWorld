@@ -33,6 +33,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +80,7 @@ import eu.wewox.pagecurl.config.rememberPageCurlConfig
 import eu.wewox.pagecurl.page.PageCurl
 import eu.wewox.pagecurl.page.PageCurlState
 import eu.wewox.pagecurl.page.rememberPageCurlState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -195,11 +197,14 @@ fun ReadView(
 
     val floatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
 
-    val exitAlwaysScrollBehavior = FloatingAppBarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingAppBarExitDirection.Bottom)
+    var showFloatBar by remember { mutableStateOf(false) }
 
     LaunchedEffect(showItems) {
         if (showItems) {
-            exitAlwaysScrollBehavior.state.offset = 0f
+            delay(250)
+            showFloatBar = true
+        } else {
+            showFloatBar = false
         }
     }
 
@@ -267,8 +272,16 @@ fun ReadView(
             topBar = {
                 AnimatedVisibility(
                     visible = showItems,
-                    enter = slideInVertically { -it } + fadeIn(),
-                    exit = slideOutVertically { -it } + fadeOut()
+                    enter = slideInVertically(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ) { -it } + fadeIn(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ),
+                    exit = slideOutVertically(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ) { -it } + fadeOut(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    )
                 ) {
                     ReaderTopBar(
                         pages = pages,
@@ -299,7 +312,8 @@ fun ReadView(
                             chapterChange = ::showToast,
                             onChapterShow = { scope.launch { drawerState.open() } },
                             vm = readVm,
-                            exitAlwaysScrollBehavior = exitAlwaysScrollBehavior.takeIf { showItems }
+                            showFloatBar = showFloatBar,
+                            onShowFloatBarChange = { showFloatBar = it },
                         )
                     } else {
                         BottomBar(
@@ -317,7 +331,6 @@ fun ReadView(
                     }
                 }
             },
-            modifier = Modifier.nestedScroll(exitAlwaysScrollBehavior)
         ) { p ->
             Box(
                 modifier = if (showBlur)

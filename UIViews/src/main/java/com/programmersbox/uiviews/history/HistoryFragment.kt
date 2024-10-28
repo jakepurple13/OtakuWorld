@@ -184,7 +184,7 @@ fun HistoryUi(
                                     SnackbarResult.ActionPerformed -> item
                                 }
                             }
-                        }
+                        },
                     )
                 } else {
                     HistoryItemPlaceholder()
@@ -200,6 +200,7 @@ private fun HistoryItem(
     dao: HistoryDao,
     logoDrawable: Drawable?,
     scope: CoroutineScope,
+    modifier: Modifier = Modifier,
     onError: () -> Unit,
 ) {
     var showPopup by remember { mutableStateOf(false) }
@@ -233,6 +234,7 @@ private fun HistoryItem(
 
     SwipeToDismissBox(
         state = dismissState,
+        modifier = modifier,
         backgroundContent = {
             val direction = dismissState.dismissDirection
             val color by animateColorAsState(
