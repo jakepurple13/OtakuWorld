@@ -1,6 +1,7 @@
 package com.programmersbox.mangaworld.reader.compose
 
 import android.text.format.DateFormat
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -67,7 +68,6 @@ import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.utils.BatteryInformation
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
 import kotlinx.coroutines.flow.launchIn
 
@@ -160,8 +160,8 @@ internal fun ReaderTopBar(
                         val activity = LocalActivity.current
 
                         DisposableEffect(LocalContext.current) {
-                            val timeReceiver = activity.timeTick { _, _ -> time = System.currentTimeMillis() }
-                            onDispose { activity.unregisterReceiver(timeReceiver) }
+                            val timeReceiver = activity?.timeTick { _, _ -> time = System.currentTimeMillis() }
+                            onDispose { activity?.unregisterReceiver(timeReceiver) }
                         }
 
                         Text(

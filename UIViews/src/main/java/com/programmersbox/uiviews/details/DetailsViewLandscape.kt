@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.details
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -71,7 +72,6 @@ import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.notifications.cancelNotification
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
@@ -279,133 +279,137 @@ private fun DetailsLandscapeContent(
         context = LocalContext.current
     )
 
-    TwoPane(
-        modifier = modifier,
-        first = {
-            val b = MaterialTheme.colorScheme.surface
-            val c = MaterialTheme.colorScheme.primary
-            NormalOtakuScaffold(
-                bottomBar = {
-                    val notificationManager = LocalContext.current.notificationManager
-                    DetailBottomBar(
-                        navController = LocalNavController.current,
-                        onShowLists = { showLists = true },
-                        info = info,
-                        customActions = {},
-                        removeFromSaved = {
-                            scope.launch(Dispatchers.IO) {
-                                dao.getNotificationItemFlow(info.url)
-                                    .firstOrNull()
-                                    ?.let {
-                                        dao.deleteNotification(it)
-                                        notificationManager.cancelNotification(it)
+    LocalActivity.current
+        ?.let { calculateDisplayFeatures(activity = it) }
+        ?.let {
+            TwoPane(
+                modifier = modifier,
+                first = {
+                    val b = MaterialTheme.colorScheme.surface
+                    val c = MaterialTheme.colorScheme.primary
+                    NormalOtakuScaffold(
+                        bottomBar = {
+                            val notificationManager = LocalContext.current.notificationManager
+                            DetailBottomBar(
+                                navController = LocalNavController.current,
+                                onShowLists = { showLists = true },
+                                info = info,
+                                customActions = {},
+                                removeFromSaved = {
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.getNotificationItemFlow(info.url)
+                                            .firstOrNull()
+                                            ?.let {
+                                                dao.deleteNotification(it)
+                                                notificationManager.cancelNotification(it)
+                                            }
                                     }
-                            }
-                        },
-                        isSaved = isSaved,
-                        canNotify = canNotify,
-                        notifyAction = notifyAction,
-                        modifier = Modifier
-                            .padding(LocalNavHostPadding.current)
-                            .drawWithCache {
-                                onDrawBehind {
-                                    drawLine(
-                                        b,
-                                        Offset(0f, 8f),
-                                        Offset(size.width, 8f),
-                                        4 * density
-                                    )
-                                }
-                            },
-                        containerColor = c,
-                        isFavorite = isFavorite,
-                        onFavoriteClick = onFavoriteClick,
-                        windowInsets = BottomAppBarDefaults.windowInsets
-                    )
-                },
-                contentWindowInsets = WindowInsets.navigationBars,
-                containerColor = Color.Transparent,
-                modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(it)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    DetailsHeader(
-                        model = info,
-                        logo = painterResource(id = logo.notificationId),
-                        isFavorite = isFavorite,
-                        favoriteClick = onFavoriteClick,
-                        onPaletteSet = onPaletteSet,
-                        possibleDescription = {
-                            if (info.description.isNotEmpty()) {
-                                var descriptionVisibility by remember { mutableStateOf(false) }
-                                Box {
-                                    val progress = remember { mutableStateOf(false) }
-
-                                    Text(
-                                        description,
-                                        modifier = Modifier
-                                            .combinedClickable(
-                                                interactionSource = null,
-                                                indication = ripple(),
-                                                onClick = { descriptionVisibility = !descriptionVisibility },
-                                                onLongClick = { onTranslateDescription(progress) }
+                                },
+                                isSaved = isSaved,
+                                canNotify = canNotify,
+                                notifyAction = notifyAction,
+                                modifier = Modifier
+                                    .padding(LocalNavHostPadding.current)
+                                    .drawWithCache {
+                                        onDrawBehind {
+                                            drawLine(
+                                                b,
+                                                Offset(0f, 8f),
+                                                Offset(size.width, 8f),
+                                                4 * density
                                             )
-                                            .padding(horizontal = 4.dp)
-                                            .fillMaxWidth()
-                                            .animateContentSize(),
-                                        overflow = TextOverflow.Ellipsis,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                        }
+                                    },
+                                containerColor = c,
+                                isFavorite = isFavorite,
+                                onFavoriteClick = onFavoriteClick,
+                                windowInsets = BottomAppBarDefaults.windowInsets
+                            )
+                        },
+                        contentWindowInsets = WindowInsets.navigationBars,
+                        containerColor = Color.Transparent,
+                        modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(it)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            DetailsHeader(
+                                model = info,
+                                logo = painterResource(id = logo.notificationId),
+                                isFavorite = isFavorite,
+                                favoriteClick = onFavoriteClick,
+                                onPaletteSet = onPaletteSet,
+                                possibleDescription = {
+                                    if (info.description.isNotEmpty()) {
+                                        var descriptionVisibility by remember { mutableStateOf(false) }
+                                        Box {
+                                            val progress = remember { mutableStateOf(false) }
 
-                                    if (progress.value) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
+                                            Text(
+                                                description,
+                                                modifier = Modifier
+                                                    .combinedClickable(
+                                                        interactionSource = null,
+                                                        indication = ripple(),
+                                                        onClick = { descriptionVisibility = !descriptionVisibility },
+                                                        onLongClick = { onTranslateDescription(progress) }
+                                                    )
+                                                    .padding(horizontal = 4.dp)
+                                                    .fillMaxWidth()
+                                                    .animateContentSize(),
+                                                overflow = TextOverflow.Ellipsis,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+
+                                            if (progress.value) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.align(Alignment.Center)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
+                            )
+                        }
+                    }
+                },
+                second = {
+                    val listOfChapters = remember(reverseChapters) {
+                        info.chapters.let { if (reverseChapters) it.reversed() else it }
+                    }
+                    LazyColumnScrollbar(
+                        state = listState,
+                        settings = ScrollbarSettings.Default.copy(
+                            thumbThickness = 8.dp,
+                            scrollbarPadding = 2.dp,
+                            thumbUnselectedColor = MaterialTheme.colorScheme.primary,
+                            thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
+                        ),
+                    ) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.fillMaxHeight(),
+                            state = listState
+                        ) {
+                            items(listOfChapters) { c ->
+                                ChapterItem(
+                                    infoModel = info,
+                                    c = c,
+                                    read = chapters,
+                                    chapters = info.chapters,
+                                    shareChapter = shareChapter,
+                                    markAs = markAs,
+                                    showDownload = showDownloadButton
+                                )
                             }
                         }
-                    )
-                }
-            }
-        },
-        second = {
-            val listOfChapters = remember(reverseChapters) {
-                info.chapters.let { if (reverseChapters) it.reversed() else it }
-            }
-            LazyColumnScrollbar(
-                state = listState,
-                settings = ScrollbarSettings.Default.copy(
-                    thumbThickness = 8.dp,
-                    scrollbarPadding = 2.dp,
-                    thumbUnselectedColor = MaterialTheme.colorScheme.primary,
-                    thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
-                ),
-            ) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxHeight(),
-                    state = listState
-                ) {
-                    items(listOfChapters) { c ->
-                        ChapterItem(
-                            infoModel = info,
-                            c = c,
-                            read = chapters,
-                            chapters = info.chapters,
-                            shareChapter = shareChapter,
-                            markAs = markAs,
-                            showDownload = showDownloadButton
-                        )
                     }
-                }
-            }
-        },
-        displayFeatures = calculateDisplayFeatures(activity = LocalActivity.current),
-        strategy = HorizontalTwoPaneStrategy(splitFraction = 0.5f)
-    )
+                },
+                displayFeatures = it,
+                strategy = HorizontalTwoPaneStrategy(splitFraction = 0.5f)
+            )
+        }
 }

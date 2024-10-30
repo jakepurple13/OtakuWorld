@@ -18,7 +18,7 @@ fun ToolTipWrapper(
     content: @Composable () -> Unit,
 ) {
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
         tooltip = { RichTooltip { info() } },
         state = tooltipState,
         modifier = modifier,

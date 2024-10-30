@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.settings
 
 import android.Manifest
 import android.os.Environment
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.helpfulutils.requestPermissions
@@ -36,7 +38,6 @@ import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.PreferenceSetting
@@ -132,7 +133,7 @@ fun InfoSettings(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                activity.requestPermissions(
+                                (activity as? FragmentActivity)?.requestPermissions(
                                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
                                     Manifest.permission.READ_EXTERNAL_STORAGE
                                 ) {

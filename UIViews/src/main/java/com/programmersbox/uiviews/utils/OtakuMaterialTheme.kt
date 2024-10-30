@@ -123,7 +123,6 @@ fun OtakuMaterialTheme(
 
         MaterialExpressiveTheme(colorScheme.animate()) {
             CompositionLocalProvider(
-                LocalActivity provides remember { context.findActivity() },
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
                 LocalSettingsHandling provides koinInject(),

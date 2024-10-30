@@ -1,10 +1,11 @@
 package com.programmersbox.novelworld
 
+import android.app.Activity
 import android.net.Uri
 import android.text.format.DateFormat
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -81,7 +82,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -103,7 +103,6 @@ import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -123,7 +122,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class ReadViewModel(
-    activity: ComponentActivity,
+    activity: Activity?,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     model: Flow<List<String>>? = handle.get<String>("currentChapter")
@@ -151,9 +150,9 @@ class ReadViewModel(
         }
     }
 
-    private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(activity!!).itemDao() }
 
-    val list by lazy { ChapterList(activity, genericInfo).get().orEmpty() }
+    val list by lazy { ChapterList(activity!!, genericInfo).get().orEmpty() }
 
     private val novelUrl by lazy { handle.get<String>("novelInfoUrl") ?: "" }
     val title by lazy { handle.get<String>("novelTitle") ?: "" }
@@ -164,7 +163,7 @@ class ReadViewModel(
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
     var batteryPercent by mutableFloatStateOf(0f)
 
-    val batteryInformation by lazy { BatteryInformation(activity) }
+    val batteryInformation by lazy { BatteryInformation(activity!!) }
 
     val pageList = mutableStateOf("")
     val isLoadingPages = mutableStateOf(false)
@@ -224,7 +223,7 @@ class ReadViewModel(
 )
 @Composable
 fun NovelReader(
-    activity: FragmentActivity = LocalActivity.current,
+    activity: Activity? = LocalActivity.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) },
 ) {
@@ -279,7 +278,7 @@ fun NovelReader(
     }
 
     fun showToast() {
-        activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
+        activity?.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)

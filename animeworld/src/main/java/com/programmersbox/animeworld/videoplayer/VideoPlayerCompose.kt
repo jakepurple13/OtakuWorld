@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.provider.Settings
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -102,7 +103,6 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LifecycleHandle
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.AirBar
@@ -144,12 +144,12 @@ fun VideoPlayerUi(
         onStop = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-            setWindowBrightness(activity, originalScreenBrightness.toFloat())
+            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
         },
         onDestroy = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-            setWindowBrightness(activity, originalScreenBrightness.toFloat())
+            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
         },
         onCreate = {
             context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -644,7 +644,7 @@ fun GestureBox(
                             val deltaV = (255f * deltaY * 3f / size.height).toInt()
                             val brightnessValue = mGestureDownBrightness + deltaV
                             if (brightnessValue in 0..255) {
-                                setWindowBrightness(activity, brightnessValue.toFloat())
+                                activity?.let { setWindowBrightness(it, brightnessValue.toFloat()) }
                             }
                             val brightnessPercent = (mGestureDownBrightness + deltaY * 255f * 3f / size.height).toInt()
                             seekJob = coroutineScope.launch {

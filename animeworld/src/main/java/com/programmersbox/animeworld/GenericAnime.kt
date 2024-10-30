@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -95,7 +96,6 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreferenceSetting
@@ -460,11 +460,13 @@ class GenericAnime(
                         if (MainActivity.cast.isCastActive()) {
                             context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
                         } else {
-                            MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                .also { m ->
-                                    CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
-                                }
-                                .show(activity.supportFragmentManager, "media_chooser")
+                            (activity as? FragmentActivity)?.supportFragmentManager?.let {
+                                MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                                    .also { m ->
+                                        CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
+                                    }
+                                    .show(it, "media_chooser")
+                            }
                         }
                     }
                 )
@@ -484,7 +486,7 @@ class GenericAnime(
                     indication = ripple(),
                     interactionSource = null
                 ) {
-                    activity.requestPermissions(
+                    (activity as? FragmentActivity)?.requestPermissions(
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     ) {

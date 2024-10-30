@@ -1,5 +1,7 @@
 package com.programmersbox.uiviews.settings
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -74,7 +76,6 @@ import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
@@ -572,7 +573,7 @@ private fun AccountSettings(
                         headlineContent = { Text(stringResource(if (accountInfo != null) R.string.logOut else R.string.logIn)) },
                         modifier = Modifier.clickable {
                             showDialog = false
-                            viewModel.signInOrOut(context, activity)
+                            (activity as? ComponentActivity)?.let { viewModel.signInOrOut(context, it) }
                         }
                     )
                 }
