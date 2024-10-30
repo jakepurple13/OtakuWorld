@@ -909,9 +909,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             dialog<Screen.CustomListScreen.DeleteFromList> {
                 DeleteFromListScreen(
-                    deleteFromList = it.toRoute(),
-
-                    )
+                    deleteFromList = it.toRoute()
+                )
             }
 
             composable<Screen.ImportListScreen> { ImportListScreen(it.toRoute()) }
