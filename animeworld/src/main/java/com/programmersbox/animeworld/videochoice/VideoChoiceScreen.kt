@@ -1,6 +1,7 @@
 package com.programmersbox.animeworld.videochoice
 
 import android.content.Context
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled._360
 import androidx.compose.material.icons.filled.DeviceUnknown
@@ -25,7 +26,6 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
@@ -65,7 +65,7 @@ fun VideoChoiceScreen(
                 )
             }
         } else {
-            (genericInfo as GenericAnime).downloadVideo(activity, model, it)
+            activity?.let { it1 -> (genericInfo as GenericAnime).downloadVideo(it1, model, it) }
         }
     }
 
