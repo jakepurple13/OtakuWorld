@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import androidx.compose.ui.ComposeUiFlags
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -53,9 +55,12 @@ import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application() {
 
+    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
+        ComposeUiFlags.isSemanticAutofillEnabled = true
+
         runCatching {
             FirebaseApp.initializeApp(this)
 
