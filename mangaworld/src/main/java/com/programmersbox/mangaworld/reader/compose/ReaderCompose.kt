@@ -26,14 +26,11 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingAppBarDefaults
-import androidx.compose.material3.FloatingAppBarExitDirection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,7 +44,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -302,8 +298,16 @@ fun ReadView(
             bottomBar = {
                 AnimatedVisibility(
                     visible = showItems,
-                    enter = slideInVertically { it } + fadeIn(),
-                    exit = slideOutVertically { it } + fadeOut()
+                    enter = slideInVertically(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ) { it } + fadeIn(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ),
+                    exit = slideOutVertically(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    ) { it } + fadeOut(
+                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                    )
                 ) {
                     if (floatingBottomBar) {
                         FloatingBottomBar(
