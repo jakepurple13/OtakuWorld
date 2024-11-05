@@ -45,7 +45,7 @@ compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2024.10.01"
 materialKolor = "2.0.0"
-firebaseKtx = "0.2.0"
+firebaseKtx = "0.2.1"
 
 ### MangaWorld
 piasy = "1.8.1"
