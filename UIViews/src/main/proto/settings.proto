@@ -21,6 +21,7 @@ message Settings {
   ThemeColor themeColor = 16;
   MiddleNavigationAction middleNavigationAction = 17;
   MiddleMultipleActions multipleActions = 18;
+  bool showExpressiveness = 19;
 }
 
 enum SystemThemeMode {

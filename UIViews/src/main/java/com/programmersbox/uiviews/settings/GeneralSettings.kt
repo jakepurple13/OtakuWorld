@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.BlurOff
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
@@ -86,7 +87,10 @@ import com.programmersbox.uiviews.utils.rememberSwatchType
 fun GeneralSettings(
     customSettings: @Composable () -> Unit = {},
 ) {
-    SettingsScaffold(stringResource(R.string.general_menu_title)) {
+    SettingsScaffold(
+        title = stringResource(R.string.general_menu_title),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         val handling = LocalSettingsHandling.current
 
         var isAmoledMode by handling.rememberIsAmoledMode()
@@ -100,6 +104,8 @@ fun GeneralSettings(
             isAmoledMode = isAmoledMode,
             onAmoledModeChange = { isAmoledMode = it }
         )
+
+        ExpressivenessSetting(handling = handling)
 
         BlurSetting(handling = handling)
 
@@ -361,14 +367,24 @@ private fun AmoledModeSetting(
 }
 
 @Composable
+private fun ExpressivenessSetting(handling: SettingsHandling) {
+    var showExpressiveness by handling.rememberShowExpressiveness()
+    SwitchSetting(
+        settingTitle = { Text("Show Expressiveness") },
+        settingIcon = { Icon(Icons.Default.Animation, null, modifier = Modifier.fillMaxSize()) },
+        summaryValue = { Text("Have the animations be expressive!") },
+        value = showExpressiveness,
+        updateValue = { showExpressiveness = it }
+    )
+}
+
+@Composable
 private fun BlurSetting(handling: SettingsHandling) {
     var showBlur by handling.rememberShowBlur()
 
     SwitchSetting(
         settingTitle = { Text("Show Blur") },
-        summaryValue = {
-            Text("Use blurring to get a glassmorphic look")
-        },
+        summaryValue = { Text("Use blurring to get a glassmorphic look") },
         settingIcon = {
             Icon(
                 imageVector = if (showBlur) Icons.Default.BlurOn else Icons.Default.BlurOff,

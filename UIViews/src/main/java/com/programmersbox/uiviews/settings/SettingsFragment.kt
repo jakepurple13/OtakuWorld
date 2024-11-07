@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -689,6 +690,7 @@ fun SettingsScaffold(
             scrollBehavior = it,
         )
     },
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     OtakuScaffold(
@@ -697,6 +699,7 @@ fun SettingsScaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets
     ) { p ->
         Column(
+            verticalArrangement = verticalArrangement,
             content = content,
             modifier = Modifier
                 .padding(p)

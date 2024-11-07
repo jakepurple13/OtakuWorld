@@ -74,6 +74,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             amoledMode = false
             usePalette = true
             showBlur = true
+            showExpressiveness = false
             multipleActions = middleMultipleActions {
                 startAction = MiddleNavigationAction.All
                 endAction = MiddleNavigationAction.Notifications
@@ -178,6 +179,13 @@ class SettingsHandling(context: Context) {
         key = { it.themeColor },
         update = { setThemeColor(it) },
         defaultValue = ThemeColor.Dynamic
+    )
+
+    @Composable
+    fun rememberShowExpressiveness() = preferences.rememberPreference(
+        key = { it.showExpressiveness },
+        update = { setShowExpressiveness(it) },
+        defaultValue = true
     )
 
     @Composable

@@ -8,6 +8,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -57,11 +58,13 @@ fun OtakuMaterialTheme(
     navController: NavHostController,
     genericInfo: GenericInfo,
     isAmoledMode: Boolean = false,
-    themeSetting: SystemThemeMode,
-    themeColor: ThemeColor = ThemeColor.Dynamic,
+    settingsHandling: SettingsHandling,
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
+
+    val themeSetting by settingsHandling.rememberSystemThemeMode()
+    val themeColor by settingsHandling.rememberThemeColor()
 
     KoinAndroidContext {
         val context = LocalContext.current
@@ -69,7 +72,7 @@ fun OtakuMaterialTheme(
             SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
             SystemThemeMode.Day -> false
             SystemThemeMode.Night -> true
-            SystemThemeMode.UNRECOGNIZED -> isSystemInDarkTheme()
+            else -> isSystemInDarkTheme()
         }
 
         DisposableEffect(darkTheme) {
@@ -121,7 +124,11 @@ fun OtakuMaterialTheme(
             )
         }
 
-        MaterialExpressiveTheme(colorScheme.animate()) {
+        MaterialExpressiveTheme(
+            colorScheme = colorScheme.animate(),
+            motionScheme = if (settingsHandling.rememberShowExpressiveness().value) MotionScheme.expressive()
+            else MotionScheme.standard(),
+        ) {
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,

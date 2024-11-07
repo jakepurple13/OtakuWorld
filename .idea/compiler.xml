@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="17" />
+    <bytecodeTargetLevel target="17">
+      <module name="OtakuWorld.animeworld" target="21" />
+      <module name="OtakuWorld.UIViews" target="21" />
+      <module name="OtakuWorld.anime_sources" target="21" />
+      <module name="OtakuWorld.anime_sources.defaultanimesources" target="21" />
+      <module name="OtakuWorld.animeworldtv" target="21" />
+      <module name="OtakuWorld.app" target="21" />
+      <module name="OtakuWorld.buildSrc" target="21" />
+      <module name="OtakuWorld.buildSrc.main" target="21" />
+      <module name="OtakuWorld.buildSrc.test" target="21" />
+      <module name="OtakuWorld.favoritesdatabase" target="21" />
+      <module name="OtakuWorld.gemini" target="21" />
+      <module name="OtakuWorld.manga_sources" target="21" />
+      <module name="OtakuWorld.manga_sources.defaultmangasources" target="21" />
+      <module name="OtakuWorld.Models" target="21" />
+      <module name="OtakuWorld.novel_sources" target="21" />
+      <module name="OtakuWorld.novel_sources.bestlightnovel" target="21" />
+      <module name="OtakuWorld.novel_sources.novelupdates" target="21" />
+      <module name="OtakuWorld.novelworld" target="21" />
+      <module name="OtakuWorld.sharedutils" target="21" />
+      <module name="OtakuWorld.sharedutils.extensionloader" target="21" />
+      <module name="OtakuWorld.source_utilities" target="21" />
+      <module name="StudioProjects.OtakuWorld.animeworld" target="21" />
+      <module name="StudioProjects.OtakuWorld.mangaworld" target="21" />
+      <module name="StudioProjects.OtakuWorld.UIViews" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>
