@@ -74,7 +74,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             amoledMode = false
             usePalette = true
             showBlur = true
-            showExpressiveness = false
+            showExpressiveness = true
             multipleActions = middleMultipleActions {
                 startAction = MiddleNavigationAction.All
                 endAction = MiddleNavigationAction.Notifications

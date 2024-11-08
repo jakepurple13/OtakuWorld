@@ -15,6 +15,7 @@
       <module name="OtakuWorld.gemini" target="21" />
       <module name="OtakuWorld.manga_sources" target="21" />
       <module name="OtakuWorld.manga_sources.defaultmangasources" target="21" />
+      <module name="OtakuWorld.mangaworld" target="21" />
       <module name="OtakuWorld.Models" target="21" />
       <module name="OtakuWorld.novel_sources" target="21" />
       <module name="OtakuWorld.novel_sources.bestlightnovel" target="21" />

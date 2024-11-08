@@ -143,10 +143,8 @@ fun DetailsView(
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
             try {
-                when {
-                    scaffoldState.isOpen -> scaffoldState.close()
-                    else -> navController.popBackStack()
-                }
+                if (scaffoldState.isOpen) scaffoldState.close()
+                else navController.popBackStack()
             } catch (e: Exception) {
                 navController.popBackStack()
             }

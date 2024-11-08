@@ -1,17 +1,20 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.programmersbox.uiviews.utils.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -27,17 +30,11 @@ fun BannerBox(
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
     bannerEnter: EnterTransition = slideInVertically(
-        animationSpec = tween(
-            durationMillis = 150,
-            easing = LinearOutSlowInEasing
-        )
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
     ) { -it },
     bannerExit: ExitTransition = slideOutVertically(
-        animationSpec = tween(
-            durationMillis = 150,
-            easing = LinearOutSlowInEasing
-        )
-    ) { -it },
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
+    ) { -it } + fadeOut(),
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
