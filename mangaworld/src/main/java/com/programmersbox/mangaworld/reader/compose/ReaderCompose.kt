@@ -268,14 +268,10 @@ fun ReadView(
             topBar = {
                 AnimatedVisibility(
                     visible = showItems,
-                    enter = slideInVertically(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ) { -it } + fadeIn(
+                    enter = slideInVertically { -it } + fadeIn(
                         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                     ),
-                    exit = slideOutVertically(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ) { -it } + fadeOut(
+                    exit = slideOutVertically { -it } + fadeOut(
                         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                     )
                 ) {
@@ -290,7 +286,7 @@ fun ReadView(
                         playingMiddleAction = middleAction,
                         showBlur = showBlur,
                         modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                         } else Modifier
                     )
                 }
@@ -298,14 +294,10 @@ fun ReadView(
             bottomBar = {
                 AnimatedVisibility(
                     visible = showItems,
-                    enter = slideInVertically(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ) { it } + fadeIn(
+                    enter = slideInVertically { it } + fadeIn(
                         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                     ),
-                    exit = slideOutVertically(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ) { it } + fadeOut(
+                    exit = slideOutVertically { it } + fadeOut(
                         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                     )
                 ) {
@@ -329,7 +321,7 @@ fun ReadView(
                             showBlur = showBlur,
                             isAmoledMode = isAmoledMode,
                             modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
-                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f)
+                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
                             } else Modifier,
                         )
                     }

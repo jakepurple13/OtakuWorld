@@ -525,7 +525,7 @@ fun OtakuCustomListScreen(
                                     hazeState,
                                     HazeMaterials.regular(MaterialTheme.colorScheme.surface)
                                 ) {
-                                    progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                                    progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                                 } else it
                         },
                 ) {

@@ -201,7 +201,7 @@ fun AllView(
                             val surface = MaterialTheme.colorScheme.surface
                             it.hazeChild(hazeState) {
                                 backgroundColor = surface
-                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                             }
                         } else it
                     }

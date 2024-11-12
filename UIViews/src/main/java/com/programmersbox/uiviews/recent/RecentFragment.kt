@@ -181,7 +181,7 @@ fun RecentView(
         },
         blurTopBar = showBlur,
         topBarBlur = {
-            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
         }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }

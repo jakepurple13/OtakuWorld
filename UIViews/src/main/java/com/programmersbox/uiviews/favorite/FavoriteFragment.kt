@@ -256,7 +256,7 @@ fun FavoriteUi(
                     Column(
                         if (showBlur) Modifier.hazeChild(hazeState) {
                             backgroundColor = surface
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                         } else Modifier
                     ) {
                         var active by rememberSaveable { mutableStateOf(false) }
