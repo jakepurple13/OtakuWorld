@@ -46,14 +46,14 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(
     ":favoritesdatabase",
     ":anime_sources",
-    ":manga_sources",
+    //":manga_sources",
+    //":novel_sources",
+    //":app",
     ":Models",
     ":UIViews",
     ":animeworld",
     ":mangaworld",
-    ":app",
     ":novelworld",
-    ":novel_sources",
     ":animeworldtv",
     ":sharedutils",
     ":source_utilities",
@@ -63,11 +63,11 @@ include(
 )
 
 rootProject.name = "OtakuWorld"
-include(
+/*include(
     ":novel_sources:novelupdates",
     ":novel_sources:bestlightnovel"
-)
-include(":manga_sources:defaultmangasources")
-include(":anime_sources:defaultanimesources")
+)*/
+//include(":manga_sources:defaultmangasources")
+//include(":anime_sources:defaultanimesources")
 //include(":MangaWorldbaselineprofile")
 include(":gemini")
