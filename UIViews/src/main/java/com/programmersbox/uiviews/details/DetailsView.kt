@@ -63,6 +63,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -313,6 +314,26 @@ fun DetailsView(
                         }
                     },
                     isSaved = isSaved,
+                    addToSaved = {
+                        scope.launch(Dispatchers.IO) {
+                            dao.insertNotification(
+                                NotificationItem(
+                                    id = info.hashCode(),
+                                    url = info.url,
+                                    summaryText = context
+                                        .getString(
+                                            R.string.hadAnUpdate,
+                                            info.title,
+                                            info.chapters.firstOrNull()?.name.orEmpty()
+                                        ),
+                                    notiTitle = info.title,
+                                    imageUrl = info.imageUrl,
+                                    source = info.source.serviceName,
+                                    contentTitle = info.title
+                                )
+                            )
+                        }
+                    },
                     canNotify = canNotify,
                     notifyAction = notifyAction,
                     isFavorite = isFavorite,

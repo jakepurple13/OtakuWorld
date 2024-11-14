@@ -421,6 +421,7 @@ fun DetailFloatingActionButtonMenu(
     onShowLists: () -> Unit,
     info: InfoModel,
     removeFromSaved: () -> Unit,
+    addToSaved: () -> Unit,
     isSaved: Boolean,
     canNotify: Boolean,
     notifyAction: () -> Unit,
@@ -473,6 +474,15 @@ fun DetailFloatingActionButtonMenu(
                 },
                 icon = { Icon(Icons.Default.BookmarkRemove, contentDescription = null) },
                 text = { Text(text = "Remove from Saved") },
+            )
+        } else {
+            FloatingActionButtonMenuItem(
+                onClick = {
+                    fabMenuExpanded = false
+                    addToSaved()
+                },
+                icon = { Icon(Icons.Default.Save, null) },
+                text = { Text(stringResource(id = R.string.save_for_later)) },
             )
         }
 
