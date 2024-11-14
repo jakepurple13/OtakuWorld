@@ -53,7 +53,7 @@ fun Modifier.customSharedElement(
     if (animatedScope != null && key != null && scope != null) {
         with(scope) {
             sharedElement(
-                state = rememberSharedContentState(key = key),
+                sharedContentState = rememberSharedContentState(key = key),
                 animatedVisibilityScope = animatedScope,
                 /*boundsTransform = boundsTransform,
                 placeHolderSize = placeHolderSize,
