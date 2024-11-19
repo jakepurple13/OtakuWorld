@@ -194,55 +194,57 @@ fun RecentView(
                 targetState = isConnected,
                 label = ""
             ) { connected ->
-                when (connected) {
-                    false -> {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                Icons.Default.CloudOff,
-                                null,
-                                modifier = Modifier.size(50.dp),
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
-                            )
-                            Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
+                if (!connected) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            Icons.Default.CloudOff,
+                            null,
+                            modifier = Modifier.size(50.dp),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                        )
+                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
+                    }
+                } else {
+                    OtakuPullToRefreshBox(
+                        isRefreshing = recentVm.isRefreshing,
+                        onRefresh = { recentVm.reset() },
+                        state = pull,
+                        paddingValues = p
+                    ) {
+                        when {
+                            sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
+
+                            recentVm.filteredSourceList.isEmpty() -> {
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(p)
+                                ) { info.ComposeShimmerItem() }
+                            }
+
+                            else -> {
+                                info.ItemListView(
+                                    list = recentVm.filteredSourceList,
+                                    listState = state,
+                                    favorites = recentVm.favoriteList,
+                                    paddingValues = p,
+                                    onLongPress = { item, c ->
+                                        newItemModel(if (c == ComponentState.Pressed) item else null)
+                                        showBanner = c == ComponentState.Pressed
+                                    },
+                                    modifier = Modifier.fillMaxSize()
+                                ) { navController.navigateToDetails(it) }
+                            }
                         }
                     }
 
-                    true -> {
-                        OtakuPullToRefreshBox(
-                            isRefreshing = recentVm.isRefreshing,
-                            onRefresh = { recentVm.reset() },
-                            state = pull,
-                            paddingValues = p
-                        ) {
-                            when {
-                                sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
-
-                                recentVm.filteredSourceList.isEmpty() -> Box(Modifier.fillMaxSize()) { info.ComposeShimmerItem() }
-
-                                else -> {
-                                    info.ItemListView(
-                                        list = recentVm.filteredSourceList,
-                                        listState = state,
-                                        favorites = recentVm.favoriteList,
-                                        paddingValues = p,
-                                        onLongPress = { item, c ->
-                                            newItemModel(if (c == ComponentState.Pressed) item else null)
-                                            showBanner = c == ComponentState.Pressed
-                                        },
-                                        modifier = Modifier.fillMaxSize()
-                                    ) { navController.navigateToDetails(it) }
-                                }
-                            }
-                        }
-
-                        if (source?.canScroll == true && recentVm.filteredSourceList.isNotEmpty()) {
-                            InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                                recentVm.loadMore()
-                            }
+                    if (source?.canScroll == true && recentVm.filteredSourceList.isNotEmpty()) {
+                        InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                            recentVm.loadMore()
                         }
                     }
                 }

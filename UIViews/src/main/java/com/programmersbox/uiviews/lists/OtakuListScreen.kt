@@ -5,6 +5,8 @@ package com.programmersbox.uiviews.lists
 import androidx.activity.compose.BackHandler
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -25,11 +27,13 @@ import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.allVerticalHingeBounds
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowSize
+import androidx.compose.material3.adaptive.layout.AnimatedPane
+import androidx.compose.material3.adaptive.layout.AnimatedPaneScope
 import androidx.compose.material3.adaptive.layout.HingePolicy
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
-import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldScope
+import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldPaneScope
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.adaptive.occludingVerticalHingeBounds
 import androidx.compose.material3.adaptive.separatingVerticalHingeBounds
@@ -79,13 +83,16 @@ fun OtakuListScreen(
         )
     )
 
-    val details: @Composable ThreePaneScaffoldScope.() -> Unit = {
+    val details: @Composable ThreePaneScaffoldPaneScope.() -> Unit = {
         AnimatedPanes(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
-                targetState = viewModel.customItem,
+                targetState = viewModel.viewingItem,
                 label = "",
                 transitionSpec = {
-                    (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
+                    if (initialState != null && targetState != null)
+                        EnterTransition.None togetherWith ExitTransition.None
+                    else
+                        (slideInHorizontally { -it } + fadeIn()) togetherWith (fadeOut() + slideOutHorizontally { -it })
                 }
             ) { targetState ->
                 if (targetState != null) {
@@ -177,15 +184,14 @@ fun OtakuListScreen(
 
 @ExperimentalMaterial3AdaptiveApi
 @Composable
-fun ThreePaneScaffoldScope.AnimatedPanes(
+fun ThreePaneScaffoldPaneScope.AnimatedPanes(
     modifier: Modifier,
-    content: (@Composable () -> Unit),
+    content: @Composable AnimatedPaneScope.() -> Unit,
 ) {
-    /*AnimatedPane(
+    AnimatedPane(
         modifier = modifier,
         content = content
-    )*/
-    content()
+    )
 }
 
 @ExperimentalMaterial3AdaptiveApi

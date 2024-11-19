@@ -7,12 +7,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.toJson
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -27,24 +30,30 @@ class OtakuListViewModel(
 
     var customItem: CustomList? by mutableStateOf(null)
 
+    var viewingItem: CustomList? by mutableStateOf(null)
+        private set
+
     var searchBarActive by mutableStateOf(false)
     var searchQuery by mutableStateOf("")
 
     val listBySource by derivedStateOf {
-        customItem?.list
+        viewingItem
+            ?.list
             .orEmpty()
             .groupBy { it.source }
     }
 
     val searchItems by derivedStateOf {
-        customItem?.list
+        viewingItem
+            ?.list
             .orEmpty()
             .distinctBy { it.title }
             .filter { it.title.contains(searchQuery, ignoreCase = true) }
     }
 
     val items by derivedStateOf {
-        customItem?.list
+        viewingItem
+            ?.list
             .orEmpty()
             .filter { it.title.contains(searchQuery, ignoreCase = true) }
             .groupBy { it.title }
@@ -53,11 +62,20 @@ class OtakuListViewModel(
     }
 
     init {
-        listDao.getAllLists()
+        listDao
+            .getAllLists()
             .onEach {
                 customLists.clear()
                 customLists.addAll(it)
             }
+            .launchIn(viewModelScope)
+
+        snapshotFlow { customItem }
+            .flatMapMerge {
+                if (it == null) flowOf(null)
+                else listDao.getCustomListItemFlow(it.item.uuid)
+            }
+            .onEach { viewingItem = it }
             .launchIn(viewModelScope)
     }
 
@@ -70,16 +88,16 @@ class OtakuListViewModel(
 
     suspend fun removeItems(items: List<CustomListInfo>): Result<Boolean> = runCatching {
         items.forEach { item -> listDao.removeItem(item) }
-        customItem?.item?.let { listDao.updateFullList(it) }
+        viewingItem?.item?.let { listDao.updateFullList(it) }
         true
     }
 
     fun rename(newName: String) {
-        viewModelScope.launch { customItem?.item?.copy(name = newName)?.let { listDao.updateFullList(it) } }
+        viewModelScope.launch { viewingItem?.item?.copy(name = newName)?.let { listDao.updateFullList(it) } }
     }
 
     fun deleteAll() {
-        viewModelScope.launch { customItem?.let { item -> listDao.removeList(item) } }
+        viewModelScope.launch { viewingItem?.let { item -> listDao.removeList(item) } }
     }
 
     fun setQuery(query: String) {
@@ -92,7 +110,7 @@ class OtakuListViewModel(
                 try {
                     context.contentResolver.openFileDescriptor(document, "w")?.use {
                         FileOutputStream(it.fileDescriptor).use { f ->
-                            f.write(customItem?.toJson()?.toByteArray())
+                            f.write(viewingItem?.toJson()?.toByteArray())
                         }
                     }
                 } catch (e: FileNotFoundException) {
