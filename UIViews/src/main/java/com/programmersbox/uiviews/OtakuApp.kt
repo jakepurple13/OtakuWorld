@@ -7,12 +7,12 @@ import android.content.pm.ShortcutManager
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Constraints
-import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.android.material.color.DynamicColors
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.ktx.analytics
@@ -197,9 +197,9 @@ abstract class OtakuApp : Application() {
 
     private fun shortcutSetup() {
         val manager = getSystemService(ShortcutManager::class.java)
-        if (manager.dynamicShortcuts.size == 0) {
+        if (manager.dynamicShortcuts.isEmpty()) {
             // Application restored. Need to re-publish dynamic shortcuts.
-            if (manager.pinnedShortcuts.size > 0) {
+            if (manager.pinnedShortcuts.isNotEmpty()) {
                 // Pinned shortcuts have been restored. Use
                 // updateShortcuts() to make sure they contain
                 // up-to-date information.
@@ -235,13 +235,7 @@ abstract class OtakuApp : Application() {
                         1, TimeUnit.HOURS,
                         5, TimeUnit.MINUTES
                     )
-                        .setInputData(
-                            Data.Builder()
-                                .putAll(
-                                    mapOf(UpdateFlowWorker.CHECK_ALL to false)
-                                )
-                                .build()
-                        )
+                        .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
                         .setConstraints(
                             Constraints.Builder()
                                 .setRequiredNetworkType(NetworkType.CONNECTED)

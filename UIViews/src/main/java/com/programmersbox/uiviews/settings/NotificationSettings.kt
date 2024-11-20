@@ -2,10 +2,16 @@ package com.programmersbox.uiviews.settings
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
@@ -20,13 +26,16 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.Constraints
-import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.hasKeyWithValueOfType
+import androidx.work.workDataOf
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.OtakuApp
@@ -42,14 +51,17 @@ import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NotificationSettings(
     dao: ItemDao = LocalItemDao.current,
     context: Context = LocalContext.current,
-    notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao, context) }
+    notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao, context) },
 ) {
+    val work = remember { WorkManager.getInstance(context) }
     SettingsScaffold(stringResource(R.string.notification_settings)) {
         val scope = rememberCoroutineScope()
         ShowWhen(notiViewModel.savedNotifications > 0) {
@@ -100,29 +112,23 @@ fun NotificationSettings(
                 indication = ripple(),
                 interactionSource = null
             ) {
-                WorkManager.getInstance(context)
-                    .enqueueUniqueWork(
-                        "oneTimeUpdate",
-                        ExistingWorkPolicy.KEEP,
-                        OneTimeWorkRequestBuilder<UpdateFlowWorker>()
-                            .setInputData(
-                                Data.Builder()
-                                    .putAll(
-                                        mapOf(UpdateFlowWorker.CHECK_ALL to true)
-                                    )
-                                    .build()
-                            )
-                            .setConstraints(
-                                Constraints.Builder()
-                                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                                    .setRequiresBatteryNotLow(false)
-                                    .setRequiresCharging(false)
-                                    .setRequiresDeviceIdle(false)
-                                    .setRequiresStorageNotLow(false)
-                                    .build()
-                            )
-                            .build()
-                    )
+                work.enqueueUniqueWork(
+                    "oneTimeUpdate",
+                    ExistingWorkPolicy.KEEP,
+                    OneTimeWorkRequestBuilder<UpdateFlowWorker>()
+                        .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to true))
+                        .addTag("ManualCheck")
+                        .setConstraints(
+                            Constraints.Builder()
+                                .setRequiredNetworkType(NetworkType.CONNECTED)
+                                .setRequiresBatteryNotLow(false)
+                                .setRequiresCharging(false)
+                                .setRequiresDeviceIdle(false)
+                                .setRequiresStorageNotLow(false)
+                                .build()
+                        )
+                        .build()
+                )
             }
         )
 
@@ -173,7 +179,6 @@ fun NotificationSettings(
                         indication = ripple(),
                         interactionSource = null
                     ) {
-                        val work = WorkManager.getInstance(context)
                         work.cancelUniqueWork("updateFlowChecks")
                         work.pruneWork()
                         OtakuApp.updateSetup(context)
@@ -182,8 +187,81 @@ fun NotificationSettings(
                             .show()
                     }
             )
+
+            Spacer(Modifier.padding(16.dp))
+
+            val dateFormat = remember { SimpleDateFormat.getDateTimeInstance() }
+
+            val workInfo by work
+                .getWorkInfosForUniqueWorkFlow("updateFlowChecks")
+                .collectAsStateWithLifecycle(emptyList())
+
+            workInfo.forEach { WorkInfoItem(it, dateFormat) }
+        }
+
+        val manualWorkInfo by work
+            .getWorkInfosByTagFlow("ManualCheck")
+            .collectAsStateWithLifecycle(emptyList())
+
+        manualWorkInfo.forEach { workInfo ->
+            val (progress, max) = if (workInfo.progress.hasKeyWithValueOfType<Int>("progress") && workInfo.progress.hasKeyWithValueOfType<Int>("max")) {
+                workInfo.progress.getInt("progress", 0) to workInfo.progress.getInt("max", 0)
+            } else null to null
+            PreferenceSetting(
+                settingTitle = { Text("Manual Check:") },
+                summaryValue = {
+                    Column(Modifier.animateContentSize()) {
+                        Text(workInfo.state.toString())
+                        Text(workInfo.progress.getString("source").orEmpty())
+                        if (progress != null && max != null) {
+                            if (progress == 0) {
+                                LinearWavyProgressIndicator()
+                            } else {
+                                val animatedProgress by animateFloatAsState(progress.toFloat() / max.toFloat())
+                                LinearWavyProgressIndicator(progress = { animatedProgress })
+                            }
+                        }
+                    }
+                },
+                endIcon = {
+                    if (progress != null && max != null) {
+                        Text("$progress/$max")
+                    }
+                }
+            )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun WorkInfoItem(workInfo: WorkInfo, dateFormat: DateFormat) {
+    val (progress, max) = if (workInfo.progress.hasKeyWithValueOfType<Int>("progress") && workInfo.progress.hasKeyWithValueOfType<Int>("max")) {
+        workInfo.progress.getInt("progress", 0) to workInfo.progress.getInt("max", 0)
+    } else null to null
+    PreferenceSetting(
+        settingTitle = { Text("Scheduled Check:") },
+        summaryValue = {
+            Column(Modifier.animateContentSize()) {
+                Text(dateFormat.format(workInfo.nextScheduleTimeMillis))
+                Text(workInfo.state.toString())
+                Text(workInfo.progress.getString("source").orEmpty())
+                if (progress != null && max != null) {
+                    if (progress == 0) {
+                        LinearWavyProgressIndicator()
+                    } else {
+                        val animatedProgress by animateFloatAsState(progress.toFloat() / max.toFloat())
+                        LinearWavyProgressIndicator(progress = { animatedProgress })
+                    }
+                }
+            }
+        },
+        endIcon = {
+            if (progress != null && max != null) {
+                Text("$progress/$max")
+            }
+        }
+    )
 }
 
 @LightAndDarkPreviews

@@ -16,6 +16,7 @@ import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
@@ -124,12 +125,22 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
 
         logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
 
+        val sourceSize = sourceRepository.apiServiceList.size
+
         // Getting all recent updates
         val newList = list.intersect(
             sourceRepository.apiServiceList
                 .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
-                .mapNotNull { m ->
+                .mapIndexedNotNull { index, m ->
                     runCatching {
+                        //TODO: Make this easier to handle
+                        setProgress(
+                            workDataOf(
+                                "max" to sourceSize,
+                                "progress" to index,
+                                "source" to m.serviceName,
+                            )
+                        )
                         withTimeoutOrNull(10000) {
                             m.getRecentFlow()
                                 .catch { emit(emptyList()) }
@@ -149,6 +160,13 @@ class UpdateFlowWorker(context: Context, workerParams: WorkerParameters) : Corou
         println("Checking for updates")
         val items = newList.mapIndexedNotNull { index, model ->
             update.sendRunningNotification(newList.size, index, model.title)
+            setProgress(
+                workDataOf(
+                    "max" to newList.size,
+                    "progress" to index,
+                    "source" to model.title,
+                )
+            )
             runCatching {
                 val newData = sourceRepository.toSourceByApiServiceName(model.source)
                     ?.apiService
