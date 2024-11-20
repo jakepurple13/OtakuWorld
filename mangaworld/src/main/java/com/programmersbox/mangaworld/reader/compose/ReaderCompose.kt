@@ -213,6 +213,12 @@ fun ReadView(
         }
     }
 
+    AddToFavoritesDialog(
+        show = readVm.addToFavorites.shouldShow,
+        onDismiss = { readVm.addToFavorites = readVm.addToFavorites.copy(hasShown = true) },
+        onAddToFavorites = readVm::addToFavorites
+    )
+
     var settingsPopup by remember { mutableStateOf(false) }
 
     if (settingsPopup) {

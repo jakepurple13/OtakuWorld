@@ -14,15 +14,19 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -35,6 +39,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import java.io.File
+
+private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
     mangaReader: MangaReader,
@@ -73,7 +79,7 @@ class ReadViewModel(
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
             downloaded: Boolean = false,
-            filePath: String? = null
+            filePath: String? = null,
         ) {
             navController.navigate(
                 MangaReader(
@@ -109,12 +115,27 @@ class ReadViewModel(
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
+    private val itemListener = FirebaseDb.FirebaseListener()
+    var addToFavorites by mutableStateOf(FavoriteChecker(false, 0))
+
+    data class FavoriteChecker(val hasShown: Boolean, val count: Int, val isFavorite: Boolean = false) {
+        val shouldShow: Boolean = !hasShown && count > FAVORITE_CHECK && !isFavorite
+    }
+
     init {
         val url = chapterHolder.chapterModel?.url ?: mangaReader.mangaUrl
         list = chapterHolder.chapters.orEmpty()
         currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
 
         loadPages(modelPath)
+
+        combine(
+            itemListener.findItemByUrlFlow(mangaUrl),
+            dao.containsItem(mangaUrl)
+        ) { f, d -> f || d }
+            .dispatchIo()
+            .onEach { addToFavorites = addToFavorites.copy(isFavorite = it) }
+            .launchIn(viewModelScope)
     }
 
     var showInfo by mutableStateOf(true)
@@ -123,6 +144,7 @@ class ReadViewModel(
 
     fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
         currentChapter = newChapter
+        addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
             ChapterWatched(item.url, item.name, mangaUrl)
                 .let {
@@ -137,6 +159,21 @@ class ReadViewModel(
                 .getChapterInfo()
                 .map { it.mapNotNull(Storage::link) }
                 .let { loadPages(it) }
+        }
+    }
+
+    fun addToFavorites() {
+        addToFavorites = addToFavorites.copy(hasShown = true)
+        viewModelScope.launch {
+            currentChapterModel
+                ?.source
+                ?.getSourceByUrlFlow(mangaUrl)
+                ?.firstOrNull()
+                ?.toDbModel()
+                ?.let {
+                    dao.insertFavorite(it)
+                    FirebaseDb.insertShowFlow(it).collect()
+                }
         }
     }
 
@@ -167,5 +204,6 @@ class ReadViewModel(
         super.onCleared()
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
+        itemListener.unregister()
     }
 }

@@ -222,7 +222,7 @@ fun RecentView(
                                 Box(
                                     Modifier
                                         .fillMaxSize()
-                                        .padding(p)
+                                        .padding(top = p.calculateTopPadding())
                                 ) { info.ComposeShimmerItem() }
                             }
 
