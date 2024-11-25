@@ -19,6 +19,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -39,7 +42,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ImportExport
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -48,11 +52,10 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -264,7 +267,8 @@ fun OtakuCustomListScreen(
                         .uuid
                         .toString()
                         .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
-                }
+                },
+                onExportAction = { pickDocumentLauncher.launch("${it.item.name}.json") }
             )
         }
     }
@@ -347,50 +351,32 @@ fun OtakuCustomListScreen(
 
                             Text("(${customItem?.list.orEmpty().size})")
 
-                            var showMenu by remember { mutableStateOf(false) }
-
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.export_list)) },
-                                    onClick = {
-                                        showMenu = false
-                                        pickDocumentLauncher.launch("${customItem?.item?.name}.json")
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.edit_import_list)) },
-                                    onClick = {
-                                        showMenu = false
-                                        showInfoSheet = true
-                                    }
-                                )
-                            }
-
                             AnimatedVisibility(!searchBarActive) {
-                                IconButton(
-                                    onClick = {
-                                        shareItem.launchCatching(
-                                            Intent.createChooser(
-                                                Intent(Intent.ACTION_SEND).apply {
-                                                    type = "text/plain"
-                                                    putExtra(
-                                                        Intent.EXTRA_TEXT,
-                                                        customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
-                                                    )
-                                                    putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
-                                                },
-                                                context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            shareItem.launchCatching(
+                                                Intent.createChooser(
+                                                    Intent(Intent.ACTION_SEND).apply {
+                                                        type = "text/plain"
+                                                        putExtra(
+                                                            Intent.EXTRA_TEXT,
+                                                            customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
+                                                        )
+                                                        putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                                    },
+                                                    context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                                )
                                             )
-                                        )
-                                    }
-                                ) { Icon(Icons.Default.Share, null) }
-                            }
-                            AnimatedVisibility(!searchBarActive) {
-                                IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
+                                        }
+                                    ) { Icon(Icons.Default.Share, null) }
+
+                                    IconButton(
+                                        onClick = { showInfoSheet = true }
+                                    ) { Icon(Icons.Default.Info, null) }
+                                }
                             }
                         }
                     },
@@ -747,7 +733,7 @@ private fun CustomListScreenPreview() {
 
 //TODO: Add a bottom sheet for some info about the list.
 // This includes being able to maybe changing the cover and anything else
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun InfoSheet(
     customItem: CustomList,
@@ -759,6 +745,7 @@ private fun InfoSheet(
     logo: AppLogo,
     onDeleteListAction: () -> Unit,
     onRemoveItemsAction: () -> Unit,
+    onExportAction: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -924,11 +911,24 @@ private fun InfoSheet(
 
             HorizontalDivider()
 
-            Row(
+            FlowRow(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Card(
+                ActionItem(
+                    onClick = {
+                        scope.launch { sheetState.hide() }
+                            .invokeOnCompletion {
+                                onDismiss()
+                                onExportAction()
+                            }
+                    }
+                ) {
+                    Icon(Icons.Default.ImportExport, null)
+                    Text(stringResource(R.string.export_list))
+                }
+
+                ActionItem(
                     onClick = {
                         scope.launch { sheetState.hide() }
                             .invokeOnCompletion {
@@ -941,17 +941,12 @@ private fun InfoSheet(
                         contentColor = MaterialTheme.colorScheme.error,
                     )
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(8.dp)
-                    ) {
-                        Icon(Icons.Default.RemoveCircle, null)
-                        Text(stringResource(R.string.remove_items))
-                    }
+                    Icon(Icons.Default.RemoveCircle, null)
+                    Text(stringResource(R.string.remove_items))
                 }
 
                 if (customItem.item.uuid != OtakuApp.forLaterUuid) {
-                    Card(
+                    ActionItem(
                         onClick = {
                             scope.launch { sheetState.hide() }
                                 .invokeOnCompletion {
@@ -964,16 +959,31 @@ private fun InfoSheet(
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
                         ),
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Icon(Icons.Default.Delete, null)
-                            Text(stringResource(R.string.delete_list_title))
-                        }
+                        Icon(Icons.Default.Delete, null)
+                        Text(stringResource(R.string.delete_list_title))
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ActionItem(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    colors: CardColors = CardDefaults.cardColors(),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(
+        onClick = onClick,
+        colors = colors,
+        modifier = modifier
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(8.dp),
+            content = content
+        )
     }
 }
