@@ -14,7 +14,6 @@ import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,16 +35,22 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,8 +58,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -65,13 +70,14 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +91,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -93,7 +102,6 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.Alizarin
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -155,20 +163,8 @@ fun OtakuCustomListScreen(
     isHorizontal: Boolean = false,
     addSecurityItem: (UUID) -> Unit,
     removeSecurityItem: (UUID) -> Unit,
-    hasAuthentication: Boolean = false,
 ) {
     val hazeState = remember { HazeState() }
-    val biometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = {
-            customItem?.item?.uuid?.let { addSecurityItem(it) }
-        },
-    )
-
-    val removeBiometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = {
-            customItem?.item?.uuid?.let { removeSecurityItem(it) }
-        },
-    )
     val navController = LocalNavController.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -225,103 +221,6 @@ fun OtakuCustomListScreen(
         )
     }
 
-    var showSecurityDialog by remember { mutableStateOf(false) }
-
-    if (showSecurityDialog) {
-        AlertDialog(
-            onDismissRequest = { showSecurityDialog = false },
-            title = { Text("Require Authentication to View this list?") },
-            text = { Text("This will require phone authentication to view this list") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSecurityDialog = false
-                        biometricPrompting(
-                            context,
-                            biometricPrompt
-                        ).authenticate(
-                            BiometricPrompt.PromptInfo.Builder()
-                                .setTitle("Add Authentication for ${customItem?.item?.name}")
-                                .setSubtitle("Enter Authentication to add")
-                                .setNegativeButtonText("Never Mind")
-                                .build()
-                        )
-                    }
-                ) { Text(stringResource(id = R.string.confirm)) }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSecurityDialog = false }
-                ) { Text(stringResource(id = R.string.cancel)) }
-            }
-        )
-    }
-
-    var showRemoveSecurityDialog by remember { mutableStateOf(false) }
-
-    if (showRemoveSecurityDialog) {
-        AlertDialog(
-            onDismissRequest = { showRemoveSecurityDialog = false },
-            title = { Text("Remove Authentication?") },
-            text = { Text("This will remove the phone authentication to view this list") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showRemoveSecurityDialog = false
-                        biometricPrompting(
-                            context,
-                            removeBiometricPrompt
-                        ).authenticate(
-                            BiometricPrompt.PromptInfo.Builder()
-                                .setTitle("Remove Authentication for ${customItem?.item?.name}")
-                                .setSubtitle("Enter Authentication to remove")
-                                .setNegativeButtonText("Never Mind")
-                                .build()
-                        )
-                    }
-                ) { Text(stringResource(id = R.string.confirm)) }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showRemoveSecurityDialog = false }
-                ) { Text(stringResource(id = R.string.cancel)) }
-            }
-        )
-    }
-
-    var showAdd by remember { mutableStateOf(false) }
-
-    if (showAdd) {
-        var name by remember { mutableStateOf(customItem?.item?.name.orEmpty()) }
-        AlertDialog(
-            onDismissRequest = { showAdd = false },
-            title = { Text(stringResource(R.string.update_list_name_title)) },
-            text = {
-                TextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.list_name)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            rename(name)
-                            showAdd = false
-                        }
-                    },
-                    enabled = name.isNotEmpty()
-                ) { Text(stringResource(id = R.string.confirm)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) }
-            }
-        )
-    }
-
     var showLoadingDialog by remember { mutableStateOf(false) }
 
     LoadingDialog(
@@ -344,6 +243,31 @@ fun OtakuCustomListScreen(
             state = modalSheetState
         )
     }*/
+
+    var showInfoSheet by rememberSaveable { mutableStateOf(false) }
+    val infoSheetState = rememberModalBottomSheetState()
+
+    if (showInfoSheet) {
+        customItem?.let {
+            InfoSheet(
+                onDismiss = { showInfoSheet = false },
+                sheetState = infoSheetState,
+                customItem = it,
+                rename = { name -> scope.launch { rename(name) } },
+                addSecurityItem = addSecurityItem,
+                removeSecurityItem = removeSecurityItem,
+                logo = logoDrawable,
+                onDeleteListAction = { deleteList = true },
+                onRemoveItemsAction = {
+                    it
+                        .item
+                        .uuid
+                        .toString()
+                        .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
+                }
+            )
+        }
+    }
 
     var showBanner by remember { mutableStateOf(false) }
 
@@ -441,56 +365,9 @@ fun OtakuCustomListScreen(
                                     text = { Text(stringResource(R.string.edit_import_list)) },
                                     onClick = {
                                         showMenu = false
-                                        showAdd = true
+                                        showInfoSheet = true
                                     }
                                 )
-
-                                if (hasAuthentication) {
-                                    DropdownMenuItem(
-                                        text = { Text("Remove Authentication") },
-                                        onClick = {
-                                            showRemoveSecurityDialog = true
-                                            showMenu = false
-                                        },
-                                    )
-                                } else {
-                                    DropdownMenuItem(
-                                        text = { Text("Require Authentication") },
-                                        onClick = {
-                                            showSecurityDialog = true
-                                            showMenu = false
-                                        },
-                                    )
-                                }
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.remove_items)) },
-                                    onClick = {
-                                        showMenu = false
-                                        customItem
-                                            ?.item
-                                            ?.uuid
-                                            ?.toString()
-                                            ?.let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
-                                    },
-                                    colors = MenuDefaults.itemColors(
-                                        textColor = Alizarin
-                                    ),
-                                )
-
-                                if (customItem?.item?.uuid != OtakuApp.forLaterUuid) {
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.delete_list_title)) },
-                                        onClick = {
-                                            showMenu = false
-                                            deleteList = true
-                                        },
-                                        colors = MenuDefaults.itemColors(
-                                            textColor = MaterialTheme.colorScheme.onErrorContainer,
-                                        ),
-                                        modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer)
-                                    )
-                                }
                             }
 
                             AnimatedVisibility(!searchBarActive) {
@@ -865,5 +742,238 @@ private fun CustomListScreenPreview() {
             addSecurityItem = {},
             removeSecurityItem = {},
         )
+    }
+}
+
+//TODO: Add a bottom sheet for some info about the list.
+// This includes being able to maybe changing the cover and anything else
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
+@Composable
+private fun InfoSheet(
+    customItem: CustomList,
+    sheetState: SheetState,
+    addSecurityItem: (UUID) -> Unit,
+    removeSecurityItem: (UUID) -> Unit,
+    rename: (String) -> Unit,
+    onDismiss: () -> Unit,
+    logo: AppLogo,
+    onDeleteListAction: () -> Unit,
+    onRemoveItemsAction: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val biometricPrompt = rememberBiometricPrompt(
+        onAuthenticationSucceeded = { addSecurityItem(customItem.item.uuid) },
+    )
+
+    val removeBiometricPrompt = rememberBiometricPrompt(
+        onAuthenticationSucceeded = { removeSecurityItem(customItem.item.uuid) },
+    )
+
+    var showSecurityDialog by remember { mutableStateOf(false) }
+
+    if (showSecurityDialog) {
+        AlertDialog(
+            onDismissRequest = { showSecurityDialog = false },
+            title = { Text("Require Authentication to View this list?") },
+            text = { Text("This will require phone authentication to view this list") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSecurityDialog = false
+                        biometricPrompting(
+                            context,
+                            biometricPrompt
+                        ).authenticate(
+                            BiometricPrompt.PromptInfo.Builder()
+                                .setTitle("Add Authentication for ${customItem.item.name}")
+                                .setSubtitle("Enter Authentication to add")
+                                .setNegativeButtonText("Never Mind")
+                                .build()
+                        )
+                    }
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSecurityDialog = false }
+                ) { Text(stringResource(id = R.string.cancel)) }
+            }
+        )
+    }
+
+    var showRemoveSecurityDialog by remember { mutableStateOf(false) }
+
+    if (showRemoveSecurityDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveSecurityDialog = false },
+            title = { Text("Remove Authentication?") },
+            text = { Text("This will remove the phone authentication to view this list") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showRemoveSecurityDialog = false
+                        biometricPrompting(
+                            context,
+                            removeBiometricPrompt
+                        ).authenticate(
+                            BiometricPrompt.PromptInfo.Builder()
+                                .setTitle("Remove Authentication for ${customItem.item.name}")
+                                .setSubtitle("Enter Authentication to remove")
+                                .setNegativeButtonText("Never Mind")
+                                .build()
+                        )
+                    }
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showRemoveSecurityDialog = false }
+                ) { Text(stringResource(id = R.string.cancel)) }
+            }
+        )
+    }
+
+    var currentName by remember { mutableStateOf(customItem.item.name) }
+
+    var showAdd by remember { mutableStateOf(false) }
+
+    if (showAdd) {
+        AlertDialog(
+            onDismissRequest = { showAdd = false },
+            title = { Text(stringResource(R.string.update_list_name_title)) },
+            text = { Text("Are you sure you want to change the name?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        rename(currentName)
+                        showAdd = false
+                    }
+                ) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) }
+            }
+        )
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(16.dp)
+        ) {
+            OutlinedTextField(
+                currentName,
+                onValueChange = { currentName = it },
+                shape = MaterialTheme.shapes.large,
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showAdd = true },
+                        enabled = currentName != customItem.item.name
+                    ) { Icon(Icons.Default.Check, null) }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            ListItem(
+                headlineContent = {},
+                leadingContent = {
+                    GlideImage(
+                        model = customItem.list.firstOrNull()?.imageUrl,
+                        failure = placeholder(logo.logo),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            .clip(MaterialTheme.shapes.small)
+                    )
+                },
+                supportingContent = {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Require Biometrics?")
+                        Checkbox(
+                            checked = customItem.item.useBiometric,
+                            onCheckedChange = {
+                                if (it) {
+                                    showSecurityDialog = true
+                                } else {
+                                    showRemoveSecurityDialog = true
+                                }
+                            }
+                        )
+                    }
+                },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent,
+                )
+            )
+
+            HorizontalDivider()
+
+            Text("List Count: ${customItem.list.size}")
+
+            //TODO: Make these chips to filter the list
+            customItem.list
+                .groupBy { it.source }
+                .forEach { (t, u) -> Text("$t: ${u.size}") }
+
+            HorizontalDivider()
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Card(
+                    onClick = {
+                        scope.launch { sheetState.hide() }
+                            .invokeOnCompletion {
+                                onDismiss()
+                                onRemoveItemsAction()
+                            }
+                    },
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.error,
+                    )
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Icon(Icons.Default.RemoveCircle, null)
+                        Text(stringResource(R.string.remove_items))
+                    }
+                }
+
+                if (customItem.item.uuid != OtakuApp.forLaterUuid) {
+                    Card(
+                        onClick = {
+                            scope.launch { sheetState.hide() }
+                                .invokeOnCompletion {
+                                    onDismiss()
+                                    onDeleteListAction()
+                                }
+                        },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        ),
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Icon(Icons.Default.Delete, null)
+                            Text(stringResource(R.string.delete_list_title))
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -120,7 +120,6 @@ fun OtakuListScreen(
                         removeSecurityItem = {
                             scope.launch { listDao.updateBiometric(it, false) }
                         },
-                        hasAuthentication = targetState.item.useBiometric
                     )
                     BackHandler {
                         viewModel.customItem = null
