@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -31,6 +30,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,9 +51,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.dokar.sonner.ToastType
-import com.dokar.sonner.ToasterDefaults
-import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.ReaderType
@@ -64,7 +62,6 @@ import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
@@ -104,7 +101,7 @@ fun ReadView(
 ) {
     HideSystemBarsWhileOnScreen()
 
-    val toaster = rememberToasterState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
 
@@ -146,12 +143,10 @@ fun ReadView(
     var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
     fun showToast() {
-        toaster.show(
-            message = context.getString(R.string.addedChapterItem),
-            icon = R.mipmap.ic_launcher,
-            type = ToastType.Success,
-            duration = ToasterDefaults.DurationShort
-        )
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(context.getString(R.string.addedChapterItem))
+        }
     }
 
     val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
@@ -333,6 +328,7 @@ fun ReadView(
                     }
                 }
             },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
         ) { p ->
             Box(
                 modifier = if (showBlur)
@@ -392,10 +388,6 @@ fun ReadView(
                     }
                 }
             }
-            ToasterSetup(
-                toaster = toaster,
-                modifier = Modifier.padding(p)
-            )
         }
     }
 }

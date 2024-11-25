@@ -33,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -70,7 +71,6 @@ import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
-import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
@@ -182,7 +182,8 @@ fun RecentView(
         blurTopBar = showBlur,
         topBarBlur = {
             progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-        }
+        },
+        snackbarHost = { SnackbarHost(recentVm.snackbarHostState) }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(
@@ -250,12 +251,6 @@ fun RecentView(
                 }
             }
         }
-
-        ToasterItemsSetup(
-            toastItems = recentVm,
-            alignment = Alignment.TopCenter,
-            modifier = Modifier.padding(p)
-        )
     }
 }
 

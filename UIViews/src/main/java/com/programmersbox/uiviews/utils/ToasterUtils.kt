@@ -92,11 +92,11 @@ class DefaultToastItems : ToastItems {
 @Composable
 fun ToasterItemsSetup(
     toastItems: ToastItems,
+    modifier: Modifier = Modifier,
     scope: CoroutineScope = rememberCoroutineScope(),
     toaster: ToasterState = rememberToasterState(
         onToastDismissed = { scope.launch { toastItems.removeError() } }
     ),
-    modifier: Modifier = Modifier,
     alignment: Alignment = Alignment.BottomEnd,
 ) {
     LaunchedEffect(toaster, toastItems) {

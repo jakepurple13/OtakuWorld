@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.recent
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -18,8 +19,6 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.CurrentSourceRepository
-import com.programmersbox.uiviews.utils.DefaultToastItems
-import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.combineSources
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -33,13 +32,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class RecentViewModel(
     dao: ItemDao,
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
-) : ViewModel(), ToastItems by DefaultToastItems() {
+) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
     private val sourceList = mutableStateListOf<ItemModel>()
@@ -60,6 +60,8 @@ class RecentViewModel(
     val gridState = LazyGridState(0, 0)
 
     val sources = mutableStateListOf<SourceInformation>()
+
+    val snackbarHostState = SnackbarHostState()
 
     init {
         combineSources(sourceRepository, dao)
@@ -118,7 +120,12 @@ class RecentViewModel(
             ?.dispatchIo()
             ?.catch {
                 it.printStackTrace()
-                showError()
+                withContext(Dispatchers.Main) {
+                    snackbarHostState.showSnackbar(
+                        "Something went wrong",
+                        withDismissAction = true
+                    )
+                }
                 emit(emptyList())
                 recordFirebaseException(it)
             }
