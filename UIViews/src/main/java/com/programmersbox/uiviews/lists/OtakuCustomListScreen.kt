@@ -141,6 +141,7 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
@@ -274,7 +275,7 @@ fun OtakuCustomListScreen(
                 onFilterAction = viewModel::filter,
                 onClearFilterAction = viewModel::clearFilter,
                 showBySource = viewModel.showBySource,
-                onShowBySource = { viewModel.showBySource = it }
+                onShowBySource = { viewModel.toggleShowSource(context, it) },
             )
         }
     }
@@ -447,7 +448,7 @@ fun OtakuCustomListScreen(
 
                             items(
                                 items = sourceItems,
-                                key = { it.title + it.source },
+                                key = { it.title + it.source + it.uniqueId },
                                 contentType = { it }
                             ) { item ->
                                 CustomItemVertical(
@@ -763,7 +764,7 @@ private fun DeleteItemsModal(
 private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
-        val viewModel: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao) }
+        val viewModel: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, emptyFlow()) }
         OtakuCustomListScreen(
             viewModel = viewModel,
             customItem = null,

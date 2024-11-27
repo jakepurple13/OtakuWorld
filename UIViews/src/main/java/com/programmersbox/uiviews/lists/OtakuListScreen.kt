@@ -61,6 +61,7 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
+import com.programmersbox.uiviews.utils.showBySource
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
@@ -68,10 +69,16 @@ import kotlinx.coroutines.launch
 fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
-    customListViewModel: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao) },
     isHorizontal: Boolean = false,
 ) {
     val context = LocalContext.current
+    val customListViewModel: OtakuCustomListViewModel = viewModel {
+        OtakuCustomListViewModel(
+            listDao = listDao,
+            showBySourceFlow = context.showBySource
+        )
+    }
+
     val scope = rememberCoroutineScope()
     val showListDetail by LocalSettingsHandling.current.rememberShowListDetail()
 

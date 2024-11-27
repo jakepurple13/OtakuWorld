@@ -14,6 +14,9 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.uiviews.utils.SHOW_BY_SOURCE
+import com.programmersbox.uiviews.utils.updatePref
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -25,6 +28,7 @@ import java.io.IOException
 
 class OtakuCustomListViewModel(
     private val listDao: ListDao,
+    private val showBySourceFlow: Flow<Boolean>,
 ) : ViewModel() {
     var customItem: CustomList? by mutableStateOf(null)
 
@@ -61,6 +65,16 @@ class OtakuCustomListViewModel(
             }
             .onEach { customList = it }
             .launchIn(viewModelScope)
+
+        showBySourceFlow
+            .onEach { showBySource = it }
+            .launchIn(viewModelScope)
+    }
+
+    fun toggleShowSource(context: Context, value: Boolean) {
+        viewModelScope.launch {
+            context.updatePref(SHOW_BY_SOURCE, value)
+        }
     }
 
     fun setList(customList: CustomList?) {

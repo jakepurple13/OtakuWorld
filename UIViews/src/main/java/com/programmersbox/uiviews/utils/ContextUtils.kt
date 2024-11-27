@@ -98,7 +98,6 @@ import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.collections.set
 import kotlin.properties.Delegates
 import kotlin.properties.PropertyDelegateProvider
 
@@ -108,6 +107,9 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     "otakuworld",
     //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
 )
+
+val SHOW_BY_SOURCE = booleanPreferencesKey("showBySource")
+val Context.showBySource get() = dataStore.data.map { it[SHOW_BY_SOURCE] ?: false }
 
 val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
 val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
