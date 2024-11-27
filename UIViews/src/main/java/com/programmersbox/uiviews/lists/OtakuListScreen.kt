@@ -87,10 +87,8 @@ fun OtakuListScreen(
         )
     )
 
-    //state.seekBack()
-
     val details: @Composable ThreePaneScaffoldPaneScope.() -> Unit = {
-        AnimatedPanes(modifier = Modifier.fillMaxSize()) {
+        AnimatedPane {
             AnimatedContent(
                 targetState = customListViewModel.customItem,
                 label = "",
@@ -162,7 +160,7 @@ fun OtakuListScreen(
         directive = state.scaffoldDirective,
         value = state.scaffoldValue,
         listPane = {
-            AnimatedPanes(modifier = Modifier.fillMaxSize()) {
+            AnimatedPane {
                 OtakuListView(
                     customItem = customListViewModel.customItem,
                     customLists = viewModel.customLists,
