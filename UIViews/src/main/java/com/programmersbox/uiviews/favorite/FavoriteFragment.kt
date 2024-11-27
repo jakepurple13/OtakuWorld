@@ -101,12 +101,9 @@ import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
-import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -122,7 +119,6 @@ fun FavoriteUi(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) },
 ) {
-    val hazeState = remember { HazeState() }
     val navController = LocalNavController.current
     val context = LocalContext.current
 
@@ -165,7 +161,6 @@ fun FavoriteUi(
         ModalBottomSheet(
             onDismissRequest = { showSort = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
         ) {
             InsetCenterAlignedTopAppBar(
                 title = { Text("Sort By") },
@@ -241,7 +236,7 @@ fun FavoriteUi(
         placeholder = logo,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) {
-        OtakuScaffold(
+        OtakuHazeScaffold(
             snackbarHost = {
                 SnackbarHost(
                     snackbarHostState,
@@ -249,16 +244,10 @@ fun FavoriteUi(
                 )
             },
             topBar = {
-                val surface = MaterialTheme.colorScheme.surface
                 Surface(
-                    color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface
+                    color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
                 ) {
-                    Column(
-                        if (showBlur) Modifier.hazeChild(hazeState) {
-                            backgroundColor = surface
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                        } else Modifier
-                    ) {
+                    Column {
                         var active by rememberSaveable { mutableStateOf(false) }
 
                         fun closeSearchBar() {
@@ -403,6 +392,10 @@ fun FavoriteUi(
                         }
                     }
                 }
+            },
+            blurTopBar = showBlur,
+            topBarBlur = {
+                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
             }
         ) { p ->
             if (viewModel.listSources.isEmpty()) {
@@ -463,10 +456,6 @@ fun FavoriteUi(
                     },
                     onShowBanner = { showBanner = it },
                     logo = logo,
-                    modifier = if (showBlur)
-                        Modifier.haze(hazeState)
-                    else
-                        Modifier
                 )
             }
         }

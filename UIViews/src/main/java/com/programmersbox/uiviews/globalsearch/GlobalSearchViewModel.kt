@@ -24,7 +24,7 @@ import ru.beryukhov.reactivenetwork.ReactiveNetwork
 class GlobalSearchViewModel(
     val sourceRepository: SourceRepository,
     val dao: HistoryDao,
-    initialSearch: String
+    initialSearch: String,
 ) : ViewModel() {
 
     val observeNetwork = ReactiveNetwork()
@@ -57,7 +57,7 @@ class GlobalSearchViewModel(
                             .dispatchIoAndCatchList()
                             .map { SearchModel(a.apiService.serviceName, it) }
                             .filter { it.data.isNotEmpty() }
-                            .onEach { searchListPublisher = searchListPublisher + it }
+                            .onEach { searchListPublisher += it }
                             .onCompletion { isRefreshing = false }
                     }
                     .forEach { launch { it.collect() } }

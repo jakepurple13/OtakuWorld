@@ -88,7 +88,7 @@ internal fun LimitedBottomSheetScaffold(
             modifier = Modifier.fillMaxSize()
         ) {
             content(padding)
-            layoutHeight = maxHeight
+            layoutHeight = this.maxHeight
         }
 
         BottomSheetScaffold(

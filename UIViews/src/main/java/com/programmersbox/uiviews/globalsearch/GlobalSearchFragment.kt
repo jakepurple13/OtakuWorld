@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +51,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
@@ -71,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.CrossFade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -82,6 +87,7 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.BannerScope
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -108,9 +114,12 @@ import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.components.plus
 import com.programmersbox.uiviews.utils.navigateToDetails
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.materials.HazeMaterials
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -231,8 +240,13 @@ fun GlobalSearchView(
                             .let {
                                 if (showBlur) {
                                     val surface = MaterialTheme.colorScheme.surface
-                                    it.hazeChild(hazeState) {
+                                    it.hazeChild(
+                                        hazeState,
+                                        HazeMaterials.thin(surface)
+                                    ) {
                                         backgroundColor = surface
+                                        progressive =
+                                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                                     }
                                 } else it
                             }
@@ -316,146 +330,181 @@ fun GlobalSearchView(
             )
         ) { padding ->
             Crossfade(targetState = networkState, label = "") { network ->
-                when (network) {
-                    false -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(padding),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                Icons.Default.CloudOff,
-                                null,
-                                modifier = Modifier.size(50.dp),
-                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                            )
-                            Text(
-                                stringResource(R.string.you_re_offline),
-                                style = M3MaterialTheme.typography.titleLarge,
-                                color = M3MaterialTheme.colorScheme.onBackground
-                            )
+                if (network) {
+                    Content(
+                        viewModel = viewModel,
+                        pullRefreshState = pullRefreshState,
+                        padding = padding,
+                        listState = listState,
+                        hazeState = hazeState,
+                        showBlur = showBlur,
+                        scope = scope,
+                        navController = navController,
+                        notificationLogo = notificationLogo,
+                        mainLogoDrawable = mainLogoDrawable,
+                        onSearchModel = { searchModelBottom = it },
+                        onShowBanner = { showBanner = it },
+                        bottomScaffold = bottomScaffold,
+                    )
+                } else {
+                    NoNetwork(padding)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BannerScope.Content(
+    viewModel: GlobalSearchViewModel,
+    pullRefreshState: PullToRefreshState,
+    padding: PaddingValues,
+    listState: LazyListState,
+    hazeState: HazeState,
+    showBlur: Boolean,
+    scope: CoroutineScope,
+    navController: NavController,
+    notificationLogo: NotificationLogo,
+    mainLogoDrawable: AppLogo,
+    onSearchModel: (SearchModel) -> Unit,
+    onShowBanner: (Boolean) -> Unit,
+    bottomScaffold: BottomSheetScaffoldState,
+) {
+    OtakuPullToRefreshBox(
+        isRefreshing = viewModel.isRefreshing,
+        state = pullRefreshState,
+        onRefresh = {},
+        enabled = { false },
+        paddingValues = padding + LocalNavHostPadding.current
+    ) {
+        LazyColumn(
+            state = listState,
+            contentPadding = padding + LocalNavHostPadding.current,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .let {
+                    if (showBlur)
+                        it.haze(hazeState)
+                    else
+                        it
+                }
+                .fillMaxSize()
+                .padding(top = 8.dp)
+        ) {
+            if (viewModel.isRefreshing) {
+                items(3) {
+                    Surface(
+                        modifier = Modifier.m3placeholder(
+                            true,
+                            highlight = PlaceholderHighlight.shimmer()
+                        ),
+                        tonalElevation = 4.dp,
+                        shape = M3MaterialTheme.shapes.medium
+                    ) {
+                        Column {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    "Otaku",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .padding(start = 4.dp)
+                                )
+                                IconButton(
+                                    onClick = {},
+                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                ) { Icon(Icons.Default.ChevronRight, null) }
+                            }
+                            LazyRow { items(3) { M3PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
                         }
                     }
+                }
+            } else if (viewModel.searchListPublisher.isNotEmpty()) {
+                items(viewModel.searchListPublisher) { i ->
+                    Surface(
+                        tonalElevation = 4.dp,
+                        shape = M3MaterialTheme.shapes.medium,
+                        onClick = {
+                            onSearchModel(i)
+                            scope.launch { bottomScaffold.bottomSheetState.expand() }
+                        }
+                    ) {
+                        Column {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    i.apiName,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .padding(start = 4.dp)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        onSearchModel(i)
+                                        scope.launch { bottomScaffold.bottomSheetState.expand() }
+                                    },
+                                    modifier = Modifier.align(Alignment.CenterEnd)
+                                ) {
+                                    Row {
+                                        Text(i.data.size.toString())
+                                        Icon(Icons.Default.ChevronRight, null)
+                                    }
+                                }
+                            }
 
-                    true -> {
-                        OtakuPullToRefreshBox(
-                            isRefreshing = viewModel.isRefreshing,
-                            state = pullRefreshState,
-                            onRefresh = {},
-                            enabled = { false },
-                            paddingValues = padding + LocalNavHostPadding.current
-                        ) {
-                            LazyColumn(
-                                state = listState,
-                                contentPadding = padding + LocalNavHostPadding.current,
-                                verticalArrangement = Arrangement.spacedBy(2.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
+                            val carouselState = rememberCarouselState { i.data.size }
+
+                            HorizontalMultiBrowseCarousel(
+                                state = carouselState,
+                                preferredItemWidth = ComposableUtils.IMAGE_WIDTH,
+                                flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(state = carouselState),
+                                itemSpacing = 4.dp,
                                 modifier = Modifier
-                                    .let {
-                                        if (showBlur)
-                                            it.haze(hazeState)
-                                        else
-                                            it
-                                    }
-                                    .fillMaxSize()
-                                    .padding(top = 8.dp)
+                                    .padding(horizontal = 4.dp)
+                                    .padding(bottom = 4.dp)
                             ) {
-                                if (viewModel.isRefreshing) {
-                                    items(3) {
-                                        Surface(
-                                            modifier = Modifier.m3placeholder(
-                                                true,
-                                                highlight = PlaceholderHighlight.shimmer()
-                                            ),
-                                            tonalElevation = 4.dp,
-                                            shape = M3MaterialTheme.shapes.medium
-                                        ) {
-                                            Column {
-                                                Box(modifier = Modifier.fillMaxWidth()) {
-                                                    Text(
-                                                        "Otaku",
-                                                        modifier = Modifier
-                                                            .align(Alignment.CenterStart)
-                                                            .padding(start = 4.dp)
-                                                    )
-                                                    IconButton(
-                                                        onClick = {},
-                                                        modifier = Modifier.align(Alignment.CenterEnd)
-                                                    ) { Icon(Icons.Default.ChevronRight, null) }
-                                                }
-                                                LazyRow { items(3) { M3PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
-                                            }
+                                i.data.getOrNull(it)?.let { m ->
+                                    SearchCoverCard(
+                                        model = m,
+                                        placeHolder = mainLogoDrawable.logo,
+                                        onLongPress = { c ->
+                                            newItemModel(if (c == ComponentState.Pressed) m else null)
+                                            onShowBanner(c == ComponentState.Pressed)
                                         }
-                                    }
-                                } else if (viewModel.searchListPublisher.isNotEmpty()) {
-                                    items(viewModel.searchListPublisher) { i ->
-                                        Surface(
-                                            tonalElevation = 4.dp,
-                                            shape = M3MaterialTheme.shapes.medium,
-                                            onClick = {
-                                                searchModelBottom = i
-                                                scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                            }
-                                        ) {
-                                            Column {
-                                                Box(modifier = Modifier.fillMaxWidth()) {
-                                                    Text(
-                                                        i.apiName,
-                                                        modifier = Modifier
-                                                            .align(Alignment.CenterStart)
-                                                            .padding(start = 4.dp)
-                                                    )
-                                                    IconButton(
-                                                        onClick = {
-                                                            searchModelBottom = i
-                                                            scope.launch { bottomScaffold.bottomSheetState.expand() }
-                                                        },
-                                                        modifier = Modifier.align(Alignment.CenterEnd)
-                                                    ) {
-                                                        Row {
-                                                            Text(i.data.size.toString())
-                                                            Icon(Icons.Default.ChevronRight, null)
-                                                        }
-                                                    }
-                                                }
-
-                                                val carouselState = rememberCarouselState { i.data.size }
-
-                                                HorizontalMultiBrowseCarousel(
-                                                    state = carouselState,
-                                                    preferredItemWidth = ComposableUtils.IMAGE_WIDTH,
-                                                    flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(state = carouselState),
-                                                    itemSpacing = 4.dp,
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 4.dp)
-                                                        .padding(bottom = 4.dp)
-                                                ) {
-                                                    i.data.getOrNull(it)?.let { m ->
-                                                        SearchCoverCard(
-                                                            model = m,
-                                                            placeHolder = mainLogoDrawable.logo,
-                                                            onLongPress = { c ->
-                                                                newItemModel(if (c == ComponentState.Pressed) m else null)
-                                                                showBanner = c == ComponentState.Pressed
-                                                            }
-                                                        ) { navController.navigateToDetails(m) }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (viewModel.isSearching) {
-                                        item { CircularProgressIndicator() }
-                                    }
+                                    ) { navController.navigateToDetails(m) }
                                 }
                             }
                         }
                     }
                 }
+                if (viewModel.isSearching) {
+                    item { CircularProgressIndicator() }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun NoNetwork(padding: PaddingValues) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            Icons.Default.CloudOff,
+            null,
+            modifier = Modifier.size(50.dp),
+            colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
+        )
+        Text(
+            stringResource(R.string.you_re_offline),
+            style = M3MaterialTheme.typography.titleLarge,
+            color = M3MaterialTheme.colorScheme.onBackground
+        )
     }
 }
 

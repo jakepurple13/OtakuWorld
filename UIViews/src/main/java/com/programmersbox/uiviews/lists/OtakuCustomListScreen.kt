@@ -905,6 +905,7 @@ private fun InfoSheet(
             Text("List Count: ${customItem.list.size}")
 
             //TODO: Make these chips to filter the list
+            // Add option to show sources grouped or not
             customItem.list
                 .groupBy { it.source }
                 .forEach { (t, u) -> Text("$t: ${u.size}") }
