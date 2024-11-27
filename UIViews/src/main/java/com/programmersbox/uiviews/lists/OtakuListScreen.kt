@@ -42,8 +42,10 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +54,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -65,6 +68,7 @@ import kotlinx.coroutines.launch
 fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
+    customListViewModel: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao) },
     isHorizontal: Boolean = false,
 ) {
     val context = LocalContext.current
@@ -83,10 +87,12 @@ fun OtakuListScreen(
         )
     )
 
+    //state.seekBack()
+
     val details: @Composable ThreePaneScaffoldPaneScope.() -> Unit = {
         AnimatedPanes(modifier = Modifier.fillMaxSize()) {
             AnimatedContent(
-                targetState = viewModel.viewingItem,
+                targetState = customListViewModel.customItem,
                 label = "",
                 transitionSpec = {
                     if (initialState != null && targetState != null)
@@ -97,21 +103,18 @@ fun OtakuListScreen(
             ) { targetState ->
                 if (targetState != null) {
                     OtakuCustomListScreen(
+                        viewModel = customListViewModel,
                         customItem = targetState,
-                        writeToFile = viewModel::writeToFile,
+                        writeToFile = customListViewModel::writeToFile,
                         isHorizontal = isHorizontal,
-                        deleteAll = viewModel::deleteAll,
-                        rename = viewModel::rename,
-                        listBySource = viewModel.listBySource,
-                        removeItems = viewModel::removeItems,
-                        items = viewModel.items,
-                        searchItems = viewModel.searchItems,
-                        searchQuery = viewModel.searchQuery,
-                        setQuery = viewModel::setQuery,
-                        searchBarActive = viewModel.searchBarActive,
-                        onSearchBarActiveChange = { viewModel.searchBarActive = it },
+                        deleteAll = customListViewModel::deleteAll,
+                        rename = customListViewModel::rename,
+                        searchQuery = customListViewModel.searchQuery,
+                        setQuery = customListViewModel::setQuery,
+                        searchBarActive = customListViewModel.searchBarActive,
+                        onSearchBarActiveChange = { customListViewModel.searchBarActive = it },
                         navigateBack = {
-                            viewModel.customItem = null
+                            customListViewModel.setList(null)
                             scope.launch { state.navigateBack() }
                         },
                         addSecurityItem = {
@@ -122,7 +125,7 @@ fun OtakuListScreen(
                         },
                     )
                     BackHandler {
-                        viewModel.customItem = null
+                        customListViewModel.setList(null)
                         scope.launch { state.navigateBack() }
                     }
                 } else {
@@ -141,9 +144,18 @@ fun OtakuListScreen(
         }
     }
 
+    var temp by remember { mutableStateOf<CustomList?>(null) }
+
     val biometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = { navigate() },
-        onAuthenticationFailed = { viewModel.customItem = null }
+        onAuthenticationSucceeded = {
+            customListViewModel.setList(temp)
+            temp = null
+            navigate()
+        },
+        onAuthenticationFailed = {
+            customListViewModel.setList(null)
+            temp = null
+        }
     )
 
     ListDetailPaneScaffold(
@@ -152,11 +164,11 @@ fun OtakuListScreen(
         listPane = {
             AnimatedPanes(modifier = Modifier.fillMaxSize()) {
                 OtakuListView(
-                    customItem = viewModel.customItem,
+                    customItem = customListViewModel.customItem,
                     customLists = viewModel.customLists,
                     navigateDetail = {
-                        viewModel.customItem = it
                         if (it.item.useBiometric) {
+                            temp = it
                             biometricPrompting(
                                 context.findActivity(),
                                 biometricPrompt
@@ -168,6 +180,8 @@ fun OtakuListScreen(
                                     .build()
                             )
                         } else {
+                            customListViewModel.setList(it)
+                            temp = null
                             navigate()
                         }
                     }

@@ -35,6 +35,8 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
@@ -57,6 +59,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -150,14 +154,11 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuCustomListScreen(
+    viewModel: OtakuCustomListViewModel,
     customItem: CustomList?,
     writeToFile: (Uri, Context) -> Unit,
     deleteAll: suspend () -> Unit,
     rename: suspend (String) -> Unit,
-    listBySource: Map<String, List<CustomListInfo>>,
-    removeItems: suspend (List<CustomListInfo>) -> Result<Boolean>,
-    items: List<Map.Entry<String, List<CustomListInfo>>>,
-    searchItems: List<CustomListInfo>,
     searchQuery: String,
     setQuery: (String) -> Unit,
     searchBarActive: Boolean,
@@ -268,7 +269,12 @@ fun OtakuCustomListScreen(
                         .toString()
                         .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
                 },
-                onExportAction = { pickDocumentLauncher.launch("${it.item.name}.json") }
+                onExportAction = { pickDocumentLauncher.launch("${it.item.name}.json") },
+                filtered = viewModel.filtered,
+                onFilterAction = viewModel::filter,
+                onClearFilterAction = viewModel::clearFilter,
+                showBySource = viewModel.showBySource,
+                onShowBySource = { viewModel.showBySource = it }
             )
         }
     }
@@ -399,7 +405,7 @@ fun OtakuCustomListScreen(
                             .padding(16.dp)
                             .fillMaxWidth()
                     ) {
-                        itemsIndexed(items = searchItems) { index, item ->
+                        itemsIndexed(items = viewModel.searchItems) { index, item ->
                             ListItem(
                                 headlineContent = { Text(item.title) },
                                 leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
@@ -427,31 +433,79 @@ fun OtakuCustomListScreen(
                     .padding(vertical = 4.dp)
                     .haze(state = hazeState)
             ) {
-                items(
-                    items = items,
-                    key = { it.key },
-                    contentType = { it }
-                ) { item ->
-                    CustomItemVertical(
-                        items = item.value,
-                        title = item.key,
-                        logo = logoDrawable.logo,
-                        showLoadingDialog = { showLoadingDialog = it },
-                        onError = {
-                            scope.launch {
-                                snackbarHostState.currentSnackbarData?.dismiss()
-                                snackbarHostState.showSnackbar(
-                                    "Something went wrong. Source might not be installed",
-                                    duration = SnackbarDuration.Short
+                when (val state = viewModel.items) {
+                    is OtakuListState.BySource -> {
+                        state.items.forEach { (source, sourceItems) ->
+                            item(
+                                span = { GridItemSpan(maxLineSpan) },
+                            ) {
+                                CenterAlignedTopAppBar(
+                                    title = { Text(source) },
+                                    windowInsets = WindowInsets(0.dp),
                                 )
                             }
-                        },
-                        onShowBanner = {
-                            newItem(if (it) item.value.firstOrNull() else null)
-                            showBanner = it
-                        },
-                        modifier = Modifier.animateItem()
-                    )
+
+                            items(
+                                items = sourceItems,
+                                key = { it.title + it.source },
+                                contentType = { it }
+                            ) { item ->
+                                CustomItemVertical(
+                                    items = listOf(item),
+                                    title = item.title,
+                                    logo = logoDrawable.logo,
+                                    showLoadingDialog = { showLoadingDialog = it },
+                                    onError = {
+                                        scope.launch {
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            snackbarHostState.showSnackbar(
+                                                "Something went wrong. Source might not be installed",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    },
+                                    onShowBanner = {
+                                        newItem(if (it) item else null)
+                                        showBanner = it
+                                    },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+                    }
+
+                    is OtakuListState.ByTitle -> {
+                        items(
+                            items = state.items,
+                            key = { it.key },
+                            contentType = { it }
+                        ) { item ->
+                            CustomItemVertical(
+                                items = item.value,
+                                title = item.key,
+                                logo = logoDrawable.logo,
+                                showLoadingDialog = { showLoadingDialog = it },
+                                onError = {
+                                    scope.launch {
+                                        snackbarHostState.currentSnackbarData?.dismiss()
+                                        snackbarHostState.showSnackbar(
+                                            "Something went wrong. Source might not be installed",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                },
+                                onShowBanner = {
+                                    newItem(if (it) item.value.firstOrNull() else null)
+                                    showBanner = it
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+
+                    OtakuListState.Empty -> {
+
+                    }
                 }
             }
         }
@@ -709,18 +763,15 @@ private fun DeleteItemsModal(
 private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
-        val viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) }
+        val viewModel: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao) }
         OtakuCustomListScreen(
+            viewModel = viewModel,
             customItem = null,
             writeToFile = viewModel::writeToFile,
             navigateBack = {},
             isHorizontal = false,
             deleteAll = viewModel::deleteAll,
             rename = viewModel::rename,
-            listBySource = viewModel.listBySource,
-            removeItems = viewModel::removeItems,
-            items = viewModel.items,
-            searchItems = viewModel.searchItems,
             searchQuery = viewModel.searchQuery,
             setQuery = viewModel::setQuery,
             searchBarActive = viewModel.searchBarActive,
@@ -746,6 +797,11 @@ private fun InfoSheet(
     onDeleteListAction: () -> Unit,
     onRemoveItemsAction: () -> Unit,
     onExportAction: () -> Unit,
+    filtered: List<String>,
+    onFilterAction: (String) -> Unit,
+    onClearFilterAction: () -> Unit,
+    showBySource: Boolean,
+    onShowBySource: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -850,7 +906,9 @@ private fun InfoSheet(
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             OutlinedTextField(
                 currentName,
@@ -877,22 +935,36 @@ private fun InfoSheet(
                     )
                 },
                 supportingContent = {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Require Biometrics?")
-                        Checkbox(
-                            checked = customItem.item.useBiometric,
-                            onCheckedChange = {
-                                if (it) {
-                                    showSecurityDialog = true
-                                } else {
-                                    showRemoveSecurityDialog = true
+                    Column {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Require Biometrics?")
+                            Checkbox(
+                                checked = customItem.item.useBiometric,
+                                onCheckedChange = {
+                                    if (it) {
+                                        showSecurityDialog = true
+                                    } else {
+                                        showRemoveSecurityDialog = true
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Show by Source?")
+                            Checkbox(
+                                checked = showBySource,
+                                onCheckedChange = onShowBySource
+                            )
+                        }
                     }
                 },
                 colors = ListItemDefaults.colors(
@@ -904,11 +976,25 @@ private fun InfoSheet(
 
             Text("List Count: ${customItem.list.size}")
 
-            //TODO: Make these chips to filter the list
-            // Add option to show sources grouped or not
-            customItem.list
-                .groupBy { it.source }
-                .forEach { (t, u) -> Text("$t: ${u.size}") }
+            FlowRow(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                customItem.list
+                    .groupBy { it.source }
+                    .forEach { (t, u) ->
+                        FilterChip(
+                            selected = filtered.contains(t),
+                            onClick = { onFilterAction(t) },
+                            label = { Text(t) },
+                            trailingIcon = { Text(u.size.toString()) }
+                        )
+                    }
+
+                FilledTonalButton(
+                    onClick = onClearFilterAction
+                ) { Text("Clear Filter") }
+            }
 
             HorizontalDivider()
 
