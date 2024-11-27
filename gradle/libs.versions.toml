@@ -217,7 +217,7 @@ sonner = { module = "io.github.dokar3:sonner", version = "0.3.8" }
 datastore = "androidx.datastore:datastore:1.1.1"
 datastorePref = "androidx.datastore:datastore-preferences:1.1.1"
 
-jsoup = "org.jsoup:jsoup:1.18.1"
+jsoup = "org.jsoup:jsoup:1.18.2"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
 
