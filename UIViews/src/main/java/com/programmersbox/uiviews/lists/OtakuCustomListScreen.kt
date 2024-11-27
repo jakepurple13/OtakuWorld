@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -435,7 +436,7 @@ fun OtakuCustomListScreen(
                     .haze(state = hazeState)
             ) {
                 when (val state = viewModel.items) {
-                    is OtakuListState.BySource -> {
+                    is OtakuListState.BySource if state.items.isNotEmpty() -> {
                         state.items.forEach { (source, sourceItems) ->
                             item(
                                 span = { GridItemSpan(maxLineSpan) },
@@ -475,7 +476,7 @@ fun OtakuCustomListScreen(
                         }
                     }
 
-                    is OtakuListState.ByTitle -> {
+                    is OtakuListState.ByTitle if state.items.isNotEmpty() -> {
                         items(
                             items = state.items,
                             key = { it.key },
@@ -504,8 +505,17 @@ fun OtakuCustomListScreen(
                         }
                     }
 
-                    OtakuListState.Empty -> {
-
+                    else -> {
+                        item(
+                            span = { GridItemSpan(maxLineSpan) }
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Text("You haven't added anything to this list yet!")
+                            }
+                        }
                     }
                 }
             }

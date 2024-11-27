@@ -14,8 +14,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 import kotlin.reflect.KClass
 
-abstract class AndroidPluginBase<T: BaseExtension>(
-    private val clazz: KClass<T>
+abstract class AndroidPluginBase<T : BaseExtension>(
+    private val clazz: KClass<T>,
 ) : Plugin<Project> {
 
     abstract fun Project.projectSetup()
@@ -26,7 +26,7 @@ abstract class AndroidPluginBase<T: BaseExtension>(
         target.pluginManager.apply("kotlin-android")
         target.tasks.withType<KotlinCompile> {
             compilerOptions {
-                freeCompilerArgs.add("-Xcontext-receivers")
+                freeCompilerArgs.add("-Xwhen-guards")
                 jvmTarget.set(JvmTarget.JVM_1_8)
             }
         }
