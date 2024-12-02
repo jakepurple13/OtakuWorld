@@ -4,12 +4,19 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +25,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
@@ -26,6 +35,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ElevatedCard
@@ -55,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
@@ -83,7 +95,6 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
@@ -91,6 +102,7 @@ import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.rememberSwatchStyle
 import com.programmersbox.uiviews.utils.rememberSwatchType
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -101,7 +113,6 @@ fun DetailsScreen(
     detailInfo: Screen.DetailsScreen.Details,
     logo: NotificationLogo,
     windowSize: WindowSizeClass,
-    localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     blurHashDao: BlurHashDao = LocalBlurDao.current,
@@ -118,7 +129,6 @@ fun DetailsScreen(
     DetailsScreen(
         logo = logo,
         windowSize = windowSize,
-        localContext = localContext,
         dao = dao,
         genericInfo = genericInfo,
         details = details
@@ -136,7 +146,6 @@ fun DetailsScreen(
     //detailInfo: Screen.DetailsScreen.Details,
     logo: NotificationLogo,
     windowSize: WindowSizeClass,
-    localContext: Context = LocalContext.current,
     dao: ItemDao = LocalItemDao.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     blurHashDao: BlurHashDao = LocalBlurDao.current,
@@ -150,7 +159,6 @@ fun DetailsScreen(
         )
     },
 ) {
-    val uriHandler = LocalUriHandler.current
     val showDownload by LocalSettingsHandling.current.rememberShowDownload()
     val scope = rememberCoroutineScope()
     val handling = LocalSettingsHandling.current
@@ -184,92 +192,109 @@ fun DetailsScreen(
         state = dynamicColor,
         animate = true
     ) {
-        if (details.info == null) {
-            Scaffold(
-                topBar = {
-                    InsetSmallTopAppBar(
-                        modifier = Modifier.zIndex(2f),
-                        title = {
-                            Text(
-                                details.itemModel?.title.orEmpty(),
-                                maxLines = 1
-                            )
-                        },
-                        navigationIcon = { BackButton() },
-                        actions = {
-                            val shareItem = rememberLauncherForActivityResult(
-                                ActivityResultContracts.StartActivityForResult()
-                            ) {}
-                            IconButton(
-                                onClick = {
-                                    shareItem.launchCatching(
-                                        Intent.createChooser(
-                                            Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
-                                                putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
-                                            },
-                                            localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
-                                        )
-                                    )
-                                }
-                            ) { Icon(Icons.Default.Share, null) }
+        AnimatedContent(
+            targetState = details.currentState,
+            label = "",
+            transitionSpec = {
+                when (val state = targetState) {
+                    is DetailState.Success if state.info == (initialState as? DetailState.Success)?.info -> {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    }
 
-                            IconButton(
-                                onClick = {
-                                    details.itemModel?.url?.let { uriHandler.openUri(it) }
-                                }
-                            ) { Icon(Icons.Default.OpenInBrowser, null) }
-
-                            IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
-                        },
+                    else -> fadeIn() togetherWith fadeOut()
+                }
+            },
+            contentKey = {
+                when (it) {
+                    is DetailState.Success -> it.info
+                    else -> it
+                }
+            }
+        ) { target ->
+            when (val state = target) {
+                is DetailState.Error -> {
+                    DetailError(
+                        details = details,
+                        state = state
                     )
                 }
-            ) { PlaceHolderHeader(it, details.blurHash) }
-        } else if (details.info != null) {
 
-            val isSaved by dao.doesNotificationExistFlow(details.itemModel!!.url).collectAsStateWithLifecycle(false)
+                DetailState.Loading -> {
+                    DetailLoading(
+                        details = details
+                    )
+                }
 
-            if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {
-                DetailsViewLandscape(
-                    info = details.info!!,
-                    isSaved = isSaved,
-                    shareChapter = shareChapter,
-                    logo = logo,
-                    isFavorite = details.favoriteListener,
-                    onFavoriteClick = { b -> if (b) details.removeItem() else details.addItem() },
-                    chapters = details.chapters,
-                    markAs = details::markAs,
-                    description = details.description,
-                    onTranslateDescription = details::translateDescription,
-                    showDownloadButton = { showDownload },
-                    canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
-                    notifyAction = { scope.launch { details.toggleNotify() } },
-                    onPaletteSet = { details.palette = it }
-                )
-            } else {
-                DetailsView(
-                    info = details.info!!,
-                    isSaved = isSaved,
-                    shareChapter = shareChapter,
-                    logo = logo,
-                    isFavorite = details.favoriteListener,
-                    onFavoriteClick = { b -> if (b) details.removeItem() else details.addItem() },
-                    chapters = details.chapters,
-                    markAs = details::markAs,
-                    description = details.description,
-                    onTranslateDescription = details::translateDescription,
-                    showDownloadButton = { showDownload },
-                    canNotify = details.dbModel?.shouldCheckForUpdate ?: false,
-                    notifyAction = { scope.launch { details.toggleNotify() } },
-                    onPaletteSet = { details.palette = it },
-                    onBitmapSet = { details.imageBitmap = it },
-                    blurHash = details.blurHash
-                )
+                is DetailState.Success -> {
+                    DetailContent(
+                        dao = dao,
+                        details = details,
+                        scope = scope,
+                        state = state,
+                        windowSize = windowSize,
+                        shareChapter = shareChapter,
+                        logo = logo,
+                        showDownload = showDownload
+                    )
+                }
             }
         }
     }
-    ToasterItemsSetup(toastItems = details)
+}
+
+@OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun DetailContent(
+    dao: ItemDao,
+    details: DetailsViewModel,
+    scope: CoroutineScope,
+    state: DetailState.Success,
+    windowSize: WindowSizeClass,
+    shareChapter: Boolean,
+    logo: NotificationLogo,
+    showDownload: Boolean,
+) {
+    val isSaved by dao
+        .doesNotificationExistFlow(state.info.url)
+        .collectAsStateWithLifecycle(false)
+
+    if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {
+        DetailsViewLandscape(
+            info = state.info,
+            isSaved = isSaved,
+            shareChapter = shareChapter,
+            logo = logo,
+            isFavorite = state.action is DetailFavoriteAction.Remove,
+            onFavoriteClick = { details.favoriteAction(state.action) },
+            chapters = details.chapters,
+            markAs = details::markAs,
+            description = details.description,
+            onTranslateDescription = details::translateDescription,
+            showDownloadButton = { showDownload },
+            canNotify = details.dbModel?.shouldCheckForUpdate == true,
+            notifyAction = { scope.launch { details.toggleNotify() } },
+            onPaletteSet = { details.palette = it }
+        )
+    } else {
+        DetailsView(
+            info = state.info,
+            isSaved = isSaved,
+            shareChapter = shareChapter,
+            logo = logo,
+            isFavorite = state.action is DetailFavoriteAction.Remove,
+            onFavoriteClick = { details.favoriteAction(state.action) },
+            chapters = details.chapters,
+            markAs = details::markAs,
+            description = details.description,
+            onTranslateDescription = details::translateDescription,
+            showDownloadButton = { showDownload },
+            canNotify = details.dbModel?.shouldCheckForUpdate == true,
+            notifyAction = { scope.launch { details.toggleNotify() } },
+            onPaletteSet = { details.palette = it },
+            onBitmapSet = { details.imageBitmap = it },
+            blurHash = details.blurHash
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -324,6 +349,126 @@ fun MarkAsScreen(
                             )
                         }
                     )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+private fun DetailLoading(
+    details: DetailsViewModel,
+    localContext: Context = LocalContext.current,
+    uriHandler: UriHandler = LocalUriHandler.current,
+) {
+    Scaffold(
+        topBar = {
+            InsetSmallTopAppBar(
+                modifier = Modifier.zIndex(2f),
+                title = {
+                    Text(
+                        details.itemModel?.title.orEmpty(),
+                        maxLines = 1
+                    )
+                },
+                navigationIcon = { BackButton() },
+                actions = {
+                    val shareItem = rememberLauncherForActivityResult(
+                        ActivityResultContracts.StartActivityForResult()
+                    ) {}
+                    IconButton(
+                        onClick = {
+                            shareItem.launchCatching(
+                                Intent.createChooser(
+                                    Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
+                                        putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
+                                    },
+                                    localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+                                )
+                            )
+                        }
+                    ) { Icon(Icons.Default.Share, null) }
+
+                    IconButton(
+                        onClick = {
+                            details.itemModel?.url?.let { uriHandler.openUri(it) }
+                        }
+                    ) { Icon(Icons.Default.OpenInBrowser, null) }
+
+                    IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
+                },
+            )
+        }
+    ) { PlaceHolderHeader(it, details.blurHash) }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DetailError(
+    details: DetailsViewModel,
+    localContext: Context = LocalContext.current,
+    uriHandler: UriHandler = LocalUriHandler.current,
+    state: DetailState.Error,
+) {
+    Scaffold(
+        topBar = {
+            InsetSmallTopAppBar(
+                modifier = Modifier.zIndex(2f),
+                title = {
+                    Text(
+                        details.itemModel?.title.orEmpty(),
+                        maxLines = 1
+                    )
+                },
+                navigationIcon = { BackButton() },
+                actions = {
+                    val shareItem = rememberLauncherForActivityResult(
+                        ActivityResultContracts.StartActivityForResult()
+                    ) {}
+                    IconButton(
+                        onClick = {
+                            shareItem.launchCatching(
+                                Intent.createChooser(
+                                    Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
+                                        putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
+                                    },
+                                    localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+                                )
+                            )
+                        }
+                    ) { Icon(Icons.Default.Share, null) }
+
+                    IconButton(
+                        onClick = {
+                            details.itemModel?.url?.let { uriHandler.openUri(it) }
+                        }
+                    ) { Icon(Icons.Default.OpenInBrowser, null) }
+
+                    IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, null) }
+                },
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(padding),
+            contentAlignment = Alignment.Center
+        ) {
+            Card {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Warning, null)
+                    Text("Something happened!")
+                    Text(state.e.message.orEmpty())
                 }
             }
         }
