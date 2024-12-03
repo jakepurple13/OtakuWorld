@@ -154,8 +154,13 @@ class UpdateFlowWorker(
                         )
                     )
                     runCatching {
+                        withTimeoutOrNull(10000) {
+                            m.getRecentFlow()
+                                .catch { emit(emptyList()) }
+                                .firstOrNull()
+                        }
                         /*withTimeoutOrNull(10000) { m.getRecentFlow().firstOrNull() }*/
-                        getRecents(m)
+                        //getRecents(m)
                     }
                         .onFailure {
                             recordFirebaseException(it)
