@@ -67,7 +67,6 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(libs.bundles.koinLibs)
     implementation(platform(libs.composePlatform))
     implementation(libs.bundles.compose)
     implementation(libs.coilGif)

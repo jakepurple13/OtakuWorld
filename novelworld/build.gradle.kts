@@ -50,7 +50,5 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(libs.bundles.koinLibs)
-
     implementation(libs.ktorAndroid)
 }

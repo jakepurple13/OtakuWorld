@@ -43,7 +43,8 @@ dependencies {
 
     implementation(libs.reactiveNetwork)
 
-    implementation(libs.bundles.koinLibs)
+    api(platform(libs.koin.bom))
+    api(libs.bundles.koinLibs)
 
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
@@ -78,7 +79,7 @@ dependencies {
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(libs.workRuntime)
+    api(libs.workRuntime)
 
     implementation(libs.kotlinxSerialization)
 

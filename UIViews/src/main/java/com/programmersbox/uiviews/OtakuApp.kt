@@ -6,6 +6,7 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -34,6 +35,7 @@ import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
+import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -46,6 +48,8 @@ import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.androidx.workmanager.dsl.worker
+import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -53,7 +57,7 @@ import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-abstract class OtakuApp : Application() {
+abstract class OtakuApp : Application(), Configuration.Provider {
 
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate() {
@@ -100,8 +104,13 @@ abstract class OtakuApp : Application() {
                             logoId = applicationInfo.icon
                         )
                     }
+                    single { UpdateNotification(get()) }
+                    worker { UpdateFlowWorker(get(), get(), get(), get(), get(), get(), get()) }
+                    worker { AppCheckWorker(get(), get(), get()) }
+                    worker { SourceUpdateChecker(get(), get(), get(), get(), get(), get()) }
                 }
             )
+            workManagerFactory()
         }
 
         onCreated()
@@ -190,6 +199,11 @@ abstract class OtakuApp : Application() {
         shortcutSetup()
 
     }
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .build()
 
     abstract fun onCreated()
 

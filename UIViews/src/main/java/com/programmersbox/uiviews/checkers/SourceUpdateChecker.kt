@@ -16,15 +16,15 @@ import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class SourceUpdateChecker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), KoinComponent {
-
-    private val logo: NotificationLogo by inject()
-    private val sourceRepository: SourceRepository by inject()
-    private val sourceLoader: SourceLoader by inject()
-    private val otakuWorldCatalog: OtakuWorldCatalog by inject()
-
+class SourceUpdateChecker(
+    context: Context,
+    workerParams: WorkerParameters,
+    private val logo: NotificationLogo,
+    private val sourceRepository: SourceRepository,
+    private val sourceLoader: SourceLoader,
+    private val otakuWorldCatalog: OtakuWorldCatalog,
+) : CoroutineWorker(context, workerParams), KoinComponent {
     override suspend fun doWork(): Result {
         return try {
             val notificationManager = applicationContext.notificationManager

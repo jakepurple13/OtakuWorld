@@ -49,6 +49,7 @@ dependencies {
 
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
+    implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koinLibs)
     implementation(Deps.jakepurple13Libs)
     implementation(libs.uiUtil)

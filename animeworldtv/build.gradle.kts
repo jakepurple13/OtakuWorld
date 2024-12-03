@@ -38,7 +38,8 @@ dependencies {
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    implementation(libs.koinAndroid)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
     implementation(libs.bundles.roomLibs)
     implementation(libs.gson)
 

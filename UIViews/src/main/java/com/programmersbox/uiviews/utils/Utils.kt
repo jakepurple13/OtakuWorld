@@ -17,7 +17,7 @@ fun recordFirebaseException(throwable: Throwable) = runCatching {
 
 fun logFirebaseMessage(message: String) = runCatching {
     Firebase.crashlytics.log(message)
-}
+}.onFailure { println(message) }
 
 fun combineSources(
     sourceRepository: SourceRepository,

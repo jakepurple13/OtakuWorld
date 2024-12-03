@@ -13,7 +13,7 @@ dragselect = "2.4.1"
 easylauncher = "6.4.0"
 firebaseCrashlyticsGradle = "3.0.2"
 googleServices = "4.4.2"
-haze = "1.0.2"
+haze = "1.1.0"
 kamelImage = "1.0.2"
 latestAboutLibsRelease = "11.2.3"
 coroutinesVersion = "1.9.0"
@@ -24,7 +24,7 @@ protobufGradlePlugin = "0.9.4"
 reorderable = "2.4.0"
 roomVersion = "2.7.0-alpha11"
 navVersion = "2.9.0-alpha03"
-koinVersion = "4.0.0"
+koin-bom = "4.0.0"
 coil = "2.7.0"
 lifecycle = "2.9.0-alpha07"
 jetpack = "1.6.0-alpha03"
@@ -164,8 +164,11 @@ lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", versio
 lifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 lifecycleViewModel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 
-koinAndroid = { module = "io.insert-koin:koin-android", version.ref = "koinVersion" }
-koinCompose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinVersion" }
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+koin-core = { module = "io.insert-koin:koin-core" }
+koinCompose = { module = "io.insert-koin:koin-androidx-compose" }
+koin-android = { module = "io.insert-koin:koin-android" }
+koin-workmanager = { module = "io.insert-koin:koin-androidx-workmanager" }
 
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
@@ -372,7 +375,7 @@ media3 = [
 leanbackLibs = ["leanback", "leanbackPreference"]
 
 okHttpLibs = ["okhttpLib", "okhttpDns"]
-koinLibs = ["koinAndroid", "koinCompose"]
+koinLibs = ["koin-android", "koin-core", "koin-workmanager", "koinCompose"]
 firebaseCrashLibs = ["crashlytics", "analytics"]
 datastoreLibs = ["datastore", "datastorePref"]
 
