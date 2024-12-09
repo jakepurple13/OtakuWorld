@@ -196,7 +196,7 @@ class MainFragment : BrowseSupportFragment() {
                 .filterNotNull()
                 .map {
                     val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                    AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
+                    AppUpdate.checkForUpdate(appVersion, it.updateRealVersion.orEmpty())
                 }
                 .onEach {
                     if (it) gridRowAdapter.add(resources.getString(R.string.update_available))

@@ -73,7 +73,7 @@ class AppCheckWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.update_real_version.orEmpty() }
+            val f = withTimeoutOrNull(60000) { AppUpdate.getUpdate()?.updateRealVersion.orEmpty() }
             logFirebaseMessage("Current Version: $f")
             val appVersion = applicationContext.appVersion
             if (f != null && AppUpdate.checkForUpdate(appVersion, f)) {

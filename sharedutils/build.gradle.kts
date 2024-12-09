@@ -2,6 +2,7 @@ import plugins.ProductFlavorTypes
 
 plugins {
     id("otaku-library")
+    id("kotlinx-serialization")
 }
 
 android {
@@ -46,6 +47,8 @@ dependencies {
 
     implementation(libs.coroutinesCore)
     implementation(libs.coroutinesAndroid)
+
+    implementation(libs.bundles.ktorLibs)
 
     implementation(projects.models)
     implementation(projects.favoritesdatabase)

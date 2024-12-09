@@ -47,6 +47,8 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 
+//TODO: MAYBE give each screen an enum of where they are and the transitions are based off of that?
+
 @OptIn(
     ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class
 )

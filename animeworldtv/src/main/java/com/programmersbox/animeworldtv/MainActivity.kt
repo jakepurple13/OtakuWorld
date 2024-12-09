@@ -26,7 +26,7 @@ class MainActivity : FragmentActivity() {
 
         lifecycleScope.launch {
             if (currentService == null) {
-                val s = Sources.values().filterNot(Sources::notWorking).random()
+                val s = Sources.entries.filterNot(Sources::notWorking).random()
                 //sourceFlow.emit(s)
                 currentService = s.serviceName
             } else if (currentService != null) {

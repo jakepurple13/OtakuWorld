@@ -121,14 +121,14 @@ fun InfoSettings(
         val downloadInstaller = remember { DownloadAndInstaller(context) }
 
         ShowWhen(
-            visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.update_real_version.orEmpty())
+            visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.updateRealVersion.orEmpty())
         ) {
             var showDialog by remember { mutableStateOf(false) }
 
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
-                    title = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                    title = { Text(stringResource(R.string.updateTo, appUpdate?.updateRealVersion.orEmpty())) },
                     text = { Text(stringResource(R.string.please_update_for_latest_features)) },
                     confirmButton = {
                         TextButton(
@@ -171,7 +171,7 @@ fun InfoSettings(
 
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.update_available)) },
-                summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.update_real_version.orEmpty())) },
+                summaryValue = { Text(stringResource(R.string.updateTo, appUpdate?.updateRealVersion.orEmpty())) },
                 modifier = Modifier.clickable(
                     indication = ripple(),
                     interactionSource = null
