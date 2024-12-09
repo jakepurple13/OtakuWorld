@@ -2,5 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:base"
-  ]
+  ],
+  "ignoreDeps": ["app.cash.zipline:zipline-profiler", "app.cash.zipline:zipline-loader"]
 }
