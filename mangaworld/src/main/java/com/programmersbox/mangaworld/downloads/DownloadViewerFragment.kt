@@ -59,7 +59,6 @@ import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
 import com.programmersbox.mangaworld.MangaSettingsHandling
@@ -83,7 +82,6 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalPermissionsApi::class,
     ExperimentalFoundationApi::class,
     ExperimentalAnimationApi::class,
 )
@@ -263,6 +261,7 @@ private fun ChapterItem(
                                                 }
                                                 emit(true)
                                             } catch (e: Exception) {
+                                                e.printStackTrace()
                                                 emit(false)
                                             }
                                         }

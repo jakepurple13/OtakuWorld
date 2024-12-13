@@ -31,7 +31,8 @@ import coil.request.ImageRequest
 import coil.size.Size
 import com.bumptech.glide.load.model.GlideUrl
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
-import com.github.panpf.zoomimage.compose.glide.internal.ExperimentalGlideComposeApi
+import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
+import com.github.panpf.zoomimage.rememberGlideZoomState
 import com.github.panpf.zoomimage.zoom.ReadMode
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangaworld.R
@@ -182,14 +183,14 @@ internal fun Panpf(
             .fillMaxWidth()
             .clip(RectangleShape)
     ) {
-        val state = com.github.panpf.zoomimage.compose.rememberZoomState()
+        val state = rememberGlideZoomState()
         LaunchedEffect(Unit) {
             state.zoomable.readMode = ReadMode(ReadMode.SIZE_TYPE_VERTICAL, ReadMode.Decider.Default)
         }
 
         GlideZoomAsyncImage(
             model = remember(painter) { GlideUrl(painter) { headers } },
-            state = state,
+            zoomState = state,
             contentDescription = null,
             contentScale = contentScale,
             scrollBar = null,

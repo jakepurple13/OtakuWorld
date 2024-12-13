@@ -69,7 +69,6 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import coil.request.videoFramePercent
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
@@ -97,7 +96,6 @@ import java.util.concurrent.TimeUnit
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalAnimationApi::class,
-    ExperimentalPermissionsApi::class
 )
 @Composable
 fun ViewVideoScreen() {

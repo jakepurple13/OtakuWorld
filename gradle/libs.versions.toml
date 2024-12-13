@@ -21,7 +21,7 @@ glideVersion = "4.16.0"
 pagecurl = "1.5.1"
 pagingVersion = "3.3.5"
 protobufGradlePlugin = "0.9.4"
-reorderable = "2.4.0"
+reorderable = "2.4.2"
 roomVersion = "2.7.0-alpha12"
 navVersion = "2.9.0-alpha04"
 koin-bom = "4.0.0"
@@ -30,7 +30,7 @@ lifecycle = "2.9.0-alpha08"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
-accompanist = "0.36.0"
+accompanist = "0.37.0"
 okhttpVersion = "4.12.0"
 ktorVersion = "3.0.2"
 workVersion = "2.10.0"
@@ -61,7 +61,7 @@ benchmark-macro-junit4 = "1.3.0"
 androidx-baselineprofile = "1.3.0"
 profileinstaller = "1.3.1"
 zoomableImageGlide = "0.14.0"
-zoomimageComposeGlide = "1.0.2"
+zoomimageComposeGlide = "1.1.0"
 
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
@@ -139,7 +139,6 @@ material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "m
 
 #Accompanist
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 okhttpLib = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
 okhttpDns = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpVersion" }
@@ -340,7 +339,7 @@ compose = [
     "composeRuntimeLivedata",
     "landscapist-bom", "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
     "coilCompose",
-    "composeConstraintLayout", "permissions",
+    "composeConstraintLayout",
     "drawablePainter", "uiUtil",
     "materialYou", "materialYou-common",
     "materialWindow",
@@ -354,7 +353,7 @@ composeTv = [
     "composeRuntimeLivedata",
     "landscapist-bom", "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
     "coilCompose",
-    "composeConstraintLayout", "permissions",
+    "composeConstraintLayout",
     "drawablePainter", "uiUtil",
     "navCompose"
 ]

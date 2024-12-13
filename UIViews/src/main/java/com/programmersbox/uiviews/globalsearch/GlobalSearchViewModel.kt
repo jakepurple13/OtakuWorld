@@ -48,6 +48,7 @@ class GlobalSearchViewModel(
             isRefreshing = true
             isSearching = true
             searchListPublisher = emptyList()
+            //TODO: Add option to have live population or all at once
             async {
                 sourceRepository.list
                     .apmap { a ->
@@ -61,21 +62,26 @@ class GlobalSearchViewModel(
                             .onCompletion { isRefreshing = false }
                     }
                     .forEach { launch { it.collect() } }
+
                 // this populates after it all finishes
-                /*combine(
-                info.searchList()
-                        .apmap { a ->
-                            a
-                                .searchSourceList(searchText, list = emptyList())
-                                .dispatchIoAndCatchList()
-                                .map { SearchModel(a.serviceName, it) }
+                /*val d = awaitAll(
+                    *sourceRepository
+                        .list
+                        .mapNotNull { a ->
+                            async {
+                                a
+                                    .apiService
+                                    .searchSourceList(searchText, list = emptyList())
+                                    .dispatchIoAndCatchList()
+                                    .map { SearchModel(a.apiService.serviceName, it) }
+                                    .filter { it.data.isNotEmpty() }
+                                    .firstOrNull()
+                            }
                         }
-                ) { it.toList().filter { s -> s.data.isNotEmpty() } }
-                    .onStart { isRefreshing = true }
-                    .onCompletion { isRefreshing = false }
-                    .onEach { searchListPublisher = it }
-                    .collect()
-                */
+                        .toTypedArray()
+                ).filterNotNull()
+                searchListPublisher = d
+                isRefreshing = false*/
             }.await()
             isSearching = false
         }

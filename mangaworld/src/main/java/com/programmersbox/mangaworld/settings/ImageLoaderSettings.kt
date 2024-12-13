@@ -190,7 +190,7 @@ private fun Coil(
     )
 }
 
-@OptIn(com.github.panpf.zoomimage.compose.glide.internal.ExperimentalGlideComposeApi::class)
+@OptIn(com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi::class)
 @Composable
 private fun Panpf(
     url: String,

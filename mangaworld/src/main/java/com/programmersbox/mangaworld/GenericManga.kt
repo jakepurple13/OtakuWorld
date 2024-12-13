@@ -46,7 +46,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -262,7 +261,7 @@ class GenericManga(
         }
     }
 
-    @OptIn(ExperimentalPermissionsApi::class, ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalAnimationApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
 
         viewSettings {

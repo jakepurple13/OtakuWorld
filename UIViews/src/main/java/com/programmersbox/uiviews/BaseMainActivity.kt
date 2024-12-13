@@ -6,8 +6,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -113,8 +115,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.SourceOrder
@@ -387,7 +387,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 Modifier.draggable(
                     orientation = Orientation.Vertical,
                     state =
-                    rememberDraggableState { delta -> scrollBehavior.state.heightOffset -= delta },
+                        rememberDraggableState { delta -> scrollBehavior.state.heightOffset -= delta },
                     onDragStopped = { velocity ->
                         settleAppBarBottom(
                             scrollBehavior.state,
@@ -713,12 +713,11 @@ abstract class BaseMainActivity : AppCompatActivity() {
         )
     }
 
-    @OptIn(ExperimentalPermissionsApi::class)
     @Composable
     fun AskForNotificationPermissions() {
         if (Build.VERSION.SDK_INT >= 33) {
-            val permissions = rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
-            LaunchedEffect(Unit) { permissions.launchPermissionRequest() }
+            val permissionRequest = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+            LaunchedEffect(Unit) { permissionRequest.launch(Manifest.permission.POST_NOTIFICATIONS) }
         }
     }
 
