@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.helpfulutils.requestPermissions
@@ -104,7 +104,7 @@ fun InfoSettings(
             ) { uriHandler.openUri("https://ko-fi.com/V7V3D3JI") }
         )
 
-        val appUpdate by updateAppCheck.collectAsState(null)
+        val appUpdate by updateAppCheck.collectAsStateWithLifecycle(null)
 
         PreferenceSetting(
             settingIcon = {

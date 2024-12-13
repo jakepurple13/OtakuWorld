@@ -45,7 +45,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -312,7 +311,7 @@ private fun SettingsScreen(
     sourcesOrderClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
 
     if (BuildConfig.DEBUG) {
         PreferenceSetting(
@@ -369,7 +368,9 @@ private fun SettingsScreen(
         )
     )
 
-    val historyCount by LocalHistoryDao.current.getAllRecentHistoryCount().collectAsState(initial = 0)
+    val historyCount by LocalHistoryDao.current
+        .getAllRecentHistoryCount()
+        .collectAsStateWithLifecycle(0)
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.history)) },

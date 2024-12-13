@@ -56,7 +56,6 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +73,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.CrossFade
@@ -153,11 +153,11 @@ fun GlobalSearchView(
     val pullRefreshState = rememberPullToRefreshState()
     val mainLogoDrawable = koinInject<AppLogo>()
 
-    val networkState by viewModel.observeNetwork.collectAsState(initial = true)
+    val networkState by viewModel.observeNetwork.collectAsStateWithLifecycle(true)
 
     val history by dao
         .searchHistory("%${viewModel.searchText}%")
-        .collectAsState(emptyList())
+        .collectAsStateWithLifecycle(emptyList())
 
     var showBanner by remember { mutableStateOf(false) }
 

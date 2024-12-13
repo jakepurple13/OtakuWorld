@@ -6,13 +6,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -30,7 +30,9 @@ fun PlaySettings(
     SettingsScaffold(stringResource(R.string.playSettings)) {
         val scope = rememberCoroutineScope()
         val settingsHandling = LocalSettingsHandling.current
-        val slider by settingsHandling.batteryPercentage.collectAsState(runBlocking { settingsHandling.batteryPercentage.first() })
+        val slider by settingsHandling
+            .batteryPercentage
+            .collectAsStateWithLifecycle(runBlocking { settingsHandling.batteryPercentage.first() })
         var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }
 
         SliderSetting(

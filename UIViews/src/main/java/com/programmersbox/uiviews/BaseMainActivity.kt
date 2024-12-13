@@ -85,7 +85,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -723,7 +722,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @Composable
     fun updateCheck(): Boolean {
-        val appUpdate by updateAppCheck.collectAsState(null)
+        val appUpdate by updateAppCheck.collectAsStateWithLifecycle(null)
         return AppUpdate.checkForUpdate(
             appVersion(),
             appUpdate?.updateRealVersion.orEmpty()

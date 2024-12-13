@@ -36,7 +36,6 @@ import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +50,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -95,10 +95,10 @@ fun AllView(
     allVm: AllViewModel = viewModel { AllViewModel(dao, currentSourceRepository) },
     isHorizontal: Boolean = false,
 ) {
-    val isConnected by allVm.observeNetwork.collectAsState(initial = true)
+    val isConnected by allVm.observeNetwork.collectAsStateWithLifecycle(true)
     val source by currentSourceRepository
         .asFlow()
-        .collectAsState(initial = null)
+        .collectAsStateWithLifecycle(null)
 
     LaunchedEffect(isConnected) {
         if (allVm.sourceList.isEmpty() && source != null && isConnected && allVm.count != 1) allVm.reset(source!!)
@@ -301,7 +301,7 @@ fun AllScreen(
     modifier: Modifier = Modifier,
 ) {
     val info = LocalGenericInfo.current
-    val source by LocalCurrentSource.current.asFlow().collectAsState(initial = null)
+    val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
     val navController = LocalNavController.current
     val pullRefreshState = rememberPullToRefreshState()
     NormalOtakuScaffold { p ->

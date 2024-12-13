@@ -71,7 +71,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,6 +88,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 
@@ -102,7 +102,7 @@ fun GeminiRecommendationScreen(
     val dao = database.recommendationDao()
     val savedRecommendations by dao
         .getAllRecommendations()
-        .collectAsState(emptyList())
+        .collectAsStateWithLifecycle(emptyList())
 
     GeminiRecommendationScreen(
         savedRecommendations = savedRecommendations,

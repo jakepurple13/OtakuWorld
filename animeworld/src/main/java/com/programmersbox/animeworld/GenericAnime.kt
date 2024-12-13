@@ -46,7 +46,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,6 +63,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -313,7 +313,8 @@ class GenericAnime(
 
     @Composable
     override fun DetailActions(infoModel: InfoModel, tint: Color) {
-        val showCast by MainActivity.cast.sessionConnected().collectAsState(initial = true)
+        val showCast by MainActivity.cast.sessionConnected()
+            .collectAsStateWithLifecycle(true)
 
         AnimatedVisibility(
             visible = showCast,
@@ -514,7 +515,9 @@ class GenericAnime(
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
 
-            val player by context.useNewPlayerFlow.collectAsState(true)
+            val player by context
+                .useNewPlayerFlow
+                .collectAsStateWithLifecycle(true)
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.use_new_player)) },
@@ -524,7 +527,7 @@ class GenericAnime(
                 updateValue = { scope.launch { context.updatePref(USER_NEW_PLAYER, it) } }
             )
 
-            val ignoreSsl by context.ignoreSsl.collectAsState(initial = true)
+            val ignoreSsl by context.ignoreSsl.collectAsStateWithLifecycle(true)
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },

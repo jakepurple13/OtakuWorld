@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.BatteryStd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -199,7 +198,7 @@ fun <T, R> rememberPreference(
             .data
             .mapNotNull { it[key]?.let(mapToType) ?: defaultValue }
             .distinctUntilChanged()
-    }.collectAsState(defaultValue)
+    }.collectAsStateWithLifecycle(defaultValue)
 
     return remember(state) {
         object : MutableState<R> {

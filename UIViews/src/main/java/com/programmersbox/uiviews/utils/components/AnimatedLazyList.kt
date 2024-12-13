@@ -25,13 +25,21 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import kotlinx.coroutines.CoroutineScope
@@ -453,7 +461,9 @@ fun <T> AnimatedLazyRow(
     val scope = rememberCoroutineScope { Dispatchers.Main }
     val viewModel = remember { AnimatedLazyListViewModel<T>(scope, animationDuration, reverseLayout) }
     viewModel.updateList(items)
-    val currentItems by viewModel.items.collectAsState(emptyList())
+    val currentItems by viewModel
+        .items
+        .collectAsStateWithLifecycle(emptyList())
 
     LazyRow(
         state = state,
@@ -497,7 +507,9 @@ fun <T> AnimatedLazyColumn(
     val scope = rememberCoroutineScope()
     val viewModel = remember { AnimatedLazyListViewModel<T>(scope, animationDuration, reverseLayout) }
     viewModel.updateList(items)
-    val currentItems by viewModel.items.collectAsState(emptyList())
+    val currentItems by viewModel
+        .items
+        .collectAsStateWithLifecycle(emptyList())
 
     LazyColumn(
         state = state,
