@@ -47,6 +47,8 @@ composeBomVersion = "2024.12.01"
 materialKolor = "2.0.0"
 firebaseKtx = "0.2.1"
 
+googlePerformancePlugin = "1.4.2"
+
 ### MangaWorld
 piasy = "1.8.1"
 
@@ -65,6 +67,10 @@ zoomimageComposeGlide = "1.1.0"
 
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
+arcore = "1.0.0-alpha01"
+composeXr = "1.0.0-alpha01"
+scenecore = "1.0.0-alpha01"
+
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -73,6 +79,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
 org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "googleAndroidLibrariesMapsplatformSecretsGradlePlugin" }
+google-firebase-performance = { id = "com.google.firebase.firebase-perf", version.ref = "googlePerformancePlugin" }
 
 [libraries]
 androidx-baselineprofile-gradle-plugin = { module = "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin", version.ref = "androidx-baselineprofile" }
@@ -311,6 +318,7 @@ firebaseFirestore = { group = "com.google.firebase", name = "firebase-firestore"
 firebaseAuth = { group = "com.google.firebase", name = "firebase-auth" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-perf = { module = "com.google.firebase:firebase-perf" }
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
 playServices = "com.google.android.gms:play-services-auth:21.3.0"
 
@@ -329,6 +337,11 @@ uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", versi
 benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark-macro-junit4" }
 profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
 panpf-zoomimage-compose-glide = { module = "io.github.panpf.zoomimage:zoomimage-compose-glide", version.ref = "zoomimageComposeGlide" }
+
+androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
+androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
+androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
+androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version.ref = "composeXr" }
 
 [bundles]
 compose = [
@@ -375,7 +388,7 @@ leanbackLibs = ["leanback", "leanbackPreference"]
 
 okHttpLibs = ["okhttpLib", "okhttpDns"]
 koinLibs = ["koin-android", "koin-core", "koin-workmanager", "koinCompose"]
-firebaseCrashLibs = ["crashlytics", "analytics"]
+firebaseCrashLibs = ["crashlytics", "analytics", "firebase-perf"]
 datastoreLibs = ["datastore", "datastorePref"]
 
 piasyLibs = ["bigImageViewer", "bigImageGlideLoader", "progressPieIndicator"]
@@ -410,4 +423,11 @@ kamel = [
     "kamel-decoder-image-vector",
     "kamel-decoder-svg-batik",
     "kamel-decoder-svg-std"
+]
+
+xr = [
+    "androidx-arcore",
+    "androidx-compose-xr",
+    "androidx-scenecore",
+    "androidx-xr-material3"
 ]

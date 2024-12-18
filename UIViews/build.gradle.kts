@@ -142,6 +142,8 @@ dependencies {
 
     implementation(libs.reorderable)
 
+    //implementation(libs.bundles.xr)
+
     //TODO: Use this to check recomposition count on every screen
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")
 }

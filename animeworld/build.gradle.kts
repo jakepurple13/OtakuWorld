@@ -4,6 +4,7 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
     id("com.mikepenz.aboutlibraries.plugin")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.firebase.performance)
 }
 
 android {

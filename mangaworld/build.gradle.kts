@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
     //id("androidx.baselineprofile")
+    alias(libs.plugins.google.firebase.performance)
 }
 
 android {
