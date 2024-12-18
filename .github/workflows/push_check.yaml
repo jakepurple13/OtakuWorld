@@ -52,7 +52,7 @@ jobs:
         id: buildMangaApks
         run: ./gradlew mangaworld:assembleRelease
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: manga_sign
         with:
@@ -62,7 +62,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: manga_sign_no_firebase
         with:
@@ -112,7 +112,7 @@ jobs:
         id: buildAnimeApks
         run: ./gradlew animeworld:assembleRelease
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: anime_sign
         with:
@@ -122,7 +122,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: anime_sign_no_firebase
         with:
@@ -172,7 +172,7 @@ jobs:
         id: buildAnimeTvApks
         run: ./gradlew animeworldtv:assembleRelease
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: animetv_sign
         with:
@@ -182,7 +182,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: animetv_sign_no_firebase
         with:
@@ -232,7 +232,7 @@ jobs:
         id: buildNovelApks
         run: ./gradlew novelworld:assembleRelease
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: novel_sign
         with:
@@ -242,7 +242,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.1
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: novel_sign_no_firebase
         with:
