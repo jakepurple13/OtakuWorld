@@ -142,7 +142,7 @@ class UpdateFlowWorker(
             val sourceSize = sourceRepository.apiServiceList.size
 
             //TODO: Add some tracing metrics
-            putAttribute("sourceSize", sourceSize.toString())
+            putMetric("sourceSize", sourceSize.toLong())
 
             // Getting all recent updates
             val newList = list.intersect(
@@ -177,7 +177,7 @@ class UpdateFlowWorker(
             ) { o, n -> o.url == n.url }
                 .distinctBy { it.url }
 
-            putAttribute("updateCheckSize", newList.size.toString())
+            putMetric("updateCheckSize", newList.size.toLong())
 
             // Checking if any have updates
             println("Checking for updates")
