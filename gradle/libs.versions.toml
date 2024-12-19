@@ -65,6 +65,8 @@ profileinstaller = "1.3.1"
 zoomableImageGlide = "0.14.0"
 zoomimageComposeGlide = "1.1.0"
 
+workinspector = "1.2"
+
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 arcore = "1.0.0-alpha01"
@@ -337,6 +339,8 @@ uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", versi
 benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark-macro-junit4" }
 profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
 panpf-zoomimage-compose-glide = { module = "io.github.panpf.zoomimage:zoomimage-compose-glide", version.ref = "zoomimageComposeGlide" }
+
+workinspector = { module = "com.github.koitharu:workinspector", version.ref = "workinspector" }
 
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }

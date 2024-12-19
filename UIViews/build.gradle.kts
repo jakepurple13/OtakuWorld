@@ -142,6 +142,8 @@ dependencies {
 
     implementation(libs.reorderable)
 
+    debugImplementation(libs.workinspector)
+
     //implementation(libs.bundles.xr)
 
     //TODO: Use this to check recomposition count on every screen

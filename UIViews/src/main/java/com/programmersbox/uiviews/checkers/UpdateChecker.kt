@@ -19,6 +19,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.google.firebase.perf.trace
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
@@ -111,116 +112,126 @@ class UpdateFlowWorker(
         const val CHECK_ALL = "check_all"
     }
 
-    override suspend fun doWork(): Result = try {
-        update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
-        logFirebaseMessage("Starting check here")
-        applicationContext.updatePref(UPDATE_CHECKING_START, System.currentTimeMillis())
+    override suspend fun doWork(): Result = trace("update_checker") {
+        try {
+            update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
+            logFirebaseMessage("Starting check here")
+            applicationContext.updatePref(UPDATE_CHECKING_START, System.currentTimeMillis())
 
-        logFirebaseMessage("Start")
+            logFirebaseMessage("Start")
 
-        val checkAll = inputData.getBoolean(CHECK_ALL, false)
+            val checkAll = inputData.getBoolean(CHECK_ALL, false)
 
-        //Getting all favorites
-        val list = listOf(
-            if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync(),
-            FirebaseDb.getAllShows().requireNoNulls()
-                .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
-        )
-            .flatten()
-            .groupBy(DbModel::url)
-            .map { it.value.fastMaxBy(DbModel::numChapters)!! }
-
-        //Making sure we have our sources
-        if (sourceRepository.list.isEmpty()) {
-            sourceLoader.blockingLoad()
-        }
-
-        logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
-
-        val sourceSize = sourceRepository.apiServiceList.size
-
-        // Getting all recent updates
-        val newList = list.intersect(
-            sourceRepository.apiServiceList
-                .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
-                .mapIndexedNotNull { index, m ->
-                    logFirebaseMessage("Checking ${m.serviceName}")
-                    //TODO: Make this easier to handle
-                    setProgress(
-                        workDataOf(
-                            "max" to sourceSize,
-                            "progress" to index,
-                            "source" to m.serviceName,
-                        )
-                    )
-                    runCatching {
-                        withTimeoutOrNull(10000) {
-                            m.getRecentFlow()
-                                .catch { emit(emptyList()) }
-                                .firstOrNull()
-                        }
-                        /*withTimeoutOrNull(10000) { m.getRecentFlow().firstOrNull() }*/
-                        //getRecents(m)
-                    }
-                        .onFailure {
-                            recordFirebaseException(it)
-                            it.printStackTrace()
-                        }
-                        .getOrNull()
-                        .also { logFirebaseMessage("Finished checking ${m.serviceName} with ${it?.size}") }
-                }.flatten()
-        ) { o, n -> o.url == n.url }
-            .distinctBy { it.url }
-
-        // Checking if any have updates
-        println("Checking for updates")
-        val items = newList.mapIndexedNotNull { index, model ->
-            update.sendRunningNotification(newList.size, index, model.title)
-            setProgress(
-                workDataOf(
-                    "max" to newList.size,
-                    "progress" to index,
-                    "source" to model.title,
-                )
+            //Getting all favorites
+            val list = listOf(
+                if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync(),
+                FirebaseDb.getAllShows().requireNoNulls()
+                    .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
             )
-            runCatching {
-                val newData = sourceRepository.toSourceByApiServiceName(model.source)
-                    ?.apiService
-                    ?.let {
-                        withTimeout(10000) {
-                            model.toItemModel(it)
-                                .toInfoModel()
-                                .firstOrNull()
-                                ?.getOrNull()
-                        }
-                    }
-                logFirebaseMessage("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
-                // To test notifications, comment the takeUnless out
-                Pair(newData, model)
-                    .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
+                .flatten()
+                .groupBy(DbModel::url)
+                .map { it.value.fastMaxBy(DbModel::numChapters)!! }
+
+            //Making sure we have our sources
+            if (sourceRepository.list.isEmpty()) {
+                sourceLoader.blockingLoad()
             }
-                .onFailure {
-                    recordFirebaseException(it)
-                    it.printStackTrace()
+
+            logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
+
+            val sourceSize = sourceRepository.apiServiceList.size
+
+            //TODO: Add some tracing metrics
+            putAttribute("sourceSize", sourceSize.toString())
+
+            // Getting all recent updates
+            val newList = list.intersect(
+                sourceRepository.apiServiceList
+                    .filter { s -> list.fastAny { m -> m.source == s.serviceName } }
+                    .mapIndexedNotNull { index, m ->
+                        logFirebaseMessage("Checking ${m.serviceName}")
+                        //TODO: Make this easier to handle
+                        setProgress(
+                            workDataOf(
+                                "max" to sourceSize,
+                                "progress" to index,
+                                "source" to m.serviceName,
+                            )
+                        )
+                        runCatching {
+                            withTimeoutOrNull(10000) {
+                                m.getRecentFlow()
+                                    .catch { emit(emptyList()) }
+                                    .firstOrNull()
+                            }
+                            /*withTimeoutOrNull(10000) { m.getRecentFlow().firstOrNull() }*/
+                            //getRecents(m)
+                        }
+                            .onFailure {
+                                recordFirebaseException(it)
+                                it.printStackTrace()
+                            }
+                            .getOrNull()
+                            .also { logFirebaseMessage("Finished checking ${m.serviceName} with ${it?.size}") }
+                    }.flatten()
+            ) { o, n -> o.url == n.url }
+                .distinctBy { it.url }
+
+            putAttribute("updateCheckSize", newList.size.toString())
+
+            // Checking if any have updates
+            println("Checking for updates")
+            val items = newList.mapIndexedNotNull { index, model ->
+                update.sendRunningNotification(newList.size, index, model.title)
+                setProgress(
+                    workDataOf(
+                        "max" to newList.size,
+                        "progress" to index,
+                        "source" to model.title,
+                    )
+                )
+                runCatching {
+                    val newData = sourceRepository.toSourceByApiServiceName(model.source)
+                        ?.apiService
+                        ?.let {
+                            withTimeout(10000) {
+                                model.toItemModel(it)
+                                    .toInfoModel()
+                                    .firstOrNull()
+                                    ?.getOrNull()
+                            }
+                        }
+                    logFirebaseMessage("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
+                    // To test notifications, comment the takeUnless out
+                    Pair(newData, model)
+                        .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
                 }
-                .getOrNull()
+                    .onFailure {
+                        recordFirebaseException(it)
+                        it.printStackTrace()
+                    }
+                    .getOrNull()
+            }
+
+            // Saving updates
+            update.updateManga(dao, items)
+            update.onEnd(
+                update.mapDbModel(dao, items, genericInfo),
+                info = genericInfo
+            )/* { id, notification -> setForegroundInfo(id, notification) }*/
+            logFirebaseMessage("Finished!")
+
+            Result.success()
+        } catch (e: Exception) {
+            recordFirebaseException(e)
+            applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
+            update.sendFinishedNotification()
+            Result.success()
+        } finally {
+            applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
+            update.sendFinishedNotification()
+            Result.success()
         }
-
-        // Saving updates
-        update.updateManga(dao, items)
-        update.onEnd(update.mapDbModel(dao, items, genericInfo), info = genericInfo)/* { id, notification -> setForegroundInfo(id, notification) }*/
-        logFirebaseMessage("Finished!")
-
-        Result.success()
-    } catch (e: Exception) {
-        recordFirebaseException(e)
-        applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
-        update.sendFinishedNotification()
-        Result.success()
-    } finally {
-        applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
-        update.sendFinishedNotification()
-        Result.success()
     }
 
     //TODO: This will be tested out for now.

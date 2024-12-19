@@ -99,6 +99,12 @@ fun DebugView() {
                 }
             }*/
 
+            /*item {
+                Button(
+                    onClick = { context.startActivity(WorkInspector.getIntent(context)) }
+                ) { Text("Work Inspector") }
+            }*/
+
             item {
                 Button(
                     onClick = { error("Crash") }
