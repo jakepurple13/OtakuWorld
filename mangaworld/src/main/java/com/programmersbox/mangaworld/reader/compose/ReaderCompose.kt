@@ -75,6 +75,8 @@ import eu.wewox.pagecurl.page.PageCurlState
 import eu.wewox.pagecurl.page.rememberPageCurlState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -342,7 +344,19 @@ fun ReadView(
                     paddingValues = p
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
-                    Crossfade(targetState = readerType, label = "") {
+                    Crossfade(
+                        targetState = readerType,
+                        label = "",
+                        modifier = if (imageLoaderType == ImageLoaderType.Panpf) {
+                            Modifier
+                        } else {
+                            Modifier.zoomable(
+                                rememberZoomState(),
+                                enableOneFingerZoom = false,
+                                onTap = { readVm.showInfo = !readVm.showInfo }
+                            )
+                        }
+                    ) {
                         when (it) {
                             ReaderType.List -> {
                                 ListView(

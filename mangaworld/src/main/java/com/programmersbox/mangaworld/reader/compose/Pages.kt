@@ -65,8 +65,6 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.engawapg.lib.zoomable.rememberZoomState
-import net.engawapg.lib.zoomable.zoomable
 
 @Composable
 internal fun LastPageReached(
@@ -257,7 +255,7 @@ enum class SwipeUpGesture {
 internal fun ChapterPage(
     chapterLink: () -> String,
     isDownloaded: Boolean,
-    openCloseOverlay: () -> Unit,
+    openCloseOverlay: () -> Unit = {},
     headers: Map<String, String>,
     contentScale: ContentScale,
     imageLoaderType: ImageLoaderType,
@@ -283,7 +281,6 @@ internal fun ChapterPage(
                 headers = headers,
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = contentScale,
-                onClick = openCloseOverlay,
                 imageLoaderType = imageLoaderType
             )
         }
@@ -298,7 +295,6 @@ private fun ZoomableImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     imageLoaderType: ImageLoaderType,
-    onClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -309,11 +305,6 @@ private fun ZoomableImage(
                 onClick = onClick,
                 interactionSource = null
             )*/
-            .zoomable(
-                rememberZoomState(),
-                enableOneFingerZoom = false,
-                onTap = { onClick() }
-            )
     ) {
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
