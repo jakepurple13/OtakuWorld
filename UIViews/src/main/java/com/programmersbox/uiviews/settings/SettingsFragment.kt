@@ -66,7 +66,6 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
@@ -93,6 +92,7 @@ import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.Locale
 
@@ -292,8 +292,7 @@ internal fun SettingScreen(
 
 @Composable
 private fun SettingsScreen(
-    dao: ItemDao = LocalItemDao.current,
-    vm: SettingsViewModel = viewModel { SettingsViewModel(dao) },
+    vm: SettingsViewModel = koinViewModel(),
     notificationClick: () -> Unit,
     composeSettingsDsl: ComposeSettingsDsl,
     debugMenuClick: () -> Unit,

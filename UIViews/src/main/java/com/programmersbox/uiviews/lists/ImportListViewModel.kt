@@ -5,8 +5,10 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.fromJson
@@ -18,11 +20,14 @@ import java.util.UUID
 
 class ImportListViewModel(
     private val listDao: ListDao,
-    importListScreen: Screen.ImportListScreen,
+    savedStateHandle: SavedStateHandle,
     context: Context,
 ) : ViewModel() {
 
-    private val document = importListScreen.uri.let(Uri::parse)
+    private val document = savedStateHandle
+        .toRoute<Screen.ImportListScreen>()
+        .uri
+        .let(Uri::parse)
 
     var importStatus: ImportListStatus by mutableStateOf(ImportListStatus.Loading)
         private set

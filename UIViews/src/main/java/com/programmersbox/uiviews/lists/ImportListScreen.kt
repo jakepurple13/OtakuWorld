@@ -20,12 +20,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,12 +52,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.dokar.sonner.ToastType
-import com.dokar.sonner.rememberToasterState
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -67,147 +70,145 @@ import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.ToasterSetup
-import com.programmersbox.uiviews.utils.ToasterUtils
 import com.programmersbox.uiviews.utils.components.NormalOtakuScaffold
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.UUID
-import kotlin.time.Duration
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ImportListScreen(
-    importList: Screen.ImportListScreen,
     listDao: ListDao = LocalCustomListDao.current,
-    context: Context = LocalContext.current,
-    vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, importList, context) },
+    vm: ImportListViewModel = koinViewModel(),
 ) {
-    val toaster = rememberToasterState()
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val logoDrawable = koinInject<AppLogo>().logo
 
-    when (val status = vm.importStatus) {
-        ImportListStatus.Loading -> {
-            LaunchedEffect(Unit) {
-                toaster.show(
-                    "Importing...",
-                    id = ToasterUtils.LOADING_TOAST_ID,
-                    icon = ToasterUtils.LOADING_TOAST_ID,
-                    duration = Duration.INFINITE,
-                )
-            }
-            Box(Modifier.fillMaxSize()) {
-                CircularProgressIndicator()
-            }
-        }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-        is ImportListStatus.Error -> {
-            LaunchedEffect(Unit) {
-                toaster.dismiss(ToasterUtils.LOADING_TOAST_ID)
-                toaster.show("Error", type = ToastType.Error)
-            }
-            NormalOtakuScaffold(
-                topBar = {
-                    InsetSmallTopAppBar(
-                        title = { Text(stringResource(R.string.importing_import_list)) },
-                        navigationIcon = { BackButton() },
-                        scrollBehavior = scrollBehavior
-                    )
-                },
-            ) { padding ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        Icons.Default.Warning,
-                        null,
-                        modifier = Modifier.size(50.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
-                    )
-                    Text(stringResource(id = R.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
-                    Text(status.throwable.localizedMessage.orEmpty())
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
+        }
+    ) { _ ->
+        when (val status = vm.importStatus) {
+            ImportListStatus.Loading -> {
+                LaunchedEffect(Unit) {
+                    snackbarHostState.showSnackbar("Importing...")
+                }
+                Box(Modifier.fillMaxSize()) {
+                    CircularWavyProgressIndicator()
                 }
             }
-        }
 
-        is ImportListStatus.Success -> {
-            LaunchedEffect(Unit) {
-                toaster.dismiss(ToasterUtils.LOADING_TOAST_ID)
-                toaster.show("Completed!", type = ToastType.Success)
-            }
-            val lists by listDao.getAllLists().collectAsStateWithLifecycle(emptyList())
-            var name by remember(status.customList?.item) { mutableStateOf(status.customList?.item?.name.orEmpty()) }
-            NormalOtakuScaffold(
-                topBar = {
-                    Column {
+            is ImportListStatus.Error -> {
+                LaunchedEffect(Unit) {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar("Error")
+                }
+                NormalOtakuScaffold(
+                    topBar = {
                         InsetSmallTopAppBar(
                             title = { Text(stringResource(R.string.importing_import_list)) },
                             navigationIcon = { BackButton() },
-                            actions = { Text("(${status.customList?.list.orEmpty().size})") },
                             scrollBehavior = scrollBehavior
                         )
+                    },
+                ) { padding ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            Icons.Default.Warning,
+                            null,
+                            modifier = Modifier.size(50.dp),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                        )
+                        Text(stringResource(id = R.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
+                        Text(status.throwable.localizedMessage.orEmpty())
+                    }
+                }
+            }
 
-                        Surface {
-                            OutlinedTextField(
-                                value = name,
-                                onValueChange = { name = it },
-                                label = { Text(stringResource(R.string.list_name)) },
-                                placeholder = { Text(status.customList?.item?.name.orEmpty()) },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                isError = lists.any { it.item.name == name },
+            is ImportListStatus.Success -> {
+                LaunchedEffect(Unit) {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar("Completed!")
+                }
+                val lists by listDao.getAllLists().collectAsStateWithLifecycle(emptyList())
+                var name by remember(status.customList?.item) { mutableStateOf(status.customList?.item?.name.orEmpty()) }
+                NormalOtakuScaffold(
+                    topBar = {
+                        Column {
+                            InsetSmallTopAppBar(
+                                title = { Text(stringResource(R.string.importing_import_list)) },
+                                navigationIcon = { BackButton() },
+                                actions = { Text("(${status.customList?.list.orEmpty().size})") },
+                                scrollBehavior = scrollBehavior
+                            )
+
+                            Surface {
+                                OutlinedTextField(
+                                    value = name,
+                                    onValueChange = { name = it },
+                                    label = { Text(stringResource(R.string.list_name)) },
+                                    placeholder = { Text(status.customList?.item?.name.orEmpty()) },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                    isError = lists.any { it.item.name == name },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    },
+                    bottomBar = {
+                        BottomAppBar(
+                            windowInsets = WindowInsets(0.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        vm.importList(name)
+                                        navController.popBackStack()
+                                    }
+                                },
+                                enabled = lists.none { it.item.name == name },
                                 modifier = Modifier.fillMaxWidth()
+                            ) { Text(stringResource(R.string.import_import_list)) }
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(LocalNavHostPadding.current)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                ) { padding ->
+                    LazyColumn(
+                        contentPadding = padding,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    ) {
+                        items(status.customList?.list.orEmpty()) { item ->
+                            CustomItem(
+                                item = item,
+                                logoDrawable = logoDrawable,
+                                modifier = Modifier.animateItem()
                             )
                         }
-                    }
-                },
-                bottomBar = {
-                    BottomAppBar(
-                        windowInsets = WindowInsets(0.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    vm.importList(name)
-                                    navController.popBackStack()
-                                }
-                            },
-                            enabled = lists.none { it.item.name == name },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text(stringResource(R.string.import_import_list)) }
-                    }
-                },
-                modifier = Modifier
-                    .padding(LocalNavHostPadding.current)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-            ) { padding ->
-                LazyColumn(
-                    contentPadding = padding,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(vertical = 4.dp),
-                ) {
-                    items(status.customList?.list.orEmpty()) { item ->
-                        CustomItem(
-                            item = item,
-                            logoDrawable = logoDrawable,
-                            modifier = Modifier.animateItem()
-                        )
                     }
                 }
             }
         }
     }
-
-    ToasterSetup(toaster = toaster)
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -257,11 +258,9 @@ private fun ImportScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
         val context: Context = LocalContext.current
-        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, Screen.ImportListScreen(""), context) }
+        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle(), context) }
         ImportListScreen(
-            importList = Screen.ImportListScreen(""),
             listDao = listDao,
-            context = context,
             vm = vm
         )
     }

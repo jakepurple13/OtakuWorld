@@ -58,28 +58,20 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.biometricPrompting
-import com.programmersbox.uiviews.utils.components.DataStoreHandling
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
-    viewModel: OtakuListViewModel = koinViewModel(),//viewModel { OtakuListViewModel(listDao) },
+    viewModel: OtakuListViewModel = koinViewModel(),
     isHorizontal: Boolean = false,
-    dataStoreHandling: DataStoreHandling = koinInject(),
 ) {
     val context = LocalContext.current
-    val customListViewModel: OtakuCustomListViewModel = koinViewModel()/*viewModel {
-        OtakuCustomListViewModel(
-            listDao = listDao,
-            showBySourceFlow = dataStoreHandling.showBySource
-        )
-    }*/
+    val customListViewModel: OtakuCustomListViewModel = koinViewModel()
 
     val scope = rememberCoroutineScope()
     val showListDetail by LocalSettingsHandling.current.rememberShowListDetail()

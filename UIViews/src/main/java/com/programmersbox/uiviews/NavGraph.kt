@@ -213,7 +213,7 @@ fun NavGraphBuilder.settings(
             )
         }
 
-        composable<Screen.ImportListScreen> { ImportListScreen(it.toRoute()) }
+        composable<Screen.ImportListScreen> { ImportListScreen() }
 
         animatedScopeComposable<Screen.NotificationScreen>(
             deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),

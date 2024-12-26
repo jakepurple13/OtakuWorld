@@ -84,7 +84,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.work.Data
@@ -120,7 +119,6 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.M3CoverCard
@@ -128,7 +126,6 @@ import com.programmersbox.uiviews.utils.M3ImageCard
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.components.BottomSheetDeleteGridScaffold
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
@@ -144,6 +141,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -167,8 +165,7 @@ fun NotificationsScreen(
     genericInfo: GenericInfo = LocalGenericInfo.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     db: ItemDao = LocalItemDao.current,
-    settingsHandling: SettingsHandling = LocalSettingsHandling.current,
-    vm: NotificationScreenViewModel = viewModel { NotificationScreenViewModel(db, settingsHandling, sourceRepository) },
+    vm: NotificationScreenViewModel = koinViewModel(),
     cancelNotificationById: (Int) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
 ) {
