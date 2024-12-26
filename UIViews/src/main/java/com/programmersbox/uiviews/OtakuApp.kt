@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import androidx.annotation.CallSuper
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Configuration
@@ -31,6 +32,7 @@ import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.AppLogo
+import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
@@ -63,6 +65,7 @@ import java.util.concurrent.TimeUnit
 abstract class OtakuApp : Application(), Configuration.Provider {
 
     @OptIn(ExperimentalComposeUiApi::class)
+    @CallSuper
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
@@ -86,6 +89,14 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
         Loged.TAG = this::class.java.simpleName
+
+        createFirebaseIds().let {
+            FirebaseDb.DOCUMENT_ID = it.documentId
+            FirebaseDb.CHAPTERS_ID = it.chaptersId
+            FirebaseDb.COLLECTION_ID = it.collectionId
+            FirebaseDb.ITEM_ID = it.itemId
+            FirebaseDb.READ_OR_WATCHED_ID = it.readOrWatchedId
+        }
 
         createNotificationChannel("otakuChannel", importance = NotificationChannelImportance.HIGH)
         createNotificationGroup("otakuGroup")
@@ -211,9 +222,10 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             .setMinimumLoggingLevel(android.util.Log.DEBUG)
             .build()
 
-    abstract fun onCreated()
+    open fun onCreated() {}
 
     abstract fun Module.buildModules()
+    abstract fun createFirebaseIds(): FirebaseIds
 
     protected open fun shortcuts(): List<ShortcutInfo> = emptyList()
 
@@ -235,6 +247,14 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         manager.dynamicShortcuts = shortcuts
     }
+
+    data class FirebaseIds(
+        val documentId: String,
+        val chaptersId: String,
+        val collectionId: String,
+        val itemId: String,
+        val readOrWatchedId: String,
+    )
 
     companion object {
 
