@@ -53,27 +53,19 @@ jobs:
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          arguments: mangaworld:assembleRelease
+        run: ./gradlew mangaworld:assembleRelease
 
       - name: Build AnimeWorld artifacts
         id: buildAnimeApks
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          arguments: animeworld:assembleRelease
+        run: ./gradlew animeworld:assembleRelease
 
       - name: Build NovelWorld artifacts
         id: buildNovelApks
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          arguments: novelworld:assembleRelease
+        run: ./gradlew novelworld:assembleRelease
 
       - name: Build AnimeWorldTV artifacts
         id: buildAnimeTvApks
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          arguments: animeworldtv:assembleRelease
+        run: ./gradlew animeworldtv:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
