@@ -9,9 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -19,7 +21,6 @@ import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -37,26 +38,30 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import org.koin.core.component.KoinComponent
 import java.io.File
 
 private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
-    mangaReader: MangaReader,
+    savedStateHandle: SavedStateHandle,
     private val dao: ItemDao,
-    val genericInfo: GenericInfo,
     private val chapterHolder: ChapterHolder,
-    val headers: MutableMap<String, String> = mutableMapOf(),
-    model: Flow<List<String>>? = chapterHolder.chapterModel
+) : ViewModel() {
+
+    private val mangaReader: MangaReader = savedStateHandle.toRoute()
+
+    val isDownloaded: Boolean = mangaReader.downloaded
+    val headers: MutableMap<String, String> = mutableMapOf()
+
+    val model: Flow<List<String>>? = chapterHolder.chapterModel
         ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { h -> h.headers.toList() })
             it.mapNotNull(Storage::link)
-        },
-    val isDownloaded: Boolean = mangaReader.downloaded,
-    filePath: File? = mangaReader.filePath?.let { File(it) },
-    modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
+        }
+
+    val filePath: File? = runCatching { mangaReader.filePath?.let { File(it) } }.getOrNull()
+    val modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
         flow {
             filePath
                 .listFiles()
@@ -69,8 +74,7 @@ class ReadViewModel(
             .flowOn(Dispatchers.IO)
     } else {
         model
-    },
-) : ViewModel(), KoinComponent {
+    }
 
     companion object {
         fun navigateToMangaReader(

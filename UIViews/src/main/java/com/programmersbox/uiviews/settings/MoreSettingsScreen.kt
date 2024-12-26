@@ -16,25 +16,22 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.CategorySetting
-import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.ToasterUtils
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreSettingsScreen(
-    dao: ItemDao = LocalItemDao.current,
-    viewModel: MoreSettingsViewModel = viewModel { MoreSettingsViewModel(dao) },
+    viewModel: MoreSettingsViewModel = koinViewModel(),
 ) {
     val toaster = rememberToasterState(
         onToastDismissed = { viewModel.importExportListStatus = ImportExportListStatus.Idle }

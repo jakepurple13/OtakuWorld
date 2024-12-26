@@ -85,7 +85,6 @@ fun NavGraphBuilder.navGraph(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
         DetailsScreen(
-            detailInfo = it.toRoute(),
             logo = notificationLogo,
             windowSize = windowSize
         )
@@ -194,7 +193,6 @@ fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             GlobalSearchView(
-                globalSearchScreen = it.toRoute<Screen.GlobalSearchScreen>(),
                 notificationLogo = notificationLogo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
@@ -262,7 +260,6 @@ fun NavGraphBuilder.settings(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
         GlobalSearchView(
-            globalSearchScreen = it.toRoute<Screen.GlobalSearchScreen>(),
             notificationLogo = notificationLogo,
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )

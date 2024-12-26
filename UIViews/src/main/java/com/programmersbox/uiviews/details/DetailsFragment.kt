@@ -72,8 +72,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kmpalette.color
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.rememberDynamicMaterialThemeState
@@ -82,20 +80,16 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalBlurDao
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.historySave
@@ -107,30 +101,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun DetailsScreen(
-    detailInfo: Screen.DetailsScreen.Details,
     logo: NotificationLogo,
     windowSize: WindowSizeClass,
     dao: ItemDao = LocalItemDao.current,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    blurHashDao: BlurHashDao = LocalBlurDao.current,
-    details: DetailsViewModel = viewModel {
-        DetailsViewModel(
-            details = detailInfo,
-            handle = createSavedStateHandle(),
-            genericInfo = genericInfo,
-            dao = dao,
-            blurHashDao = blurHashDao
-        )
-    },
+    details: DetailsViewModel = koinViewModel(),
 ) {
-    DetailsScreen(
+    DetailsScreenInternal(
         logo = logo,
         windowSize = windowSize,
         dao = dao,
-        genericInfo = genericInfo,
         details = details
     )
 }
@@ -142,22 +125,12 @@ fun DetailsScreen(
     ExperimentalAnimationApi::class
 )
 @Composable
-fun DetailsScreen(
+private fun DetailsScreenInternal(
     //detailInfo: Screen.DetailsScreen.Details,
     logo: NotificationLogo,
     windowSize: WindowSizeClass,
     dao: ItemDao = LocalItemDao.current,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    blurHashDao: BlurHashDao = LocalBlurDao.current,
-    details: DetailsViewModel = viewModel {
-        DetailsViewModel(
-            //details = detailInfo,
-            handle = createSavedStateHandle(),
-            genericInfo = genericInfo,
-            dao = dao,
-            blurHashDao = blurHashDao
-        )
-    },
+    details: DetailsViewModel = koinViewModel(),
 ) {
     val showDownload by LocalSettingsHandling.current.rememberShowDownload()
     val scope = rememberCoroutineScope()

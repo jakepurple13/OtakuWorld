@@ -13,13 +13,14 @@ import com.mikepenz.iconics.utils.icon
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import org.koin.core.context.loadKoinModules
+import org.koin.core.module.Module
 
 class AnimeApp : OtakuApp() {
+    override fun Module.buildModules() {
+        includes(appModule)
+    }
+
     override fun onCreated() {
-
-        loadKoinModules(appModule)
-
         FirebaseDb.DOCUMENT_ID = "favoriteShows"
         FirebaseDb.CHAPTERS_ID = "episodesWatched"
         FirebaseDb.COLLECTION_ID = "animeworld"

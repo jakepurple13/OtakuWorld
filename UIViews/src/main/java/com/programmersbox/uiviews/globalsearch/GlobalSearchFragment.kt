@@ -74,6 +74,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.CrossFade
@@ -95,13 +96,11 @@ import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
@@ -122,6 +121,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -130,18 +130,10 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 )
 @Composable
 fun GlobalSearchView(
-    globalSearchScreen: Screen.GlobalSearchScreen,
     notificationLogo: NotificationLogo,
     isHorizontal: Boolean,
-    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     dao: HistoryDao = LocalHistoryDao.current,
-    viewModel: GlobalSearchViewModel = viewModel {
-        GlobalSearchViewModel(
-            sourceRepository = sourceRepository,
-            initialSearch = globalSearchScreen.title ?: "",
-            dao = dao,
-        )
-    },
+    viewModel: GlobalSearchViewModel = koinViewModel(),
 ) {
     val hazeState = remember { HazeState() }
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
@@ -576,14 +568,13 @@ private fun GlobalScreenPreview() {
     PreviewTheme {
         val dao = LocalHistoryDao.current
         GlobalSearchView(
-            globalSearchScreen = Screen.GlobalSearchScreen(""),
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
             isHorizontal = false,
             viewModel = viewModel {
                 GlobalSearchViewModel(
                     sourceRepository = SourceRepository(),
-                    initialSearch = "",
+                    savedStateHandle = createSavedStateHandle(),
                     dao = dao,
                 )
             }

@@ -2,13 +2,14 @@ package com.programmersbox.novelworld
 
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import org.koin.core.context.loadKoinModules
+import org.koin.core.module.Module
 
 class NovelApp : OtakuApp() {
+    override fun Module.buildModules() {
+        includes(appModule)
+    }
+
     override fun onCreated() {
-
-        loadKoinModules(appModule)
-
         FirebaseDb.DOCUMENT_ID = "favoriteNovels"
         FirebaseDb.CHAPTERS_ID = "novelsChaptersRead"
         FirebaseDb.COLLECTION_ID = "novelworld"

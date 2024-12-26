@@ -27,7 +27,9 @@ import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -66,6 +68,7 @@ import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun LastPageReached(
     isLoading: Boolean,
@@ -88,7 +91,7 @@ internal fun LastPageReached(
     ) {
         Box(Modifier.fillMaxSize()) {
             if (isLoading) {
-                CircularProgressIndicator(
+                CircularWavyProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
                 )
             }

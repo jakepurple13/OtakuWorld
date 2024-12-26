@@ -53,31 +53,33 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.uiviews.utils.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.biometricPrompting
+import com.programmersbox.uiviews.utils.components.DataStoreHandling
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
-import com.programmersbox.uiviews.utils.showBySource
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun OtakuListScreen(
     listDao: ListDao = LocalCustomListDao.current,
-    viewModel: OtakuListViewModel = viewModel { OtakuListViewModel(listDao) },
+    viewModel: OtakuListViewModel = koinViewModel(),//viewModel { OtakuListViewModel(listDao) },
     isHorizontal: Boolean = false,
+    dataStoreHandling: DataStoreHandling = koinInject(),
 ) {
     val context = LocalContext.current
-    val customListViewModel: OtakuCustomListViewModel = viewModel {
+    val customListViewModel: OtakuCustomListViewModel = koinViewModel()/*viewModel {
         OtakuCustomListViewModel(
             listDao = listDao,
-            showBySourceFlow = context.showBySource
+            showBySourceFlow = dataStoreHandling.showBySource
         )
-    }
+    }*/
 
     val scope = rememberCoroutineScope()
     val showListDetail by LocalSettingsHandling.current.rememberShowListDetail()

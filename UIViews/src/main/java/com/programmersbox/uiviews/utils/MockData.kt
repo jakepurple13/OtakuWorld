@@ -60,6 +60,8 @@ import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.di.viewModels
+import com.programmersbox.uiviews.utils.components.DataStoreHandling
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
@@ -202,6 +204,8 @@ fun PreviewTheme(
                             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                     )
                 }
+                single { DataStoreHandling(get()) }
+                viewModels()
             }
         }
     ) {

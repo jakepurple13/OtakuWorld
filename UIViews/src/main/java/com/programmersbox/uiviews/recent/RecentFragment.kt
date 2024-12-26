@@ -54,9 +54,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
@@ -64,10 +61,8 @@ import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
@@ -80,6 +75,7 @@ import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @OptIn(
@@ -88,11 +84,9 @@ import org.koin.compose.koinInject
 )
 @Composable
 fun RecentView(
-    dao: ItemDao = LocalItemDao.current,
     context: Context = LocalContext.current,
-    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
-    recentVm: RecentViewModel = viewModel { RecentViewModel(dao, sourceRepository, currentSourceRepository) },
+    recentVm: RecentViewModel = koinViewModel(),
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current

@@ -2,7 +2,14 @@ package com.programmersbox.animeworld.videoplayer
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -27,7 +34,6 @@ import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
@@ -37,12 +43,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.security.cert.X509Certificate
-import java.util.*
+import java.util.Formatter
+import java.util.Locale
 import javax.net.ssl.X509TrustManager
 
 class VideoViewModel(
     handle: SavedStateHandle,
-    genericInfo: GenericInfo,
     context: Context,
     private val storageHolder: StorageHolder,
 ) : ViewModel() {

@@ -45,7 +45,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -54,6 +53,7 @@ import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.compose.ReadView
+import com.programmersbox.mangaworld.reader.compose.ReadViewModel
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
@@ -83,6 +83,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import java.io.File
 
@@ -92,6 +93,7 @@ val appModule = module {
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     single { ChapterHolder() }
     single { MangaSettingsHandling(get()) }
+    viewModelOf(::ReadViewModel)
 }
 
 class ChapterHolder {
@@ -123,7 +125,7 @@ class GenericManga(
         chapterHolder.chapters = allChapters
         if (runBlocking { mangaSettingsHandling.useNewReader.flow.first() }) {
             chapterHolder.chapterModel = model
-            com.programmersbox.mangaworld.reader.compose.ReadViewModel.navigateToMangaReader(
+            ReadViewModel.navigateToMangaReader(
                 navController,
                 infoModel.title,
                 model.url,
@@ -400,10 +402,10 @@ class GenericManga(
         ExperimentalFoundationApi::class
     )
     override fun NavGraphBuilder.globalNavSetup() {
-        composable<com.programmersbox.mangaworld.reader.compose.ReadViewModel.MangaReader>(
+        composable<ReadViewModel.MangaReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
-        ) { ReadView(it.toRoute()) }
+        ) { ReadView() }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {

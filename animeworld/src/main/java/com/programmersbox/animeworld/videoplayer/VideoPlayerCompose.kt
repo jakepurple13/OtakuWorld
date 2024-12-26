@@ -130,7 +130,7 @@ fun VideoPlayerUi(
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     storageHolder: StorageHolder = koinInject(),
-    viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), genericInfo, context, storageHolder) },
+    viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), context, storageHolder) },
 ) {
     val activity = LocalActivity.current
 

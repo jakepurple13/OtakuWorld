@@ -50,17 +50,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.ReaderType
-import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
 import dev.chrisbanes.haze.HazeProgressive
@@ -77,6 +71,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -86,20 +81,9 @@ import org.koin.compose.koinInject
 @ExperimentalFoundationApi
 @Composable
 fun ReadView(
-    mangaReader: ReadViewModel.MangaReader,
     context: Context = LocalContext.current,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    ch: ChapterHolder = koinInject(),
     mangaSettingsHandling: MangaSettingsHandling = koinInject(),
-    dao: ItemDao = LocalItemDao.current,
-    readVm: ReadViewModel = viewModel {
-        ReadViewModel(
-            mangaReader = mangaReader,
-            genericInfo = genericInfo,
-            chapterHolder = ch,
-            dao = dao
-        )
-    },
+    readVm: ReadViewModel = koinViewModel(),
 ) {
     HideSystemBarsWhileOnScreen()
 
@@ -351,7 +335,7 @@ fun ReadView(
                             Modifier
                         } else {
                             Modifier.zoomable(
-                                rememberZoomState(),
+                                zoomState = rememberZoomState(),
                                 enableOneFingerZoom = false,
                                 onTap = { readVm.showInfo = !readVm.showInfo }
                             )

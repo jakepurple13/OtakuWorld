@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
@@ -47,18 +48,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class DetailsViewModel(
-    details: Screen.DetailsScreen.Details? = null,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     private val dao: ItemDao,
     private val blurHashDao: BlurHashDao,
-) : ViewModel(), KoinComponent {
+    sourceRepository: SourceRepository,
+) : ViewModel() {
 
-    private val sourceRepository: SourceRepository by inject()
+    private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
     val itemModel: ItemModel? = details?.toItemModel(sourceRepository, genericInfo)
         ?: handle.get<String>("model")

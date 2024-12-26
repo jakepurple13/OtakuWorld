@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -51,6 +50,7 @@ import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
@@ -59,7 +59,7 @@ import java.text.SimpleDateFormat
 fun NotificationSettings(
     dao: ItemDao = LocalItemDao.current,
     context: Context = LocalContext.current,
-    notiViewModel: NotificationViewModel = viewModel { NotificationViewModel(dao, context) },
+    notiViewModel: NotificationViewModel = koinViewModel(),
 ) {
     val work = remember { WorkManager.getInstance(context) }
     SettingsScaffold(stringResource(R.string.notification_settings)) {

@@ -36,8 +36,10 @@ import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.checkers.UpdateNotification
+import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
+import com.programmersbox.uiviews.utils.components.DataStoreHandling
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.Dispatchers
@@ -48,10 +50,11 @@ import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.androidx.workmanager.dsl.worker
+import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
+import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.util.Locale
 import java.util.UUID
@@ -96,6 +99,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             androidContext(this@OtakuApp)
             loadKoinModules(
                 module {
+                    buildModules()
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
                     single { SettingsHandling(get()) }
                     single {
@@ -105,34 +109,36 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                         )
                     }
                     single { UpdateNotification(get()) }
-                    worker { UpdateFlowWorker(get(), get(), get(), get(), get(), get(), get()) }
-                    worker { AppCheckWorker(get(), get(), get()) }
-                    worker { SourceUpdateChecker(get(), get(), get(), get(), get(), get()) }
+                    single { DataStoreHandling(get()) }
+                    workerOf(::UpdateFlowWorker)
+                    workerOf(::AppCheckWorker)
+                    workerOf(::SourceUpdateChecker)
+                    viewModels()
+
+                    single { SourceRepository() }
+                    single { CurrentSourceRepository() }
+                    single { ChangingSettingsRepository() }
+                    single { ItemDatabase.getInstance(get()) }
+                    single { BlurHashDatabase.getInstance(get()) }
+                    single { HistoryDatabase.getInstance(get()) }
+                    single { ListDatabase.getInstance(get()) }
+                    single { get<ListDatabase>().listDao() }
+                    single { get<ItemDatabase>().itemDao() }
+                    single { get<BlurHashDatabase>().blurDao() }
+                    single { get<HistoryDatabase>().historyDao() }
+                    single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
+                    single {
+                        OtakuWorldCatalog(
+                            get<GenericInfo>().sourceType
+                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                        )
+                    }
                 }
             )
             workManagerFactory()
         }
 
         onCreated()
-
-        loadKoinModules(
-            module {
-                single { SourceRepository() }
-                single { CurrentSourceRepository() }
-                single { ChangingSettingsRepository() }
-                single { ItemDatabase.getInstance(get()) }
-                single { BlurHashDatabase.getInstance(get()) }
-                single { HistoryDatabase.getInstance(get()) }
-                single { ListDatabase.getInstance(get()) }
-                single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
-                single {
-                    OtakuWorldCatalog(
-                        get<GenericInfo>().sourceType
-                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-                    )
-                }
-            }
-        )
 
         get<SourceLoader>().load()
 
@@ -206,6 +212,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             .build()
 
     abstract fun onCreated()
+
+    abstract fun Module.buildModules()
 
     protected open fun shortcuts(): List<ShortcutInfo> = emptyList()
 

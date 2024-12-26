@@ -50,7 +50,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
@@ -85,13 +84,14 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
 @Composable
 fun HistoryUi(
     dao: HistoryDao = LocalHistoryDao.current,
-    hm: HistoryViewModel = viewModel { HistoryViewModel(dao) },
+    hm: HistoryViewModel = koinViewModel(),
 ) {
     val recentItems = hm.historyItems.collectAsLazyPagingItems()
     val recentSize by hm.historyCount.collectAsStateWithLifecycle(0)

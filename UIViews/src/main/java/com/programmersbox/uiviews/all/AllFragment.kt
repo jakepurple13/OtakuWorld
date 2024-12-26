@@ -51,9 +51,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
@@ -63,7 +61,6 @@ import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -82,6 +79,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -90,9 +88,8 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 @ExperimentalFoundationApi
 @Composable
 fun AllView(
-    dao: ItemDao = LocalItemDao.current,
     currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
-    allVm: AllViewModel = viewModel { AllViewModel(dao, currentSourceRepository) },
+    allVm: AllViewModel = koinViewModel(),
     isHorizontal: Boolean = false,
 ) {
     val isConnected by allVm.observeNetwork.collectAsStateWithLifecycle(true)

@@ -3,11 +3,14 @@ package com.programmersbox.uiviews.globalsearch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
+import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -22,10 +25,12 @@ import kotlinx.coroutines.runBlocking
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class GlobalSearchViewModel(
+    savedStateHandle: SavedStateHandle,
     val sourceRepository: SourceRepository,
     val dao: HistoryDao,
-    initialSearch: String,
 ) : ViewModel() {
+
+    private val initialSearch: String = savedStateHandle.toRoute<Screen.GlobalSearchScreen>().title ?: ""
 
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()

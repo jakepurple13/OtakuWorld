@@ -5,12 +5,14 @@ import androidx.core.content.FileProvider
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import org.koin.core.context.loadKoinModules
+import org.koin.core.module.Module
 
 class MangaApp : OtakuApp() {
-    override fun onCreated() {
-        loadKoinModules(appModule)
+    override fun Module.buildModules() {
+        includes(appModule)
+    }
 
+    override fun onCreated() {
         SubsamplingScaleImageView.setPreferredBitmapConfig(Bitmap.Config.ARGB_8888)
 
         FirebaseDb.DOCUMENT_ID = "favoriteManga"

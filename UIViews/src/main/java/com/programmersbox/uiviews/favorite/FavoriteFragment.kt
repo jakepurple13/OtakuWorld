@@ -73,7 +73,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
@@ -106,6 +105,7 @@ import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -117,7 +117,7 @@ fun FavoriteUi(
     isHorizontal: Boolean = false,
     dao: ItemDao = LocalItemDao.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
-    viewModel: FavoriteViewModel = viewModel { FavoriteViewModel(dao, sourceRepository) },
+    viewModel: FavoriteViewModel = koinViewModel(),
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current

@@ -17,18 +17,15 @@ import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.components.DataStoreHandling
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.shouldCheckFlow
-import com.programmersbox.uiviews.utils.updateCheckingEnd
-import com.programmersbox.uiviews.utils.updateCheckingStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AccountViewModel : ViewModel() {
@@ -70,7 +67,7 @@ class MoreInfoViewModel : ViewModel() {
 
 class NotificationViewModel(
     dao: ItemDao,
-    context: Context
+    dataStoreHandling: DataStoreHandling,
 ) : ViewModel() {
 
     var savedNotifications by mutableIntStateOf(0)
@@ -80,7 +77,7 @@ class NotificationViewModel(
 
     var time by mutableStateOf("")
 
-    private val dateTimeFormatter by lazy { context.getSystemDateTimeFormat() }
+    private val dateTimeFormatter by lazy { SimpleDateFormat.getDateTimeInstance() }
 
     init {
         dao.getAllNotificationCount()
@@ -88,11 +85,21 @@ class NotificationViewModel(
             .onEach { savedNotifications = it }
             .launchIn(viewModelScope)
 
-        viewModelScope.launch { context.shouldCheckFlow.collect { canCheck = it } }
+        dataStoreHandling
+            .shouldCheck
+            .asFlow()
+            .onEach { canCheck = it }
+            .launchIn(viewModelScope)
 
         combine(
-            context.updateCheckingStart.map { "Start: ${dateTimeFormatter.format(it)}" },
-            context.updateCheckingEnd.map { "End: ${dateTimeFormatter.format(it)}" }
+            dataStoreHandling
+                .updateCheckingStart
+                .asFlow()
+                .map { "Start: ${dateTimeFormatter.format(it)}" },
+            dataStoreHandling
+                .updateCheckingEnd
+                .asFlow()
+                .map { "End: ${dateTimeFormatter.format(it)}" }
         ) { s, e -> s to e }
             .map { "${it.first}\n${it.second}" }
             .onEach { time = it }

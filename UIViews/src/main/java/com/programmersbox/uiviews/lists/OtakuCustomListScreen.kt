@@ -95,6 +95,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
@@ -127,6 +128,7 @@ import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.components.CoilGradientImage
+import com.programmersbox.uiviews.utils.components.DataStoreHandler
 import com.programmersbox.uiviews.utils.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
@@ -142,7 +144,6 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
@@ -774,7 +775,17 @@ private fun DeleteItemsModal(
 private fun CustomListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
-        val viewModel: OtakuCustomListViewModel = viewModel { OtakuCustomListViewModel(listDao, emptyFlow()) }
+        val context = LocalContext.current
+        val viewModel: OtakuCustomListViewModel = viewModel {
+            OtakuCustomListViewModel(
+                listDao,
+                DataStoreHandler(
+                    context = context,
+                    defaultValue = false,
+                    key = booleanPreferencesKey("asdf")
+                )
+            )
+        }
         OtakuCustomListScreen(
             viewModel = viewModel,
             customItem = null,
