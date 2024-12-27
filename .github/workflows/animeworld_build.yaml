@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: echo ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
+      - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
         env:
           ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES_TWO }}
 
