@@ -62,7 +62,7 @@ jobs:
         run: |
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-          echo "NIGHTLY_TIME=${date}" >> $GITHUB_ENV
+          echo "NIGHTLY_TIME=$(date)" >> $GITHUB_ENV
 
       - name: Create Nightly Release
         id: create_release
