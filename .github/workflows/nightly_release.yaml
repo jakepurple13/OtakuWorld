@@ -10,6 +10,8 @@ jobs:
   checkNightly:
     name: Check for new commits
     runs-on: ubuntu-latest
+    outputs:
+      shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,32 +24,32 @@ jobs:
 
   mangaworld:
     needs: checkNightly
-    if: ${{ env.NEW_COMMIT_COUNT > 0 }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/mangaworld_build.yaml
     secrets: inherit # pass all secrets
 
   animeworld:
     needs: checkNightly
-    if: ${{ env.NEW_COMMIT_COUNT > 0 }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
 
   animeworldtv:
     needs: checkNightly
-    if: ${{ env.NEW_COMMIT_COUNT > 0 }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/animeworldtv_build.yaml
     secrets: inherit # pass all secrets
 
   novelworld:
     needs: checkNightly
-    if: ${{ env.NEW_COMMIT_COUNT > 0 }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/novelworld_build.yaml
     secrets: inherit # pass all secrets
 
   release:
     name: Release APK
     needs: [ mangaworld, animeworld, novelworld, animeworldtv ]
-    if: ${{ env.NEW_COMMIT_COUNT > 0 }}
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     runs-on: ubuntu-latest
     steps:
 
