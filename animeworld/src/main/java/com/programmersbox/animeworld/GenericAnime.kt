@@ -131,7 +131,14 @@ class GenericAnime(
     val animeDataStoreHandling: AnimeDataStoreHandling,
 ) : GenericInfo {
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") animeNoFirebaseFile else animeFile }
+    override val apkString: AppUpdate.AppUpdates.() -> String?
+        get() = {
+            when (BuildConfig.FLAVOR) {
+                "noFirebase" -> animeNoFirebaseFile
+                "noCloudFirebase" -> animeNoCloudFile
+                else -> animeFile
+            }
+        }
     override val deepLinkUri: String get() = "animeworld://"
 
     override val sourceType: String get() = "anime"

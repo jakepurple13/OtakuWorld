@@ -69,6 +69,8 @@ import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application(), Configuration.Provider {
 
+    //TODO: Add a screen analytic to every screen
+
     @OptIn(ExperimentalComposeUiApi::class)
     @CallSuper
     override fun onCreate() {

@@ -54,6 +54,14 @@ object AppUpdate {
         val novelNoFirebaseFile: String?,
         @SerialName("animetv_no_firebase_file")
         val animetvNoFirebaseFile: String?,
+        @SerialName("manga_no_cloud_file")
+        val mangaNoCloudFile: String?,
+        @SerialName("anime_no_cloud_file")
+        val animeNoCloudFile: String?,
+        @SerialName("novel_no_cloud_file")
+        val novelNoCloudFile: String?,
+        @SerialName("animetv_no_cloud_file")
+        val animetvNoCloudFile: String?,
     ) {
         fun downloadUrl(url: AppUpdates.() -> String?) = "$updateUrl${url()}"
     }

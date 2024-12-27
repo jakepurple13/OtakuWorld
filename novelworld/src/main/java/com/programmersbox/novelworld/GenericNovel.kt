@@ -110,7 +110,14 @@ class GenericNovel(val context: Context) : GenericInfo {
     ) {
     }
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") novelNoFirebaseFile else novelFile }
+    override val apkString: AppUpdate.AppUpdates.() -> String?
+        get() = {
+            when (BuildConfig.FLAVOR) {
+                "noFirebase" -> novelNoFirebaseFile
+                "noCloudFirebase" -> novelNoCloudFile
+                else -> novelFile
+            }
+        }
 
     @Composable
     override fun ComposeShimmerItem() {

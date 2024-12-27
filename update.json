@@ -10,5 +10,9 @@
   "manga_no_firebase_file": "mangaworld-no-firebase-release.apk",
   "anime_no_firebase_file": "animeworld-no-firebase-release.apk",
   "novel_no_firebase_file": "novelworld-no-firebase-release.apk",
-  "animetv_no_firebase_file": "animeworldtv-no-firebase-release.apk"
+  "animetv_no_firebase_file": "animeworldtv-no-firebase-release.apk",
+  "manga_no_cloud_file": "mangaworld-no-cloud-release.apk",
+  "anime_no_cloud_file": "animeworld-no-cloud-release.apk",
+  "novel_no_cloud_file": "novelworld-no-cloud-release.apk",
+  "animetv_no_cloud_file": "animeworldtv-no-cloud-release.apk"
 }

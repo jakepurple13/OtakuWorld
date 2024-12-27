@@ -111,7 +111,14 @@ class GenericManga(
 
     override val deepLinkUri: String get() = "mangaworld://"
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") mangaNoFirebaseFile else mangaFile }
+    override val apkString: AppUpdate.AppUpdates.() -> String?
+        get() = {
+            when (BuildConfig.FLAVOR) {
+                "noFirebase" -> mangaNoFirebaseFile
+                "noCloudFirebase" -> mangaNoCloudFile
+                else -> mangaFile
+            }
+        }
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(

@@ -62,19 +62,7 @@ jobs:
         run: |
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-
-      #      - name: Update Nightly Release
-      #        id: create_release
-      #        uses: andelf/nightly-release@main
-      #        env:
-      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #        with:
-      #          tag_name: nightly
-      #          name: 'OtakuWorld Nightly Release'
-      #          prerelease: true
-      #          body: 'Nightly release of OtakuWorld.'
-      #          files: |
-      #            ${{ github.workspace }}/release-artifacts/**
+          echo "NIGHTLY_TIME=${date}" >> $GITHUB_ENV
 
       - name: Create Nightly Release
         id: create_release
@@ -87,6 +75,7 @@ jobs:
           generate_release_notes: true
           tag_name: nightly
           name: OtakuWorld Nightly Release
+          body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
             ${{ github.workspace }}/release-artifacts/**
 
@@ -95,4 +84,4 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'Nightly Release of the project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed at {{ steps.create_release.outputs.url }}.'
+          args: 'Nightly Release of the project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed at ${{ steps.create_release.outputs.url }}.'
