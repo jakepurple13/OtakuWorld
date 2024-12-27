@@ -15,7 +15,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.uiviews.utils.dataStore
+import com.programmersbox.uiviews.utils.datastore.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

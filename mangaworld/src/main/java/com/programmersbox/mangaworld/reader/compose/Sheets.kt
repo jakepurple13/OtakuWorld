@@ -70,13 +70,13 @@ import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.components.CategorySetting
 import com.programmersbox.uiviews.utils.components.PreferenceSetting
 import com.programmersbox.uiviews.utils.components.ShowWhen
 import com.programmersbox.uiviews.utils.components.SliderSetting
 import com.programmersbox.uiviews.utils.components.SwitchSetting
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.CoroutineScope

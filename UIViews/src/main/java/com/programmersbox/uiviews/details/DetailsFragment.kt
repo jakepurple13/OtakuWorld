@@ -92,10 +92,10 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.rememberSwatchStyle
+import com.programmersbox.uiviews.utils.datastore.rememberSwatchType
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.rememberSwatchStyle
-import com.programmersbox.uiviews.utils.rememberSwatchType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -64,7 +64,6 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.components.ListSetting
 import com.programmersbox.uiviews.utils.components.PreferenceSetting
 import com.programmersbox.uiviews.utils.components.ShowMoreSetting
@@ -75,10 +74,11 @@ import com.programmersbox.uiviews.utils.components.ThemeItem
 import com.programmersbox.uiviews.utils.components.seedColor
 import com.programmersbox.uiviews.utils.customsettings.item
 import com.programmersbox.uiviews.utils.customsettings.visibleName
-import com.programmersbox.uiviews.utils.rememberFloatingNavigation
-import com.programmersbox.uiviews.utils.rememberHistorySave
-import com.programmersbox.uiviews.utils.rememberSwatchStyle
-import com.programmersbox.uiviews.utils.rememberSwatchType
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
+import com.programmersbox.uiviews.utils.datastore.rememberFloatingNavigation
+import com.programmersbox.uiviews.utils.datastore.rememberHistorySave
+import com.programmersbox.uiviews.utils.datastore.rememberSwatchStyle
+import com.programmersbox.uiviews.utils.datastore.rememberSwatchType
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api

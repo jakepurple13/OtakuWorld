@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils
+package com.programmersbox.uiviews.utils.datastore
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -30,7 +30,6 @@ import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 
-//TODO: Move this into it's own file
 suspend fun <DS : DataStore<MessageType>, MessageType : GeneratedMessageLite<MessageType, BuilderType>, BuilderType : GeneratedMessageLite.Builder<MessageType, BuilderType>> DS.update(
     statsBuilder: suspend BuilderType.() -> BuilderType,
 ) = updateData { statsBuilder(it.toBuilder()).build() }

@@ -15,7 +15,7 @@ import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
-import com.programmersbox.uiviews.utils.SettingsHandling
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

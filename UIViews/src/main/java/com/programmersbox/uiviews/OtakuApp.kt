@@ -28,10 +28,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.programmersbox.extensionloader.SourceLoader
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.CustomListItem
-import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
@@ -44,11 +41,12 @@ import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.checkers.UpdateNotification
+import com.programmersbox.uiviews.di.databases
+import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.utils.SettingsHandling
-import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.datastore.RemoteConfigKeys
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -132,18 +130,9 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     workerOf(::AppCheckWorker)
                     workerOf(::SourceUpdateChecker)
                     viewModels()
+                    databases()
+                    repository()
 
-                    single { SourceRepository() }
-                    single { CurrentSourceRepository() }
-                    single { ChangingSettingsRepository() }
-                    single { ItemDatabase.getInstance(get()) }
-                    single { BlurHashDatabase.getInstance(get()) }
-                    single { HistoryDatabase.getInstance(get()) }
-                    single { ListDatabase.getInstance(get()) }
-                    single { get<ListDatabase>().listDao() }
-                    single { get<ItemDatabase>().itemDao() }
-                    single { get<BlurHashDatabase>().blurDao() }
-                    single { get<HistoryDatabase>().historyDao() }
                     single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
                     single {
                         OtakuWorldCatalog(

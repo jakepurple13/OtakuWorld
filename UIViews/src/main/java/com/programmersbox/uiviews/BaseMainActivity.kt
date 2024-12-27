@@ -127,7 +127,6 @@ import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.components.MultipleActions
@@ -135,8 +134,9 @@ import com.programmersbox.uiviews.utils.components.rememberMultipleBarState
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
+import com.programmersbox.uiviews.utils.datastore.rememberFloatingNavigation
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.rememberFloatingNavigation
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild

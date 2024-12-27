@@ -55,13 +55,14 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseUIStyle
-import com.programmersbox.uiviews.ChangingSettingsRepository
-import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.di.databases
+import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
@@ -194,9 +195,8 @@ fun PreviewTheme(
             }
             module {
                 single<GenericInfo> { MockInfo }
-                single { SourceRepository() }
-                single { CurrentSourceRepository() }
-                single { ChangingSettingsRepository() }
+                repository()
+                databases()
                 single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
                 single {
                     OtakuWorldCatalog(

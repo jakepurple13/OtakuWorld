@@ -12,7 +12,7 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.uiviews.NotificationSortBy
-import com.programmersbox.uiviews.utils.SettingsHandling
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 
 class NotificationScreenViewModel(
     db: ItemDao,
-    private val settingsHandling: SettingsHandling,
+    settingsHandling: SettingsHandling,
     sourceRepository: SourceRepository,
 ) : ViewModel() {
 

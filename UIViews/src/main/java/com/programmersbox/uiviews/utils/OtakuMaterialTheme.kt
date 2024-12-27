@@ -1,9 +1,6 @@
 package com.programmersbox.uiviews.utils
 
 import android.os.Build
-import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -15,7 +12,6 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -40,6 +36,8 @@ import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import com.programmersbox.uiviews.utils.components.seedColor
+import com.programmersbox.uiviews.utils.datastore.SettingsHandling
+import com.programmersbox.uiviews.utils.datastore.rememberSwatchStyle
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -75,7 +73,7 @@ fun OtakuMaterialTheme(
             else -> isSystemInDarkTheme()
         }
 
-        DisposableEffect(darkTheme) {
+        /*DisposableEffect(darkTheme) {
             (context as? ComponentActivity)?.enableEdgeToEdge(
                 statusBarStyle = SystemBarStyle.auto(
                     android.graphics.Color.TRANSPARENT,
@@ -87,7 +85,7 @@ fun OtakuMaterialTheme(
                 ) { darkTheme },
             )
             onDispose {}
-        }
+        }*/
 
         val colorScheme = if (themeColor == ThemeColor.Dynamic) {
             when {
