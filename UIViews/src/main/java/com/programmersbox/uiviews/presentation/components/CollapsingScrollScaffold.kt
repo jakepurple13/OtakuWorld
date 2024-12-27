@@ -46,17 +46,17 @@ fun CollapsingScrollScaffold(
         containerColor = Color.Transparent,
         topBar = {
             TopBarFixed(
-                maxOffset = toolbarHeightPx.value,
-                currentOffset = topPanelOffset.value,
+                maxOffset = toolbarHeightPx.floatValue,
+                currentOffset = topPanelOffset.floatValue,
                 topBar = topBarFixed
             )
         },
         bottomBar = bottomBar
     ) { padding ->
         CoordinatedScroll(
-            collapsingAreaHeightPx = toolbarHeightPx.value
+            collapsingAreaHeightPx = toolbarHeightPx.floatValue
         ) { offset, nestedScroll ->
-            topPanelOffset.value = offset
+            topPanelOffset.floatValue = offset
 
             Box(
                 Modifier
@@ -66,14 +66,14 @@ fun CollapsingScrollScaffold(
             ) {
                 TopBarCollapsing(
                     currentOffset = offset,
-                    maxOffset = toolbarHeightPx.value,
+                    maxOffset = toolbarHeightPx.floatValue,
                     modifier = Modifier.fillMaxWidth(),
-                    onHeightCalculated = { toolbarHeightPx.value = it },
+                    onHeightCalculated = { toolbarHeightPx.floatValue = it },
                     topBar = topBarCollapsing
                 )
 
                 val contentPadding = with(LocalDensity.current) {
-                    toolbarHeightPx.value.toInt().toDp() - abs(offset).toDp()
+                    toolbarHeightPx.floatValue.toInt().toDp() - abs(offset).toDp()
                 }
 
                 Box(
@@ -97,25 +97,25 @@ internal fun CoordinatedScroll(
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
 
-                var absoluteOffset = currentAbsoluteOffsetPx.value + delta
+                var absoluteOffset = currentAbsoluteOffsetPx.floatValue + delta
                 if (absoluteOffset > 0f) {
                     absoluteOffset = 0f
                 }
-                currentAbsoluteOffsetPx.value = absoluteOffset
+                currentAbsoluteOffsetPx.floatValue = absoluteOffset
 
                 if (absoluteOffset >= -collapsingAreaHeightPx) {
-                    currentOffsetPx.value = absoluteOffset
+                    currentOffsetPx.floatValue = absoluteOffset
                 } else {
-                    currentOffsetPx.value = -collapsingAreaHeightPx
+                    currentOffsetPx.floatValue = -collapsingAreaHeightPx
                 }
 
                 return when {
                     // The panel is completely collapsed - an internal scroll must be turned on
-                    abs(currentOffsetPx.value) == collapsingAreaHeightPx -> Offset.Zero
+                    abs(currentOffsetPx.floatValue) == collapsingAreaHeightPx -> Offset.Zero
 
                     // The panel is completely expanded - we must turn on an internal scroll
                     // to complete content scrolling
-                    abs(currentOffsetPx.value) == 0f -> Offset.Zero
+                    abs(currentOffsetPx.floatValue) == 0f -> Offset.Zero
 
                     // Intermediate state - the scroll is blocked
                     else -> available
@@ -125,7 +125,7 @@ internal fun CoordinatedScroll(
     }
 
     content(
-        currentOffsetPx.value,
+        currentOffsetPx.floatValue,
         nestedScrollConnection
     )
 }

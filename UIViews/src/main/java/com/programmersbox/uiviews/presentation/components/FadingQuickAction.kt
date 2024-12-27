@@ -21,19 +21,18 @@ enum class FadingAction {
 fun Modifier.fadingQuickAction(
     key: FadingAction,
     onAnimationEnd: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) = composed {
     val alphaValue = remember { Animatable(0f) }
 
     LaunchedEffect(key) {
-        when (key) {
-            FadingAction.Fade -> alphaValue
-            else -> null
-        }?.let { animatable ->
-            animatable.animateTo(1f)
-            animatable.animateTo(0f)
-            onAnimationEnd()
-        }
+        alphaValue
+            .takeIf { key == FadingAction.Fade }
+            ?.let { animatable ->
+                animatable.animateTo(1f)
+                animatable.animateTo(0f)
+                onAnimationEnd()
+            }
     }
 
     Row(modifier = Modifier.fillMaxSize()) {
