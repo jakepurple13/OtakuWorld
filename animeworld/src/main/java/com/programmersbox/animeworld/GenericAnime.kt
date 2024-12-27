@@ -106,6 +106,7 @@ import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.trackScreen
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -552,7 +553,10 @@ class GenericAnime(
             VideoViewModel.VideoPlayerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) { VideoPlayerUi() }
+        ) {
+            trackScreen("video_player")
+            VideoPlayerUi()
+        }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -561,7 +565,10 @@ class GenericAnime(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
-        ) { ViewVideoScreen() }
+        ) {
+            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+            ViewVideoScreen()
+        }
     }
 
     @Composable

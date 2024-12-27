@@ -52,6 +52,7 @@ import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.dsl.module
 
 val appModule = module {
@@ -84,7 +85,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         ChapterList(context, this@GenericNovel).set(allChapters)
         ReadViewModel.navigateToNovelReader(
@@ -106,7 +107,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
     }
 
@@ -207,7 +208,10 @@ class GenericNovel(val context: Context) : GenericInfo {
                 navArgument("novelUrl") { },
                 navArgument("novelInfoUrl") { },
             )
-        ) { NovelReader() }
+        ) {
+            trackScreen("novelReader")
+            NovelReader()
+        }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

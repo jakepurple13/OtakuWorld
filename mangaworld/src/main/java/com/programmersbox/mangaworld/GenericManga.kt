@@ -76,6 +76,7 @@ import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.trackScreen
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -412,7 +413,10 @@ class GenericManga(
         composable<ReadViewModel.MangaReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
-        ) { ReadView() }
+        ) {
+            trackScreen("mangaReader")
+            ReadView()
+        }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -420,13 +424,19 @@ class GenericManga(
             DownloadViewModel.DownloadRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) { DownloadScreen() }
+        ) {
+            trackScreen(DownloadViewModel.DownloadRoute)
+            DownloadScreen()
+        }
 
         composable(
             ImageLoaderSettingsRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) { ImageLoaderSettings(mangaSettingsHandling) }
+        ) {
+            trackScreen(ImageLoaderSettingsRoute)
+            ImageLoaderSettings(mangaSettingsHandling)
+        }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

@@ -47,6 +47,7 @@ import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
+import com.programmersbox.uiviews.utils.trackScreen
 
 //TODO: MAYBE give each screen an enum of where they are and the transitions are based off of that?
 
@@ -63,12 +64,16 @@ fun NavGraphBuilder.navGraph(
     animatedScopeComposable<Screen.RecentScreen>(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start) }
-    ) { RecentView() }
+    ) {
+        trackScreen(Screen.RecentScreen)
+        RecentView()
+    }
 
     animatedScopeComposable<Screen.AllScreen>(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
     ) {
+        trackScreen(Screen.AllScreen)
         AllView(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
@@ -85,6 +90,7 @@ fun NavGraphBuilder.navGraph(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
+        trackScreen(Screen.DetailsScreen)
         DetailsScreen(
             logo = notificationLogo,
             windowSize = windowSize
@@ -117,6 +123,7 @@ private fun NavGraphBuilder.settings(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         ) {
+            trackScreen(Screen.SettingsScreen)
             SettingScreen(
                 composeSettingsDsl = customPreferences,
                 notificationClick = { navController.navigate(Screen.NotificationScreen) { launchSingleTop = true } },
@@ -139,22 +146,32 @@ private fun NavGraphBuilder.settings(
         composable<Screen.OrderScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) { SourceOrderScreen() }
+        ) {
+            trackScreen(Screen.OrderScreen)
+            SourceOrderScreen()
+        }
 
         composable<Screen.NotificationsSettings>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) { NotificationSettings() }
+        ) {
+            trackScreen(Screen.NotificationsSettings)
+            NotificationSettings()
+        }
 
         composable<Screen.GeneralSettings>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) { GeneralSettings(customPreferences.generalSettings) }
+        ) {
+            trackScreen(Screen.GeneralSettings)
+            GeneralSettings(customPreferences.generalSettings)
+        }
 
         composable<Screen.MoreInfoSettings>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         ) {
+            trackScreen(Screen.MoreInfoSettings)
             InfoSettings(
                 usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } }
             )
@@ -163,22 +180,32 @@ private fun NavGraphBuilder.settings(
         composable<Screen.OtherSettings>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) { PlaySettings(customPreferences.playerSettings) }
+        ) {
+            trackScreen(Screen.OtherSettings)
+            PlaySettings(customPreferences.playerSettings)
+        }
 
         composable<Screen.MoreSettings>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) { MoreSettingsScreen() }
+        ) {
+            trackScreen(Screen.MoreSettings)
+            MoreSettingsScreen()
+        }
 
         animatedScopeComposable<Screen.HistoryScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-        ) { HistoryUi() }
+        ) {
+            trackScreen(Screen.HistoryScreen)
+            HistoryUi()
+        }
 
         animatedScopeComposable<Screen.FavoriteScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
+            trackScreen(Screen.FavoriteScreen)
             FavoriteUi(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
@@ -187,12 +214,16 @@ private fun NavGraphBuilder.settings(
         composable<Screen.AboutScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-        ) { AboutLibrariesScreen() }
+        ) {
+            trackScreen(Screen.AboutScreen)
+            AboutLibrariesScreen()
+        }
 
         composable<Screen.GlobalSearchScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
+            trackScreen("global_search")
             GlobalSearchView(
                 notificationLogo = notificationLogo,
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
@@ -203,24 +234,30 @@ private fun NavGraphBuilder.settings(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
         ) {
+            trackScreen(Screen.CustomListScreen)
             OtakuListScreen(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }
 
         dialog<Screen.CustomListScreen.DeleteFromList> {
+            trackScreen("delete_from_list")
             DeleteFromListScreen(
                 deleteFromList = it.toRoute()
             )
         }
 
-        composable<Screen.ImportListScreen> { ImportListScreen() }
+        composable<Screen.ImportListScreen> {
+            trackScreen("import_list")
+            ImportListScreen()
+        }
 
         animatedScopeComposable<Screen.NotificationScreen>(
             deepLinks = listOf(navDeepLink { uriPattern = genericInfo.deepLinkUri + Screen.NotificationScreen.route }),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
+            trackScreen(Screen.NotificationScreen)
             val context = LocalContext.current
             val notificationManager = remember { context.notificationManager }
             NotificationsScreen(
@@ -233,10 +270,13 @@ private fun NavGraphBuilder.settings(
         composable<Screen.ExtensionListScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) { ExtensionList() }
-
+        ) {
+            trackScreen(Screen.ExtensionListScreen)
+            ExtensionList()
+        }
 
         composable<Screen.GeminiScreen> {
+            trackScreen(Screen.GeminiScreen)
             GeminiRecommendationScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -260,6 +300,7 @@ private fun NavGraphBuilder.settings(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
+        trackScreen("global_search")
         GlobalSearchView(
             notificationLogo = notificationLogo,
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
@@ -270,6 +311,7 @@ private fun NavGraphBuilder.settings(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
     ) {
+        trackScreen(Screen.CustomListScreen.Home)
         OtakuListScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
@@ -280,6 +322,7 @@ private fun NavGraphBuilder.settings(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
+        trackScreen(Screen.NotificationScreen.Home)
         val context = LocalContext.current
         val notificationManager = remember { context.notificationManager }
         NotificationsScreen(
@@ -293,6 +336,7 @@ private fun NavGraphBuilder.settings(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
+        trackScreen(Screen.FavoriteScreen.Home)
         FavoriteUi(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
@@ -301,5 +345,8 @@ private fun NavGraphBuilder.settings(
     composable<Screen.ExtensionListScreen.Home>(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
-    ) { ExtensionList() }
+    ) {
+        trackScreen(Screen.ExtensionListScreen.Home)
+        ExtensionList()
+    }
 }
