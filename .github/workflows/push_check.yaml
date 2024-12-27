@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   mangaworld:
-    uses: ./.github/workflows/mangaworld_build.yml
+    uses: ./.github/workflows/mangaworld_build.yaml
     if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
     concurrency:
@@ -37,7 +37,7 @@ jobs:
       cancel-in-progress: true
 
   animeworld:
-    uses: ./.github/workflows/animeworld_build.yml
+    uses: ./.github/workflows/animeworld_build.yaml
     if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
     concurrency:
@@ -45,7 +45,7 @@ jobs:
       cancel-in-progress: true
 
   animeworldtv:
-    uses: ./.github/workflows/animeworldtv_build.yml
+    uses: ./.github/workflows/animeworldtv_build.yaml
     if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
     concurrency:
@@ -53,7 +53,7 @@ jobs:
       cancel-in-progress: true
 
   novelworld:
-    uses: ./.github/workflows/novelworld_build.yml
+    uses: ./.github/workflows/novelworld_build.yaml
     if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
     concurrency:
