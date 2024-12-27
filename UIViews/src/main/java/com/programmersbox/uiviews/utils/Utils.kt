@@ -5,6 +5,7 @@ import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlin.experimental.ExperimentalTypeInference
 
 @OptIn(ExperimentalTypeInference::class)
@@ -23,7 +24,7 @@ fun combineSources(
     sourceRepository: SourceRepository,
     dao: ItemDao,
 ) = combine(
-    sourceRepository.sources,
+    sourceRepository.sources.map { it.filter { it.catalog == null } },
     dao.getSourceOrder()
 ) { list, order ->
     list.sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }

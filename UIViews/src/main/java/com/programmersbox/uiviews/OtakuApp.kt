@@ -50,12 +50,12 @@ import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.utils.recordFirebaseException
-import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -77,9 +77,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
         ComposeUiFlags.isSemanticAutofillEnabled = true
-
-        //TODO: Make a new sample project so that other developers can pull and do things without issues
-        // Make new build files for each app and call them each in a single one
 
         runCatching {
             FirebaseApp.initializeApp(this)
@@ -163,6 +160,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         get<SourceLoader>().load()
 
+        val dataStoreHandling = get<DataStoreHandling>()
+
         GlobalScope.launch(Dispatchers.IO) {
             val forLaterName = getString(R.string.for_later)
             val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray()).also { forLaterUuid = it }
@@ -220,12 +219,13 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     .build()
             ).state.observeForever { println(it) }
 
-            updateSetup(this)
+            //runBlocking { updateSetup(this@OtakuApp, dataStoreHandling.shouldCheck.get()) }
+            setupCheckWorker(dataStoreHandling)
         }
 
         shortcutSetup()
 
-        runCatching { if (BuildConfig.FLAVOR != "noFirebase") remoteConfigSetup(get()) }
+        runCatching { if (BuildConfig.FLAVOR != "noFirebase") remoteConfigSetup(dataStoreHandling) }
     }
 
     override val workManagerConfiguration: Configuration
@@ -310,12 +310,43 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         val readOrWatchedId: String,
     )
 
+    private fun setupCheckWorker(dataStoreHandling: DataStoreHandling) {
+        val work = WorkManager.getInstance(this)
+        dataStoreHandling
+            .shouldCheck
+            .asFlow()
+            .distinctUntilChanged()
+            .onEach { check ->
+                if (check) {
+                    work.enqueueUniquePeriodicWork(
+                        "updateFlowChecks",
+                        ExistingPeriodicWorkPolicy.KEEP,
+                        PeriodicWorkRequestBuilder<UpdateFlowWorker>(
+                            1, TimeUnit.HOURS,
+                            5, TimeUnit.MINUTES
+                        )
+                            .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
+                            .setConstraints(
+                                Constraints.Builder()
+                                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                                    .build()
+                            )
+                            .setInitialDelay(10, TimeUnit.SECONDS)
+                            .build()
+                    )
+                } else {
+                    work.cancelUniqueWork("updateFlowChecks")
+                }
+            }
+            .launchIn(GlobalScope)
+    }
+
     companion object {
 
         var forLaterUuid: UUID? = null
 
-        fun updateSetup(context: Context) {
-            updateSetupNow(context, runBlocking { context.shouldCheckFlow.first() })
+        fun updateSetup(context: Context, boolean: Boolean) {
+            updateSetupNow(context, boolean)
         }
 
         fun updateSetupNow(context: Context, check: Boolean) {
@@ -339,7 +370,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                         )
                         .setInitialDelay(10, TimeUnit.SECONDS)
                         .build()
-                ).state.observeForever { println(it) }
+                )
             } else {
                 work.cancelUniqueWork("updateFlowChecks")
                 work.pruneWork()

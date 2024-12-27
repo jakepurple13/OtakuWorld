@@ -68,7 +68,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.kmpalette.palette.graphics.Palette
@@ -81,13 +80,15 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.lists.ListChoiceScreen
 import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.components.ToolTipWrapper
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.asState
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.shouldCheckFlow
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 enum class PaletteSwatchType(val swatch: (Palette) -> Palette.Swatch?) {
     Vibrant(Palette::vibrantSwatch),
@@ -175,6 +176,8 @@ internal fun DetailActions(
 
     val dropDownDismiss = { showDropDown = false }
 
+    val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()
+
     DropdownMenu(
         expanded = showDropDown,
         onDismissRequest = dropDownDismiss,
@@ -257,7 +260,7 @@ internal fun DetailActions(
             )
         }
 
-        if (isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value) {
+        if (isFavorite && shouldCheck) {
             DropdownMenuItem(
                 onClick = {
                     dropDownDismiss()
@@ -348,6 +351,8 @@ fun DetailBottomBar(
 ) {
     BottomAppBar(
         actions = {
+            val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()
+
             ToolTipWrapper(
                 info = { Text("Add to List") }
             ) {
@@ -374,7 +379,7 @@ fun DetailBottomBar(
             }
 
             AnimatedVisibility(
-                visible = isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value,
+                visible = isFavorite && shouldCheck,
                 enter = fadeIn() + slideInHorizontally(),
                 exit = slideOutHorizontally() + fadeOut()
             ) {
@@ -515,7 +520,9 @@ fun DetailFloatingActionButtonMenu(
             text = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) },
         )
 
-        if (isFavorite && LocalContext.current.shouldCheckFlow.collectAsStateWithLifecycle(initialValue = true).value) {
+        val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()
+
+        if (isFavorite && shouldCheck) {
             FloatingActionButtonMenuItem(
                 onClick = notifyAction,
                 icon = {

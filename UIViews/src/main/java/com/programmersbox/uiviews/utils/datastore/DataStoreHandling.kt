@@ -9,6 +9,11 @@ import com.programmersbox.uiviews.details.PaletteSwatchType
 
 class DataStoreHandling(context: Context) {
 
+    val currentService = DataStoreHandlerNullable(
+        context = context,
+        key = stringPreferencesKey("currentService"),
+    )
+
     val showBySource = DataStoreHandler(
         context = context,
         key = booleanPreferencesKey("showBySource"),

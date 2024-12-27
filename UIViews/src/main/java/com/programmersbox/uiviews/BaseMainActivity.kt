@@ -133,8 +133,8 @@ import com.programmersbox.uiviews.utils.components.HazeScaffold
 import com.programmersbox.uiviews.utils.components.MultipleActions
 import com.programmersbox.uiviews.utils.components.rememberMultipleBarState
 import com.programmersbox.uiviews.utils.currentDetailsUrl
-import com.programmersbox.uiviews.utils.currentService
 import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.rememberFloatingNavigation
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
@@ -144,6 +144,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -158,6 +159,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private val notificationLogo: NotificationLogo by inject()
     private val changingSettingsRepository: ChangingSettingsRepository by inject()
     private val itemDatabase: ItemDatabase by inject()
+    private val dataStoreHandling: DataStoreHandling by inject()
     protected lateinit var navController: NavHostController
 
     protected fun isNavInitialized() = ::navController.isInitialized
@@ -194,21 +196,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     insetsController.show(WindowInsetsCompat.Type.systemBars())
                 } else {
                     insetsController.hide(WindowInsetsCompat.Type.systemBars())
-                }
-            }
-            .launchIn(lifecycleScope)
-
-        sourceRepository.sources
-            .onEach {
-                val itemDao = itemDatabase.itemDao()
-                it.forEachIndexed { index, sourceInformation ->
-                    itemDao.insertSourceOrder(
-                        SourceOrder(
-                            source = sourceInformation.packageName,
-                            name = sourceInformation.apiService.serviceName,
-                            order = index
-                        )
-                    )
                 }
             }
             .launchIn(lifecycleScope)
@@ -730,15 +717,35 @@ abstract class BaseMainActivity : AppCompatActivity() {
     }
 
     private fun setup() {
-        lifecycleScope.launch {
-            if (currentService == null) {
-                val s = sourceRepository.list.randomOrNull()?.apiService
-                currentSourceRepository.emit(s)
-                currentService = s?.serviceName
-            } else {
-                sourceRepository.toSourceByApiServiceName(currentService.orEmpty())?.let { currentSourceRepository.emit(it.apiService) }
+        sourceRepository.sources
+            .onEach {
+                val itemDao = itemDatabase.itemDao()
+                it.forEachIndexed { index, sourceInformation ->
+                    itemDao.insertSourceOrder(
+                        SourceOrder(
+                            source = sourceInformation.packageName,
+                            name = sourceInformation.apiService.serviceName,
+                            order = index
+                        )
+                    )
+                }
             }
-        }
+            .launchIn(lifecycleScope)
+
+        dataStoreHandling.currentService
+            .asFlow()
+            .mapNotNull {
+                if (it == null) {
+                    sourceRepository
+                        .list
+                        .filter { it.catalog == null }
+                        .randomOrNull()
+                } else {
+                    sourceRepository.toSourceByApiServiceName(it)
+                }
+            }
+            .onEach { currentSourceRepository.emit(it.apiService) }
+            .launchIn(lifecycleScope)
 
         flow { emit(AppUpdate.getUpdate()) }
             .catch { emit(null) }
@@ -756,8 +763,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: Screen) = isTopLevelDestinationInHierarchy(destination.route)
 
     private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: String) = this?.hierarchy?.any {
-        it.route?.contains(destination, true) ?: false
-    } ?: false
+        it.route?.contains(destination, true) == true
+    } == true
 
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)

@@ -42,12 +42,10 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.UPDATE_CHECKING_END
-import com.programmersbox.uiviews.utils.UPDATE_CHECKING_START
 import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
-import com.programmersbox.uiviews.utils.updatePref
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.cancel
@@ -104,6 +102,7 @@ class UpdateFlowWorker(
     private val sourceLoader: SourceLoader,
     private val update: UpdateNotification,
     database: ItemDatabase,
+    private val dataStoreHandling: DataStoreHandling,
 ) : CoroutineWorker(context, workerParams) {
 
     private val dao = database.itemDao()
@@ -116,7 +115,7 @@ class UpdateFlowWorker(
         try {
             update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
             logFirebaseMessage("Starting check here")
-            applicationContext.updatePref(UPDATE_CHECKING_START, System.currentTimeMillis())
+            dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
 
             logFirebaseMessage("Start")
 
@@ -224,11 +223,11 @@ class UpdateFlowWorker(
             Result.success()
         } catch (e: Exception) {
             recordFirebaseException(e)
-            applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
+            dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
             update.sendFinishedNotification()
             Result.success()
         } finally {
-            applicationContext.updatePref(UPDATE_CHECKING_END, System.currentTimeMillis())
+            dataStoreHandling.updateCheckingEnd.set(System.currentTimeMillis())
             update.sendFinishedNotification()
             Result.success()
         }

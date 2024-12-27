@@ -87,7 +87,7 @@ import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
-import com.programmersbox.uiviews.utils.currentService
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen
 import kotlinx.coroutines.flow.combine
@@ -605,10 +605,13 @@ fun SourceChooserScreen(
     onChosen: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val dataStoreHandling = koinInject<DataStoreHandling>()
     val sourceRepository = LocalSourcesRepository.current
-    val currentSourceRepository = LocalCurrentSource.current
     val itemDao = LocalItemDao.current
+
+    val currentService by dataStoreHandling.currentService
+        .asFlow()
+        .collectAsStateWithLifecycle(null)
 
     ListBottomScreen(
         includeInsetPadding = true,
@@ -627,17 +630,12 @@ fun SourceChooserScreen(
             .value,
         onClick = { service ->
             onChosen()
-            scope.launch {
-                service.let {
-                    currentSourceRepository.emit(it.apiService)
-                    context.currentService = it.apiService.serviceName
-                }
-            }
+            scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
         }
     ) {
         ListBottomSheetItemModel(
             primaryText = it.apiService.serviceName,
-            icon = if (it.apiService.serviceName == context.currentService) Icons.Default.Check else null
+            icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
         )
     }
 }

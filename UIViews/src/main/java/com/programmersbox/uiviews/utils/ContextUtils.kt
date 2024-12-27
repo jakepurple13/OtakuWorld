@@ -46,7 +46,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentActivity
@@ -71,7 +70,6 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
 import com.programmersbox.helpfulutils.connectivityManager
@@ -100,43 +98,22 @@ import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 import kotlin.properties.PropertyDelegateProvider
 
-var Context.currentService: String? by sharedPrefObjectDelegate(null)
-
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
     "otakuworld",
     //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
 )
 
-val SHOW_BY_SOURCE = booleanPreferencesKey("showBySource")
-val Context.showBySource get() = dataStore.data.map { it[SHOW_BY_SOURCE] ?: false }
-
-val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
-val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
-
-val HISTORY_SAVE = intPreferencesKey("history_save")
-val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }
-
-val UPDATE_CHECKING_START = longPreferencesKey("lastUpdateCheckStart")
-val Context.updateCheckingStart get() = dataStore.data.map { it[UPDATE_CHECKING_START] ?: System.currentTimeMillis() }
-
-val UPDATE_CHECKING_END = longPreferencesKey("lastUpdateCheckEnd")
-val Context.updateCheckingEnd get() = dataStore.data.map { it[UPDATE_CHECKING_END] ?: System.currentTimeMillis() }
-
-val SWATCH_TYPE = stringPreferencesKey("swatchType")
-
 @Composable
 fun rememberSwatchType() = rememberPreference(
-    key = SWATCH_TYPE,
+    key = stringPreferencesKey("swatchType"),
     mapToType = { runCatching { PaletteSwatchType.valueOf(it) }.getOrDefault(PaletteSwatchType.Vibrant) },
     mapToKey = { it.name },
     defaultValue = PaletteSwatchType.Vibrant
 )
 
-val SWATCH_STYLE = stringPreferencesKey("swatchStyle")
-
 @Composable
 fun rememberSwatchStyle() = rememberPreference(
-    key = SWATCH_STYLE,
+    key = stringPreferencesKey("swatchStyle"),
     mapToType = { runCatching { PaletteStyle.valueOf(it) }.getOrDefault(PaletteStyle.TonalSpot) },
     mapToKey = { it.name },
     defaultValue = PaletteStyle.TonalSpot
@@ -146,7 +123,7 @@ suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStor
 
 @Composable
 fun rememberHistorySave() = rememberPreference(
-    key = HISTORY_SAVE,
+    key = intPreferencesKey("history_save"),
     defaultValue = 50
 )
 

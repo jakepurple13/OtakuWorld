@@ -91,17 +91,17 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.findActivity
-import com.programmersbox.uiviews.utils.historySave
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.rememberSwatchStyle
 import com.programmersbox.uiviews.utils.rememberSwatchType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun DetailsScreen(
@@ -463,6 +463,7 @@ fun ChapterItem(
     val navController = LocalNavController.current
     val genericInfo = LocalGenericInfo.current
     val context = LocalContext.current
+    val dataStoreHandling = koinInject<DataStoreHandling>()
     val scope = rememberCoroutineScope()
 
     fun insertRecent() {
@@ -477,7 +478,7 @@ fun ChapterItem(
                     timestamp = System.currentTimeMillis()
                 )
             )
-            val save = runBlocking { context.historySave.first() }
+            val save = runBlocking { dataStoreHandling.historySave.get() }
             if (save != -1) historyDao.removeOldData(save)
         }
     }

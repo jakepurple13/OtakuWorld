@@ -53,6 +53,29 @@ class DataStoreHandlerObject<T, R>(
     }
 }
 
+class DataStoreHandlerNullable<T>(
+    internal val key: Preferences.Key<T>,
+    private val context: Context,
+) {
+    fun asFlow() = context.dataStore.data.map { it[key] }
+
+    suspend fun getOrNull() = asFlow().firstOrNull()
+
+    suspend fun set(value: T?) {
+        context.dataStore.edit {
+            if (value == null) {
+                it.remove(key)
+            } else {
+                it[key] = value
+            }
+        }
+    }
+
+    suspend fun clear() {
+        context.dataStore.edit { it.remove(key) }
+    }
+}
+
 @Composable
 fun <T> DataStoreHandler<T>.asState() = rememberPreference(key, defaultValue)
 

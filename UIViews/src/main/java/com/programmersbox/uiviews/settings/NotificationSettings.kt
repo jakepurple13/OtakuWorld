@@ -37,20 +37,19 @@ import androidx.work.hasKeyWithValueOfType
 import androidx.work.workDataOf
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.SHOULD_CHECK
 import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.SwitchSetting
-import com.programmersbox.uiviews.utils.updatePref
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
@@ -62,6 +61,7 @@ fun NotificationSettings(
     notiViewModel: NotificationViewModel = koinViewModel(),
 ) {
     val work = remember { WorkManager.getInstance(context) }
+    val shouldCheck = koinInject<DataStoreHandling>().shouldCheck
     SettingsScaffold(stringResource(R.string.notification_settings)) {
         val scope = rememberCoroutineScope()
         ShowWhen(notiViewModel.savedNotifications > 0) {
@@ -141,10 +141,7 @@ fun NotificationSettings(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            scope.launch {
-                                context.updatePref(SHOULD_CHECK, false)
-                                OtakuApp.updateSetupNow(context, false)
-                            }
+                            scope.launch { shouldCheck.set(false) }
                             showDialog = false
                         }
                     ) { Text(stringResource(R.string.yes)) }
@@ -160,10 +157,7 @@ fun NotificationSettings(
                 if (!it) {
                     showDialog = true
                 } else {
-                    scope.launch {
-                        context.updatePref(SHOULD_CHECK, it)
-                        OtakuApp.updateSetupNow(context, it)
-                    }
+                    scope.launch { shouldCheck.set(it) }
                 }
             }
         )
@@ -179,9 +173,12 @@ fun NotificationSettings(
                         indication = ripple(),
                         interactionSource = null
                     ) {
-                        work.cancelUniqueWork("updateFlowChecks")
-                        work.pruneWork()
-                        OtakuApp.updateSetup(context)
+                        scope.launch {
+                            work.cancelUniqueWork("updateFlowChecks")
+                            work.pruneWork()
+                            shouldCheck.set(!shouldCheck.get())
+                            shouldCheck.set(!shouldCheck.get())
+                        }
                         Toast
                             .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)
                             .show()

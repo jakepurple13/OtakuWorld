@@ -105,7 +105,7 @@ import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.utils.components.placeholder.shimmer
-import com.programmersbox.uiviews.utils.updatePref
+import com.programmersbox.uiviews.utils.datastore.asState
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -115,9 +115,10 @@ import kotlinx.coroutines.launch
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get(), get()) }
+    single<GenericInfo> { GenericAnime(get(), get(), get()) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
+    single { AnimeDataStoreHandling(get()) }
 }
 
 class StorageHolder {
@@ -127,6 +128,7 @@ class StorageHolder {
 class GenericAnime(
     val context: Context,
     val storageHolder: StorageHolder,
+    val animeDataStoreHandling: AnimeDataStoreHandling,
 ) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") animeNoFirebaseFile else animeFile }
@@ -512,28 +514,29 @@ class GenericAnime(
         }
 
         playerSettings {
-            val context = LocalContext.current
             val scope = rememberCoroutineScope()
 
-            val player by context
-                .useNewPlayerFlow
-                .collectAsStateWithLifecycle(true)
+            val useNewPlayer = animeDataStoreHandling.useNewPlayer
+
+            val player by useNewPlayer.asState()
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.use_new_player)) },
                 summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
                 settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
                 value = player,
-                updateValue = { scope.launch { context.updatePref(USER_NEW_PLAYER, it) } }
+                updateValue = { scope.launch { useNewPlayer.set(it) } }
             )
 
-            val ignoreSsl by context.ignoreSsl.collectAsStateWithLifecycle(true)
+            val ignoreSsl = animeDataStoreHandling.ignoreSsl
+
+            val ignoreSslState by ignoreSsl.asState()
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
                 settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
-                value = ignoreSsl
-            ) { scope.launch { context.updatePref(IGNORE_SSL, it) } }
+                value = ignoreSslState
+            ) { scope.launch { ignoreSsl.set(it) } }
         }
     }
 

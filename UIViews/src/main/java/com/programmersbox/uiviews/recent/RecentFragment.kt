@@ -2,7 +2,6 @@
 
 package com.programmersbox.uiviews.recent
 
-import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -51,15 +50,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.CurrentSourceRepository
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -70,7 +66,7 @@ import com.programmersbox.uiviews.utils.components.InfiniteListHandler
 import com.programmersbox.uiviews.utils.components.NoSourcesInstalled
 import com.programmersbox.uiviews.utils.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.utils.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.utils.currentService
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
 import dev.chrisbanes.haze.HazeProgressive
@@ -84,12 +80,11 @@ import org.koin.compose.koinInject
 )
 @Composable
 fun RecentView(
-    context: Context = LocalContext.current,
-    currentSourceRepository: CurrentSourceRepository = LocalCurrentSource.current,
     recentVm: RecentViewModel = koinViewModel(),
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
+    val dataStoreHandling = koinInject<DataStoreHandling>()
     val state = recentVm.gridState
     val scope = rememberCoroutineScope()
     val source = recentVm.currentSource
@@ -113,14 +108,14 @@ fun RecentView(
     }
 
     LaunchedEffect(pagerState, initSource) {
-        snapshotFlow { pagerState.settledPage }.collect {
-            if (initSource != -1) {
-                sourceList.getOrNull(it)?.let { service ->
-                    currentSourceRepository.emit(service.apiService)
-                    context.currentService = service.apiService.serviceName
+        snapshotFlow { pagerState.settledPage }
+            .collect {
+                if (initSource != -1) {
+                    sourceList
+                        .getOrNull(it)
+                        ?.let { s -> dataStoreHandling.currentService.set(s.apiService.serviceName) }
                 }
             }
-        }
     }
 
     var showSourceChooser by showSourceChooser()

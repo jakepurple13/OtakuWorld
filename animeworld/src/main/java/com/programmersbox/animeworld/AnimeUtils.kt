@@ -57,6 +57,7 @@ import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
 import com.programmersbox.uiviews.utils.dataStore
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -74,6 +75,20 @@ val Context.ignoreSsl get() = dataStore.data.map { it[IGNORE_SSL] ?: true }
 
 val USER_NEW_PLAYER = booleanPreferencesKey("useNewPlayer")
 val Context.useNewPlayerFlow get() = dataStore.data.map { it[USER_NEW_PLAYER] ?: true }
+
+class AnimeDataStoreHandling(context: Context) {
+    val useNewPlayer = DataStoreHandler(
+        key = booleanPreferencesKey("useNewPlayer"),
+        defaultValue = true,
+        context = context
+    )
+
+    val ignoreSsl = DataStoreHandler(
+        key = booleanPreferencesKey("ignore_ssl"),
+        defaultValue = true,
+        context = context
+    )
+}
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun Context.navigateToVideoPlayer(
