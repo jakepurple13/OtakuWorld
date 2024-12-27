@@ -19,10 +19,10 @@ import androidx.compose.ui.res.stringResource
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.CategorySetting
-import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.ToasterUtils
+import com.programmersbox.uiviews.utils.components.CategorySetting
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.compose.koinViewModel

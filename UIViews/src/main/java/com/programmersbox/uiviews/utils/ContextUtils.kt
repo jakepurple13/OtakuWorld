@@ -301,6 +301,8 @@ class BatteryInformation(val context: Context) : KoinComponent {
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
     val settingsHandling: SettingsHandling by inject()
 
+    private val batteryPercent by lazy { settingsHandling.batteryPercent }
+
     enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
         CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
         DEFAULT(GoogleMaterial.Icon.gmd_battery_std, Icons.Default.BatteryStd),
@@ -315,12 +317,12 @@ class BatteryInformation(val context: Context) : KoinComponent {
     ) = combine(
         combine(
             batteryLevel,
-            settingsHandling.batteryPercentage
+            batteryPercent.asFlow()
         ) { b, d -> b <= d }
             .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
         combine(
             batteryInfo,
-            settingsHandling.batteryPercentage
+            batteryPercent.asFlow()
         ) { b, d -> b to d }
             .map {
                 when {
@@ -343,12 +345,12 @@ class BatteryInformation(val context: Context) : KoinComponent {
         combine(
             combine(
                 batteryLevel,
-                settingsHandling.batteryPercentage
+                batteryPercent.asFlow()
             ) { b, d -> b <= d }
                 .map { if (it) Color.RED else normalBatteryColor },
             combine(
                 batteryInfo,
-                settingsHandling.batteryPercentage
+                batteryPercent.asFlow()
             ) { b, d -> b to d }
                 .map {
                     when {

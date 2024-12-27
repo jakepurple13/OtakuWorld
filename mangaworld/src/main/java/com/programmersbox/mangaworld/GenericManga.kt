@@ -72,9 +72,9 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.PreferenceSetting
-import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
+import com.programmersbox.uiviews.utils.components.SwitchSetting
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect

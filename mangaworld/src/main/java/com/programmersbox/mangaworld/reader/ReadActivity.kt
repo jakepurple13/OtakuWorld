@@ -232,12 +232,14 @@ class ReadActivity : AppCompatActivity() {
                 readerBinding.sliderValue.text = value.toInt().toString()
             }
 
-            val battery = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 }
+            val batteryPercent = settingsHandling.batteryPercent
+
+            val battery = runBlocking { batteryPercent.get() }
             readerBinding.batterySlider.value = battery.toFloat()
             readerBinding.batterySliderValue.text = battery.toString()
             readerBinding.batterySlider.addOnChangeListener { _, value, fromUser ->
                 if (fromUser) {
-                    lifecycleScope.launch(Dispatchers.IO) { settingsHandling.setBatteryPercentage(value.toInt()) }
+                    lifecycleScope.launch(Dispatchers.IO) { batteryPercent.set(value.toInt()) }
                 }
                 readerBinding.batterySliderValue.text = value.toInt().toString()
             }

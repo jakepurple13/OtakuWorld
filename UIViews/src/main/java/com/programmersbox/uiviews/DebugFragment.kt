@@ -37,15 +37,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.uiviews.utils.CheckBoxSetting
 import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.PreferenceSetting
-import com.programmersbox.uiviews.utils.ShowMoreSetting
-import com.programmersbox.uiviews.utils.ShowWhen
-import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.components.CheckBoxSetting
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
+import com.programmersbox.uiviews.utils.components.ShowMoreSetting
+import com.programmersbox.uiviews.utils.components.ShowWhen
+import com.programmersbox.uiviews.utils.components.SwitchSetting
 
 @SuppressLint("ComposeContentEmitterReturningValues")
 @ExperimentalComposeUiApi

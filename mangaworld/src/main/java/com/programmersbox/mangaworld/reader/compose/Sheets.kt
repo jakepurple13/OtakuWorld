@@ -68,14 +68,15 @@ import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
-import com.programmersbox.uiviews.utils.CategorySetting
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.SettingsHandling
-import com.programmersbox.uiviews.utils.ShowWhen
-import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.adaptiveGridCell
+import com.programmersbox.uiviews.utils.components.CategorySetting
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
+import com.programmersbox.uiviews.utils.components.ShowWhen
+import com.programmersbox.uiviews.utils.components.SliderSetting
+import com.programmersbox.uiviews.utils.components.SwitchSetting
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.CoroutineScope
@@ -99,6 +100,9 @@ internal fun SettingsSheet(
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val batteryPercent = settingsHandling.batteryPercent
+    val batteryValue by batteryPercent.rememberPreference()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -121,8 +125,8 @@ internal fun SettingsSheet(
                     settingIcon = Icons.Default.BatteryAlert,
                     settingTitle = R.string.battery_alert_percentage,
                     settingSummary = R.string.battery_default,
-                    preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
-                    initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
+                    preferenceUpdate = { batteryPercent.set(it) },
+                    initialValue = remember { batteryValue },
                     range = 1f..100f
                 )
                 HorizontalDivider()
@@ -310,7 +314,7 @@ private fun SliderSetting(
 ) {
     var sliderValue by remember { mutableFloatStateOf(initialValue.toFloat()) }
 
-    com.programmersbox.uiviews.utils.SliderSetting(
+    SliderSetting(
         sliderValue = sliderValue,
         settingTitle = { Text(stringResource(id = settingTitle)) },
         settingSummary = { Text(stringResource(id = settingSummary)) },

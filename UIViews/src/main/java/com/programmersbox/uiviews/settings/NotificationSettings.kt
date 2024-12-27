@@ -41,10 +41,10 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalItemDao
-import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.ShowWhen
-import com.programmersbox.uiviews.utils.SwitchSetting
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
+import com.programmersbox.uiviews.utils.components.ShowWhen
+import com.programmersbox.uiviews.utils.components.SwitchSetting
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -56,7 +56,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -111,13 +110,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
@@ -241,13 +238,14 @@ fun NovelReader(
     }
 
     val scope = rememberCoroutineScope()
-    val pullRefreshState = rememberPullToRefreshState()
 
     val settingsHandling = LocalSettingsHandling.current
 
     var showInfo by remember { mutableStateOf(true) }
 
     var settingsPopup by remember { mutableStateOf(false) }
+    val batteryPercent = settingsHandling.batteryPercent
+    val batteryValue by batteryPercent.rememberPreference()
 
     if (settingsPopup) {
         AlertDialog(
@@ -266,8 +264,8 @@ fun NovelReader(
                         settingIcon = Icons.Default.BatteryAlert,
                         settingTitle = R.string.battery_alert_percentage,
                         settingSummary = R.string.battery_default,
-                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
-                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
+                        preferenceUpdate = { batteryPercent.set(it) },
+                        initialValue = remember { batteryValue },
                         range = 1f..100f,
                         steps = 0
                     )

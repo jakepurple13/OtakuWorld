@@ -40,10 +40,10 @@ import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
+import com.programmersbox.uiviews.utils.components.ShowWhen
 import com.programmersbox.uiviews.utils.components.icons.Discord
 import com.programmersbox.uiviews.utils.components.icons.Github
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs

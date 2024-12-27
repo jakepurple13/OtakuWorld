@@ -70,7 +70,6 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.CategorySetting
 import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
@@ -79,14 +78,15 @@ import com.programmersbox.uiviews.utils.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LocalHistoryDao
 import com.programmersbox.uiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.utils.LocalSourcesRepository
-import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
-import com.programmersbox.uiviews.utils.ShowWhen
 import com.programmersbox.uiviews.utils.appVersion
+import com.programmersbox.uiviews.utils.components.CategorySetting
 import com.programmersbox.uiviews.utils.components.ListBottomScreen
 import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.utils.components.PreferenceSetting
+import com.programmersbox.uiviews.utils.components.ShowWhen
 import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen

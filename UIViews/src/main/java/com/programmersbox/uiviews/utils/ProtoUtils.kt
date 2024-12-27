@@ -23,12 +23,14 @@ import com.programmersbox.uiviews.middleMultipleActions
 import com.programmersbox.uiviews.settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 
+//TODO: Move this into it's own file
 suspend fun <DS : DataStore<MessageType>, MessageType : GeneratedMessageLite<MessageType, BuilderType>, BuilderType : GeneratedMessageLite.Builder<MessageType, BuilderType>> DS.update(
     statsBuilder: suspend BuilderType.() -> BuilderType,
 ) = updateData { statsBuilder(it.toBuilder()).build() }
@@ -94,8 +96,12 @@ class SettingsHandling(context: Context) {
         defaultValue = SystemThemeMode.FollowSystem
     )
 
-    val batteryPercentage = all.map { it.batteryPercent }
-    suspend fun setBatteryPercentage(percent: Int) = preferences.update { setBatteryPercent(percent) }
+    val batteryPercent = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.batteryPercent },
+        update = { setBatteryPercent(it) },
+        defaultValue = 20
+    )
 
     @Composable
     fun rememberShareChapter() = preferences.rememberPreference(
@@ -111,9 +117,12 @@ class SettingsHandling(context: Context) {
         defaultValue = false
     )
 
-    val notificationSortBy = all.map { it.notificationSortBy }
-
-    suspend fun setNotificationSortBy(sort: NotificationSortBy) = preferences.update { setNotificationSortBy(sort) }
+    val notificationSortBy = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.notificationSortBy },
+        update = { setNotificationSortBy(it) },
+        defaultValue = NotificationSortBy.Date
+    )
 
     @Composable
     fun rememberShowListDetail() = preferences.rememberPreference(
@@ -130,13 +139,6 @@ class SettingsHandling(context: Context) {
         l.remove(url)
         clearCustomUrls()
         addAllCustomUrls(l)
-    }
-
-    inner class SettingInfo<T>(
-        val flow: Flow<T>,
-        private val updateValue: suspend Settings.Builder.(T) -> Settings.Builder,
-    ) {
-        suspend fun updateSetting(value: T) = preferences.update { updateValue(value) }
     }
 
     @Composable
@@ -229,6 +231,45 @@ fun <T, DS, MessageType, BuilderType> DS.rememberPreference(
 
             override fun component1() = value
             override fun component2(): (T) -> Unit = { value = it }
+        }
+    }
+}
+
+class ProtoStoreHandler<T, DS, MessageType, BuilderType>(
+    private val preferences: DS,
+    private val key: (MessageType) -> T,
+    private val update: BuilderType.(T) -> BuilderType,
+    private val defaultValue: T,
+) where DS : DataStore<MessageType>,
+        MessageType : GeneratedMessageLite<MessageType, BuilderType>,
+        BuilderType : GeneratedMessageLite.Builder<MessageType, BuilderType> {
+
+    fun asFlow() = preferences.data.map { key(it) }
+
+    suspend fun get() = asFlow().firstOrNull() ?: defaultValue
+
+    suspend fun set(value: T) {
+        preferences.update { update(value) }
+    }
+
+    @Composable
+    fun rememberPreference(): MutableState<T> {
+        val coroutineScope = rememberCoroutineScope()
+        val state by remember { preferences.data.map(key) }.collectAsStateWithLifecycle(initialValue = defaultValue)
+
+        return remember(state) {
+            object : MutableState<T> {
+                override var value: T
+                    get() = state
+                    set(value) {
+                        coroutineScope.launch {
+                            preferences.update { update(value) }
+                        }
+                    }
+
+                override fun component1() = value
+                override fun component2(): (T) -> Unit = { value = it }
+            }
         }
     }
 }

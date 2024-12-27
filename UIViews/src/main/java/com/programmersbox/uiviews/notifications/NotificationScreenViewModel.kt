@@ -25,6 +25,8 @@ class NotificationScreenViewModel(
     sourceRepository: SourceRepository,
 ) : ViewModel() {
 
+    private val notificationSortBy = settingsHandling.notificationSortBy
+
     val items = mutableStateListOf<NotificationItem>()
 
     var sortedBy by mutableStateOf(NotificationSortBy.Date)
@@ -54,7 +56,8 @@ class NotificationScreenViewModel(
             }
             .launchIn(viewModelScope)
 
-        settingsHandling.notificationSortBy
+        notificationSortBy
+            .asFlow()
             .onEach { sortedBy = it }
             .launchIn(viewModelScope)
     }
@@ -72,7 +75,7 @@ class NotificationScreenViewModel(
 
     fun toggleSort() {
         viewModelScope.launch {
-            settingsHandling.setNotificationSortBy(
+            notificationSortBy.set(
                 when (sortedBy) {
                     NotificationSortBy.Date -> NotificationSortBy.Grouped
                     NotificationSortBy.Grouped -> NotificationSortBy.Date

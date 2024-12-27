@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils
+package com.programmersbox.uiviews.utils.components
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -55,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.PreviewTheme
 
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi

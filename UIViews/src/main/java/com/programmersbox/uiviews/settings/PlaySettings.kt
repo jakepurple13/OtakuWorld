@@ -12,15 +12,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.SliderSetting
-import kotlinx.coroutines.flow.first
+import com.programmersbox.uiviews.utils.components.SliderSetting
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,9 +27,8 @@ fun PlaySettings(
     SettingsScaffold(stringResource(R.string.playSettings)) {
         val scope = rememberCoroutineScope()
         val settingsHandling = LocalSettingsHandling.current
-        val slider by settingsHandling
-            .batteryPercentage
-            .collectAsStateWithLifecycle(runBlocking { settingsHandling.batteryPercentage.first() })
+        val batteryPercent = settingsHandling.batteryPercent
+        val slider by batteryPercent.rememberPreference()
         var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }
 
         SliderSetting(
@@ -42,7 +38,7 @@ fun PlaySettings(
             settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
             range = 1f..100f,
             updateValue = { sliderValue = it },
-            onValueChangedFinished = { scope.launch { settingsHandling.setBatteryPercentage(sliderValue.toInt()) } }
+            onValueChangedFinished = { scope.launch { batteryPercent.set(sliderValue.toInt()) } }
         )
 
         customSettings()
