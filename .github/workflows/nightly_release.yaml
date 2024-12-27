@@ -16,7 +16,9 @@ jobs:
         with:
           fetch-depth: 0 # Required to count the commits
       - name: Get new commits
-        run: echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
+        run: |
+          set -x
+          echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
 
   mangaworld:
     needs: checkNightly
