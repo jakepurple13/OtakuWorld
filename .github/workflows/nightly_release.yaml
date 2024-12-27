@@ -52,7 +52,6 @@ jobs:
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     runs-on: ubuntu-latest
     steps:
-
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -64,34 +63,36 @@ jobs:
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
-      - name: Update Nightly Release
-        uses: andelf/nightly-release@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: nightly
-          name: 'OtakuWorld Nightly Release'
-          prerelease: true
-          body: 'Nightly release of OtakuWorld.'
-          files: |
-            ${{ github.workspace }}/release-artifacts/**
-
-      #      - name: Create Nightly Release
+      #      - name: Update Nightly Release
       #        id: create_release
-      #        uses: softprops/action-gh-release@v2
-      #        if: startsWith(github.ref, 'refs/tags/')
+      #        uses: andelf/nightly-release@main
       #        env:
       #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #        with:
-      #          fail_on_unmatched_files: true
-      #          tag_name: ${{ env.VERSION_TAG }}
-      #          name: Release ${{ env.VERSION_TAG }}
+      #          tag_name: nightly
+      #          name: 'OtakuWorld Nightly Release'
+      #          prerelease: true
+      #          body: 'Nightly release of OtakuWorld.'
       #          files: |
       #            ${{ github.workspace }}/release-artifacts/**
+
+      - name: Create Nightly Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          fail_on_unmatched_files: true
+          prerelease: true
+          generate_release_notes: true
+          tag_name: nightly
+          name: OtakuWorld Nightly Release
+          files: |
+            ${{ github.workspace }}/release-artifacts/**
 
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'Nightly Release of the project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed.'
+          args: 'Nightly Release of the project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed at {{ steps.create_release.outputs.url }}.'
