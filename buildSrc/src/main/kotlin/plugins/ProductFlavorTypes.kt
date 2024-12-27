@@ -7,6 +7,7 @@ enum class ProductFlavorTypes(
     val nameType: String
 ) {
     NoFirebase("noFirebase"),
+    NoCloudFirebase("noCloudFirebase"),
     Full("full");
 
     operator fun <T: ProductFlavor> invoke(receiver: NamedDomainObjectContainer<T>, block: T.() -> Unit = {}) {

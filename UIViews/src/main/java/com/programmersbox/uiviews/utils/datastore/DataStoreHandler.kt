@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils.components
+package com.programmersbox.uiviews.utils.datastore
 
 import android.content.Context
 import androidx.compose.runtime.Composable

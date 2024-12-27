@@ -21,6 +21,12 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.crashlytics.setCustomKeys
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ConfigUpdate
+import com.google.firebase.remoteconfig.ConfigUpdateListener
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.CustomListItem
@@ -41,7 +47,8 @@ import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.utils.SettingsHandling
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
-import com.programmersbox.uiviews.utils.components.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.programmersbox.uiviews.utils.shouldCheckFlow
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +77,9 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
         ComposeUiFlags.isSemanticAutofillEnabled = true
+
+        //TODO: Make a new sample project so that other developers can pull and do things without issues
+        // Make new build files for each app and call them each in a single one
 
         runCatching {
             FirebaseApp.initializeApp(this)
@@ -215,6 +225,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         shortcutSetup()
 
+        runCatching { if (BuildConfig.FLAVOR != "noFirebase") remoteConfigSetup(get()) }
     }
 
     override val workManagerConfiguration: Configuration
@@ -246,6 +257,49 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         shortcuts.addAll(shortcuts())
 
         manager.dynamicShortcuts = shortcuts
+    }
+
+    private fun remoteConfigSetup(dataStoreHandling: DataStoreHandling) {
+        val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
+        val configSettings = remoteConfigSettings {
+            //Official docs say to only have this set for debug builds
+            if (BuildConfig.DEBUG) minimumFetchIntervalInSeconds = 3600
+        }
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
+
+        //Updates
+        remoteConfig.addOnConfigUpdateListener(
+            object : ConfigUpdateListener {
+                override fun onUpdate(configUpdate: ConfigUpdate) {
+                    remoteConfig.activate().addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            GlobalScope.launch {
+                                val dataStoreKeys = RemoteConfigKeys.entries
+                                configUpdate.updatedKeys.forEach { t ->
+                                    if (BuildConfig.DEBUG) println("Updated key: $t")
+                                    runCatching {
+                                        dataStoreKeys.first { keys -> keys.key == t }
+                                    }
+                                        .onSuccess {
+                                            it.setDataStoreValue(
+                                                dataStoreHandling = dataStoreHandling,
+                                                remoteConfig = remoteConfig
+                                            )
+                                        }
+                                        .onFailure { it.printStackTrace() }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                override fun onError(error: FirebaseRemoteConfigException) {
+                    error.printStackTrace()
+                    Firebase.crashlytics.recordException(error)
+                }
+            }
+        )
     }
 
     data class FirebaseIds(

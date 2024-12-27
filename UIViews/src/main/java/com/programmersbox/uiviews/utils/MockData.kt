@@ -61,7 +61,7 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.utils.components.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext

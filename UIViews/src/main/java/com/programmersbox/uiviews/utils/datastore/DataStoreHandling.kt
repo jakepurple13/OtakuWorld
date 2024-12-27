@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils.components
+package com.programmersbox.uiviews.utils.datastore
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -51,5 +51,11 @@ class DataStoreHandling(context: Context) {
         context = context,
         key = booleanPreferencesKey("floatingNavigation"),
         defaultValue = true
+    )
+
+    val showGemini = DataStoreHandler(
+        context = context,
+        key = booleanPreferencesKey(RemoteConfigKeys.ShowGemini.key),
+        defaultValue = false
     )
 }

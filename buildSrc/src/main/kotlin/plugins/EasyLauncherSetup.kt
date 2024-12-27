@@ -24,8 +24,13 @@ class EasyLauncherSetup : Plugin<Project> {
     private fun Project.extensionSetup() {
         extensions.findByType<EasyLauncherExtension>()?.apply {
             defaultFlavorNaming(true)
-            productFlavors.register(ProductFlavorTypes.NoFirebase.nameType) {
-                filters(chromeLike())
+            productFlavors.apply {
+                register(ProductFlavorTypes.NoFirebase.nameType) {
+                    filters(chromeLike())
+                }
+                register(ProductFlavorTypes.NoCloudFirebase.nameType) {
+                    filters(chromeLike())
+                }
             }
 
             buildTypes.apply {

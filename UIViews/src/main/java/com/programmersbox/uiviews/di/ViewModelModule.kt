@@ -14,7 +14,7 @@ import com.programmersbox.uiviews.settings.ExtensionListViewModel
 import com.programmersbox.uiviews.settings.MoreSettingsViewModel
 import com.programmersbox.uiviews.settings.NotificationViewModel
 import com.programmersbox.uiviews.settings.SettingsViewModel
-import com.programmersbox.uiviews.utils.components.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf

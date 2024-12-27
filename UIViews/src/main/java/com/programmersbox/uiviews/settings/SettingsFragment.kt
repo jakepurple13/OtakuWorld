@@ -142,7 +142,7 @@ fun SettingScreen(
                 title = { Text(stringResource(R.string.settings)) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    if (BuildConfig.FLAVOR != "noFirebase") {
+                    if (BuildConfig.FLAVOR == "full") {
                         AccountSettings()
                     }
                 }
@@ -446,7 +446,8 @@ private fun SettingsScreen(
     //TODO: This will be for the future when this works again
     // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
     // once it doesn't, this will be fully implemented
-    if (BuildConfig.DEBUG) {
+    val showGemini by vm.showGemini.collectAsStateWithLifecycle(false)
+    if (showGemini) {
         PreferenceSetting(
             settingTitle = { Text("Gemini Recommendations") },
             settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },

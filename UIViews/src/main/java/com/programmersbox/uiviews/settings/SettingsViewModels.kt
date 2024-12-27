@@ -17,7 +17,7 @@ import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.components.DataStoreHandling
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -124,7 +124,12 @@ class TranslationViewModel : ViewModel() {
 
 }
 
-class SettingsViewModel(dao: ItemDao) : ViewModel() {
+class SettingsViewModel(
+    dao: ItemDao,
+    dataStoreHandling: DataStoreHandling,
+) : ViewModel() {
+    val showGemini = dataStoreHandling.showGemini.asFlow()
+
     var savedNotifications by mutableIntStateOf(0)
         private set
 

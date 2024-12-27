@@ -14,7 +14,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.uiviews.utils.components.DataStoreHandler
+import com.programmersbox.uiviews.utils.datastore.DataStoreHandler
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn

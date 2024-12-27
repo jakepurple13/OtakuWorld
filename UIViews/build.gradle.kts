@@ -20,6 +20,7 @@ android {
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.NoCloudFirebase(this)
         ProductFlavorTypes.Full(this)
     }
     namespace = "com.programmersbox.uiviews"

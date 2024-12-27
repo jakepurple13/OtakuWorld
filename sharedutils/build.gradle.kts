@@ -9,6 +9,7 @@ android {
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase(this)
+        ProductFlavorTypes.NoCloudFirebase(this)
         ProductFlavorTypes.Full(this)
     }
 
@@ -16,11 +17,10 @@ android {
         getByName("main") {
             java.srcDirs("src/main/java")
         }
-        getByName("full") {
-            java.srcDirs("src/full/java")
-        }
-        getByName("noFirebase") {
-            java.srcDirs("src/noFirebase/java")
+        ProductFlavorTypes.values().forEach {
+            getByName(it.nameType) {
+                java.srcDirs("src/${it.nameType}/java")
+            }
         }
     }
     namespace = "com.programmersbox.sharedutils"
