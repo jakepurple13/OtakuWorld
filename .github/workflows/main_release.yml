@@ -14,33 +14,21 @@ jobs:
     uses: ./.github/workflows/mangaworld_build.yaml
     if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-manga
-      cancel-in-progress: true
 
   animeworld:
     uses: ./.github/workflows/animeworld_build.yaml
     if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-anime
-      cancel-in-progress: true
 
   animeworldtv:
     uses: ./.github/workflows/animeworldtv_build.yaml
     if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-animetv
-      cancel-in-progress: true
 
   novelworld:
     uses: ./.github/workflows/novelworld_build.yaml
     if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-novel
-      cancel-in-progress: true
         #  apk:
         #    name: Generate APK
         #    runs-on: ubuntu-latest
