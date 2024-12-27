@@ -1,12 +1,12 @@
 name: Release Workflow
- 
+
 on:
   push:
-   tags:
+    tags:
       - 'v*'
-   paths-ignore: 
-     - '.github/**'
-     
+    paths-ignore:
+      - '.github/**'
+
   workflow_dispatch:
 
 jobs:
@@ -226,10 +226,10 @@ jobs:
           #         with:
           #           name: apk
   #           path: mangaworld/build/outputs/apk/debug/mangaworld-debug.apk
-#       - name: Upload APK
-#         uses: actions/upload-artifact@v1
-#         with:
-#           name: apk
+  #       - name: Upload APK
+  #         uses: actions/upload-artifact@v1
+  #         with:
+  #           name: apk
   #           path: novelworld/build/outputs/apk/debug/novelworld-debug.apk
 
   #  android:
@@ -252,72 +252,72 @@ jobs:
       #          path: release-artifacts
 
       - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed Anime App
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed Manga App
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed Novel App
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed AnimeTV App
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed Anime App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed Manga App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed Novel App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed AnimeTV App
 
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed Anime No Firebase App
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed Manga No Firebase App
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed Novel No Firebase App
-     - name: Download APK from build
-       uses: actions/download-artifact@v4
-       with:
-         name: Signed AnimeTV No Firebase App
-                 - name: Download APK from build
-                 uses: actions/download-artifact@v1
-                 with:
-                   name: Signed OtakuManager App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed Anime No Firebase App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed Manga No Firebase App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed Novel No Firebase App
+      - name: Download APK from build
+        uses: actions/download-artifact@v4
+        with:
+          name: Signed AnimeTV No Firebase App
+      #      - name: Download APK from build
+      #        uses: actions/download-artifact@v4
+      #        with:
+      #            name: Signed OtakuManager App
 
-     - name: Get tag name
-       id: get_tag_name
-       run: |
-         set -x
-         echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-     - name: Create Release
-       id: create_release
-       uses: softprops/action-gh-release@v2
-       if: startsWith(github.ref, 'refs/tags/')
-       env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       with:
-         fail_on_unmatched_files: true
-         tag_name: ${{ env.VERSION_TAG }}
-         name: Release ${{ env.VERSION_TAG }}
-         files: |
-           mangaworld-release.apk
-           animeworld-release.apk
-           novelworld-release.apk
-           animeworldtv-release.apk
+      - name: Get tag name
+        id: get_tag_name
+        run: |
+          set -x
+          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          fail_on_unmatched_files: true
+          tag_name: ${{ env.VERSION_TAG }}
+          name: Release ${{ env.VERSION_TAG }}
+          files: |
+            mangaworld-release.apk
+            animeworld-release.apk
+            novelworld-release.apk
+            animeworldtv-release.apk
+            
+            mangaworld-no-firebase-release.apk
+            animeworld-no-firebase-release.apk
+            novelworld-no-firebase-release.apk
+            animeworldtv-no-firebase-release.apk
 
-           mangaworld-no-firebase-release.apk
-           animeworld-no-firebase-release.apk
-           novelworld-no-firebase-release.apk
-           animeworldtv-no-firebase-release.apk
-
-     - name: Discord notification
-       env:
-         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-       uses: Ilshidur/action-discord@master
-       with:
-         args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed.'
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed.'

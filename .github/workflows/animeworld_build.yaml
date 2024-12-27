@@ -2,15 +2,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  mangaworld:
-    name: Generate MangaWorld APK
+  animeworld:
+    name: Generate AnimeWorld APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: echo $MANGA_GOOGLE_SERVICES_JSON > mangaworld/google-services.json
+      - run: echo ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
         env:
-          MANGA_GOOGLE_SERVICES_JSON: ${{ secrets.MANGA_SERVICES_TWO }}
+          ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES_TWO }}
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -23,15 +23,15 @@ jobs:
         with:
           add-job-summary-as-pr-comment: always
 
-      - name: Build MangaWorld artifacts
-        id: buildMangaApks
-        run: ./gradlew mangaworld:assembleRelease
+      - name: Build AnimeWorld artifacts
+        id: buildAnimeApks
+        run: ./gradlew animeworld:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
-        id: manga_sign
+        id: anime_sign
         with:
-          releaseDirectory: mangaworld/build/outputs/apk/full/release
+          releaseDirectory: animeworld/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -39,9 +39,9 @@ jobs:
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
-        id: manga_sign_no_firebase
+        id: anime_sign_no_firebase
         with:
-          releaseDirectory: mangaworld/build/outputs/apk/noFirebase/release
+          releaseDirectory: animeworld/build/outputs/apk/noFirebase/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -49,31 +49,31 @@ jobs:
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
-        id: manga_sign_no_cloud_firebase
+        id: anime_sign_no_cloud_firebase
         with:
-          releaseDirectory: mangaworld/build/outputs/apk/noCloudFirebase/release
+          releaseDirectory: animeworld/build/outputs/apk/noCloudFirebase/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Clean up MangaWorld artifacts
+      - name: Clean up AnimeWorld artifacts
         run: |
-          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
-          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
-          cp ${{ steps.manga_sign_no_cloud_firebase.outputs.signedReleaseFile }} mangaworld-no-cloud-firebase-release.apk
+          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
+          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
+          cp ${{ steps.anime_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworld-no-cloud-firebase-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Signed Manga App
-          path: mangaworld-release.apk
+          name: Signed Anime App
+          path: animeworld-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Signed Manga No Firebase App
-          path: mangaworld-no-firebase-release.apk
+          name: Signed Anime No Firebase App
+          path: animeworld-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Signed Manga No Cloud Firebase App
-          path: mangaworld-no-cloud-firebase-release.apk
+          name: Signed Anime No Cloud Firebase App
+          path: animeworld-no-cloud-firebase-release.apk
