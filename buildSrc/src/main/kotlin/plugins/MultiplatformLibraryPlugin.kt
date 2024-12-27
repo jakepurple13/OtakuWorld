@@ -45,7 +45,7 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             compilations.all {
                 this@androidTarget.compilerOptions {
                     freeCompilerArgs.add("-Xcontext-receivers")
-                    jvmTarget.set(JvmTarget.JVM_1_8)
+                    jvmTarget.set(JvmTarget.JVM_11)
                 }
             }
         }
