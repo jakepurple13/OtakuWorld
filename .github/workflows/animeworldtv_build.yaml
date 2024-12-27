@@ -30,7 +30,7 @@ jobs:
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
-        id: anime_sign
+        id: anime_tv_sign
         with:
           releaseDirectory: animeworldtv/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -40,7 +40,7 @@ jobs:
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
-        id: anime_sign_no_firebase
+        id: anime_tv_sign_no_firebase
         with:
           releaseDirectory: animeworldtv/build/outputs/apk/noFirebase/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -50,7 +50,7 @@ jobs:
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
-        id: anime_sign_no_cloud_firebase
+        id: anime_tv_sign_no_cloud_firebase
         with:
           releaseDirectory: animeworldtv/build/outputs/apk/noCloudFirebase/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -60,21 +60,21 @@ jobs:
 
       - name: Clean up AnimeWorld artifacts
         run: |
-          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
-          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
-          cp ${{ steps.anime_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworldtv-no-cloud-firebase-release.apk
+          cp ${{ steps.anime_tv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
+          cp ${{ steps.anime_tv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
+          cp ${{ steps.anime_tv_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworldtv-no-cloud-firebase-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Signed Anime App
+          name: Signed Anime Tv App
           path: animeworldtv-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Signed Anime No Firebase App
+          name: Signed Anime Tv No Firebase App
           path: animeworldtv-no-firebase-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Signed Anime No Cloud Firebase App
+          name: Signed Anime Tv No Cloud Firebase App
           path: animeworldtv-no-cloud-firebase-release.apk
