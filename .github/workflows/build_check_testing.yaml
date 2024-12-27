@@ -35,4 +35,4 @@ jobs:
         id: get_tag_name
         run: |
           set -x
-          echo "NIGHTLY_TIME=$date" >> $GITHUB_ENV
+          echo "NIGHTLY_TIME=$(date)" >> $GITHUB_ENV
