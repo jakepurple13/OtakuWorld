@@ -75,6 +75,10 @@ import com.programmersbox.animeworld.SlideToDeleteDialog
 import com.programmersbox.animeworld.VideoContent
 import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
+import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.presentation.components.CoilGradientImage
+import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.Emerald
@@ -82,10 +86,6 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
-import com.programmersbox.uiviews.utils.components.CoilGradientImage
-import com.programmersbox.uiviews.utils.components.ImageFlushListItem
-import com.programmersbox.uiviews.utils.components.PermissionRequest
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild

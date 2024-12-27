@@ -10,9 +10,9 @@ import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangasettings.mangaSettings
-import com.programmersbox.uiviews.utils.datastore.GenericSerializer
-import com.programmersbox.uiviews.utils.datastore.rememberPreference
-import com.programmersbox.uiviews.utils.datastore.update
+import com.programmersbox.uiviews.datastore.GenericSerializer
+import com.programmersbox.uiviews.datastore.rememberPreference
+import com.programmersbox.uiviews.datastore.update
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.InputStream

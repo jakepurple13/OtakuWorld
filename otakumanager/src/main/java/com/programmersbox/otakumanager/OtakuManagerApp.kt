@@ -18,7 +18,7 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.MainLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.utils.ComponentState
+import com.programmersbox.uiviews.presentation.componentstate
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.shouldCheck
 import org.koin.core.context.loadKoinModules

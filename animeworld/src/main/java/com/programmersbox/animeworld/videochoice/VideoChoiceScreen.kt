@@ -26,10 +26,10 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.components.ListBottomScreen
+import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.components.ListBottomScreen
-import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

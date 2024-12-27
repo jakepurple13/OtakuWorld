@@ -7,7 +7,7 @@ import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.uiviews.BaseMainActivity
-import com.programmersbox.uiviews.utils.datastore.updatePref
+import com.programmersbox.uiviews.datastore.updatePref
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject

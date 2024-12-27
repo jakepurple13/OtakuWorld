@@ -23,7 +23,7 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.Screen
 

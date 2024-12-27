@@ -44,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.components.OtakuScaffold
+import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 

@@ -56,8 +56,8 @@ import androidx.navigation.NavController
 import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.uiviews.utils.datastore.DataStoreHandler
-import com.programmersbox.uiviews.utils.datastore.dataStore
+import com.programmersbox.uiviews.datastore.DataStoreHandler
+import com.programmersbox.uiviews.datastore.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first

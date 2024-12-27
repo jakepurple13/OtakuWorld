@@ -33,11 +33,11 @@ import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
-import com.programmersbox.uiviews.utils.components.CategorySetting
-import com.programmersbox.uiviews.utils.components.PreferenceSetting
-import com.programmersbox.uiviews.utils.components.ShowWhen
-import com.programmersbox.uiviews.utils.components.SliderSetting
-import com.programmersbox.uiviews.utils.components.SwitchSetting
+import com.programmersbox.uiviews.presentation.components.CategorySetting
+import com.programmersbox.uiviews.presentation.components.PreferenceSetting
+import com.programmersbox.uiviews.presentation.components.ShowWhen
+import com.programmersbox.uiviews.presentation.components.SliderSetting
+import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

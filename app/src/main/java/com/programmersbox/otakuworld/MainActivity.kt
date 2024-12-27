@@ -82,8 +82,8 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.Coordinator
 import com.programmersbox.uiviews.utils.CoordinatorModel
-import com.programmersbox.uiviews.utils.components.MaterialCard
-import com.programmersbox.uiviews.utils.components.icons.Github
+import com.programmersbox.uiviews.presentation.components.MaterialCard
+import com.programmersbox.uiviews.presentation.components.icons.Github
 import com.programmersbox.uiviews.utils.coordinatorOffset
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -288,7 +288,7 @@ class MainActivity : AppCompatActivity() {
 
                         Text("${swipeableState.progress.fraction}")
 
-                        com.programmersbox.uiviews.utils.components.SwipeButton(
+                        com.programmersbox.uiviews.presentation.components.SwipeButton(
                             swipeableState = swipeableState,
                             iconGraphicsLayer = {
                                 scaleX = scale

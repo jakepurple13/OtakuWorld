@@ -96,11 +96,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.programmersbox.uiviews.ChangingSettingsRepository
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.settings.SourceChooserScreen
-import com.programmersbox.uiviews.settings.TranslationScreen
+import com.programmersbox.uiviews.presentation.settings.SourceChooserScreen
+import com.programmersbox.uiviews.presentation.settings.TranslationScreen
+import com.programmersbox.uiviews.repository.ChangingSettingsRepository
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates

@@ -45,9 +45,9 @@ import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect

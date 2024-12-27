@@ -58,11 +58,15 @@ import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
-import com.programmersbox.uiviews.utils.datastore.SettingsHandling
+import com.programmersbox.uiviews.theme.LocalCustomListDao
+import com.programmersbox.uiviews.theme.LocalHistoryDao
+import com.programmersbox.uiviews.theme.LocalItemDao
+import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext

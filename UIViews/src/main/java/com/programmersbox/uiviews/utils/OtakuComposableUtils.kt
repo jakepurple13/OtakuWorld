@@ -54,11 +54,11 @@ import coil.request.ImageRequest
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.components.BannerBox
-import com.programmersbox.uiviews.utils.components.CoilGradientImage
-import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.utils.components.placeholder.shimmer
+import com.programmersbox.uiviews.presentation.components.BannerBox
+import com.programmersbox.uiviews.presentation.components.CoilGradientImage
+import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
 import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
 import com.programmersbox.uiviews.utils.sharedelements.customSharedElement

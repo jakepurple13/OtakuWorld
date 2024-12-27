@@ -44,14 +44,14 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
-import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.utils.components.placeholder.shimmer
 import org.koin.dsl.module
 
 val appModule = module {

@@ -97,8 +97,8 @@ import com.programmersbox.uiviews.utils.CheckBoxSetting
 import com.programmersbox.uiviews.utils.PreferenceSetting
 import com.programmersbox.uiviews.utils.SliderSetting
 import com.programmersbox.uiviews.utils.SwitchSetting
-import com.programmersbox.uiviews.utils.components.FullDynamicThemePrimaryColorsFromImage
-import com.programmersbox.uiviews.utils.components.rememberDynamicColorState
+import com.programmersbox.uiviews.presentation.components.FullDynamicThemePrimaryColorsFromImage
+import com.programmersbox.uiviews.presentation.components.rememberDynamicColorState
 import com.programmersbox.uiviews.utils.currentColorScheme
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.delay

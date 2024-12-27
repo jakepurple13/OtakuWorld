@@ -41,12 +41,12 @@ import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.checkers.UpdateNotification
+import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.RemoteConfigKeys
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.utils.datastore.DataStoreHandling
-import com.programmersbox.uiviews.utils.datastore.RemoteConfigKeys
-import com.programmersbox.uiviews.utils.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
