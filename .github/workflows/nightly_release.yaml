@@ -15,31 +15,33 @@ jobs:
         run: echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
 
   mangaworld:
+    needs: checkNightly
     if: ${{ env.NEW_COMMIT_COUNT > 0 }}
     uses: ./.github/workflows/mangaworld_build.yaml
     secrets: inherit # pass all secrets
 
   animeworld:
+    needs: checkNightly
     if: ${{ env.NEW_COMMIT_COUNT > 0 }}
     uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
 
   animeworldtv:
+    needs: checkNightly
     if: ${{ env.NEW_COMMIT_COUNT > 0 }}
     uses: ./.github/workflows/animeworldtv_build.yaml
     secrets: inherit # pass all secrets
 
   novelworld:
+    needs: checkNightly
     if: ${{ env.NEW_COMMIT_COUNT > 0 }}
     uses: ./.github/workflows/novelworld_build.yaml
     secrets: inherit # pass all secrets
 
-
-
   release:
     name: Release APK
     needs: [ mangaworld, animeworld, novelworld, animeworldtv ]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: ${{ env.NEW_COMMIT_COUNT > 0 }}
     runs-on: ubuntu-latest
     steps:
 
