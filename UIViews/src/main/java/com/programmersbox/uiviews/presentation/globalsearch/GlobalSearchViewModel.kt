@@ -10,7 +10,7 @@ import androidx.navigation.toRoute
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.models.ItemModel
-import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

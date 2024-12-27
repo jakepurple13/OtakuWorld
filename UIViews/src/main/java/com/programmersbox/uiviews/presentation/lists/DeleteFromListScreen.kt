@@ -41,10 +41,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.M3CoverCard
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject

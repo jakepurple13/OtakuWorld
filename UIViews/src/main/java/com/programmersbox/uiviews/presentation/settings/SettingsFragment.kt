@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -83,7 +84,6 @@ import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
@@ -652,7 +652,10 @@ private fun SourceChooserPreview() {
 fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
 
-    LifecycleHandle(onResume = { vm.loadModels() })
+    LifecycleResumeEffect(Unit) {
+        vm.loadModels()
+        onPauseOrDispose {}
+    }
 
     ListBottomScreen(
         title = stringResource(R.string.chooseModelToDelete),

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils
+package com.programmersbox.uiviews.presentation
 
 import android.net.Uri
 import androidx.navigation.NavController
@@ -7,6 +7,7 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.utils.ApiServiceSerializer
 import kotlinx.serialization.Serializable
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets

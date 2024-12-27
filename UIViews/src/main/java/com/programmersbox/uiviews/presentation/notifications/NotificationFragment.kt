@@ -111,6 +111,7 @@ import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteGridS
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.GradientImage
 import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
@@ -132,7 +133,6 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.navigateToDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow

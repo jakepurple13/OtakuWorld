@@ -62,6 +62,7 @@ import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshDefaults
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
+import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.theme.LocalCurrentSource
 import com.programmersbox.uiviews.utils.ComponentState
@@ -73,7 +74,6 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ToasterItemsSetup
-import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze

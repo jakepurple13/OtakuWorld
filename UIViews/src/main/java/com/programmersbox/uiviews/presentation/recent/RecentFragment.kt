@@ -59,6 +59,7 @@ import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -67,7 +68,6 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
-import com.programmersbox.uiviews.utils.navigateToDetails
 import com.programmersbox.uiviews.utils.showSourceChooser
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch

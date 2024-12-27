@@ -79,9 +79,9 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.asState
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.uiviews.presentation.lists.ListChoiceScreen
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.launchCatching
 import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope

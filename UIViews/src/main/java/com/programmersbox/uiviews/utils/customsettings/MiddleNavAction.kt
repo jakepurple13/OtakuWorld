@@ -29,7 +29,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.presentation.Screen
 
 data class MiddleNavigationItem(
     val screen: Screen,

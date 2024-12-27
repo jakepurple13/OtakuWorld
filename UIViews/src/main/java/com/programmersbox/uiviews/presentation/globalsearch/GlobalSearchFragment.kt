@@ -96,6 +96,7 @@ import com.programmersbox.uiviews.presentation.components.placeholder.Placeholde
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.presentation.components.plus
+import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.BannerScope
@@ -112,7 +113,6 @@ import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
-import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze

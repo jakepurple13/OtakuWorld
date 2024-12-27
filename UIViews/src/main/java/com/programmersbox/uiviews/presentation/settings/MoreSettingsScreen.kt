@@ -103,5 +103,6 @@ fun MoreSettingsScreen(
         HorizontalDivider()
     }
 
+    //TODO: Remove toaster and switch back to snackbar
     ToasterSetup(toaster = toaster)
 }

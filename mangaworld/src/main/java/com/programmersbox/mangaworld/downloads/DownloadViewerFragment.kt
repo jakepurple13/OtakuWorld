@@ -64,6 +64,7 @@ import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import com.programmersbox.uiviews.presentation.components.animatedItems
@@ -71,7 +72,6 @@ import com.programmersbox.uiviews.presentation.components.updateAnimatedItemsSta
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.Screen
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach

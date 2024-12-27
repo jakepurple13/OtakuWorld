@@ -63,6 +63,7 @@ import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
@@ -75,7 +76,6 @@ import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.navigateToDetails
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

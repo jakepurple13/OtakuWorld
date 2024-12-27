@@ -20,6 +20,7 @@ fun logFirebaseMessage(message: String) = runCatching {
     Firebase.crashlytics.log(message)
 }.onFailure { println(message) }
 
+//TODO: This could probably go...somewhere
 fun combineSources(
     sourceRepository: SourceRepository,
     dao: ItemDao,

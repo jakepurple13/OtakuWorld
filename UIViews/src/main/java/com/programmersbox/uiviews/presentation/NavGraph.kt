@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.uiviews.presentation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -22,8 +22,8 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.programmersbox.gemini.GeminiRecommendationScreen
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.uiviews.presentation.AboutLibrariesScreen
-import com.programmersbox.uiviews.presentation.DebugView
+import com.programmersbox.uiviews.BuildConfig
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.all.AllView
 import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
@@ -45,7 +45,6 @@ import com.programmersbox.uiviews.presentation.settings.PlaySettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.Screen
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 
@@ -102,7 +101,7 @@ fun NavGraphBuilder.navGraph(
     ExperimentalComposeUiApi::class,
     ExperimentalFoundationApi::class
 )
-fun NavGraphBuilder.settings(
+private fun NavGraphBuilder.settings(
     customPreferences: ComposeSettingsDsl,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,

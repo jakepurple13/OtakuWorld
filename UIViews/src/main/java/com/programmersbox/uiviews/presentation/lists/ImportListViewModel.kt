@@ -12,7 +12,7 @@ import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.uiviews.utils.Screen
+import com.programmersbox.uiviews.presentation.Screen
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
