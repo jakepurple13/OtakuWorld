@@ -14,13 +14,13 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 These apps do not contain ANY sources themselves. In order to pull sources, the apps do contain some
 default sources.
 
-MangaWorld:
-Any sources that work with [Mihon](https://mihon.app/) will work with MangaWorld...After the bridge
+For MangaWorld: Any sources that work with [Mihon](https://mihon.app/) will work with
+MangaWorld...After the bridge
 is installed.
 
-AnimeWorld:
-Any sources that work with [Aniyomi](https://aniyomi.org/) will work with AnimeWorld...After the
-bridge is installed
+For AnimeWorld: Any sources that work with [Aniyomi](https://aniyomi.org/) will work with
+AnimeWorld...After the
+bridge is installed.
 
 ## Contents
    * [Screenshots](#screenshots)
