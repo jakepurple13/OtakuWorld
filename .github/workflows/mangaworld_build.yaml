@@ -1,3 +1,5 @@
+name: MangaWorld Build
+
 on:
   workflow_dispatch:
   workflow_call:

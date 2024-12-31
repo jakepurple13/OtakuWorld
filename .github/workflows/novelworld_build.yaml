@@ -1,3 +1,5 @@
+name: NovelWorld Build
+
 on:
   workflow_dispatch:
   workflow_call:

@@ -1,3 +1,5 @@
+name: AnimeWorld Tv Build
+
 on:
   workflow_dispatch:
   workflow_call:
