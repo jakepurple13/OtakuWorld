@@ -1,4 +1,5 @@
-# Supported Languages
+## 🌐  Supported Languages
+
 [中文](README-zh.md)
 - 🇺🇸 English
 - 🇨🇳 Chinese
