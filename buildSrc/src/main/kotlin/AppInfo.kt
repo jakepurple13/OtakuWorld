@@ -1,6 +1,6 @@
 object AppInfo {
-    const val otakuVersionName = "31.0.1"
-    const val compileVersion = 34
-    const val minimumSdk = 24
-    const val targetSdk = 34
+    const val otakuVersionName = "32.0.0"
+    const val compileVersion = 35
+    const val minimumSdk = 28
+    const val targetSdk = 35
 }

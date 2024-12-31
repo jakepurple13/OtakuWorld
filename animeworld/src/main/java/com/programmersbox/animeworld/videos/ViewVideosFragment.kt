@@ -15,8 +15,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,26 +26,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pages
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissValue
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberSwipeToDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,11 +57,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import coil.ImageLoader
@@ -72,37 +69,33 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import coil.request.videoFramePercent
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
 import com.programmersbox.animeworld.VideoContent
 import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
+import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteScaffold
+import com.programmersbox.uiviews.presentation.components.CoilGradientImage
+import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.Emerald
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
-import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.components.BottomSheetDeleteScaffold
-import com.programmersbox.uiviews.utils.components.CoilGradientImage
-import com.programmersbox.uiviews.utils.components.ImageFlushListItem
-import com.programmersbox.uiviews.utils.components.PermissionRequest
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
     ExperimentalAnimationApi::class,
-    ExperimentalPermissionsApi::class
 )
 @Composable
 fun ViewVideoScreen() {
@@ -120,10 +113,9 @@ fun ViewVideoScreen() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 private fun VideoLoad(viewModel: ViewVideoViewModel) {
 
@@ -146,6 +138,8 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
         scope.launch { state.bottomSheetState.partialExpand() }
     }
+
+    val surface = MaterialTheme.colorScheme.surface
 
     var itemToDelete by remember { mutableStateOf<VideoContent?>(null) }
     var showDialog by remember { mutableStateOf(false) }
@@ -172,7 +166,9 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                    modifier = Modifier.hazeChild(hazeState)
+                    modifier = Modifier.hazeChild(hazeState) {
+                        backgroundColor = surface
+                    }
                 )
             },
             containerColor = Color.Transparent,
@@ -282,10 +278,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                     contentPadding = p,
                     modifier = Modifier
                         .fillMaxSize()
-                        .haze(
-                            hazeState,
-                            backgroundColor = M3MaterialTheme.colorScheme.surface
-                        )
+                        .haze(hazeState)
                 ) {
                     items(
                         items = itemList,
@@ -294,7 +287,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         VideoContentView(
                             item = it,
                             imageLoader = coilImageLoader,
-                            modifier = Modifier.animateItemPlacement()
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -320,20 +313,20 @@ private fun EmptyState(paddingValues: PaddingValues) {
             Column(modifier = Modifier) {
                 Text(
                     text = stringResource(id = R.string.get_started),
-                    style = M3MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 Text(
                     text = stringResource(id = R.string.download_a_video),
-                    style = M3MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 val navController = LocalNavController.current
 
                 Button(
-                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
+                    onClick = { navController.popBackStack(Screen.RecentScreen, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)
@@ -346,7 +339,6 @@ private fun EmptyState(paddingValues: PaddingValues) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 private fun VideoContentView(
     item: VideoContent,
@@ -360,9 +352,9 @@ private fun VideoContentView(
     val navController = LocalNavController.current
     val context = LocalContext.current
 
-    val dismissState = rememberSwipeToDismissState(
+    val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
-            if (it == SwipeToDismissValue.StartToEnd) {
+            if (it == SwipeToDismissBoxValue.StartToEnd) {
                 if (MainActivity.cast.isCastActive()) {
                     MainActivity.cast.loadMedia(
                         File(item.path!!),
@@ -378,7 +370,7 @@ private fun VideoContentView(
                         ""
                     )
                 }
-            } else if (it == SwipeToDismissValue.EndToStart) {
+            } else if (it == SwipeToDismissBoxValue.EndToStart) {
                 showDialog = true
             }
             false
@@ -391,22 +383,22 @@ private fun VideoContentView(
             val direction = dismissState.dismissDirection
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    SwipeToDismissValue.Settled -> Color.Transparent
-                    SwipeToDismissValue.StartToEnd -> Emerald
-                    SwipeToDismissValue.EndToStart -> Color.Red
+                    SwipeToDismissBoxValue.Settled -> Color.Transparent
+                    SwipeToDismissBoxValue.StartToEnd -> Emerald
+                    SwipeToDismissBoxValue.EndToStart -> Color.Red
                 }, label = ""
             )
             val alignment = when (direction) {
-                SwipeToDismissValue.StartToEnd -> Alignment.CenterStart
-                SwipeToDismissValue.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
                 else -> Alignment.Center
             }
             val icon = when (direction) {
-                SwipeToDismissValue.StartToEnd -> Icons.Default.PlayArrow
-                SwipeToDismissValue.EndToStart -> Icons.Default.Delete
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.PlayArrow
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
                 else -> Icons.Default.Pages
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
 
             Box(
                 Modifier
@@ -424,30 +416,26 @@ private fun VideoContentView(
         },
         content = {
             ElevatedCard(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        if (MainActivity.cast.isCastActive()) {
-                            MainActivity.cast.loadMedia(
-                                File(item.path!!),
-                                context
-                                    .getSharedPreferences("videos", Context.MODE_PRIVATE)
-                                    .getLong(item.assetFileStringUri, 0),
-                                null, null
-                            )
-                        } else {
-                            context.navigateToVideoPlayer(
-                                navController,
-                                item.assetFileStringUri,
-                                item.videoName,
-                                true,
-                                ""
-                            )
-                        }
+                onClick = {
+                    if (MainActivity.cast.isCastActive()) {
+                        MainActivity.cast.loadMedia(
+                            File(item.path!!),
+                            context
+                                .getSharedPreferences("videos", Context.MODE_PRIVATE)
+                                .getLong(item.assetFileStringUri, 0),
+                            null, null
+                        )
+                    } else {
+                        context.navigateToVideoPlayer(
+                            navController,
+                            item.assetFileStringUri,
+                            item.videoName,
+                            true,
+                            ""
+                        )
                     }
+                },
+                modifier = Modifier.fillMaxSize()
             ) {
                 ImageFlushListItem(
                     leadingContent = {

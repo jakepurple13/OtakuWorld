@@ -1,0 +1,82 @@
+name: AnimeWorld Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  animeworld:
+    name: Generate AnimeWorld APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
+        env:
+          ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES_TWO }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: adopt
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          add-job-summary-as-pr-comment: always
+
+      - name: Build AnimeWorld artifacts
+        id: buildAnimeApks
+        run: ./gradlew animeworld:assembleRelease
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: anime_sign
+        with:
+          releaseDirectory: animeworld/build/outputs/apk/full/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: anime_sign_no_firebase
+        with:
+          releaseDirectory: animeworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: anime_sign_no_cloud_firebase
+        with:
+          releaseDirectory: animeworld/build/outputs/apk/noCloudFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up AnimeWorld artifacts
+        run: |
+          cp ${{ steps.anime_sign.outputs.signedReleaseFile }} animeworld-release.apk
+          cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
+          cp ${{ steps.anime_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworld-no-cloud-firebase-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Anime App
+          path: animeworld-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Anime No Firebase App
+          path: animeworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Anime No Cloud Firebase App
+          path: animeworld-no-cloud-firebase-release.apk

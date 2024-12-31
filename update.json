@@ -1,7 +1,7 @@
 {
   "update_version": 27.0,
-  "update_real_version": "31.0.1",
-  "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/download/v31.0.1/",
+  "update_real_version": "32.0.0",
+  "update_url": "https://github.com/jakepurple13/OtakuWorld/releases/download/v32.0.0_1/",
   "manga_file": "mangaworld-release.apk",
   "anime_file": "animeworld-release.apk",
   "novel_file": "novelworld-release.apk",
@@ -10,5 +10,9 @@
   "manga_no_firebase_file": "mangaworld-no-firebase-release.apk",
   "anime_no_firebase_file": "animeworld-no-firebase-release.apk",
   "novel_no_firebase_file": "novelworld-no-firebase-release.apk",
-  "animetv_no_firebase_file": "animeworldtv-no-firebase-release.apk"
+  "animetv_no_firebase_file": "animeworldtv-no-firebase-release.apk",
+  "manga_no_cloud_file": "mangaworld-no-cloud-release.apk",
+  "anime_no_cloud_file": "animeworld-no-cloud-release.apk",
+  "novel_no_cloud_file": "novelworld-no-cloud-release.apk",
+  "animetv_no_cloud_file": "animeworldtv-no-cloud-release.apk"
 }

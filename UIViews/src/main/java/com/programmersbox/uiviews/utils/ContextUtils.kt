@@ -1,7 +1,5 @@
 package com.programmersbox.uiviews.utils
 
-import android.Manifest
-import android.app.Dialog
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
@@ -10,52 +8,31 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.net.ConnectivityManager
-import android.net.Network
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresPermission
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.BatteryUnknown
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.BatteryStd
-import androidx.compose.material.icons.filled.BatteryUnknown
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -66,16 +43,15 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.gsonutils.sharedPrefObjectDelegate
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
-import com.programmersbox.helpfulutils.connectivityManager
 import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
@@ -89,30 +65,7 @@ import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.collections.set
 import kotlin.properties.Delegates
-import kotlin.properties.PropertyDelegateProvider
-
-var Context.currentService: String? by sharedPrefObjectDelegate(null)
-
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    "otakuworld",
-    //produceMigrations = { listOf(SharedPreferencesMigration(it, "HelpfulUtils")) }
-)
-
-val SHOULD_CHECK = booleanPreferencesKey("shouldCheckUpdate")
-val Context.shouldCheckFlow get() = dataStore.data.map { it[SHOULD_CHECK] ?: true }
-
-val HISTORY_SAVE = intPreferencesKey("history_save")
-val Context.historySave get() = dataStore.data.map { it[HISTORY_SAVE] ?: 50 }
-
-val UPDATE_CHECKING_START = longPreferencesKey("lastUpdateCheckStart")
-val Context.updateCheckingStart get() = dataStore.data.map { it[UPDATE_CHECKING_START] ?: System.currentTimeMillis() }
-
-val UPDATE_CHECKING_END = longPreferencesKey("lastUpdateCheckEnd")
-val Context.updateCheckingEnd get() = dataStore.data.map { it[UPDATE_CHECKING_END] ?: System.currentTimeMillis() }
-
-suspend fun <T> Context.updatePref(key: Preferences.Key<T>, value: T) = dataStore.edit { it[key] = value }
 
 @JvmInline
 value class NotificationLogo(val notificationId: Int)
@@ -147,6 +100,7 @@ fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap {
     return out
 }
 
+//TODO: Kotlinx Serialization this!
 class ChapterModelSerializer : JsonSerializer<ChapterModel> {
     override fun serialize(src: ChapterModel, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val json = JsonObject()
@@ -191,43 +145,21 @@ class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeseria
     }
 }
 
-fun <T : View> BottomSheetBehavior<T>.open() {
-    state = BottomSheetBehavior.STATE_EXPANDED
-}
-
-fun <T : View> BottomSheetBehavior<T>.close() {
-    state = BottomSheetBehavior.STATE_COLLAPSED
-}
-
-fun <T : View> BottomSheetBehavior<T>.halfOpen() {
-    state = BottomSheetBehavior.STATE_HALF_EXPANDED
-}
-
-abstract class BaseBottomSheetDialogFragment : BottomSheetDialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = super.onCreateDialog(savedInstanceState)
-        .apply {
-            setOnShowListener {
-                val sheet = findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
-                val bottomSheet = BottomSheetBehavior.from(sheet)
-                bottomSheet.skipCollapsed = true
-                bottomSheet.isDraggable = false
-                bottomSheet.open()
-            }
-        }
-}
-
+//TODO: Put in own file
 class BatteryInformation(val context: Context) : KoinComponent {
 
     val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
     val settingsHandling: SettingsHandling by inject()
 
+    private val batteryPercent by lazy { settingsHandling.batteryPercent }
+
     enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
         CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
         DEFAULT(GoogleMaterial.Icon.gmd_battery_std, Icons.Default.BatteryStd),
         FULL(GoogleMaterial.Icon.gmd_battery_full, Icons.Default.BatteryFull),
         ALERT(GoogleMaterial.Icon.gmd_battery_alert, Icons.Default.BatteryAlert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.Default.BatteryUnknown)
+        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.AutoMirrored.Filled.BatteryUnknown)
     }
 
     suspend fun composeSetupFlow(
@@ -236,12 +168,12 @@ class BatteryInformation(val context: Context) : KoinComponent {
     ) = combine(
         combine(
             batteryLevel,
-            settingsHandling.batteryPercentage
+            batteryPercent.asFlow()
         ) { b, d -> b <= d }
             .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
         combine(
             batteryInfo,
-            settingsHandling.batteryPercentage
+            batteryPercent.asFlow()
         ) { b, d -> b to d }
             .map {
                 when {
@@ -264,12 +196,12 @@ class BatteryInformation(val context: Context) : KoinComponent {
         combine(
             combine(
                 batteryLevel,
-                settingsHandling.batteryPercentage
+                batteryPercent.asFlow()
             ) { b, d -> b <= d }
                 .map { if (it) Color.RED else normalBatteryColor },
             combine(
                 batteryInfo,
-                settingsHandling.batteryPercentage
+                batteryPercent.asFlow()
             ) { b, d -> b to d }
                 .map {
                     when {
@@ -296,16 +228,7 @@ fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
     Locale.getDefault()
 )
 
-val LocalSystemDateTimeFormat = staticCompositionLocalOf<SimpleDateFormat> { error("Nothing here!") }
-
-inline fun <reified V : ViewModel> factoryCreate(crossinline build: () -> V) = object : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(V::class.java)) {
-            return build() as T
-        }
-        throw IllegalArgumentException("Unknown class name")
-    }
-}
+val LocalSystemDateTimeFormat = staticCompositionLocalOf<java.text.DateFormat> { error("Nothing here!") }
 
 object Cached {
 
@@ -472,8 +395,6 @@ class ExpirableLRUCache<K, V>(
 
 val LocalSettingsHandling = staticCompositionLocalOf<SettingsHandling> { error("Not Set") }
 
-val LocalActivity = staticCompositionLocalOf<FragmentActivity> { error("Context is not an Activity.") }
-
 tailrec fun Context.findActivity(): FragmentActivity = when (this) {
     is FragmentActivity -> this
     is ContextWrapper -> this.baseContext.findActivity()
@@ -500,44 +421,6 @@ fun rememberBackStackEntry(
 val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
 
-enum class Status { Available, Losing, Lost, Unavailable }
-
-@RequiresApi(Build.VERSION_CODES.N)
-@RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-@Composable
-fun connectivityStatus(
-    initialValue: Status = Status.Unavailable,
-    context: Context = LocalContext.current,
-    vararg key: Any,
-): State<Status> = produceState(initialValue = initialValue, keys = key) {
-    val callback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            super.onAvailable(network)
-            value = Status.Available
-        }
-
-        override fun onLosing(network: Network, maxMsToLive: Int) {
-            super.onLosing(network, maxMsToLive)
-            value = Status.Losing
-        }
-
-        override fun onLost(network: Network) {
-            super.onLost(network)
-            value = Status.Lost
-        }
-
-        override fun onUnavailable() {
-            super.onUnavailable()
-            value = Status.Unavailable
-        }
-    }
-
-    val manager = context.connectivityManager
-    manager.registerDefaultNetworkCallback(callback)
-
-    awaitDispose { manager.unregisterNetworkCallback(callback) }
-}
-
 val Context.appVersion: String
     get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         packageManager.getPackageInfo(
@@ -555,41 +438,5 @@ fun appVersion(): String {
     } else {
         val context = LocalContext.current
         remember(context) { context.appVersion }
-    }
-}
-
-internal inline fun <T> SavedStateHandle.state(
-    key: String? = null,
-    crossinline initialValue: () -> T,
-) = PropertyDelegateProvider<Any, MutableState<T>> { thisRef, property ->
-    val internalKey = key ?: "${thisRef.javaClass.name}#${property.name}"
-    getMutableState(internalKey, initialValue())
-}
-
-internal fun <T> SavedStateHandle.getMutableState(
-    key: String,
-    initialValue: T,
-): MutableState<T> {
-    val stateFlow = getStateFlow(key, initialValue)
-    // Sync initial value with `stateFlow`.
-    val base = mutableStateOf(stateFlow.value)
-
-    return object : MutableState<T> by base {
-
-        override var value: T
-            get() {
-                // Sync `base` value with `stateFlow`.
-                if (base.value != stateFlow.value) {
-                    base.value = stateFlow.value
-                }
-                return base.value
-            }
-            set(value) {
-                // Sync `base` value with `stateFlow`.
-                if (stateFlow.value != value) {
-                    set(key, value)
-                    base.value = get<T>(key) ?: value
-                }
-            }
     }
 }

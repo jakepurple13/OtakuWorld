@@ -9,12 +9,13 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 import kotlin.reflect.KClass
 
-abstract class AndroidPluginBase<T: BaseExtension>(
-    private val clazz: KClass<T>
+abstract class AndroidPluginBase<T : BaseExtension>(
+    private val clazz: KClass<T>,
 ) : Plugin<Project> {
 
     abstract fun Project.projectSetup()
@@ -23,19 +24,26 @@ abstract class AndroidPluginBase<T: BaseExtension>(
     override fun apply(target: Project) {
         target.projectSetup()
         target.pluginManager.apply("kotlin-android")
-        target.tasks.withType<KotlinCompile> { kotlinOptions { jvmTarget = "1.8" } }
+        target.tasks.withType<KotlinCompile> {
+            compilerOptions {
+                freeCompilerArgs.add("-Xwhen-guards")
+                jvmTarget.set(JvmTarget.JVM_11)
+            }
+        }
         target.configureAndroidBase()
-        target.afterEvaluate { useGoogleType() }
     }
 
-    private fun Project.useGoogleType() {
+    protected fun Project.useGoogleType() {
         extensions.findByType<BaseAppModuleExtension>()?.apply {
             applicationVariants.forEach { variant ->
                 println(variant.name)
                 val variantName = variant.name
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                 val googleTask = tasks.findByName("process${variantName}GoogleServices")
-                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
+                // Need to get the noFirebase packages in firebase first
+                // googleTask?.enabled = System.getenv("CI") != null
+                //TODO: Testing
+                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName || System.getenv("CI") != null
             }
         }
     }
@@ -55,20 +63,26 @@ abstract class AndroidPluginBase<T: BaseExtension>(
             }
 
             compileOptions {
-                sourceCompatibility = JavaVersion.VERSION_1_8
-                targetCompatibility = JavaVersion.VERSION_1_8
+                sourceCompatibility = JavaVersion.VERSION_11
+                targetCompatibility = JavaVersion.VERSION_11
             }
 
             packagingOptions {
                 resources {
                     excludes += "/META-INF/{AL2.0,LGPL2.1}:"
+                    excludes += "license/README.dom.txt"
+                    excludes += "license/LICENSE.dom-documentation.txt"
+                    excludes += "license/NOTICE"
+                    excludes += "license/LICENSE.dom-software.txt"
+                    excludes += "license/LICENSE*"
+                    excludes += "license/LICENSE"
                 }
             }
 
             dependencies {
-                implementation(libs.findLibrary("kotlinStLib").get())
-                implementation(libs.findLibrary("androidCore").get())
-                implementation(libs.findLibrary("appCompat").get())
+                implementation(libs.kotlinStLib.get())
+                implementation(libs.androidCore.get())
+                implementation(libs.appCompat.get())
             }
         }
     }

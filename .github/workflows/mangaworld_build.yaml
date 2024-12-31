@@ -1,0 +1,82 @@
+name: MangaWorld Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  mangaworld:
+    name: Generate MangaWorld APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - run: echo $MANGA_GOOGLE_SERVICES_JSON > mangaworld/google-services.json
+        env:
+          MANGA_GOOGLE_SERVICES_JSON: ${{ secrets.MANGA_SERVICES_TWO }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: adopt
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          add-job-summary-as-pr-comment: always
+
+      - name: Build MangaWorld artifacts
+        id: buildMangaApks
+        run: ./gradlew mangaworld:assembleRelease
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: manga_sign
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/full/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: manga_sign_no_firebase
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: manga_sign_no_cloud_firebase
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/noCloudFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up MangaWorld artifacts
+        run: |
+          cp ${{ steps.manga_sign.outputs.signedReleaseFile }} mangaworld-release.apk
+          cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
+          cp ${{ steps.manga_sign_no_cloud_firebase.outputs.signedReleaseFile }} mangaworld-no-cloud-firebase-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Manga App
+          path: mangaworld-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Manga No Firebase App
+          path: mangaworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Manga No Cloud Firebase App
+          path: mangaworld-no-cloud-firebase-release.apk

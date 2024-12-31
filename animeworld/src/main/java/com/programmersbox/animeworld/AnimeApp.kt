@@ -11,21 +11,21 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.icon
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.OtakuApp
-import org.koin.core.context.loadKoinModules
+import org.koin.core.module.Module
 
 class AnimeApp : OtakuApp() {
-    override fun onCreated() {
-
-        loadKoinModules(appModule)
-
-        FirebaseDb.DOCUMENT_ID = "favoriteShows"
-        FirebaseDb.CHAPTERS_ID = "episodesWatched"
-        FirebaseDb.COLLECTION_ID = "animeworld"
-        FirebaseDb.ITEM_ID = "showUrl"
-        FirebaseDb.READ_OR_WATCHED_ID = "numEpisodes"
+    override fun Module.buildModules() {
+        includes(appModule)
     }
+
+    override fun createFirebaseIds(): FirebaseIds = FirebaseIds(
+        documentId = "favoriteShows",
+        chaptersId = "episodesWatched",
+        collectionId = "animeworld",
+        itemId = "showUrl",
+        readOrWatchedId = "numEpisodes"
+    )
 
     @RequiresApi(Build.VERSION_CODES.N_MR1)
     override fun shortcuts(): List<ShortcutInfo> = listOf(

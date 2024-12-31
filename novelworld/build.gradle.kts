@@ -1,11 +1,9 @@
 plugins {
-    id("otaku-application")
+    `otaku-application`
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
-    id("otaku-easylauncher")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.firebase.performance)
 }
 
 android {
@@ -23,9 +21,9 @@ android {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.recyclerview)
-    implementation(libs.preference)
+    implementation(androidx.preference.preference)
+    implementation(androidx.recyclerview.recyclerview)
+    implementation(androidx.constraintlayout.constraintlayout)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -41,15 +39,17 @@ dependencies {
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)
 
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
     val composeBom = platform(libs.composePlatform)
     implementation(composeBom)
     implementation(libs.bundles.compose)
 
-    implementation(libs.bundles.datastoreLibs)
+    implementation(androidx.datastore.datastore)
+    implementation(androidx.datastore.datastorePreferences)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(libs.bundles.koinLibs)
+    implementation(libs.ktorAndroid)
 }

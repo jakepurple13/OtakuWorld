@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -18,7 +19,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,14 +39,13 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PersonalVideo
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,6 +63,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -94,19 +94,19 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.datastore.asState
+import com.programmersbox.uiviews.presentation.components.PreferenceSetting
+import com.programmersbox.uiviews.presentation.components.ShowWhen
+import com.programmersbox.uiviews.presentation.components.SwitchSetting
+import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.PreferenceSetting
-import com.programmersbox.uiviews.utils.ShowWhen
-import com.programmersbox.uiviews.utils.SwitchSetting
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
-import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.utils.components.placeholder.shimmer
-import com.programmersbox.uiviews.utils.updatePref
+import com.programmersbox.uiviews.utils.trackScreen
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -116,9 +116,10 @@ import kotlinx.coroutines.launch
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get(), get()) }
+    single<GenericInfo> { GenericAnime(get(), get(), get()) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
+    single { AnimeDataStoreHandling(get()) }
 }
 
 class StorageHolder {
@@ -128,9 +129,17 @@ class StorageHolder {
 class GenericAnime(
     val context: Context,
     val storageHolder: StorageHolder,
+    val animeDataStoreHandling: AnimeDataStoreHandling,
 ) : GenericInfo {
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") anime_no_firebase_file else anime_file }
+    override val apkString: AppUpdate.AppUpdates.() -> String?
+        get() = {
+            when (BuildConfig.FLAVOR) {
+                "noFirebase" -> animeNoFirebaseFile
+                "noCloudFirebase" -> animeNoCloudFile
+                else -> animeFile
+            }
+        }
     override val deepLinkUri: String get() = "animeworld://"
 
     override val sourceType: String get() = "anime"
@@ -314,7 +323,8 @@ class GenericAnime(
 
     @Composable
     override fun DetailActions(infoModel: InfoModel, tint: Color) {
-        val showCast by MainActivity.cast.sessionConnected().collectAsState(initial = true)
+        val showCast by MainActivity.cast.sessionConnected()
+            .collectAsStateWithLifecycle(true)
 
         AnimatedVisibility(
             visible = showCast,
@@ -436,8 +446,8 @@ class GenericAnime(
                 settingTitle = { Text(stringResource(R.string.video_menu_title)) },
                 settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    indication = ripple(),
+                    interactionSource = null
                 ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
             )
 
@@ -455,17 +465,19 @@ class GenericAnime(
                         )
                     },
                     modifier = Modifier.clickable(
-                        indication = rememberRipple(),
-                        interactionSource = remember { MutableInteractionSource() }
+                        indication = ripple(),
+                        interactionSource = null
                     ) {
                         if (MainActivity.cast.isCastActive()) {
                             context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
                         } else {
-                            MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                .also { m ->
-                                    CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
-                                }
-                                .show(activity.supportFragmentManager, "media_chooser")
+                            (activity as? FragmentActivity)?.supportFragmentManager?.let {
+                                MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                                    .also { m ->
+                                        CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
+                                    }
+                                    .show(it, "media_chooser")
+                            }
                         }
                     }
                 )
@@ -482,10 +494,10 @@ class GenericAnime(
                 summaryValue = { Text(folderLocation) },
                 settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    indication = ripple(),
+                    interactionSource = null
                 ) {
-                    activity.requestPermissions(
+                    (activity as? FragmentActivity)?.requestPermissions(
                         Manifest.permission.READ_EXTERNAL_STORAGE,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     ) {
@@ -510,26 +522,29 @@ class GenericAnime(
         }
 
         playerSettings {
-            val context = LocalContext.current
             val scope = rememberCoroutineScope()
 
-            val player by context.useNewPlayerFlow.collectAsState(true)
+            val useNewPlayer = animeDataStoreHandling.useNewPlayer
+
+            val player by useNewPlayer.asState()
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(R.string.use_new_player)) },
                 summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
                 settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
                 value = player,
-                updateValue = { scope.launch { context.updatePref(USER_NEW_PLAYER, it) } }
+                updateValue = { scope.launch { useNewPlayer.set(it) } }
             )
 
-            val ignoreSsl by context.ignoreSsl.collectAsState(initial = true)
+            val ignoreSsl = animeDataStoreHandling.ignoreSsl
+
+            val ignoreSslState by ignoreSsl.asState()
 
             SwitchSetting(
                 settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
                 settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
-                value = ignoreSsl
-            ) { scope.launch { context.updatePref(IGNORE_SSL, it) } }
+                value = ignoreSslState
+            ) { scope.launch { ignoreSsl.set(it) } }
         }
     }
 
@@ -538,7 +553,10 @@ class GenericAnime(
             VideoViewModel.VideoPlayerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) { VideoPlayerUi() }
+        ) {
+            trackScreen("video_player")
+            VideoPlayerUi()
+        }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -547,7 +565,10 @@ class GenericAnime(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
-        ) { ViewVideoScreen() }
+        ) {
+            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+            ViewVideoScreen()
+        }
     }
 
     @Composable

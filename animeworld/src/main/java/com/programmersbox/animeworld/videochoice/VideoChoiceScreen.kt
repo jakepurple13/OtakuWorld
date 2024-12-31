@@ -1,6 +1,7 @@
 package com.programmersbox.animeworld.videochoice
 
 import android.content.Context
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled._360
 import androidx.compose.material.icons.filled.DeviceUnknown
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.filled._4k
 import androidx.compose.material.icons.filled._4mp
 import androidx.compose.material.icons.filled._7mp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -24,11 +26,10 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.LocalActivity
+import com.programmersbox.uiviews.presentation.components.ListBottomScreen
+import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.components.ListBottomScreen
-import com.programmersbox.uiviews.utils.components.ListBottomSheetItemModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,12 +65,13 @@ fun VideoChoiceScreen(
                 )
             }
         } else {
-            (genericInfo as GenericAnime).downloadVideo(activity, model, it)
+            activity?.let { it1 -> (genericInfo as GenericAnime).downloadVideo(it1, model, it) }
         }
     }
 
     ModalBottomSheet(
-        onDismissRequest = { VideoSourceModel.showVideoSources = null }
+        onDismissRequest = { VideoSourceModel.showVideoSources = null },
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         ListBottomScreen(
             includeInsetPadding = false,

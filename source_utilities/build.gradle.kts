@@ -27,6 +27,7 @@ dependencies {
 
     implementation(projects.models)
 
+    implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koinLibs)
 
     implementation(libs.bundles.ktorLibs)

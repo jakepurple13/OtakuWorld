@@ -1,9 +1,6 @@
 plugins {
-    id("otaku-application")
+    `otaku-application`
     kotlin("kapt")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
-    id("otaku-easylauncher")
 }
 
 android {
@@ -25,10 +22,11 @@ dependencies {
     implementation(libs.androidxLegacySupport)
     implementation(libs.material)
     implementation(libs.constraintlayout)
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)
-    implementation(libs.palette)
+    //implementation(libs.palette)
     implementation(libs.bundles.media3)
     // For building media playback UIs for Android TV using the Jetpack Leanback library
     implementation(libs.exoplayerleanback)
@@ -40,7 +38,8 @@ dependencies {
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    implementation(libs.koinAndroid)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
     implementation(libs.bundles.roomLibs)
     implementation(libs.gson)
 

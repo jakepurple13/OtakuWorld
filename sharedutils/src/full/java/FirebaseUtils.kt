@@ -21,6 +21,7 @@ import com.google.firebase.firestore.toObjects
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -88,15 +89,7 @@ object FirebaseAuthentication : KoinComponent {
     }
 }
 
-data class CustomFirebaseUser(val displayName: String?, val photoUrl: Uri?)
-
-object FirebaseDb {
-
-    var DOCUMENT_ID = ""
-    var CHAPTERS_ID = ""
-    var COLLECTION_ID = ""
-    var ITEM_ID = ""
-    var READ_OR_WATCHED_ID = ""
+object FirebaseDbImpl : FirebaseConnection {
 
     @SuppressLint("StaticFieldLeak")
     private val db = FirebaseFirestore.getInstance().apply {
@@ -112,75 +105,23 @@ object FirebaseDb {
 
     private fun <TResult> Task<TResult>.await(): TResult = Tasks.await(this)
 
-    private val showDoc2 get() = FirebaseAuthentication.currentUser?.let {
-        runCatching { db.collection(COLLECTION_ID).document(DOCUMENT_ID).collection(it.uid) }.getOrNull()
-    }
-    private val episodeDoc2 get() = FirebaseAuthentication.currentUser?.let {
-        runCatching { db.collection(COLLECTION_ID).document(CHAPTERS_ID).collection(it.uid) }.getOrNull()
-    }
+    private val showDoc2
+        get() = FirebaseAuthentication.currentUser?.let {
+            runCatching { db.collection(FirebaseDb.COLLECTION_ID).document(FirebaseDb.DOCUMENT_ID).collection(it.uid) }.getOrNull()
+        }
+    private val episodeDoc2
+        get() = FirebaseAuthentication.currentUser?.let {
+            runCatching { db.collection(FirebaseDb.COLLECTION_ID).document(FirebaseDb.CHAPTERS_ID).collection(it.uid) }.getOrNull()
+        }
 
-    private data class FirebaseAllShows(val first: String = DOCUMENT_ID, val second: List<FirebaseDbModel> = emptyList())
-
-    private data class FirebaseDbModel(
-        val title: String? = null,
-        val description: String? = null,
-        val showUrl: String? = null,
-        val mangaUrl: String? = null,
-        val imageUrl: String? = null,
-        val source: String? = null,
-        var numEpisodes: Int? = null,
-        var chapterCount: Int? = null
-    )
-
-    private data class FirebaseChapterWatched(
-        val url: String? = null,
-        val name: String? = null,
-        val showUrl: String? = null,
-    )
-
-    private fun FirebaseDbModel.toDbModel() = DbModel(
-        title.orEmpty(),
-        description.orEmpty(),
-        (showUrl ?: mangaUrl).orEmpty(),
-        imageUrl.orEmpty(),
-        source.orEmpty(),
-        numEpisodes ?: chapterCount ?: 0,
-    )
-
-    private fun DbModel.toFirebaseDbModel() = FirebaseDbModel(
-        title,
-        description,
-        url,
-        url,
-        imageUrl,
-        source,
-        numChapters,
-        numChapters
-    )
-
-    private fun FirebaseChapterWatched.toChapterWatchedModel() = ChapterWatched(
-        url.orEmpty().pathToUrl(),
-        name.orEmpty(),
-        showUrl.orEmpty().pathToUrl(),
-    )
-
-    private fun ChapterWatched.toFirebaseChapterWatched() = FirebaseChapterWatched(
-        url,
-        name,
-        this.favoriteUrl,
-    )
-
-    private fun String.urlToPath() = replace("/", "<")
-    private fun String.pathToUrl() = replace("<", "/")
-
-    fun getAllShows() = showDoc2
+    override fun getAllShows() = showDoc2
         ?.get()
         ?.await()
         ?.toObjects<FirebaseDbModel>()
         ?.fastMap { it.toDbModel() }
         .orEmpty()
 
-    fun insertShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun insertShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.set(showDbModel.toFirebaseDbModel())
             ?.addOnSuccessListener {
@@ -194,7 +135,7 @@ object FirebaseDb {
         awaitClose()
     }
 
-    fun removeShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun removeShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
             ?.delete()
             ?.addOnSuccessListener {
@@ -208,9 +149,9 @@ object FirebaseDb {
         awaitClose()
     }
 
-    fun updateShowFlow(showDbModel: DbModel) = callbackFlow {
+    override fun updateShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
         showDoc2?.document(showDbModel.url.urlToPath())
-            ?.update(READ_OR_WATCHED_ID, showDbModel.numChapters)
+            ?.update(FirebaseDb.READ_OR_WATCHED_ID, showDbModel.numChapters)
             ?.addOnSuccessListener {
                 trySend(Unit)
                 close()
@@ -222,7 +163,21 @@ object FirebaseDb {
         awaitClose()
     }
 
-    fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow {
+    override fun toggleUpdateCheckShowFlow(showDbModel: DbModel) = callbackFlow<Unit> {
+        showDoc2?.document(showDbModel.url.urlToPath())
+            ?.update(FirebaseDb.SHOW_CHECK_FOR_UPDATE_ID, showDbModel.shouldCheckForUpdate)
+            ?.addOnSuccessListener {
+                trySend(Unit)
+                close()
+            }
+            ?.addOnFailureListener { close(it) } ?: run {
+            trySend(Unit)
+            close()
+        }
+        awaitClose()
+    }
+
+    override fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow<Unit> {
         episodeDoc2
             ?.document(episodeWatched.favoriteUrl.urlToPath())
             //?.set("create" to 1)
@@ -263,7 +218,7 @@ object FirebaseDb {
         awaitClose()
     }
 
-    fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow {
+    override fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched) = callbackFlow<Unit> {
         episodeDoc2
             ?.document(episodeWatched.favoriteUrl.urlToPath())
             ?.update("watched", FieldValue.arrayRemove(episodeWatched.toFirebaseChapterWatched()))
@@ -281,11 +236,11 @@ object FirebaseDb {
         awaitClose()
     }
 
-    class FirebaseListener {
+    class FirebaseListener : FirebaseConnection.FirebaseListener {
 
         private var listener: ListenerRegistration? = null
 
-        fun getAllShowsFlow() = callbackFlow {
+        override fun getAllShowsFlow() = callbackFlow {
             listener?.remove()
             listener = showDoc2?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
@@ -297,11 +252,22 @@ object FirebaseDb {
             awaitClose { listener?.remove() }
         }
 
-        fun findItemByUrlFlow(url: String?) = callbackFlow {
+        override fun getShowFlow(url: String?): Flow<DbModel?> = callbackFlow {
             listener?.remove()
-            listener = showDoc2?.whereEqualTo(ITEM_ID, url)?.addSnapshotListener { value, error ->
+            listener = showDoc2?.whereEqualTo(FirebaseDb.ITEM_ID, url)?.addSnapshotListener { value, error ->
                 value?.toObjects<FirebaseDbModel>()
-                    .also { println(it) }
+                    ?.fastMap { it.toDbModel() }
+                    ?.let { trySend(it.firstOrNull()) }
+                error?.let(this::close)
+            }
+            if (listener == null) trySend(null)
+            awaitClose { listener?.remove() }
+        }
+
+        override fun findItemByUrlFlow(url: String?) = callbackFlow {
+            listener?.remove()
+            listener = showDoc2?.whereEqualTo(FirebaseDb.ITEM_ID, url)?.addSnapshotListener { value, error ->
+                value?.toObjects<FirebaseDbModel>()
                     ?.fastMap { it.toDbModel() }
                     ?.let { trySend(it.isNotEmpty()) }
                 error?.let(this::close)
@@ -310,7 +276,7 @@ object FirebaseDb {
             awaitClose { listener?.remove() }
         }
 
-        fun getAllEpisodesByShowFlow(showUrl: String) = callbackFlow {
+        override fun getAllEpisodesByShowFlow(showUrl: String) = callbackFlow {
             listener?.remove()
             listener = episodeDoc2
                 ?.document(showUrl.urlToPath())
@@ -324,12 +290,9 @@ object FirebaseDb {
             awaitClose()
         }
 
-        fun unregister() {
+        override fun unregister() {
             listener?.remove()
             listener = null
         }
-
     }
-
-    private class Watched(val watched: List<FirebaseChapterWatched> = emptyList())
 }

@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
@@ -10,22 +11,21 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.uiviews.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.ApiServiceSerializer
+import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.Screen
 
 interface GenericInfo {
 
@@ -38,8 +38,28 @@ interface GenericInfo {
     fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
     fun deepLinkSettings(context: Context): PendingIntent?
 
-    fun deepLinkDetailsUri(itemModel: ItemModel?) =
-        "$deepLinkUri${Screen.DetailsScreen.route}/${Uri.encode(itemModel.toJson(ApiService::class.java to ApiServiceSerializer()))}".toUri()
+    @SuppressLint("RestrictedApi")
+    fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
+        @Suppress("UNCHECKED_CAST")
+        val route = generateRouteWithArgs(
+            Screen.DetailsScreen.Details(
+                title = itemModel?.title ?: "",
+                description = itemModel?.description ?: "",
+                url = itemModel?.url ?: "",
+                imageUrl = itemModel?.imageUrl ?: "",
+                source = itemModel?.source?.serviceName ?: "",
+            ),
+            mapOf(
+                "title" to NavType.StringType as NavType<Any?>,
+                "description" to NavType.StringType as NavType<Any?>,
+                "url" to NavType.StringType as NavType<Any?>,
+                "imageUrl" to NavType.StringType as NavType<Any?>,
+                "source" to NavType.StringType as NavType<Any?>,
+            )
+        )
+
+        return "$deepLinkUri$route".toUri()
+    }
 
     fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
 
@@ -49,7 +69,7 @@ interface GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     )
 
     fun sourceList(): List<ApiService>
@@ -90,8 +110,8 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        modifier: Modifier = Modifier,
-        paddingValues: PaddingValues = PaddingValues(0.dp),
+        modifier: Modifier,
+        paddingValues: PaddingValues,
         onClick: (ItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
@@ -102,8 +122,8 @@ interface GenericInfo {
         favorites: List<DbModel>,
         listState: LazyGridState,
         onLongPress: (ItemModel, ComponentState) -> Unit,
-        modifier: Modifier = Modifier,
-        paddingValues: PaddingValues = PaddingValues(0.dp),
+        modifier: Modifier,
+        paddingValues: PaddingValues,
         onClick: (ItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 

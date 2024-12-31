@@ -1,0 +1,87 @@
+name: Nightly Release Workflow
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # runs daily at 00:00
+
+  workflow_dispatch:
+
+jobs:
+  checkNightly:
+    name: Check for new commits
+    runs-on: ubuntu-latest
+    outputs:
+      shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required to count the commits
+      - name: Get new commits
+        run: |
+          set -x
+          echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
+
+  mangaworld:
+    needs: checkNightly
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    uses: ./.github/workflows/mangaworld_build.yaml
+    secrets: inherit # pass all secrets
+
+  animeworld:
+    needs: checkNightly
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    uses: ./.github/workflows/animeworld_build.yaml
+    secrets: inherit # pass all secrets
+
+  animeworldtv:
+    needs: checkNightly
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    uses: ./.github/workflows/animeworldtv_build.yaml
+    secrets: inherit # pass all secrets
+
+  novelworld:
+    needs: checkNightly
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    uses: ./.github/workflows/novelworld_build.yaml
+    secrets: inherit # pass all secrets
+
+  release:
+    name: Release APK
+    needs: [ mangaworld, animeworld, novelworld, animeworldtv ]
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Get tag name
+        id: get_tag_name
+        run: |
+          set -x
+          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+          echo "NIGHTLY_TIME=$(date)" >> $GITHUB_ENV
+
+      - name: Create Nightly Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          fail_on_unmatched_files: true
+          prerelease: true
+          generate_release_notes: true
+          tag_name: nightly
+          name: OtakuWorld Nightly Release
+          body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
+          files: |
+            ${{ github.workspace }}/release-artifacts/**
+
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'Nightly Release of the project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed at ${{ steps.create_release.outputs.url }}.'

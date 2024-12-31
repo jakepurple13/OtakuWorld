@@ -108,8 +108,8 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         .flowOn(Dispatchers.Main)
                         .onEach {
                             val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                            p.summary = if (AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty()))
-                                getString(R.string.updateVersionAvailable, it.update_real_version.orEmpty())
+                            p.summary = if (AppUpdate.checkForUpdate(appVersion, it.updateRealVersion.orEmpty()))
+                                getString(R.string.updateVersionAvailable, it.updateRealVersion.orEmpty())
                             else ""
                         }
                         .collect()
@@ -136,9 +136,9 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         .filterNotNull()
                         .flowOn(Dispatchers.Main)
                         .onEach {
-                            p.summary = getString(R.string.currentVersion, it.update_real_version.orEmpty())
+                            p.summary = getString(R.string.currentVersion, it.updateRealVersion.orEmpty())
                             val appVersion = context?.packageManager?.getPackageInfo(requireContext().packageName, 0)?.versionName.orEmpty()
-                            p.isVisible = AppUpdate.checkForUpdate(appVersion, it.update_real_version.orEmpty())
+                            p.isVisible = AppUpdate.checkForUpdate(appVersion, it.updateRealVersion.orEmpty())
                         }
                         .collect()
                 }

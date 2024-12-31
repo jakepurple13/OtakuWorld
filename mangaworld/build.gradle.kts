@@ -1,13 +1,12 @@
 plugins {
-    id("otaku-application")
-    kotlin("kapt")
+    `otaku-application`
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
-    id("otaku-easylauncher")
+    `otaku-protobuf`
     alias(libs.plugins.ksp)
-    id("androidx.baselineprofile")
+    id("kotlinx-serialization")
+    //id("androidx.baselineprofile")
+    alias(libs.plugins.google.firebase.performance)
 }
 
 android {
@@ -25,14 +24,15 @@ android {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.swiperefresh)
-    implementation(libs.recyclerview)
-    implementation(libs.profileinstaller)
+    implementation(androidx.constraintlayout.constraintlayout)
+    implementation(androidx.swiperefreshlayout.swiperefreshlayout)
+    implementation(androidx.recyclerview.recyclerview)
+    implementation(androidx.preference.preferenceKtx)
+    implementation(androidx.profileinstaller.profileinstaller)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-    implementation(libs.preference)
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.fileChooser)
@@ -42,12 +42,13 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
     implementation(projects.sourceUtilities)
-    implementation(projects.imageloader)
+    implementation(libs.kamel.image)
     implementation(libs.duktape)
     implementation(libs.bundles.ziplineLibs)
+    implementation(libs.ktorAndroid)
 
     implementation(libs.glide)
-    baselineProfile(projects.mangaWorldbaselineprofile)
+    //baselineProfile(projects.mangaWorldbaselineprofile)
     ksp(libs.glideCompiler)
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
@@ -67,13 +68,22 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(libs.bundles.koinLibs)
     implementation(platform(libs.composePlatform))
     implementation(libs.bundles.compose)
     implementation(libs.coilGif)
-    implementation(libs.bundles.datastoreLibs)
+
+    implementation(androidx.datastore.datastore)
+    implementation(androidx.datastore.datastorePreferences)
 
     implementation(libs.glideCompose)
 
     implementation(libs.zoomableModifier)
+
+    implementation(libs.pagecurl)
+
+    implementation(libs.panpf.zoomimage.compose.glide)
+
+    implementation(libs.telephoto.zoomable.image.glide)
+
+    implementation(libs.sonner)
 }

@@ -1,10 +1,11 @@
 package com.programmersbox.novelworld
 
+import android.app.Activity
 import android.net.Uri
 import android.text.format.DateFormat
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -21,9 +22,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,14 +34,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -79,21 +74,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.text.HtmlCompat
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.material.textview.MaterialTextView
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
@@ -104,12 +97,12 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalActivity
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -117,24 +110,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class ReadViewModel(
-    activity: ComponentActivity,
+    activity: Activity?,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     model: Flow<List<String>>? = handle.get<String>("currentChapter")
         ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
         ?.getChapterInfo()
-        ?.map { it.mapNotNull(Storage::link) }
+        ?.map { it.mapNotNull(Storage::link) },
 ) : ViewModel() {
 
     companion object {
@@ -156,9 +147,9 @@ class ReadViewModel(
         }
     }
 
-    private val dao by lazy { ItemDatabase.getInstance(activity).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(activity!!).itemDao() }
 
-    val list by lazy { ChapterList(activity, genericInfo).get().orEmpty() }
+    val list by lazy { ChapterList(activity!!, genericInfo).get().orEmpty() }
 
     private val novelUrl by lazy { handle.get<String>("novelInfoUrl") ?: "" }
     val title by lazy { handle.get<String>("novelTitle") ?: "" }
@@ -169,7 +160,7 @@ class ReadViewModel(
     var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
     var batteryPercent by mutableFloatStateOf(0f)
 
-    val batteryInformation by lazy { BatteryInformation(activity) }
+    val batteryInformation by lazy { BatteryInformation(activity!!) }
 
     val pageList = mutableStateOf("")
     val isLoadingPages = mutableStateOf(false)
@@ -225,14 +216,13 @@ class ReadViewModel(
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
     ExperimentalAnimationApi::class
 )
 @Composable
 fun NovelReader(
-    activity: FragmentActivity = LocalActivity.current,
+    activity: Activity? = LocalActivity.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) }
+    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) },
 ) {
     HideSystemBarsWhileOnScreen()
 
@@ -248,22 +238,14 @@ fun NovelReader(
     }
 
     val scope = rememberCoroutineScope()
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = readVm.isLoadingPages.value,
-        onRefresh = {
-            readVm.loadPages(
-                readVm.list.getOrNull(readVm.currentChapter)
-                    ?.getChapterInfo()
-                    ?.map { it.mapNotNull(Storage::link) }
-            )
-        }
-    )
 
     val settingsHandling = LocalSettingsHandling.current
 
     var showInfo by remember { mutableStateOf(true) }
 
     var settingsPopup by remember { mutableStateOf(false) }
+    val batteryPercent = settingsHandling.batteryPercent
+    val batteryValue by batteryPercent.rememberPreference()
 
     if (settingsPopup) {
         AlertDialog(
@@ -282,8 +264,8 @@ fun NovelReader(
                         settingIcon = Icons.Default.BatteryAlert,
                         settingTitle = R.string.battery_alert_percentage,
                         settingSummary = R.string.battery_default,
-                        preferenceUpdate = { settingsHandling.setBatteryPercentage(it) },
-                        initialValue = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 },
+                        preferenceUpdate = { batteryPercent.set(it) },
+                        initialValue = remember { batteryValue },
                         range = 1f..100f,
                         steps = 0
                     )
@@ -294,7 +276,7 @@ fun NovelReader(
     }
 
     fun showToast() {
-        activity.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
+        activity?.runOnUiThread { Toast.makeText(context, R.string.addedChapterItem, Toast.LENGTH_SHORT).show() }
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -363,7 +345,7 @@ fun NovelReader(
                                             else M3MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f), label = ""
                                         ).value
                                     ),
-                                    shape = MaterialTheme.shapes.medium,
+                                    shape = M3MaterialTheme.shapes.medium,
                                     tonalElevation = 4.dp
                                 ) {
                                     ListItem(
@@ -399,10 +381,16 @@ fun NovelReader(
                 )
             }
         ) { p ->
-            Box(
-                modifier = Modifier
-                    .padding(p)
-                    .pullRefresh(pullRefreshState)
+            OtakuPullToRefreshBox(
+                isRefreshing = readVm.isLoadingPages.value,
+                onRefresh = {
+                    readVm.loadPages(
+                        readVm.list.getOrNull(readVm.currentChapter)
+                            ?.getChapterInfo()
+                            ?.map { it.mapNotNull(Storage::link) }
+                    )
+                },
+                modifier = Modifier.padding(p)
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -411,17 +399,16 @@ fun NovelReader(
                         .verticalScroll(rememberScrollState())
                         .fillMaxSize()
                 ) {
-                    AndroidView(
+                    Text(
+                        AnnotatedString.fromHtml(readVm.pageList.value),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(4.dp)
                             .clickable(
                                 indication = null,
-                                interactionSource = remember { MutableInteractionSource() },
+                                interactionSource = null,
                                 onClick = { showInfo = !showInfo }
                             ),
-                        factory = { MaterialTextView(it) },
-                        update = { it.text = HtmlCompat.fromHtml(readVm.pageList.value, HtmlCompat.FROM_HTML_MODE_COMPACT) }
                     )
 
                     if (readVm.currentChapter <= 0) {
@@ -436,15 +423,6 @@ fun NovelReader(
                         )
                     }
                 }
-
-                PullRefreshIndicator(
-                    refreshing = readVm.isLoadingPages.value,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    backgroundColor = M3MaterialTheme.colorScheme.background,
-                    contentColor = M3MaterialTheme.colorScheme.onBackground,
-                    scale = true
-                )
             }
         }
     }
@@ -456,7 +434,7 @@ fun TopBar(
     showItems: Boolean,
     contentScrollBehavior: TopAppBarScrollBehavior,
     readVm: ReadViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     AnimatedVisibility(
@@ -536,7 +514,7 @@ fun BottomBar(
     readVm: ReadViewModel,
     showToast: () -> Unit,
     settingsPopup: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         visible = showItems,
@@ -684,7 +662,7 @@ private fun SliderSetting(
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
-    steps: Int = 0
+    steps: Int = 0,
 ) {
     ConstraintLayout(
         modifier = Modifier
@@ -696,7 +674,7 @@ private fun SliderSetting(
             title,
             summary,
             slider,
-            value
+            value,
         ) = createRefs()
 
         Icon(

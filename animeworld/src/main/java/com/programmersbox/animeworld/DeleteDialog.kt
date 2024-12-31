@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Done
@@ -30,7 +29,6 @@ import com.programmersbox.helpfulutils.runOnUIThread
 import java.io.File
 
 @ExperimentalAnimationApi
-@ExperimentalMaterialApi
 @Composable
 fun SlideToDeleteDialog(
     showDialog: Boolean,
@@ -67,7 +65,6 @@ fun SlideToDeleteDialog(
     )
 }
 
-@ExperimentalMaterialApi
 @ExperimentalAnimationApi
 @Composable
 private fun SlideToDeleteDialog(

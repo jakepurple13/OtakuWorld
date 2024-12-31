@@ -2,11 +2,17 @@ package plugins
 
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.apply
 
 class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModuleExtension::class) {
 
     override fun Project.projectSetup() {
         pluginManager.apply("com.android.application")
+        pluginManager.apply(EasyLauncherSetup::class)
+        pluginManager.apply("com.google.gms.google-services")
+        pluginManager.apply("com.google.firebase.crashlytics")
+        pluginManager.apply(libs.plugins.compose.compiler.get().pluginId)
+        afterEvaluate { useGoogleType() }
     }
 
     override fun BaseAppModuleExtension.androidConfig(project: Project) {
@@ -14,8 +20,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         buildFeatures.buildConfig = true
 
         composeOptions {
-            useLiveLiterals = true
-            kotlinCompilerExtensionVersion = project.libs.findVersion("jetpackCompiler").get().requiredVersion
+
         }
 
         buildTypes {
@@ -33,8 +38,13 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         productFlavors {
             ProductFlavorTypes.NoFirebase(this) {
                 versionNameSuffix = "-noFirebase"
-                applicationIdSuffix = ".noFirebase"
+                if(System.getenv("CI") == null) //TODO: Testing
+                    applicationIdSuffix = ".noFirebase"
                 isDefault = true
+            }
+            ProductFlavorTypes.NoCloudFirebase(this) {
+                versionNameSuffix = "-noCloudFirebase"
+                applicationIdSuffix = ".noCloudFirebase"
             }
             ProductFlavorTypes.Full(this)
         }

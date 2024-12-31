@@ -22,6 +22,11 @@ gradlePlugin {
             implementationClass = "plugins.AndroidLibraryPlugin"
         }
 
+        register("otaku-protobuf") {
+            id = "otaku-protobuf"
+            implementationClass = "plugins.OtakuProtobufPlugin"
+        }
+
         register("otaku-source-application") {
             id = "otaku-source-application"
             implementationClass = "plugins.AndroidSourcePlugin"
@@ -51,4 +56,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
     implementation(libs.easylauncher)
     implementation(libs.androidx.baselineprofile.gradle.plugin)
+    implementation(libs.protobuf.gradle.plugin)
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }

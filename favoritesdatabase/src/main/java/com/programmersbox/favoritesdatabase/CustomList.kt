@@ -10,6 +10,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
@@ -22,8 +23,11 @@ import java.util.UUID
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)]
+    version = 7,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 7),
+    ]
 )
 abstract class ListDatabase : RoomDatabase() {
 
@@ -59,8 +63,8 @@ interface ListDao {
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
     fun getCustomListItemFlow(uuid: UUID): Flow<CustomList>
 
-    @Insert
-    suspend fun createList(listItem: CustomListItem)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun createList(listItem: CustomListItem): Long
 
     @Insert
     suspend fun addItem(listItem: CustomListInfo)
@@ -106,6 +110,9 @@ interface ListDao {
             true
         }
     }
+
+    @Query("UPDATE CustomListItem SET useBiometric = :useBiometric WHERE uuid = :uuid")
+    suspend fun updateBiometric(uuid: UUID, useBiometric: Boolean)
 }
 
 data class CustomList(
@@ -115,7 +122,7 @@ data class CustomList(
         parentColumn = "uuid",
         entityColumn = "uuid"
     )
-    val list: List<CustomListInfo>
+    val list: List<CustomListInfo>,
 )
 
 @Entity(tableName = "CustomListItem")
@@ -127,6 +134,8 @@ data class CustomListItem(
     val name: String,
     @ColumnInfo(name = "time")
     val time: Long = System.currentTimeMillis(),
+    @ColumnInfo(defaultValue = "0")
+    val useBiometric: Boolean = false,
 )
 
 @Entity(tableName = "CustomListInfo")
@@ -145,5 +154,5 @@ data class CustomListInfo(
     @ColumnInfo(name = "imageUrl")
     val imageUrl: String,
     @ColumnInfo(name = "sources")
-    val source: String
+    val source: String,
 )

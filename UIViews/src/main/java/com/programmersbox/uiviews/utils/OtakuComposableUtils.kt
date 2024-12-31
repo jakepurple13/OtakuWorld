@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalGlideComposeApi::class)
+
 package com.programmersbox.uiviews.utils
 
 import android.graphics.drawable.Drawable
@@ -39,23 +41,28 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.components.BannerBox
-import com.programmersbox.uiviews.utils.components.CoilGradientImage
-import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.utils.components.placeholder.shimmer
+import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.presentation.components.BannerBox
+import com.programmersbox.uiviews.presentation.components.CoilGradientImage
+import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
+import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
+import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360
@@ -64,6 +71,7 @@ object ComposableUtils {
     val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { IMAGE_HEIGHT_PX.toDp() }
 }
 
+//TODO: Should put these in the components package
 @Composable
 fun M3CoverCard(
     imageUrl: String,
@@ -99,7 +107,82 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f),
+            .bounceClick(.9f)
+            .customSharedElement(
+                OtakuImageElement(
+                    origin = imageUrl,
+                    source = name
+                )
+            ),
+        tonalElevation = 4.dp,
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .lifecycle(LocalLifecycleOwner.current)
+                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
+                    .crossfade(true)
+                    .placeholder(placeHolder)
+                    .error(error)
+                    .build(),
+                contentScale = ContentScale.FillBounds,
+                contentDescription = name,
+                modifier = Modifier.matchParentSize()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black
+                            ),
+                            startY = 50f
+                        )
+                    )
+            ) {
+                Text(
+                    name,
+                    style = MaterialTheme
+                        .typography
+                        .bodyLarge
+                        .copy(textAlign = TextAlign.Center, color = Color.White),
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(name, name))
+                )
+            }
+
+            favoriteIcon()
+        }
+
+    }
+}
+
+@Composable
+fun M3ImageCard(
+    imageUrl: String,
+    name: String,
+    placeHolder: Int,
+    modifier: Modifier = Modifier,
+    error: Int = placeHolder,
+    headers: Map<String, Any> = emptyMap(),
+) {
+    Surface(
+        modifier = modifier.size(
+            ComposableUtils.IMAGE_WIDTH,
+            ComposableUtils.IMAGE_HEIGHT
+        ),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -147,10 +230,7 @@ fun M3CoverCard(
                         .align(Alignment.BottomCenter)
                 )
             }
-
-            favoriteIcon()
         }
-
     }
 }
 
@@ -208,7 +288,14 @@ fun M3CoverCard(
                     .build(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
+                    .customSharedElement(
+                        OtakuImageElement(
+                            origin = imageUrl,
+                            source = name
+                        )
+                    )
             )
 
             Box(
@@ -235,6 +322,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(name, name))
                 )
             }
 
@@ -281,7 +369,14 @@ fun M3CoverCard(
                     .build(),
                 contentScale = ContentScale.FillBounds,
                 contentDescription = name,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
+                    .customSharedElement(
+                        OtakuImageElement(
+                            origin = imageUrl,
+                            source = name
+                        )
+                    )
             )
 
             Box(
@@ -308,6 +403,7 @@ fun M3CoverCard(
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .align(Alignment.BottomCenter)
+                        .customSharedElement(OtakuTitleElement(name, name))
                 )
             }
 
@@ -389,16 +485,12 @@ fun OtakuBannerBox(
 ) {
     var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
 
-    var bannerScope by remember { mutableStateOf<BannerScope?>(null) }
+    val bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
 
-    DisposableEffect(Unit) {
-        bannerScope = object : BannerScope {
-            override fun newItemModel(itemModel: ItemModel?) {
-                itemInfo = itemModel
-            }
-        }
+    /*DisposableEffect(Unit) {
+        bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
         onDispose { bannerScope = null }
-    }
+    }*/
 
     BannerBox(
         modifier = modifier,
@@ -440,11 +532,12 @@ fun OtakuBannerBox(
                 )
             }
         },
-        content = { bannerScope?.content() }
+        content = { bannerScope.content() }
     )
 }
 
-interface BannerScope {
+fun interface BannerScope {
+    //TODO: Maybe add a modifier into here for onLongClick?
     fun newItemModel(itemModel: ItemModel?)
 }
 
@@ -506,7 +599,8 @@ fun SourceNotInstalledModal(
         BackHandler { onShowItemDismiss(null) }
 
         ModalBottomSheet(
-            onDismissRequest = { onShowItemDismiss(null) }
+            onDismissRequest = { onShowItemDismiss(null) },
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             Text(
                 source.orEmpty(),
@@ -519,7 +613,7 @@ fun SourceNotInstalledModal(
                 leadingContent = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier.clickable {
                     onShowItemDismiss(null)
-                    Screen.GlobalSearchScreen.navigate(navController, showItem)
+                    navController.navigate(Screen.GlobalSearchScreen(showItem))
                 }
             )
             additionOptions()

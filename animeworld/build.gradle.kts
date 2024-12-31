@@ -1,12 +1,10 @@
 plugins {
-    id("otaku-application")
+    `otaku-application`
     kotlin("kapt")
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     id("com.mikepenz.aboutlibraries.plugin")
-    id("otaku-easylauncher")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.firebase.performance)
 }
 
 android {
@@ -24,10 +22,11 @@ android {
 
 dependencies {
     implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.preference)
+    implementation(androidx.constraintlayout.constraintlayout)
+    implementation(androidx.preference.preferenceKtx)
+    implementation(platform(libs.firebasePlatform))
     implementation(libs.bundles.firebaseCrashLibs)
-    implementation(libs.recyclerview)
+    implementation(androidx.recyclerview.recyclerview)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -35,7 +34,7 @@ dependencies {
     implementation(libs.fileChooser)
     implementation(libs.slideToAct)
 
-    implementation(libs.mediaRouter)
+    implementation(androidx.mediarouter.mediarouter)
 
     implementation(libs.torrentStream)
 
@@ -69,7 +68,6 @@ dependencies {
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    implementation(libs.bundles.koinLibs)
     val composeBom = platform(libs.composePlatform)
     implementation(composeBom)
     implementation(libs.bundles.compose)
@@ -78,4 +76,6 @@ dependencies {
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.bundles.media3)
+
+    implementation(libs.ktorAndroid)
 }

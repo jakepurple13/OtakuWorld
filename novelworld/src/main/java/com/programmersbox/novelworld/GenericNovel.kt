@@ -15,14 +15,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,14 +44,15 @@ import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
-import com.programmersbox.uiviews.utils.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.utils.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.utils.components.placeholder.shimmer
+import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.dsl.module
 
 val appModule = module {
@@ -85,7 +85,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
         ChapterList(context, this@GenericNovel).set(allChapters)
         ReadViewModel.navigateToNovelReader(
@@ -107,13 +107,19 @@ class GenericNovel(val context: Context) : GenericInfo {
         infoModel: InfoModel,
         context: Context,
         activity: FragmentActivity,
-        navController: NavController
+        navController: NavController,
     ) {
     }
 
-    override val apkString: AppUpdate.AppUpdates.() -> String? get() = { if (BuildConfig.FLAVOR == "noFirebase") novel_no_firebase_file else novel_file }
+    override val apkString: AppUpdate.AppUpdates.() -> String?
+        get() = {
+            when (BuildConfig.FLAVOR) {
+                "noFirebase" -> novelNoFirebaseFile
+                "noCloudFirebase" -> novelNoCloudFile
+                else -> novelFile
+            }
+        }
 
-    @OptIn(ExperimentalMaterialApi::class)
     @Composable
     override fun ComposeShimmerItem() {
         LazyColumn {
@@ -141,7 +147,6 @@ class GenericNovel(val context: Context) : GenericInfo {
     }
 
     @OptIn(
-        ExperimentalMaterialApi::class,
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class,
         ExperimentalMaterial3Api::class
@@ -203,7 +208,10 @@ class GenericNovel(val context: Context) : GenericInfo {
                 navArgument("novelUrl") { },
                 navArgument("novelInfoUrl") { },
             )
-        ) { NovelReader() }
+        ) {
+            trackScreen("novelReader")
+            NovelReader()
+        }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {

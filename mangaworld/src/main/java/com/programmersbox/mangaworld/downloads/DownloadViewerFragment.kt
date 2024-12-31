@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,12 +33,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissValue
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSwipeToDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,34 +57,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
+import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
-import com.programmersbox.mangaworld.reader.ReadViewModel
-import com.programmersbox.mangaworld.useNewReaderFlow
+import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.presentation.components.OtakuScaffold
+import com.programmersbox.uiviews.presentation.components.PermissionRequest
+import com.programmersbox.uiviews.presentation.components.animatedItems
+import com.programmersbox.uiviews.presentation.components.updateAnimatedItemsState
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.Screen
-import com.programmersbox.uiviews.utils.components.OtakuScaffold
-import com.programmersbox.uiviews.utils.components.PermissionRequest
-import com.programmersbox.uiviews.utils.components.animatedItems
-import com.programmersbox.uiviews.utils.components.updateAnimatedItemsState
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import org.koin.compose.koinInject
 import java.io.File
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalPermissionsApi::class,
     ExperimentalFoundationApi::class,
     ExperimentalAnimationApi::class,
 )
@@ -125,7 +121,15 @@ fun DownloadScreen() {
 @ExperimentalFoundationApi
 @ExperimentalAnimationApi
 @Composable
-private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
+private fun DownloadViewer(
+    viewModel: DownloadViewModel,
+    p1: PaddingValues,
+    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
+) {
+    val useNewReader by mangaSettingsHandling.useNewReader
+        .flow
+        .collectAsStateWithLifecycle(initialValue = true)
+
     val fileList = viewModel.fileList
 
     val f by updateAnimatedItemsState(newList = fileList.entries.toList())
@@ -142,7 +146,7 @@ private fun DownloadViewer(viewModel: DownloadViewModel, p1: PaddingValues) {
             f,
             enterTransition = fadeIn(),
             exitTransition = fadeOut()
-        ) { file -> ChapterItem(file) }
+        ) { file -> ChapterItem(file, useNewReader) }
     }
 }
 
@@ -176,7 +180,7 @@ private fun EmptyState(p1: PaddingValues) {
                 )
 
                 Button(
-                    onClick = { navController.popBackStack(Screen.RecentScreen.route, false) },
+                    onClick = { navController.popBackStack(Screen.RecentScreen, false) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)
@@ -188,7 +192,10 @@ private fun EmptyState(p1: PaddingValues) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>) {
+private fun ChapterItem(
+    file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>,
+    useNewReader: Boolean = true,
+) {
     val context = LocalContext.current
 
     var expanded by remember { mutableStateOf(false) }
@@ -203,8 +210,8 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
-                    indication = rememberRipple(),
-                    interactionSource = remember { MutableInteractionSource() }
+                    indication = ripple(),
+                    interactionSource = null
                 ) { expanded = !expanded }
         ) {
             ListItem(
@@ -254,6 +261,7 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                                                 }
                                                 emit(true)
                                             } catch (e: Exception) {
+                                                e.printStackTrace()
                                                 emit(false)
                                             }
                                         }
@@ -268,9 +276,9 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     )
                 }
 
-                val dismissState = rememberSwipeToDismissState(
+                val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = {
-                        if (it == SwipeToDismissValue.EndToStart) {
+                        if (it == SwipeToDismissBoxValue.EndToStart) {
                             //delete
                             showPopup = true
                         }
@@ -285,12 +293,12 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                     backgroundContent = {
                         val color by animateColorAsState(
                             when (dismissState.targetValue) {
-                                SwipeToDismissValue.EndToStart -> Color.Red
+                                SwipeToDismissBoxValue.EndToStart -> Color.Red
                                 else -> Color.Transparent
                             }, label = ""
                         )
 
-                        val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissValue.Settled) 0.75f else 1f, label = "")
+                        val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
 
                         Box(
                             Modifier
@@ -314,11 +322,11 @@ private fun ChapterItem(file: Map.Entry<String, Map<String, List<ChaptersGet.Cha
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(
-                                    indication = rememberRipple(),
-                                    interactionSource = remember { MutableInteractionSource() }
+                                    indication = ripple(),
+                                    interactionSource = null
                                 ) {
-                                    if (runBlocking { context.useNewReaderFlow.first() }) {
-                                        ReadViewModel.navigateToMangaReader(
+                                    if (useNewReader) {
+                                        com.programmersbox.mangaworld.reader.compose.ReadViewModel.navigateToMangaReader(
                                             navController,
                                             filePath = c?.chapterFolder,
                                             downloaded = true

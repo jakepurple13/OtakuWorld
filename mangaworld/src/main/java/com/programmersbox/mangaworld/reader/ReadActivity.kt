@@ -31,19 +31,31 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.helpfulutils.*
+import com.programmersbox.helpfulutils.battery
+import com.programmersbox.helpfulutils.colorFromTheme
+import com.programmersbox.helpfulutils.enableImmersiveMode
+import com.programmersbox.helpfulutils.gone
+import com.programmersbox.helpfulutils.startDrawable
+import com.programmersbox.helpfulutils.visible
 import com.programmersbox.mangaworld.CustomHideBottomViewOnScrollBehavior
-import com.programmersbox.mangaworld.PAGE_PADDING
+import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
-import com.programmersbox.mangaworld.pagePadding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.*
+import com.programmersbox.uiviews.datastore.SettingsHandling
+import com.programmersbox.uiviews.utils.BatteryInformation
+import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
@@ -57,6 +69,7 @@ class ReadActivity : AppCompatActivity() {
     private val loader by lazy { Glide.with(this) }
     private val genericInfo by inject<GenericInfo>()
     private val settingsHandling: SettingsHandling by inject()
+    private val mangaSettingsHandling: MangaSettingsHandling by inject()
 
     private fun View.slideUp() {
         val layoutParams = this.layoutParams
@@ -194,7 +207,7 @@ class ReadActivity : AppCompatActivity() {
         var decor = VerticalSpaceItemDecoration(4)
         binding.readView.addItemDecoration(decor)
         lifecycleScope.launch {
-            pagePadding
+            mangaSettingsHandling.pagePadding.flow
                 .flowWithLifecycle(lifecycle)
                 .onEach {
                     runOnUiThread {
@@ -209,22 +222,24 @@ class ReadActivity : AppCompatActivity() {
         binding.readerSettings.setOnClickListener {
             val readerBinding = ReaderSettingsDialogBinding.inflate(layoutInflater)
 
-            val padding = runBlocking { dataStore.data.first()[PAGE_PADDING] ?: 4 }
+            val padding = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 }
             readerBinding.pagePaddingSlider.value = padding.toFloat()
             readerBinding.sliderValue.text = padding.toString()
             readerBinding.pagePaddingSlider.addOnChangeListener { _, value, fromUser ->
                 if (fromUser) {
-                    lifecycleScope.launch(Dispatchers.IO) { updatePref(PAGE_PADDING, value.toInt()) }
+                    lifecycleScope.launch(Dispatchers.IO) { mangaSettingsHandling.pagePadding.updateSetting(value.toInt()) }
                 }
                 readerBinding.sliderValue.text = value.toInt().toString()
             }
 
-            val battery = runBlocking { settingsHandling.batteryPercentage.firstOrNull() ?: 20 }
+            val batteryPercent = settingsHandling.batteryPercent
+
+            val battery = runBlocking { batteryPercent.get() }
             readerBinding.batterySlider.value = battery.toFloat()
             readerBinding.batterySliderValue.text = battery.toString()
             readerBinding.batterySlider.addOnChangeListener { _, value, fromUser ->
                 if (fromUser) {
-                    lifecycleScope.launch(Dispatchers.IO) { settingsHandling.setBatteryPercentage(value.toInt()) }
+                    lifecycleScope.launch(Dispatchers.IO) { batteryPercent.set(value.toInt()) }
                 }
                 readerBinding.batterySliderValue.text = value.toInt().toString()
             }

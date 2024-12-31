@@ -13,6 +13,7 @@ enum class ApplicationBuildTypes(
         override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
             getByName(buildTypeName) {
                 isMinifyEnabled = false
+                isShrinkResources = false
                 block()
             }
         }
@@ -32,6 +33,8 @@ enum class ApplicationBuildTypes(
                 matchingFallbacks.addAll(values().filter { it != Beta }.map(ApplicationBuildTypes::buildTypeName))
                 if(this is ApplicationBuildType) {
                     isDebuggable = false
+                    isShrinkResources = false
+                    isMinifyEnabled = false
                 }
                 block()
             }

@@ -2,7 +2,14 @@ package com.programmersbox.animeworld.videoplayer
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -27,7 +34,6 @@ import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
@@ -37,12 +43,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.security.cert.X509Certificate
-import java.util.*
+import java.util.Formatter
+import java.util.Locale
 import javax.net.ssl.X509TrustManager
 
 class VideoViewModel(
     handle: SavedStateHandle,
-    genericInfo: GenericInfo,
     context: Context,
     private val storageHolder: StorageHolder,
 ) : ViewModel() {
@@ -56,7 +62,7 @@ class VideoViewModel(
             showPath: String,
             showName: String,
             downloadOrStream: Boolean,
-            referer: String
+            referer: String,
         ) {
             navController.navigate(
                 "video_player?showPath=$showPath&showName=$showName&downloadOrStream=$downloadOrStream&referer=$referer"
@@ -116,8 +122,8 @@ class VideoViewModel(
         }
     }
 
-    val currentTime get() = stringForTime(videoInfo.currentPosition)
-    val totalTime get() = stringForTime(videoInfo.duration)
+    val currentTime by derivedStateOf { stringForTime(videoInfo.currentPosition) }
+    val totalTime by derivedStateOf { stringForTime(videoInfo.duration) }
 
     private fun stringForTime(milliseconded: Long): String {
         var milliseconds = milliseconded
@@ -217,7 +223,7 @@ fun Context.getMediaSource(
     url: Uri,
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String
+    header: String,
 ): MediaSource =
     when (Util.inferContentType(url.lastPathSegment.orEmpty().toUri())) {
         C.CONTENT_TYPE_DASH -> DashMediaSource.Factory(
@@ -248,7 +254,7 @@ fun Context.getMediaSource(
 private fun Context.getDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String
+    header: String,
 ): DataSource.Factory =
     DefaultDataSource.Factory(
         this,
@@ -259,7 +265,7 @@ private fun Context.getDataSourceFactory(
 private fun Context.getHttpDataSourceFactory(
     preview: Boolean,
     bandwidthMeter: BandwidthMeter,
-    header: String
+    header: String,
 ): DataSource.Factory = DefaultHttpDataSource.Factory().apply {
     setUserAgent(Util.getUserAgent(this@getHttpDataSourceFactory, "AnimeWorld"))
     //setTransferListener(if (preview) null else bandwidthMeter)

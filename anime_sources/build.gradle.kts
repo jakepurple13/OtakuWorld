@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.models)
     api(projects.sourceUtilities)
 
+    implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koinLibs)
 
     implementation(libs.bundles.ktorLibs)

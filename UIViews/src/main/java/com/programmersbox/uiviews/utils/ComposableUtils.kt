@@ -5,11 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.view.WindowManager
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -27,10 +30,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -47,8 +52,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -71,11 +79,13 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -85,13 +95,18 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
-import com.programmersbox.uiviews.ChangingSettingsRepository
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.settings.SourceChooserScreen
-import com.programmersbox.uiviews.settings.TranslationScreen
+import com.programmersbox.uiviews.presentation.settings.SourceChooserScreen
+import com.programmersbox.uiviews.presentation.settings.TranslationScreen
+import com.programmersbox.uiviews.repository.ChangingSettingsRepository
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates
+
+@OptIn(ExperimentalMaterial3Api::class)
+val LocalBottomAppBarScrollBehavior = staticCompositionLocalOf<BottomAppBarScrollBehavior> { error("") }
 
 fun Int.toComposeColor() = Color(this)
 
@@ -209,8 +224,28 @@ fun Color.contrastAgainst(background: Color): Float {
     return kotlin.math.max(fgLuminance, bgLuminance) / kotlin.math.min(fgLuminance, bgLuminance)
 }
 
+val LocalWindowSizeClass = staticCompositionLocalOf<WindowSizeClass> {
+    error("No WindowSizeClass available")
+}
+
+val gridColumns: Int
+    @Composable get() = when (LocalWindowSizeClass.current.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> 3
+        WindowWidthSizeClass.Medium -> 5
+        else -> 6
+    }
+
 @Composable
-fun adaptiveGridCell(): GridCells = CustomAdaptive(ComposableUtils.IMAGE_WIDTH)
+fun adaptiveGridCell(): GridCells {
+    val gridChoice by LocalSettingsHandling.current.rememberGridChoice()
+    val width = ComposableUtils.IMAGE_WIDTH
+    return when (gridChoice) {
+        GridChoice.FullAdaptive -> remember { CustomAdaptive(width) }
+        GridChoice.Adaptive -> remember { GridCells.Adaptive(width) }
+        GridChoice.Fixed -> GridCells.Fixed(gridColumns)
+        else -> GridCells.Fixed(gridColumns)
+    }
+}
 
 class CustomAdaptive(private val minSize: Dp) : GridCells {
     init {
@@ -391,6 +426,7 @@ fun InsetLargeTopAppBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LoadingDialog(
     showLoadingDialog: Boolean,
@@ -408,7 +444,7 @@ fun LoadingDialog(
                     .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
             ) {
                 Column {
-                    CircularProgressIndicator(
+                    ContainedLoadingIndicator(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
@@ -424,6 +460,10 @@ val Alizarin = Color(0xFFe74c3c)
 
 @Composable
 fun Color.animate(label: String = "") = animateColorAsState(this, label = label)
+
+@Composable
+fun Color?.animate(default: Color, label: String = "") =
+    animateColorAsState(this ?: default, label = label)
 
 @Composable
 fun LazyListState.isScrollingUp(): Boolean {
@@ -457,13 +497,10 @@ fun ManagedActivityResultLauncher<Intent, ActivityResult>.launchCatching(
 fun HideSystemBarsWhileOnScreen() {
     val changingSettingsRepository: ChangingSettingsRepository = koinInject()
 
-    LifecycleHandle(
-        onStop = { changingSettingsRepository.showNavBar.tryEmit(true) },
-        onDestroy = { changingSettingsRepository.showNavBar.tryEmit(true) },
-        onCreate = { changingSettingsRepository.showNavBar.tryEmit(false) },
-        onStart = { changingSettingsRepository.showNavBar.tryEmit(false) },
-        onResume = { changingSettingsRepository.showNavBar.tryEmit(false) }
-    )
+    LifecycleResumeEffect(Unit) {
+        changingSettingsRepository.showNavBar.tryEmit(false)
+        onPauseOrDispose { changingSettingsRepository.showNavBar.tryEmit(true) }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -476,7 +513,8 @@ fun showSourceChooser(): MutableState<Boolean> {
     if (showSourceChooser.value) {
         ModalBottomSheet(
             onDismissRequest = { showSourceChooser.value = false },
-            sheetState = state
+            sheetState = state,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             SourceChooserScreen(
                 onChosen = {
@@ -497,7 +535,8 @@ fun showTranslationScreen(): MutableState<Boolean> {
 
     if (showTranslationScreen.value) {
         ModalBottomSheet(
-            onDismissRequest = { showTranslationScreen.value = false }
+            onDismissRequest = { showTranslationScreen.value = false },
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             TranslationScreen()
         }
@@ -535,3 +574,107 @@ fun BoxWithConstraintsScope.topBounds(paddingValues: PaddingValues): Rect {
 }
 
 val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
+
+@Composable
+fun hapticInteractionSource(
+    hapticFeedbackType: HapticFeedbackType = HapticFeedbackType.LongPress,
+    enabled: Boolean = true,
+): MutableInteractionSource {
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    LaunchedEffect(isPressed) {
+        if (isPressed && enabled) {
+            haptic.performHapticFeedback(hapticFeedbackType)
+        }
+    }
+
+    return interactionSource
+}
+
+@Composable
+fun KeepScreenOn() {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = context.findActivity().window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+}
+
+/*
+// Need `implementation("com.mutualmobile:composesensors:1.1.2")` to make this work
+@Composable
+fun HingeDetection(
+    locationAlignment: Alignment = Alignment.TopCenter,
+    timeoutDurationMillis: Long = 2000
+) {
+    val hingeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        rememberHingeAngleSensorState()
+    } else {
+        null
+    }
+
+    hingeState?.let { hinge ->
+        val alphaHinge = remember { Animatable(0f) }
+        var firstCount by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(hinge.angle) {
+            alphaHinge.animateTo(1f)
+            delay(timeoutDurationMillis)
+            alphaHinge.animateTo(0f)
+        }
+
+        Box(
+            contentAlignment = locationAlignment,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = alphaHinge.value }
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(WindowInsets.systemBars.asPaddingValues())
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.Black.copy(alpha = .75f))
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    Icons.Default.DevicesFold,
+                    null,
+                    tint = Color.White,
+                    modifier = Modifier.weight(1f, false)
+                )
+
+                Text(
+                    "${hinge.angle}°",
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Canvas(
+                    Modifier
+                        .size(24.dp)
+                        .weight(1f, false)
+                ) {
+                    drawArc(
+                        Color.White,
+                        270f,
+                        hinge.angle,
+                        true
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        style = Stroke()
+                    )
+                }
+            }
+        }
+    }
+}
+*/

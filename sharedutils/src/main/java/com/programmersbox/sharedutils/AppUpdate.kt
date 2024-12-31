@@ -1,26 +1,69 @@
 package com.programmersbox.sharedutils
 
-import com.programmersbox.gsonutils.getJsonApi
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 object AppUpdate {
     private const val url = "https://raw.githubusercontent.com/jakepurple13/OtakuWorld/master/update.json"
-    fun getUpdate() = getJsonApi<AppUpdates>(url)
+
+    private val client = HttpClient {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+
+    suspend fun getUpdate() = runCatching {
+        client.get(url)
+            .bodyAsText()
+            .let { Json.decodeFromString<AppUpdates>(it) }
+    }
+        .onSuccess { println(it) }
+        .onFailure { it.printStackTrace() }
+        .getOrNull()
+
+    @Serializable
     data class AppUpdates(
-        val update_version: Double?,
-        val update_real_version: String?,
-        val update_url: String?,
-        val manga_file: String?,
-        val anime_file: String?,
-        val novel_file: String?,
-        val animetv_file: String?,
-        val otakumanager_file: String?,
-        val manga_no_firebase_file: String?,
-        val anime_no_firebase_file: String?,
-        val novel_no_firebase_file: String?,
-        val animetv_no_firebase_file: String?,
+        @SerialName("update_version")
+        val updateVersion: Double?,
+        @SerialName("update_real_version")
+        val updateRealVersion: String?,
+        @SerialName("update_url")
+        val updateUrl: String?,
+        @SerialName("manga_file")
+        val mangaFile: String?,
+        @SerialName("anime_file")
+        val animeFile: String?,
+        @SerialName("novel_file")
+        val novelFile: String?,
+        @SerialName("animetv_file")
+        val animetvFile: String?,
+        @SerialName("otakumanager_file")
+        val otakumanagerFile: String?,
+        @SerialName("manga_no_firebase_file")
+        val mangaNoFirebaseFile: String?,
+        @SerialName("anime_no_firebase_file")
+        val animeNoFirebaseFile: String?,
+        @SerialName("novel_no_firebase_file")
+        val novelNoFirebaseFile: String?,
+        @SerialName("animetv_no_firebase_file")
+        val animetvNoFirebaseFile: String?,
+        @SerialName("manga_no_cloud_file")
+        val mangaNoCloudFile: String?,
+        @SerialName("anime_no_cloud_file")
+        val animeNoCloudFile: String?,
+        @SerialName("novel_no_cloud_file")
+        val novelNoCloudFile: String?,
+        @SerialName("animetv_no_cloud_file")
+        val animetvNoCloudFile: String?,
     ) {
-        fun downloadUrl(url: AppUpdates.() -> String?) = "$update_url${url()}"
+        fun downloadUrl(url: AppUpdates.() -> String?) = "$updateUrl${url()}"
     }
 
     private fun String.removeVariantSuffix() = removeSuffix("-noFirebase")
@@ -42,6 +85,7 @@ object AppUpdate {
             major.second.toInt() == major.first.toInt()
                     && minor.second.toInt() == minor.first.toInt()
                     && patch.second.removeVariantSuffix().toInt() > patch.first.removeVariantSuffix().toInt() -> true
+
             else -> false
         }
     } catch (e: Exception) {

@@ -1,7 +1,12 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.paging.PagingSource
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -18,6 +23,18 @@ interface ItemDao {
 
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavoritesSync(): List<DbModel>
+
+    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
+    fun getAllNotifyingFavoritesSync(): List<DbModel>
+
+    @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
+    fun getAllNotifyingFavorites(): Flow<List<DbModel>>
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateFavoriteItem(dbModel: DbModel)
+
+    @Query("SELECT * FROM FavoriteItem WHERE url=:url")
+    fun getDbModel(url: String): Flow<DbModel?>
 
     @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
     fun containsItem(url: String): Flow<Boolean>
@@ -61,4 +78,24 @@ interface ItemDao {
     @Query("SELECT COUNT(id) FROM Notifications")
     fun getAllNotificationCount(): Flow<Int>
 
+    @Query("SELECT * FROM SourceOrder ORDER BY `order` ASC")
+    fun getSourceOrder(): Flow<List<SourceOrder>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSourceOrder(sourceOrder: SourceOrder)
+
+    @Query("SELECT * FROM SourceOrder ORDER BY `order` ASC")
+    suspend fun getSourceOrderSync(): List<SourceOrder>
+
+    @Query("DELETE FROM SourceOrder")
+    suspend fun deleteAllSourceOrder()
+
+    @Query("DELETE FROM SourceOrder where source = :source")
+    suspend fun deleteSourceOrder(source: String)
+
+    @Query("UPDATE SourceOrder SET `order` = :order WHERE source = :source")
+    suspend fun updateSourceOrder(source: String, order: Int)
+
+    @Update
+    suspend fun updateSourceOrder(sourceOrder: SourceOrder)
 }
