@@ -1,3 +1,7 @@
+# 🌐 支持的语言
+
+- 🇨🇳 中文
+- 🇺🇸 English
 # 御宅族世界
 
  ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
