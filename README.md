@@ -1,5 +1,5 @@
 # Explanation
-[English](README.md) |
+[English]|
 [中文](README-zh.md)
 # OtakuWorld
  ![visitors](https://page-views.glitch.me/badge?page_id=jakepurple13.OtakuWorld)
