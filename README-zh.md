@@ -1,5 +1,9 @@
+# 🌐 支持的语言
+
+- 🇨🇳 中文
+- 🇺🇸 English
 # 御宅族世界
- ![visitors](https://page-views.glitch.me/badge?page_id=jakepurple13.OtakuWorld)
+
  ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
  
  [Discord 链接](https://discord.gg/MhhHMWqryg) 现在有一个 discord 了！！！由于这是我第一次这样做，所以可能会有一些变动和修改。
