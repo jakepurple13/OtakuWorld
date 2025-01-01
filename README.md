@@ -1,6 +1,3 @@
-# Explanation
-[English](README.md) |
-[中文](README-zh.md)
 # OtakuWorld
  ![visitors](https://page-views.glitch.me/badge?page_id=jakepurple13.OtakuWorld)
  ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
