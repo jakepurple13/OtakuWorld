@@ -302,7 +302,7 @@ leanback = "androidx.leanback:leanback:1.2.0-alpha02"
 leanbackPreference = "androidx.leanback:leanback-preference:1.2.0-alpha02"
 
 duktape = "com.squareup.duktape:duktape-android:1.4.0"
-rhino = "org.mozilla:rhino:1.7.14"
+rhino = "org.mozilla:rhino:1.8.0"
 kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
