@@ -117,6 +117,7 @@ import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
+import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.plus
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalCustomListDao
@@ -130,7 +131,6 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.M3CoverCard
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.biometricPrompting
@@ -439,11 +439,22 @@ fun OtakuCustomListScreen(
                 when (val state = viewModel.items) {
                     is OtakuListState.BySource if state.items.isNotEmpty() -> {
                         state.items.forEach { (source, sourceItems) ->
+                            //var showSource by mutableStateOf(false)
                             item(
                                 span = { GridItemSpan(maxLineSpan) },
                             ) {
                                 CenterAlignedTopAppBar(
                                     title = { Text(source) },
+                                    /*actions = {
+                                        IconButton(
+                                            onClick = { showSource = !showSource }
+                                        ) {
+                                            Icon(
+                                                if (showSource) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
+                                                null
+                                            )
+                                        }
+                                    },*/
                                     windowInsets = WindowInsets(0.dp),
                                 )
                             }
@@ -453,6 +464,7 @@ fun OtakuCustomListScreen(
                                 key = { it.title + it.source + it.uniqueId },
                                 contentType = { it }
                             ) { item ->
+                                //if(showSource)
                                 CustomItemVertical(
                                     items = listOf(item),
                                     title = item.title,
