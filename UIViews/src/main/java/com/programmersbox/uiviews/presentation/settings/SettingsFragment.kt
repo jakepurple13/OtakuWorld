@@ -666,7 +666,7 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
             primaryText = it.language,
             overlineText = try {
                 Locale.forLanguageTag(it.language).displayLanguage
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             },
             icon = Icons.Default.Delete

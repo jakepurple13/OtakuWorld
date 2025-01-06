@@ -17,10 +17,10 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.combineSources
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -53,7 +53,7 @@ class RecentViewModel(
 
     var count = 1
 
-    private val itemListener = FirebaseDb.FirebaseListener()
+    private val itemListener = fireListener()
 
     var currentSource by mutableStateOf<ApiService?>(null)
 
@@ -132,10 +132,5 @@ class RecentViewModel(
             ?.onCompletion { isRefreshing = false }
             ?.onEach { sourceList.addAll(it) }
             ?.launchIn(viewModelScope)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        itemListener.unregister()
     }
 }

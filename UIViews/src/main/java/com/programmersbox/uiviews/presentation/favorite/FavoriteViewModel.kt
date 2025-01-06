@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -22,7 +22,7 @@ class FavoriteViewModel(
     private val sourceRepository: SourceRepository,
 ) : ViewModel() {
 
-    private val fireListener = FirebaseDb.FirebaseListener()
+    private val fireListener = fireListener("favorite")
 
     private val favoriteList = mutableStateListOf<DbModel>()
 

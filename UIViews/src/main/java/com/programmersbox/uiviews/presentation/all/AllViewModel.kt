@@ -12,11 +12,11 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
+import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -48,7 +48,7 @@ class AllViewModel(
 
     var count = 1
 
-    private val itemListener = FirebaseDb.FirebaseListener()
+    private val itemListener = fireListener()
 
     init {
         combine(
@@ -101,10 +101,4 @@ class AllViewModel(
             .onCompletion { isSearching = false }
             .launchIn(viewModelScope)
     }
-
-    override fun onCleared() {
-        super.onCleared()
-        itemListener.unregister()
-    }
-
 }

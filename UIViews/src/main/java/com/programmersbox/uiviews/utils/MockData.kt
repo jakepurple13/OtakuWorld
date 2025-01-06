@@ -63,6 +63,7 @@ import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
+import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.theme.LocalItemDao

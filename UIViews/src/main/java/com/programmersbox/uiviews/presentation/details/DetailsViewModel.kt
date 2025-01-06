@@ -34,6 +34,7 @@ import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
 import com.programmersbox.uiviews.utils.blurhash.BlurHashItem
 import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.vanniktech.blurhash.BlurHash
 import kotlinx.coroutines.Job
@@ -71,9 +72,9 @@ class DetailsViewModel(
 
     private var addRemoveFavoriteJob: Job? = null
 
-    private val itemListener = FirebaseDb.FirebaseListener()
-    private val dbModelListener = FirebaseDb.FirebaseListener()
-    private val chapterListener = FirebaseDb.FirebaseListener()
+    private val itemListener = fireListener("favorite")
+    private val dbModelListener = fireListener("update")
+    private val chapterListener = fireListener("chapter")
 
     var favoriteListener by mutableStateOf(false)
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
@@ -260,9 +261,6 @@ class DetailsViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        itemListener.unregister()
-        chapterListener.unregister()
-        dbModelListener.unregister()
         englishTranslator.clear()
     }
 }
