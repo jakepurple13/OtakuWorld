@@ -11,7 +11,7 @@ jobs:
     name: Check for new commits
     runs-on: ubuntu-latest
     outputs:
-      shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }}
+      shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }} || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +62,8 @@ jobs:
         run: |
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-          echo "NIGHTLY_TIME=$(date)" >> $GITHUB_ENV
+          echo "NIGHTLY_TIME=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
+          echo "NIGHTLY_TAG=$(date '+%Y_%m_%d')" >> $GITHUB_ENV
 
       - name: Create Nightly Release
         id: create_release
@@ -73,7 +74,7 @@ jobs:
           fail_on_unmatched_files: true
           prerelease: true
           generate_release_notes: true
-          tag_name: nightly_${{ env.NIGHTLY_TIME }}
+          tag_name: nightly_${{ env.NIGHTLY_TAG }}
           name: OtakuWorld Nightly Release ${{ env.NIGHTLY_TIME }}
           body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
