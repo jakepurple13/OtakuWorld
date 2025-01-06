@@ -73,8 +73,8 @@ jobs:
           fail_on_unmatched_files: true
           prerelease: true
           generate_release_notes: true
-          tag_name: nightly
-          name: OtakuWorld Nightly Release
+          tag_name: nightly_${{ env.NIGHTLY_TIME }}
+          name: OtakuWorld Nightly Release ${{ env.NIGHTLY_TIME }}
           body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
             ${{ github.workspace }}/release-artifacts/**
