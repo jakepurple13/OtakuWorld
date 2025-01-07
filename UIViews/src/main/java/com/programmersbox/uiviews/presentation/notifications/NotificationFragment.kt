@@ -3,6 +3,7 @@
 package com.programmersbox.uiviews.presentation.notifications
 
 import android.app.NotificationManager
+import android.content.Context
 import android.graphics.drawable.Drawable
 import android.text.format.DateFormat
 import android.widget.Toast
@@ -15,6 +16,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -48,6 +51,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
@@ -62,11 +66,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,7 +99,6 @@ import coil.request.ImageRequest
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
@@ -111,16 +114,14 @@ import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteGridS
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.GradientImage
 import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
-import com.programmersbox.uiviews.presentation.components.M3CoverCard
+import com.programmersbox.uiviews.presentation.components.M3CoverCard2
 import com.programmersbox.uiviews.presentation.components.M3ImageCard
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.theme.LocalItemDao
+import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.CustomBannerBox
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
@@ -134,7 +135,6 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -164,10 +164,8 @@ fun NotificationsScreen(
     navController: NavController = LocalNavController.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
-    db: ItemDao = LocalItemDao.current,
     vm: NotificationScreenViewModel = koinViewModel(),
-    cancelNotificationById: (Int) -> Unit,
-    cancelNotification: (NotificationItem) -> Unit,
+    notificationRepository: NotificationRepository = koinInject(),
 ) {
 
     var showLoadingDialog by remember { mutableStateOf(false) }
@@ -181,15 +179,6 @@ fun NotificationsScreen(
 
     val context = LocalContext.current
     val logoDrawable = koinInject<AppLogo>().logo
-
-    LaunchedEffect(Unit) {
-        db.getAllNotificationCount()
-            .filter { it == 0 }
-            .collect {
-                cancelNotificationById(42)
-                //navController.popBackStack()
-            }
-    }
 
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
@@ -233,7 +222,7 @@ fun NotificationsScreen(
                             TextButton(
                                 onClick = {
                                     scope.launch {
-                                        val number = db.deleteAllNotifications()
+                                        val number = vm.deleteAllNotifications()
                                         launch(Dispatchers.Main) {
                                             onDismiss()
                                             Toast.makeText(
@@ -241,7 +230,6 @@ fun NotificationsScreen(
                                                 context.getString(R.string.deleted_notifications, number),
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            cancelNotificationById(42)
                                         }
                                     }
                                 }
@@ -266,8 +254,8 @@ fun NotificationsScreen(
             },
             onRemove = { item ->
                 if (item is NotificationInfo.Noti) {
-                    vm.deleteNotification(db, item.item)
-                    cancelNotification(item.item)
+                    vm.deleteNotification(item.item)
+                    notificationRepository.cancelNotification(item.item)
                 }
             },
             onMultipleRemove = { d ->
@@ -275,10 +263,7 @@ fun NotificationsScreen(
                     withContext(Dispatchers.Default) {
                         d
                             .filterIsInstance<NotificationInfo.Noti>()
-                            .forEach {
-                                cancelNotification(it.item)
-                                db.deleteNotification(it.item)
-                            }
+                            .forEach { vm.deleteNotification(it.item) }
                     }
                 }
             },
@@ -310,11 +295,11 @@ fun NotificationsScreen(
                             navController = navController,
                             vm = vm,
                             p = p,
-                            db = db,
                             toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
                             onLoadingChange = { showLoadingDialog = it },
                             deleteNotification = vm::deleteNotification,
-                            cancelNotification = cancelNotification,
+                            cancelNotification = vm::cancelNotification,
+                            notificationLogo = notificationLogo,
                             onError = {
                                 scope.launch {
                                     state.snackbarHostState.currentSnackbarData?.dismiss()
@@ -380,8 +365,7 @@ fun NotificationsScreen(
                                                     item = it,
                                                     navController = navController,
                                                     deleteNotification = vm::deleteNotification,
-                                                    cancelNotification = cancelNotification,
-                                                    db = db,
+                                                    cancelNotification = vm::cancelNotification,
                                                     genericInfo = genericInfo,
                                                     logoDrawable = logoDrawable,
                                                     notificationLogo = notificationLogo,
@@ -456,169 +440,224 @@ sealed class NotificationInfo {
 private fun DateSort(
     navController: NavController,
     vm: NotificationScreenViewModel,
-    deleteNotification: (db: ItemDao, item: NotificationItem, block: () -> Unit) -> Unit,
+    deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
-    db: ItemDao,
     p: PaddingValues,
     toSource: (String) -> ApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
+    notificationLogo: NotificationLogo,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    context: Context = LocalContext.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
     val scope = rememberCoroutineScope()
-    var showBanner by remember { mutableStateOf(false) }
-
-    CustomBannerBox<NotificationItem>(
-        showBanner = showBanner,
-        bannerContent = { notiItem ->
-            ListItem(
-                leadingContent = {
-                    val logo = koinInject<AppLogo>().logoId
-                    CoilGradientImage(
-                        model = rememberAsyncImagePainter(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(notiItem?.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .placeholder(logo)
-                                .error(logo)
-                                .build()
-                        ),
-                        modifier = Modifier
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            .clip(MaterialTheme.shapes.small)
-                    )
-                },
-                overlineContent = { Text(notiItem?.source.orEmpty()) },
-                headlineContent = { Text(notiItem?.notiTitle.orEmpty()) },
-                supportingContent = {
-                    Text(
-                        notiItem?.summaryText.orEmpty(),
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-            )
-        },
+    LazyColumn(
+        contentPadding = p,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(vertical = 4.dp),
     ) {
-        LazyColumn(
-            contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
-        ) {
-            vm.groupedList.forEach { item ->
-                val expanded = vm.groupedListState[item.first]?.value == true
-                stickyHeader {
-                    Surface(
-                        shape = M3MaterialTheme.shapes.medium,
-                        tonalElevation = 4.dp,
-                        onClick = { vm.toggleGroupedState(item.first) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateItem()
-                    ) {
-                        ListItem(
-                            modifier = Modifier.padding(4.dp),
-                            headlineContent = { Text(item.first) },
-                            leadingContent = { Text(item.second.size.toString()) },
-                            trailingContent = {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    null,
-                                    modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
-                                )
-                            }
-                        )
-                    }
+        vm.groupedList.forEach { item ->
+            val expanded = vm.groupedListState[item.first]?.value == true
+            stickyHeader {
+                Surface(
+                    shape = M3MaterialTheme.shapes.medium,
+                    tonalElevation = 4.dp,
+                    onClick = { vm.toggleGroupedState(item.first) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateItem()
+                ) {
+                    ListItem(
+                        modifier = Modifier.padding(4.dp),
+                        headlineContent = { Text(item.first) },
+                        leadingContent = { Text(item.second.size.toString()) },
+                        trailingContent = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                null,
+                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
+                            )
+                        }
+                    )
                 }
+            }
 
-                item {
-                    AnimatedVisibility(
-                        visible = expanded,
-                        enter = expandVertically(),
-                        exit = shrinkVertically()
-                    ) {
-                        BoxWithConstraints {
-                            this.constraints
-                            val itemsInRow = (maxWidth / ComposableUtils.IMAGE_WIDTH)
-                                .coerceAtLeast(1f)
-                                .roundToInt()
-                            Column {
-                                item.second.chunked(itemsInRow).forEach {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        it.forEach { i ->
-                                            var showPopup by remember { mutableStateOf(false) }
+            item {
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    BoxWithConstraints {
+                        this.constraints
+                        val itemsInRow = (maxWidth / ComposableUtils.IMAGE_WIDTH)
+                            .coerceAtLeast(1f)
+                            .roundToInt()
+                        Column {
+                            item.second.chunked(itemsInRow).forEach {
+                                var showPopup by remember { mutableStateOf(false) }
 
-                                            if (showPopup) {
-                                                val onDismiss = { showPopup = false }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    it.forEach { i ->
+                                        var showOptions by remember { mutableStateOf(false) }
+                                        val sheet = rememberModalBottomSheetState(true)
 
-                                                AlertDialog(
-                                                    onDismissRequest = onDismiss,
-                                                    title = { Text(stringResource(R.string.removeNoti, i.notiTitle)) },
-                                                    confirmButton = {
-                                                        TextButton(
-                                                            onClick = {
-                                                                deleteNotification(db, i, onDismiss)
-                                                                cancelNotification(i)
-                                                            }
-                                                        ) { Text(stringResource(R.string.yes)) }
+                                        if (showOptions) {
+                                            ModalBottomSheet(
+                                                onDismissRequest = { showOptions = false },
+                                                sheetState = sheet
+                                            ) {
+                                                ListItem(
+                                                    leadingContent = {
+                                                        val logo = koinInject<AppLogo>().logoId
+                                                        CoilGradientImage(
+                                                            model = rememberAsyncImagePainter(
+                                                                model = ImageRequest.Builder(LocalContext.current)
+                                                                    .data(i.imageUrl)
+                                                                    .lifecycle(LocalLifecycleOwner.current)
+                                                                    .crossfade(true)
+                                                                    .placeholder(logo)
+                                                                    .error(logo)
+                                                                    .build()
+                                                            ),
+                                                            modifier = Modifier
+                                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                                                .clip(MaterialTheme.shapes.small)
+                                                        )
                                                     },
-                                                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                                                    overlineContent = { Text(i.source) },
+                                                    headlineContent = { Text(i.notiTitle) },
+                                                    supportingContent = {
+                                                        Text(
+                                                            i.summaryText,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                        )
+                                                    },
                                                 )
-                                            }
 
-                                            val dismissState = rememberSwipeToDismissBoxState(
-                                                confirmValueChange = {
-                                                    if (it == SwipeToDismissBoxValue.StartToEnd || it == SwipeToDismissBoxValue.EndToStart) {
-                                                        showPopup = true
-                                                    }
-                                                    false
+                                                Card(
+                                                    onClick = {
+                                                        scope.launch(Dispatchers.IO) {
+                                                            SavedNotifications.viewNotificationFromDb(
+                                                                context = context,
+                                                                n = i,
+                                                                notificationLogo = notificationLogo,
+                                                                info = genericInfo,
+                                                                sourceRepository = sourceRepository
+                                                            )
+                                                            sheet.hide()
+                                                        }.invokeOnCompletion { showOptions = false }
+                                                    },
+                                                ) {
+                                                    ListItem(
+                                                        headlineContent = { Text(stringResource(R.string.notify)) },
+                                                    )
                                                 }
-                                            )
 
-                                            SwipeToDismissBox(
-                                                state = dismissState,
-                                                modifier = Modifier.weight(1f, false),
-                                                backgroundContent = {
-                                                    val color by animateColorAsState(
-                                                        when (dismissState.targetValue) {
-                                                            SwipeToDismissBoxValue.Settled -> Color.Transparent
-                                                            SwipeToDismissBoxValue.StartToEnd -> Color.Red
-                                                            SwipeToDismissBoxValue.EndToStart -> Color.Red
-                                                        }, label = ""
-                                                    )
+                                                HorizontalDivider()
 
-                                                    val scale by animateFloatAsState(
-                                                        if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
-                                                        label = ""
-                                                    )
-
-                                                    Box(
-                                                        Modifier
-                                                            .fillMaxSize()
-                                                            .clip(MaterialTheme.shapes.medium)
-                                                            .background(color)
-                                                            .padding(horizontal = 20.dp),
-                                                        contentAlignment = Alignment.Center
+                                                NotifyAt(
+                                                    item = i,
+                                                ) { dateShow ->
+                                                    Card(
+                                                        onClick = { dateShow() },
                                                     ) {
-                                                        Icon(
-                                                            Icons.Default.Delete,
-                                                            contentDescription = null,
-                                                            modifier = Modifier.scale(scale),
-                                                            tint = M3MaterialTheme.colorScheme.onSurface
+                                                        ListItem(
+                                                            headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
                                                         )
                                                     }
+                                                }
+
+                                                HorizontalDivider()
+
+                                                Card(
+                                                    onClick = {
+                                                        scope.launch {
+                                                            sheet.hide()
+                                                        }.invokeOnCompletion {
+                                                            showOptions = false
+                                                            showPopup = true
+                                                        }
+                                                    },
+                                                ) {
+                                                    ListItem(
+                                                        headlineContent = { Text(stringResource(R.string.remove)) },
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        if (showPopup) {
+                                            val onDismiss = { showPopup = false }
+
+                                            AlertDialog(
+                                                onDismissRequest = onDismiss,
+                                                title = { Text(stringResource(R.string.removeNoti, i.notiTitle)) },
+                                                confirmButton = {
+                                                    TextButton(
+                                                        onClick = {
+                                                            showOptions = false
+                                                            deleteNotification(i, onDismiss)
+                                                            cancelNotification(i)
+                                                        }
+                                                    ) { Text(stringResource(R.string.yes)) }
                                                 },
-                                                content = {
-                                                    M3CoverCard(
-                                                        imageUrl = i.imageUrl.orEmpty(),
-                                                        name = i.notiTitle,
-                                                        placeHolder = R.drawable.ic_site_settings,
-                                                        onLongPress = {
-                                                            newItem(if (it == ComponentState.Pressed) i else null)
-                                                            showBanner = it == ComponentState.Pressed
-                                                        },
+                                                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                                            )
+                                        }
+
+                                        val dismissState = rememberSwipeToDismissBoxState(
+                                            confirmValueChange = {
+                                                if (it == SwipeToDismissBoxValue.StartToEnd || it == SwipeToDismissBoxValue.EndToStart) {
+                                                    showPopup = true
+                                                }
+                                                false
+                                            }
+                                        )
+
+                                        SwipeToDismissBox(
+                                            state = dismissState,
+                                            modifier = Modifier.weight(1f, false),
+                                            backgroundContent = {
+                                                val color by animateColorAsState(
+                                                    when (dismissState.targetValue) {
+                                                        SwipeToDismissBoxValue.Settled -> Color.Transparent
+                                                        SwipeToDismissBoxValue.StartToEnd -> Color.Red
+                                                        SwipeToDismissBoxValue.EndToStart -> Color.Red
+                                                    }, label = ""
+                                                )
+
+                                                val scale by animateFloatAsState(
+                                                    if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
+                                                    label = ""
+                                                )
+
+                                                Box(
+                                                    Modifier
+                                                        .fillMaxSize()
+                                                        .clip(MaterialTheme.shapes.medium)
+                                                        .background(color)
+                                                        .padding(horizontal = 20.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Delete,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.scale(scale),
+                                                        tint = M3MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+                                            },
+                                            content = {
+                                                M3CoverCard2(
+                                                    imageUrl = i.imageUrl.orEmpty(),
+                                                    name = i.notiTitle,
+                                                    placeHolder = R.drawable.ic_site_settings,
+                                                    modifier = Modifier.combinedClickable(
                                                         onClick = {
                                                             toSource(i.source)?.let { source ->
                                                                 Cached.cache[i.url]?.let {
@@ -639,10 +678,11 @@ private fun DateSort(
                                                                 }
                                                                 ?.launchIn(scope) ?: onError(i)
                                                         },
+                                                        onLongClick = { showOptions = true }
                                                     )
-                                                }
-                                            )
-                                        }
+                                                )
+                                            }
+                                        )
                                     }
                                 }
                             }
@@ -659,9 +699,8 @@ private fun DateSort(
 private fun NotificationItem(
     item: NotificationItem,
     navController: NavController,
-    deleteNotification: (db: ItemDao, item: NotificationItem, block: () -> Unit) -> Unit,
+    deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
-    db: ItemDao,
     genericInfo: GenericInfo,
     toSource: (String) -> ApiService?,
     logoDrawable: Drawable?,
@@ -685,7 +724,7 @@ private fun NotificationItem(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        deleteNotification(db, item, onDismiss)
+                        deleteNotification(item, onDismiss)
                         cancelNotification(item)
                     }
                 ) { Text(stringResource(R.string.yes)) }
@@ -808,8 +847,15 @@ private fun NotificationItem(
 
                             NotifyAt(
                                 item = item,
-                                onDropDownDismiss = dropDownDismiss
-                            )
+                            ) { dateShow ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.notifyAtTime)) },
+                                    onClick = {
+                                        dropDownDismiss()
+                                        dateShow()
+                                    }
+                                )
+                            }
 
                             HorizontalDivider()
 
@@ -835,7 +881,7 @@ private fun NotificationItem(
 @Composable
 private fun NotifyAt(
     item: NotificationItem,
-    onDropDownDismiss: () -> Unit,
+    content: @Composable (() -> Unit) -> Unit,
 ) {
     val context = LocalContext.current
     var showDatePicker by remember { mutableStateOf(false) }
@@ -923,12 +969,8 @@ private fun NotifyAt(
         }
     }
 
-    DropdownMenuItem(
-        text = { Text(stringResource(R.string.notifyAtTime)) },
-        onClick = {
-            onDropDownDismiss()
-            showDatePicker = true
-        }
+    content(
+        { showDatePicker = true }
     )
 }
 
@@ -978,8 +1020,6 @@ private fun NotificationPreview() {
     PreviewTheme {
         NotificationsScreen(
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
-            cancelNotification = {},
-            cancelNotificationById = {}
         )
     }
 }
@@ -991,8 +1031,7 @@ private fun NotificationItemPreview() {
         NotificationItem(
             item = NotificationItem(1, "", "world", "hello", null, "MANGA_READ", "Title"),
             navController = rememberNavController(),
-            deleteNotification = { _, _, _ -> },
-            db = LocalItemDao.current,
+            deleteNotification = { _, _ -> },
             genericInfo = MockInfo,
             cancelNotification = {},
             logoDrawable = null,

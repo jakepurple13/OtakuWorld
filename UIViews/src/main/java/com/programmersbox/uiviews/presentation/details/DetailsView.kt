@@ -64,14 +64,13 @@ import androidx.core.graphics.ColorUtils
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
-import com.programmersbox.uiviews.presentation.notifications.cancelNotification
+import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
@@ -92,6 +91,7 @@ import me.tatarka.compose.collapsable.CollapsableColumn
 import me.tatarka.compose.collapsable.rememberCollapsableTopBehavior
 import my.nanihadesuka.compose.InternalLazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalComposeUiApi
@@ -116,6 +116,7 @@ fun DetailsView(
     onPaletteSet: (Palette) -> Unit,
     blurHash: BitmapPainter?,
     onBitmapSet: (Bitmap) -> Unit,
+    notificationRepository: NotificationRepository = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
@@ -127,8 +128,6 @@ fun DetailsView(
     val showBlur by settings.rememberShowBlur()
 
     val hostState = remember { SnackbarHostState() }
-
-    val notificationManager = LocalContext.current.notificationManager
 
     val listState = rememberLazyListState()
 
@@ -309,7 +308,7 @@ fun DetailsView(
                                 .firstOrNull()
                                 ?.let {
                                     dao.deleteNotification(it)
-                                    notificationManager.cancelNotification(it)
+                                    notificationRepository.cancelNotification(it)
                                 }
                         }
                     },

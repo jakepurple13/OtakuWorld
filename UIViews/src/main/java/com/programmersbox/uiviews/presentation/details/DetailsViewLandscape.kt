@@ -65,14 +65,13 @@ import com.google.accompanist.adaptive.TwoPane
 import com.google.accompanist.adaptive.calculateDisplayFeatures
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
-import com.programmersbox.uiviews.presentation.notifications.cancelNotification
+import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
@@ -85,6 +84,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import org.koin.compose.koinInject
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
@@ -264,6 +264,7 @@ private fun DetailsLandscapeContent(
     notifyAction: () -> Unit,
     onPaletteSet: (Palette) -> Unit,
     modifier: Modifier = Modifier,
+    notificationRepository: NotificationRepository = koinInject(),
 ) {
     val scope = rememberCoroutineScope()
     val dao = LocalItemDao.current
@@ -289,7 +290,6 @@ private fun DetailsLandscapeContent(
                     val c = MaterialTheme.colorScheme.primary
                     NormalOtakuScaffold(
                         bottomBar = {
-                            val notificationManager = LocalContext.current.notificationManager
                             DetailBottomBar(
                                 navController = LocalNavController.current,
                                 onShowLists = { showLists = true },
@@ -301,7 +301,7 @@ private fun DetailsLandscapeContent(
                                             .firstOrNull()
                                             ?.let {
                                                 dao.deleteNotification(it)
-                                                notificationManager.cancelNotification(it)
+                                                notificationRepository.cancelNotification(it)
                                             }
                                     }
                                 },

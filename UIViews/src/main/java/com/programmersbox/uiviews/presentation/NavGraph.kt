@@ -10,9 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -21,7 +19,6 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.programmersbox.gemini.GeminiRecommendationScreen
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.all.AllView
@@ -33,7 +30,6 @@ import com.programmersbox.uiviews.presentation.lists.DeleteFromListScreen
 import com.programmersbox.uiviews.presentation.lists.ImportListScreen
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.notifications.NotificationsScreen
-import com.programmersbox.uiviews.presentation.notifications.cancelNotification
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.presentation.settings.ExtensionList
@@ -258,12 +254,8 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             trackScreen(Screen.NotificationScreen)
-            val context = LocalContext.current
-            val notificationManager = remember { context.notificationManager }
             NotificationsScreen(
                 notificationLogo = notificationLogo,
-                cancelNotificationById = notificationManager::cancel,
-                cancelNotification = notificationManager::cancelNotification
             )
         }
 
@@ -323,12 +315,8 @@ private fun NavGraphBuilder.settings(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
         trackScreen(Screen.NotificationScreen.Home)
-        val context = LocalContext.current
-        val notificationManager = remember { context.notificationManager }
         NotificationsScreen(
             notificationLogo = notificationLogo,
-            cancelNotificationById = notificationManager::cancel,
-            cancelNotification = notificationManager::cancelNotification
         )
     }
 

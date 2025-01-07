@@ -13,16 +13,19 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.datastore.SettingsHandling
+import com.programmersbox.uiviews.repository.NotificationRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class NotificationScreenViewModel(
-    db: ItemDao,
+    private val db: ItemDao,
     settingsHandling: SettingsHandling,
     sourceRepository: SourceRepository,
+    private val notificationRepository: NotificationRepository,
 ) : ViewModel() {
 
     private val notificationSortBy = settingsHandling.notificationSortBy
@@ -56,17 +59,32 @@ class NotificationScreenViewModel(
             }
             .launchIn(viewModelScope)
 
+        db.getAllNotificationCount()
+            .filter { it == 0 }
+            .onEach { notificationRepository.cancelGroup() }
+            .launchIn(viewModelScope)
+
         notificationSortBy
             .asFlow()
             .onEach { sortedBy = it }
             .launchIn(viewModelScope)
     }
 
-    fun deleteNotification(db: ItemDao, item: NotificationItem, block: () -> Unit = {}) {
+    fun deleteNotification(item: NotificationItem, block: () -> Unit = {}) {
         viewModelScope.launch {
             withContext(Dispatchers.Default) { db.deleteNotification(item) }
+            notificationRepository.cancelNotification(item)
             block()
         }
+    }
+
+    fun cancelNotification(notificationItem: NotificationItem) = notificationRepository.cancelNotification(notificationItem)
+    fun cancelNotificationById(id: Int) = notificationRepository.cancelById(id)
+
+    suspend fun deleteAllNotifications(): Int {
+        db.getAllNotifications().forEach { notificationRepository.cancelNotification(it) }
+        notificationRepository.cancelGroup()
+        return db.deleteAllNotifications()
     }
 
     fun toggleGroupedState(source: String) {
