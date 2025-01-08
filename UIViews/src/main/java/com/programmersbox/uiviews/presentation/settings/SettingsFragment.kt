@@ -324,18 +324,16 @@ private fun SettingsScreen(
         )
     }
 
-    ShowWhen(vm.savedNotifications > 0) {
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
-            settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-            summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = notificationClick
-            )
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
+        settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
+        summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
+        modifier = Modifier.clickable(
+            indication = ripple(),
+            interactionSource = null,
+            onClick = notificationClick
         )
-    }
+    )
 
     PreferenceSetting(
         settingTitle = { Text(stringResource(R.string.viewFavoritesMenu)) },

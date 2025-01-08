@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews.presentation.settings
 
 import android.Manifest
-import android.os.Environment
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -50,7 +49,6 @@ import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,11 +138,11 @@ fun InfoSettings(
                                     if (it.isGranted) {
                                         updateAppCheck.value
                                             ?.let { a ->
-                                                val isApkAlreadyThere = File(
+                                                /*val isApkAlreadyThere = File(
                                                     context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
                                                     a.let(genericInfo.apkString).toString()
                                                 )
-                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()
+                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()*/
                                                 val url = a.downloadUrl(genericInfo.apkString)
                                                 downloadInstaller.downloadAndInstall(
                                                     url = url,

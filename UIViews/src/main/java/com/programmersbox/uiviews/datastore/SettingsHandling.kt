@@ -76,6 +76,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             usePalette = true
             showBlur = true
             showExpressiveness = true
+            notifyOnReboot = true
             multipleActions = middleMultipleActions {
                 startAction = MiddleNavigationAction.All
                 endAction = MiddleNavigationAction.Notifications
@@ -100,6 +101,13 @@ class SettingsHandling(context: Context) {
         key = { it.batteryPercent },
         update = { setBatteryPercent(it) },
         defaultValue = 20
+    )
+
+    val notifyOnReboot = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.notifyOnReboot },
+        update = { setNotifyOnReboot(it) },
+        defaultValue = true
     )
 
     @Composable

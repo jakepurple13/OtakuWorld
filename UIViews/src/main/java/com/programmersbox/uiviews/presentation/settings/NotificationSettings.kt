@@ -105,6 +105,12 @@ fun NotificationSettings(
             )
         }
 
+        SwitchSetting(
+            settingTitle = { Text("Notify on Boot") },
+            value = notiViewModel.notifyOnBoot.rememberPreference().value,
+            updateValue = { scope.launch { notiViewModel.notifyOnBoot.set(it) } }
+        )
+
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.last_update_check_time)) },
             summaryValue = { Text(notiViewModel.time) },

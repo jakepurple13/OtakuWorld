@@ -18,6 +18,7 @@ import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -68,6 +69,7 @@ class MoreInfoViewModel : ViewModel() {
 class NotificationViewModel(
     dao: ItemDao,
     dataStoreHandling: DataStoreHandling,
+    settingsHandling: SettingsHandling,
 ) : ViewModel() {
 
     var savedNotifications by mutableIntStateOf(0)
@@ -76,6 +78,8 @@ class NotificationViewModel(
     var canCheck by mutableStateOf(false)
 
     var time by mutableStateOf("")
+
+    val notifyOnBoot = settingsHandling.notifyOnReboot
 
     private val dateTimeFormatter by lazy { SimpleDateFormat.getDateTimeInstance() }
 

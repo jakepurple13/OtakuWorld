@@ -42,6 +42,7 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.logFirebaseMessage
@@ -468,16 +469,24 @@ class DeleteNotificationReceiver : BroadcastReceiver() {
     }
 }
 
+//TODO: Move into own file
 class BootReceived : BroadcastReceiver(), KoinComponent {
 
     private val logo: NotificationLogo by inject()
     private val info: GenericInfo by inject()
     private val sourceRepository: SourceRepository by inject()
+    private val settingsHandling: SettingsHandling by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
         println(intent?.action)
-        context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info, sourceRepository) }
+        runCatching {
+            runBlocking {
+                if (settingsHandling.notifyOnReboot.get()) {
+                    context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info, sourceRepository) }
+                }
+            }
+        }
     }
 }
 

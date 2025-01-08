@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -30,9 +31,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -41,6 +45,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
@@ -511,6 +516,163 @@ fun <T> BottomSheetDeleteGridScaffold(
             }
         }
     ) { mainView(it, listOfItems) }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+fun <T> ModalBottomSheetDelete(
+    listOfItems: List<T>,
+    multipleTitle: String,
+    onRemove: (T) -> Unit,
+    onMultipleRemove: (List<T>) -> Unit,
+    onDismiss: () -> Unit,
+    itemUi: @Composable (T) -> Unit,
+    isTitle: (T) -> Boolean = { false },
+    titleUi: @Composable (T) -> Unit = {},
+    span: (LazyGridItemSpanScope.(item: T) -> GridItemSpan)? = null,
+    state: SheetState = rememberModalBottomSheetState(),
+    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    customSingleRemoveDialog: (T) -> Boolean = { true },
+) {
+    val context = LocalContext.current
+
+    val dragState = rememberDragSelectState<T>()
+
+    var showPopup by remember { mutableStateOf(false) }
+
+    if (showPopup) {
+        val onDismiss = { showPopup = false }
+
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(multipleTitle) },
+            text = {
+                Text(
+                    context.resources.getQuantityString(
+                        R.plurals.areYouSureRemove,
+                        dragState.selected.size,
+                        dragState.selected.size
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onMultipleRemove(dragState.selected)
+                    }
+                ) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+        )
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = state,
+    ) {
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text(stringResource(R.string.delete_multiple)) },
+                    actions = {
+                        var showPopup by remember { mutableStateOf(false) }
+
+                        if (showPopup) {
+                            val onDismiss = { showPopup = false }
+                            AlertDialog(
+                                onDismissRequest = onDismiss,
+                                title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            onDismiss()
+                                            onMultipleRemove(listOfItems)
+                                        }
+                                    ) { Text(stringResource(R.string.yes)) }
+                                },
+                                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                            )
+                        }
+
+                        IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
+                    },
+                    windowInsets = WindowInsets(0.dp),
+                    scrollBehavior = scrollBehavior
+                )
+            },
+            bottomBar = {
+                BottomAppBar(
+                    contentPadding = PaddingValues(0.dp),
+                    windowInsets = WindowInsets(0.dp)
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    ) { Text(stringResource(id = R.string.cancel)) }
+
+                    Button(
+                        onClick = { showPopup = true },
+                        enabled = dragState.selected.isNotEmpty(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    ) { Text(stringResource(id = R.string.remove)) }
+                }
+            }
+        ) { p ->
+            LazyDragSelectVerticalGrid(
+                columns = adaptiveGridCell(),
+                items = listOfItems,
+                contentPadding = p,
+                state = dragState,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    span = span
+                ) { m ->
+                    if (isTitle(m)) {
+                        titleUi(m)
+                    } else {
+                        Box {
+                            DeleteItemDragSelectView(
+                                item = m,
+                                deleteTitle = deleteTitle,
+                                customSingleRemoveDialog = customSingleRemoveDialog,
+                                onRemove = onRemove,
+                                itemUi = itemUi,
+                                modifier = Modifier
+                                    .dragSelectToggleableItem(
+                                        state = dragState,
+                                        item = m,
+                                    )
+                                    .clickable {
+                                        if (dragState.isSelected(m)) dragState.removeSelected(m)
+                                        else dragState.addSelected(m)
+                                    }
+                            )
+                            if (dragState.inSelectionMode) {
+                                Box(modifier = Modifier.matchParentSize()) {
+                                    if (dragState.isSelected(m)) {
+                                        SelectedIcon()
+                                    } else {
+                                        UnselectedIcon()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

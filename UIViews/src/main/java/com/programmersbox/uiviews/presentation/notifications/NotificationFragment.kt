@@ -2,7 +2,6 @@
 
 package com.programmersbox.uiviews.presentation.notifications
 
-import android.app.NotificationManager
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.text.format.DateFormat
@@ -34,7 +33,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -52,6 +50,7 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
@@ -110,12 +109,12 @@ import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteGridScaffold
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.GradientImage
 import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.M3CoverCard2
 import com.programmersbox.uiviews.presentation.components.M3ImageCard
+import com.programmersbox.uiviews.presentation.components.ModalBottomSheetDelete
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
@@ -148,12 +147,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
-fun NotificationManager.cancelNotification(item: NotificationItem) {
-    cancel(item.id)
-    val g = activeNotifications.map { it.notification }.filter { it.group == "otakuGroup" }
-    if (g.size == 1) cancel(42)
-}
-
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
@@ -177,7 +170,6 @@ fun NotificationsScreen(
 
     val items = vm.items
 
-    val context = LocalContext.current
     val logoDrawable = koinInject<AppLogo>().logo
 
     val state = rememberBottomSheetScaffoldState()
@@ -197,61 +189,20 @@ fun NotificationsScreen(
         source = showNotificationItem?.source
     )
 
-    Box(
-        modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
-    ) {
-        BottomSheetDeleteGridScaffold(
+    var showDeleteModal by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(true)
+
+    if (showDeleteModal) {
+        ModalBottomSheetDelete(
+            onDismiss = { showDeleteModal = false },
             listOfItems = vm.groupedList.flatMap {
                 listOf(
                     NotificationInfo.Source(it.first),
                     *it.second.map { NotificationInfo.Noti(it) }.toTypedArray()
                 )
-            },//items,
-            state = state,
-            multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
-            bottomScrollBehavior = scrollBehavior,
-            topBar = {
-                var showPopup by remember { mutableStateOf(false) }
-
-                if (showPopup) {
-                    val onDismiss = { showPopup = false }
-                    AlertDialog(
-                        onDismissRequest = onDismiss,
-                        title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    scope.launch {
-                                        val number = vm.deleteAllNotifications()
-                                        launch(Dispatchers.Main) {
-                                            onDismiss()
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.deleted_notifications, number),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                }
-                            ) { Text(stringResource(R.string.yes)) }
-                        },
-                        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-                    )
-                }
-
-                InsetSmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
-                    actions = {
-                        IconButton(onClick = { showPopup = true }) { Icon(Icons.Default.ClearAll, null) }
-                        IconToggleButton(
-                            checked = vm.sortedBy == NotificationSortBy.Grouped,
-                            onCheckedChange = { vm.toggleSort() }
-                        ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
-                    },
-                    navigationIcon = { BackButton() }
-                )
             },
+            state = sheetState,
+            multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
             onRemove = { item ->
                 if (item is NotificationInfo.Noti) {
                     vm.deleteNotification(item.item)
@@ -287,7 +238,28 @@ fun NotificationsScreen(
                     is NotificationInfo.Source -> GridItemSpan(maxLineSpan)
                 }
             }
-        ) { p, _ ->
+        )
+    }
+
+    Box(
+        modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
+    ) {
+        Scaffold(
+            topBar = {
+                InsetSmallTopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                    actions = {
+                        IconToggleButton(
+                            checked = vm.sortedBy == NotificationSortBy.Grouped,
+                            onCheckedChange = { vm.toggleSort() }
+                        ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
+                        IconButton(onClick = { showDeleteModal = true }) { Icon(Icons.Default.Delete, null) }
+                    },
+                    navigationIcon = { BackButton() }
+                )
+            },
+        ) { p ->
             Crossfade(targetState = vm.sortedBy, label = "") { target ->
                 when (target) {
                     NotificationSortBy.Date -> {
@@ -496,13 +468,12 @@ private fun DateSort(
                             .roundToInt()
                         Column {
                             item.second.chunked(itemsInRow).forEach {
-                                var showPopup by remember { mutableStateOf(false) }
-
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     it.forEach { i ->
+                                        var showPopup by remember { mutableStateOf(false) }
                                         var showOptions by remember { mutableStateOf(false) }
                                         val sheet = rememberModalBottomSheetState(true)
 
@@ -538,6 +509,34 @@ private fun DateSort(
                                                         )
                                                     },
                                                 )
+
+                                                Card(
+                                                    onClick = {
+                                                        scope.launch(Dispatchers.IO) {
+                                                            sheet.hide()
+                                                            toSource(i.source)?.let { source ->
+                                                                Cached.cache[i.url]?.let {
+                                                                    flow {
+                                                                        emit(
+                                                                            it
+                                                                                .toDbModel()
+                                                                                .toItemModel(source)
+                                                                        )
+                                                                    }
+                                                                } ?: source.getSourceByUrlFlow(i.url)
+                                                            }
+                                                                ?.dispatchIo()
+                                                                ?.onStart { onLoadingChange(true) }
+                                                                ?.onEach {
+                                                                    onLoadingChange(false)
+                                                                    navController.navigateToDetails(it)
+                                                                }
+                                                                ?.launchIn(scope) ?: onError(i)
+                                                        }.invokeOnCompletion { showOptions = false }
+                                                    },
+                                                ) {
+                                                    ListItem(headlineContent = { Text("Open") })
+                                                }
 
                                                 Card(
                                                     onClick = {
