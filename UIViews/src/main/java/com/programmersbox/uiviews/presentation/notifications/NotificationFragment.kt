@@ -510,82 +510,86 @@ private fun DateSort(
                                                     },
                                                 )
 
-                                                Card(
-                                                    onClick = {
-                                                        scope.launch(Dispatchers.IO) {
-                                                            sheet.hide()
-                                                            toSource(i.source)?.let { source ->
-                                                                Cached.cache[i.url]?.let {
-                                                                    flow {
-                                                                        emit(
-                                                                            it
-                                                                                .toDbModel()
-                                                                                .toItemModel(source)
-                                                                        )
-                                                                    }
-                                                                } ?: source.getSourceByUrlFlow(i.url)
-                                                            }
-                                                                ?.dispatchIo()
-                                                                ?.onStart { onLoadingChange(true) }
-                                                                ?.onEach {
-                                                                    onLoadingChange(false)
-                                                                    navController.navigateToDetails(it)
-                                                                }
-                                                                ?.launchIn(scope) ?: onError(i)
-                                                        }.invokeOnCompletion { showOptions = false }
-                                                    },
-                                                ) {
-                                                    ListItem(headlineContent = { Text("Open") })
-                                                }
-
-                                                Card(
-                                                    onClick = {
-                                                        scope.launch(Dispatchers.IO) {
-                                                            SavedNotifications.viewNotificationFromDb(
-                                                                context = context,
-                                                                n = i,
-                                                                notificationLogo = notificationLogo,
-                                                                info = genericInfo,
-                                                                sourceRepository = sourceRepository
-                                                            )
-                                                            sheet.hide()
-                                                        }.invokeOnCompletion { showOptions = false }
-                                                    },
-                                                ) {
-                                                    ListItem(
-                                                        headlineContent = { Text(stringResource(R.string.notify)) },
-                                                    )
-                                                }
-
-                                                HorizontalDivider()
-
-                                                NotifyAt(
-                                                    item = i,
-                                                ) { dateShow ->
+                                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                                     Card(
-                                                        onClick = { dateShow() },
+                                                        onClick = {
+                                                            scope.launch(Dispatchers.IO) {
+                                                                sheet.hide()
+                                                                toSource(i.source)?.let { source ->
+                                                                    Cached.cache[i.url]?.let {
+                                                                        flow {
+                                                                            emit(
+                                                                                it
+                                                                                    .toDbModel()
+                                                                                    .toItemModel(source)
+                                                                            )
+                                                                        }
+                                                                    } ?: source.getSourceByUrlFlow(i.url)
+                                                                }
+                                                                    ?.dispatchIo()
+                                                                    ?.onStart { onLoadingChange(true) }
+                                                                    ?.onEach {
+                                                                        onLoadingChange(false)
+                                                                        navController.navigateToDetails(it)
+                                                                    }
+                                                                    ?.launchIn(scope) ?: onError(i)
+                                                            }.invokeOnCompletion { showOptions = false }
+                                                        },
+                                                    ) {
+                                                        ListItem(headlineContent = { Text("Open") })
+                                                    }
+
+                                                    HorizontalDivider()
+
+                                                    Card(
+                                                        onClick = {
+                                                            scope.launch(Dispatchers.IO) {
+                                                                SavedNotifications.viewNotificationFromDb(
+                                                                    context = context,
+                                                                    n = i,
+                                                                    notificationLogo = notificationLogo,
+                                                                    info = genericInfo,
+                                                                    sourceRepository = sourceRepository
+                                                                )
+                                                                sheet.hide()
+                                                            }.invokeOnCompletion { showOptions = false }
+                                                        },
                                                     ) {
                                                         ListItem(
-                                                            headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
+                                                            headlineContent = { Text(stringResource(R.string.notify)) },
                                                         )
                                                     }
-                                                }
 
-                                                HorizontalDivider()
+                                                    HorizontalDivider()
 
-                                                Card(
-                                                    onClick = {
-                                                        scope.launch {
-                                                            sheet.hide()
-                                                        }.invokeOnCompletion {
-                                                            showOptions = false
-                                                            showPopup = true
+                                                    NotifyAt(
+                                                        item = i,
+                                                    ) { dateShow ->
+                                                        Card(
+                                                            onClick = { dateShow() },
+                                                        ) {
+                                                            ListItem(
+                                                                headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
+                                                            )
                                                         }
-                                                    },
-                                                ) {
-                                                    ListItem(
-                                                        headlineContent = { Text(stringResource(R.string.remove)) },
-                                                    )
+                                                    }
+
+                                                    HorizontalDivider()
+
+                                                    Card(
+                                                        onClick = {
+                                                            scope.launch {
+                                                                sheet.hide()
+                                                            }.invokeOnCompletion {
+                                                                showOptions = false
+                                                                showPopup = true
+                                                            }
+                                                        },
+                                                    ) {
+                                                        ListItem(
+                                                            headlineContent = { Text(stringResource(R.string.remove)) },
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
