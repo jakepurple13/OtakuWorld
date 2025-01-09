@@ -1,5 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.presentation.recent
 
 import androidx.compose.animation.AnimatedContent

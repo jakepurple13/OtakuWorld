@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
-import dev.chrisbanes.haze.HazeChildScope
+import dev.chrisbanes.haze.HazeEffectScope
 
 @ExperimentalMaterial3Api
 @Composable
@@ -28,8 +28,8 @@ fun OtakuHazeScaffold(
     contentColor: Color = contentColorFor(containerColor),
     blurTopBar: Boolean = false,
     blurBottomBar: Boolean = false,
-    topBarBlur: (HazeChildScope.() -> Unit)? = null,
-    bottomBarBlur: (HazeChildScope.() -> Unit)? = null,
+    topBarBlur: (HazeEffectScope.() -> Unit)? = null,
+    bottomBarBlur: (HazeEffectScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     HazeScaffold(

@@ -26,11 +26,11 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import dev.chrisbanes.haze.HazeChildScope
+import dev.chrisbanes.haze.HazeEffectScope
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
@@ -59,8 +59,8 @@ fun HazeScaffold(
     hazeState: HazeState = remember { HazeState() },
     topBarStyle: HazeStyle = HazeMaterials.thin(containerColor),
     bottomBarStyle: HazeStyle = topBarStyle,
-    topBarBlur: (HazeChildScope.() -> Unit)? = null,
-    bottomBarBlur: (HazeChildScope.() -> Unit)? = null,
+    topBarBlur: (HazeEffectScope.() -> Unit)? = null,
+    bottomBarBlur: (HazeEffectScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     NestedScaffold(
@@ -70,7 +70,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = topBarStyle, block = topBarBlur),
+                    modifier = Modifier.hazeEffect(state = hazeState, style = topBarStyle, block = topBarBlur),
                 ) { topBar() }
             } else {
                 topBar()
@@ -81,7 +81,7 @@ fun HazeScaffold(
                 // We explicitly only want to add a Box if we are blurring.
                 // Scaffold has logic which changes based on whether `bottomBar` contains a layout node.
                 Box(
-                    modifier = Modifier.hazeChild(state = hazeState, style = bottomBarStyle, block = bottomBarBlur),
+                    modifier = Modifier.hazeEffect(state = hazeState, style = bottomBarStyle, block = bottomBarBlur),
                 ) { bottomBar() }
             } else {
                 bottomBar()
@@ -95,7 +95,7 @@ fun HazeScaffold(
         contentWindowInsets = contentWindowInsets,
     ) { contentPadding ->
         Box(
-            modifier = Modifier.haze(state = hazeState),
+            modifier = Modifier.hazeSource(state = hazeState),
             content = { content(contentPadding) },
         )
     }

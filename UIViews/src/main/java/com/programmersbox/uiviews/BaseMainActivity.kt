@@ -142,7 +142,7 @@ import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -284,7 +284,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                                 .padding(horizontal = 24.dp)
                                                 .windowInsetsPadding(WindowInsets.navigationBars)
                                                 .clip(MaterialTheme.shapes.extraLarge)
-                                                .hazeChild(
+                                                .hazeEffect(
                                                     state = hazeState,
                                                     style = HazeMaterials.ultraThin(),
                                                 )

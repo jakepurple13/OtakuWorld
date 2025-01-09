@@ -59,8 +59,8 @@ import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import eu.wewox.pagecurl.ExperimentalPageCurlApi
 import eu.wewox.pagecurl.config.rememberPageCurlConfig
@@ -272,7 +272,7 @@ fun ReadView(
                         playingStartAction = startAction,
                         playingMiddleAction = middleAction,
                         showBlur = showBlur,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
+                        modifier = if (showBlur) Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
                             progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                         } else Modifier
                     )
@@ -307,7 +307,7 @@ fun ReadView(
                             vm = readVm,
                             showBlur = showBlur,
                             isAmoledMode = isAmoledMode,
-                            modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
+                            modifier = if (showBlur) Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
                                 //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
                             } else Modifier,
                         )
@@ -318,7 +318,7 @@ fun ReadView(
         ) { p ->
             Box(
                 modifier = if (showBlur)
-                    Modifier.haze(state = hazeState)
+                    Modifier.hazeSource(state = hazeState)
                 else
                     Modifier,
             ) {

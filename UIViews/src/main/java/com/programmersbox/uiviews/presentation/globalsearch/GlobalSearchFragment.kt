@@ -115,8 +115,8 @@ import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -163,11 +163,9 @@ fun GlobalSearchView(
 
         BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
             scope.launch {
-                try {
+                runCatching {
                     bottomScaffold.bottomSheetState.partialExpand()
-                } catch (e: Exception) {
-                    navController.popBackStack()
-                }
+                }.onFailure { navController.popBackStack() }
             }
         }
 
@@ -232,7 +230,7 @@ fun GlobalSearchView(
                             .let {
                                 if (showBlur) {
                                     val surface = MaterialTheme.colorScheme.surface
-                                    it.hazeChild(
+                                    it.hazeEffect(
                                         hazeState,
                                         HazeMaterials.thin(surface)
                                     ) {
@@ -378,7 +376,7 @@ private fun BannerScope.Content(
             modifier = Modifier
                 .let {
                     if (showBlur)
-                        it.haze(hazeState)
+                        it.hazeSource(hazeState)
                     else
                         it
                 }
