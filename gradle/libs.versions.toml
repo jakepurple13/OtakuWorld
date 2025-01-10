@@ -2,7 +2,7 @@
 biometricVersion = "1.4.0-alpha02"
 blurhash = "0.4.0-SNAPSHOT"
 generativeai = "0.9.0"
-gradle = "8.7.3"
+gradle = "8.8.0"
 
 kotlin = "2.1.0"
 kspVersion = "2.1.0-1.0.29"
