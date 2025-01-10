@@ -92,7 +92,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -397,17 +396,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
             val multipleBarState = rememberMultipleBarState()
 
             Box(modifier = Modifier.fillMaxWidth()) {
-                if (showBlur) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                        modifier = modifier
-                            .matchParentSize()
-                            .blur(20.dp)
-                    ) {}
-                }
                 FloatingNavigationBar(
                     containerColor = when {
-                        showBlur -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                        showBlur -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
                         isAmoledMode -> MaterialTheme.colorScheme.surface
                         else -> NavigationBarDefaults.containerColor
                     },

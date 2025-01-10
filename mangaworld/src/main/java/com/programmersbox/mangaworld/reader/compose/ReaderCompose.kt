@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,6 +74,7 @@ import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
@@ -251,6 +253,28 @@ fun ReadView(
         },
         gesturesEnabled = (readVm.list.size > 1 && userGestureAllowed) || drawerState.isOpen
     ) {
+        //TODO: Maybe make this an option?
+        val scrollAlpha by remember {
+            derivedStateOf {
+                when (readerType) {
+                    ReaderType.List -> {
+                        if (listState.firstVisibleItemIndex == 0) {
+                            listState.layoutInfo.visibleItemsInfo.firstOrNull()?.let {
+                                (it.offset / it.size.toFloat()).absoluteValue
+                            } ?: 1f
+                        } else {
+                            1f
+                        }
+                    }
+
+                    ReaderType.Pager -> 1f
+                    ReaderType.FlipPager -> 1f
+                    ReaderType.CurlPager -> 1f
+                    ReaderType.UNRECOGNIZED -> 1f
+                }
+            }
+        }
+
         Scaffold(
             topBar = {
                 AnimatedVisibility(
@@ -262,20 +286,24 @@ fun ReadView(
                         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                     )
                 ) {
-                    ReaderTopBar(
-                        pages = pages,
-                        currentPage = currentPage,
-                        currentChapter = readVm
-                            .currentChapterModel
-                            ?.name
-                            ?: "Ch ${readVm.list.size - readVm.currentChapter}",
-                        playingStartAction = startAction,
-                        playingMiddleAction = middleAction,
-                        showBlur = showBlur,
-                        modifier = if (showBlur) Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                        } else Modifier
-                    )
+                    key(scrollAlpha) {
+                        ReaderTopBar(
+                            pages = pages,
+                            currentPage = currentPage,
+                            currentChapter = readVm
+                                .currentChapterModel
+                                ?.name
+                                ?: "Ch ${readVm.list.size - readVm.currentChapter}",
+                            playingStartAction = startAction,
+                            playingMiddleAction = middleAction,
+                            showBlur = showBlur,
+                            modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                                blurEnabled = showBlur
+                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                                alpha = scrollAlpha
+                            }
+                        )
+                    }
                 }
             },
             bottomBar = {
@@ -299,18 +327,22 @@ fun ReadView(
                             onShowFloatBarChange = { showFloatBar = it },
                         )
                     } else {
-                        BottomBar(
-                            onPageSelectClick = { showBottomSheet = true },
-                            onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
-                            onChapterShow = { scope.launch { drawerState.open() } },
-                            vm = readVm,
-                            showBlur = showBlur,
-                            isAmoledMode = isAmoledMode,
-                            modifier = if (showBlur) Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
-                            } else Modifier,
-                        )
+                        key(scrollAlpha) {
+                            BottomBar(
+                                onPageSelectClick = { showBottomSheet = true },
+                                onSettingsClick = { settingsPopup = true },
+                                chapterChange = ::showToast,
+                                onChapterShow = { scope.launch { drawerState.open() } },
+                                vm = readVm,
+                                showBlur = showBlur,
+                                isAmoledMode = isAmoledMode,
+                                modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
+                                    blurEnabled = showBlur
+                                    alpha = scrollAlpha
+                                }
+                            )
+                        }
                     }
                 }
             },

@@ -86,4 +86,6 @@ dependencies {
     implementation(libs.telephoto.zoomable.image.glide)
 
     implementation(libs.sonner)
+
+    //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
