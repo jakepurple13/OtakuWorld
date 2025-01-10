@@ -87,8 +87,8 @@ import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -166,7 +166,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                    modifier = Modifier.hazeChild(hazeState) {
+                    modifier = Modifier.hazeEffect(hazeState) {
                         backgroundColor = surface
                     }
                 )
@@ -278,7 +278,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                     contentPadding = p,
                     modifier = Modifier
                         .fillMaxSize()
-                        .haze(hazeState)
+                        .hazeSource(hazeState)
                 ) {
                     items(
                         items = itemList,

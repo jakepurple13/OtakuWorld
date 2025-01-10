@@ -48,6 +48,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -127,12 +128,17 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
+import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.dispatchIo
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -145,7 +151,6 @@ import org.koin.compose.koinInject
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -160,6 +165,8 @@ fun NotificationsScreen(
     vm: NotificationScreenViewModel = koinViewModel(),
     notificationRepository: NotificationRepository = koinInject(),
 ) {
+
+    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     var showLoadingDialog by remember { mutableStateOf(false) }
 
@@ -272,6 +279,7 @@ fun NotificationsScreen(
                             deleteNotification = vm::deleteNotification,
                             cancelNotification = vm::cancelNotification,
                             notificationLogo = notificationLogo,
+                            showBlur = showBlur,
                             onError = {
                                 scope.launch {
                                     state.snackbarHostState.currentSnackbarData?.dismiss()
@@ -291,6 +299,8 @@ fun NotificationsScreen(
                     }
 
                     NotificationSortBy.Grouped -> {
+                        val hazeState = remember { HazeState() }
+
                         LazyColumn(
                             contentPadding = p,
                             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -301,11 +311,14 @@ fun NotificationsScreen(
 
                                 stickyHeader {
                                     Surface(
-                                        shape = M3MaterialTheme.shapes.medium,
+                                        shape = MaterialTheme.shapes.medium,
                                         tonalElevation = 4.dp,
                                         onClick = { vm.toggleGroupedState(item.first) },
+                                        color = if (expanded && showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .clip(MaterialTheme.shapes.medium)
+                                            .hazeEffect(hazeState, style = HazeMaterials.thin())
                                             .animateItem()
                                     ) {
                                         ListItem(
@@ -318,7 +331,10 @@ fun NotificationsScreen(
                                                     null,
                                                     modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
                                                 )
-                                            }
+                                            },
+                                            colors = ListItemDefaults.colors(
+                                                containerColor = Color.Transparent,
+                                            )
                                         )
                                     }
                                 }
@@ -331,6 +347,7 @@ fun NotificationsScreen(
                                     ) {
                                         Column(
                                             verticalArrangement = Arrangement.spacedBy(4.dp),
+                                            modifier = Modifier.hazeSource(hazeState)
                                         ) {
                                             item.second.forEach {
                                                 NotificationItem(
@@ -419,10 +436,13 @@ private fun DateSort(
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
     notificationLogo: NotificationLogo,
+    showBlur: Boolean,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
+    val hazeState = remember { HazeState() }
+
     val scope = rememberCoroutineScope()
     LazyColumn(
         contentPadding = p,
@@ -432,12 +452,16 @@ private fun DateSort(
         vm.groupedList.forEach { item ->
             val expanded = vm.groupedListState[item.first]?.value == true
             stickyHeader {
+
                 Surface(
-                    shape = M3MaterialTheme.shapes.medium,
+                    shape = MaterialTheme.shapes.medium,
                     tonalElevation = 4.dp,
                     onClick = { vm.toggleGroupedState(item.first) },
+                    color = if (expanded && showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .hazeEffect(hazeState, style = HazeMaterials.thin())
                         .animateItem()
                 ) {
                     ListItem(
@@ -450,7 +474,10 @@ private fun DateSort(
                                 null,
                                 modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
                             )
-                        }
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent,
+                        )
                     )
                 }
             }
@@ -466,7 +493,9 @@ private fun DateSort(
                         val itemsInRow = (maxWidth / ComposableUtils.IMAGE_WIDTH)
                             .coerceAtLeast(1f)
                             .roundToInt()
-                        Column {
+                        Column(
+                            modifier = Modifier.hazeSource(hazeState)
+                        ) {
                             item.second.chunked(itemsInRow).forEach {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -651,7 +680,7 @@ private fun DateSort(
                                                         Icons.Default.Delete,
                                                         contentDescription = null,
                                                         modifier = Modifier.scale(scale),
-                                                        tint = M3MaterialTheme.colorScheme.onSurface
+                                                        tint = MaterialTheme.colorScheme.onSurface
                                                     )
                                                 }
                                             },
@@ -779,7 +808,7 @@ private fun NotificationItem(
                     icon,
                     contentDescription = null,
                     modifier = Modifier.scale(scale),
-                    tint = M3MaterialTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         },

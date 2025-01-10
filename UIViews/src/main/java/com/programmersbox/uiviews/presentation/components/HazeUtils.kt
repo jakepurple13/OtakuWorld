@@ -35,6 +35,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
 private val LocalScaffoldContentPadding = staticCompositionLocalOf { PaddingValues(0.dp) }
+val LocalHazeState = staticCompositionLocalOf { HazeState() }
 
 /**
  * A lot of the Haze stuff has been adapted from ChrisBanes Tivi app with some modifications

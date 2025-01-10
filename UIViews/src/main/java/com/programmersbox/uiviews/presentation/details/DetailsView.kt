@@ -81,8 +81,8 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.isScrollingUp
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -200,7 +200,7 @@ fun DetailsView(
                     InsetSmallTopAppBar(
                         modifier = Modifier
                             .zIndex(2f)
-                            .let { if (showBlur) it.hazeChild(hazeState, HazeMaterials.thin()) else it },
+                            .let { if (showBlur) it.hazeEffect(hazeState, HazeMaterials.thin()) else it },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = if (showBlur)
                                 Color.Transparent
@@ -375,7 +375,7 @@ fun DetailsView(
                     .padding(vertical = 4.dp)
                     .let {
                         if (showBlur)
-                            it.haze(hazeState)
+                            it.hazeSource(hazeState)
                         else
                             it
                     },

@@ -76,6 +76,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
@@ -91,6 +92,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -124,7 +126,6 @@ import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.rememberFloatingNavigation
 import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.HazeScaffold
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.uiviews.presentation.navGraph
@@ -255,8 +256,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 showAllItem = showAllItem,
                                 currentDestination = currentDestination
                             )
-                            HazeScaffold(
-                                hazeState = hazeState,
+                            //FIXME: If this doesn't haze, then everything works
+                            // Fix it when it updates
+                            Scaffold(
+                                //hazeState = hazeState,
                                 bottomBar = {
                                     if (!floatingNavigation) {
                                         BottomNav(
@@ -264,7 +267,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                             showNavBar = showNavBar,
                                             navType = navType,
                                             currentDestination = currentDestination,
-                                            showBlur = showBlur,
+                                            showBlur = showBlur && false,
                                             isAmoledMode = isAmoledMode,
                                             middleNavItem = middleNavItem,
                                             multipleActions = multipleActions,
@@ -294,11 +297,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     }
                                 },
                                 contentWindowInsets = WindowInsets(0.dp),
-                                blurBottomBar = showBlur && !floatingNavigation,
+                                //blurBottomBar = showBlur && !floatingNavigation,
                             ) { innerPadding ->
                                 CompositionLocalProvider(
                                     LocalNavHostPadding provides innerPadding,
                                     LocalSharedElementScope provides this@SharedTransitionLayout,
+                                    //LocalHazeState provides hazeState,
                                     //For later maybe
                                     //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                                 ) {
@@ -393,9 +397,17 @@ abstract class BaseMainActivity : AppCompatActivity() {
             val multipleBarState = rememberMultipleBarState()
 
             Box(modifier = Modifier.fillMaxWidth()) {
+                if (showBlur) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                        modifier = modifier
+                            .matchParentSize()
+                            .blur(20.dp)
+                    ) {}
+                }
                 FloatingNavigationBar(
                     containerColor = when {
-                        showBlur -> Color.Transparent
+                        showBlur -> MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
                         isAmoledMode -> MaterialTheme.colorScheme.surface
                         else -> NavigationBarDefaults.containerColor
                     },

@@ -140,8 +140,8 @@ import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
@@ -393,7 +393,7 @@ fun OtakuCustomListScreen(
                         .fillMaxWidth()
                         .let {
                             if (showBlur)
-                                it.hazeChild(
+                                it.hazeEffect(
                                     hazeState,
                                     HazeMaterials.regular(MaterialTheme.colorScheme.surface)
                                 ) {
@@ -434,7 +434,7 @@ fun OtakuCustomListScreen(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .padding(vertical = 4.dp)
-                    .haze(state = hazeState)
+                    .hazeSource(state = hazeState)
             ) {
                 when (val state = viewModel.items) {
                     is OtakuListState.BySource if state.items.isNotEmpty() -> {

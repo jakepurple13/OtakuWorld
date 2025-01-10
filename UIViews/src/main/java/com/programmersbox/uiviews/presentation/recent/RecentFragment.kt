@@ -27,11 +27,10 @@ import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -59,7 +58,6 @@ import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -119,32 +117,25 @@ fun RecentView(
     var showSourceChooser by showSourceChooser()
 
     OtakuHazeScaffold(
+        //state = LocalHazeState.current,
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 title = {
-                    ListItem(
-                        overlineContent = { Text("Current Source:") },
-                        headlineContent = {
-                            AnimatedContent(
-                                targetState = pagerState.targetPage,
-                                transitionSpec = {
-                                    if (targetState > initialState) {
-                                        slideInVertically { height -> height } + fadeIn() togetherWith
-                                                slideOutVertically { height -> -height } + fadeOut()
-                                    } else {
-                                        slideInVertically { height -> -height } + fadeIn() togetherWith
-                                                slideOutVertically { height -> height } + fadeOut()
-                                    }.using(SizeTransform(clip = false))
-                                },
-                                label = ""
-                            ) { targetState ->
-                                Text(sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty())
-                            }
+                    AnimatedContent(
+                        targetState = pagerState.targetPage,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                slideInVertically { height -> height } + fadeIn() togetherWith
+                                        slideOutVertically { height -> -height } + fadeOut()
+                            } else {
+                                slideInVertically { height -> -height } + fadeIn() togetherWith
+                                        slideOutVertically { height -> height } + fadeOut()
+                            }.using(SizeTransform(clip = false))
                         },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        )
-                    )
+                        label = ""
+                    ) { targetState ->
+                        Text(sourceList.getOrNull(targetState)?.apiService?.serviceName.orEmpty())
+                    }
                 },
                 actions = {
                     VerticalPager(
@@ -163,12 +154,21 @@ fun RecentView(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = if (showBlur)
+                        Color.Transparent
+                    else
+                        Color.Unspecified
+                ),
             )
         },
         blurTopBar = showBlur,
         topBarBlur = {
-            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+            progressive = HazeProgressive.verticalGradient(
+                startIntensity = 1f,
+                endIntensity = 0f,
+                preferPerformance = true
+            )
         },
         snackbarHost = { SnackbarHost(recentVm.snackbarHostState) }
     ) { p ->

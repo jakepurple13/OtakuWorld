@@ -8,16 +8,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import dev.chrisbanes.haze.HazeEffectScope
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 @ExperimentalMaterial3Api
 @Composable
 fun OtakuHazeScaffold(
     modifier: Modifier = Modifier,
+    state: HazeState = remember { HazeState() },
     topBar: @Composable () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
@@ -28,11 +33,14 @@ fun OtakuHazeScaffold(
     contentColor: Color = contentColorFor(containerColor),
     blurTopBar: Boolean = false,
     blurBottomBar: Boolean = false,
+    topBarStyle: HazeStyle = HazeMaterials.thin(containerColor),
+    bottomBarStyle: HazeStyle = topBarStyle,
     topBarBlur: (HazeEffectScope.() -> Unit)? = null,
     bottomBarBlur: (HazeEffectScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     HazeScaffold(
+        hazeState = state,
         modifier = modifier,
         topBar = topBar,
         bottomBar = bottomBar,
@@ -44,6 +52,8 @@ fun OtakuHazeScaffold(
         contentWindowInsets = contentWindowInsets,
         blurTopBar = blurTopBar,
         blurBottomBar = blurBottomBar,
+        topBarStyle = topBarStyle,
+        bottomBarStyle = bottomBarStyle,
         topBarBlur = topBarBlur,
         bottomBarBlur = bottomBarBlur,
     ) { content(it + LocalNavHostPadding.current) }
@@ -64,15 +74,15 @@ fun OtakuScaffold(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
-        modifier,
-        topBar,
-        bottomBar,
-        snackbarHost,
-        floatingActionButton,
-        floatingActionButtonPosition,
-        containerColor,
-        contentColor,
-        contentWindowInsets
+        modifier = modifier,
+        topBar = topBar,
+        bottomBar = bottomBar,
+        snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
+        floatingActionButtonPosition = floatingActionButtonPosition,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        contentWindowInsets = contentWindowInsets
     ) { content(it + LocalNavHostPadding.current) }
 }
 
@@ -91,15 +101,15 @@ fun NormalOtakuScaffold(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
-        modifier,
-        topBar,
-        bottomBar,
-        snackbarHost,
-        floatingActionButton,
-        floatingActionButtonPosition,
-        containerColor,
-        contentColor,
-        contentWindowInsets,
-        content
+        modifier = modifier,
+        topBar = topBar,
+        bottomBar = bottomBar,
+        snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
+        floatingActionButtonPosition = floatingActionButtonPosition,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        contentWindowInsets = contentWindowInsets,
+        content = content
     )
 }

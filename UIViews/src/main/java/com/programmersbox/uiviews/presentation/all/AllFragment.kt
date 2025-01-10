@@ -76,8 +76,8 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -196,7 +196,7 @@ fun AllView(
                     .let {
                         if (showBlur) {
                             val surface = MaterialTheme.colorScheme.surface
-                            it.hazeChild(hazeState) {
+                            it.hazeEffect(hazeState) {
                                 backgroundColor = surface
                                 progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                             }
@@ -236,42 +236,38 @@ fun AllView(
             modifier = Modifier.padding(p1)
         ) {
             Crossfade(targetState = isConnected, label = "") { connected ->
-                when (connected) {
-                    false -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(p1),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                Icons.Default.CloudOff,
-                                null,
-                                modifier = Modifier.size(50.dp, 50.dp),
-                                colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                            )
-                            Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
-                        }
-                    }
-
-                    true -> {
-                        AllScreen(
-                            itemInfoChange = this@OtakuBannerBox::newItemModel,
-                            state = state,
-                            showBanner = { showBanner = it },
-                            isRefreshing = allVm.isRefreshing,
-                            sourceList = allVm.sourceList,
-                            favoriteList = allVm.favoriteList,
-                            onLoadMore = allVm::loadMore,
-                            onReset = allVm::reset,
-                            paddingValues = p1,
-                            modifier = if (showBlur)
-                                Modifier.haze(hazeState)
-                            else
-                                Modifier
+                if (!connected) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(p1),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            Icons.Default.CloudOff,
+                            null,
+                            modifier = Modifier.size(50.dp, 50.dp),
+                            colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                         )
+                        Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                     }
+                } else {
+                    AllScreen(
+                        itemInfoChange = this@OtakuBannerBox::newItemModel,
+                        state = state,
+                        showBanner = { showBanner = it },
+                        isRefreshing = allVm.isRefreshing,
+                        sourceList = allVm.sourceList,
+                        favoriteList = allVm.favoriteList,
+                        onLoadMore = allVm::loadMore,
+                        onReset = allVm::reset,
+                        paddingValues = p1,
+                        modifier = if (showBlur)
+                            Modifier.hazeSource(hazeState)
+                        else
+                            Modifier
+                    )
                 }
             }
         }
