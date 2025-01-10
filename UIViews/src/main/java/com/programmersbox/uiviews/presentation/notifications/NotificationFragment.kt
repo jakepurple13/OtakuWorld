@@ -116,13 +116,13 @@ import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.M3CoverCard2
 import com.programmersbox.uiviews.presentation.components.M3ImageCard
 import com.programmersbox.uiviews.presentation.components.ModalBottomSheetDelete
+import com.programmersbox.uiviews.presentation.components.plus
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -248,174 +248,170 @@ fun NotificationsScreen(
         )
     }
 
-    Box(
-        modifier = Modifier.padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
-    ) {
-        Scaffold(
-            topBar = {
-                InsetSmallTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
-                    actions = {
-                        IconToggleButton(
-                            checked = vm.sortedBy == NotificationSortBy.Grouped,
-                            onCheckedChange = { vm.toggleSort() }
-                        ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
-                        IconButton(onClick = { showDeleteModal = true }) { Icon(Icons.Default.Delete, null) }
-                    },
-                    navigationIcon = { BackButton() }
-                )
-            },
-        ) { p ->
-            Crossfade(targetState = vm.sortedBy, label = "") { target ->
-                when (target) {
-                    NotificationSortBy.Date -> {
-                        DateSort(
-                            navController = navController,
-                            vm = vm,
-                            p = p,
-                            toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
-                            onLoadingChange = { showLoadingDialog = it },
-                            deleteNotification = vm::deleteNotification,
-                            cancelNotification = vm::cancelNotification,
-                            notificationLogo = notificationLogo,
-                            showBlur = showBlur,
-                            onError = {
-                                scope.launch {
-                                    state.snackbarHostState.currentSnackbarData?.dismiss()
-                                    val result = state.snackbarHostState.showSnackbar(
-                                        "Something went wrong. Source might not be installed",
-                                        duration = SnackbarDuration.Long,
-                                        actionLabel = "More Options",
-                                        withDismissAction = true
-                                    )
-                                    showNotificationItem = when (result) {
-                                        SnackbarResult.Dismissed -> null
-                                        SnackbarResult.ActionPerformed -> it
-                                    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                actions = {
+                    IconToggleButton(
+                        checked = vm.sortedBy == NotificationSortBy.Grouped,
+                        onCheckedChange = { vm.toggleSort() }
+                    ) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
+                    IconButton(onClick = { showDeleteModal = true }) { Icon(Icons.Default.Delete, null) }
+                },
+                navigationIcon = { BackButton() }
+            )
+        },
+    ) { p ->
+        Crossfade(targetState = vm.sortedBy, label = "") { target ->
+            when (target) {
+                NotificationSortBy.Date -> {
+                    DateSort(
+                        navController = navController,
+                        vm = vm,
+                        p = p + LocalNavHostPadding.current,
+                        toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                        onLoadingChange = { showLoadingDialog = it },
+                        deleteNotification = vm::deleteNotification,
+                        cancelNotification = vm::cancelNotification,
+                        notificationLogo = notificationLogo,
+                        showBlur = showBlur,
+                        onError = {
+                            scope.launch {
+                                state.snackbarHostState.currentSnackbarData?.dismiss()
+                                val result = state.snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Long,
+                                    actionLabel = "More Options",
+                                    withDismissAction = true
+                                )
+                                showNotificationItem = when (result) {
+                                    SnackbarResult.Dismissed -> null
+                                    SnackbarResult.ActionPerformed -> it
                                 }
                             }
-                        )
-                    }
+                        }
+                    )
+                }
 
-                    NotificationSortBy.Grouped -> {
-                        val hazeState = remember { HazeState() }
+                NotificationSortBy.Grouped -> {
+                    val hazeState = remember { HazeState() }
 
-                        LazyColumn(
-                            contentPadding = p,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(vertical = 4.dp),
-                        ) {
-                            vm.groupedList.forEach { item ->
-                                val expanded = vm.groupedListState[item.first]?.value == true
+                    LazyColumn(
+                        contentPadding = p + LocalNavHostPadding.current,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    ) {
+                        vm.groupedList.forEach { item ->
+                            val expanded = vm.groupedListState[item.first]?.value == true
 
-                                stickyHeader {
-                                    Surface(
-                                        shape = MaterialTheme.shapes.medium,
-                                        tonalElevation = 4.dp,
-                                        onClick = { vm.toggleGroupedState(item.first) },
-                                        color = if (expanded && showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(MaterialTheme.shapes.medium)
-                                            .hazeEffect(hazeState, style = HazeMaterials.thin())
-                                            .animateItem()
-                                    ) {
-                                        ListItem(
-                                            modifier = Modifier.padding(4.dp),
-                                            headlineContent = { Text(item.first) },
-                                            leadingContent = { Text(item.second.size.toString()) },
-                                            trailingContent = {
-                                                Icon(
-                                                    Icons.Default.ArrowDropDown,
-                                                    null,
-                                                    modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
-                                                )
-                                            },
-                                            colors = ListItemDefaults.colors(
-                                                containerColor = Color.Transparent,
+                            stickyHeader {
+                                Surface(
+                                    shape = MaterialTheme.shapes.medium,
+                                    tonalElevation = 4.dp,
+                                    onClick = { vm.toggleGroupedState(item.first) },
+                                    color = if (expanded && showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .hazeEffect(hazeState, style = HazeMaterials.thin())
+                                        .animateItem()
+                                ) {
+                                    ListItem(
+                                        modifier = Modifier.padding(4.dp),
+                                        headlineContent = { Text(item.first) },
+                                        leadingContent = { Text(item.second.size.toString()) },
+                                        trailingContent = {
+                                            Icon(
+                                                Icons.Default.ArrowDropDown,
+                                                null,
+                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
                                             )
+                                        },
+                                        colors = ListItemDefaults.colors(
+                                            containerColor = Color.Transparent,
                                         )
-                                    }
+                                    )
                                 }
+                            }
 
-                                item {
-                                    AnimatedVisibility(
-                                        visible = expanded,
-                                        enter = expandVertically(),
-                                        exit = shrinkVertically()
+                            item {
+                                AnimatedVisibility(
+                                    visible = expanded,
+                                    enter = expandVertically(),
+                                    exit = shrinkVertically()
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.hazeSource(hazeState)
                                     ) {
-                                        Column(
-                                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                                            modifier = Modifier.hazeSource(hazeState)
-                                        ) {
-                                            item.second.forEach {
-                                                NotificationItem(
-                                                    item = it,
-                                                    navController = navController,
-                                                    deleteNotification = vm::deleteNotification,
-                                                    cancelNotification = vm::cancelNotification,
-                                                    genericInfo = genericInfo,
-                                                    logoDrawable = logoDrawable,
-                                                    notificationLogo = notificationLogo,
-                                                    toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
-                                                    sourceRepository = sourceRepository,
-                                                    onLoadingChange = { showLoadingDialog = it },
-                                                    onError = {
-                                                        scope.launch {
-                                                            state.snackbarHostState.currentSnackbarData?.dismiss()
-                                                            val result = state.snackbarHostState.showSnackbar(
-                                                                "Something went wrong. Source might not be installed",
-                                                                duration = SnackbarDuration.Long,
-                                                                actionLabel = "More Options",
-                                                                withDismissAction = true
-                                                            )
-                                                            showNotificationItem = when (result) {
-                                                                SnackbarResult.Dismissed -> null
-                                                                SnackbarResult.ActionPerformed -> it
-                                                            }
+                                        item.second.forEach {
+                                            NotificationItem(
+                                                item = it,
+                                                navController = navController,
+                                                deleteNotification = vm::deleteNotification,
+                                                cancelNotification = vm::cancelNotification,
+                                                genericInfo = genericInfo,
+                                                logoDrawable = logoDrawable,
+                                                notificationLogo = notificationLogo,
+                                                toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                                                sourceRepository = sourceRepository,
+                                                onLoadingChange = { showLoadingDialog = it },
+                                                onError = {
+                                                    scope.launch {
+                                                        state.snackbarHostState.currentSnackbarData?.dismiss()
+                                                        val result = state.snackbarHostState.showSnackbar(
+                                                            "Something went wrong. Source might not be installed",
+                                                            duration = SnackbarDuration.Long,
+                                                            actionLabel = "More Options",
+                                                            withDismissAction = true
+                                                        )
+                                                        showNotificationItem = when (result) {
+                                                            SnackbarResult.Dismissed -> null
+                                                            SnackbarResult.ActionPerformed -> it
                                                         }
-                                                    },
-                                                )
-                                            }
+                                                    }
+                                                },
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                }
 
-                    NotificationSortBy.UNRECOGNIZED -> {}
+                NotificationSortBy.UNRECOGNIZED -> {}
+            }
+        }
+
+        /*AnimatedLazyColumn(
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
+            items = itemList.fastMap {
+                AnimatedLazyListItem(key = it.url, value = it) {
+                    NotificationItem(
+                        item = it,
+                        navController = navController,
+                        vm = vm,
+                        notificationManager = notificationManager,
+                        db = db,
+                        parentFragmentManager = fragmentManager,
+                        genericInfo = genericInfo,
+                        logo = logo,
+                        notificationLogo = notificationLogo
+                    )
                 }
             }
+        )*/
 
-            /*AnimatedLazyColumn(
-                contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(vertical = 4.dp),
-                items = itemList.fastMap {
-                    AnimatedLazyListItem(key = it.url, value = it) {
-                        NotificationItem(
-                            item = it,
-                            navController = navController,
-                            vm = vm,
-                            notificationManager = notificationManager,
-                            db = db,
-                            parentFragmentManager = fragmentManager,
-                            genericInfo = genericInfo,
-                            logo = logo,
-                            notificationLogo = notificationLogo
-                        )
-                    }
-                }
-            )*/
-
-            /*LazyColumn(
-                contentPadding = p,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(vertical = 4.dp)
-            ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
-        }
+        /*LazyColumn(
+            contentPadding = p,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) { items(itemList) { NotificationItem(item = it!!, navController = findNavController()) } }*/
     }
 }
 
