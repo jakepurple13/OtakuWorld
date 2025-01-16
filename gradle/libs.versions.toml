@@ -128,7 +128,7 @@ composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
-tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha11" }
+tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha12" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
 composeAnimation = { group = "androidx.compose.animation", name = "animation" }
 composeRuntimeLivedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
