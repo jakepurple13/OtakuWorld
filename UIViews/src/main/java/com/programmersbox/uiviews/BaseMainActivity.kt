@@ -3,7 +3,6 @@ package com.programmersbox.uiviews
 import android.Manifest
 import android.app.assist.AssistContent
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -102,6 +101,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -774,7 +774,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)
-        outContent?.webUri = Uri.parse(currentDetailsUrl)
+        outContent?.webUri = currentDetailsUrl.toUri()
     }
 
     override fun onNewIntent(intent: Intent) {

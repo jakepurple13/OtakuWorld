@@ -35,7 +35,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
@@ -88,7 +88,7 @@ fun RecentView(
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
-    val isConnected by recentVm.observeNetwork.collectAsState(initial = true)
+    val isConnected by recentVm.observeNetwork.collectAsStateWithLifecycle(true)
 
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 

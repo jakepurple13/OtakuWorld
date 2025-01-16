@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.settings
 
+import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -81,11 +82,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -627,6 +628,7 @@ private fun CustomUrlDialog(
         sheetState = rememberModalBottomSheetState(true),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
+        val scope = rememberCoroutineScope()
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -718,9 +720,13 @@ private fun CustomUrlDialog(
                             }
                         )
                     }
-                    val clipboard = LocalClipboardManager.current
+                    val clipboard = LocalClipboard.current
                     OutlinedCard(
-                        onClick = { clipboard.setText(buildAnnotatedString { append(it) }) }
+                        onClick = {
+                            scope.launch {
+                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Url", it)))
+                            }
+                        }
                     ) {
                         ListItem(
                             headlineContent = { Text(it) },

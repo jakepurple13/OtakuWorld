@@ -17,8 +17,8 @@ import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingAppBarDefaults
-import androidx.compose.material3.HorizontalFloatingAppBar
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -124,9 +124,9 @@ fun BoxScope.MultipleActions(
         modifier = modifier
             .align(Alignment.BottomCenter)
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+            .offset(y = -FloatingToolbarDefaults.ScreenOffset),
     ) {
-        HorizontalFloatingAppBar(
+        HorizontalFloatingToolbar(
             expanded = state.expanded,
             leadingContent = leadingContent,
             trailingContent = trailingContent,

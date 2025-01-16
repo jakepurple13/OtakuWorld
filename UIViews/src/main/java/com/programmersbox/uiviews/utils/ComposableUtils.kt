@@ -38,7 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
@@ -365,7 +365,7 @@ fun InsetSmallTopAppBar(
 fun InsetCenterAlignedTopAppBar(
     modifier: Modifier = Modifier,
     insetPadding: WindowInsets = WindowInsets.statusBars,
-    colors: TopAppBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
@@ -387,7 +387,7 @@ fun InsetCenterAlignedTopAppBar(
 fun InsetMediumTopAppBar(
     modifier: Modifier = Modifier,
     insetPadding: WindowInsets = WindowInsets.statusBars,
-    colors: TopAppBarColors = TopAppBarDefaults.mediumTopAppBarColors(),
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
@@ -404,18 +404,18 @@ fun InsetMediumTopAppBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InsetLargeTopAppBar(
     modifier: Modifier = Modifier,
     insetPadding: WindowInsets = WindowInsets.statusBars,
-    colors: TopAppBarColors = TopAppBarDefaults.largeTopAppBarColors(),
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: @Composable () -> Unit = {},
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    LargeTopAppBar(
+    LargeFlexibleTopAppBar(
         modifier = modifier,
         windowInsets = insetPadding,
         title = title,

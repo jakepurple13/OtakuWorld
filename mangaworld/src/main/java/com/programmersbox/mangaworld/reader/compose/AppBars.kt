@@ -36,9 +36,9 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingAppBarDefaults
-import androidx.compose.material3.FloatingAppBarScrollBehavior
-import androidx.compose.material3.HorizontalFloatingAppBar
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarScrollBehavior
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -185,7 +185,7 @@ internal fun ReaderTopBar(
                     .align(Alignment.CenterVertically)
             )
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
     )
 }
 
@@ -200,16 +200,16 @@ internal fun FloatingBottomBar(
     modifier: Modifier = Modifier,
     showFloatBar: Boolean = true,
     onShowFloatBarChange: (Boolean) -> Unit = {},
-    exitAlwaysScrollBehavior: FloatingAppBarScrollBehavior? = null,
+    exitAlwaysScrollBehavior: FloatingToolbarScrollBehavior? = null,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
-        HorizontalFloatingAppBar(
+        HorizontalFloatingToolbar(
             modifier = modifier
                 .align(Alignment.BottomEnd)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .offset(y = -FloatingAppBarDefaults.ScreenOffset),
+                .offset(y = -FloatingToolbarDefaults.ScreenOffset),
             expanded = showFloatBar,
             leadingContent = {
                 val prevShown = vm.currentChapter < vm.list.lastIndex
