@@ -13,7 +13,7 @@ dragselect = "2.4.1"
 easylauncher = "6.4.0"
 firebaseCrashlyticsGradle = "3.0.2"
 googleServices = "4.4.2"
-haze = "1.2.1"
+haze = "1.2.2"
 kamelImage = "1.0.2"
 latestAboutLibsRelease = "11.4.0"
 coroutinesVersion = "1.10.1"
@@ -21,7 +21,7 @@ glideVersion = "4.16.0"
 pagecurl = "1.5.1"
 pagingVersion = "3.3.5"
 protobufGradlePlugin = "0.9.4"
-reorderable = "2.4.2"
+reorderable = "2.4.3"
 roomVersion = "2.7.0-alpha12"
 navVersion = "2.9.0-alpha04"
 koin-bom = "4.0.1"
@@ -48,6 +48,8 @@ materialKolor = "2.0.0"
 firebaseKtx = "0.2.1"
 
 googlePerformancePlugin = "1.4.2"
+
+firebaseBom = "33.8.0"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -316,7 +318,7 @@ androidxWebkit = "androidx.webkit:webkit:1.12.1"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
-firebasePlatform = "com.google.firebase:firebase-bom:33.7.0"
+firebasePlatform = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database" }
 firebaseFirestore = { group = "com.google.firebase", name = "firebase-firestore" }
 firebaseAuth = { group = "com.google.firebase", name = "firebase-auth" }
