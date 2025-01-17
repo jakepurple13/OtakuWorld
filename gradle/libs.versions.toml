@@ -316,7 +316,7 @@ androidxWebkit = "androidx.webkit:webkit:1.12.1"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
-firebasePlatform = "com.google.firebase:firebase-bom:33.7.0"
+firebasePlatform = "com.google.firebase:firebase-bom:33.8.0"
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database" }
 firebaseFirestore = { group = "com.google.firebase", name = "firebase-firestore" }
 firebaseAuth = { group = "com.google.firebase", name = "firebase-auth" }
