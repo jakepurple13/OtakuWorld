@@ -47,6 +47,7 @@ import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
+import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -128,6 +129,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     }
                     single { UpdateNotification(get()) }
                     single { DataStoreHandling(get()) }
+                    single { DownloadAndInstaller(get()) }
                     workerOf(::UpdateFlowWorker)
                     workerOf(::AppCheckWorker)
                     workerOf(::SourceUpdateChecker)

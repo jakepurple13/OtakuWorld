@@ -113,7 +113,6 @@ import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
 import com.programmersbox.uiviews.theme.LocalCurrentSource
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
@@ -133,7 +132,6 @@ fun ExtensionList(
     val scope = rememberCoroutineScope()
 
     val context = LocalContext.current
-    val downloadAndInstall = remember { DownloadAndInstaller(context) }
 
     fun updateCheck() {
         WorkManager.getInstance(context)
@@ -270,7 +268,7 @@ fun ExtensionList(
                         installedSources = viewModel.installed,
                         sourcesList = viewModel.remoteSourcesVersions,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
-                            downloadAndInstall.downloadAndInstall(downloadLink, destinationPath)
+                            viewModel.downloadAndInstaller.downloadAndInstall(downloadLink, destinationPath)
                         }
                     )
                 }
@@ -280,7 +278,7 @@ fun ExtensionList(
                     RemoteExtensionItems(
                         remoteSources = viewModel.remoteSources,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
-                            downloadAndInstall.downloadAndInstall(downloadLink, destinationPath)
+                            viewModel.downloadAndInstaller.downloadAndInstall(downloadLink, destinationPath)
                         },
                     )
                 }

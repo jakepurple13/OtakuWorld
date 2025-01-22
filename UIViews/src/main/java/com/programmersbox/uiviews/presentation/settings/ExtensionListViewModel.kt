@@ -16,6 +16,7 @@ import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.datastore.SettingsHandling
+import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -25,6 +26,7 @@ class ExtensionListViewModel(
     private val sourceLoader: SourceLoader,
     otakuWorldCatalog: OtakuWorldCatalog,
     settingsHandling: SettingsHandling,
+    val downloadAndInstaller: DownloadAndInstaller,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<SourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()

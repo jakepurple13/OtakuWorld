@@ -18,18 +18,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -83,6 +84,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -134,11 +136,13 @@ import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
+import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.dispatchIo
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -150,7 +154,6 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
-import kotlin.math.roundToInt
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -165,7 +168,6 @@ fun NotificationsScreen(
     vm: NotificationScreenViewModel = koinViewModel(),
     notificationRepository: NotificationRepository = koinInject(),
 ) {
-
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
     var showLoadingDialog by remember { mutableStateOf(false) }
@@ -264,13 +266,17 @@ fun NotificationsScreen(
             )
         },
     ) { p ->
-        Crossfade(targetState = vm.sortedBy, label = "") { target ->
+        Crossfade(
+            targetState = vm.sortedBy,
+            label = "",
+            modifier = Modifier.padding(p)
+        ) { target ->
             when (target) {
                 NotificationSortBy.Date -> {
                     DateSort(
                         navController = navController,
                         vm = vm,
-                        p = p + LocalNavHostPadding.current,
+                        p = LocalNavHostPadding.current,
                         toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
                         onLoadingChange = { showLoadingDialog = it },
                         deleteNotification = vm::deleteNotification,
@@ -296,90 +302,33 @@ fun NotificationsScreen(
                 }
 
                 NotificationSortBy.Grouped -> {
-                    val hazeState = remember { HazeState() }
-
-                    LazyColumn(
-                        contentPadding = p + LocalNavHostPadding.current,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
-                    ) {
-                        vm.groupedList.forEach { item ->
-                            val expanded = vm.groupedListState[item.first]?.value == true
-
-                            stickyHeader {
-                                Surface(
-                                    shape = MaterialTheme.shapes.medium,
-                                    tonalElevation = 4.dp,
-                                    onClick = { vm.toggleGroupedState(item.first) },
-                                    color = if (expanded && showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(MaterialTheme.shapes.medium)
-                                        .hazeEffect(hazeState, style = HazeMaterials.thin())
-                                        .animateItem()
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier.padding(4.dp),
-                                        headlineContent = { Text(item.first) },
-                                        leadingContent = { Text(item.second.size.toString()) },
-                                        trailingContent = {
-                                            Icon(
-                                                Icons.Default.ArrowDropDown,
-                                                null,
-                                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
-                                            )
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = Color.Transparent,
-                                        )
-                                    )
-                                }
-                            }
-
-                            item {
-                                AnimatedVisibility(
-                                    visible = expanded,
-                                    enter = expandVertically(),
-                                    exit = shrinkVertically()
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                                        modifier = Modifier.hazeSource(hazeState)
-                                    ) {
-                                        item.second.forEach {
-                                            NotificationItem(
-                                                item = it,
-                                                navController = navController,
-                                                deleteNotification = vm::deleteNotification,
-                                                cancelNotification = vm::cancelNotification,
-                                                genericInfo = genericInfo,
-                                                logoDrawable = logoDrawable,
-                                                notificationLogo = notificationLogo,
-                                                toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
-                                                sourceRepository = sourceRepository,
-                                                onLoadingChange = { showLoadingDialog = it },
-                                                onError = {
-                                                    scope.launch {
-                                                        state.snackbarHostState.currentSnackbarData?.dismiss()
-                                                        val result = state.snackbarHostState.showSnackbar(
-                                                            "Something went wrong. Source might not be installed",
-                                                            duration = SnackbarDuration.Long,
-                                                            actionLabel = "More Options",
-                                                            withDismissAction = true
-                                                        )
-                                                        showNotificationItem = when (result) {
-                                                            SnackbarResult.Dismissed -> null
-                                                            SnackbarResult.ActionPerformed -> it
-                                                        }
-                                                    }
-                                                },
-                                            )
-                                        }
-                                    }
+                    GroupedSort(
+                        navController = navController,
+                        vm = vm,
+                        p = LocalNavHostPadding.current,
+                        toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                        onLoadingChange = { showLoadingDialog = it },
+                        deleteNotification = vm::deleteNotification,
+                        cancelNotification = vm::cancelNotification,
+                        notificationLogo = notificationLogo,
+                        logoDrawable = logoDrawable,
+                        showBlur = showBlur,
+                        onError = {
+                            scope.launch {
+                                state.snackbarHostState.currentSnackbarData?.dismiss()
+                                val result = state.snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Long,
+                                    actionLabel = "More Options",
+                                    withDismissAction = true
+                                )
+                                showNotificationItem = when (result) {
+                                    SnackbarResult.Dismissed -> null
+                                    SnackbarResult.ActionPerformed -> it
                                 }
                             }
                         }
-                    }
+                    )
                 }
 
                 NotificationSortBy.UNRECOGNIZED -> {}
@@ -440,15 +389,332 @@ private fun DateSort(
     val hazeState = remember { HazeState() }
 
     val scope = rememberCoroutineScope()
-    LazyColumn(
+
+    LazyVerticalGrid(
+        columns = adaptiveGridCell(),
         contentPadding = p,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 4.dp),
+    ) {
+        vm.groupedList.forEach { item ->
+            val expanded = vm.groupedListState[item.first]?.value == true
+            stickyHeader {
+                Surface(
+                    shape = if (expanded) RectangleShape else MaterialTheme.shapes.medium,
+                    tonalElevation = 4.dp,
+                    onClick = { vm.toggleGroupedState(item.first) },
+                    color = if (expanded && showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(if (expanded) RectangleShape else MaterialTheme.shapes.medium)
+                        .hazeEffect(hazeState, style = HazeMaterials.thin())
+                        .animateItem()
+                ) {
+                    ListItem(
+                        modifier = Modifier.padding(4.dp),
+                        headlineContent = { Text(item.first) },
+                        leadingContent = { Text(item.second.size.toString()) },
+                        trailingContent = {
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                null,
+                                modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent,
+                        )
+                    )
+                }
+            }
+
+            if (expanded) {
+                items(item.second) {
+                    NotiItem(
+                        i = it,
+                        scope = scope,
+                        toSource = toSource,
+                        onError = onError,
+                        onLoadingChange = onLoadingChange,
+                        notificationLogo = notificationLogo,
+                        navController = navController,
+                        genericInfo = genericInfo,
+                        context = context,
+                        sourceRepository = sourceRepository,
+                        deleteNotification = deleteNotification,
+                        cancelNotification = cancelNotification,
+                        modifier = Modifier.hazeSource(hazeState)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotiItem(
+    i: NotificationItem,
+    scope: CoroutineScope,
+    toSource: (String) -> ApiService?,
+    onError: (NotificationItem) -> Unit,
+    onLoadingChange: (Boolean) -> Unit,
+    notificationLogo: NotificationLogo,
+    navController: NavController,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    context: Context = LocalContext.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
+    cancelNotification: (NotificationItem) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showPopup by remember { mutableStateOf(false) }
+    var showOptions by remember { mutableStateOf(false) }
+    val sheet = rememberModalBottomSheetState(true)
+
+    if (showOptions) {
+        ModalBottomSheet(
+            onDismissRequest = { showOptions = false },
+            sheetState = sheet
+        ) {
+            ListItem(
+                leadingContent = {
+                    val logo = koinInject<AppLogo>().logoId
+                    CoilGradientImage(
+                        model = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(i.imageUrl)
+                                .lifecycle(LocalLifecycleOwner.current)
+                                .crossfade(true)
+                                .placeholder(logo)
+                                .error(logo)
+                                .build()
+                        ),
+                        modifier = Modifier
+                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                            .clip(MaterialTheme.shapes.small)
+                    )
+                },
+                overlineContent = { Text(i.source) },
+                headlineContent = { Text(i.notiTitle) },
+                supportingContent = {
+                    Text(
+                        i.summaryText,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Card(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            sheet.hide()
+                            toSource(i.source)?.let { source ->
+                                Cached.cache[i.url]?.let {
+                                    flow {
+                                        emit(
+                                            it
+                                                .toDbModel()
+                                                .toItemModel(source)
+                                        )
+                                    }
+                                } ?: source.getSourceByUrlFlow(i.url)
+                            }
+                                ?.dispatchIo()
+                                ?.onStart { onLoadingChange(true) }
+                                ?.onEach {
+                                    onLoadingChange(false)
+                                    navController.navigateToDetails(it)
+                                }
+                                ?.launchIn(scope) ?: onError(i)
+                        }.invokeOnCompletion { showOptions = false }
+                    },
+                ) {
+                    ListItem(headlineContent = { Text("Open") })
+                }
+
+                HorizontalDivider()
+
+                Card(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            SavedNotifications.viewNotificationFromDb(
+                                context = context,
+                                n = i,
+                                notificationLogo = notificationLogo,
+                                info = genericInfo,
+                                sourceRepository = sourceRepository
+                            )
+                            sheet.hide()
+                        }.invokeOnCompletion { showOptions = false }
+                    },
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.notify)) },
+                    )
+                }
+
+                HorizontalDivider()
+
+                NotifyAt(
+                    item = i,
+                ) { dateShow ->
+                    Card(
+                        onClick = { dateShow() },
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
+                        )
+                    }
+                }
+
+                HorizontalDivider()
+
+                Card(
+                    onClick = {
+                        scope.launch {
+                            sheet.hide()
+                        }.invokeOnCompletion {
+                            showOptions = false
+                            showPopup = true
+                        }
+                    },
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.remove)) },
+                    )
+                }
+            }
+        }
+    }
+
+    if (showPopup) {
+        val onDismiss = { showPopup = false }
+
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.removeNoti, i.notiTitle)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showOptions = false
+                        deleteNotification(i, onDismiss)
+                        cancelNotification(i)
+                    }
+                ) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+        )
+    }
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.StartToEnd || it == SwipeToDismissBoxValue.EndToStart) {
+                showPopup = true
+            }
+            false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier.wrapContentSize(),
+        backgroundContent = {
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.Settled -> Color.Transparent
+                    SwipeToDismissBoxValue.StartToEnd -> Color.Red
+                    SwipeToDismissBoxValue.EndToStart -> Color.Red
+                }, label = ""
+            )
+
+            val scale by animateFloatAsState(
+                if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
+                label = ""
+            )
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        content = {
+            M3CoverCard2(
+                imageUrl = i.imageUrl.orEmpty(),
+                name = i.notiTitle,
+                placeHolder = R.drawable.ic_site_settings,
+                modifier = Modifier.combinedClickable(
+                    onClick = {
+                        toSource(i.source)?.let { source ->
+                            Cached.cache[i.url]?.let {
+                                flow {
+                                    emit(
+                                        it
+                                            .toDbModel()
+                                            .toItemModel(source)
+                                    )
+                                }
+                            } ?: source.getSourceByUrlFlow(i.url)
+                        }
+                            ?.dispatchIo()
+                            ?.onStart { onLoadingChange(true) }
+                            ?.onEach {
+                                onLoadingChange(false)
+                                navController.navigateToDetails(it)
+                            }
+                            ?.launchIn(scope) ?: onError(i)
+                    },
+                    onLongClick = { showOptions = true }
+                )
+            )
+        }
+    )
+}
+
+@Composable
+private fun GroupedSort(
+    navController: NavController,
+    vm: NotificationScreenViewModel,
+    deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
+    cancelNotification: (NotificationItem) -> Unit,
+    p: PaddingValues,
+    toSource: (String) -> ApiService?,
+    onError: (NotificationItem) -> Unit,
+    onLoadingChange: (Boolean) -> Unit,
+    notificationLogo: NotificationLogo,
+    logoDrawable: Drawable?,
+    showBlur: Boolean,
+    genericInfo: GenericInfo = LocalGenericInfo.current,
+    context: Context = LocalContext.current,
+    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+) {
+    val scope = rememberCoroutineScope()
+    val hazeState = remember { HazeState() }
+
+    LazyColumn(
+        contentPadding = p + LocalNavHostPadding.current,
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.padding(vertical = 4.dp),
     ) {
         vm.groupedList.forEach { item ->
             val expanded = vm.groupedListState[item.first]?.value == true
-            stickyHeader {
 
+            stickyHeader {
                 Surface(
                     shape = MaterialTheme.shapes.medium,
                     tonalElevation = 4.dp,
@@ -484,236 +750,39 @@ private fun DateSort(
                     enter = expandVertically(),
                     exit = shrinkVertically()
                 ) {
-                    BoxWithConstraints {
-                        this.constraints
-                        val itemsInRow = (maxWidth / ComposableUtils.IMAGE_WIDTH)
-                            .coerceAtLeast(1f)
-                            .roundToInt()
-                        Column(
-                            modifier = Modifier.hazeSource(hazeState)
-                        ) {
-                            item.second.chunked(itemsInRow).forEach {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    it.forEach { i ->
-                                        var showPopup by remember { mutableStateOf(false) }
-                                        var showOptions by remember { mutableStateOf(false) }
-                                        val sheet = rememberModalBottomSheetState(true)
-
-                                        if (showOptions) {
-                                            ModalBottomSheet(
-                                                onDismissRequest = { showOptions = false },
-                                                sheetState = sheet
-                                            ) {
-                                                ListItem(
-                                                    leadingContent = {
-                                                        val logo = koinInject<AppLogo>().logoId
-                                                        CoilGradientImage(
-                                                            model = rememberAsyncImagePainter(
-                                                                model = ImageRequest.Builder(LocalContext.current)
-                                                                    .data(i.imageUrl)
-                                                                    .lifecycle(LocalLifecycleOwner.current)
-                                                                    .crossfade(true)
-                                                                    .placeholder(logo)
-                                                                    .error(logo)
-                                                                    .build()
-                                                            ),
-                                                            modifier = Modifier
-                                                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                                                .clip(MaterialTheme.shapes.small)
-                                                        )
-                                                    },
-                                                    overlineContent = { Text(i.source) },
-                                                    headlineContent = { Text(i.notiTitle) },
-                                                    supportingContent = {
-                                                        Text(
-                                                            i.summaryText,
-                                                            overflow = TextOverflow.Ellipsis,
-                                                        )
-                                                    },
-                                                )
-
-                                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                    Card(
-                                                        onClick = {
-                                                            scope.launch(Dispatchers.IO) {
-                                                                sheet.hide()
-                                                                toSource(i.source)?.let { source ->
-                                                                    Cached.cache[i.url]?.let {
-                                                                        flow {
-                                                                            emit(
-                                                                                it
-                                                                                    .toDbModel()
-                                                                                    .toItemModel(source)
-                                                                            )
-                                                                        }
-                                                                    } ?: source.getSourceByUrlFlow(i.url)
-                                                                }
-                                                                    ?.dispatchIo()
-                                                                    ?.onStart { onLoadingChange(true) }
-                                                                    ?.onEach {
-                                                                        onLoadingChange(false)
-                                                                        navController.navigateToDetails(it)
-                                                                    }
-                                                                    ?.launchIn(scope) ?: onError(i)
-                                                            }.invokeOnCompletion { showOptions = false }
-                                                        },
-                                                    ) {
-                                                        ListItem(headlineContent = { Text("Open") })
-                                                    }
-
-                                                    HorizontalDivider()
-
-                                                    Card(
-                                                        onClick = {
-                                                            scope.launch(Dispatchers.IO) {
-                                                                SavedNotifications.viewNotificationFromDb(
-                                                                    context = context,
-                                                                    n = i,
-                                                                    notificationLogo = notificationLogo,
-                                                                    info = genericInfo,
-                                                                    sourceRepository = sourceRepository
-                                                                )
-                                                                sheet.hide()
-                                                            }.invokeOnCompletion { showOptions = false }
-                                                        },
-                                                    ) {
-                                                        ListItem(
-                                                            headlineContent = { Text(stringResource(R.string.notify)) },
-                                                        )
-                                                    }
-
-                                                    HorizontalDivider()
-
-                                                    NotifyAt(
-                                                        item = i,
-                                                    ) { dateShow ->
-                                                        Card(
-                                                            onClick = { dateShow() },
-                                                        ) {
-                                                            ListItem(
-                                                                headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
-                                                            )
-                                                        }
-                                                    }
-
-                                                    HorizontalDivider()
-
-                                                    Card(
-                                                        onClick = {
-                                                            scope.launch {
-                                                                sheet.hide()
-                                                            }.invokeOnCompletion {
-                                                                showOptions = false
-                                                                showPopup = true
-                                                            }
-                                                        },
-                                                    ) {
-                                                        ListItem(
-                                                            headlineContent = { Text(stringResource(R.string.remove)) },
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        if (showPopup) {
-                                            val onDismiss = { showPopup = false }
-
-                                            AlertDialog(
-                                                onDismissRequest = onDismiss,
-                                                title = { Text(stringResource(R.string.removeNoti, i.notiTitle)) },
-                                                confirmButton = {
-                                                    TextButton(
-                                                        onClick = {
-                                                            showOptions = false
-                                                            deleteNotification(i, onDismiss)
-                                                            cancelNotification(i)
-                                                        }
-                                                    ) { Text(stringResource(R.string.yes)) }
-                                                },
-                                                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
-                                            )
-                                        }
-
-                                        val dismissState = rememberSwipeToDismissBoxState(
-                                            confirmValueChange = {
-                                                if (it == SwipeToDismissBoxValue.StartToEnd || it == SwipeToDismissBoxValue.EndToStart) {
-                                                    showPopup = true
-                                                }
-                                                false
-                                            }
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.hazeSource(hazeState)
+                    ) {
+                        item.second.forEach {
+                            NotificationItem(
+                                item = it,
+                                navController = navController,
+                                deleteNotification = vm::deleteNotification,
+                                cancelNotification = vm::cancelNotification,
+                                genericInfo = genericInfo,
+                                logoDrawable = logoDrawable,
+                                notificationLogo = notificationLogo,
+                                toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
+                                sourceRepository = sourceRepository,
+                                onLoadingChange = onLoadingChange,
+                                onError = {
+                                    scope.launch {
+                                        //TODO: Fix this!
+                                        /*state.snackbarHostState.currentSnackbarData?.dismiss()
+                                        val result = state.snackbarHostState.showSnackbar(
+                                            "Something went wrong. Source might not be installed",
+                                            duration = SnackbarDuration.Long,
+                                            actionLabel = "More Options",
+                                            withDismissAction = true
                                         )
-
-                                        SwipeToDismissBox(
-                                            state = dismissState,
-                                            modifier = Modifier.weight(1f, false),
-                                            backgroundContent = {
-                                                val color by animateColorAsState(
-                                                    when (dismissState.targetValue) {
-                                                        SwipeToDismissBoxValue.Settled -> Color.Transparent
-                                                        SwipeToDismissBoxValue.StartToEnd -> Color.Red
-                                                        SwipeToDismissBoxValue.EndToStart -> Color.Red
-                                                    }, label = ""
-                                                )
-
-                                                val scale by animateFloatAsState(
-                                                    if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
-                                                    label = ""
-                                                )
-
-                                                Box(
-                                                    Modifier
-                                                        .fillMaxSize()
-                                                        .clip(MaterialTheme.shapes.medium)
-                                                        .background(color)
-                                                        .padding(horizontal = 20.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Icon(
-                                                        Icons.Default.Delete,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.scale(scale),
-                                                        tint = MaterialTheme.colorScheme.onSurface
-                                                    )
-                                                }
-                                            },
-                                            content = {
-                                                M3CoverCard2(
-                                                    imageUrl = i.imageUrl.orEmpty(),
-                                                    name = i.notiTitle,
-                                                    placeHolder = R.drawable.ic_site_settings,
-                                                    modifier = Modifier.combinedClickable(
-                                                        onClick = {
-                                                            toSource(i.source)?.let { source ->
-                                                                Cached.cache[i.url]?.let {
-                                                                    flow {
-                                                                        emit(
-                                                                            it
-                                                                                .toDbModel()
-                                                                                .toItemModel(source)
-                                                                        )
-                                                                    }
-                                                                } ?: source.getSourceByUrlFlow(i.url)
-                                                            }
-                                                                ?.dispatchIo()
-                                                                ?.onStart { onLoadingChange(true) }
-                                                                ?.onEach {
-                                                                    onLoadingChange(false)
-                                                                    navController.navigateToDetails(it)
-                                                                }
-                                                                ?.launchIn(scope) ?: onError(i)
-                                                        },
-                                                        onLongClick = { showOptions = true }
-                                                    )
-                                                )
-                                            }
-                                        )
+                                        showNotificationItem = when (result) {
+                                            SnackbarResult.Dismissed -> null
+                                            SnackbarResult.ActionPerformed -> it
+                                        }*/
                                     }
-                                }
-                            }
+                                },
+                            )
                         }
                     }
                 }

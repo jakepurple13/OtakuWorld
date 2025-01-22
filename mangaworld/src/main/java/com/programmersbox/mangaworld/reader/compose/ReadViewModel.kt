@@ -209,6 +209,5 @@ class ReadViewModel(
         super.onCleared()
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
-        itemListener.unregister()
     }
 }

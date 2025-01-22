@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.transformWhile
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
-internal class DownloadAndInstaller(private val context: Context) {
+class DownloadAndInstaller(private val context: Context) {
     private val downloadManager by lazy { context.getSystemService<DownloadManager>()!! }
     private val downloadReceiver = DownloadCompletionReceiver()
     private val activeDownloads = hashMapOf<String, Long>()
@@ -124,7 +124,7 @@ internal class DownloadAndInstaller(private val context: Context) {
             val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
             runCatching { context.registerReceiver(this, filter) }
                 .onFailure {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         context.registerReceiver(this, filter, Context.RECEIVER_EXPORTED)
                     }
                 }

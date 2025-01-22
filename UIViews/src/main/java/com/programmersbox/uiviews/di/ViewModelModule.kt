@@ -12,6 +12,7 @@ import com.programmersbox.uiviews.presentation.lists.OtakuListViewModel
 import com.programmersbox.uiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.uiviews.presentation.recent.RecentViewModel
 import com.programmersbox.uiviews.presentation.settings.ExtensionListViewModel
+import com.programmersbox.uiviews.presentation.settings.MoreInfoViewModel
 import com.programmersbox.uiviews.presentation.settings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.NotificationViewModel
 import com.programmersbox.uiviews.presentation.settings.SettingsViewModel
@@ -34,4 +35,5 @@ fun Module.viewModels() {
     viewModelOf(::ImportListViewModel)
     viewModelOf(::NotificationScreenViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::MoreInfoViewModel)
 }

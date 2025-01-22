@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.sharedutils.AppLogo
@@ -39,7 +38,6 @@ import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.icons.Discord
 import com.programmersbox.uiviews.presentation.components.icons.Github
-import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -48,12 +46,13 @@ import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoSettings(
-    infoViewModel: MoreInfoViewModel = viewModel(),
+    infoViewModel: MoreInfoViewModel = koinViewModel(),
     usedLibraryClick: () -> Unit,
 ) {
     val activity = LocalActivity.current
@@ -116,8 +115,6 @@ fun InfoSettings(
             modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
         )
 
-        val downloadInstaller = remember { DownloadAndInstaller(context) }
-
         ShowWhen(
             visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.updateRealVersion.orEmpty())
         ) {
@@ -144,10 +141,12 @@ fun InfoSettings(
                                                 )
                                                 if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()*/
                                                 val url = a.downloadUrl(genericInfo.apkString)
-                                                downloadInstaller.downloadAndInstall(
-                                                    url = url,
-                                                    destinationPath = url.split("/").lastOrNull() ?: "update_apk"
-                                                )
+                                                infoViewModel
+                                                    .downloadAndInstaller
+                                                    .downloadAndInstall(
+                                                        url = url,
+                                                        destinationPath = url.split("/").lastOrNull() ?: "update_apk"
+                                                    )
                                             }
                                     }
                                 }

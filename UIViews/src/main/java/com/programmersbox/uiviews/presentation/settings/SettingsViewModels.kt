@@ -19,6 +19,7 @@ import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
+import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
@@ -47,7 +48,9 @@ class AccountViewModel : ViewModel() {
     }
 }
 
-class MoreInfoViewModel : ViewModel() {
+class MoreInfoViewModel(
+    val downloadAndInstaller: DownloadAndInstaller,
+) : ViewModel() {
 
     private val checker = AtomicBoolean(false)
 
