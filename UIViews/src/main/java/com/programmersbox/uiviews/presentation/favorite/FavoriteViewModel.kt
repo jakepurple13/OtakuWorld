@@ -6,20 +6,18 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.fireListener
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class FavoriteViewModel(
-    dao: ItemDao,
     private val sourceRepository: SourceRepository,
+    favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     private val fireListener = fireListener("favorite")
@@ -31,10 +29,8 @@ class FavoriteViewModel(
     private val fullSourceList get() = (sourceList + favoriteList.map { it.source }).distinct()
 
     init {
-        combine(
-            fireListener.getAllShowsFlow(),
-            dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+        favoritesRepository
+            .getAllFavorites(fireListener)
             .onEach {
                 favoriteList.clear()
                 favoriteList.addAll(it)
@@ -106,11 +102,6 @@ class FavoriteViewModel(
         } else {
             resetSources()
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        fireListener.unregister()
     }
 }
 

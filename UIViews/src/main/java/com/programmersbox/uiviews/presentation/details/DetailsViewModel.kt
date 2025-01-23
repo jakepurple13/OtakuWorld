@@ -17,17 +17,16 @@ import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -37,9 +36,9 @@ import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.vanniktech.blurhash.BlurHash
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -53,9 +52,9 @@ import kotlinx.coroutines.launch
 class DetailsViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
-    private val dao: ItemDao,
     private val blurHashDao: BlurHashDao,
     sourceRepository: SourceRepository,
+    private val favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -169,10 +168,7 @@ class DetailsViewModel(
     suspend fun toggleNotify() {
         dbModel
             ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
-            ?.let {
-                dao.updateFavoriteItem(it)
-                FirebaseDb.toggleUpdateCheckShowFlow(it).collect()
-            }
+            ?.let { favoritesRepository.toggleNotify(it) }
     }
 
     private val englishTranslator = TranslateItems()
@@ -186,25 +182,28 @@ class DetailsViewModel(
     }
 
     private fun setup(info: InfoModel) {
-        combine(
-            itemListener.findItemByUrlFlow(info.url),
-            dao.containsItem(info.url)
-        ) { f, d -> f || d }
+        favoritesRepository
+            .isFavorite(
+                url = info.url,
+                fireListenerClosable = itemListener,
+            )
             .dispatchIo()
             .onEach { favoriteListener = it }
             .launchIn(viewModelScope)
 
-        combine(
-            chapterListener.getAllEpisodesByShowFlow(info.url),
-            dao.getAllChapters(info.url)
-        ) { f, d -> (f + d).distinctBy { it.url } }
+        favoritesRepository
+            .getChapters(
+                url = info.url,
+                fireListenerClosable = chapterListener,
+            )
             .onEach { chapters = it }
             .launchIn(viewModelScope)
 
-        combine(
-            dao.getDbModel(info.url),
-            dbModelListener.getShowFlow(info.url)
-        ) { d, f -> f ?: d }
+        favoritesRepository
+            .getModel(
+                url = info.url,
+                fireListenerClosable = dbModelListener,
+            )
             .onEach { dbModel = it }
             .launchIn(viewModelScope)
     }
@@ -217,8 +216,11 @@ class DetailsViewModel(
         )
 
         viewModelScope.launch {
-            if (b) dao.insertChapter(chapter) else dao.deleteChapter(chapter)
-            (if (b) FirebaseDb.insertEpisodeWatchedFlow(chapter) else FirebaseDb.removeEpisodeWatchedFlow(chapter)).collect()
+            if (b) {
+                favoritesRepository.addWatched(chapter)
+            } else {
+                favoritesRepository.removeWatched(chapter)
+            }
         }
     }
 
@@ -227,13 +229,12 @@ class DetailsViewModel(
             is DetailFavoriteAction.Add -> {
                 val db = action.info.toDbModel(action.info.chapters.size)
                 addRemoveFavoriteJob?.cancel()
-                addRemoveFavoriteJob = viewModelScope.launch {
-                    dao.insertFavorite(db)
-                    FirebaseDb.insertShowFlow(db).collect()
+                addRemoveFavoriteJob = viewModelScope.launch(Dispatchers.IO) {
+                    favoritesRepository.addFavorite(db)
                 }
 
                 imageBitmap?.let {
-                    viewModelScope.launch {
+                    viewModelScope.launch(Dispatchers.IO) {
                         blurHashDao.insertHash(
                             BlurHashItem(
                                 action.info.imageUrl,
@@ -247,12 +248,11 @@ class DetailsViewModel(
             is DetailFavoriteAction.Remove -> {
                 val db = action.info.toDbModel(action.info.chapters.size)
                 addRemoveFavoriteJob?.cancel()
-                addRemoveFavoriteJob = viewModelScope.launch {
-                    dao.deleteFavorite(db)
-                    FirebaseDb.removeShowFlow(db).collect()
+                addRemoveFavoriteJob = viewModelScope.launch(Dispatchers.IO) {
+                    favoritesRepository.removeFavorite(db)
                 }
 
-                viewModelScope.launch {
+                viewModelScope.launch(Dispatchers.IO) {
                     blurHashItem?.let { blurHashDao.deleteHash(it) }
                 }
             }

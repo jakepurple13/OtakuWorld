@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DbModel
@@ -13,12 +12,12 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOn
@@ -31,6 +30,7 @@ import ru.beryukhov.reactivenetwork.ReactiveNetwork
 class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
+    favoritesRepository: FavoritesRepository,
 ) : ViewModel(), ToastItems by DefaultToastItems() {
 
     val observeNetwork = ReactiveNetwork()
@@ -51,10 +51,8 @@ class AllViewModel(
     private val itemListener = fireListener()
 
     init {
-        combine(
-            itemListener.getAllShowsFlow(),
-            dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+        favoritesRepository
+            .getAllFavorites(itemListener)
             .onEach { favoriteList = it.toMutableStateList() }
             .launchIn(viewModelScope)
 

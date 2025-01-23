@@ -13,6 +13,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -24,6 +25,7 @@ import java.io.InputStreamReader
 
 class MoreSettingsViewModel(
     private val dao: ItemDao,
+    private val favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     var importExportListStatus: ImportExportListStatus by mutableStateOf(ImportExportListStatus.Idle)
@@ -46,8 +48,7 @@ class MoreSettingsViewModel(
             }
                 .onSuccess { list ->
                     list?.forEach {
-                        dao.insertFavorite(it)
-                        FirebaseDb.insertShowFlow(it)
+                        favoritesRepository.addFavorite(it)
                     }
                     importExportListStatus = ImportExportListStatus.Success
                 }

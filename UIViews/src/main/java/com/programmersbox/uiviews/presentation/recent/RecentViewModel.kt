@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.extensionloader.SourceRepository
@@ -18,13 +17,13 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.combineSources
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
@@ -39,6 +38,7 @@ class RecentViewModel(
     dao: ItemDao,
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
+    favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -71,10 +71,8 @@ class RecentViewModel(
             }
             .launchIn(viewModelScope)
 
-        combine(
-            itemListener.getAllShowsFlow(),
-            dao.getAllFavorites()
-        ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+        favoritesRepository
+            .getAllFavorites(itemListener)
             .onEach {
                 favoriteList.clear()
                 favoriteList.addAll(it)

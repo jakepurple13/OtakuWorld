@@ -21,13 +21,13 @@ import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -47,6 +47,7 @@ class ReadViewModel(
     savedStateHandle: SavedStateHandle,
     private val dao: ItemDao,
     private val chapterHolder: ChapterHolder,
+    favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     private val mangaReader: MangaReader = savedStateHandle.toRoute()
@@ -134,10 +135,11 @@ class ReadViewModel(
 
         loadPages(modelPath)
 
-        combine(
-            itemListener.findItemByUrlFlow(mangaUrl),
-            dao.containsItem(mangaUrl)
-        ) { f, d -> f || d }
+        favoritesRepository
+            .isFavorite(
+                url = mangaUrl,
+                fireListenerClosable = itemListener
+            )
             .dispatchIo()
             .onEach { addToFavorites = addToFavorites.copy(isFavorite = it) }
             .launchIn(viewModelScope)
