@@ -40,6 +40,7 @@ class NotificationScreenViewModel(
             .sortedByDescending { it.second.size }
     }
 
+    //TODO: Maybe make the groupedList empty if it's false?
     val groupedListState = mutableStateMapOf(
         *sourceRepository.list.map { it.apiService.serviceName to mutableStateOf(false) }.toTypedArray()
     )
