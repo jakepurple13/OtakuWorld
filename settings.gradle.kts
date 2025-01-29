@@ -19,10 +19,9 @@ dependencyResolutionManagement {
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 
-    //TODO: Remove current ones and replace with this!
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2025.01.00")
+            from("androidx.gradle:gradle-version-catalog:2025.01.01")
         }
     }
 }
