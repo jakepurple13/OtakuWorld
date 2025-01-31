@@ -130,6 +130,7 @@ class DetailsViewModel(
             }
             .onEach { blurHash = BitmapPainter(it) }
             .onEach { if (palette == null) palette = Palette.from(it).generate() }
+            .dispatchIo()
             .launchIn(viewModelScope)
 
         combine(
@@ -145,6 +146,7 @@ class DetailsViewModel(
                 imageUrl = image
             )
         }
+            .dispatchIo()
             .onEach {
                 if (it.blurHashItem == null && it.bitmap != null && it.isFavorite && it.imageUrl != null) {
                     blurHashDao.insertHash(
@@ -153,6 +155,8 @@ class DetailsViewModel(
                             BlurHash.encode(it.bitmap, 4, 3)
                         )
                     )
+                } else if (it.blurHashItem != null && !it.isFavorite) {
+                    blurHashDao.deleteHash(it.blurHashItem)
                 }
             }
             .launchIn(viewModelScope)
@@ -232,17 +236,6 @@ class DetailsViewModel(
                 addRemoveFavoriteJob = viewModelScope.launch(Dispatchers.IO) {
                     favoritesRepository.addFavorite(db)
                 }
-
-                imageBitmap?.let {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        blurHashDao.insertHash(
-                            BlurHashItem(
-                                action.info.imageUrl,
-                                BlurHash.encode(it, 4, 3)
-                            )
-                        )
-                    }
-                }
             }
 
             is DetailFavoriteAction.Remove -> {
@@ -250,10 +243,6 @@ class DetailsViewModel(
                 addRemoveFavoriteJob?.cancel()
                 addRemoveFavoriteJob = viewModelScope.launch(Dispatchers.IO) {
                     favoritesRepository.removeFavorite(db)
-                }
-
-                viewModelScope.launch(Dispatchers.IO) {
-                    blurHashItem?.let { blurHashDao.deleteHash(it) }
                 }
             }
         }

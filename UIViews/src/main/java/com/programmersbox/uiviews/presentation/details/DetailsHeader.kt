@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.createBitmap
 import com.bumptech.glide.load.model.GlideUrl
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.models.InfoModel
@@ -104,7 +105,7 @@ internal fun DetailsHeader(
             GlideUrl(model.imageUrl) { model.extras.map { it.key to it.value.toString() }.toMap() }
         } catch (e: IllegalArgumentException) {
             e.printStackTrace()
-            val b = Bitmap.createBitmap(5, 5, Bitmap.Config.ARGB_8888)
+            val b = createBitmap(5, 5)
             Canvas(b).drawColor(surface.toArgb())
             b
         }
@@ -253,28 +254,30 @@ internal fun DetailsHeader(
                         overflow = TextOverflow.Ellipsis,
                         maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     )
+                    Crossfade(targetState = isFavorite, label = "") { target ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable(
+                                    interactionSource = null,
+                                    indication = ripple()
+                                ) { favoriteClick(isFavorite) }
+                                .padding(4.dp)
+                                .semantics(true) {}
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                if (target) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
 
-                    Row(
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = null,
-                                indication = ripple()
-                            ) { favoriteClick(isFavorite) }
-                            .semantics(true) {}
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-                        Crossfade(targetState = isFavorite, label = "") { target ->
                             Text(
                                 stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontSize = 20.sp,
-                                modifier = Modifier.align(Alignment.CenterVertically),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontSize = 16.sp,
                             )
                         }
                     }
@@ -356,7 +359,6 @@ internal fun PlaceHolderHeader(
             }
 
             Row(modifier = Modifier.padding(4.dp)) {
-
                 Card(
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier

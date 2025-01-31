@@ -54,7 +54,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -422,6 +421,8 @@ fun DetailBottomBar(
 @Composable
 fun DetailFloatingActionButtonMenu(
     navController: NavController,
+    fabMenuExpanded: Boolean,
+    onFabMenuExpandedChange: (Boolean) -> Unit,
     isVisible: Boolean,
     onShowLists: () -> Unit,
     info: InfoModel,
@@ -434,9 +435,8 @@ fun DetailFloatingActionButtonMenu(
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
 ) {
-    var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
-    BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
+    BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
 
     FloatingActionButtonMenu(
         expanded = fabMenuExpanded,
@@ -455,7 +455,7 @@ fun DetailFloatingActionButtonMenu(
                         alphaAnimationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
                     ),
                 checked = fabMenuExpanded,
-                onCheckedChange = { fabMenuExpanded = !fabMenuExpanded }
+                onCheckedChange = { onFabMenuExpandedChange(!fabMenuExpanded) }
             ) {
                 val imageVector by remember {
                     derivedStateOf {
@@ -469,12 +469,12 @@ fun DetailFloatingActionButtonMenu(
                 )
             }
         },
-        modifier = modifier,
+        modifier = modifier
     ) {
         if (isSaved) {
             FloatingActionButtonMenuItem(
                 onClick = {
-                    fabMenuExpanded = false
+                    onFabMenuExpandedChange(false)
                     removeFromSaved()
                 },
                 icon = { Icon(Icons.Default.BookmarkRemove, contentDescription = null) },
@@ -483,7 +483,7 @@ fun DetailFloatingActionButtonMenu(
         } else {
             FloatingActionButtonMenuItem(
                 onClick = {
-                    fabMenuExpanded = false
+                    onFabMenuExpandedChange(false)
                     addToSaved()
                 },
                 icon = { Icon(Icons.Default.Save, null) },
@@ -493,7 +493,7 @@ fun DetailFloatingActionButtonMenu(
 
         FloatingActionButtonMenuItem(
             onClick = {
-                fabMenuExpanded = false
+                onFabMenuExpandedChange(false)
                 onShowLists()
             },
             icon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = null) },
@@ -502,7 +502,7 @@ fun DetailFloatingActionButtonMenu(
 
         FloatingActionButtonMenuItem(
             onClick = {
-                fabMenuExpanded = false
+                onFabMenuExpandedChange(false)
                 navController.navigate(Screen.GlobalSearchScreen(info.title))
             },
             icon = { Icon(Icons.Default.Search, contentDescription = null) },

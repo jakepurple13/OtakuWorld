@@ -1,11 +1,10 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.presentation.details
 
 import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
@@ -46,10 +45,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -140,6 +141,8 @@ fun DetailsView(
 
     val context = LocalContext.current
 
+    var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
+
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
             try {
@@ -189,13 +192,21 @@ fun DetailsView(
     ) {
 
         val collapsableBehavior = rememberCollapsableTopBehavior(
-            enterAlways = false
+            enterAlways = false,
+            canScroll = { !fabMenuExpanded }
+        )
+
+        val fabBlur = Modifier.blur(
+            animateDpAsState(
+                if (fabMenuExpanded) 2.dp else 0.dp
+            ).value
         )
 
         OtakuScaffold(
             topBar = {
                 CollapsableColumn(
-                    behavior = collapsableBehavior
+                    behavior = collapsableBehavior,
+                    modifier = fabBlur
                 ) {
                     InsetSmallTopAppBar(
                         modifier = Modifier
@@ -244,7 +255,7 @@ fun DetailsView(
                                                 info.imageUrl,
                                                 info.source.serviceName
                                             )
-                                        } ?: false
+                                        } == true
 
                                         hostState.showSnackbar(
                                             context.getString(
@@ -292,7 +303,7 @@ fun DetailsView(
                         onPaletteSet = onPaletteSet,
                         onBitmapSet = onBitmapSet,
                         blurHash = blurHash,
-                        modifier = Modifier.collapse()
+                        modifier = Modifier.collapse(),
                     )
                 }
             },
@@ -337,6 +348,8 @@ fun DetailsView(
                     notifyAction = notifyAction,
                     isFavorite = isFavorite,
                     onFavoriteClick = onFavoriteClick,
+                    fabMenuExpanded = fabMenuExpanded,
+                    onFabMenuExpandedChange = { fabMenuExpanded = it },
                     modifier = Modifier.padding(LocalNavHostPadding.current)
                 )
             },
@@ -370,6 +383,7 @@ fun DetailsView(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 state = listState,
                 contentPadding = modifiedPaddingValues,
+                userScrollEnabled = !fabMenuExpanded,
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 4.dp)
@@ -378,7 +392,8 @@ fun DetailsView(
                             it.hazeSource(hazeState)
                         else
                             it
-                    },
+                    }
+                    .then(fabBlur),
             ) {
                 if (info.description.isNotEmpty()) {
                     item {
