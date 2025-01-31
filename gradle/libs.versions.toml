@@ -44,7 +44,7 @@ compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2025.01.01"
-materialKolor = "2.0.1"
+materialKolor = "2.0.2"
 firebaseKtx = "0.2.1"
 
 googlePerformancePlugin = "1.4.2"
