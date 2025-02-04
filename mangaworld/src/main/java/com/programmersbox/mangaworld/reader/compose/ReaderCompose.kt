@@ -337,7 +337,8 @@ fun ReadView(
                                 showBlur = showBlur,
                                 isAmoledMode = isAmoledMode,
                                 modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
+                                    //TODO: Trying out
+                                    progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
                                     blurEnabled = showBlur
                                     alpha = scrollAlpha
                                 }
