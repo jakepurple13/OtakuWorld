@@ -20,6 +20,7 @@ import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class ExtensionListViewModel(
     sourceRepository: SourceRepository,
@@ -43,6 +44,19 @@ class ExtensionListViewModel(
 
     val hasCustomBridge by derivedStateOf {
         installedSources.any { it.catalog is ExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
+    }
+
+    fun downloadAndInstall(downloadLink: String, destinationPath: String) {
+        downloadAndInstaller
+            .downloadAndInstall(downloadLink, destinationPath)
+            .launchIn(viewModelScope)
+    }
+
+    fun uninstall(packageName: String) {
+        viewModelScope.launch {
+            downloadAndInstaller.uninstall(packageName)
+            sourceLoader.load()
+        }
     }
 
     init {

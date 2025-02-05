@@ -72,6 +72,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.1.2"
+ackpineVersion = "0.9.4"
 
 arcore = "1.0.0-alpha01"
 composeXr = "1.0.0-alpha02"
@@ -88,6 +89,8 @@ google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google
 google-firebase-performance = { id = "com.google.firebase.firebase-perf", version.ref = "googlePerformancePlugin" }
 
 [libraries]
+ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpineVersion" }
+ackpine-core = { module = "ru.solrudev.ackpine:ackpine-core", version.ref = "ackpineVersion" }
 androidx-baselineprofile-gradle-plugin = { module = "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin", version.ref = "androidx-baselineprofile" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
 blurhash = { module = "com.vanniktech:blurhash", version.ref = "blurhash" }

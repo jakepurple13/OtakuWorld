@@ -1,184 +1,109 @@
 package com.programmersbox.uiviews.utils
 
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import androidx.core.content.FileProvider
-import androidx.core.content.getSystemService
+import android.widget.Toast
 import androidx.core.net.toUri
-import kotlinx.coroutines.delay
+import com.google.firebase.perf.trace
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.onDownload
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.util.cio.writeChannel
+import io.ktor.utils.io.copyAndClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import ru.solrudev.ackpine.installer.PackageInstaller
+import ru.solrudev.ackpine.installer.createSession
+import ru.solrudev.ackpine.installer.parameters.InstallerType
+import ru.solrudev.ackpine.installer.parameters.PackageSource
+import ru.solrudev.ackpine.session.Failure
+import ru.solrudev.ackpine.session.Session
+import ru.solrudev.ackpine.session.await
+import ru.solrudev.ackpine.session.parameters.Confirmation
+import ru.solrudev.ackpine.session.state
+import ru.solrudev.ackpine.uninstaller.PackageUninstaller
+import ru.solrudev.ackpine.uninstaller.createSession
 import java.io.File
-import kotlin.time.Duration.Companion.seconds
 
-class DownloadAndInstaller(private val context: Context) {
-    private val downloadManager by lazy { context.getSystemService<DownloadManager>()!! }
-    private val downloadReceiver = DownloadCompletionReceiver()
-    private val activeDownloads = hashMapOf<String, Long>()
-    private val downloadsStateFlows = hashMapOf<Long, MutableStateFlow<InstallType>>()
+class DownloadAndInstaller(
+    private val context: Context,
+) {
+    private val packageInstaller by lazy { PackageInstaller.getInstance(context) }
+    private val packageUninstaller by lazy { PackageUninstaller.getInstance(context) }
+    private val client = HttpClient()
+
+    suspend fun uninstall(packageName: String) {
+        packageUninstaller.createSession(packageName) {
+            confirmation = Confirmation.IMMEDIATE
+        }
+            .await()
+            .let {
+                println(it)
+                Toast.makeText(context, "Uninstalled $packageName", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     fun downloadAndInstall(
         url: String,
-        destinationPath: String
-    ): Flow<InstallType> {
-        val oldDownload = activeDownloads[url]
-        if (oldDownload != null) {
-            deleteDownload(url)
-        }
+        destinationPath: String,
+    ): Flow<DownloadAndInstallStatus> {
+        val file = File(context.cacheDir, "${url.toUri().lastPathSegment}.apk")
 
-        downloadReceiver.register()
-
-        val downloadUri = url.toUri()
-        val request = DownloadManager.Request(downloadUri)
-            .setTitle(destinationPath)
-            .setMimeType(APK_MIME)
-            .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, downloadUri.lastPathSegment)
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-
-        val id = downloadManager.enqueue(request)
-        activeDownloads[url] = id
-
-        val downloadStateFlow = MutableStateFlow(InstallType.Pending)
-        downloadsStateFlows[id] = downloadStateFlow
-
-        val pollStatusFlow = downloadStatusFlow(id).mapNotNull { downloadStatus ->
-            when (downloadStatus) {
-                DownloadManager.STATUS_PENDING -> InstallType.Pending
-                DownloadManager.STATUS_RUNNING -> InstallType.Downloading
-                else -> null
-            }
-        }
-
-        return merge(downloadStateFlow, pollStatusFlow).transformWhile {
-            emit(it)
-            !it.isCompleted()
-        }.onCompletion {
-            deleteDownload(url)
-        }
-    }
-
-    private fun downloadStatusFlow(id: Long): Flow<Int> = flow {
-        val query = DownloadManager.Query().setFilterById(id)
-        while (true) {
-            val downloadStatus = downloadManager.query(query).use { cursor ->
-                if (!cursor.moveToFirst()) return@flow
-                cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-            }
-
-            emit(downloadStatus)
-
-            if (downloadStatus == DownloadManager.STATUS_SUCCESSFUL || downloadStatus == DownloadManager.STATUS_FAILED) {
-                return@flow
-            }
-
-            delay(1.seconds)
-        }
-    }
-        .distinctUntilChanged()
-
-    fun installApk(downloadId: Long, uri: Uri) {
-        val installIntent = Intent(Intent.ACTION_VIEW).apply {
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-            setDataAndType(uri, APK_MIME)
-            putExtra(EXTRA_DOWNLOAD_ID, downloadId)
-        }
-        context.startActivity(installIntent)
-    }
-
-    fun updateInstallStep(downloadId: Long, step: InstallType) {
-        downloadsStateFlows[downloadId]?.let { it.value = step }
-    }
-
-    private fun deleteDownload(pkgName: String) {
-        val downloadId = activeDownloads.remove(pkgName)
-        if (downloadId != null) {
-            downloadManager.remove(downloadId)
-            downloadsStateFlows.remove(downloadId)
-        }
-        if (activeDownloads.isEmpty()) {
-            downloadReceiver.unregister()
-        }
-    }
-
-    private inner class DownloadCompletionReceiver : BroadcastReceiver() {
-        private var isRegistered = false
-
-        fun register() {
-            if (isRegistered) return
-            isRegistered = true
-
-            val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-            runCatching { context.registerReceiver(this, filter) }
-                .onFailure {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        context.registerReceiver(this, filter, Context.RECEIVER_EXPORTED)
+        return channelFlow<DownloadAndInstallStatus> {
+            trace("download_and_install") {
+                client.prepareGet(url) {
+                    onDownload { bytesSentTotal, contentLength ->
+                        send(DownloadAndInstallStatus.Downloading(bytesSentTotal.toFloat() / (contentLength ?: 1L)))
                     }
+                }.execute {
+                    it.bodyAsChannel().copyAndClose(file.writeChannel())
+                    send(DownloadAndInstallStatus.Downloaded)
                 }
-        }
 
-        fun unregister() {
-            if (!isRegistered) return
-            isRegistered = false
+                println("Starting Install Session")
 
-            context.unregisterReceiver(this)
-        }
+                val sess = packageInstaller.createSession(
+                    File(context.cacheDir, "${url.toUri().lastPathSegment}.apk").toUri()
+                ) {
+                    packageSource = PackageSource.DownloadedFile
 
+                    confirmation = Confirmation.DEFERRED
+                    installerType = InstallerType.SESSION_BASED
 
-        override fun onReceive(context: Context, intent: Intent?) {
-            val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0) ?: return
-            if (id !in activeDownloads.values) return
-            val uri = downloadManager.getUriForDownloadedFile(id)
-            if (uri == null) {
-                updateInstallStep(id, InstallType.Error)
-                return
-            }
-
-            val query = DownloadManager.Query().setFilterById(id)
-            downloadManager.query(query).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val localUri = cursor.getString(
-                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI),
-                    ).removePrefix(FILE_SCHEME)
-
-                    installApk(id, File(localUri).getUriCompat(context))
+                    requireUserAction = true
+                    requestUpdateOwnership = true
                 }
+
+                sess
+                    .state
+                    .map { s ->
+                        when (s) {
+                            is Session.State.Failed<*> -> DownloadAndInstallStatus.Error(s.failure)
+                            Session.State.Succeeded -> DownloadAndInstallStatus.Installed
+                            else -> DownloadAndInstallStatus.Installing
+                        }
+                    }
+                    .onEach { send(it) }
+                    .launchIn(this@channelFlow)
+
+                sess.await()
             }
         }
-    }
-
-    companion object {
-        const val APK_MIME = "application/vnd.android.package-archive"
-        const val EXTRA_DOWNLOAD_ID = "ExtensionInstaller.extra.DOWNLOAD_ID"
-        const val FILE_SCHEME = "file://"
+            .onEach {
+                println(it)
+                if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
+                if (it is DownloadAndInstallStatus.Installed) file.delete()
+            }
     }
 }
 
-enum class InstallType {
-    Idle, Pending, Downloading, Installing, Installed, Error;
-
-    fun isCompleted(): Boolean {
-        return this == Installed || this == Error || this == Idle
-    }
-}
-
-fun File.getUriCompat(context: Context): Uri {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        FileProvider.getUriForFile(context, "${context.packageName}.provider", this)
-    } else {
-        this.toUri()
-    }
+sealed class DownloadAndInstallStatus {
+    data class Downloading(val progress: Float) : DownloadAndInstallStatus()
+    data object Downloaded : DownloadAndInstallStatus()
+    data object Installing : DownloadAndInstallStatus()
+    data object Installed : DownloadAndInstallStatus()
+    data class Error(val failure: Failure) : DownloadAndInstallStatus()
 }

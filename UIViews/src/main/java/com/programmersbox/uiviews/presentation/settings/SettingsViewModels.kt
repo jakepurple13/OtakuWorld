@@ -16,6 +16,7 @@ import com.programmersbox.sharedutils.CustomRemoteModel
 import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.sharedutils.updateAppCheck
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicBoolean
@@ -50,9 +52,25 @@ class AccountViewModel : ViewModel() {
 
 class MoreInfoViewModel(
     val downloadAndInstaller: DownloadAndInstaller,
+    private val genericInfo: GenericInfo,
 ) : ViewModel() {
 
     private val checker = AtomicBoolean(false)
+
+    fun update(
+        a: AppUpdate.AppUpdates,
+    ) {
+        viewModelScope.launch {
+            val url = a.downloadUrl(genericInfo.apkString)
+
+            downloadAndInstaller
+                .downloadAndInstall(
+                    url = url,
+                    destinationPath = url.split("/").lastOrNull() ?: "update_apk"
+                )
+                .launchIn(viewModelScope)
+        }
+    }
 
     suspend fun updateChecker(context: Context) {
         try {

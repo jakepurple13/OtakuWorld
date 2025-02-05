@@ -268,7 +268,14 @@ fun ExtensionList(
                         installedSources = viewModel.installed,
                         sourcesList = viewModel.remoteSourcesVersions,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
-                            viewModel.downloadAndInstaller.downloadAndInstall(downloadLink, destinationPath)
+                            viewModel.downloadAndInstall(downloadLink, destinationPath)
+                        },
+                        onUninstall = {
+                            val uri = Uri.fromParts("package", it, null)
+                            val uninstall = Intent(Intent.ACTION_DELETE, uri)
+                            context.startActivity(uninstall)
+                            //TODO: Try out later with a dialog
+                            //viewModel.uninstall(it)
                         }
                     )
                 }
@@ -278,7 +285,7 @@ fun ExtensionList(
                     RemoteExtensionItems(
                         remoteSources = viewModel.remoteSources,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
-                            viewModel.downloadAndInstaller.downloadAndInstall(downloadLink, destinationPath)
+                            viewModel.downloadAndInstall(downloadLink, destinationPath)
                         },
                     )
                 }
@@ -293,15 +300,11 @@ private fun InstalledExtensionItems(
     installedSources: Map<ApiServicesCatalog?, InstalledViewState>,
     sourcesList: List<RemoteSources>,
     onDownloadAndInstall: (String, String) -> Unit,
+    onUninstall: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val currentSourceRepository = LocalCurrentSource.current
     val context = LocalContext.current
-    fun uninstall(packageName: String) {
-        val uri = Uri.fromParts("package", packageName, null)
-        val uninstall = Intent(Intent.ACTION_DELETE, uri)
-        context.startActivity(uninstall)
-    }
     Column(
         modifier = modifier
     ) {
@@ -336,7 +339,7 @@ private fun InstalledExtensionItems(
                             trailingContent = t?.let {
                                 {
                                     IconButton(
-                                        onClick = { uninstall(u.sourceInformation.random().packageName) }
+                                        onClick = { onUninstall(u.sourceInformation.random().packageName) }
                                     ) { Icon(Icons.Default.Delete, null) }
                                 }
                             }
@@ -389,7 +392,7 @@ private fun InstalledExtensionItems(
                                     }
 
                                     IconButton(
-                                        onClick = { uninstall(source.packageName) }
+                                        onClick = { onUninstall(source.packageName) }
                                     ) { Icon(Icons.Default.Delete, null) }
                                 }
                             }
