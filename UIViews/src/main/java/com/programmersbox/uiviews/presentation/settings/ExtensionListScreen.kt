@@ -268,6 +268,7 @@ fun ExtensionList(
                         installedSources = viewModel.installed,
                         sourcesList = viewModel.remoteSourcesVersions,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
+                            //TODO: Need to show some ui for download progress and installing progress
                             viewModel.downloadAndInstall(downloadLink, destinationPath)
                         },
                         onUninstall = {
