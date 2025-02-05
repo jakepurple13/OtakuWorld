@@ -98,8 +98,12 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.error
+import coil3.request.lifecycle
+import coil3.request.placeholder
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.extensionloader.SourceRepository

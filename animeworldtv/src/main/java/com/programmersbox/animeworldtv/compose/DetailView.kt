@@ -47,8 +47,9 @@ import androidx.tv.material3.Card
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.programmersbox.anime_sources.anime.AllAnime.dispatchIo
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.models.ApiService
@@ -221,8 +222,11 @@ private fun MovieImageWithGradients(
     bringIntoViewRequester: BringIntoViewRequester
 ) {
     AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current).data(movieDetails.imageUrl)
-            .crossfade(true).build(),
+        model = ImageRequest
+            .Builder(LocalContext.current)
+            .data(movieDetails.imageUrl)
+            .crossfade(true)
+            .build(),
         contentDescription = movieDetails.title,
         modifier = Modifier
             .fillMaxSize()

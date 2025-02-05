@@ -54,8 +54,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.lifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo

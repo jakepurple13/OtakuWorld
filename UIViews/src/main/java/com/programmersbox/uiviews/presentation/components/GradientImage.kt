@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImagePainter
+import coil3.compose.AsyncImagePainter
 import com.bumptech.glide.integration.compose.CrossFade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -86,7 +86,7 @@ fun CoilGradientImage(
     scaleY: Float = 1.5f,
 ) {
     Box {
-        if (model.state is AsyncImagePainter.State.Success) {
+        if (model.state.value is AsyncImagePainter.State.Success) {
             Image(
                 painter = model,
                 contentDescription = contentDescription,

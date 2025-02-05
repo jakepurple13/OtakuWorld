@@ -44,8 +44,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.error
+import coil3.request.lifecycle
+import coil3.request.placeholder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R

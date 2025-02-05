@@ -24,11 +24,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.AsyncImagePainter
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
-import coil.request.ImageRequest
-import coil.size.Size
+import coil3.compose.AsyncImagePainter
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.lifecycle
+import coil3.size.Size
 import com.bumptech.glide.load.model.GlideUrl
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
 import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
@@ -142,7 +144,6 @@ internal fun Coil(
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(painter)
-            .apply { headers.forEach { addHeader(it.key, it.value) } }
             .lifecycle(LocalLifecycleOwner.current)
             .crossfade(true)
             .size(Size.ORIGINAL)

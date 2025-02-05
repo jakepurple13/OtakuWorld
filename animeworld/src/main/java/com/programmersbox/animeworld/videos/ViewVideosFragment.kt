@@ -64,11 +64,13 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.VideoFrameDecoder
-import coil.request.ImageRequest
-import coil.request.videoFramePercent
+import coil3.ImageLoader
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.lifecycle
+import coil3.video.VideoFrameDecoder
+import coil3.video.videoFramePercent
 import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
@@ -186,6 +188,11 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                 false
             },
             onMultipleRemove = { downloadedItems ->
+                //TODO: Maybe?
+                /*MediaStore.createDeleteRequest(
+                    context.contentResolver,
+                    downloadedItems.mapNotNull { it.assetFileStringUri?.toUri() }
+                )*/
                 downloadedItems.forEach {
                     try {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -199,7 +206,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         } else {
                             File(it.path!!).delete()
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         Toast.makeText(context, "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT).show()
                     }
                 }

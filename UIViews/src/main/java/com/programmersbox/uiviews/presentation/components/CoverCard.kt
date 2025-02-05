@@ -23,8 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.error
+import coil3.request.lifecycle
+import coil3.request.placeholder
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.bounceClick
@@ -86,7 +90,6 @@ fun M3CoverCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)
@@ -155,7 +158,6 @@ fun M3ImageCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)
@@ -242,7 +244,6 @@ fun M3CoverCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)
@@ -323,7 +324,6 @@ fun M3CoverCard(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)
@@ -401,7 +401,6 @@ fun M3CoverCard2(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
                     .lifecycle(LocalLifecycleOwner.current)
-                    .apply { headers.forEach { addHeader(it.key, it.value.toString()) } }
                     .crossfade(true)
                     .placeholder(placeHolder)
                     .error(error)

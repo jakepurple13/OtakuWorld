@@ -25,7 +25,7 @@ reorderable = "2.4.3"
 roomVersion = "2.7.0-alpha13"
 navVersion = "2.9.0-alpha05"
 koin-bom = "4.0.2"
-coil = "2.7.0"
+coil = "3.1.0"
 lifecycle = "2.9.0-alpha09"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
@@ -144,8 +144,8 @@ landscapistGlide = { group = "com.github.skydoves", name = "landscapist-glide" }
 landscapistPalette = { group = "com.github.skydoves", name = "landscapist-palette" }
 landscapistPlaceholder = { group = "com.github.skydoves", name = "landscapist-placeholder" }
 composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.0"
-coilCompose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
-coilVideo = { module = "io.coil-kt:coil-video", version.ref = "coil" }
+coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coilVideo = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
@@ -244,7 +244,7 @@ telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-g
 zoomableModifier = "net.engawapg.lib:zoomable:2.0.0"
 
 ### MangaWorld
-coilGif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
+coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 subsamplingImageView = "com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0"
 bigImageViewer = { module = "com.github.piasy:BigImageViewer", version.ref = "piasy" }
 bigImageGlideLoader = { module = "com.github.piasy:GlideImageLoader", version.ref = "piasy" }

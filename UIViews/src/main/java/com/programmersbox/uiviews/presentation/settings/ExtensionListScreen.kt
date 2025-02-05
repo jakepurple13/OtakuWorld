@@ -99,7 +99,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.RemoteSources

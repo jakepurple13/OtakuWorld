@@ -62,10 +62,13 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
-import coil.request.ImageRequest
-import coil.transform.CircleCropTransformation
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.lifecycle
+import coil3.request.transformations
+import coil3.transform.CircleCropTransformation
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
