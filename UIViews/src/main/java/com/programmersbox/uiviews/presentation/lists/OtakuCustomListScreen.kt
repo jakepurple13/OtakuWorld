@@ -96,14 +96,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.request.error
-import coil3.request.lifecycle
-import coil3.request.placeholder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
@@ -117,8 +110,8 @@ import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandler
 import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
+import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
@@ -293,16 +286,9 @@ fun OtakuCustomListScreen(
         bannerContent = {
             ListItem(
                 leadingContent = {
-                    CoilGradientImage(
-                        model = rememberAsyncImagePainter(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(it?.imageUrl)
-                                .lifecycle(LocalLifecycleOwner.current)
-                                .crossfade(true)
-                                .placeholder(logoDrawable.logoId)
-                                .error(logoDrawable.logoId)
-                                .build()
-                        ),
+                    GlideGradientImage(
+                        model = it?.imageUrl,
+                        placeholder = logoDrawable.logoId,
                         modifier = Modifier
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             .clip(MaterialTheme.shapes.small)

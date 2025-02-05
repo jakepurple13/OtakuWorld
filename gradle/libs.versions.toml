@@ -146,6 +146,7 @@ landscapistPlaceholder = { group = "com.github.skydoves", name = "landscapist-pl
 composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.0"
 coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coilVideo = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
+coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
@@ -359,7 +360,7 @@ compose = [
     "composeActivity", "composeLifecycle", "composeLifecycleRuntime",
     "composeRuntimeLivedata",
     "landscapist-bom", "landscapistGlide", "landscapistPalette", "landscapistPlaceholder",
-    "coilCompose",
+    "coilCompose", "coilOkHttp",
     "composeConstraintLayout",
     "drawablePainter", "uiUtil",
     "materialYou", "materialYou-common",

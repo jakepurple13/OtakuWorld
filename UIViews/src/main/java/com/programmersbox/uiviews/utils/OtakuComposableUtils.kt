@@ -36,26 +36,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.request.error
-import coil3.request.lifecycle
-import coil3.request.placeholder
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.BannerBox
-import com.programmersbox.uiviews.presentation.components.CoilGradientImage
+import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
@@ -158,16 +150,9 @@ fun OtakuBannerBox(
             ) {
                 ListItem(
                     leadingContent = {
-                        CoilGradientImage(
-                            model = rememberAsyncImagePainter(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(itemInfo?.imageUrl.orEmpty())
-                                    .lifecycle(LocalLifecycleOwner.current)
-                                    .crossfade(true)
-                                    .placeholder(placeholder)
-                                    .error(placeholder)
-                                    .build()
-                            ),
+                        GlideGradientImage(
+                            model = itemInfo?.imageUrl.orEmpty(),
+                            placeholder = placeholder,
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -53,22 +54,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.SubcomposeAsyncImage
-import coil3.compose.SubcomposeAsyncImageContent
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.request.lifecycle
-import coil3.request.transformations
-import coil3.transform.CircleCropTransformation
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
@@ -93,6 +87,7 @@ import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen
+import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -549,17 +544,14 @@ private fun AccountSettings(
             onDismissRequest = { showDialog = false },
             confirmButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.done)) } },
             icon = {
-                SubcomposeAsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(accountInfo?.photoUrl)
-                        .crossfade(true)
-                        .lifecycle(LocalLifecycleOwner.current)
-                        .transformations(CircleCropTransformation())
-                        .build(),
-                    contentDescription = null,
+                GlideImage(
+                    imageModel = { accountInfo?.photoUrl },
                     loading = { Icon(Icons.Default.AccountCircle, null) },
-                    error = { Icon(Icons.Default.AccountCircle, null) },
-                    success = { SubcomposeAsyncImageContent() }
+                    failure = { Icon(Icons.Default.AccountCircle, null) },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(40.dp)
+                        .clickable { showDialog = true }
                 )
             },
             title = {
@@ -584,18 +576,12 @@ private fun AccountSettings(
         )
     }
 
-    SubcomposeAsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(accountInfo?.photoUrl)
-            .crossfade(true)
-            .lifecycle(LocalLifecycleOwner.current)
-            .transformations(CircleCropTransformation())
-            .build(),
-        contentDescription = null,
+    GlideImage(
+        imageModel = { accountInfo?.photoUrl },
         loading = { Icon(Icons.Default.AccountCircle, null) },
-        error = { Icon(Icons.Default.AccountCircle, null) },
-        success = { SubcomposeAsyncImageContent() },
+        failure = { Icon(Icons.Default.AccountCircle, null) },
         modifier = Modifier
+            .clip(CircleShape)
             .size(40.dp)
             .clickable { showDialog = true }
     )

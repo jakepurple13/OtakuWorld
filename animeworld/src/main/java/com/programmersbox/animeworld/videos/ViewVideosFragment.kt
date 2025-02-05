@@ -61,14 +61,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import coil3.ImageLoader
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import coil3.request.lifecycle
 import coil3.video.VideoFrameDecoder
 import coil3.video.videoFramePercent
 import com.programmersbox.animeworld.MainActivity
@@ -245,7 +243,6 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                                 model = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(item.assetFileStringUri.orEmpty())
-                                        .lifecycle(LocalLifecycleOwner.current)
                                         .crossfade(true)
                                         .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
                                         .videoFramePercent(.1)
@@ -478,7 +475,6 @@ private fun VideoContentView(
                                 model = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(item.assetFileStringUri.orEmpty())
-                                        .lifecycle(LocalLifecycleOwner.current)
                                         .crossfade(true)
                                         .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
                                         .videoFramePercent(.1)

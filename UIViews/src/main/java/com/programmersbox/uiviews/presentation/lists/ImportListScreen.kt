@@ -50,14 +50,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.request.lifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
@@ -65,6 +60,7 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -226,16 +222,12 @@ private fun CustomItem(
             .padding(horizontal = 4.dp)
     ) {
         Row {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .build(),
-                placeholder = rememberDrawablePainter(logoDrawable),
+            ImageLoaderChoice(
+                imageUrl = item.imageUrl,
+                placeHolder = rememberDrawablePainter(logoDrawable),
                 error = rememberDrawablePainter(logoDrawable),
                 contentScale = ContentScale.Crop,
-                contentDescription = item.title,
+                name = item.title,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

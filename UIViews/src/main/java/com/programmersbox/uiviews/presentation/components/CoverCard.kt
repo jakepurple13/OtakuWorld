@@ -18,17 +18,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.request.error
-import coil3.request.lifecycle
-import coil3.request.placeholder
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.bounceClick
@@ -36,7 +30,9 @@ import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
 import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
 import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
+import com.skydoves.landscapist.rememberDrawablePainter
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun M3CoverCard(
     imageUrl: String,
@@ -86,16 +82,13 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            ImageLoaderChoice(
+                imageUrl = imageUrl,
+                headers = headers,
+                name = name,
+                placeHolder = placeHolder,
+                error = error,
                 contentScale = ContentScale.FillBounds,
-                contentDescription = name,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -154,16 +147,13 @@ fun M3ImageCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            ImageLoaderChoice(
+                imageUrl = imageUrl,
+                headers = headers,
+                placeHolder = placeHolder,
+                error = error,
                 contentScale = ContentScale.FillBounds,
-                contentDescription = name,
+                name = name,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -240,16 +230,13 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            ImageLoaderChoice(
+                imageUrl = imageUrl,
                 contentScale = ContentScale.FillBounds,
-                contentDescription = name,
+                name = name,
+                headers = headers,
+                placeHolder = rememberDrawablePainter(placeHolder),
+                error = rememberDrawablePainter(error),
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(
@@ -320,16 +307,13 @@ fun M3CoverCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            ImageLoaderChoice(
+                imageUrl = imageUrl,
                 contentScale = ContentScale.FillBounds,
-                contentDescription = name,
+                name = name,
+                headers = headers,
+                placeHolder = rememberDrawablePainter(placeHolder),
+                error = rememberDrawablePainter(error),
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(
@@ -397,16 +381,13 @@ fun M3CoverCard2(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl)
-                    .lifecycle(LocalLifecycleOwner.current)
-                    .crossfade(true)
-                    .placeholder(placeHolder)
-                    .error(error)
-                    .build(),
+            ImageLoaderChoice(
+                imageUrl = imageUrl,
                 contentScale = ContentScale.FillBounds,
-                contentDescription = name,
+                name = name,
+                headers = headers,
+                placeHolder = placeHolder,
+                error = error,
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(

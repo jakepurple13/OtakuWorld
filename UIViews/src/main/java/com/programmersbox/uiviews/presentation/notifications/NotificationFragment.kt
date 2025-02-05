@@ -91,19 +91,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import coil3.request.error
-import coil3.request.lifecycle
-import coil3.request.placeholder
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.extensionloader.SourceRepository
@@ -118,7 +111,7 @@ import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.presentation.components.CoilGradientImage
+import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.GradientImage
 import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.M3CoverCard2
@@ -491,16 +484,9 @@ private fun OptionsSheet(
         ListItem(
             leadingContent = {
                 val logo = koinInject<AppLogo>().logoId
-                CoilGradientImage(
-                    model = rememberAsyncImagePainter(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(i.imageUrl)
-                            .lifecycle(LocalLifecycleOwner.current)
-                            .crossfade(true)
-                            .placeholder(logo)
-                            .error(logo)
-                            .build()
-                    ),
+                GlideGradientImage(
+                    model = i.imageUrl,
+                    placeholder = logo,
                     modifier = Modifier
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         .clip(MaterialTheme.shapes.small)

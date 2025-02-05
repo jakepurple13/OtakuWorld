@@ -23,13 +23,14 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import coil3.request.lifecycle
 import coil3.size.Size
 import com.bumptech.glide.load.model.GlideUrl
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
@@ -144,8 +145,12 @@ internal fun Coil(
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(painter)
-            .lifecycle(LocalLifecycleOwner.current)
             .crossfade(true)
+            .httpHeaders(
+                NetworkHeaders.Builder()
+                    .apply { headers.forEach { (t, u) -> add(t, u) } }
+                    .build()
+            )
             .size(Size.ORIGINAL)
             .build(),
         contentDescription = null,
@@ -155,7 +160,7 @@ internal fun Coil(
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
             .clipToBounds()
     ) {
-        val state = this.painter.state
+        val state by this.painter.state.collectAsStateWithLifecycle()
         when (state) {
             is AsyncImagePainter.State.Error -> Text(
                 stringResource(R.string.pressToRefresh),
