@@ -60,6 +60,7 @@ import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
+import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -170,7 +171,12 @@ fun RecentView(
                 preferPerformance = true
             )
         },
-        snackbarHost = { SnackbarHost(recentVm.snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(
+                recentVm.snackbarHostState,
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
+        }
     ) { p ->
         var showBanner by remember { mutableStateOf(false) }
         OtakuBannerBox(
