@@ -148,7 +148,6 @@ dependencies {
     implementation(libs.ackpine.core)
     implementation(libs.ackpine.ktx)
 
-
     //implementation(libs.bundles.xr)
 
     //TODO: Use this to check recomposition count on every screen

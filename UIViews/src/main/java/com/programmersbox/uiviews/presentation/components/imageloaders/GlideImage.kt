@@ -21,7 +21,13 @@ fun CustomGlideImage(
     error: Int = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
 ) {
-    val url = remember(imageUrl) { GlideUrl(imageUrl) { headers.mapValues { it.value.toString() } } }
+    val url = remember(imageUrl) {
+        try {
+            GlideUrl(imageUrl) { headers.mapValues { it.value.toString() } }
+        } catch (_: IllegalArgumentException) {
+            ""
+        }
+    }
 
     GlideImage(
         imageModel = { url },
@@ -49,8 +55,13 @@ fun CustomGlideImage(
     error: Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
 ) {
-    val url = remember(imageUrl) { GlideUrl(imageUrl) { headers.mapValues { it.value.toString() } } }
-
+    val url = remember(imageUrl) {
+        try {
+            GlideUrl(imageUrl) { headers.mapValues { it.value.toString() } }
+        } catch (_: IllegalArgumentException) {
+            ""
+        }
+    }
     GlideImage(
         imageModel = { url },
         imageOptions = ImageOptions(

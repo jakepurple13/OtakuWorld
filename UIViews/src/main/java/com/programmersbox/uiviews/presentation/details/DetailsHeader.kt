@@ -102,7 +102,7 @@ internal fun DetailsHeader(
     val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
         try {
-            GlideUrl(model.imageUrl) { model.extras.map { it.key to it.value.toString() }.toMap() }
+            GlideUrl(model.imageUrl) { model.extras.mapValues { it.value.toString() } }
         } catch (e: IllegalArgumentException) {
             e.printStackTrace()
             val b = createBitmap(5, 5)
