@@ -11,9 +11,9 @@ androidxBaselineprofileGradlePlugin = "1.3.3"
 composeCollapsable = "0.4.0"
 dragselect = "2.4.1"
 easylauncher = "6.4.0"
-firebaseCrashlyticsGradle = "3.0.2"
+firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
-haze = "1.3.0"
+haze = "1.3.1"
 kamelImage = "1.0.3"
 latestAboutLibsRelease = "11.5.0"
 coroutinesVersion = "1.10.1"
@@ -49,14 +49,14 @@ firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "1.4.2"
 
-firebaseBom = "33.8.0"
+firebaseBom = "33.9.0"
 
 ### MangaWorld
 piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.5.1"
+media3Version = "1.6.0-alpha03"
 
 junit = "1.2.1"
 espresso-core = "3.6.1"
@@ -72,7 +72,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.1.2"
-ackpineVersion = "0.10.1"
+ackpineVersion = "0.10.2"
 
 arcore = "1.0.0-alpha01"
 composeXr = "1.0.0-alpha02"

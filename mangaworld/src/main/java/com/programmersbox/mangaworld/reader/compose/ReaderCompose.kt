@@ -327,7 +327,8 @@ fun ReadView(
                             onShowFloatBarChange = { showFloatBar = it },
                         )
                     } else {
-                        key(scrollAlpha) {
+                        //TODO: Can't really use key since it doesn't give the button animation
+                        //key(scrollAlpha) {
                             BottomBar(
                                 onPageSelectClick = { showBottomSheet = true },
                                 onSettingsClick = { settingsPopup = true },
@@ -338,12 +339,12 @@ fun ReadView(
                                 isAmoledMode = isAmoledMode,
                                 modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
                                     //TODO: Trying out
-                                    progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
+                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
                                     blurEnabled = showBlur
-                                    alpha = scrollAlpha
+                                    //alpha = scrollAlpha
                                 }
                             )
-                        }
+                        //}
                     }
                 }
             },

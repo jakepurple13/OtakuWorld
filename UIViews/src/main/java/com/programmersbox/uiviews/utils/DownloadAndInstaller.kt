@@ -54,6 +54,7 @@ class DownloadAndInstaller(
 
         return channelFlow<DownloadAndInstallStatus> {
             trace("download_and_install") {
+                //TODO: Show notification for progress
                 client.prepareGet(url) {
                     onDownload { bytesSentTotal, contentLength ->
                         send(DownloadAndInstallStatus.Downloading(bytesSentTotal.toFloat() / (contentLength ?: 1L)))
@@ -65,9 +66,7 @@ class DownloadAndInstaller(
 
                 println("Starting Install Session")
 
-                val sess = packageInstaller.createSession(
-                    File(context.cacheDir, "${url.toUri().lastPathSegment}.apk").toUri()
-                ) {
+                val sess = packageInstaller.createSession(file.toUri()) {
                     packageSource = PackageSource.DownloadedFile
 
                     confirmation = Confirmation.DEFERRED
