@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.presentation.lists
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -36,13 +37,13 @@ class OtakuCustomListViewModel(
     var showBySource by mutableStateOf(false)
 
     var searchBarActive by mutableStateOf(false)
-    var searchQuery by mutableStateOf("")
+    var searchQuery by mutableStateOf(TextFieldState())
 
     val items by derivedStateOf {
         customList?.let {
             when {
-                showBySource -> OtakuListState.BySource(it, searchQuery, filtered)
-                else -> OtakuListState.ByTitle(it, searchQuery, filtered)
+                showBySource -> OtakuListState.BySource(it, searchQuery.text.toString(), filtered)
+                else -> OtakuListState.ByTitle(it, searchQuery.text.toString(), filtered)
             }
         } ?: OtakuListState.Empty
     }
@@ -50,7 +51,7 @@ class OtakuCustomListViewModel(
     val searchItems by derivedStateOf {
         customList
             ?.list
-            ?.filter { it.title.contains(searchQuery, ignoreCase = true) }
+            ?.filter { it.title.contains(searchQuery.text.toString(), ignoreCase = true) }
             ?.filter { filtered.contains(it.source) }
             .orEmpty()
     }
@@ -85,7 +86,7 @@ class OtakuCustomListViewModel(
             .distinct()
         filtered.clear()
         filtered.addAll(sources)
-        searchQuery = ""
+        searchQuery = TextFieldState()
         searchBarActive = false
     }
 
@@ -114,7 +115,7 @@ class OtakuCustomListViewModel(
     }
 
     fun setQuery(query: String) {
-        searchQuery = query
+        //searchQuery = query
     }
 
     fun writeToFile(document: Uri, context: Context) {

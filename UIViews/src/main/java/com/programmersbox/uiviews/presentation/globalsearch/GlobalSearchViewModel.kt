@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.globalsearch
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -36,7 +37,7 @@ class GlobalSearchViewModel(
         .observeInternetConnectivity()
         .flowOn(Dispatchers.IO)
 
-    var searchText by mutableStateOf(initialSearch)
+    var searchText by mutableStateOf(TextFieldState(initialSearch))
     var searchListPublisher by mutableStateOf<List<SearchModel>>(emptyList())
     var isRefreshing by mutableStateOf(false)
     var isSearching by mutableStateOf(false)
@@ -59,7 +60,7 @@ class GlobalSearchViewModel(
                     .apmap { a ->
                         a
                             .apiService
-                            .searchSourceList(searchText, list = emptyList())
+                            .searchSourceList(searchText.text.toString(), list = emptyList())
                             .dispatchIoAndCatchList()
                             .map { SearchModel(a.apiService.serviceName, it) }
                             .filter { it.data.isNotEmpty() }

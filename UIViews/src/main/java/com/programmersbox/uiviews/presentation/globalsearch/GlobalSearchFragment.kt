@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
@@ -180,28 +181,22 @@ fun GlobalSearchView(
                 }
                 Column {
                     DynamicSearchBar(
-                        query = viewModel.searchText,
-                        onQueryChange = { viewModel.searchText = it },
+                        textFieldState = viewModel.searchText,
                         isDocked = isHorizontal,
                         onSearch = {
                             closeSearchBar()
-                            if (viewModel.searchText.isNotEmpty()) {
+                            if (viewModel.searchText.text.isNotEmpty()) {
                                 scope.launch(Dispatchers.IO) {
-                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
                                 }
                             }
                             viewModel.searchForItems()
                         },
-                        active = active,
-                        onActiveChange = {
-                            active = it
-                            if (!active) focusManager.clearFocus()
-                        },
                         placeholder = { Text(stringResource(R.string.global_search)) },
                         leadingIcon = { BackButton() },
                         trailingIcon = {
-                            AnimatedVisibility(viewModel.searchText.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.searchText = "" }) {
+                            AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
                             }
@@ -257,11 +252,11 @@ fun GlobalSearchView(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            viewModel.searchText = historyModel.searchText
+                                            viewModel.searchText = TextFieldState(historyModel.searchText)
                                             closeSearchBar()
-                                            if (viewModel.searchText.isNotEmpty()) {
+                                            if (viewModel.searchText.text.isNotEmpty()) {
                                                 scope.launch(Dispatchers.IO) {
-                                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText))
+                                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
                                                 }
                                             }
                                             viewModel.searchForItems()
@@ -273,7 +268,7 @@ fun GlobalSearchView(
                             }
                         }
                     }
-                    HorizontalDivider()
+                    //HorizontalDivider()
                 }
             },
             sheetContent = searchModelBottom?.let { s ->

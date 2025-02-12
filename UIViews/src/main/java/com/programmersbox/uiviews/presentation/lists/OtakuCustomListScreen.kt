@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -159,7 +160,7 @@ fun OtakuCustomListScreen(
     writeToFile: (Uri, Context) -> Unit,
     deleteAll: suspend () -> Unit,
     rename: suspend (String) -> Unit,
-    searchQuery: String,
+    searchQuery: TextFieldState,
     setQuery: (String) -> Unit,
     searchBarActive: Boolean,
     onSearchBarActiveChange: (Boolean) -> Unit,
@@ -316,12 +317,11 @@ fun OtakuCustomListScreen(
             },
             topBar = {
                 DynamicSearchBar(
-                    query = searchQuery,
-                    onQueryChange = setQuery,
+                    textFieldState = searchQuery,
                     isDocked = isHorizontal,
                     onSearch = { onSearchBarActiveChange(false) },
-                    active = searchBarActive,
-                    onActiveChange = { onSearchBarActiveChange(it) },
+                    //active = searchBarActive,
+                    //onActiveChange = { onSearchBarActiveChange(it) },
                     placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
                     leadingIcon = {
                         IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
@@ -342,7 +342,7 @@ fun OtakuCustomListScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AnimatedVisibility(searchQuery.isNotEmpty()) {
+                            AnimatedVisibility(searchQuery.text.isNotEmpty()) {
                                 IconButton(onClick = { setQuery("") }) {
                                     Icon(Icons.Default.Cancel, null)
                                 }
