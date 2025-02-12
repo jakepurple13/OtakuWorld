@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.favorite
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -46,7 +47,7 @@ class FavoriteViewModel(
             .launchIn(viewModelScope)
     }
 
-    var searchText by mutableStateOf("")
+    var searchText by mutableStateOf(TextFieldState())
 
     var sortedBy by mutableStateOf<SortFavoritesBy<*>>(SortFavoritesBy.TITLE)
     var reverse by mutableStateOf(false)
@@ -54,7 +55,7 @@ class FavoriteViewModel(
     val selectedSources = mutableStateListOf<String>()
 
     val listSources by derivedStateOf {
-        favoriteList.filter { it.title.contains(searchText, true) && it.source in selectedSources }
+        favoriteList.filter { it.title.contains(searchText.text, true) && it.source in selectedSources }
     }
 
     val groupedSources by derivedStateOf {

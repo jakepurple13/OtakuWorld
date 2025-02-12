@@ -3,7 +3,6 @@ package com.programmersbox.uiviews.presentation.favorite
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -28,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReadMore
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -58,6 +59,8 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopSearchBar
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,7 +86,6 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
@@ -255,7 +257,83 @@ fun FavoriteUi(
                             focusManager.clearFocus()
                             active = false
                         }
-                        DynamicSearchBar(
+                        val searchBarState = rememberSearchBarState()
+
+                        val searchField: @Composable () -> Unit = {
+                            SearchBarDefaults.InputField(
+                                searchBarState = searchBarState,
+                                textFieldState = viewModel.searchText,
+                                onSearch = { closeSearchBar() },
+                                placeholder = {
+                                    Text(
+                                        context.resources.getQuantityString(
+                                            R.plurals.numFavorites,
+                                            viewModel.listSources.size,
+                                            viewModel.listSources.size
+                                        )
+                                    )
+                                },
+                                leadingIcon = { BackButton() },
+                                trailingIcon = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
+                                            IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
+                                                Icon(Icons.Default.Cancel, null)
+                                            }
+                                        }
+
+                                        AnimatedVisibility(!active) {
+                                            IconButton(onClick = { showSort = true }) {
+                                                Icon(Icons.AutoMirrored.Filled.Sort, null)
+                                            }
+                                        }
+                                    }
+                                },
+                                colors = if (showBlur)
+                                    SearchBarDefaults.inputFieldColors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                    )
+                                else
+                                    SearchBarDefaults.inputFieldColors()
+                            )
+                        }
+
+                        TopSearchBar(
+                            state = searchBarState,
+                            inputField = searchField
+                        )
+
+                        ExpandedFullScreenSearchBar(
+                            state = searchBarState,
+                            inputField = searchField
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
+                                    ListItem(
+                                        headlineContent = { Text(dbModel.title) },
+                                        supportingContent = { Text(dbModel.source) },
+                                        leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                                        modifier = Modifier.clickable {
+                                            viewModel.searchText = TextFieldState(dbModel.title)
+                                            closeSearchBar()
+                                        }
+                                    )
+                                    if (index != 3) {
+                                        HorizontalDivider()
+                                    }
+                                }
+                            }
+                        }
+
+                        /*DynamicSearchBar(
                             isDocked = isHorizontal,
                             query = viewModel.searchText,
                             onQueryChange = { viewModel.searchText = it },
@@ -334,7 +412,7 @@ fun FavoriteUi(
                                     }
                                 }
                             }
-                        }
+                        }*/
 
                         var showFilterBySourceModal by remember { mutableStateOf(false) }
 
