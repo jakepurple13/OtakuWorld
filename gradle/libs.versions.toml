@@ -76,7 +76,7 @@ ackpineVersion = "0.10.2"
 
 arcore = "1.0.0-alpha02"
 composeXr = "1.0.0-alpha02"
-scenecore = "1.0.0-alpha01"
+scenecore = "1.0.0-alpha02"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
