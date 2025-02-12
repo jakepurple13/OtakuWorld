@@ -65,6 +65,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -1031,9 +1032,10 @@ private fun NotifyAt(
     )
 
     if (showTimePicker) {
-        AlertDialog(
+        TimePickerDialog(
             onDismissRequest = { showTimePicker = false },
             title = { Text(stringResource(id = R.string.selectTime)) },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
             confirmButton = {
                 val dateTimeFormatter = LocalSystemDateTimeFormat.current
                 TextButton(
@@ -1068,10 +1070,8 @@ private fun NotifyAt(
                         ).show()
                     }
                 ) { Text(stringResource(R.string.ok)) }
-            },
-            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
-            text = { TimePicker(state = timeState) }
-        )
+            }
+        ) { TimePicker(state = timeState) }
     }
 
     if (showDatePicker) {
