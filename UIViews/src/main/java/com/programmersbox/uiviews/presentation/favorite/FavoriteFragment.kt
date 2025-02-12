@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.favorite
 
+import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -135,7 +136,7 @@ fun FavoriteUi(
 
     var showSort by remember { mutableStateOf(false) }
 
-    val logo = koinInject<AppLogo>().logoId
+    val logo = koinInject<AppLogo>()
 
     SourceNotInstalledModal(
         showItem = showDbModel?.title,
@@ -233,7 +234,7 @@ fun FavoriteUi(
 
     OtakuBannerBox(
         showBanner = showBanner,
-        placeholder = logo,
+        placeholder = logo.logoId,
         modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
     ) {
         OtakuHazeScaffold(
@@ -455,7 +456,7 @@ fun FavoriteUi(
                         }
                     },
                     onShowBanner = { showBanner = it },
-                    logo = logo,
+                    logo = logo.logo,
                 )
             }
         }
@@ -471,7 +472,7 @@ private fun BannerScope.FavoritesGrid(
     navController: NavController,
     moreInfoClick: (DbModel) -> Unit,
     onShowBanner: (Boolean) -> Unit,
-    logo: Int,
+    logo: Drawable,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(

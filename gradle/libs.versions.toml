@@ -32,7 +32,7 @@ jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.0"
 okhttpVersion = "4.12.0"
-ktorVersion = "3.0.3"
+ktorVersion = "3.1.0"
 workVersion = "2.10.0"
 ziplineVersion = "1.1.0"
 landscapist = "2.4.6"
@@ -74,7 +74,7 @@ googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 datastore = "1.1.2"
 ackpineVersion = "0.10.2"
 
-arcore = "1.0.0-alpha01"
+arcore = "1.0.0-alpha02"
 composeXr = "1.0.0-alpha02"
 scenecore = "1.0.0-alpha01"
 
@@ -213,7 +213,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.8.5"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.8.6"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
