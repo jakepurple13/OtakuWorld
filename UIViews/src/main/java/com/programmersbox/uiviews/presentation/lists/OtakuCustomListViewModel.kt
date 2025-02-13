@@ -36,7 +36,6 @@ class OtakuCustomListViewModel(
     val filtered = mutableStateListOf<String>()
     var showBySource by mutableStateOf(false)
 
-    var searchBarActive by mutableStateOf(false)
     var searchQuery by mutableStateOf(TextFieldState())
 
     val items by derivedStateOf {
@@ -87,7 +86,6 @@ class OtakuCustomListViewModel(
         filtered.clear()
         filtered.addAll(sources)
         searchQuery = TextFieldState()
-        searchBarActive = false
     }
 
     fun filter(source: String) {
@@ -115,7 +113,7 @@ class OtakuCustomListViewModel(
     }
 
     fun setQuery(query: String) {
-        //searchQuery = query
+        searchQuery = TextFieldState(query)
     }
 
     fun writeToFile(document: Uri, context: Context) {

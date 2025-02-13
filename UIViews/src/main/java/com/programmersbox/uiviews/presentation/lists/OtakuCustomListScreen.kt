@@ -9,13 +9,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,7 +70,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -80,6 +78,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -162,8 +161,6 @@ fun OtakuCustomListScreen(
     rename: suspend (String) -> Unit,
     searchQuery: TextFieldState,
     setQuery: (String) -> Unit,
-    searchBarActive: Boolean,
-    onSearchBarActiveChange: (Boolean) -> Unit,
     navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
     addSecurityItem: (UUID) -> Unit,
@@ -316,41 +313,37 @@ fun OtakuCustomListScreen(
                 )
             },
             topBar = {
+                val searchBarState = rememberSearchBarState()
+
                 DynamicSearchBar(
                     textFieldState = searchQuery,
+                    searchBarState = searchBarState,
                     isDocked = isHorizontal,
-                    onSearch = { onSearchBarActiveChange(false) },
-                    //active = searchBarActive,
-                    //onActiveChange = { onSearchBarActiveChange(it) },
+                    onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
                     placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
                     leadingIcon = {
-                        IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                        if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                            IconButton(
+                                onClick = { scope.launch { searchBarState.animateToCollapsed() } }
+                            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+
+                        } else {
+                            IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                        }
                     },
-                    colors = SearchBarDefaults.colors(
-                        containerColor = animateColorAsState(
-                            MaterialTheme.colorScheme.surface.copy(
-                                alpha = if (searchBarActive) {
-                                    1f
-                                } else {
-                                    if (showBlur) 0f else 1f
-                                }
-                            ),
-                            label = ""
-                        ).value,
-                    ),
                     trailingIcon = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             AnimatedVisibility(searchQuery.text.isNotEmpty()) {
-                                IconButton(onClick = { setQuery("") }) {
-                                    Icon(Icons.Default.Cancel, null)
-                                }
+                                IconButton(
+                                    onClick = { setQuery("") }
+                                ) { Icon(Icons.Default.Cancel, null) }
                             }
 
                             Text("(${customItem?.list.orEmpty().size})")
 
-                            AnimatedVisibility(!searchBarActive) {
+                            AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -379,17 +372,15 @@ fun OtakuCustomListScreen(
                             }
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .let {
-                            if (showBlur)
-                                it.hazeEffect(
-                                    hazeState,
-                                    HazeMaterials.regular(MaterialTheme.colorScheme.surface)
-                                ) {
-                                    progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                                } else it
-                        },
+                    modifier = Modifier.let {
+                        if (showBlur)
+                            it.hazeEffect(
+                                hazeState,
+                                HazeMaterials.regular(MaterialTheme.colorScheme.surface)
+                            ) {
+                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                            } else it
+                    },
                 ) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(1),
@@ -399,18 +390,20 @@ fun OtakuCustomListScreen(
                             .fillMaxWidth()
                     ) {
                         itemsIndexed(items = viewModel.searchItems) { index, item ->
-                            ListItem(
-                                headlineContent = { Text(item.title) },
-                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                modifier = Modifier
-                                    .clickable {
-                                        setQuery(item.title)
-                                        onSearchBarActiveChange(false)
-                                    }
-                                    .animateItem()
-                            )
-                            if (index != 0) {
-                                HorizontalDivider()
+                            Card(
+                                onClick = {
+                                    setQuery(item.title)
+                                    scope.launch { searchBarState.animateToCollapsed() }
+                                },
+                                modifier = Modifier.animateItem()
+                            ) {
+                                ListItem(
+                                    headlineContent = { Text(item.title) },
+                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = Color.Transparent
+                                    )
+                                )
                             }
                         }
                     }
@@ -798,8 +791,6 @@ private fun CustomListScreenPreview() {
             rename = viewModel::rename,
             searchQuery = viewModel.searchQuery,
             setQuery = viewModel::setQuery,
-            searchBarActive = viewModel.searchBarActive,
-            onSearchBarActiveChange = { viewModel.searchBarActive = it },
             addSecurityItem = {},
             removeSecurityItem = {},
         )

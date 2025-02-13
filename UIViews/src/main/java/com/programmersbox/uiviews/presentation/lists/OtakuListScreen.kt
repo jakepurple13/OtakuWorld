@@ -108,8 +108,6 @@ fun OtakuListScreen(
                         rename = customListViewModel::rename,
                         searchQuery = customListViewModel.searchQuery,
                         setQuery = customListViewModel::setQuery,
-                        searchBarActive = customListViewModel.searchBarActive,
-                        onSearchBarActiveChange = { customListViewModel.searchBarActive = it },
                         navigateBack = {
                             customListViewModel.setList(null)
                             scope.launch { state.navigateBack() }

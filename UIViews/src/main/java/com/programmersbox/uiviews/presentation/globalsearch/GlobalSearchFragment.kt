@@ -4,10 +4,8 @@ import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,20 +28,23 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomSheetScaffoldState
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,13 +56,13 @@ import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +71,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -140,7 +140,6 @@ fun GlobalSearchView(
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val navController = LocalNavController.current
 
-    val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val pullRefreshState = rememberPullToRefreshState()
@@ -173,15 +172,15 @@ fun GlobalSearchView(
         LimitedBottomSheetScaffold(
             scaffoldState = bottomScaffold,
             topBar = {
-                var active by rememberSaveable { mutableStateOf(false) }
+                val searchBarState = rememberSearchBarState()
 
                 fun closeSearchBar() {
-                    focusManager.clearFocus()
-                    active = false
+                    scope.launch { searchBarState.animateToCollapsed() }
                 }
                 Column {
                     DynamicSearchBar(
                         textFieldState = viewModel.searchText,
+                        searchBarState = searchBarState,
                         isDocked = isHorizontal,
                         onSearch = {
                             closeSearchBar()
@@ -193,7 +192,16 @@ fun GlobalSearchView(
                             viewModel.searchForItems()
                         },
                         placeholder = { Text(stringResource(R.string.global_search)) },
-                        leadingIcon = { BackButton() },
+                        leadingIcon = {
+                            if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                                IconButton(
+                                    onClick = { closeSearchBar() }
+                                ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+
+                            } else {
+                                BackButton()
+                            }
+                        },
                         trailingIcon = {
                             AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
@@ -202,16 +210,6 @@ fun GlobalSearchView(
                             }
                         },
                         colors = SearchBarDefaults.colors(
-                            containerColor = animateColorAsState(
-                                MaterialTheme.colorScheme.surface.copy(
-                                    alpha = if (active) {
-                                        1f
-                                    } else {
-                                        if (showBlur) 0f else 1f
-                                    }
-                                ),
-                                label = ""
-                            ).value,
                             inputFieldColors = if (showBlur)
                                 SearchBarDefaults.inputFieldColors(
                                     focusedContainerColor = Color.Transparent,
@@ -220,55 +218,59 @@ fun GlobalSearchView(
                             else
                                 SearchBarDefaults.inputFieldColors()
                         ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .let {
-                                if (showBlur) {
-                                    val surface = MaterialTheme.colorScheme.surface
-                                    it.hazeEffect(
-                                        hazeState,
-                                        HazeMaterials.thin(surface)
-                                    ) {
-                                        backgroundColor = surface
-                                        progressive =
-                                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                                    }
-                                } else it
-                            }
+                        modifier = Modifier.let {
+                            if (showBlur) {
+                                val surface = MaterialTheme.colorScheme.surface
+                                it.hazeEffect(
+                                    hazeState,
+                                    HazeMaterials.thin(surface)
+                                ) {
+                                    backgroundColor = surface
+                                    progressive =
+                                        HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                                }
+                            } else it
+                        }
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             itemsIndexed(history) { index, historyModel ->
-                                ListItem(
-                                    headlineContent = { Text(historyModel.searchText) },
-                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                    trailingContent = {
-                                        IconButton(
-                                            onClick = { scope.launch { dao.deleteHistory(historyModel) } },
-                                        ) { Icon(Icons.Default.Cancel, null) }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            viewModel.searchText = TextFieldState(historyModel.searchText)
-                                            closeSearchBar()
-                                            if (viewModel.searchText.text.isNotEmpty()) {
-                                                scope.launch(Dispatchers.IO) {
-                                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
-                                                }
+                                Card(
+                                    onClick = {
+                                        viewModel.searchText = TextFieldState(historyModel.searchText)
+                                        closeSearchBar()
+                                        if (viewModel.searchText.text.isNotEmpty()) {
+                                            scope.launch(Dispatchers.IO) {
+                                                dao.insertHistory(
+                                                    HistoryItem(
+                                                        System.currentTimeMillis(),
+                                                        viewModel.searchText.text.toString()
+                                                    )
+                                                )
                                             }
-                                            viewModel.searchForItems()
                                         }
-                                )
-                                if (index != history.lastIndex) {
-                                    HorizontalDivider()
+                                        viewModel.searchForItems()
+                                    }
+                                ) {
+                                    ListItem(
+                                        headlineContent = { Text(historyModel.searchText) },
+                                        leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                        trailingContent = {
+                                            IconButton(
+                                                onClick = { scope.launch { dao.deleteHistory(historyModel) } },
+                                            ) { Icon(Icons.Default.Cancel, null) }
+                                        },
+                                        colors = ListItemDefaults.colors(
+                                            containerColor = Color.Transparent
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 }
                             }
                         }
                     }
-                    //HorizontalDivider()
                 }
             },
             sheetContent = searchModelBottom?.let { s ->
@@ -464,6 +466,21 @@ private fun BannerScope.Content(
                 }
                 if (viewModel.isSearching) {
                     item { CircularProgressIndicator() }
+                }
+            } else if (viewModel.searchListPublisher.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Search,
+                            null,
+                            modifier = Modifier.size(50.dp)
+                        )
+                        Text("Search for something!")
+                    }
                 }
             }
         }
