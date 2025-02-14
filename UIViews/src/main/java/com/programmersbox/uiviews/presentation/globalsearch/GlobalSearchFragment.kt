@@ -177,97 +177,95 @@ fun GlobalSearchView(
                 fun closeSearchBar() {
                     scope.launch { searchBarState.animateToCollapsed() }
                 }
-                Column {
-                    DynamicSearchBar(
-                        textFieldState = viewModel.searchText,
-                        searchBarState = searchBarState,
-                        isDocked = isHorizontal,
-                        onSearch = {
-                            closeSearchBar()
-                            if (viewModel.searchText.text.isNotEmpty()) {
-                                scope.launch(Dispatchers.IO) {
-                                    dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
-                                }
+                DynamicSearchBar(
+                    textFieldState = viewModel.searchText,
+                    searchBarState = searchBarState,
+                    isDocked = isHorizontal,
+                    onSearch = {
+                        closeSearchBar()
+                        if (viewModel.searchText.text.isNotEmpty()) {
+                            scope.launch(Dispatchers.IO) {
+                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
                             }
-                            viewModel.searchForItems()
-                        },
-                        placeholder = { Text(stringResource(R.string.global_search)) },
-                        leadingIcon = {
-                            if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                                IconButton(
-                                    onClick = { closeSearchBar() }
-                                ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
-                            } else {
-                                BackButton()
-                            }
-                        },
-                        trailingIcon = {
-                            AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
-                                    Icon(Icons.Default.Cancel, null)
-                                }
-                            }
-                        },
-                        colors = SearchBarDefaults.colors(
-                            inputFieldColors = if (showBlur)
-                                SearchBarDefaults.inputFieldColors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                )
-                            else
-                                SearchBarDefaults.inputFieldColors()
-                        ),
-                        modifier = Modifier.let {
-                            if (showBlur) {
-                                val surface = MaterialTheme.colorScheme.surface
-                                it.hazeEffect(
-                                    hazeState,
-                                    HazeMaterials.thin(surface)
-                                ) {
-                                    backgroundColor = surface
-                                    progressive =
-                                        HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                                }
-                            } else it
                         }
+                        viewModel.searchForItems()
+                    },
+                    placeholder = { Text(stringResource(R.string.global_search)) },
+                    leadingIcon = {
+                        if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                            IconButton(
+                                onClick = { closeSearchBar() }
+                            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+
+                        } else {
+                            BackButton()
+                        }
+                    },
+                    trailingIcon = {
+                        AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
+                                Icon(Icons.Default.Cancel, null)
+                            }
+                        }
+                    },
+                    colors = SearchBarDefaults.colors(
+                        inputFieldColors = if (showBlur)
+                            SearchBarDefaults.inputFieldColors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                            )
+                        else
+                            SearchBarDefaults.inputFieldColors()
+                    ),
+                    modifier = Modifier.let {
+                        if (showBlur) {
+                            val surface = MaterialTheme.colorScheme.surface
+                            it.hazeEffect(
+                                hazeState,
+                                HazeMaterials.thin(surface)
+                            ) {
+                                backgroundColor = surface
+                                progressive =
+                                    HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                            }
+                        } else it
+                    }
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            itemsIndexed(history) { index, historyModel ->
-                                Card(
-                                    onClick = {
-                                        viewModel.searchText = TextFieldState(historyModel.searchText)
-                                        closeSearchBar()
-                                        if (viewModel.searchText.text.isNotEmpty()) {
-                                            scope.launch(Dispatchers.IO) {
-                                                dao.insertHistory(
-                                                    HistoryItem(
-                                                        System.currentTimeMillis(),
-                                                        viewModel.searchText.text.toString()
-                                                    )
+                        itemsIndexed(history) { index, historyModel ->
+                            Card(
+                                onClick = {
+                                    viewModel.searchText = TextFieldState(historyModel.searchText)
+                                    closeSearchBar()
+                                    if (viewModel.searchText.text.isNotEmpty()) {
+                                        scope.launch(Dispatchers.IO) {
+                                            dao.insertHistory(
+                                                HistoryItem(
+                                                    System.currentTimeMillis(),
+                                                    viewModel.searchText.text.toString()
                                                 )
-                                            }
+                                            )
                                         }
-                                        viewModel.searchForItems()
                                     }
-                                ) {
-                                    ListItem(
-                                        headlineContent = { Text(historyModel.searchText) },
-                                        leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                        trailingContent = {
-                                            IconButton(
-                                                onClick = { scope.launch { dao.deleteHistory(historyModel) } },
-                                            ) { Icon(Icons.Default.Cancel, null) }
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = Color.Transparent
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
+                                    viewModel.searchForItems()
                                 }
+                            ) {
+                                ListItem(
+                                    headlineContent = { Text(historyModel.searchText) },
+                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    trailingContent = {
+                                        IconButton(
+                                            onClick = { scope.launch { dao.deleteHistory(historyModel) } },
+                                        ) { Icon(Icons.Default.Cancel, null) }
+                                    },
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = Color.Transparent
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
