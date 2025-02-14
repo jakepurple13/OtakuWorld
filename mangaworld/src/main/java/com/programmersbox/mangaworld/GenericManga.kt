@@ -20,19 +20,16 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
-import androidx.compose.material.icons.filled.BorderBottom
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -57,6 +54,8 @@ import com.programmersbox.mangaworld.reader.compose.ReadViewModel
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
+import com.programmersbox.mangaworld.settings.ReaderSettings
+import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -65,9 +64,9 @@ import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState
@@ -89,7 +88,7 @@ import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get(), get(), get()) }
+    single<GenericInfo> { GenericManga(get(), get(), get(), get()) }
     single { NetworkHelper(get()) }
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     single { ChapterHolder() }
@@ -106,6 +105,7 @@ class GenericManga(
     val context: Context,
     val chapterHolder: ChapterHolder,
     val mangaSettingsHandling: MangaSettingsHandling,
+    val settingsHandling: SettingsHandling,
 ) : GenericInfo {
 
     override val sourceType: String get() = "manga"
@@ -284,6 +284,15 @@ class GenericManga(
                     interactionSource = null
                 ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
             )
+
+            PreferenceSetting(
+                settingTitle = { Text("Manga Reader Settings") },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null
+                ) { navController.navigate(ReaderSettingsScreen) { launchSingleTop = true } }
+            )
         }
 
         generalSettings {
@@ -379,26 +388,8 @@ class GenericManga(
         }
 
         playerSettings {
-            val navController = LocalNavController.current
             PlayerSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
-                onImageLoaderClick = { navController.navigate(ImageLoaderSettingsRoute) { launchSingleTop = true } }
-            )
-
-            var userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
-            SwitchSetting(
-                value = userGestureAllowed,
-                updateValue = { userGestureAllowed = it },
-                settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
-                settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
-            )
-
-            var useFloatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
-            SwitchSetting(
-                value = useFloatingBottomBar,
-                updateValue = { useFloatingBottomBar = it },
-                settingTitle = { Text("Use a Floating Bottom Bar in Reader") },
-                settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) }
             )
         }
     }
@@ -420,7 +411,6 @@ class GenericManga(
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
-        //TODO: Add a settings screen that looks like the reader and the user can press on elements to customize
         composable(
             DownloadViewModel.DownloadRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
@@ -437,6 +427,17 @@ class GenericManga(
         ) {
             trackScreen(ImageLoaderSettingsRoute)
             ImageLoaderSettings(mangaSettingsHandling)
+        }
+
+        composable<ReaderSettingsScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
+        ) {
+            trackScreen("readerSettings")
+            ReaderSettings(
+                mangaSettingsHandling = mangaSettingsHandling,
+                settingsHandling = settingsHandling
+            )
         }
     }
 

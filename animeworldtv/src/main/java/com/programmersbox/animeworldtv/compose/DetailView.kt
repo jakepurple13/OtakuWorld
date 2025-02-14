@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,7 +66,7 @@ fun DetailView() {
     val vm = viewModel { DetailViewModel(createSavedStateHandle()) }
     val navController = LocalNavController.current
     val childPadding = rememberChildPadding()
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val screenHeight = LocalWindowInfo.current.containerSize.height.dp
 
     BackHandler { navController.popBackStack() }
 

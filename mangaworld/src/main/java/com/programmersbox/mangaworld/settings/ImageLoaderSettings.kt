@@ -121,7 +121,7 @@ fun ImageLoaderSettings(
 }
 
 @Composable
-private fun ImageLoaderType.Composed(
+fun ImageLoaderType.Composed(
     url: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
