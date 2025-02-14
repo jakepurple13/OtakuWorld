@@ -10,20 +10,14 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Numbers
@@ -38,7 +32,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarScrollBehavior
-import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +40,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalFloatingToolbar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -202,71 +196,60 @@ internal fun FloatingBottomBar(
     onShowFloatBarChange: (Boolean) -> Unit = {},
     exitAlwaysScrollBehavior: FloatingToolbarScrollBehavior? = null,
 ) {
-    Box(
-        modifier = Modifier.fillMaxWidth()
+    //TODO: Maybe have a setting to choose between vertical and horizontal?
+    VerticalFloatingToolbar(
+        expanded = showFloatBar,
+        scrollBehavior = exitAlwaysScrollBehavior,
+        floatingActionButton = {
+            FloatingToolbarDefaults.StandardFloatingActionButton(
+                onClick = { onShowFloatBarChange(!showFloatBar) },
+            ) {
+                Icon(
+                    if (showFloatBar) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+        modifier = modifier
     ) {
-        HorizontalFloatingToolbar(
-            modifier = modifier
-                .align(Alignment.BottomEnd)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .offset(y = -FloatingToolbarDefaults.ScreenOffset),
-            expanded = showFloatBar,
-            leadingContent = {
-                val prevShown = vm.currentChapter < vm.list.lastIndex
-                val nextShown = vm.currentChapter > 0
+        val prevShown = vm.currentChapter < vm.list.lastIndex
+        val nextShown = vm.currentChapter > 0
 
-                AnimatedVisibility(
-                    visible = prevShown && vm.list.size > 1,
-                    enter = expandHorizontally(expandFrom = Alignment.Start),
-                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                ) {
-                    PreviousIconButton(
-                        previousChapter = chapterChange,
-                        vm = vm,
-                    )
-                }
+        AnimatedVisibility(
+            visible = prevShown && vm.list.size > 1,
+            enter = expandHorizontally(expandFrom = Alignment.Start),
+            exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+        ) {
+            PreviousIconButton(
+                previousChapter = chapterChange,
+                vm = vm,
+            )
+        }
 
-                GoBackIconButton()
+        GoBackIconButton()
 
-                AnimatedVisibility(
-                    visible = nextShown && vm.list.size > 1,
-                    enter = expandHorizontally(),
-                    exit = shrinkHorizontally()
-                ) {
-                    NextIconButton(
-                        nextChapter = chapterChange,
-                        vm = vm,
-                    )
-                }
+        AnimatedVisibility(
+            visible = nextShown && vm.list.size > 1,
+            enter = expandHorizontally(),
+            exit = shrinkHorizontally()
+        ) {
+            NextIconButton(
+                nextChapter = chapterChange,
+                vm = vm,
+            )
+        }
 
-                IconButton(
-                    onClick = onPageSelectClick,
-                ) { Icon(Icons.Default.GridOn, null) }
+        IconButton(
+            onClick = onPageSelectClick,
+        ) { Icon(Icons.Default.GridOn, null) }
 
-                IconButton(
-                    onClick = onChapterShow,
-                ) { Icon(Icons.Default.Numbers, null) }
-            },
-            trailingContent = {
-                IconButton(
-                    onClick = onSettingsClick,
-                    //modifier = Modifier.weight(1f)
-                ) { Icon(Icons.Default.Settings, null) }
-            },
-            scrollBehavior = exitAlwaysScrollBehavior,
-            content = {
-                FilledIconButton(
-                    onClick = { onShowFloatBarChange(!showFloatBar) },
-                    modifier = Modifier
-                        .width(64.dp)
-                ) {
-                    Icon(
-                        if (showFloatBar) Icons.Default.ChevronRight else Icons.Default.ChevronLeft,
-                        contentDescription = "Localized description"
-                    )
-                }
-            },
-        )
+        IconButton(
+            onClick = onChapterShow,
+        ) { Icon(Icons.Default.Numbers, null) }
+
+        IconButton(
+            onClick = onSettingsClick,
+        ) { Icon(Icons.Default.Settings, null) }
     }
 }
 

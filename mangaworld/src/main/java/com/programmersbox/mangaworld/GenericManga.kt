@@ -420,6 +420,7 @@ class GenericManga(
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
+        //TODO: Add a settings screen that looks like the reader and the user can press on elements to customize
         composable(
             DownloadViewModel.DownloadRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },

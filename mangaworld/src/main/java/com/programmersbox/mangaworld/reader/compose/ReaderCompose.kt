@@ -307,16 +307,48 @@ fun ReadView(
                 }
             },
             bottomBar = {
-                AnimatedVisibility(
-                    visible = showItems,
-                    enter = slideInVertically { it } + fadeIn(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ),
-                    exit = slideOutVertically { it } + fadeOut(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    )
-                ) {
-                    if (floatingBottomBar) {
+                if (!floatingBottomBar) {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically { it } + fadeIn(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ),
+                        exit = slideOutVertically { it } + fadeOut(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        )
+                    ) {
+                        //TODO: Can't really use key since it doesn't give the button animation
+                        //key(scrollAlpha) {
+                        BottomBar(
+                            onPageSelectClick = { showBottomSheet = true },
+                            onSettingsClick = { settingsPopup = true },
+                            chapterChange = ::showToast,
+                            onChapterShow = { scope.launch { drawerState.open() } },
+                            vm = readVm,
+                            showBlur = showBlur,
+                            isAmoledMode = isAmoledMode,
+                            modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                                //TODO: Trying out
+                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
+                                blurEnabled = showBlur
+                                //alpha = scrollAlpha
+                            }
+                        )
+                        //}
+                    }
+                }
+            },
+            floatingActionButton = {
+                if (floatingBottomBar) {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically { it } + fadeIn(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ),
+                        exit = slideOutVertically { it } + fadeOut(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        )
+                    ) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
@@ -326,25 +358,6 @@ fun ReadView(
                             showFloatBar = showFloatBar,
                             onShowFloatBarChange = { showFloatBar = it },
                         )
-                    } else {
-                        //TODO: Can't really use key since it doesn't give the button animation
-                        //key(scrollAlpha) {
-                            BottomBar(
-                                onPageSelectClick = { showBottomSheet = true },
-                                onSettingsClick = { settingsPopup = true },
-                                chapterChange = ::showToast,
-                                onChapterShow = { scope.launch { drawerState.open() } },
-                                vm = readVm,
-                                showBlur = showBlur,
-                                isAmoledMode = isAmoledMode,
-                                modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                    //TODO: Trying out
-                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
-                                    blurEnabled = showBlur
-                                    //alpha = scrollAlpha
-                                }
-                            )
-                        //}
                     }
                 }
             },
