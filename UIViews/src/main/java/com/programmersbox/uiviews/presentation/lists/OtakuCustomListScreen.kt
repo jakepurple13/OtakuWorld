@@ -12,6 +12,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -41,6 +42,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Circle
@@ -77,6 +79,7 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -93,6 +96,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -433,52 +437,66 @@ fun OtakuCustomListScreen(
                 when (val state = viewModel.items) {
                     is OtakuListState.BySource if state.items.isNotEmpty() -> {
                         state.items.forEach { (source, sourceItems) ->
-                            //var showSource by mutableStateOf(false)
+                            val showSource = state.sourceShower[source]?.value == true
+
                             item(
-                                span = { GridItemSpan(maxLineSpan) },
+                                span = { GridItemSpan(maxLineSpan) }
                             ) {
-                                CenterAlignedTopAppBar(
-                                    title = { Text(source) },
-                                    /*actions = {
-                                        IconButton(
-                                            onClick = { showSource = !showSource }
-                                        ) {
+                                Surface(
+                                    shape = MaterialTheme.shapes.medium,
+                                    tonalElevation = 4.dp,
+                                    onClick = {
+                                        state.sourceShower[source]?.value = state.sourceShower[source]?.value?.not() == true
+                                    },
+                                    color = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItem()
+                                ) {
+                                    ListItem(
+                                        modifier = Modifier.padding(4.dp),
+                                        headlineContent = { Text(source) },
+                                        trailingContent = {
                                             Icon(
-                                                if (showSource) Icons.Default.ArrowDropDown else Icons.Default.ArrowDropUp,
-                                                null
+                                                Icons.Default.ArrowDropDown,
+                                                null,
+                                                modifier = Modifier.rotate(animateFloatAsState(if (showSource) 180f else 0f, label = "").value)
                                             )
-                                        }
-                                    },*/
-                                    windowInsets = WindowInsets(0.dp),
-                                )
+                                        },
+                                        colors = ListItemDefaults.colors(
+                                            containerColor = Color.Transparent,
+                                        )
+                                    )
+                                }
                             }
 
-                            items(
-                                items = sourceItems,
-                                key = { it.title + it.source + it.uniqueId },
-                                contentType = { it }
-                            ) { item ->
-                                //if(showSource)
-                                CustomItemVertical(
-                                    items = listOf(item),
-                                    title = item.title,
-                                    logo = logoDrawable.logo,
-                                    showLoadingDialog = { showLoadingDialog = it },
-                                    onError = {
-                                        scope.launch {
-                                            snackbarHostState.currentSnackbarData?.dismiss()
-                                            snackbarHostState.showSnackbar(
-                                                "Something went wrong. Source might not be installed",
-                                                duration = SnackbarDuration.Short
-                                            )
-                                        }
-                                    },
-                                    onShowBanner = {
-                                        newItem(if (it) item else null)
-                                        showBanner = it
-                                    },
-                                    modifier = Modifier.animateItem()
-                                )
+                            if (showSource) {
+                                items(
+                                    items = sourceItems,
+                                    key = { it.title + it.source + it.uniqueId },
+                                    contentType = { it }
+                                ) { item ->
+                                    CustomItemVertical(
+                                        items = listOf(item),
+                                        title = item.title,
+                                        logo = logoDrawable.logo,
+                                        showLoadingDialog = { showLoadingDialog = it },
+                                        onError = {
+                                            scope.launch {
+                                                snackbarHostState.currentSnackbarData?.dismiss()
+                                                snackbarHostState.showSnackbar(
+                                                    "Something went wrong. Source might not be installed",
+                                                    duration = SnackbarDuration.Short
+                                                )
+                                            }
+                                        },
+                                        onShowBanner = {
+                                            newItem(if (it) item else null)
+                                            showBanner = it
+                                        },
+                                        modifier = Modifier.animateItem()
+                                    )
+                                }
                             }
                         }
                     }

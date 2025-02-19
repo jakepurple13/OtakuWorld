@@ -3,6 +3,7 @@ package com.programmersbox.uiviews.presentation.lists
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -155,7 +156,11 @@ sealed class OtakuListState {
         )
     }
 
-    data class BySource(val items: List<Map.Entry<String, List<CustomListInfo>>>) : OtakuListState() {
+    data class BySource(
+        val items: List<Map.Entry<String, List<CustomListInfo>>>,
+        val sourceShower: Map<String, MutableState<Boolean>> = items
+            .associate { it.key to mutableStateOf(false) },
+    ) : OtakuListState() {
         constructor(
             customList: CustomList,
             searchQuery: String,
