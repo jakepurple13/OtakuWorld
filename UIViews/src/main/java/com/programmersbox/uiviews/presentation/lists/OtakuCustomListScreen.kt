@@ -439,6 +439,7 @@ fun OtakuCustomListScreen(
                         state.items.forEach { (source, sourceItems) ->
                             val showSource = state.sourceShower[source]?.value == true
 
+                            //TODO: Try stickyHeader
                             item(
                                 span = { GridItemSpan(maxLineSpan) }
                             ) {
@@ -456,6 +457,7 @@ fun OtakuCustomListScreen(
                                     ListItem(
                                         modifier = Modifier.padding(4.dp),
                                         headlineContent = { Text(source) },
+                                        leadingContent = { Text(sourceItems.size.toString()) },
                                         trailingContent = {
                                             Icon(
                                                 Icons.Default.ArrowDropDown,
