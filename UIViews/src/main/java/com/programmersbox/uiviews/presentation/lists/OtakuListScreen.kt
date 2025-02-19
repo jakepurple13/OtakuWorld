@@ -89,7 +89,7 @@ fun OtakuListScreen(
     val details: @Composable ThreePaneScaffoldPaneScope.() -> Unit = {
         AnimatedPane {
             AnimatedContent(
-                targetState = customListViewModel.customItem,
+                targetState = customListViewModel.customList,
                 label = "",
                 transitionSpec = {
                     if (initialState != null && targetState != null)

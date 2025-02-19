@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricPrompt
@@ -80,6 +82,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -102,6 +105,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
@@ -155,7 +159,7 @@ import java.util.UUID
 @Composable
 fun OtakuCustomListScreen(
     viewModel: OtakuCustomListViewModel,
-    customItem: CustomList?,
+    customItem: CustomList,
     writeToFile: (Uri, Context) -> Unit,
     deleteAll: suspend () -> Unit,
     rename: suspend (String) -> Unit,
@@ -173,6 +177,15 @@ fun OtakuCustomListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+
+    val window = LocalActivity.current
+
+    DisposableEffect(customItem.item.useBiometric) {
+        if (customItem.item.useBiometric) {
+            window?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+        onDispose { window?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
 
     val logoDrawable = koinInject<AppLogo>()
 
@@ -194,7 +207,7 @@ fun OtakuCustomListScreen(
             text = {
                 Column {
                     Text(stringResource(R.string.are_you_sure_delete_list))
-                    Text(customItem?.item?.name.orEmpty())
+                    Text(customItem.item.name.orEmpty())
                     OutlinedTextField(
                         value = listName,
                         onValueChange = { listName = it },
@@ -216,7 +229,7 @@ fun OtakuCustomListScreen(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.error
                     ),
-                    enabled = listName == customItem?.item?.name
+                    enabled = listName == customItem.item.name
                 ) { Text(stringResource(id = R.string.confirm)) }
             },
             dismissButton = { TextButton(onClick = { deleteList = false }) { Text(stringResource(id = R.string.cancel)) } }
@@ -250,31 +263,29 @@ fun OtakuCustomListScreen(
     val infoSheetState = rememberModalBottomSheetState()
 
     if (showInfoSheet) {
-        customItem?.let {
-            InfoSheet(
-                onDismiss = { showInfoSheet = false },
-                sheetState = infoSheetState,
-                customItem = it,
-                rename = { name -> scope.launch { rename(name) } },
-                addSecurityItem = addSecurityItem,
-                removeSecurityItem = removeSecurityItem,
-                logo = logoDrawable,
-                onDeleteListAction = { deleteList = true },
-                onRemoveItemsAction = {
-                    it
-                        .item
-                        .uuid
-                        .toString()
-                        .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
-                },
-                onExportAction = { pickDocumentLauncher.launch("${it.item.name}.json") },
-                filtered = viewModel.filtered,
-                onFilterAction = viewModel::filter,
-                onClearFilterAction = viewModel::clearFilter,
-                showBySource = viewModel.showBySource,
-                onShowBySource = { viewModel.toggleShowSource(context, it) },
-            )
-        }
+        InfoSheet(
+            onDismiss = { showInfoSheet = false },
+            sheetState = infoSheetState,
+            customItem = customItem,
+            rename = { name -> scope.launch { rename(name) } },
+            addSecurityItem = addSecurityItem,
+            removeSecurityItem = removeSecurityItem,
+            logo = logoDrawable,
+            onDeleteListAction = { deleteList = true },
+            onRemoveItemsAction = {
+                customItem
+                    .item
+                    .uuid
+                    .toString()
+                    .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
+            },
+            onExportAction = { pickDocumentLauncher.launch("${customItem.item.name}.json") },
+            filtered = viewModel.filtered,
+            onFilterAction = viewModel::filter,
+            onClearFilterAction = viewModel::clearFilter,
+            showBySource = viewModel.showBySource,
+            onShowBySource = { viewModel.toggleShowSource(context, it) },
+        )
     }
 
     var showBanner by remember { mutableStateOf(false) }
@@ -320,7 +331,7 @@ fun OtakuCustomListScreen(
                     searchBarState = searchBarState,
                     isDocked = isHorizontal,
                     onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
-                    placeholder = { Text(stringResource(id = R.string.search) + " " + customItem?.item?.name.orEmpty()) },
+                    placeholder = { Text(stringResource(id = R.string.search) + " " + customItem.item.name) },
                     leadingIcon = {
                         if (searchBarState.currentValue == SearchBarValue.Expanded) {
                             IconButton(
@@ -341,7 +352,7 @@ fun OtakuCustomListScreen(
                                 ) { Icon(Icons.Default.Cancel, null) }
                             }
 
-                            Text("(${customItem?.list.orEmpty().size})")
+                            Text("(${customItem.list.size})")
 
                             AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
                                 Row(
@@ -355,11 +366,11 @@ fun OtakuCustomListScreen(
                                                         type = "text/plain"
                                                         putExtra(
                                                             Intent.EXTRA_TEXT,
-                                                            customItem?.list.orEmpty().joinToString("\n") { "${it.title} - ${it.url}" }
+                                                            customItem.list.joinToString("\n") { "${it.title} - ${it.url}" }
                                                         )
-                                                        putExtra(Intent.EXTRA_TITLE, customItem?.item?.name.orEmpty())
+                                                        putExtra(Intent.EXTRA_TITLE, customItem.item.name)
                                                     },
-                                                    context.getString(R.string.share_item, customItem?.item?.name.orEmpty())
+                                                    context.getString(R.string.share_item, customItem.item.name)
                                                 )
                                             )
                                         }
@@ -783,7 +794,13 @@ private fun CustomListScreenPreview() {
         }
         OtakuCustomListScreen(
             viewModel = viewModel,
-            customItem = null,
+            customItem = CustomList(
+                item = CustomListItem(
+                    uuid = UUID.randomUUID(),
+                    name = "Hello",
+                ),
+                list = emptyList()
+            ),
             writeToFile = viewModel::writeToFile,
             navigateBack = {},
             isHorizontal = false,
@@ -1062,7 +1079,7 @@ private fun InfoSheet(
                         ),
                     ) {
                         Icon(Icons.Default.Delete, null)
-                        Text(stringResource(R.string.delete_list_title))
+                        Text(stringResource(R.string.delete))
                     }
                 }
             }

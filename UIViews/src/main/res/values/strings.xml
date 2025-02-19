@@ -214,4 +214,5 @@
     <string name="add_to_for_later_list">Add to For Later list</string>
     <string name="show_download_button">Show Download Button</string>
     <string name="show_list_detail_pane_for_lists">Show List Detail Pane for Lists</string>
+    <string name="delete">Delete</string>
 </resources>

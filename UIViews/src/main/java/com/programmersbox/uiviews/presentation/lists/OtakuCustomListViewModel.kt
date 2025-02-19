@@ -79,7 +79,8 @@ class OtakuCustomListViewModel(
 
     fun setList(customList: CustomList?) {
         this.customItem = customList
-        val sources = customList?.list
+        val sources = customList
+            ?.list
             ?.map { it.source }
             .orEmpty()
             .distinct()
