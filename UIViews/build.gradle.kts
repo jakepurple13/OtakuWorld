@@ -152,4 +152,6 @@ dependencies {
 
     //TODO: Use this to check recomposition count on every screen
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")
+
+    implementation(libs.zoomable.peek.overlay)
 }

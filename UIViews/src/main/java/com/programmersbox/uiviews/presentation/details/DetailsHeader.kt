@@ -83,6 +83,8 @@ import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.glide.GlideImageState
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.placeholder.placeholder.PlaceholderPlugin
+import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
+import me.saket.telephoto.zoomable.zoomablePeekOverlay
 
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
@@ -181,6 +183,7 @@ internal fun DetailsHeader(
                                 source = model.title,
                             )
                         )
+                        .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState())
                 ) {
                     var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
 

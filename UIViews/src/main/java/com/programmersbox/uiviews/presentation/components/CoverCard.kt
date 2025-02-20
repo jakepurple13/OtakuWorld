@@ -31,6 +31,8 @@ import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
 import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
 import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
 import com.skydoves.landscapist.rememberDrawablePainter
+import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
+import me.saket.telephoto.zoomable.zoomablePeekOverlay
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -74,7 +76,8 @@ fun M3CoverCard(
                     origin = imageUrl,
                     source = name
                 )
-            ),
+            )
+            .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState()),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -136,10 +139,12 @@ fun M3ImageCard(
     headers: Map<String, Any> = emptyMap(),
 ) {
     Surface(
-        modifier = modifier.size(
-            ComposableUtils.IMAGE_WIDTH,
-            ComposableUtils.IMAGE_HEIGHT
-        ),
+        modifier = modifier
+            .size(
+                ComposableUtils.IMAGE_WIDTH,
+                ComposableUtils.IMAGE_HEIGHT
+            )
+            .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState()),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -222,7 +227,8 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f),
+            .bounceClick(.9f)
+            .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState()),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -299,7 +305,8 @@ fun M3CoverCard(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
-            .bounceClick(.9f),
+            .bounceClick(.9f)
+            .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState()),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
     ) {
@@ -373,6 +380,7 @@ fun M3CoverCard2(
                 ComposableUtils.IMAGE_WIDTH,
                 ComposableUtils.IMAGE_HEIGHT
             )
+            .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState())
             .then(modifier),
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium
