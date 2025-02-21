@@ -24,7 +24,11 @@ jobs:
         run: |
           set -x
           echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
-          echo "$IS_PRERELEASE"
+      - name: Set variables.properties
+        run: |
+          cat <<EOF > variables.properties
+          IS_PRERELEASE:true
+          EOF
 
   mangaworld:
     needs: checkNightly
