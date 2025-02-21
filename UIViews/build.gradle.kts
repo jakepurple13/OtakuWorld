@@ -27,10 +27,14 @@ android {
                 System.getenv("IS_PRERELEASE") ?: run {
                     val props = Properties()
                     props.load(FileInputStream(rootProject.file("variables.properties")))
+                    props.entries.forEach {
+                        println("${it.key} : ${it.value}")
+                    }
                     props.getProperty("IS_PRERELEASE")
                 }
             }
                 .onSuccess { println("IS_PRERELEASE: $it") }
+                .onFailure { it.printStackTrace() }
                 .mapCatching { it.toBoolean() }
                 .getOrDefault(false)
                 .toString()
