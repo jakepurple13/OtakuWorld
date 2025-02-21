@@ -10,6 +10,8 @@ jobs:
   checkNightly:
     name: Check for new commits
     runs-on: ubuntu-latest
+    env:
+      IS_PRERELEASE: true
     outputs:
       shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }}
     steps:
@@ -20,7 +22,6 @@ jobs:
       - name: Get new commits
         run: |
           set -x
-          echo "IS_PRERELEASE=true" >> $GITHUB_ENV
           echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
 
   mangaworld:
