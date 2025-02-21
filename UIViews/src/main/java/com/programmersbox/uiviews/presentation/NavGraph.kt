@@ -32,14 +32,14 @@ import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.notifications.NotificationsScreen
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.presentation.settings.ExtensionList
 import com.programmersbox.uiviews.presentation.settings.GeneralSettings
 import com.programmersbox.uiviews.presentation.settings.InfoSettings
-import com.programmersbox.uiviews.presentation.settings.MoreSettingsScreen
 import com.programmersbox.uiviews.presentation.settings.NotificationSettings
 import com.programmersbox.uiviews.presentation.settings.PlaySettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
+import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
+import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.chromeCustomTabs

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings
+package com.programmersbox.uiviews.presentation.settings.moresettings
 
 import android.content.Context
 import android.net.Uri

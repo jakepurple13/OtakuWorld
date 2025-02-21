@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings
+package com.programmersbox.uiviews.presentation.settings.moresettings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +21,7 @@ import com.dokar.sonner.rememberToasterState
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
+import com.programmersbox.uiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.ToasterUtils
 import kotlinx.coroutines.flow.launchIn

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings
+package com.programmersbox.uiviews.presentation.settings.extensions
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue

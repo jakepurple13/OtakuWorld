@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings
+package com.programmersbox.uiviews.presentation.settings.extensions
 
 import android.content.ClipData
 import android.content.Intent

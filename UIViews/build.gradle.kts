@@ -1,6 +1,4 @@
 import plugins.ProductFlavorTypes
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
     `otaku-library`
@@ -23,17 +21,7 @@ android {
         buildConfigField(
             type = "Boolean",
             name = "IS_PRERELEASE",
-            value = runCatching {
-                System.getenv("IS_PRERELEASE") ?: run {
-                    val props = Properties()
-                    props.load(FileInputStream(rootProject.file("variables.properties")))
-                    props.entries.forEach {
-                        println("${it.key} : ${it.value}")
-                    }
-                    props.getProperty("IS_PRERELEASE")
-                }
-            }
-                .onSuccess { println("IS_PRERELEASE: $it") }
+            value = runCatching { System.getenv("IS_PRERELEASE") }
                 .onFailure { it.printStackTrace() }
                 .mapCatching { it.toBoolean() }
                 .getOrDefault(false)
