@@ -35,6 +35,8 @@ jobs:
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/mangaworld_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   animeworld:
     needs: checkNightly
