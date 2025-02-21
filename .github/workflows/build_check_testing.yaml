@@ -1,5 +1,8 @@
 name: Android Testing CI Workflow
 
+env:
+  IS_PRERELEASE: true
+
 on:
   #push:
   #  branches:
@@ -36,3 +39,12 @@ jobs:
         run: |
           set -x
           echo "NIGHTLY_TIME=$(date)" >> $GITHUB_ENV
+  
+
+  tester:
+    name: testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo Prerelease
+        run: |
+          echo "$IS_PRERELEASE"
