@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +34,7 @@ import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
+import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
@@ -54,6 +56,7 @@ import org.koin.compose.koinInject
 fun InfoSettings(
     infoViewModel: MoreInfoViewModel = koinViewModel(),
     usedLibraryClick: () -> Unit,
+    onPreleaseClick: () -> Unit,
 ) {
     val activity = LocalActivity.current
     val genericInfo = LocalGenericInfo.current
@@ -81,6 +84,18 @@ fun InfoSettings(
                 interactionSource = null
             ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
         )
+
+        if (BuildConfig.IS_PRERELEASE || BuildConfig.DEBUG) {
+            PreferenceSetting(
+                settingTitle = { Text("Update to latest pre release") },
+                settingIcon = { Icon(Icons.Default.Bento, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = onPreleaseClick
+                )
+            )
+        }
 
         PreferenceSetting(
             settingTitle = { Text(stringResource(R.string.join_discord)) },
@@ -185,7 +200,8 @@ fun InfoSettings(
 private fun InfoSettingsPreview() {
     PreviewTheme {
         InfoSettings(
-            usedLibraryClick = {}
+            usedLibraryClick = {},
+            onPreleaseClick = {}
         )
     }
 }

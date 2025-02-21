@@ -17,6 +17,18 @@ android {
         buildConfig = true
     }
 
+    defaultConfig {
+        buildConfigField(
+            type = "Boolean",
+            name = "IS_PRERELEASE",
+            value = runCatching { System.getenv("IS_PRERELEASE") }
+                .mapCatching { it.toBoolean() }
+                .getOrDefault(false)
+                .toString()
+                .also { println("IS_PRERELEASE: $it") }
+        )
+    }
+
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase(this)
@@ -154,4 +166,6 @@ dependencies {
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")
 
     implementation(libs.zoomable.peek.overlay)
+
+    implementation(libs.kotlinx.datetime)
 }

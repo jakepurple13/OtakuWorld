@@ -16,6 +16,7 @@ import com.programmersbox.uiviews.presentation.settings.MoreInfoViewModel
 import com.programmersbox.uiviews.presentation.settings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.NotificationViewModel
 import com.programmersbox.uiviews.presentation.settings.SettingsViewModel
+import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -36,4 +37,5 @@ fun Module.viewModels() {
     viewModelOf(::NotificationScreenViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::MoreInfoViewModel)
+    viewModelOf(::PrereleaseViewModel)
 }

@@ -5,6 +5,7 @@ generativeai = "0.9.0"
 gradle = "8.8.1"
 
 kotlin = "2.1.10"
+kotlinxDatetime = "0.6.1"
 kspVersion = "2.1.10-1.0.30"
 
 androidxBaselineprofileGradlePlugin = "1.3.3"
@@ -111,6 +112,7 @@ kamel-decoder-image-bitmap-resizing = { module = "media.kamel:kamel-decoder-imag
 kamel-decoder-image-bitmap = { module = "media.kamel:kamel-decoder-image-bitmap", version.ref = "kamelImage" }
 kamel-image = { module = "media.kamel:kamel-image-default", version.ref = "kamelImage" }
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
 pagecurl = { module = "io.github.oleksandrbalan:pagecurl", version.ref = "pagecurl" }
 palette = "androidx.palette:palette-ktx:1.0.0"

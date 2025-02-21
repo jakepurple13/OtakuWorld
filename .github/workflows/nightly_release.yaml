@@ -20,6 +20,7 @@ jobs:
       - name: Get new commits
         run: |
           set -x
+          echo "IS_PRERELEASE=true" >> $GITHUB_ENV
           echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
 
   mangaworld:

@@ -40,6 +40,7 @@ import com.programmersbox.uiviews.presentation.settings.NotificationSettings
 import com.programmersbox.uiviews.presentation.settings.PlaySettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
+import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
@@ -169,8 +170,16 @@ private fun NavGraphBuilder.settings(
         ) {
             trackScreen(Screen.MoreInfoSettings)
             InfoSettings(
-                usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } }
+                usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } },
+                onPreleaseClick = { navController.navigate(Screen.PrereleaseScreen) { launchSingleTop = true } },
             )
+        }
+
+        composable<Screen.PrereleaseScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        ) {
+            PrereleaseScreen()
         }
 
         composable<Screen.OtherSettings>(

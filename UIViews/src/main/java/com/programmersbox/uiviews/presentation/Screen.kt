@@ -37,6 +37,9 @@ sealed class Screen(val route: String) {
     data object MoreInfoSettings : Screen("more_info_settings")
 
     @Serializable
+    data object PrereleaseScreen : Screen("prerelease")
+
+    @Serializable
     data object MoreSettings : Screen("more_settings")
 
     @Serializable
