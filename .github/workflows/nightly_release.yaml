@@ -6,12 +6,13 @@ on:
 
   workflow_dispatch:
 
+env:
+  IS_PRERELEASE: true
+
 jobs:
   checkNightly:
     name: Check for new commits
     runs-on: ubuntu-latest
-    env:
-      IS_PRERELEASE: true
     outputs:
       shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }}
     steps:
