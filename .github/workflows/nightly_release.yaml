@@ -24,6 +24,7 @@ jobs:
         run: |
           set -x
           echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
+          echo "$IS_PRERELEASE"
 
   mangaworld:
     needs: checkNightly

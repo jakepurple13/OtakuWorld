@@ -21,7 +21,10 @@ android {
         buildConfigField(
             type = "Boolean",
             name = "IS_PRERELEASE",
-            value = runCatching { System.getenv("IS_PRERELEASE") }
+            value = runCatching {
+                System.getenv("IS_PRERELEASE")
+                    .also { println("IS_PRERELEASE: $it") }
+            }
                 .mapCatching { it.toBoolean() }
                 .getOrDefault(false)
                 .toString()
