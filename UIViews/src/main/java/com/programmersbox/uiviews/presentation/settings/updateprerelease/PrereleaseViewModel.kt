@@ -31,11 +31,12 @@ class PrereleaseViewModel(
         viewModelScope.launch {
             uiState = PrereleaseUiState.Loading
             uiState = runCatching { prereleaseRepository.getReleases() }
-                .map {
+                .mapCatching {
                     it
                         .filter { it.prerelease }
                         .maxBy { it.createdAt }
                 }
+                .onFailure { it.printStackTrace() }
                 .fold(
                     onSuccess = { PrereleaseUiState.Success(it) },
                     onFailure = { PrereleaseUiState.Error(it.message.orEmpty()) }

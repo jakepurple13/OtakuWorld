@@ -47,7 +47,7 @@ fun PrereleaseScreen(
                 subtitle = {
                     when (val state = viewModel.uiState) {
                         is PrereleaseUiState.Error -> Text(state.message)
-                        is PrereleaseUiState.Success -> Text(state.latestRelease.createdAt.formatTime())
+                        is PrereleaseUiState.Success -> Text(state.latestRelease.getUpdatedTime().formatTime())
                         else -> {}
                     }
                 },
@@ -86,6 +86,7 @@ fun PrereleaseScreen(
                                 modifier = Modifier.animateContentSize()
                             ) {
                                 ListItem(
+                                    overlineContent = { Text("Updated at: ${it.updatedAt.formatTime()}") },
                                     headlineContent = { Text(it.name) },
                                     trailingContent = {
                                         IconButton(

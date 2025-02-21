@@ -34,12 +34,21 @@ data class GitHubPrerelease(
     val assets: List<GitHubAssets>,
     @SerialName("created_at")
     val createdAt: Instant,
+    @SerialName("published_at")
+    val publishedAt: Instant,
     val name: String,
-)
+) {
+    fun getUpdatedTime() = assets
+        .maxByOrNull { it.updatedAt }
+        ?.updatedAt
+        ?: createdAt
+}
 
 @Serializable
 data class GitHubAssets(
     @SerialName("browser_download_url")
     val url: String,
     val name: String,
+    @SerialName("updated_at")
+    val updatedAt: Instant,
 )

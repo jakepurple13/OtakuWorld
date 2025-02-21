@@ -43,18 +43,24 @@ jobs:
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   animeworldtv:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/animeworldtv_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   novelworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/novelworld_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   release:
     name: Release APK
