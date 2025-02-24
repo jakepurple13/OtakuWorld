@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import kotlinx.coroutines.flow.launchIn
@@ -16,7 +15,6 @@ import kotlinx.coroutines.launch
 class PrereleaseViewModel(
     private val downloadAndInstaller: DownloadAndInstaller,
     private val prereleaseRepository: PrereleaseRepository,
-    private val genericInfo: GenericInfo,
 ) : ViewModel() {
 
     var uiState by mutableStateOf<PrereleaseUiState>(PrereleaseUiState.Loading)
@@ -36,6 +34,7 @@ class PrereleaseViewModel(
                         .filter { it.prerelease }
                         .maxBy { it.createdAt }
                 }
+                .map { it.copy(assets = it.assets.sortedBy { it.name }) }
                 .onFailure { it.printStackTrace() }
                 .fold(
                     onSuccess = { PrereleaseUiState.Success(it) },
@@ -59,8 +58,3 @@ sealed class PrereleaseUiState {
     data class Success(val latestRelease: GitHubPrerelease) : PrereleaseUiState()
     data class Error(val message: String) : PrereleaseUiState()
 }
-
-data class PrereleaseDownloadState(
-    val release: GitHubPrerelease,
-    val downloadStatus: DownloadAndInstallStatus,
-)
