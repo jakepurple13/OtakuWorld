@@ -38,6 +38,7 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.checkers.AppCheckWorker
+import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.checkers.UpdateNotification
@@ -133,6 +134,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     workerOf(::UpdateFlowWorker)
                     workerOf(::AppCheckWorker)
                     workerOf(::SourceUpdateChecker)
+                    workerOf(::NotifySingleWorker)
                     viewModels()
                     databases()
                     repository()

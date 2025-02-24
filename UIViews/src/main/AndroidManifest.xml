@@ -11,11 +11,11 @@
         android:fullBackupOnly="true">
 
         <receiver
-            android:name=".checkers.DeleteNotificationReceiver"
+            android:name=".receivers.DeleteNotificationReceiver"
             android:enabled="true"
             android:exported="true" />
         <receiver
-            android:name=".checkers.BootReceived"
+            android:name=".receivers.BootReceived"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
