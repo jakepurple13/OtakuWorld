@@ -148,7 +148,7 @@ landscapist-bom = { module = "com.github.skydoves:landscapist-bom", version.ref 
 landscapistGlide = { group = "com.github.skydoves", name = "landscapist-glide" }
 landscapistPalette = { group = "com.github.skydoves", name = "landscapist-palette" }
 landscapistPlaceholder = { group = "com.github.skydoves", name = "landscapist-placeholder" }
-composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.0"
+composeConstraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
 coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coilVideo = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
