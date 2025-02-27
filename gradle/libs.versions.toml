@@ -76,7 +76,7 @@ datastore = "1.1.2"
 ackpineVersion = "0.10.2"
 
 arcore = "1.0.0-alpha02"
-composeXr = "1.0.0-alpha02"
+composeXr = "1.0.0-alpha03"
 scenecore = "1.0.0-alpha02"
 
 [plugins]
