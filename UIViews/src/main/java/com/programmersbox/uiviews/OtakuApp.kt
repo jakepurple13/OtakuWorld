@@ -1,3 +1,5 @@
+@file:OptIn(DelicateCoroutinesApi::class)
+
 package com.programmersbox.uiviews
 
 import android.app.Application
@@ -50,6 +52,7 @@ import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.recordFirebaseException
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.distinctUntilChanged

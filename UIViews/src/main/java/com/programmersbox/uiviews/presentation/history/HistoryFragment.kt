@@ -1,5 +1,3 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.presentation.history
 
 import android.graphics.drawable.Drawable

@@ -112,12 +112,12 @@ import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.GradientImage
 import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.M3CoverCard2
 import com.programmersbox.uiviews.presentation.components.M3ImageCard
 import com.programmersbox.uiviews.presentation.components.ModalBottomSheetDelete
+import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.presentation.components.plus
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.repository.NotificationRepository
@@ -484,10 +484,11 @@ private fun OptionsSheet(
     ) {
         ListItem(
             leadingContent = {
-                val logo = koinInject<AppLogo>().logoId
-                GlideGradientImage(
-                    model = i.imageUrl,
-                    placeholder = logo,
+                val logo = koinInject<AppLogo>().logo
+                ImageLoaderChoice(
+                    imageUrl = i.imageUrl.orEmpty(),
+                    name = i.notiTitle,
+                    placeHolder = rememberDrawablePainter(logo),
                     modifier = Modifier
                         .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         .clip(MaterialTheme.shapes.small)
@@ -718,29 +719,31 @@ private fun NotiItem(
                 imageUrl = i.imageUrl.orEmpty(),
                 name = i.notiTitle,
                 placeHolder = R.drawable.ic_site_settings,
-                modifier = Modifier.combinedClickable(
-                    onClick = {
-                        toSource(i.source)?.let { source ->
-                            Cached.cache[i.url]?.let {
-                                flow {
-                                    emit(
-                                        it
-                                            .toDbModel()
-                                            .toItemModel(source)
-                                    )
-                                }
-                            } ?: source.getSourceByUrlFlow(i.url)
-                        }
-                            ?.dispatchIo()
-                            ?.onStart { onLoadingChange(true) }
-                            ?.onEach {
-                                onLoadingChange(false)
-                                navController.navigateToDetails(it)
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .combinedClickable(
+                        onClick = {
+                            toSource(i.source)?.let { source ->
+                                Cached.cache[i.url]?.let {
+                                    flow {
+                                        emit(
+                                            it
+                                                .toDbModel()
+                                                .toItemModel(source)
+                                        )
+                                    }
+                                } ?: source.getSourceByUrlFlow(i.url)
                             }
-                            ?.launchIn(scope) ?: onError(i)
-                    },
-                    onLongClick = { showOptions = true }
-                )
+                                ?.dispatchIo()
+                                ?.onStart { onLoadingChange(true) }
+                                ?.onEach {
+                                    onLoadingChange(false)
+                                    navController.navigateToDetails(it)
+                                }
+                                ?.launchIn(scope) ?: onError(i)
+                        },
+                        onLongClick = { showOptions = true }
+                    )
             )
         }
     )

@@ -6,10 +6,12 @@ import android.content.Intent
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.utils.recordFirebaseException
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class DeleteNotificationReceiver : BroadcastReceiver() {
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         val dao by lazy { context?.let { ItemDatabase.getInstance(it).itemDao() } }
         val url = intent?.getStringExtra("url")
