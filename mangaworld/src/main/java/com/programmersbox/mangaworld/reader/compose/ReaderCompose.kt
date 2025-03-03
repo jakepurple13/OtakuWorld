@@ -246,7 +246,9 @@ fun ReadView(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+            ) {
                 DrawerView(
                     readVm = readVm,
                     showToast = ::showToast
