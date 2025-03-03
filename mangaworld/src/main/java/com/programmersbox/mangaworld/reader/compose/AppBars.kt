@@ -1,20 +1,23 @@
 package com.programmersbox.mangaworld.reader.compose
 
-import android.text.format.DateFormat
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowCircleLeft
+import androidx.compose.material.icons.filled.ArrowCircleRight
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -26,7 +29,6 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -35,35 +37,31 @@ import androidx.compose.material3.FloatingToolbarScrollBehavior
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalFloatingToolbar
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.helpfulutils.battery
-import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.mangasettings.PlayingMiddleAction
 import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.BatteryInformation
+import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.LocalNavController
-import kotlinx.coroutines.flow.launchIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
@@ -77,11 +75,21 @@ internal fun ReaderTopBar(
     showBlur: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    CenterAlignedTopAppBar(
+    //TODO: Maybe instead of CenterAligned, it's a normal one
+    // Navigation would be a back button,
+    // title would be in the title slot
+    // then the bottom bar wouldn't need the back button in it's list
+    // Could also allow having the floating haze bar like in the main navigation?
+    // definitely would need to add a choice of bottom bar, floating, or fab.
+
+    //TODO: Trying this out
+
+    TopAppBar(
         windowInsets = WindowInsets(0.dp),
         modifier = modifier,
         navigationIcon = {
-            Crossfade(
+            BackButton()
+            /*Crossfade(
                 targetState = playingStartAction,
                 label = "startAction"
             ) { target ->
@@ -140,10 +148,14 @@ internal fun ReaderTopBar(
                     PlayingStartAction.None -> {}
                     PlayingStartAction.UNRECOGNIZED -> {}
                 }
-            }
+            }*/
         },
         title = {
-            Crossfade(
+            Text(
+                currentChapter,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            /*Crossfade(
                 targetState = playingMiddleAction,
                 label = "middleAction"
             ) { target ->
@@ -168,9 +180,9 @@ internal fun ReaderTopBar(
                     PlayingMiddleAction.Nothing -> {}
                     PlayingMiddleAction.UNRECOGNIZED -> {}
                 }
-            }
+            }*/
         },
-        actions = {
+        /*actions = {
             PageIndicator(
                 currentPage = currentPage + 1,
                 pageCount = pages.size,
@@ -178,14 +190,14 @@ internal fun ReaderTopBar(
                     .padding(4.dp)
                     .align(Alignment.CenterVertically)
             )
-        },
+        },*/
         colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
     )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun FloatingBottomBar(
+internal fun FloatingFloatingActionButton(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -414,4 +426,114 @@ private fun NextIconButton(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
         modifier = modifier
     ) { Icon(Icons.Default.ArrowForward, null) }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun FloatingBottomBar(
+    onPageSelectClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onNextChapter: () -> Unit,
+    onPreviousChapter: () -> Unit,
+    onChapterShow: () -> Unit,
+    chapterNumber: String,
+    currentPage: Int,
+    pages: Int,
+    modifier: Modifier = Modifier,
+    showBlur: Boolean,
+    isAmoledMode: Boolean,
+    shape: Shape = MaterialTheme.shapes.extraLarge,
+    containerColor: Color = when {
+        showBlur -> Color.Transparent
+        isAmoledMode -> MaterialTheme.colorScheme.surface
+        else -> NavigationBarDefaults.containerColor
+    },
+    contentColor: Color = MaterialTheme.colorScheme.contentColorFor(containerColor),
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
+) {
+    FloatingNavigationBar(
+        modifier = modifier,
+        shape = shape,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        tonalElevation = tonalElevation
+    ) {
+        NavigationBarItem(
+            selected = false,
+            onClick = onPreviousChapter,
+            icon = { Icon(Icons.Default.ArrowCircleLeft, null) },
+            label = { Text(stringResource(id = R.string.loadPreviousChapter)) }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onNextChapter,
+            icon = { Icon(Icons.Default.ArrowCircleRight, null) },
+            label = { Text(stringResource(id = R.string.loadNextChapter)) }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onPageSelectClick,
+            icon = { Text("#$chapterNumber") },
+            label = { Text("Chapters") }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onChapterShow,
+            icon = {
+                PageIndicator(
+                    currentPage = currentPage + 1,
+                    pageCount = pages,
+                    modifier = Modifier
+                )
+            },
+            label = { Text("Pages") }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onSettingsClick,
+            icon = { Icon(Icons.Default.Settings, null) },
+            label = { Text(stringResource(id = R.string.settings)) }
+        )
+    }
+}
+
+@Composable
+private fun FloatingNavigationBar(
+    modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.extraLarge,
+    containerColor: Color = NavigationBarDefaults.containerColor,
+    contentColor: Color = MaterialTheme.colorScheme.contentColorFor(containerColor),
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Surface(
+        color = containerColor,
+        contentColor = contentColor,
+        tonalElevation = tonalElevation,
+        shape = shape,
+        border = BorderStroke(
+            width = 0.5.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.surfaceVariant,
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                ),
+            ),
+        ),
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .fillMaxWidth()
+                .height(80.dp)
+                .selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            content = content,
+        )
+    }
 }

@@ -76,6 +76,7 @@ import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
+import com.programmersbox.mangaworld.reader.compose.FloatingBottomBar
 import com.programmersbox.mangaworld.reader.compose.dpToPx
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.CategorySetting
@@ -284,7 +285,20 @@ private fun ReaderSettings(
         },
         bottomBar = {
             if (!useFloatingBar) {
-                BottomBar()
+                //BottomBar()
+                FloatingBottomBar(
+                    onSettingsClick = {},
+                    onChapterShow = {},
+                    onPageSelectClick = {},
+                    onNextChapter = {},
+                    onPreviousChapter = {},
+                    showBlur = false,
+                    isAmoledMode = false,
+                    currentPage = 0,
+                    pages = 13,
+                    chapterNumber = "13",
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         },
         floatingActionButton = {

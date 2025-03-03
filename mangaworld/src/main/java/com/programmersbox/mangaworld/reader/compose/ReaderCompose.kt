@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -46,6 +47,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -319,20 +321,26 @@ fun ReadView(
                     ) {
                         //TODO: Can't really use key since it doesn't give the button animation
                         //key(scrollAlpha) {
-                        BottomBar(
+                        FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
+                            onNextChapter = { readVm.addChapterToWatched(--readVm.currentChapter, ::showToast) },
+                            onPreviousChapter = { readVm.addChapterToWatched(++readVm.currentChapter, ::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
-                            vm = readVm,
                             showBlur = showBlur,
                             isAmoledMode = isAmoledMode,
-                            modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                //TODO: Trying out
-                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
-                                blurEnabled = showBlur
-                                //alpha = scrollAlpha
-                            }
+                            chapterNumber = readVm.currentChapter.toString(),
+                            currentPage = currentPage,
+                            pages = pages.size,
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                                    //TODO: Trying out
+                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
+                                    blurEnabled = showBlur
+                                    //alpha = scrollAlpha
+                                }
                         )
                         //}
                     }
@@ -349,7 +357,7 @@ fun ReadView(
                             animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                         )
                     ) {
-                        FloatingBottomBar(
+                        FloatingFloatingActionButton(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
                             chapterChange = ::showToast,

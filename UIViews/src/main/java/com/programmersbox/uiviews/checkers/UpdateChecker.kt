@@ -85,7 +85,6 @@ class UpdateFlowWorker(
 
             val sourceSize = sourceRepository.apiServiceList.size
 
-            //TODO: Add some tracing metrics
             putMetric("sourceSize", sourceSize.toLong())
 
             // Getting all recent updates

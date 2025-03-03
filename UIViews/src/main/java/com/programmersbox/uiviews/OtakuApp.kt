@@ -3,7 +3,6 @@
 package com.programmersbox.uiviews
 
 import android.app.Application
-import android.content.Context
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import androidx.annotation.CallSuper
@@ -73,9 +72,6 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application(), Configuration.Provider {
-
-    //TODO: Add a screen analytic to every screen
-
     @OptIn(ExperimentalComposeUiApi::class)
     @CallSuper
     override fun onCreate() {
@@ -340,39 +336,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
     }
 
     companion object {
-
         var forLaterUuid: UUID? = null
-
-        fun updateSetup(context: Context, boolean: Boolean) {
-            updateSetupNow(context, boolean)
-        }
-
-        fun updateSetupNow(context: Context, check: Boolean) {
-            val work = WorkManager.getInstance(context)
-            work.cancelUniqueWork("updateChecks")
-            //work.cancelAllWork()
-            //if (context.shouldCheck) {
-            if (check) {
-                work.enqueueUniquePeriodicWork(
-                    "updateFlowChecks",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    PeriodicWorkRequestBuilder<UpdateFlowWorker>(
-                        1, TimeUnit.HOURS,
-                        5, TimeUnit.MINUTES
-                    )
-                        .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
-                        .setConstraints(
-                            Constraints.Builder()
-                                .setRequiredNetworkType(NetworkType.CONNECTED)
-                                .build()
-                        )
-                        .setInitialDelay(10, TimeUnit.SECONDS)
-                        .build()
-                )
-            } else {
-                work.cancelUniqueWork("updateFlowChecks")
-                work.pruneWork()
-            }
-        }
     }
 }
