@@ -81,6 +81,7 @@ internal fun ReaderTopBar(
     // then the bottom bar wouldn't need the back button in it's list
     // Could also allow having the floating haze bar like in the main navigation?
     // definitely would need to add a choice of bottom bar, floating, or fab.
+    // If we fully go with this, need to modify the settings screen to reflect this as well as needing to remove the protobuf settings
 
     //TODO: Trying this out
 

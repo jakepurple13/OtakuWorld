@@ -100,7 +100,7 @@ fun RecentView(
         initialPageOffsetFraction = 0f
     ) { sourceList.size }
 
-    LaunchedEffect(initSource) {
+    LaunchedEffect(initSource, source) {
         if (initSource != -1) pagerState.scrollToPage(initSource)
     }
 

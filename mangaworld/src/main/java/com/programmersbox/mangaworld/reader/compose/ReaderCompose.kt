@@ -329,7 +329,7 @@ fun ReadView(
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = showBlur,
                             isAmoledMode = isAmoledMode,
-                            chapterNumber = readVm.currentChapter.toString(),
+                            chapterNumber = (readVm.list.size - readVm.currentChapter).toString(),
                             currentPage = currentPage,
                             pages = pages.size,
                             modifier = Modifier
