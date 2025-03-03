@@ -474,14 +474,14 @@ fun FloatingBottomBar(
 
         NavigationBarItem(
             selected = false,
-            onClick = onPageSelectClick,
+            onClick = onChapterShow,
             icon = { Text("#$chapterNumber") },
             label = { Text("Chapters") }
         )
 
         NavigationBarItem(
             selected = false,
-            onClick = onChapterShow,
+            onClick = onPageSelectClick,
             icon = {
                 PageIndicator(
                     currentPage = currentPage + 1,
