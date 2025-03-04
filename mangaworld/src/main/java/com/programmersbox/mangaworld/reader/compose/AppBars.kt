@@ -334,9 +334,11 @@ fun FloatingBottomBar(
     chapterNumber: String,
     currentPage: Int,
     pages: Int,
-    modifier: Modifier = Modifier,
     showBlur: Boolean,
     isAmoledMode: Boolean,
+    previousButtonEnabled: Boolean,
+    nextButtonEnabled: Boolean,
+    modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.extraLarge,
     containerColor: Color = when {
         showBlur -> Color.Transparent
@@ -356,6 +358,7 @@ fun FloatingBottomBar(
         NavigationBarItem(
             selected = false,
             onClick = onPreviousChapter,
+            enabled = previousButtonEnabled,
             icon = { Icon(Icons.Default.ArrowCircleLeft, null) },
             label = { Text(stringResource(id = R.string.loadPreviousChapter)) }
         )
@@ -363,6 +366,7 @@ fun FloatingBottomBar(
         NavigationBarItem(
             selected = false,
             onClick = onNextChapter,
+            enabled = nextButtonEnabled,
             icon = { Icon(Icons.Default.ArrowCircleRight, null) },
             label = { Text(stringResource(id = R.string.loadNextChapter)) }
         )
@@ -415,12 +419,12 @@ private fun FloatingNavigationBar(
         modifier = modifier,
     ) {
         Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .padding(horizontal = 8.dp)
                 .fillMaxWidth()
                 .height(80.dp)
                 .selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
             content = content,
         )
     }

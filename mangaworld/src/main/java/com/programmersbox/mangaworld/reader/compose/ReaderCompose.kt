@@ -325,6 +325,8 @@ fun ReadView(
                             chapterNumber = (readVm.list.size - readVm.currentChapter).toString(),
                             currentPage = currentPage,
                             pages = animateIntAsState(pages.size).value,
+                            previousButtonEnabled = readVm.currentChapter < readVm.list.lastIndex && readVm.list.size > 1,
+                            nextButtonEnabled = readVm.currentChapter > 0 && readVm.list.size > 1,
                             modifier = Modifier
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)
