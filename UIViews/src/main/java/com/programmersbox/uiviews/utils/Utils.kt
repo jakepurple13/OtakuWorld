@@ -12,7 +12,6 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.uiviews.presentation.Screen
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlin.experimental.ExperimentalTypeInference
 
 @OptIn(ExperimentalTypeInference::class)
@@ -32,10 +31,12 @@ fun combineSources(
     sourceRepository: SourceRepository,
     dao: ItemDao,
 ) = combine(
-    sourceRepository.sources.map { it.filter { it.catalog == null } },
+    sourceRepository.sources,
     dao.getSourceOrder()
 ) { list, order ->
-    list.sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
+    list
+        .filterNot { it.apiService.notWorking }
+        .sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
 }
 
 @SuppressLint("ComposableNaming")
