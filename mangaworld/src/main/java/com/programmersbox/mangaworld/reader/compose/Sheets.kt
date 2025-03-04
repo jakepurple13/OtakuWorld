@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BorderBottom
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -62,8 +61,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.programmersbox.mangasettings.PlayingMiddleAction
-import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
@@ -71,7 +68,6 @@ import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.utils.ComposableUtils
@@ -91,17 +87,11 @@ internal fun SettingsSheet(
     mangaSettingsHandling: MangaSettingsHandling,
     readerType: ReaderType,
     readerTypeChange: (ReaderType) -> Unit,
-    startAction: PlayingStartAction,
-    onStartActionChange: (PlayingStartAction) -> Unit,
-    onMiddleActionChange: (PlayingMiddleAction) -> Unit,
-    middleAction: PlayingMiddleAction,
     modifier: Modifier = Modifier,
     settingsHandling: SettingsHandling = LocalSettingsHandling.current,
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val batteryPercent = settingsHandling.batteryPercent
-    val batteryValue by batteryPercent.rememberPreference()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -119,18 +109,6 @@ internal fun SettingsSheet(
                 },
                 settingTitle = { Text(stringResource(R.string.settings)) }
             )
-            ShowWhen(startAction == PlayingStartAction.Battery) {
-                SliderSetting(
-                    scope = scope,
-                    settingIcon = Icons.Default.BatteryAlert,
-                    settingTitle = R.string.battery_alert_percentage,
-                    settingSummary = R.string.battery_default,
-                    preferenceUpdate = { batteryPercent.set(it) },
-                    initialValue = remember { batteryValue },
-                    range = 1f..100f
-                )
-                HorizontalDivider()
-            }
             SliderSetting(
                 scope = scope,
                 settingIcon = Icons.Default.FormatLineSpacing,
@@ -232,70 +210,6 @@ internal fun SettingsSheet(
                     interactionSource = null,
                     onClick = { showImageLoaderSettings = true }
                 )
-            )
-
-            HorizontalDivider()
-
-            var showStartDropdown by remember { mutableStateOf(false) }
-
-            PreferenceSetting(
-                settingTitle = { Text("Start Option") },
-                endIcon = {
-                    DropdownMenu(
-                        expanded = showStartDropdown,
-                        onDismissRequest = { showStartDropdown = false }
-                    ) {
-                        PlayingStartAction.entries
-                            .filter { it != PlayingStartAction.UNRECOGNIZED }
-                            .forEach {
-                                DropdownMenuItem(
-                                    text = { Text(it.name) },
-                                    leadingIcon = {
-                                        if (it == startAction) {
-                                            Icon(Icons.Default.Check, null)
-                                        }
-                                    },
-                                    onClick = {
-                                        onStartActionChange(it)
-                                        showStartDropdown = false
-                                    }
-                                )
-                            }
-                    }
-                    Text(startAction.name)
-                },
-                modifier = Modifier.clickable { showStartDropdown = true }
-            )
-
-            var showMiddleDropdown by remember { mutableStateOf(false) }
-
-            PreferenceSetting(
-                settingTitle = { Text("Middle Option") },
-                endIcon = {
-                    DropdownMenu(
-                        expanded = showMiddleDropdown,
-                        onDismissRequest = { showMiddleDropdown = false }
-                    ) {
-                        PlayingMiddleAction.entries
-                            .filter { it != PlayingMiddleAction.UNRECOGNIZED }
-                            .forEach {
-                                DropdownMenuItem(
-                                    text = { Text(it.name) },
-                                    leadingIcon = {
-                                        if (it == middleAction) {
-                                            Icon(Icons.Default.Check, null)
-                                        }
-                                    },
-                                    onClick = {
-                                        onMiddleActionChange(it)
-                                        showMiddleDropdown = false
-                                    }
-                                )
-                            }
-                    }
-                    Text(middleAction.name)
-                },
-                modifier = Modifier.clickable { showMiddleDropdown = true }
             )
         },
         modifier = modifier.fillMaxWidth()

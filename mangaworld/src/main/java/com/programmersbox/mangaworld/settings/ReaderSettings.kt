@@ -1,5 +1,6 @@
 package com.programmersbox.mangaworld.settings
 
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BorderBottom
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,7 +51,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalFloatingToolbar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -71,12 +69,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.programmersbox.mangasettings.ImageLoaderType
-import com.programmersbox.mangasettings.PlayingMiddleAction
-import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.compose.FloatingBottomBar
+import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
 import com.programmersbox.mangaworld.reader.compose.dpToPx
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.CategorySetting
@@ -115,11 +112,6 @@ fun ReaderSettings(
             runBlocking { mangaSettingsHandling.pagePadding.flow.first().toFloat() }
         )
     }
-
-    var batteryPercent by settingsHandling.batteryPercent.rememberPreference()
-
-    var startOption by mangaSettingsHandling.rememberPlayingStartAction()
-    var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
     var allowUserGesture by mangaSettingsHandling.rememberUserGestureEnabled()
 
@@ -166,16 +158,10 @@ fun ReaderSettings(
         readerPadding = padding,
         onPaddingChange = { padding = it },
         onPaddingChangeFinished = { scope.launch { mangaSettingsHandling.pagePadding.updateSetting(padding.toInt()) } },
-        startOption = startOption,
-        onStartOptionChange = { startOption = it },
-        middleAction = middleAction,
-        onMiddleActionChange = { middleAction = it },
-        batteryValue = batteryPercent,
-        onBatteryChange = { batteryPercent = it.toInt() }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
 @Composable
 private fun ReaderSettings(
     imageLoaderType: ImageLoaderType,
@@ -183,12 +169,6 @@ private fun ReaderSettings(
     readerPadding: Float,
     allowUserGesture: Boolean,
     readerType: ReaderType = ReaderType.List,
-    startOption: PlayingStartAction,
-    middleAction: PlayingMiddleAction,
-    batteryValue: Int,
-    onBatteryChange: (Float) -> Unit = {},
-    onStartOptionChange: (PlayingStartAction) -> Unit = {},
-    onMiddleActionChange: (PlayingMiddleAction) -> Unit = {},
     onReaderTypeChange: (ReaderType) -> Unit = {},
     onAllowUserGestureChange: (Boolean) -> Unit = {},
     onPaddingChange: (Float) -> Unit = {},
@@ -204,82 +184,10 @@ private fun ReaderSettings(
                     navigationIcon = { BackButton() }
                 )
 
-                CenterAlignedTopAppBar(
-                    title = {
-                        var showMiddleDropdown by remember { mutableStateOf(false) }
-                        DropdownMenu(
-                            expanded = showMiddleDropdown,
-                            onDismissRequest = { showMiddleDropdown = false }
-                        ) {
-                            PlayingMiddleAction.entries
-                                .filter { it != PlayingMiddleAction.UNRECOGNIZED }
-                                .forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.name) },
-                                        leadingIcon = {
-                                            if (it == middleAction) {
-                                                Icon(Icons.Default.Check, null)
-                                            }
-                                        },
-                                        onClick = {
-                                            onMiddleActionChange(it)
-                                            showMiddleDropdown = false
-                                        }
-                                    )
-                                }
-                        }
-
-                        Surface(
-                            onClick = { showMiddleDropdown = true },
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = MaterialTheme.shapes.medium,
-                        ) {
-                            Text(
-                                middleAction.name,
-                                modifier = Modifier.padding(4.dp)
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        var showStartDropdown by remember { mutableStateOf(false) }
-                        DropdownMenu(
-                            expanded = showStartDropdown,
-                            onDismissRequest = { showStartDropdown = false }
-                        ) {
-                            PlayingStartAction.entries
-                                .filter { it != PlayingStartAction.UNRECOGNIZED }
-                                .forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.name) },
-                                        leadingIcon = {
-                                            if (it == startOption) {
-                                                Icon(Icons.Default.Check, null)
-                                            }
-                                        },
-                                        onClick = {
-                                            onStartOptionChange(it)
-                                            showStartDropdown = false
-                                        }
-                                    )
-                                }
-                        }
-
-                        Surface(
-                            onClick = { showStartDropdown = true },
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = MaterialTheme.shapes.medium,
-                        ) {
-                            Text(
-                                startOption.name,
-                                modifier = Modifier.padding(4.dp)
-                            )
-                        }
-                    },
-                    actions = { Text("5/10") },
-                    windowInsets = WindowInsets(0.dp),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = TopAppBarDefaults.topAppBarColors().scrolledContainerColor
-                    )
+                ReaderTopBar(
+                    currentChapter = "13",
+                    onSettingsClick = {},
+                    showBlur = false
                 )
             }
         },
@@ -287,7 +195,6 @@ private fun ReaderSettings(
             if (!useFloatingBar) {
                 //BottomBar()
                 FloatingBottomBar(
-                    onSettingsClick = {},
                     onChapterShow = {},
                     onPageSelectClick = {},
                     onNextChapter = {},
@@ -313,22 +220,6 @@ private fun ReaderSettings(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (startOption == PlayingStartAction.Battery) {
-                item {
-                    var sliderValue by remember { mutableFloatStateOf(batteryValue.toFloat()) }
-
-                    SliderSetting(
-                        sliderValue = sliderValue,
-                        settingTitle = { Text(stringResource(id = R.string.battery_alert_percentage)) },
-                        settingSummary = { Text(stringResource(id = R.string.battery_default)) },
-                        range = 1f..100f,
-                        updateValue = { sliderValue = it },
-                        onValueChangedFinished = { onBatteryChange(sliderValue) },
-                        settingIcon = { Icon(Icons.Default.BatteryAlert, null) }
-                    )
-                }
-            }
-
             item {
                 ImageLoaderSetting(
                     imageLoaderType = imageLoaderType,
@@ -590,9 +481,6 @@ private fun ReaderScreenPreview() {
             useFloatingBar = false,
             allowUserGesture = true,
             readerType = ReaderType.List,
-            startOption = PlayingStartAction.CurrentChapter,
-            middleAction = PlayingMiddleAction.Time,
-            batteryValue = 50
         )
     }
 }

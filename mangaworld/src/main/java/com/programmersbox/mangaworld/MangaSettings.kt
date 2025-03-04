@@ -6,8 +6,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.MangaSettings
-import com.programmersbox.mangasettings.PlayingMiddleAction
-import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangasettings.mangaSettings
 import com.programmersbox.uiviews.datastore.GenericSerializer
@@ -25,8 +23,6 @@ val Context.mangaSettings: DataStore<MangaSettings> by dataStore(
 object MangaSettingsSerializer : GenericSerializer<MangaSettings, MangaSettings.Builder> {
     override val defaultValue: MangaSettings
         get() = mangaSettings {
-            playingStartAction = PlayingStartAction.CurrentChapter
-            playingMiddleAction = PlayingMiddleAction.Nothing
             useNewReader = true
             pagePadding = 4
             readerType = ReaderType.List
@@ -37,30 +33,6 @@ object MangaSettingsSerializer : GenericSerializer<MangaSettings, MangaSettings.
 class MangaSettingsHandling(context: Context) {
     private val preferences by lazy { context.mangaSettings }
     private val all: Flow<MangaSettings> get() = preferences.data
-
-    val playingStartAction = SettingInfo(
-        flow = all.map { it.playingStartAction },
-        updateValue = { setPlayingStartAction(it) }
-    )
-
-    @Composable
-    fun rememberPlayingStartAction() = preferences.rememberPreference(
-        key = { it.playingStartAction },
-        update = { setPlayingStartAction(it) },
-        defaultValue = PlayingStartAction.CurrentChapter
-    )
-
-    val playingMiddleAction = SettingInfo(
-        flow = all.map { it.playingMiddleAction },
-        updateValue = { setPlayingMiddleAction(it) }
-    )
-
-    @Composable
-    fun rememberPlayingMiddleAction() = preferences.rememberPreference(
-        key = { it.playingMiddleAction },
-        update = { setPlayingMiddleAction(it) },
-        defaultValue = PlayingMiddleAction.Nothing
-    )
 
     val useNewReader = SettingInfo(
         flow = all.map { it.useNewReader },

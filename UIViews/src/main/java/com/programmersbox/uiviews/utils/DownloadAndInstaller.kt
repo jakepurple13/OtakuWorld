@@ -69,7 +69,7 @@ class DownloadAndInstaller(
                 val sess = packageInstaller.createSession(file.toUri()) {
                     packageSource = PackageSource.DownloadedFile
 
-                    confirmation = Confirmation.DEFERRED
+                    confirmation = Confirmation.IMMEDIATE
                     installerType = InstallerType.SESSION_BASED
 
                     requireUserAction = true

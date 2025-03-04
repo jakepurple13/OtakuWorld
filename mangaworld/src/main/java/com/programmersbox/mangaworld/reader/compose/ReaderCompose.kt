@@ -5,6 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -129,8 +130,6 @@ fun ReadView(
         .collectAsStateWithLifecycle(initialValue = 4)
 
     val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
-    var startAction by mangaSettingsHandling.rememberPlayingStartAction()
-    var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
     fun showToast() {
         scope.launch {
@@ -212,10 +211,6 @@ fun ReadView(
             mangaSettingsHandling = mangaSettingsHandling,
             readerType = readerType,
             readerTypeChange = { readerType = it },
-            startAction = startAction,
-            onStartActionChange = { startAction = it },
-            middleAction = middleAction,
-            onMiddleActionChange = { middleAction = it }
         )
     }
 
@@ -292,14 +287,11 @@ fun ReadView(
                 ) {
                     key(scrollAlpha) {
                         ReaderTopBar(
-                            pages = pages,
-                            currentPage = currentPage,
                             currentChapter = readVm
                                 .currentChapterModel
                                 ?.name
                                 ?: "Ch ${readVm.list.size - readVm.currentChapter}",
-                            playingStartAction = startAction,
-                            playingMiddleAction = middleAction,
+                            onSettingsClick = { settingsPopup = true },
                             showBlur = showBlur,
                             modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
                                 blurEnabled = showBlur
@@ -325,7 +317,6 @@ fun ReadView(
                         //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onSettingsClick = { settingsPopup = true },
                             onNextChapter = { readVm.addChapterToWatched(--readVm.currentChapter, ::showToast) },
                             onPreviousChapter = { readVm.addChapterToWatched(++readVm.currentChapter, ::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
@@ -333,7 +324,7 @@ fun ReadView(
                             isAmoledMode = isAmoledMode,
                             chapterNumber = (readVm.list.size - readVm.currentChapter).toString(),
                             currentPage = currentPage,
-                            pages = pages.size,
+                            pages = animateIntAsState(pages.size).value,
                             modifier = Modifier
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)

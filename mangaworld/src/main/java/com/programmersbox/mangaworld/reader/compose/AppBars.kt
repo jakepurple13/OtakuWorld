@@ -58,8 +58,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.mangasettings.PlayingMiddleAction
-import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -67,133 +65,28 @@ import com.programmersbox.uiviews.utils.LocalNavController
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @Composable
-internal fun ReaderTopBar(
-    pages: List<String>,
-    currentPage: Int,
+fun ReaderTopBar(
     currentChapter: String,
-    playingStartAction: PlayingStartAction,
-    playingMiddleAction: PlayingMiddleAction,
+    onSettingsClick: () -> Unit,
     showBlur: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    //TODO: Maybe instead of CenterAligned, it's a normal one
-    // Navigation would be a back button,
-    // title would be in the title slot
-    // then the bottom bar wouldn't need the back button in it's list
-    // Could also allow having the floating haze bar like in the main navigation?
-    // definitely would need to add a choice of bottom bar, floating, or fab.
-    // If we fully go with this, need to modify the settings screen to reflect this as well as needing to remove the protobuf settings
-
-    //TODO: Trying this out
-
     TopAppBar(
         windowInsets = WindowInsets(0.dp),
         modifier = modifier,
-        navigationIcon = {
-            BackButton()
-            /*Crossfade(
-                targetState = playingStartAction,
-                label = "startAction"
-            ) { target ->
-                when (target) {
-                    PlayingStartAction.Battery -> {
-                        val context = LocalContext.current
-                        var batteryColor by remember { mutableStateOf(Color.White) }
-                        var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
-                        var batteryPercent by remember { mutableFloatStateOf(0f) }
-                        val batteryInformation = remember(context) { BatteryInformation(context) }
-
-                        LaunchedEffect(context) {
-                            batteryInformation.composeSetupFlow(
-                                Color.White
-                            ) {
-                                batteryColor = it.first
-                                batteryIcon = it.second
-                            }
-                                .launchIn(this)
-                        }
-
-                        DisposableEffect(context) {
-                            val batteryInfo = context.battery {
-                                batteryPercent = it.percent
-                                batteryInformation.batteryLevel.tryEmit(it.percent)
-                                batteryInformation.batteryInfo.tryEmit(it)
-                            }
-                            onDispose { context.unregisterReceiver(batteryInfo) }
-                        }
-                        Row(
-                            modifier = Modifier.padding(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                batteryIcon.composeIcon,
-                                contentDescription = null,
-                                tint = animateColorAsState(
-                                    if (batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                                    else batteryColor, label = ""
-                                ).value
-                            )
-                            Text(
-                                "${batteryPercent.toInt()}%",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-
-                    PlayingStartAction.CurrentChapter -> {
-                        Text(
-                            currentChapter,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-
-                    PlayingStartAction.None -> {}
-                    PlayingStartAction.UNRECOGNIZED -> {}
-                }
-            }*/
-        },
+        navigationIcon = { BackButton() },
         title = {
             Text(
                 currentChapter,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.basicMarquee()
             )
-            /*Crossfade(
-                targetState = playingMiddleAction,
-                label = "middleAction"
-            ) { target ->
-                when (target) {
-                    PlayingMiddleAction.Time -> {
-                        var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-                        val activity = LocalActivity.current
-
-                        DisposableEffect(LocalContext.current) {
-                            val timeReceiver = activity?.timeTick { _, _ -> time = System.currentTimeMillis() }
-                            onDispose { activity?.unregisterReceiver(timeReceiver) }
-                        }
-
-                        Text(
-                            DateFormat.getTimeFormat(LocalContext.current).format(time).toString(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(4.dp)
-                        )
-                    }
-
-                    PlayingMiddleAction.Nothing -> {}
-                    PlayingMiddleAction.UNRECOGNIZED -> {}
-                }
-            }*/
         },
-        /*actions = {
-            PageIndicator(
-                currentPage = currentPage + 1,
-                pageCount = pages.size,
-                modifier = Modifier
-                    .padding(4.dp)
-                    .align(Alignment.CenterVertically)
-            )
-        },*/
+        actions = {
+            IconButton(
+                onClick = onSettingsClick,
+            ) { Icon(Icons.Default.Settings, null) }
+        },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
     )
 }
@@ -435,7 +328,6 @@ private fun NextIconButton(
 @Composable
 fun FloatingBottomBar(
     onPageSelectClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     onNextChapter: () -> Unit,
     onPreviousChapter: () -> Unit,
     onChapterShow: () -> Unit,
@@ -493,13 +385,6 @@ fun FloatingBottomBar(
                 )
             },
             label = { Text("Pages") }
-        )
-
-        NavigationBarItem(
-            selected = false,
-            onClick = onSettingsClick,
-            icon = { Icon(Icons.Default.Settings, null) },
-            label = { Text(stringResource(id = R.string.settings)) }
         )
     }
 }
