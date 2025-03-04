@@ -73,7 +73,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.1.3"
-ackpineVersion = "0.10.2"
+ackpineVersion = "0.11.0"
 
 arcore = "1.0.0-alpha03"
 composeXr = "1.0.0-alpha03"
