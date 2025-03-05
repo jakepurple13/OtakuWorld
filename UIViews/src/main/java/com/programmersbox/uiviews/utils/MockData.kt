@@ -195,7 +195,7 @@ fun PreviewTheme(
             androidContext(context)
             module {
                 single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                single { SettingsHandling(context) }
+                single { SettingsHandling(context, PerformanceClass.create()) }
                 single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
             }
             module {
@@ -243,7 +243,7 @@ fun PreviewTheme(
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides remember { SettingsHandling(context) },
+                LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
                 LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },

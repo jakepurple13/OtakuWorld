@@ -1,6 +1,7 @@
 [versions]
 biometricVersion = "1.4.0-alpha02"
 blurhash = "0.4.0-SNAPSHOT"
+corePerformance = "1.0.0"
 generativeai = "0.9.0"
 gradle = "8.9.0"
 
@@ -93,6 +94,7 @@ google-firebase-performance = { id = "com.google.firebase.firebase-perf", versio
 ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpineVersion" }
 ackpine-core = { module = "ru.solrudev.ackpine:ackpine-core", version.ref = "ackpineVersion" }
 androidx-baselineprofile-gradle-plugin = { module = "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin", version.ref = "androidx-baselineprofile" }
+androidx-core-performance = { module = "androidx.core:core-performance", version.ref = "corePerformance" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
 blurhash = { module = "com.vanniktech:blurhash", version.ref = "blurhash" }
 compose-collapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }

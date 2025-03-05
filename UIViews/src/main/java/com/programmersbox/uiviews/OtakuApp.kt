@@ -50,6 +50,7 @@ import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.utils.PerformanceClass
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +67,7 @@ import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import java.util.Locale
 import java.util.UUID
@@ -120,7 +122,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                 module {
                     buildModules()
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                    single { SettingsHandling(get()) }
+                    singleOf(::SettingsHandling)
                     single {
                         AppLogo(
                             logo = applicationInfo.loadIcon(packageManager),
@@ -130,6 +132,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     single { UpdateNotification(get()) }
                     single { DataStoreHandling(get()) }
                     single { DownloadAndInstaller(get()) }
+                    single { PerformanceClass.create() }
                     workerOf(::UpdateFlowWorker)
                     workerOf(::AppCheckWorker)
                     workerOf(::SourceUpdateChecker)

@@ -21,6 +21,7 @@ import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.middleMultipleActions
 import com.programmersbox.uiviews.settings
+import com.programmersbox.uiviews.utils.PerformanceClass
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -74,7 +75,7 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             showDownload = true
             amoledMode = false
             usePalette = true
-            showBlur = true
+            showBlur = PerformanceClass.canBlur()
             showExpressiveness = true
             notifyOnReboot = true
             multipleActions = middleMultipleActions {
@@ -85,7 +86,10 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
 
-class SettingsHandling(context: Context) {
+class SettingsHandling(
+    context: Context,
+    private val performanceClass: PerformanceClass,
+) {
     private val preferences by lazy { context.settings }
     private val all: Flow<Settings> get() = preferences.data
 
@@ -173,7 +177,7 @@ class SettingsHandling(context: Context) {
     fun rememberShowBlur() = preferences.rememberPreference(
         key = { it.showBlur },
         update = { setShowBlur(it) },
-        defaultValue = true
+        defaultValue = performanceClass.canBlur
     )
 
     @Composable

@@ -76,9 +76,11 @@ import com.programmersbox.uiviews.presentation.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
+import com.programmersbox.uiviews.utils.PerformanceClass
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.customsettings.item
 import com.programmersbox.uiviews.utils.customsettings.visibleName
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
@@ -91,6 +93,7 @@ fun GeneralSettings(
         title = stringResource(R.string.general_menu_title),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        val performanceClass = koinInject<PerformanceClass>()
         val handling = LocalSettingsHandling.current
 
         var isAmoledMode by handling.rememberIsAmoledMode()
@@ -107,7 +110,7 @@ fun GeneralSettings(
 
         ExpressivenessSetting(handling = handling)
 
-        BlurSetting(handling = handling)
+        if (performanceClass.canBlur) BlurSetting(handling = handling)
 
         HorizontalDivider()
 

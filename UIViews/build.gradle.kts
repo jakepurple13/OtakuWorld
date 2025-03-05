@@ -169,4 +169,6 @@ dependencies {
     implementation(libs.zoomable.peek.overlay)
 
     implementation(libs.kotlinx.datetime)
+
+    implementation(libs.androidx.core.performance)
 }
