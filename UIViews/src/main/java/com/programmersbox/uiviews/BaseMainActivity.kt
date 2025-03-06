@@ -75,7 +75,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
@@ -125,6 +124,7 @@ import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.rememberFloatingNavigation
 import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.presentation.components.HazeScaffold
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.uiviews.presentation.navGraph
@@ -210,7 +210,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val windowSize = calculateWindowSizeClass(activity = this@BaseMainActivity)
 
-
             val isAmoledMode by settingsHandling.rememberIsAmoledMode()
 
             val showBlur by settingsHandling.rememberShowBlur()
@@ -255,10 +254,9 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 showAllItem = showAllItem,
                                 currentDestination = currentDestination
                             )
-                            //FIXME: If this doesn't haze, then everything works
-                            // Fix it when it updates
-                            Scaffold(
-                                //hazeState = hazeState,
+
+                            HazeScaffold(
+                                hazeState = hazeState,
                                 bottomBar = {
                                     if (!floatingNavigation) {
                                         BottomNav(
@@ -266,7 +264,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                             showNavBar = showNavBar,
                                             navType = navType,
                                             currentDestination = currentDestination,
-                                            showBlur = showBlur && false,
+                                            showBlur = showBlur,
                                             isAmoledMode = isAmoledMode,
                                             middleNavItem = middleNavItem,
                                             multipleActions = multipleActions,
@@ -398,7 +396,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             Box(modifier = Modifier.fillMaxWidth()) {
                 FloatingNavigationBar(
                     containerColor = when {
-                        showBlur -> MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+                        showBlur -> Color.Transparent
                         isAmoledMode -> MaterialTheme.colorScheme.surface
                         else -> NavigationBarDefaults.containerColor
                     },
