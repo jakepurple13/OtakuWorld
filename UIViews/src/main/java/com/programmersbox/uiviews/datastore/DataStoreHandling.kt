@@ -63,4 +63,10 @@ class DataStoreHandling(context: Context) {
         key = booleanPreferencesKey(RemoteConfigKeys.ShowGemini.key),
         defaultValue = false
     )
+
+    val updateHourCheck = DataStoreHandler(
+        context = context,
+        key = longPreferencesKey("updateHourCheck"),
+        defaultValue = 1
+    )
 }

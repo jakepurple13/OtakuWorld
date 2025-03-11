@@ -55,6 +55,7 @@ import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -184,8 +185,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
             work.enqueueUniquePeriodicWork(
                 "appChecks",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequest.Builder(AppCheckWorker::class.java, 1, TimeUnit.DAYS)
+                ExistingPeriodicWorkPolicy.UPDATE,
+                PeriodicWorkRequest.Builder(
+                    workerClass = AppCheckWorker::class.java,
+                    repeatInterval = 7,
+                    repeatIntervalTimeUnit = TimeUnit.DAYS
+                )
                     .setConstraints(
                         Constraints.Builder()
                             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -202,7 +207,11 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             work.enqueueUniquePeriodicWork(
                 "sourceChecks",
                 ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequest.Builder(SourceUpdateChecker::class.java, 1, TimeUnit.DAYS)
+                PeriodicWorkRequest.Builder(
+                    workerClass = SourceUpdateChecker::class.java,
+                    repeatInterval = 1,
+                    repeatIntervalTimeUnit = TimeUnit.DAYS
+                )
                     .setConstraints(
                         Constraints.Builder()
                             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -309,7 +318,42 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
     private fun setupCheckWorker(dataStoreHandling: DataStoreHandling) {
         val work = WorkManager.getInstance(this)
-        dataStoreHandling
+        combine(
+            dataStoreHandling
+                .shouldCheck
+                .asFlow()
+                .distinctUntilChanged(),
+            dataStoreHandling
+                .updateHourCheck
+                .asFlow()
+                .distinctUntilChanged()
+        ) { should, interval -> should to interval }
+            .distinctUntilChanged()
+            .onEach { check ->
+                if (check.first) {
+                    work.enqueueUniquePeriodicWork(
+                        "updateFlowChecks",
+                        ExistingPeriodicWorkPolicy.UPDATE,
+                        PeriodicWorkRequestBuilder<UpdateFlowWorker>(
+                            check.second, TimeUnit.HOURS,
+                            5, TimeUnit.MINUTES
+                        )
+                            .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
+                            .setConstraints(
+                                Constraints.Builder()
+                                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                                    .build()
+                            )
+                            .setInitialDelay(10, TimeUnit.SECONDS)
+                            .build()
+                    )
+                } else {
+                    work.cancelUniqueWork("updateFlowChecks")
+                }
+            }
+            .launchIn(GlobalScope)
+
+        /*dataStoreHandling
             .shouldCheck
             .asFlow()
             .distinctUntilChanged()
@@ -335,7 +379,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     work.cancelUniqueWork("updateFlowChecks")
                 }
             }
-            .launchIn(GlobalScope)
+            .launchIn(GlobalScope)*/
     }
 
     companion object {

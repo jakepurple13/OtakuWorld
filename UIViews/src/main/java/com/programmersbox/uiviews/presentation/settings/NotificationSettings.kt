@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,9 +40,9 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
-import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
+import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -49,7 +50,6 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
@@ -61,7 +61,6 @@ fun NotificationSettings(
     notiViewModel: NotificationViewModel = koinViewModel(),
 ) {
     val work = remember { WorkManager.getInstance(context) }
-    val shouldCheck = koinInject<DataStoreHandling>().shouldCheck
     SettingsScaffold(stringResource(R.string.notification_settings)) {
         val scope = rememberCoroutineScope()
         ShowWhen(notiViewModel.savedNotifications > 0) {
@@ -147,7 +146,7 @@ fun NotificationSettings(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            scope.launch { shouldCheck.set(false) }
+                            notiViewModel.updateShouldCheck(false)
                             showDialog = false
                         }
                     ) { Text(stringResource(R.string.yes)) }
@@ -163,12 +162,26 @@ fun NotificationSettings(
                 if (!it) {
                     showDialog = true
                 } else {
-                    scope.launch { shouldCheck.set(it) }
+                    notiViewModel.updateShouldCheck(it)
                 }
             }
         )
 
         ShowWhen(notiViewModel.canCheck) {
+            var sliderValue by remember(notiViewModel.updateHourCheck) {
+                mutableFloatStateOf(notiViewModel.updateHourCheck.toFloat())
+            }
+
+            SliderSetting(
+                settingTitle = { Text("Check Every ${notiViewModel.updateHourCheck} hours") },
+                settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
+                sliderValue = sliderValue,
+                updateValue = { sliderValue = it },
+                range = 1f..24f,
+                steps = 23,
+                onValueChangedFinished = { notiViewModel.updateHourCheck(sliderValue.toLong()) }
+            )
+
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.clear_update_queue)) },
                 summaryValue = { Text(stringResource(R.string.clear_update_queue_summary)) },
@@ -182,8 +195,8 @@ fun NotificationSettings(
                         scope.launch {
                             work.cancelUniqueWork("updateFlowChecks")
                             work.pruneWork()
-                            shouldCheck.set(!shouldCheck.get())
-                            shouldCheck.set(!shouldCheck.get())
+                            notiViewModel.updateShouldCheck(!notiViewModel.canCheck)
+                            notiViewModel.updateShouldCheck(!notiViewModel.canCheck)
                         }
                         Toast
                             .makeText(context, R.string.cleared, Toast.LENGTH_SHORT)

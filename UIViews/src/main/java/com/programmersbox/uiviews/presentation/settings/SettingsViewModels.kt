@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -89,7 +90,7 @@ class MoreInfoViewModel(
 
 class NotificationViewModel(
     dao: ItemDao,
-    dataStoreHandling: DataStoreHandling,
+    private val dataStoreHandling: DataStoreHandling,
     settingsHandling: SettingsHandling,
 ) : ViewModel() {
 
@@ -97,6 +98,7 @@ class NotificationViewModel(
         private set
 
     var canCheck by mutableStateOf(false)
+    var updateHourCheck by mutableLongStateOf(0L)
 
     var time by mutableStateOf("")
 
@@ -116,6 +118,12 @@ class NotificationViewModel(
             .onEach { canCheck = it }
             .launchIn(viewModelScope)
 
+        dataStoreHandling
+            .updateHourCheck
+            .asFlow()
+            .onEach { updateHourCheck = it }
+            .launchIn(viewModelScope)
+
         combine(
             dataStoreHandling
                 .updateCheckingStart
@@ -131,6 +139,13 @@ class NotificationViewModel(
             .launchIn(viewModelScope)
     }
 
+    fun updateShouldCheck(value: Boolean) {
+        viewModelScope.launch { dataStoreHandling.shouldCheck.set(value) }
+    }
+
+    fun updateHourCheck(value: Long) {
+        viewModelScope.launch { dataStoreHandling.updateHourCheck.set(value) }
+    }
 }
 
 class TranslationViewModel : ViewModel() {
