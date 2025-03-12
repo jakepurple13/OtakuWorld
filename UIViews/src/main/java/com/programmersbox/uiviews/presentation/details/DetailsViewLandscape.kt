@@ -283,6 +283,7 @@ private fun DetailsLandscapeContent(
     LocalActivity.current
         ?.let { calculateDisplayFeatures(activity = it) }
         ?.let {
+            //TODO: Change to Adaptive stuff
             TwoPane(
                 modifier = modifier,
                 first = {

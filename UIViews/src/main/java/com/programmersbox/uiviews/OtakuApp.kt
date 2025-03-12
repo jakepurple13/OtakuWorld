@@ -318,6 +318,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
     private fun setupCheckWorker(dataStoreHandling: DataStoreHandling) {
         val work = WorkManager.getInstance(this)
+        //TODO: Try this out
         combine(
             dataStoreHandling
                 .shouldCheck
