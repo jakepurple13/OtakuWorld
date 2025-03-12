@@ -323,6 +323,7 @@ fun ReadView(
                             showBlur = showBlur,
                             isAmoledMode = isAmoledMode,
                             chapterNumber = (readVm.list.size - readVm.currentChapter).toString(),
+                            chapterCount = readVm.list.size.toString(),
                             currentPage = currentPage,
                             pages = animateIntAsState(pages.size).value,
                             previousButtonEnabled = readVm.currentChapter < readVm.list.lastIndex && readVm.list.size > 1,

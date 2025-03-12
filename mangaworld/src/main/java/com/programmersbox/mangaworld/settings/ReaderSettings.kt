@@ -204,6 +204,7 @@ private fun ReaderSettings(
                     currentPage = 0,
                     pages = 13,
                     chapterNumber = "13",
+                    chapterCount = "13",
                     previousButtonEnabled = true,
                     nextButtonEnabled = true,
                     modifier = Modifier.padding(16.dp)

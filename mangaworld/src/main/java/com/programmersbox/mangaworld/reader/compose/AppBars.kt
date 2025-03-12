@@ -332,6 +332,7 @@ fun FloatingBottomBar(
     onPreviousChapter: () -> Unit,
     onChapterShow: () -> Unit,
     chapterNumber: String,
+    chapterCount: String,
     currentPage: Int,
     pages: Int,
     showBlur: Boolean,
@@ -374,7 +375,7 @@ fun FloatingBottomBar(
         NavigationBarItem(
             selected = false,
             onClick = onChapterShow,
-            icon = { Text("#$chapterNumber") },
+            icon = { Text("#$chapterNumber/$chapterCount") },
             label = { Text("Chapters") }
         )
 
