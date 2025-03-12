@@ -1,11 +1,11 @@
 package com.programmersbox.uiviews.presentation.details
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +28,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -36,9 +37,19 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDragHandle
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowSize
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
+import androidx.compose.material3.adaptive.layout.defaultDragHandleSemantics
+import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
+import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -56,13 +67,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
-import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
-import com.google.accompanist.adaptive.TwoPane
-import com.google.accompanist.adaptive.calculateDisplayFeatures
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.models.ChapterModel
@@ -71,6 +81,7 @@ import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
+import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
 import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.theme.LocalItemDao
@@ -244,7 +255,10 @@ fun DetailsViewLandscape(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3WindowSizeClassApi::class
+)
 @Composable
 private fun DetailsLandscapeContent(
     info: InfoModel,
@@ -280,137 +294,157 @@ private fun DetailsLandscapeContent(
         context = LocalContext.current
     )
 
-    LocalActivity.current
-        ?.let { calculateDisplayFeatures(activity = it) }
-        ?.let {
-            //TODO: Change to Adaptive stuff
-            TwoPane(
-                modifier = modifier,
-                first = {
-                    val b = MaterialTheme.colorScheme.surface
-                    val c = MaterialTheme.colorScheme.primary
-                    NormalOtakuScaffold(
-                        bottomBar = {
-                            DetailBottomBar(
-                                navController = LocalNavController.current,
-                                onShowLists = { showLists = true },
-                                info = info,
-                                customActions = {},
-                                removeFromSaved = {
-                                    scope.launch(Dispatchers.IO) {
-                                        dao.getNotificationItemFlow(info.url)
-                                            .firstOrNull()
-                                            ?.let {
-                                                dao.deleteNotification(it)
-                                                notificationRepository.cancelNotification(it)
-                                            }
+    val windowSize = with(LocalDensity.current) {
+        currentWindowSize().toSize().toDpSize()
+    }
+    val windowSizeClass = remember(windowSize) { WindowSizeClass.calculateFromSize(windowSize) }
+
+    val state = rememberListDetailPaneScaffoldNavigator<Int>(
+        scaffoldDirective = calculateStandardPaneScaffoldDirective(
+            currentWindowAdaptiveInfo(),
+            windowSizeClass = windowSizeClass
+        )
+    )
+
+    ListDetailPaneScaffold(
+        directive = state.scaffoldDirective,
+        value = state.scaffoldValue,
+        paneExpansionState = rememberPaneExpansionState(keyProvider = state.scaffoldValue),
+        paneExpansionDragHandle = { state ->
+            val interactionSource = remember { MutableInteractionSource() }
+            VerticalDragHandle(
+                interactionSource = interactionSource,
+                modifier = Modifier.paneExpansionDraggable(
+                    state = state,
+                    minTouchTargetSize = LocalMinimumInteractiveComponentSize.current,
+                    interactionSource = interactionSource,
+                    semanticsProperties = state.defaultDragHandleSemantics()
+                )
+            )
+        },
+        listPane = {
+            val b = MaterialTheme.colorScheme.surface
+            val c = MaterialTheme.colorScheme.primary
+            NormalOtakuScaffold(
+                bottomBar = {
+                    DetailBottomBar(
+                        navController = LocalNavController.current,
+                        onShowLists = { showLists = true },
+                        info = info,
+                        customActions = {},
+                        removeFromSaved = {
+                            scope.launch(Dispatchers.IO) {
+                                dao.getNotificationItemFlow(info.url)
+                                    .firstOrNull()
+                                    ?.let {
+                                        dao.deleteNotification(it)
+                                        notificationRepository.cancelNotification(it)
                                     }
-                                },
-                                isSaved = isSaved,
-                                canNotify = canNotify,
-                                notifyAction = notifyAction,
-                                modifier = Modifier
-                                    .padding(LocalNavHostPadding.current)
-                                    .drawWithCache {
-                                        onDrawBehind {
-                                            drawLine(
-                                                b,
-                                                Offset(0f, 8f),
-                                                Offset(size.width, 8f),
-                                                4 * density
-                                            )
-                                        }
-                                    },
-                                containerColor = c,
-                                isFavorite = isFavorite,
-                                onFavoriteClick = onFavoriteClick,
-                                windowInsets = BottomAppBarDefaults.windowInsets
-                            )
+                            }
                         },
-                        contentWindowInsets = WindowInsets.navigationBars,
-                        containerColor = Color.Transparent,
-                        modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(it)
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            DetailsHeader(
-                                model = info,
-                                logo = painterResource(id = logo.notificationId),
-                                isFavorite = isFavorite,
-                                favoriteClick = onFavoriteClick,
-                                onPaletteSet = onPaletteSet,
-                                possibleDescription = {
-                                    if (info.description.isNotEmpty()) {
-                                        var descriptionVisibility by remember { mutableStateOf(false) }
-                                        Box {
-                                            val progress = remember { mutableStateOf(false) }
+                        isSaved = isSaved,
+                        canNotify = canNotify,
+                        notifyAction = notifyAction,
+                        modifier = Modifier
+                            .padding(LocalNavHostPadding.current)
+                            .drawWithCache {
+                                onDrawBehind {
+                                    drawLine(
+                                        b,
+                                        Offset(0f, 8f),
+                                        Offset(size.width, 8f),
+                                        4 * density
+                                    )
+                                }
+                            },
+                        containerColor = c,
+                        isFavorite = isFavorite,
+                        onFavoriteClick = onFavoriteClick,
+                        windowInsets = BottomAppBarDefaults.windowInsets
+                    )
+                },
+                contentWindowInsets = WindowInsets.navigationBars,
+                containerColor = Color.Transparent,
+                modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(it)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    DetailsHeader(
+                        model = info,
+                        logo = painterResource(id = logo.notificationId),
+                        isFavorite = isFavorite,
+                        favoriteClick = onFavoriteClick,
+                        onPaletteSet = onPaletteSet,
+                        possibleDescription = {
+                            if (info.description.isNotEmpty()) {
+                                var descriptionVisibility by remember { mutableStateOf(false) }
+                                Box {
+                                    val progress = remember { mutableStateOf(false) }
 
-                                            Text(
-                                                description,
-                                                modifier = Modifier
-                                                    .combinedClickable(
-                                                        interactionSource = null,
-                                                        indication = ripple(),
-                                                        onClick = { descriptionVisibility = !descriptionVisibility },
-                                                        onLongClick = { onTranslateDescription(progress) }
-                                                    )
-                                                    .padding(horizontal = 4.dp)
-                                                    .fillMaxWidth()
-                                                    .animateContentSize(),
-                                                overflow = TextOverflow.Ellipsis,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurface
+                                    Text(
+                                        description,
+                                        modifier = Modifier
+                                            .combinedClickable(
+                                                interactionSource = null,
+                                                indication = ripple(),
+                                                onClick = { descriptionVisibility = !descriptionVisibility },
+                                                onLongClick = { onTranslateDescription(progress) }
                                             )
+                                            .padding(horizontal = 4.dp)
+                                            .fillMaxWidth()
+                                            .animateContentSize(),
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
 
-                                            if (progress.value) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.align(Alignment.Center)
-                                                )
-                                            }
-                                        }
+                                    if (progress.value) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
                                     }
                                 }
-                            )
-                        }
-                    }
-                },
-                second = {
-                    val listOfChapters = remember(reverseChapters) {
-                        info.chapters.let { if (reverseChapters) it.reversed() else it }
-                    }
-                    LazyColumnScrollbar(
-                        state = listState,
-                        settings = ScrollbarSettings.Default.copy(
-                            thumbThickness = 8.dp,
-                            scrollbarPadding = 2.dp,
-                            thumbUnselectedColor = MaterialTheme.colorScheme.primary,
-                            thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
-                        ),
-                    ) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.fillMaxHeight(),
-                            state = listState
-                        ) {
-                            items(listOfChapters) { c ->
-                                ChapterItem(
-                                    infoModel = info,
-                                    c = c,
-                                    read = chapters,
-                                    chapters = info.chapters,
-                                    shareChapter = shareChapter,
-                                    markAs = markAs,
-                                    showDownload = showDownloadButton
-                                )
                             }
                         }
+                    )
+                }
+            }
+        },
+        detailPane = {
+            val listOfChapters = remember(reverseChapters) {
+                info.chapters.let { if (reverseChapters) it.reversed() else it }
+            }
+            LazyColumnScrollbar(
+                state = listState,
+                settings = ScrollbarSettings.Default.copy(
+                    thumbThickness = 8.dp,
+                    scrollbarPadding = 2.dp,
+                    thumbUnselectedColor = MaterialTheme.colorScheme.primary,
+                    thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
+                ),
+            ) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxHeight(),
+                    state = listState
+                ) {
+                    items(listOfChapters) { c ->
+                        ChapterItem(
+                            infoModel = info,
+                            c = c,
+                            read = chapters,
+                            chapters = info.chapters,
+                            shareChapter = shareChapter,
+                            markAs = markAs,
+                            showDownload = showDownloadButton
+                        )
                     }
-                },
-                displayFeatures = it,
-                strategy = HorizontalTwoPaneStrategy(splitFraction = 0.5f)
-            )
-        }
+                }
+            }
+        },
+        modifier = modifier,
+    )
 }
