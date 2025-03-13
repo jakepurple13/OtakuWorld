@@ -386,6 +386,9 @@ private fun DetailsLandscapeContent(
 
                                     Text(
                                         description,
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier
                                             .combinedClickable(
                                                 interactionSource = null,
@@ -395,10 +398,7 @@ private fun DetailsLandscapeContent(
                                             )
                                             .padding(horizontal = 4.dp)
                                             .fillMaxWidth()
-                                            .animateContentSize(),
-                                        overflow = TextOverflow.Ellipsis,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                            .animateContentSize()
                                     )
 
                                     if (progress.value) {

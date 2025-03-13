@@ -5,6 +5,8 @@
 # 御宅族世界
 
  ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
+ ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/nightly_release.yaml/badge.svg)
+ ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/main_release.yaml/badge.svg)
  
  [Discord 链接](https://discord.gg/MhhHMWqryg) 现在有一个 discord 了！！！由于这是我第一次这样做，所以可能会有一些变动和修改。
 
