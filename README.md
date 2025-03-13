@@ -9,7 +9,7 @@
 
 ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/build_check.yaml/badge.svg)
 ![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/nightly_release.yaml/badge.svg)
-![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/main_release.yaml/badge.svg)
+![Build Status](https://github.com/jakepurple13/OtakuWorld/actions/workflows/main_release.yml/badge.svg)
  
  [Discord Link](https://discord.gg/MhhHMWqryg) There's a discord now!!! This is something that will probably be changed and modified since it's the first time I've done this.
 
