@@ -323,7 +323,7 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 retrofit = "com.squareup.retrofit2:retrofit:2.11.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0"
-androidxWebkit = "androidx.webkit:webkit:1.12.1"
+androidxWebkit = "androidx.webkit:webkit:1.13.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
