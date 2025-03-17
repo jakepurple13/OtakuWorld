@@ -334,7 +334,7 @@ firebaseAuth = { group = "com.google.firebase", name = "firebase-auth" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
-firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
+firebaseUiAuth = "com.firebaseui:firebase-ui-auth:9.0.0"
 playServices = "com.google.android.gms:play-services-auth:21.3.0"
 
 firebase-database-ktx = { module = "com.github.skydoves:firebase-database-ktx", version.ref = "firebaseKtx" }
