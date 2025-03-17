@@ -58,7 +58,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.6.0-beta01"
+media3Version = "1.6.0-rc01"
 
 junit = "1.2.1"
 espresso-core = "3.6.1"
@@ -250,7 +250,7 @@ swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
-zoomableModifier = "net.engawapg.lib:zoomable:2.3.0"
+zoomableModifier = "net.engawapg.lib:zoomable:2.4.0"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
@@ -323,7 +323,7 @@ ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = 
 retrofit = "com.squareup.retrofit2:retrofit:2.11.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
 kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0"
-androidxWebkit = "androidx.webkit:webkit:1.12.1"
+androidxWebkit = "androidx.webkit:webkit:1.13.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
@@ -358,7 +358,7 @@ workinspector = { module = "com.github.koitharu:workinspector", version.ref = "w
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
 androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
-androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha04" }
+androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha05" }
 
 [bundles]
 compose = [
