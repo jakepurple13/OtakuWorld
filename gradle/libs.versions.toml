@@ -15,7 +15,7 @@ dragselect = "2.4.1"
 easylauncher = "6.4.0"
 firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
-haze = "1.5.0"
+haze = "1.5.1"
 kamelImage = "1.0.3"
 latestAboutLibsRelease = "11.6.3"
 coroutinesVersion = "1.10.1"
@@ -58,7 +58,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.6.0-rc01"
+media3Version = "1.6.0-rc02"
 
 junit = "1.2.1"
 espresso-core = "3.6.1"
@@ -334,7 +334,7 @@ firebaseAuth = { group = "com.google.firebase", name = "firebase-auth" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
-firebaseUiAuth = "com.firebaseui:firebase-ui-auth:8.0.2"
+firebaseUiAuth = "com.firebaseui:firebase-ui-auth:9.0.0"
 playServices = "com.google.android.gms:play-services-auth:21.3.0"
 
 firebase-database-ktx = { module = "com.github.skydoves:firebase-database-ktx", version.ref = "firebaseKtx" }

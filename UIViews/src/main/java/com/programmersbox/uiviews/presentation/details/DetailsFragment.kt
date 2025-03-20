@@ -132,12 +132,11 @@ private fun DetailsScreenInternal(
     dao: ItemDao = LocalItemDao.current,
     details: DetailsViewModel = koinViewModel(),
 ) {
-    val showDownload by LocalSettingsHandling.current.rememberShowDownload()
     val scope = rememberCoroutineScope()
     val handling = LocalSettingsHandling.current
 
+    val showDownload by handling.rememberShowDownload()
     val usePalette by handling.rememberUsePalette()
-
     val isAmoledMode by handling.rememberIsAmoledMode()
     val themeSetting by handling.rememberSystemThemeMode()
     val paletteSwatchType by rememberSwatchType()
