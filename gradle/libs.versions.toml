@@ -51,7 +51,7 @@ firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "1.4.2"
 
-firebaseBom = "33.10.0"
+firebaseBom = "33.11.0"
 
 ### MangaWorld
 piasy = "1.8.1"
