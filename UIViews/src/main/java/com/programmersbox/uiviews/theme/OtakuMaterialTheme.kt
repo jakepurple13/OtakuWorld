@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.theme
 
 import android.os.Build
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -20,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.materialkolor.ktx.animateColorScheme
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
@@ -116,7 +118,7 @@ fun OtakuMaterialTheme(
         }
 
         MaterialExpressiveTheme(
-            colorScheme = colorScheme.animate(),
+            colorScheme = animateColorScheme(colorScheme, tween()),
             motionScheme = if (settingsHandling.rememberShowExpressiveness().value) MotionScheme.expressive()
             else MotionScheme.standard(),
         ) {
