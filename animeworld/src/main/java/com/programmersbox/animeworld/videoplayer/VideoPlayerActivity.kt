@@ -12,7 +12,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.*
+import android.view.GestureDetector
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -38,7 +42,11 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.animeworld.R
-import com.programmersbox.animeworld.databinding.*
+import com.programmersbox.animeworld.databinding.ActivityVideoPlayerBinding
+import com.programmersbox.animeworld.databinding.ExoControlsBinding
+import com.programmersbox.animeworld.databinding.MxMobileBrightnessDialogBinding
+import com.programmersbox.animeworld.databinding.MxMobileVolumeDialogBinding
+import com.programmersbox.animeworld.databinding.MxProgressDialogBinding
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.audioManager
@@ -55,7 +63,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.security.cert.X509Certificate
-import java.util.*
+import java.util.Formatter
+import java.util.Locale
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
@@ -180,8 +189,8 @@ class VideoPlayerActivity : AppCompatActivity() {
             exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
         }
 
-        exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
-        exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
+        //exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
+        //exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
 
         videoBinding.playerView.setControllerVisibilityListener(
             PlayerView.ControllerVisibilityListener { exoBinding.videoInfoLayout.visibility = it }

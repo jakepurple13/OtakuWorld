@@ -64,7 +64,7 @@ dependencies {
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(libs.superForwardView)
+    //implementation(libs.superForwardView)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
