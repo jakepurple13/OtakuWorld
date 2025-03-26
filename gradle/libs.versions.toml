@@ -1,5 +1,5 @@
 [versions]
-biometricVersion = "1.4.0-alpha02"
+biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 corePerformance = "1.0.0"
 generativeai = "0.9.0"
