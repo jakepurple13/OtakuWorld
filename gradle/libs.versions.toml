@@ -1,13 +1,13 @@
 [versions]
-biometricVersion = "1.4.0-alpha02"
+biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 corePerformance = "1.0.0"
 generativeai = "0.9.0"
-gradle = "8.9.0"
+gradle = "8.9.1"
 
 kotlin = "2.1.20"
 kotlinxDatetime = "0.6.2"
-kspVersion = "2.1.20-1.0.31"
+kspVersion = "2.1.20-1.0.32"
 
 androidxBaselineprofileGradlePlugin = "1.3.3"
 composeCollapsable = "0.4.0"
@@ -24,11 +24,11 @@ pagecurl = "1.5.1"
 pagingVersion = "3.3.6"
 protobufGradlePlugin = "0.9.4"
 reorderable = "2.4.3"
-roomVersion = "2.7.0-rc02"
-navVersion = "2.9.0-alpha08"
+roomVersion = "2.7.0-rc03"
+navVersion = "2.9.0-alpha09"
 koin-bom = "4.0.3"
 coil = "3.1.0"
-lifecycle = "2.9.0-alpha12"
+lifecycle = "2.9.0-alpha13"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
@@ -45,7 +45,7 @@ composeVersion = "1.8.0-alpha01"
 compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
-composeBomVersion = "2025.03.00"
+composeBomVersion = "2025.03.01"
 materialKolor = "2.1.1"
 firebaseKtx = "0.3.0"
 
@@ -58,14 +58,14 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.6.0-rc02"
+media3Version = "1.6.0"
 
 junit = "1.2.1"
 espresso-core = "3.6.1"
 uiautomator = "2.3.0"
 benchmark-macro-junit4 = "1.3.0"
-androidx-baselineprofile = "1.3.0"
-profileinstaller = "1.3.1"
+androidx-baselineprofile = "1.3.3"
+profileinstaller = "1.4.1"
 telephoto = "0.15.1"
 zoomimageComposeGlide = "1.1.2"
 
@@ -73,7 +73,7 @@ workinspector = "1.2"
 
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
-datastore = "1.1.3"
+datastore = "1.1.4"
 ackpineVersion = "0.11.0"
 
 arcore = "1.0.0-alpha03"
@@ -358,7 +358,7 @@ workinspector = { module = "com.github.koitharu:workinspector", version.ref = "w
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
 androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
-androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha05" }
+androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha06" }
 
 [bundles]
 compose = [
