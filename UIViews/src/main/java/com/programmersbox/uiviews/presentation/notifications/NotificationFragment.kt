@@ -518,6 +518,9 @@ private fun OptionsSheet(
 
             ListItem(
                 headlineContent = { Text("Is showing in a notification: ${i.isShowing}") },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
+                )
             )
 
             HorizontalDivider()
