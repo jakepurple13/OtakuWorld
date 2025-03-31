@@ -36,7 +36,8 @@ dependencies {
 
     implementation(androidx.mediarouter.mediarouter)
 
-    implementation(libs.torrentStream)
+    //Commenting out since it's no longer being worked on
+    //implementation(libs.torrentStream)
 
     implementation(libs.gson)
 
