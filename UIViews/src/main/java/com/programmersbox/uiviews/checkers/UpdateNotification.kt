@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import com.programmersbox.favoritesdatabase.DbModel
@@ -20,6 +19,7 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.receivers.DeleteNotificationReceiver
+import com.programmersbox.uiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -47,18 +47,28 @@ class UpdateNotification(private val context: Context) : KoinComponent {
     suspend fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
         sendRunningNotification(list.size, index, pair.second.title)
         //index + 3 + (Math.random() * 50).toInt() //for a possible new notification value
+
+        val item = dao.getNotificationItem(pair.second.url)
+        val isShowing = item?.isShowing == true
+
+        val notificationId = if (isShowing)
+            item.id
+        else
+            pair.second.hashCode()
+
         dao.insertNotification(
             NotificationItem(
-                id = pair.second.hashCode(),
+                id = notificationId,
                 url = pair.second.url,
                 summaryText = context.getString(R.string.hadAnUpdate, pair.second.title, pair.first?.chapters?.firstOrNull()?.name ?: ""),
                 notiTitle = pair.second.title,
                 imageUrl = pair.second.imageUrl,
                 source = pair.second.source,
-                contentTitle = pair.second.title
+                contentTitle = pair.second.title,
+                isShowing = true
             )
         )
-        pair.second.hashCode() to NotificationDslBuilder.builder(
+        notificationId to NotificationDslBuilder.builder(
             context,
             "otakuChannel",
             icon.notificationId
@@ -90,21 +100,21 @@ class UpdateNotification(private val context: Context) : KoinComponent {
             addAction {
                 actionTitle = context.getString(R.string.mark_read)
                 actionIcon = icon.notificationId
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
+                semanticAction = SemanticActions.MARK_AS_READ
                 pendingActionIntent {
                     val intent = Intent(context, DeleteNotificationReceiver::class.java)
                     intent.action = "NOTIFICATION_DELETED_ACTION"
                     intent.putExtra("url", pair.second.url)
-                    intent.putExtra("id", pair.second.hashCode())
-                    PendingIntent.getBroadcast(context, pair.second.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE)
+                    intent.putExtra("id", notificationId)
+                    PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE)
                 }
             }
-            /*deleteIntent { context ->
-                val intent = Intent(context, DeleteNotificationReceiver::class.java)
+            deleteIntent { context ->
+                val intent = Intent(context, SwipeAwayReceiver::class.java)
                 intent.action = "NOTIFICATION_DELETED_ACTION"
                 intent.putExtra("url", pair.second.url)
-                PendingIntent.getBroadcast(context, 0, intent, 0)
-            }*/
+                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+            }
             pendingIntent { context -> info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source)) }
         }
     }

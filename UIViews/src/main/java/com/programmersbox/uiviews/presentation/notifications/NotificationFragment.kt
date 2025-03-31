@@ -101,6 +101,7 @@ import androidx.work.WorkManager
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
@@ -168,6 +169,7 @@ fun NotificationsScreen(
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     vm: NotificationScreenViewModel = koinViewModel(),
     notificationRepository: NotificationRepository = koinInject(),
+    itemDao: ItemDao = koinInject(),
 ) {
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
@@ -284,6 +286,7 @@ fun NotificationsScreen(
                         cancelNotification = vm::cancelNotification,
                         notificationLogo = notificationLogo,
                         showBlur = showBlur,
+                        itemDao = itemDao,
                         onError = {
                             scope.launch {
                                 state.snackbarHostState.currentSnackbarData?.dismiss()
@@ -314,6 +317,7 @@ fun NotificationsScreen(
                         notificationLogo = notificationLogo,
                         logoDrawable = logoDrawable,
                         showBlur = showBlur,
+                        itemDao = itemDao,
                         onError = {
                             scope.launch {
                                 state.snackbarHostState.currentSnackbarData?.dismiss()
@@ -383,6 +387,7 @@ private fun DateSort(
     onLoadingChange: (Boolean) -> Unit,
     notificationLogo: NotificationLogo,
     showBlur: Boolean,
+    itemDao: ItemDao,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
@@ -453,6 +458,7 @@ private fun DateSort(
                         sourceRepository = sourceRepository,
                         deleteNotification = deleteNotification,
                         cancelNotification = cancelNotification,
+                        itemDao = itemDao,
                         modifier = Modifier.hazeSource(hazeState)
                     )
                 }
@@ -469,6 +475,7 @@ private fun OptionsSheet(
     scope: CoroutineScope,
     navController: NavController,
     toSource: (String) -> ApiService?,
+    itemDao: ItemDao,
     context: Context = LocalContext.current,
     notificationLogo: NotificationLogo,
     genericInfo: GenericInfo = LocalGenericInfo.current,
@@ -508,6 +515,13 @@ private fun OptionsSheet(
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+
+            ListItem(
+                headlineContent = { Text("Is showing in a notification: ${i.isShowing}") },
+            )
+
+            HorizontalDivider()
+
             Card(
                 onClick = {
                     scope.launch(Dispatchers.IO) {
@@ -554,7 +568,8 @@ private fun OptionsSheet(
                             n = i,
                             notificationLogo = notificationLogo,
                             info = genericInfo,
-                            sourceRepository = sourceRepository
+                            sourceRepository = sourceRepository,
+                            itemDao = itemDao
                         )
                         sheet.hide()
                     }.invokeOnCompletion { onDismiss() }
@@ -628,6 +643,7 @@ private fun NotiItem(
     navController: NavController,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     context: Context = LocalContext.current,
+    itemDao: ItemDao,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
@@ -647,6 +663,7 @@ private fun NotiItem(
             notificationLogo = notificationLogo,
             genericInfo = genericInfo,
             sourceRepository = sourceRepository,
+            itemDao = itemDao,
             onDismiss = { showOptions = false },
             onShowDelete = { showPopup = true }
         )
@@ -762,6 +779,7 @@ private fun GroupedSort(
     notificationLogo: NotificationLogo,
     logoDrawable: Drawable?,
     showBlur: Boolean,
+    itemDao: ItemDao,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
@@ -829,6 +847,7 @@ private fun GroupedSort(
                                 toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
                                 sourceRepository = sourceRepository,
                                 onLoadingChange = onLoadingChange,
+                                itemDao = itemDao,
                                 onError = {
                                     scope.launch {
                                         //TODO: Fix this!
@@ -868,6 +887,7 @@ private fun NotificationItem(
     onError: () -> Unit,
     sourceRepository: SourceRepository,
     onLoadingChange: (Boolean) -> Unit,
+    itemDao: ItemDao,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -885,6 +905,7 @@ private fun NotificationItem(
             onLoadingChange = onLoadingChange,
             notificationLogo = notificationLogo,
             genericInfo = genericInfo,
+            itemDao = itemDao,
             sourceRepository = sourceRepository,
             onDismiss = { showOptions = false },
             onShowDelete = { showPopup = true }
@@ -1167,7 +1188,8 @@ private fun NotificationItemPreview() {
             toSource = { null },
             onError = {},
             sourceRepository = SourceRepository(),
-            onLoadingChange = {}
+            onLoadingChange = {},
+            itemDao = koinInject()
         )
     }
 }

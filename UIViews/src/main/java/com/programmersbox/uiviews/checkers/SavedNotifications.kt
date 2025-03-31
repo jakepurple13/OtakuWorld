@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Build
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.NotificationDslBuilder
@@ -15,6 +15,7 @@ import com.programmersbox.helpfulutils.SemanticActions
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.receivers.DeleteNotificationReceiver
+import com.programmersbox.uiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -28,15 +29,20 @@ import java.net.URL
 
 object SavedNotifications {
 
-    fun viewNotificationFromDb(
+    suspend fun viewNotificationFromDb(
         context: Context,
         n: NotificationItem,
         notificationLogo: NotificationLogo,
         info: GenericInfo,
         sourceRepository: SourceRepository,
+        itemDao: ItemDao,
     ) {
         val icon = notificationLogo.notificationId
         val update = UpdateNotification(context)
+        itemDao.updateNotification(
+            url = n.url,
+            isShowing = true
+        )
         (n.id to NotificationDslBuilder.builder(
             context,
             "otakuChannel",
@@ -61,7 +67,7 @@ object SavedNotifications {
             addAction {
                 actionTitle = context.getString(R.string.mark_read)
                 actionIcon = notificationLogo.notificationId
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
+                semanticAction = SemanticActions.MARK_AS_READ
                 pendingActionIntent {
                     val intent = Intent(context, DeleteNotificationReceiver::class.java)
                     intent.action = "NOTIFICATION_DELETED_ACTION"
@@ -70,12 +76,12 @@ object SavedNotifications {
                     PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
                 }
             }
-            /*deleteIntent { context ->
-                val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
+            deleteIntent { context ->
+                val intent1 = Intent(context, SwipeAwayReceiver::class.java)
                 intent1.action = "NOTIFICATION_DELETED_ACTION"
                 intent1.putExtra("url", n.url)
-                PendingIntent.getBroadcast(context, n.id, intent1, 0)
-            }*/
+                PendingIntent.getBroadcast(context, n.id, intent1, PendingIntent.FLAG_IMMUTABLE)
+            }
             pendingIntent { context ->
                 runBlocking {
                     val itemModel = sourceRepository.toSourceByApiServiceName(n.source)
@@ -117,6 +123,7 @@ object SavedNotifications {
         logo: NotificationLogo,
         info: GenericInfo,
         sourceRepository: SourceRepository,
+        itemDao: ItemDao,
     ) {
         val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
         val icon = logo.notificationId
@@ -125,6 +132,10 @@ object SavedNotifications {
             dao.getAllNotifications()
                 .fastMap { n ->
                     println(n)
+                    itemDao.updateNotification(
+                        url = n.url,
+                        isShowing = true
+                    )
                     n.id to NotificationDslBuilder.builder(
                         context,
                         "otakuChannel",
@@ -149,7 +160,7 @@ object SavedNotifications {
                         addAction {
                             actionTitle = context.getString(R.string.mark_read)
                             actionIcon = logo.notificationId
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) semanticAction = SemanticActions.MARK_AS_READ
+                            semanticAction = SemanticActions.MARK_AS_READ
                             pendingActionIntent {
                                 val intent = Intent(context, DeleteNotificationReceiver::class.java)
                                 intent.action = "NOTIFICATION_DELETED_ACTION"
@@ -158,12 +169,12 @@ object SavedNotifications {
                                 PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
                             }
                         }
-                        /*deleteIntent { context ->
-                            val intent1 = Intent(context, DeleteNotificationReceiver::class.java)
+                        deleteIntent { context ->
+                            val intent1 = Intent(context, SwipeAwayReceiver::class.java)
                             intent1.action = "NOTIFICATION_DELETED_ACTION"
                             intent1.putExtra("url", n.url)
-                            PendingIntent.getBroadcast(context, n.id, intent1, 0)
-                        }*/
+                            PendingIntent.getBroadcast(context, n.id, intent1, PendingIntent.FLAG_IMMUTABLE)
+                        }
                         pendingIntent { context ->
                             runBlocking {
                                 val itemModel = sourceRepository.toSourceByApiServiceName(n.source)//UpdateWorker.sourceFromString(n.source)

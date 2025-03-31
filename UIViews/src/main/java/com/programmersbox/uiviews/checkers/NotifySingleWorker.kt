@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.uiviews.GenericInfo
@@ -16,11 +17,21 @@ class NotifySingleWorker(
     private val logo: NotificationLogo,
     private val genericInfo: GenericInfo,
     private val sourceRepository: SourceRepository,
+    private val itemDao: ItemDao,
 ) : CoroutineWorker(context, workerParams), KoinComponent {
     override suspend fun doWork(): Result {
         inputData.getString("notiData")
             ?.fromJson<NotificationItem>()
-            ?.let { d -> SavedNotifications.viewNotificationFromDb(applicationContext, d, logo, genericInfo, sourceRepository) }
+            ?.let { d ->
+                SavedNotifications.viewNotificationFromDb(
+                    context = applicationContext,
+                    n = d,
+                    notificationLogo = logo,
+                    info = genericInfo,
+                    sourceRepository = sourceRepository,
+                    itemDao = itemDao
+                )
+            }
         return Result.success()
     }
 }

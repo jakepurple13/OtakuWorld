@@ -53,6 +53,8 @@ data class NotificationItem(
     val source: String,
     @ColumnInfo(name = "contentTitle")
     val contentTitle: String,
+    @ColumnInfo(name = "isShowing", defaultValue = "0")
+    val isShowing: Boolean = false,
 )
 
 @Entity("SourceOrder")

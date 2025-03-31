@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.checkers.SavedNotifications
@@ -20,13 +21,23 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     private val sourceRepository: SourceRepository by inject()
     private val settingsHandling: SettingsHandling by inject()
 
+    private val itemDao: ItemDao by inject()
+
     override fun onReceive(context: Context?, intent: Intent?) {
         Loged.d("BootReceived")
         println(intent?.action)
         runCatching {
             runBlocking {
                 if (settingsHandling.notifyOnReboot.get()) {
-                    context?.let { SavedNotifications.viewNotificationsFromDb(it, logo, info, sourceRepository) }
+                    context?.let {
+                        SavedNotifications.viewNotificationsFromDb(
+                            context = it,
+                            logo = logo,
+                            info = info,
+                            sourceRepository = sourceRepository,
+                            itemDao = itemDao
+                        )
+                    }
                 }
             }
         }

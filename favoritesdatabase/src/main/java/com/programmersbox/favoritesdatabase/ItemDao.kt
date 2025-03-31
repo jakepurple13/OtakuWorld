@@ -54,11 +54,17 @@ interface ItemDao {
     @Delete
     suspend fun deleteNotification(notificationItem: NotificationItem)
 
+    @Query("UPDATE Notifications SET isShowing = :isShowing WHERE url = :url")
+    suspend fun updateNotification(url: String, isShowing: Boolean)
+
+    @Update
+    suspend fun updateNotification(notificationItem: NotificationItem)
+
     @Query("DELETE FROM Notifications")
     suspend fun deleteAllNotifications(): Int
 
     @Query("SELECT * FROM Notifications where url = :url")
-    fun getNotificationItem(url: String): NotificationItem
+    fun getNotificationItem(url: String): NotificationItem?
 
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItemFlow(url: String): Flow<NotificationItem?>
