@@ -22,11 +22,11 @@ coroutinesVersion = "1.10.1"
 glideVersion = "4.16.0"
 pagecurl = "1.5.1"
 pagingVersion = "3.3.6"
-protobufGradlePlugin = "0.9.4"
+protobufGradlePlugin = "0.9.5"
 reorderable = "2.4.3"
 roomVersion = "2.7.0-rc03"
 navVersion = "2.9.0-alpha09"
-koin-bom = "4.0.3"
+koin-bom = "4.0.4"
 coil = "3.1.0"
 lifecycle = "2.9.0-alpha13"
 jetpack = "1.6.0-alpha03"
@@ -51,7 +51,7 @@ firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "1.4.2"
 
-firebaseBom = "33.11.0"
+firebaseBom = "33.12.0"
 
 ### MangaWorld
 piasy = "1.8.1"
@@ -322,7 +322,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.11.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.11.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
 androidxWebkit = "androidx.webkit:webkit:1.13.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
