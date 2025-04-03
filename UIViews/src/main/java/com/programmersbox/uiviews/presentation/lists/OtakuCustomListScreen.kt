@@ -292,6 +292,8 @@ fun OtakuCustomListScreen(
         )
     }
 
+    val sourceRepository = LocalSourcesRepository.current
+
     var showBanner by remember { mutableStateOf(false) }
 
     CustomBannerBox<CustomListInfo>(
@@ -319,6 +321,34 @@ fun OtakuCustomListScreen(
                 modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
             )
         },
+        itemToImageUrl = { it.imageUrl },
+        itemToTitle = { it.title },
+        itemToDescription = { it.description },
+        itemToSource = { it.source },
+        onOpen = {
+            sourceRepository
+                .toSourceByApiServiceName(it.source)
+                ?.apiService
+                ?.let { source ->
+                    Cached.cache[it.url]?.let {
+                        flow {
+                            emit(
+                                it
+                                    .toDbModel()
+                                    .toItemModel(source)
+                            )
+                        }
+                    } ?: source.getSourceByUrlFlow(it.url)
+                }
+                ?.dispatchIo()
+                ?.onStart { showLoadingDialog = true }
+                ?.onEach {
+                    showLoadingDialog = false
+                    navController.navigateToDetails(it)
+                }
+                ?.onCompletion { showLoadingDialog = false }
+                ?.launchIn(scope)
+        }
     ) {
         Scaffold(
             snackbarHost = {

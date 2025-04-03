@@ -57,7 +57,6 @@ import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
@@ -227,8 +226,9 @@ fun RecentView(
                                     favorites = recentVm.favoriteList,
                                     paddingValues = p,
                                     onLongPress = { item, c ->
-                                        newItemModel(if (c == ComponentState.Pressed) item else null)
-                                        showBanner = c == ComponentState.Pressed
+                                        newItemModel(item)
+                                        //newItemModel(if (c == ComponentState.Pressed) item else null)
+                                        //showBanner = c == ComponentState.Pressed
                                     },
                                     modifier = Modifier.fillMaxSize()
                                 ) { navController.navigateToDetails(it) }

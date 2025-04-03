@@ -7,13 +7,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,8 +39,8 @@ enum class ComponentState { Pressed, Released }
 
 fun Modifier.combineClickableWithIndication(
     onLongPress: (ComponentState) -> Unit = {},
-    onClick: (() -> Unit)? = null,
-    onDoubleTap: (() -> Unit)? = null
+    onClick: () -> Unit = {},
+    onDoubleTap: (() -> Unit)? = null,
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -50,20 +48,28 @@ fun Modifier.combineClickableWithIndication(
         interactionSource = interactionSource,
         indication = ripple()
     )
-        .pointerInput(Unit) {
-            detectTapGestures(
-                onLongPress = { onLongPress(ComponentState.Pressed) },
-                onPress = {
-                    val press = PressInteraction.Press(it)
-                    interactionSource.tryEmit(press)
-                    tryAwaitRelease()
-                    onLongPress(ComponentState.Released)
-                    interactionSource.tryEmit(PressInteraction.Release(press))
-                },
-                onTap = onClick?.let { c -> { c() } },
-                onDoubleTap = onDoubleTap?.let { d -> { d() } }
-            )
-        }
+        .combinedClickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick,
+            onLongClick = { onLongPress(ComponentState.Pressed) },
+            onDoubleClick = onDoubleTap
+        )
+    //TODO: If I go with making this an option, this will be in it's own function with an if statement
+    /*.pointerInput(Unit) {
+        detectTapGestures(
+            onLongPress = { onLongPress(ComponentState.Pressed) },
+            onPress = {
+                val press = PressInteraction.Press(it)
+                interactionSource.tryEmit(press)
+                tryAwaitRelease()
+                onLongPress(ComponentState.Released)
+                interactionSource.tryEmit(PressInteraction.Release(press))
+            },
+            onTap = onClick?.let { c -> { c() } },
+            onDoubleTap = onDoubleTap?.let { d -> { d() } }
+        )
+    }*/
 }
 
 fun Modifier.fadeInAnimation(): Modifier = composed {
