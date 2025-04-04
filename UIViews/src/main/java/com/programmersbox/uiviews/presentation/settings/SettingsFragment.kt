@@ -2,14 +2,21 @@ package com.programmersbox.uiviews.presentation.settings
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +26,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
@@ -37,7 +45,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,6 +75,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
@@ -82,6 +94,7 @@ import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.appVersion
@@ -587,6 +600,7 @@ private fun AccountSettings(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SourceChooserScreen(
     onChosen: () -> Unit,
@@ -600,7 +614,31 @@ fun SourceChooserScreen(
         .asFlow()
         .collectAsStateWithLifecycle(null)
 
-    ListBottomScreen(
+    var showChooser by remember { mutableStateOf<List<SourceInformation>?>(null) }
+
+    showChooser?.let {
+        ModalBottomSheet(
+            onDismissRequest = { showChooser = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            ListBottomScreen(
+                includeInsetPadding = true,
+                title = stringResource(R.string.chooseASource),
+                list = it,
+                onClick = { service ->
+                    onChosen()
+                    scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
+                }
+            ) {
+                ListBottomSheetItemModel(
+                    primaryText = it.apiService.serviceName,
+                    icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
+                )
+            }
+        }
+    }
+
+    GroupBottomScreen(
         includeInsetPadding = true,
         title = stringResource(R.string.chooseASource),
         list = remember {
@@ -611,21 +649,62 @@ fun SourceChooserScreen(
                 list
                     .filterNot { it.apiService.notWorking }
                     .sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
+                    .groupBy { it.packageName }
             }
         }
-            .collectAsStateWithLifecycle(emptyList())
+            .collectAsStateWithLifecycle(emptyMap())
             .value,
         onClick = { service ->
-            onChosen()
-            scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
+            showChooser = service
         }
     ) {
-        //TODO: Need to add a little something to allow languages.
-        // Maybe group by package name and if there's more than one in the list, we pop up a list of languages?
         ListBottomSheetItemModel(
-            primaryText = it.apiService.serviceName,
-            icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
+            primaryText = "${it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
+            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun <T> GroupBottomScreen(
+    title: String,
+    list: Map<String, T>,
+    onClick: (T) -> Unit,
+    includeInsetPadding: Boolean = true,
+    navigationIcon: @Composable () -> Unit = {
+        val navController = LocalNavController.current
+        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
+    },
+    lazyListContent: LazyListScope.() -> Unit = {},
+    itemContent: (T) -> ListBottomSheetItemModel,
+) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = Modifier.navigationBarsPadding()
+    ) {
+        stickyHeader {
+            InsetSmallTopAppBar(
+                insetPadding = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
+                title = { Text(title) },
+                navigationIcon = navigationIcon,
+                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
+            )
+            HorizontalDivider()
+        }
+        lazyListContent()
+        itemsIndexed(list.entries.toList()) { index, it ->
+            val c = itemContent(it.value)
+            ListItem(
+                modifier = Modifier.clickable { onClick(it.value) },
+                leadingContent = c.icon?.let { i -> { Icon(i, null) } },
+                headlineContent = { Text(c.primaryText) },
+                supportingContent = c.secondaryText?.let { i -> { Text(i) } },
+                overlineContent = c.overlineText?.let { i -> { Text(i) } },
+                trailingContent = c.trailingText?.let { i -> { Text(i) } }
+            )
+            if (index < list.size - 1) HorizontalDivider()
+        }
     }
 }
 
