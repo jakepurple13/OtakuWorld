@@ -620,6 +620,8 @@ fun SourceChooserScreen(
             scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
         }
     ) {
+        //TODO: Need to add a little something to allow languages.
+        // Maybe group by package name and if there's more than one in the list, we pop up a list of languages?
         ListBottomSheetItemModel(
             primaryText = it.apiService.serviceName,
             icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
@@ -647,7 +649,7 @@ fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
     ListBottomScreen(
         title = stringResource(R.string.chooseModelToDelete),
         list = vm.translationModels.toList(),
-        onClick = { item -> scope.launch { vm.deleteModel(item) } },
+        onClick = { item -> vm.deleteModel(item) },
     ) {
         ListBottomSheetItemModel(
             primaryText = it.language,

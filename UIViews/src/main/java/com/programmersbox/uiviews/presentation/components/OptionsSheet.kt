@@ -367,6 +367,13 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
             }
         )
 
+        //TODO: Add favorite/unfavorite
+        // might have to pass in a class with an action (like details does)
+        // that includes if we can show favorites or not
+
+        //TODO: Maybe do some ocr and allow all languages in order to be able to translate?
+        // https://github.com/VrajVyas11/AI_Manga_Reader
+
         OptionsItem(
             title = stringResource(R.string.global_search_by_name),
             onClick = {

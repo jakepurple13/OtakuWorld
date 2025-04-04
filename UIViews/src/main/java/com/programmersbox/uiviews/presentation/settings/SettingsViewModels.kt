@@ -154,12 +154,16 @@ class TranslationViewModel : ViewModel() {
         private set
 
     fun loadModels() {
-        TranslatorUtils.getModels { translationModels = it }
+        viewModelScope.launch {
+            translationModels = TranslatorUtils.modelList()
+        }
     }
 
-    suspend fun deleteModel(model: CustomRemoteModel) {
-        TranslatorUtils.deleteModel(model)
-        TranslatorUtils.getModels { translationModels = it }
+    fun deleteModel(model: CustomRemoteModel) {
+        viewModelScope.launch {
+            TranslatorUtils.delete(model)
+            translationModels = TranslatorUtils.modelList()
+        }
     }
 
 }

@@ -178,11 +178,11 @@ class DetailsViewModel(
     private val englishTranslator = TranslateItems()
 
     fun translateDescription(progress: MutableState<Boolean>) {
-        englishTranslator.translateDescription(
-            textToTranslate = info!!.description,
-            progress = { progress.value = it },
-            translatedText = { description = it }
-        )
+        viewModelScope.launch {
+            progress.value = true
+            description = englishTranslator.translate(info!!.description)
+            progress.value = false
+        }
     }
 
     private fun setup(info: InfoModel) {
