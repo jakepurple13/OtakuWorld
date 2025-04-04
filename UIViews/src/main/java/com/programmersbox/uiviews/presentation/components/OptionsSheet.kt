@@ -3,7 +3,6 @@ package com.programmersbox.uiviews.presentation.components
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -90,6 +89,7 @@ fun optionsSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController = LocalNavController.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
+    moreContent: @Composable OptionsSheetScope.(ItemModelOptionsSheet) -> Unit = {},
 ): MutableState<List<ItemModel>?> {
     val itemInfo = remember { mutableStateOf<List<ItemModel>?>(null) }
 
@@ -103,33 +103,10 @@ fun optionsSheetList(
                 optionsSheetValuesList = it,
                 onOpen = { navController.navigateToDetails(it.itemModel) },
                 onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
-                onDismiss = { itemInfo.value = null }
+                onDismiss = { itemInfo.value = null },
+                moreContent = moreContent
             )
         }
-
-    return itemInfo
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun <T : OptionsSheetValues> optionsSheetList(
-    scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
-    sheetState: SheetState = rememberModalBottomSheetState(true),
-    onOpen: (T) -> Unit,
-): MutableState<List<T>?> {
-    val itemInfo = remember { mutableStateOf<List<T>?>(null) }
-
-    itemInfo.value?.let {
-        OptionsSheet(
-            sheet = sheetState,
-            scope = scope,
-            optionsSheetValuesList = it,
-            onOpen = { onOpen(it) },
-            onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
-            onDismiss = { itemInfo.value = null }
-        )
-    }
 
     return itemInfo
 }
@@ -145,11 +122,38 @@ class ItemModelOptionsSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun <T : OptionsSheetValues> optionsSheetList(
+    scope: CoroutineScope = rememberCoroutineScope(),
+    navController: NavController = LocalNavController.current,
+    sheetState: SheetState = rememberModalBottomSheetState(true),
+    onOpen: (T) -> Unit,
+    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
+): MutableState<List<T>?> {
+    val itemInfo = remember { mutableStateOf<List<T>?>(null) }
+
+    itemInfo.value?.let {
+        OptionsSheet(
+            sheet = sheetState,
+            scope = scope,
+            optionsSheetValuesList = it,
+            onOpen = { onOpen(it) },
+            onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
+            onDismiss = { itemInfo.value = null },
+            moreContent = moreContent
+        )
+    }
+
+    return itemInfo
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun <T : OptionsSheetValues> optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController = LocalNavController.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
     onOpen: (T) -> Unit,
+    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ): MutableState<T?> {
     val itemInfo = remember { mutableStateOf<T?>(null) }
 
@@ -160,7 +164,8 @@ fun <T : OptionsSheetValues> optionsSheet(
             optionsSheetValues = it,
             onOpen = { onOpen(it) },
             onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
-            onDismiss = { itemInfo.value = null }
+            onDismiss = { itemInfo.value = null },
+            moreContent = moreContent
         )
     }
 
@@ -178,15 +183,21 @@ interface OptionsSheetValues {
 //TODO: Trying this out...Maybe this is an option?
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionsSheet(
+fun <T : OptionsSheetValues> OptionsSheet(
     sheet: SheetState = rememberModalBottomSheetState(true),
     scope: CoroutineScope,
-    optionsSheetValues: OptionsSheetValues,
+    optionsSheetValues: T,
     onOpen: () -> Unit,
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
     dao: ItemDao = koinInject(),
+    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
+    val optionsSheetScope = remember {
+        object : OptionsSheetScope {
+            override fun dismiss() = onDismiss()
+        }
+    }
     var showLoadingDialog by remember { mutableStateOf(false) }
 
     LoadingDialog(
@@ -201,15 +212,18 @@ fun OptionsSheet(
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
         ) {
-            OptionsItems(
-                optionsSheetValues = optionsSheetValues,
-                onOpen = onOpen,
-                onGlobalSearch = onGlobalSearch,
-                onDismiss = onDismiss,
-                sheet = sheet,
-                dao = dao,
-                scope = scope
-            )
+            with(optionsSheetScope) {
+                OptionsItems(
+                    optionsSheetValues = optionsSheetValues,
+                    onOpen = onOpen,
+                    onGlobalSearch = onGlobalSearch,
+                    onDismiss = onDismiss,
+                    sheet = sheet,
+                    dao = dao,
+                    scope = scope,
+                    moreContent = moreContent
+                )
+            }
         }
     }
 }
@@ -224,8 +238,13 @@ fun <T : OptionsSheetValues> OptionsSheet(
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
     dao: ItemDao = koinInject(),
+    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
-
+    val optionsSheetScope = remember {
+        object : OptionsSheetScope {
+            override fun dismiss() = onDismiss()
+        }
+    }
     var showLoadingDialog by remember { mutableStateOf(false) }
 
     LoadingDialog(
@@ -263,15 +282,18 @@ fun <T : OptionsSheetValues> OptionsSheet(
                         )
                     }
                     if (showInfo) {
-                        OptionsItems(
-                            optionsSheetValues = it,
-                            onOpen = { onOpen(it) },
-                            onGlobalSearch = onGlobalSearch,
-                            onDismiss = onDismiss,
-                            sheet = sheet,
-                            dao = dao,
-                            scope = scope
-                        )
+                        with(optionsSheetScope) {
+                            OptionsItems(
+                                optionsSheetValues = it,
+                                onOpen = { onOpen(it) },
+                                onGlobalSearch = onGlobalSearch,
+                                onDismiss = onDismiss,
+                                sheet = sheet,
+                                dao = dao,
+                                scope = scope,
+                                moreContent = moreContent
+                            )
+                        }
                     }
                 }
             }
@@ -281,8 +303,8 @@ fun <T : OptionsSheetValues> OptionsSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OptionsItems(
-    optionsSheetValues: OptionsSheetValues,
+private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
+    optionsSheetValues: T,
     onOpen: () -> Unit,
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -290,6 +312,7 @@ private fun OptionsItems(
     dao: ItemDao = koinInject(),
     listDao: ListDao = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),
+    moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
     val imageUrl = optionsSheetValues.imageUrl
     val title = optionsSheetValues.title
@@ -410,9 +433,40 @@ private fun OptionsItems(
                 }
             )
         }
+
+        moreContent(optionsSheetValues)
     }
 }
 
+interface OptionsSheetScope {
+    fun dismiss()
+
+    @Composable
+    fun OptionsItem(
+        title: String,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        Card(
+            onClick = onClick,
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Transparent
+            ),
+            modifier = modifier
+        ) {
+            ListItem(
+                headlineContent = { Text(title) },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+
+        HorizontalDivider()
+    }
+}
+
+/*
 @Composable
 private fun ColumnScope.OptionsItem(
     title: String,
@@ -435,4 +489,4 @@ private fun ColumnScope.OptionsItem(
     }
 
     HorizontalDivider()
-}
+}*/
