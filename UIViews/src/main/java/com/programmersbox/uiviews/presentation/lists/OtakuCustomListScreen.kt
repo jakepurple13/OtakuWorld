@@ -325,6 +325,7 @@ fun OtakuCustomListScreen(
         itemToTitle = { it.title },
         itemToDescription = { it.description },
         itemToSource = { it.source },
+        itemToUrl = { it.url },
         onOpen = {
             sourceRepository
                 .toSourceByApiServiceName(it.source)
