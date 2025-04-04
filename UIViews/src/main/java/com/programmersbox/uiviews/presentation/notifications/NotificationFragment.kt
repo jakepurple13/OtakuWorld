@@ -486,6 +486,7 @@ private fun NotificationOptionsSheet(
     genericInfo: GenericInfo = LocalGenericInfo.current,
     context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    notificationRepository: NotificationRepository = koinInject(),
     itemDao: ItemDao,
     onError: (NotificationItem) -> Unit,
 ) = optionsSheet<NotificationItemOptionsSheet>(
@@ -510,52 +511,65 @@ private fun NotificationOptionsSheet(
             ?.launchIn(scope) ?: onError(i)
     }
 ) {
-    Card(
-        onClick = {
-            scope.launch(Dispatchers.IO) {
-                SavedNotifications.viewNotificationFromDb(
-                    context = context,
-                    n = i,
-                    notificationLogo = notificationLogo,
-                    info = genericInfo,
-                    sourceRepository = sourceRepository,
-                    itemDao = itemDao
-                )
-            }.invokeOnCompletion { dismiss() }
-        },
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        )
-    ) {
-        ListItem(
-            headlineContent = { Text(stringResource(R.string.notify)) },
-            colors = ListItemDefaults.colors(
-                containerColor = Color.Transparent
-            )
-        )
-    }
-
-    HorizontalDivider()
-
-    NotifyAt(
-        item = i,
-    ) { dateShow ->
+    if (!it.item.isShowing) {
         Card(
-            onClick = { dateShow() },
+            onClick = {
+                scope.launch(Dispatchers.IO) {
+                    SavedNotifications.viewNotificationFromDb(
+                        context = context,
+                        n = i,
+                        notificationLogo = notificationLogo,
+                        info = genericInfo,
+                        sourceRepository = sourceRepository,
+                        itemDao = itemDao
+                    )
+                }.invokeOnCompletion { dismiss() }
+            },
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
             )
         ) {
             ListItem(
-                headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
+                headlineContent = { Text(stringResource(R.string.notify)) },
                 colors = ListItemDefaults.colors(
                     containerColor = Color.Transparent
                 )
             )
         }
-    }
 
-    HorizontalDivider()
+        HorizontalDivider()
+
+        NotifyAt(
+            item = i,
+        ) { dateShow ->
+            Card(
+                onClick = { dateShow() },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                )
+            ) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            }
+        }
+
+        HorizontalDivider()
+    } else {
+        OptionsItem(
+            title = "Dismiss Notification",
+            onClick = {
+                scope.launch {
+                    itemDao.updateNotification(i.url, false)
+                    notificationRepository.cancelById(i.id)
+                    dismiss()
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -986,8 +1000,11 @@ private fun NotifyAt(
                         showTimePicker = false
                         val c = Calendar.getInstance()
                         c.timeInMillis = dateState.selectedDateMillis ?: 0L
+                        c[Calendar.DAY_OF_YEAR] += 1
                         c[Calendar.HOUR_OF_DAY] = timeState.hour
                         c[Calendar.MINUTE] = timeState.minute
+                        c[Calendar.SECOND] = 0
+                        c[Calendar.MILLISECOND] = 0
 
                         WorkManager.getInstance(context)
                             .enqueueUniqueWork(
@@ -999,7 +1016,10 @@ private fun NotifyAt(
                                             .putString("notiData", item.toJson())
                                             .build()
                                     )
-                                    .setInitialDelay(c.timeInMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                                    .setInitialDelay(
+                                        duration = c.timeInMillis - System.currentTimeMillis(),
+                                        timeUnit = TimeUnit.MILLISECONDS
+                                    )
                                     .build()
                             )
 
