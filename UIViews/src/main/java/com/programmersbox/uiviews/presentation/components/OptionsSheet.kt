@@ -64,6 +64,7 @@ fun optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController = LocalNavController.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
+    moreContent: @Composable OptionsSheetScope.(ItemModelOptionsSheet) -> Unit = {},
 ): MutableState<ItemModel?> {
     val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
 
@@ -77,7 +78,8 @@ fun optionsSheet(
                 optionsSheetValues = it,
                 onOpen = { navController.navigateToDetails(it.itemModel) },
                 onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
-                onDismiss = { itemInfo.value = null }
+                onDismiss = { itemInfo.value = null },
+                moreContent = moreContent
             )
         }
 

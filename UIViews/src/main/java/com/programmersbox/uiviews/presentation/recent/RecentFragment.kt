@@ -112,7 +112,25 @@ fun RecentView(
             }
     }
 
-    var optionsSheet by optionsSheet()
+    var optionsSheet by optionsSheet(
+        moreContent = {
+            Crossfade(
+                recentVm.favoriteList.any { f -> f.url == it.url }
+            ) { target ->
+                if (target) {
+                    OptionsItem(
+                        title = stringResource(R.string.removeFromFavorites),
+                        onClick = { recentVm.favoriteAction(RecentViewModel.FavoriteAction.Remove(it.itemModel)) }
+                    )
+                } else {
+                    OptionsItem(
+                        title = stringResource(R.string.addToFavorites),
+                        onClick = { recentVm.favoriteAction(RecentViewModel.FavoriteAction.Add(it.itemModel)) }
+                    )
+                }
+            }
+        }
+    )
 
     var showSourceChooser by showSourceChooser()
 

@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.SourceInformation
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
@@ -38,7 +40,7 @@ class RecentViewModel(
     dao: ItemDao,
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
-    favoritesRepository: FavoritesRepository,
+    private val favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -130,5 +132,26 @@ class RecentViewModel(
             ?.onCompletion { isRefreshing = false }
             ?.onEach { sourceList.addAll(it) }
             ?.launchIn(viewModelScope)
+    }
+
+    fun favoriteAction(action: FavoriteAction) {
+        when (action) {
+            is FavoriteAction.Add -> {
+                viewModelScope.launch {
+                    favoritesRepository.addFavorite(action.info.toDbModel())
+                }
+            }
+
+            is FavoriteAction.Remove -> {
+                viewModelScope.launch {
+                    favoritesRepository.removeFavorite(action.info.toDbModel())
+                }
+            }
+        }
+    }
+
+    sealed class FavoriteAction {
+        data class Add(val info: ItemModel) : FavoriteAction()
+        data class Remove(val info: ItemModel) : FavoriteAction()
     }
 }
