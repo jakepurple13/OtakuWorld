@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
@@ -93,6 +91,7 @@ import com.programmersbox.uiviews.presentation.components.LimitedBottomSheetScaf
 import com.programmersbox.uiviews.presentation.components.LimitedBottomSheetScaffoldDefaults
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.uiviews.presentation.components.optionsSheet
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
@@ -100,7 +99,6 @@ import com.programmersbox.uiviews.presentation.components.plus
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.BannerScope
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -110,7 +108,6 @@ import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
@@ -151,189 +148,179 @@ fun GlobalSearchView(
         .searchHistory("%${viewModel.searchText}%")
         .collectAsStateWithLifecycle(emptyList())
 
-    var showBanner by remember { mutableStateOf(false) }
+    val bottomScaffold = rememberBottomSheetScaffoldState()
+    var optionsSheet by optionsSheet()
+    var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
-    OtakuBannerBox(
-        showBanner = showBanner,
-        placeholder = mainLogoDrawable.logoId,
-        modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-    ) {
-        val bottomScaffold = rememberBottomSheetScaffoldState()
-        var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
-
-        BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
-            scope.launch {
-                runCatching {
-                    bottomScaffold.bottomSheetState.partialExpand()
-                }.onFailure { navController.popBackStack() }
-            }
+    BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
+        scope.launch {
+            runCatching {
+                bottomScaffold.bottomSheetState.partialExpand()
+            }.onFailure { navController.popBackStack() }
         }
+    }
 
-        LimitedBottomSheetScaffold(
-            scaffoldState = bottomScaffold,
-            topBar = {
-                val searchBarState = rememberSearchBarState()
+    LimitedBottomSheetScaffold(
+        scaffoldState = bottomScaffold,
+        topBar = {
+            val searchBarState = rememberSearchBarState()
 
-                fun closeSearchBar() {
-                    scope.launch { searchBarState.animateToCollapsed() }
-                }
-                DynamicSearchBar(
-                    textFieldState = viewModel.searchText,
-                    searchBarState = searchBarState,
-                    isDocked = isHorizontal,
-                    onSearch = {
-                        closeSearchBar()
-                        if (viewModel.searchText.text.isNotEmpty()) {
-                            scope.launch(Dispatchers.IO) {
-                                dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
-                            }
-                        }
-                        viewModel.searchForItems()
-                    },
-                    placeholder = { Text(stringResource(R.string.global_search)) },
-                    leadingIcon = {
-                        if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                            IconButton(
-                                onClick = { closeSearchBar() }
-                            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
-                        } else {
-                            BackButton()
-                        }
-                    },
-                    trailingIcon = {
-                        AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
-                                Icon(Icons.Default.Cancel, null)
-                            }
-                        }
-                    },
-                    colors = SearchBarDefaults.colors(
-                        inputFieldColors = if (showBlur)
-                            SearchBarDefaults.inputFieldColors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                            )
-                        else
-                            SearchBarDefaults.inputFieldColors()
-                    ),
-                    modifier = Modifier.let {
-                        if (showBlur) {
-                            val surface = MaterialTheme.colorScheme.surface
-                            it.hazeEffect(
-                                hazeState,
-                                HazeMaterials.thin(surface)
-                            ) {
-                                backgroundColor = surface
-                                progressive =
-                                    HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                            }
-                        } else it
-                    }
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        itemsIndexed(history) { index, historyModel ->
-                            Card(
-                                onClick = {
-                                    viewModel.searchText = TextFieldState(historyModel.searchText)
-                                    closeSearchBar()
-                                    if (viewModel.searchText.text.isNotEmpty()) {
-                                        scope.launch(Dispatchers.IO) {
-                                            dao.insertHistory(
-                                                HistoryItem(
-                                                    System.currentTimeMillis(),
-                                                    viewModel.searchText.text.toString()
-                                                )
-                                            )
-                                        }
-                                    }
-                                    viewModel.searchForItems()
-                                }
-                            ) {
-                                ListItem(
-                                    headlineContent = { Text(historyModel.searchText) },
-                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                    trailingContent = {
-                                        IconButton(
-                                            onClick = { scope.launch { dao.deleteHistory(historyModel) } },
-                                        ) { Icon(Icons.Default.Cancel, null) }
-                                    },
-                                    colors = ListItemDefaults.colors(
-                                        containerColor = Color.Transparent
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
+            fun closeSearchBar() {
+                scope.launch { searchBarState.animateToCollapsed() }
+            }
+            DynamicSearchBar(
+                textFieldState = viewModel.searchText,
+                searchBarState = searchBarState,
+                isDocked = isHorizontal,
+                onSearch = {
+                    closeSearchBar()
+                    if (viewModel.searchText.text.isNotEmpty()) {
+                        scope.launch(Dispatchers.IO) {
+                            dao.insertHistory(HistoryItem(System.currentTimeMillis(), viewModel.searchText.text.toString()))
                         }
                     }
-                }
-            },
-            sheetContent = searchModelBottom?.let { s ->
-                {
-                    val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-                    NormalOtakuScaffold(
-                        topBar = {
-                            TopAppBar(
-                                scrollBehavior = sheetScrollBehavior,
-                                title = { Text(s.apiName) },
-                                actions = { Text(stringResource(id = R.string.search_found, s.data.size)) },
-                                windowInsets = WindowInsets(0.dp)
-                            )
-                        },
-                        modifier = Modifier
-                            .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
-                            .nestedScroll(sheetScrollBehavior.nestedScrollConnection),
-                    ) { p ->
-                        LazyVerticalGrid(
-                            columns = adaptiveGridCell(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            contentPadding = p,
+                    viewModel.searchForItems()
+                },
+                placeholder = { Text(stringResource(R.string.global_search)) },
+                leadingIcon = {
+                    if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                        IconButton(
+                            onClick = { closeSearchBar() }
+                        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+
+                    } else {
+                        BackButton()
+                    }
+                },
+                trailingIcon = {
+                    AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.searchText = TextFieldState() }) {
+                            Icon(Icons.Default.Cancel, null)
+                        }
+                    }
+                },
+                colors = SearchBarDefaults.colors(
+                    inputFieldColors = if (showBlur)
+                        SearchBarDefaults.inputFieldColors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                        )
+                    else
+                        SearchBarDefaults.inputFieldColors()
+                ),
+                modifier = Modifier.let {
+                    if (showBlur) {
+                        val surface = MaterialTheme.colorScheme.surface
+                        it.hazeEffect(
+                            hazeState,
+                            HazeMaterials.thin(surface)
                         ) {
-                            items(s.data) { m ->
-                                SearchCoverCard(
-                                    model = m,
-                                    placeHolder = mainLogoDrawable.logo,
-                                    onLongPress = { c ->
-                                        newItemModel(if (c == ComponentState.Pressed) m else null)
-                                        showBanner = c == ComponentState.Pressed
+                            backgroundColor = surface
+                            progressive =
+                                HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                        }
+                    } else it
+                }
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    itemsIndexed(history) { index, historyModel ->
+                        Card(
+                            onClick = {
+                                viewModel.searchText = TextFieldState(historyModel.searchText)
+                                closeSearchBar()
+                                if (viewModel.searchText.text.isNotEmpty()) {
+                                    scope.launch(Dispatchers.IO) {
+                                        dao.insertHistory(
+                                            HistoryItem(
+                                                System.currentTimeMillis(),
+                                                viewModel.searchText.text.toString()
+                                            )
+                                        )
                                     }
-                                ) { navController.navigateToDetails(m) }
+                                }
+                                viewModel.searchForItems()
                             }
+                        ) {
+                            ListItem(
+                                headlineContent = { Text(historyModel.searchText) },
+                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                trailingContent = {
+                                    IconButton(
+                                        onClick = { scope.launch { dao.deleteHistory(historyModel) } },
+                                    ) { Icon(Icons.Default.Cancel, null) }
+                                },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color.Transparent
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
-            } ?: {},
-            bottomSheet = LimitedBottomSheetScaffoldDefaults.bottomSheet(
-                sheetPeekHeight = 0.dp
-            ),
-            colors = LimitedBottomSheetScaffoldDefaults.colors(
-                topAppBarContainerColor = Color.Transparent
-            )
-        ) { padding ->
-            Crossfade(targetState = networkState, label = "") { network ->
-                if (network) {
-                    Content(
-                        viewModel = viewModel,
-                        pullRefreshState = pullRefreshState,
-                        padding = padding,
-                        listState = listState,
-                        hazeState = hazeState,
-                        showBlur = showBlur,
-                        scope = scope,
-                        navController = navController,
-                        notificationLogo = notificationLogo,
-                        mainLogoDrawable = mainLogoDrawable,
-                        onSearchModel = { searchModelBottom = it },
-                        onShowBanner = { showBanner = it },
-                        bottomScaffold = bottomScaffold,
-                    )
-                } else {
-                    NoNetwork(padding)
+            }
+        },
+        sheetContent = searchModelBottom?.let { s ->
+            {
+                val sheetScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+                NormalOtakuScaffold(
+                    topBar = {
+                        TopAppBar(
+                            scrollBehavior = sheetScrollBehavior,
+                            title = { Text(s.apiName) },
+                            actions = { Text(stringResource(id = R.string.search_found, s.data.size)) },
+                            windowInsets = WindowInsets(0.dp)
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(bottom = LocalNavHostPadding.current.calculateBottomPadding())
+                        .nestedScroll(sheetScrollBehavior.nestedScrollConnection),
+                ) { p ->
+                    LazyVerticalGrid(
+                        columns = adaptiveGridCell(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        contentPadding = p,
+                    ) {
+                        items(s.data) { m ->
+                            SearchCoverCard(
+                                model = m,
+                                placeHolder = mainLogoDrawable.logo,
+                                onLongPress = { c -> optionsSheet = m }
+                            ) { navController.navigateToDetails(m) }
+                        }
+                    }
                 }
+            }
+        } ?: {},
+        bottomSheet = LimitedBottomSheetScaffoldDefaults.bottomSheet(
+            sheetPeekHeight = 0.dp
+        ),
+        colors = LimitedBottomSheetScaffoldDefaults.colors(
+            topAppBarContainerColor = Color.Transparent
+        )
+    ) { padding ->
+        Crossfade(targetState = networkState, label = "") { network ->
+            if (network) {
+                Content(
+                    viewModel = viewModel,
+                    pullRefreshState = pullRefreshState,
+                    padding = padding,
+                    listState = listState,
+                    hazeState = hazeState,
+                    showBlur = showBlur,
+                    scope = scope,
+                    navController = navController,
+                    notificationLogo = notificationLogo,
+                    mainLogoDrawable = mainLogoDrawable,
+                    onSearchModel = { searchModelBottom = it },
+                    bottomScaffold = bottomScaffold,
+                    onLongPress = { optionsSheet = it }
+                )
+            } else {
+                NoNetwork(padding)
             }
         }
     }
@@ -341,7 +328,7 @@ fun GlobalSearchView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BannerScope.Content(
+private fun Content(
     viewModel: GlobalSearchViewModel,
     pullRefreshState: PullToRefreshState,
     padding: PaddingValues,
@@ -353,7 +340,7 @@ private fun BannerScope.Content(
     notificationLogo: NotificationLogo,
     mainLogoDrawable: AppLogo,
     onSearchModel: (SearchModel) -> Unit,
-    onShowBanner: (Boolean) -> Unit,
+    onLongPress: (ItemModel) -> Unit,
     bottomScaffold: BottomSheetScaffoldState,
 ) {
     OtakuPullToRefreshBox(
@@ -452,10 +439,7 @@ private fun BannerScope.Content(
                                     SearchCoverCard(
                                         model = m,
                                         placeHolder = mainLogoDrawable.logo,
-                                        onLongPress = { c ->
-                                            newItemModel(if (c == ComponentState.Pressed) m else null)
-                                            onShowBanner(c == ComponentState.Pressed)
-                                        }
+                                        onLongPress = { c -> onLongPress(m) }
                                     ) { navController.navigateToDetails(m) }
                                 }
                             }

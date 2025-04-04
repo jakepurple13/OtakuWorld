@@ -37,7 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -49,19 +48,18 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.uiviews.presentation.components.optionsSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.showSourceChooser
@@ -113,6 +111,8 @@ fun RecentView(
                 }
             }
     }
+
+    var optionsSheet by optionsSheet()
 
     var showSourceChooser by showSourceChooser()
 
@@ -177,69 +177,63 @@ fun RecentView(
             )
         }
     ) { p ->
-        var showBanner by remember { mutableStateOf(false) }
-        OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = koinInject<AppLogo>().logoId,
-            modifier = Modifier.padding(p)
-        ) {
-            Crossfade(
-                targetState = isConnected,
-                label = ""
-            ) { connected ->
-                if (!connected) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            Icons.Default.CloudOff,
-                            null,
-                            modifier = Modifier.size(50.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
-                        )
-                        Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
-                    }
-                } else {
-                    OtakuPullToRefreshBox(
-                        isRefreshing = recentVm.isRefreshing,
-                        onRefresh = { recentVm.reset() },
-                        state = pull,
-                        paddingValues = p
-                    ) {
-                        when {
-                            sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
+        Crossfade(
+            targetState = isConnected,
+            label = ""
+        ) { connected ->
+            if (!connected) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        Icons.Default.CloudOff,
+                        null,
+                        modifier = Modifier.size(50.dp),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                    )
+                    Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
+                }
+            } else {
+                OtakuPullToRefreshBox(
+                    isRefreshing = recentVm.isRefreshing,
+                    onRefresh = { recentVm.reset() },
+                    state = pull,
+                    paddingValues = p
+                ) {
+                    when {
+                        sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
 
-                            recentVm.filteredSourceList.isEmpty() -> {
-                                Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .padding(top = p.calculateTopPadding())
-                                ) { info.ComposeShimmerItem() }
-                            }
+                        recentVm.filteredSourceList.isEmpty() -> {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(top = p.calculateTopPadding())
+                            ) { info.ComposeShimmerItem() }
+                        }
 
-                            else -> {
-                                info.ItemListView(
-                                    list = recentVm.filteredSourceList,
-                                    listState = state,
-                                    favorites = recentVm.favoriteList,
-                                    paddingValues = p,
-                                    onLongPress = { item, c ->
-                                        newItemModel(item)
-                                        //newItemModel(if (c == ComponentState.Pressed) item else null)
-                                        //showBanner = c == ComponentState.Pressed
-                                    },
-                                    modifier = Modifier.fillMaxSize()
-                                ) { navController.navigateToDetails(it) }
-                            }
+                        else -> {
+                            info.ItemListView(
+                                list = recentVm.filteredSourceList,
+                                listState = state,
+                                favorites = recentVm.favoriteList,
+                                paddingValues = p,
+                                onLongPress = { item, c ->
+                                    optionsSheet = item
+                                    //newItemModel(item)
+                                    //newItemModel(if (c == ComponentState.Pressed) item else null)
+                                    //showBanner = c == ComponentState.Pressed
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            ) { navController.navigateToDetails(it) }
                         }
                     }
+                }
 
-                    if (source?.canScroll == true && recentVm.filteredSourceList.isNotEmpty()) {
-                        InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                            recentVm.loadMore()
-                        }
+                if (source?.canScroll == true && recentVm.filteredSourceList.isNotEmpty()) {
+                    InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                        recentVm.loadMore()
                     }
                 }
             }

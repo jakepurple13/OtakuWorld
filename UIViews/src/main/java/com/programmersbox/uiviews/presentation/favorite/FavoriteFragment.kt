@@ -16,12 +16,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -81,6 +79,7 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.R
@@ -90,18 +89,16 @@ import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
+import com.programmersbox.uiviews.presentation.components.optionsSheetList
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.BannerScope
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.InsetCenterAlignedTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -127,7 +124,7 @@ fun FavoriteUi(
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
-    var showBanner by remember { mutableStateOf(false) }
+    var optionsSheet by optionsSheetList()
     val scope = rememberCoroutineScope()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -232,242 +229,236 @@ fun FavoriteUi(
         }
     }
 
-    OtakuBannerBox(
-        showBanner = showBanner,
-        placeholder = logo.logoId,
-        modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
-    ) {
-        OtakuHazeScaffold(
-            snackbarHost = {
-                SnackbarHost(
-                    snackbarHostState,
-                    modifier = Modifier.padding(LocalNavHostPadding.current)
-                )
-            },
-            topBar = {
-                Surface(
-                    color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
-                ) {
-                    Column {
-                        val searchBarState = rememberSearchBarState()
+    OtakuHazeScaffold(
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
+        },
+        topBar = {
+            Surface(
+                color = if (showBlur) Color.Transparent else MaterialTheme.colorScheme.surface,
+            ) {
+                Column {
+                    val searchBarState = rememberSearchBarState()
 
-                        fun closeSearchBar() {
-                            scope.launch { searchBarState.animateToCollapsed() }
-                        }
+                    fun closeSearchBar() {
+                        scope.launch { searchBarState.animateToCollapsed() }
+                    }
 
-                        DynamicSearchBar(
-                            isDocked = isHorizontal,
-                            textFieldState = viewModel.searchText,
-                            searchBarState = searchBarState,
-                            onSearch = { closeSearchBar() },
-                            placeholder = {
-                                Text(
-                                    context.resources.getQuantityString(
-                                        R.plurals.numFavorites,
-                                        viewModel.listSources.size,
-                                        viewModel.listSources.size
-                                    )
+                    DynamicSearchBar(
+                        isDocked = isHorizontal,
+                        textFieldState = viewModel.searchText,
+                        searchBarState = searchBarState,
+                        onSearch = { closeSearchBar() },
+                        placeholder = {
+                            Text(
+                                context.resources.getQuantityString(
+                                    R.plurals.numFavorites,
+                                    viewModel.listSources.size,
+                                    viewModel.listSources.size
                                 )
-                            },
-                            leadingIcon = {
-                                if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                            )
+                        },
+                        leadingIcon = {
+                            if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                                IconButton(
+                                    onClick = { closeSearchBar() }
+                                ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+
+                            } else {
+                                BackButton()
+                            }
+                        },
+                        trailingIcon = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
                                     IconButton(
-                                        onClick = { closeSearchBar() }
-                                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
-                                } else {
-                                    BackButton()
+                                        onClick = { viewModel.searchText = TextFieldState() }
+                                    ) { Icon(Icons.Default.Cancel, null) }
                                 }
-                            },
-                            trailingIcon = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
-                                        IconButton(
-                                            onClick = { viewModel.searchText = TextFieldState() }
-                                        ) { Icon(Icons.Default.Cancel, null) }
-                                    }
 
-                                    AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
-                                        IconButton(onClick = { showSort = true }) {
-                                            Icon(Icons.AutoMirrored.Filled.Sort, null)
-                                        }
-                                    }
-                                }
-                            },
-                            colors = SearchBarDefaults.colors(
-                                inputFieldColors = if (showBlur)
-                                    SearchBarDefaults.inputFieldColors(
-                                        focusedContainerColor = Color.Transparent,
-                                        unfocusedContainerColor = Color.Transparent,
-                                    )
-                                else
-                                    SearchBarDefaults.inputFieldColors()
-                            ),
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
-                                    Card(
-                                        onClick = {
-                                            viewModel.searchText = TextFieldState(dbModel.title)
-                                            closeSearchBar()
-                                        },
-                                    ) {
-                                        ListItem(
-                                            headlineContent = { Text(dbModel.title) },
-                                            supportingContent = { Text(dbModel.source) },
-                                            leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
-                                            colors = ListItemDefaults.colors(
-                                                containerColor = Color.Transparent
-                                            )
-                                        )
+                                AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
+                                    IconButton(onClick = { showSort = true }) {
+                                        Icon(Icons.AutoMirrored.Filled.Sort, null)
                                     }
                                 }
                             }
-                        }
-
-                        var showFilterBySourceModal by remember { mutableStateOf(false) }
-
-                        if (showFilterBySourceModal) {
-                            BackHandler { showFilterBySourceModal = false }
-
-                            ModalBottomSheet(
-                                onDismissRequest = { showFilterBySourceModal = false },
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
-                            ) {
-                                CenterAlignedTopAppBar(title = { Text("Filter by Source") })
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                                ) {
-                                    FilterChip(
-                                        selected = true,
-                                        modifier = Modifier.combinedClickable(
-                                            onClick = { viewModel.resetSources() },
-                                            onLongClick = { viewModel.selectedSources.clear() }
-                                        ),
-                                        label = { Text("ALL") },
-                                        onClick = { viewModel.allClick() }
-                                    )
-
-                                    viewModel.allSources.forEach {
-                                        FilterChip(
-                                            selected = it.first in viewModel.selectedSources,
-                                            onClick = { viewModel.newSource(it.first) },
-                                            label = { Text(it.first) },
-                                            leadingIcon = { Text("${it.second.size - 1}") },
-                                            modifier = Modifier.combinedClickable(
-                                                onClick = { viewModel.newSource(it.first) },
-                                                onLongClick = { viewModel.singleSource(it.first) }
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                        ) {
-                            SuggestionChip(
-                                onClick = { showFilterBySourceModal = true },
-                                label = { Text("Filter By Source") }
-                            )
-
-                            SuggestionChip(
-                                label = { Text("ALL") },
-                                onClick = { viewModel.resetSources() }
-                            )
-                        }
-                    }
-                }
-            },
-            blurTopBar = showBlur,
-            topBarBlur = {
-                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-            }
-        ) { p ->
-            if (viewModel.listSources.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(p)
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(4.dp),
-                        tonalElevation = 4.dp,
-                        shape = RoundedCornerShape(4.dp)
+                        },
+                        colors = SearchBarDefaults.colors(
+                            inputFieldColors = if (showBlur)
+                                SearchBarDefaults.inputFieldColors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                )
+                            else
+                                SearchBarDefaults.inputFieldColors()
+                        ),
                     ) {
-                        Column(modifier = Modifier) {
-                            Text(
-                                text = stringResource(id = R.string.get_started),
-                                style = M3MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
-
-                            Text(
-                                text = stringResource(R.string.get_started_info),
-                                style = M3MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
-
-                            Button(
-                                onClick = { navController.popBackStack(Screen.RecentScreen, false) },
-                                modifier = Modifier
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(vertical = 4.dp)
-                            ) { Text(text = stringResource(R.string.add_a_favorite)) }
-                        }
-                    }
-                }
-            } else {
-                FavoritesGrid(
-                    paddingValues = p,
-                    groupedSources = viewModel.groupedSources,
-                    sourceRepository = sourceRepository,
-                    navController = navController,
-                    moreInfoClick = {
-                        scope.launch {
-                            snackbarHostState.currentSnackbarData?.dismiss()
-                            val result = snackbarHostState.showSnackbar(
-                                "Something went wrong. Source might not be installed",
-                                duration = SnackbarDuration.Long,
-                                actionLabel = "More Options",
-                                withDismissAction = true
-                            )
-                            showDbModel = when (result) {
-                                SnackbarResult.Dismissed -> null
-                                SnackbarResult.ActionPerformed -> it
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            viewModel.listSources.take(4).forEachIndexed { index, dbModel ->
+                                Card(
+                                    onClick = {
+                                        viewModel.searchText = TextFieldState(dbModel.title)
+                                        closeSearchBar()
+                                    },
+                                ) {
+                                    ListItem(
+                                        headlineContent = { Text(dbModel.title) },
+                                        supportingContent = { Text(dbModel.source) },
+                                        leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                                        colors = ListItemDefaults.colors(
+                                            containerColor = Color.Transparent
+                                        )
+                                    )
+                                }
                             }
                         }
-                    },
-                    onShowBanner = { showBanner = it },
-                    logo = logo.logo,
-                )
+                    }
+
+                    var showFilterBySourceModal by remember { mutableStateOf(false) }
+
+                    if (showFilterBySourceModal) {
+                        BackHandler { showFilterBySourceModal = false }
+
+                        ModalBottomSheet(
+                            onDismissRequest = { showFilterBySourceModal = false },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
+                        ) {
+                            CenterAlignedTopAppBar(title = { Text("Filter by Source") })
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                            ) {
+                                FilterChip(
+                                    selected = true,
+                                    modifier = Modifier.combinedClickable(
+                                        onClick = { viewModel.resetSources() },
+                                        onLongClick = { viewModel.selectedSources.clear() }
+                                    ),
+                                    label = { Text("ALL") },
+                                    onClick = { viewModel.allClick() }
+                                )
+
+                                viewModel.allSources.forEach {
+                                    FilterChip(
+                                        selected = it.first in viewModel.selectedSources,
+                                        onClick = { viewModel.newSource(it.first) },
+                                        label = { Text(it.first) },
+                                        leadingIcon = { Text("${it.second.size - 1}") },
+                                        modifier = Modifier.combinedClickable(
+                                            onClick = { viewModel.newSource(it.first) },
+                                            onLongClick = { viewModel.singleSource(it.first) }
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                    ) {
+                        SuggestionChip(
+                            onClick = { showFilterBySourceModal = true },
+                            label = { Text("Filter By Source") }
+                        )
+
+                        SuggestionChip(
+                            label = { Text("ALL") },
+                            onClick = { viewModel.resetSources() }
+                        )
+                    }
+                }
             }
+        },
+        blurTopBar = showBlur,
+        topBarBlur = {
+            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+        }
+    ) { p ->
+        if (viewModel.listSources.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(p)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    tonalElevation = 4.dp,
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Column(modifier = Modifier) {
+                        Text(
+                            text = stringResource(id = R.string.get_started),
+                            style = M3MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+
+                        Text(
+                            text = stringResource(R.string.get_started_info),
+                            style = M3MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+
+                        Button(
+                            onClick = { navController.popBackStack(Screen.RecentScreen, false) },
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(vertical = 4.dp)
+                        ) { Text(text = stringResource(R.string.add_a_favorite)) }
+                    }
+                }
+            }
+        } else {
+            FavoritesGrid(
+                paddingValues = p,
+                groupedSources = viewModel.groupedSources,
+                sourceRepository = sourceRepository,
+                navController = navController,
+                moreInfoClick = {
+                    scope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        val result = snackbarHostState.showSnackbar(
+                            "Something went wrong. Source might not be installed",
+                            duration = SnackbarDuration.Long,
+                            actionLabel = "More Options",
+                            withDismissAction = true
+                        )
+                        showDbModel = when (result) {
+                            SnackbarResult.Dismissed -> null
+                            SnackbarResult.ActionPerformed -> it
+                        }
+                    }
+                },
+                onLongPress = { optionsSheet = it },
+                logo = logo.logo,
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-private fun BannerScope.FavoritesGrid(
+private fun FavoritesGrid(
     paddingValues: PaddingValues,
     groupedSources: List<Map.Entry<String, List<DbModel>>>,
     sourceRepository: SourceRepository,
     navController: NavController,
     moreInfoClick: (DbModel) -> Unit,
-    onShowBanner: (Boolean) -> Unit,
+    onLongPress: (List<ItemModel>) -> Unit,
     logo: Drawable,
     modifier: Modifier = Modifier,
 ) {
@@ -519,17 +510,14 @@ private fun BannerScope.FavoritesGrid(
 
             M3CoverCard(
                 onLongPress = { c ->
-                    newItemModel(
-                        if (c == ComponentState.Pressed) {
-                            info.value.randomOrNull()?.let {
-                                sourceRepository
-                                    .toSourceByApiServiceName(it.source)
-                                    ?.apiService
-                                    ?.let { it1 -> it.toItemModel(it1) }
-                            }
-                        } else null
+                    onLongPress(
+                        info.value.mapNotNull {
+                            sourceRepository
+                                .toSourceByApiServiceName(it.source)
+                                ?.apiService
+                                ?.let { it1 -> it.toItemModel(it1) }
+                        }
                     )
-                    onShowBanner(c == ComponentState.Pressed)
                 },
                 imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                 name = info.key,

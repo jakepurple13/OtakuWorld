@@ -3,6 +3,7 @@
 package com.programmersbox.uiviews.utils
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -23,32 +25,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.OptionsSheet
+import com.programmersbox.uiviews.presentation.components.BannerBox
+import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
-import com.programmersbox.uiviews.presentation.navigateToDetails
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360
@@ -120,6 +122,30 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
     }
 }
 
+/*data class OptionsSheetInfo(
+    val imageUrl: String,
+    val title: String,
+    val description: String,
+    val serviceName: String,
+    val url: String,
+)
+
+class OptionsSheetHandler {
+    val info = mutableStateOf<OptionsSheetInfo?>(null)
+}
+
+fun OptionsSheetHandler.setItemModel(itemModel: ItemModel?) {
+    info.value = itemModel?.let {
+        OptionsSheetInfo(
+            imageUrl = it.imageUrl,
+            title = it.title,
+            description = it.description,
+            serviceName = it.source.serviceName,
+            url = it.url
+        )
+    }
+}*/
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtakuBannerBox(
@@ -137,34 +163,7 @@ fun OtakuBannerBox(
         onDispose { bannerScope = null }
     }*/
 
-    val scope = rememberCoroutineScope()
-
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    val navController = LocalNavController.current
-
-    itemInfo?.let {
-        OptionsSheet(
-            sheet = sheetState,
-            scope = scope,
-            navController = LocalNavController.current,
-            imageUrl = it.imageUrl,
-            title = it.title,
-            description = it.description,
-            serviceName = it.source.serviceName,
-            url = it.url,
-            onOpen = { navController.navigateToDetails(it) },
-            onDismiss = { itemInfo = null }
-        )
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        bannerScope.content()
-    }
-
-    /*BannerBox(
+    BannerBox(
         modifier = modifier,
         showBanner = showBanner,
         banner = {
@@ -198,7 +197,7 @@ fun OtakuBannerBox(
             }
         },
         content = { bannerScope.content() }
-    )*/
+    )
 }
 
 fun interface BannerScope {
@@ -212,12 +211,6 @@ fun <T> CustomBannerBox(
     bannerContent: @Composable BoxScope.(T?) -> Unit,
     modifier: Modifier = Modifier,
     showBanner: Boolean = false,
-    itemToImageUrl: (T) -> String,
-    itemToTitle: (T) -> String,
-    itemToDescription: (T) -> String,
-    itemToSource: (T) -> String,
-    itemToUrl: (T) -> String,
-    onOpen: (T) -> Unit,
     content: @Composable CustomBannerScope<T>.() -> Unit,
 ) {
     var itemInfo by remember { mutableStateOf<T?>(null) }
@@ -233,7 +226,7 @@ fun <T> CustomBannerBox(
         onDispose { bannerScope = null }
     }
 
-    /*BannerBox(
+    BannerBox(
         modifier = modifier,
         showBanner = showBanner,
         banner = {
@@ -249,34 +242,7 @@ fun <T> CustomBannerBox(
             }
         },
         content = { bannerScope?.content() }
-    )*/
-
-    val scope = rememberCoroutineScope()
-
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    val navController = LocalNavController.current
-
-    itemInfo?.let {
-        OptionsSheet(
-            sheet = sheetState,
-            scope = scope,
-            navController = LocalNavController.current,
-            imageUrl = itemToImageUrl(it),
-            title = itemToTitle(it),
-            description = itemToDescription(it),
-            serviceName = itemToSource(it),
-            url = itemToUrl(it),
-            onOpen = { onOpen(it) },
-            onDismiss = { itemInfo = null }
-        )
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        bannerScope?.content()
-    }
+    )
 }
 
 interface CustomBannerScope<T> {

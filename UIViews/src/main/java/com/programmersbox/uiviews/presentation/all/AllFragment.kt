@@ -54,7 +54,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
@@ -62,16 +61,15 @@ import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshDefaults
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
+import com.programmersbox.uiviews.presentation.components.optionsSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.theme.LocalCurrentSource
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.OtakuBannerBox
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import dev.chrisbanes.haze.HazeProgressive
@@ -80,7 +78,6 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @ExperimentalMaterial3Api
@@ -111,6 +108,8 @@ fun AllView(
     val focusManager = LocalFocusManager.current
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val hazeState = remember { HazeState() }
+
+    var optionsSheet by optionsSheet()
 
     OtakuScaffold(
         topBar = {
@@ -203,72 +202,56 @@ fun AllView(
                         } else it
                     }
             ) {
-                var showBanner by remember { mutableStateOf(false) }
-                OtakuBannerBox(
-                    showBanner = showBanner,
-                    placeholder = koinInject<AppLogo>().logoId,
+                OtakuPullToRefreshBox(
+                    isRefreshing = allVm.isSearching,
+                    onRefresh = {},
+                    enabled = { false },
                 ) {
-                    OtakuPullToRefreshBox(
-                        isRefreshing = allVm.isSearching,
-                        onRefresh = {},
-                        enabled = { false },
-                    ) {
-                        info.SearchListView(
-                            list = allVm.searchList,
-                            listState = rememberLazyGridState(),
-                            favorites = allVm.favoriteList,
-                            onLongPress = { item, c ->
-                                newItemModel(if (c == ComponentState.Pressed) item else null)
-                                showBanner = c == ComponentState.Pressed
-                            },
-                            paddingValues = LocalNavHostPadding.current,
-                            modifier = Modifier
-                        ) { navController.navigateToDetails(it) }
-                    }
+                    info.SearchListView(
+                        list = allVm.searchList,
+                        listState = rememberLazyGridState(),
+                        favorites = allVm.favoriteList,
+                        onLongPress = { item, c -> optionsSheet = item },
+                        paddingValues = LocalNavHostPadding.current,
+                        modifier = Modifier
+                    ) { navController.navigateToDetails(it) }
                 }
             }
         }
     ) { p1 ->
-        var showBanner by remember { mutableStateOf(false) }
-        OtakuBannerBox(
-            showBanner = showBanner,
-            placeholder = koinInject<AppLogo>().logoId,
-            modifier = Modifier.padding(p1)
-        ) {
-            Crossfade(targetState = isConnected, label = "") { connected ->
-                if (!connected) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(p1),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            Icons.Default.CloudOff,
-                            null,
-                            modifier = Modifier.size(50.dp, 50.dp),
-                            colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
-                        )
-                        Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
-                    }
-                } else {
-                    AllScreen(
-                        itemInfoChange = this@OtakuBannerBox::newItemModel,
-                        state = state,
-                        showBanner = { showBanner = it },
-                        isRefreshing = allVm.isRefreshing,
-                        sourceList = allVm.sourceList,
-                        favoriteList = allVm.favoriteList,
-                        onLoadMore = allVm::loadMore,
-                        onReset = allVm::reset,
-                        paddingValues = p1,
-                        modifier = if (showBlur)
-                            Modifier.hazeSource(hazeState)
-                        else
-                            Modifier
+
+        Crossfade(targetState = isConnected, label = "") { connected ->
+            if (!connected) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(p1),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        Icons.Default.CloudOff,
+                        null,
+                        modifier = Modifier.size(50.dp, 50.dp),
+                        colorFilter = ColorFilter.tint(M3MaterialTheme.colorScheme.onBackground)
                     )
+                    Text(stringResource(R.string.you_re_offline), style = M3MaterialTheme.typography.titleLarge)
                 }
+            } else {
+                AllScreen(
+                    itemInfoChange = { optionsSheet = it },
+                    state = state,
+                    isRefreshing = allVm.isRefreshing,
+                    sourceList = allVm.sourceList,
+                    favoriteList = allVm.favoriteList,
+                    onLoadMore = allVm::loadMore,
+                    onReset = allVm::reset,
+                    paddingValues = p1,
+                    modifier = if (showBlur)
+                        Modifier.hazeSource(hazeState)
+                    else
+                        Modifier
+                )
             }
         }
         ToasterItemsSetup(
@@ -289,7 +272,6 @@ fun AllScreen(
     onReset: (ApiService) -> Unit,
     itemInfoChange: (ItemModel?) -> Unit,
     state: LazyGridState,
-    showBanner: (Boolean) -> Unit,
     paddingValues: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -316,10 +298,7 @@ fun AllScreen(
                     list = sourceList,
                     listState = state,
                     favorites = favoriteList,
-                    onLongPress = { item, c ->
-                        itemInfoChange(if (c == ComponentState.Pressed) item else null)
-                        showBanner(c == ComponentState.Pressed)
-                    },
+                    onLongPress = { item, c -> itemInfoChange(item) },
                     paddingValues = paddingValues,
                     modifier = Modifier
                 ) { navController.navigateToDetails(it) }
@@ -346,7 +325,6 @@ private fun AllScreenPreview() {
         AllScreen(
             itemInfoChange = {},
             state = rememberLazyGridState(),
-            showBanner = {},
             isRefreshing = true,
             sourceList = emptyList(),
             favoriteList = emptyList(),

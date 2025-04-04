@@ -26,12 +26,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -100,7 +98,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -119,10 +116,11 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandler
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
-import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
+import com.programmersbox.uiviews.presentation.components.OptionsSheetValues
+import com.programmersbox.uiviews.presentation.components.optionsSheetList
 import com.programmersbox.uiviews.presentation.components.plus
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalCustomListDao
@@ -130,7 +128,6 @@ import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.CustomBannerBox
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -179,6 +176,8 @@ fun OtakuCustomListScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val sourceRepository = LocalSourcesRepository.current
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
@@ -263,6 +262,33 @@ fun OtakuCustomListScreen(
         )
     }*/
 
+    var optionsSheet by optionsSheetList<OptionsSheetValues>(
+        onOpen = {
+            sourceRepository
+                .toSourceByApiServiceName(it.serviceName)
+                ?.apiService
+                ?.let { source ->
+                    Cached.cache[it.url]?.let {
+                        flow {
+                            emit(
+                                it
+                                    .toDbModel()
+                                    .toItemModel(source)
+                            )
+                        }
+                    } ?: source.getSourceByUrlFlow(it.url)
+                }
+                ?.dispatchIo()
+                ?.onStart { showLoadingDialog = true }
+                ?.onEach {
+                    showLoadingDialog = false
+                    navController.navigateToDetails(it)
+                }
+                ?.onCompletion { showLoadingDialog = false }
+                ?.launchIn(scope)
+        }
+    )
+
     var showInfoSheet by rememberSaveable { mutableStateOf(false) }
     val infoSheetState = rememberModalBottomSheetState()
 
@@ -292,293 +318,236 @@ fun OtakuCustomListScreen(
         )
     }
 
-    val sourceRepository = LocalSourcesRepository.current
 
-    var showBanner by remember { mutableStateOf(false) }
-
-    CustomBannerBox<CustomListInfo>(
-        showBanner = showBanner,
-        bannerContent = {
-            ListItem(
-                leadingContent = {
-                    GlideGradientImage(
-                        model = it?.imageUrl,
-                        placeholder = logoDrawable.logoId,
-                        modifier = Modifier
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                            .clip(MaterialTheme.shapes.small)
-                    )
-                },
-                overlineContent = { Text(it?.source.orEmpty()) },
-                headlineContent = { Text(it?.title.orEmpty()) },
-                supportingContent = {
-                    Text(
-                        it?.description.orEmpty(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 5
-                    )
-                },
-                modifier = Modifier.padding(WindowInsets.statusBars.asPaddingValues())
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(LocalNavHostPadding.current)
             )
         },
-        itemToImageUrl = { it.imageUrl },
-        itemToTitle = { it.title },
-        itemToDescription = { it.description },
-        itemToSource = { it.source },
-        itemToUrl = { it.url },
-        onOpen = {
-            sourceRepository
-                .toSourceByApiServiceName(it.source)
-                ?.apiService
-                ?.let { source ->
-                    Cached.cache[it.url]?.let {
-                        flow {
-                            emit(
-                                it
-                                    .toDbModel()
-                                    .toItemModel(source)
+        topBar = {
+            val searchBarState = rememberSearchBarState()
+
+            DynamicSearchBar(
+                textFieldState = searchQuery,
+                searchBarState = searchBarState,
+                isDocked = isHorizontal,
+                onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
+                placeholder = { Text(stringResource(id = R.string.search) + " " + customItem.item.name) },
+                leadingIcon = {
+                    if (searchBarState.currentValue == SearchBarValue.Expanded) {
+                        IconButton(
+                            onClick = { scope.launch { searchBarState.animateToCollapsed() } }
+                        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+
+                    } else {
+                        IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    }
+                },
+                trailingIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AnimatedVisibility(searchQuery.text.isNotEmpty()) {
+                            IconButton(
+                                onClick = { setQuery("") }
+                            ) { Icon(Icons.Default.Cancel, null) }
+                        }
+
+                        Text("(${customItem.list.size})")
+
+                        AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        shareItem.launchCatching(
+                                            Intent.createChooser(
+                                                Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(
+                                                        Intent.EXTRA_TEXT,
+                                                        customItem.list.joinToString("\n") { "${it.title} - ${it.url}" }
+                                                    )
+                                                    putExtra(Intent.EXTRA_TITLE, customItem.item.name)
+                                                },
+                                                context.getString(R.string.share_item, customItem.item.name)
+                                            )
+                                        )
+                                    }
+                                ) { Icon(Icons.Default.Share, null) }
+
+                                IconButton(
+                                    onClick = { showInfoSheet = true }
+                                ) { Icon(Icons.Default.Info, null) }
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.let {
+                    if (showBlur)
+                        it.hazeEffect(
+                            hazeState,
+                            HazeMaterials.regular(MaterialTheme.colorScheme.surface)
+                        ) {
+                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                        } else it
+                },
+            ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    itemsIndexed(items = viewModel.searchItems) { index, item ->
+                        Card(
+                            onClick = {
+                                setQuery(item.title)
+                                scope.launch { searchBarState.animateToCollapsed() }
+                            },
+                            modifier = Modifier.animateItem()
+                        ) {
+                            ListItem(
+                                headlineContent = { Text(item.title) },
+                                leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color.Transparent
+                                )
                             )
                         }
-                    } ?: source.getSourceByUrlFlow(it.url)
+                    }
                 }
-                ?.dispatchIo()
-                ?.onStart { showLoadingDialog = true }
-                ?.onEach {
-                    showLoadingDialog = false
-                    navController.navigateToDetails(it)
-                }
-                ?.onCompletion { showLoadingDialog = false }
-                ?.launchIn(scope)
-        }
-    ) {
-        Scaffold(
-            snackbarHost = {
-                SnackbarHost(
-                    snackbarHostState,
-                    modifier = Modifier.padding(LocalNavHostPadding.current)
-                )
-            },
-            topBar = {
-                val searchBarState = rememberSearchBarState()
+            }
+        },
+    ) { padding ->
+        LazyVerticalGrid(
+            columns = adaptiveGridCell(),
+            contentPadding = padding + LocalNavHostPadding.current,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .hazeSource(state = hazeState)
+        ) {
+            when (val state = viewModel.items) {
+                is OtakuListState.BySource if state.items.isNotEmpty() -> {
+                    state.items.forEach { (source, sourceItems) ->
+                        val showSource = state.sourceShower[source]?.value == true
 
-                DynamicSearchBar(
-                    textFieldState = searchQuery,
-                    searchBarState = searchBarState,
-                    isDocked = isHorizontal,
-                    onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
-                    placeholder = { Text(stringResource(id = R.string.search) + " " + customItem.item.name) },
-                    leadingIcon = {
-                        if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                            IconButton(
-                                onClick = { scope.launch { searchBarState.animateToCollapsed() } }
-                            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
-                        } else {
-                            IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                        }
-                    },
-                    trailingIcon = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        //TODO: Try stickyHeader
+                        item(
+                            span = { GridItemSpan(maxLineSpan) }
                         ) {
-                            AnimatedVisibility(searchQuery.text.isNotEmpty()) {
-                                IconButton(
-                                    onClick = { setQuery("") }
-                                ) { Icon(Icons.Default.Cancel, null) }
-                            }
-
-                            Text("(${customItem.list.size})")
-
-                            AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            shareItem.launchCatching(
-                                                Intent.createChooser(
-                                                    Intent(Intent.ACTION_SEND).apply {
-                                                        type = "text/plain"
-                                                        putExtra(
-                                                            Intent.EXTRA_TEXT,
-                                                            customItem.list.joinToString("\n") { "${it.title} - ${it.url}" }
-                                                        )
-                                                        putExtra(Intent.EXTRA_TITLE, customItem.item.name)
-                                                    },
-                                                    context.getString(R.string.share_item, customItem.item.name)
-                                                )
-                                            )
-                                        }
-                                    ) { Icon(Icons.Default.Share, null) }
-
-                                    IconButton(
-                                        onClick = { showInfoSheet = true }
-                                    ) { Icon(Icons.Default.Info, null) }
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.let {
-                        if (showBlur)
-                            it.hazeEffect(
-                                hazeState,
-                                HazeMaterials.regular(MaterialTheme.colorScheme.surface)
-                            ) {
-                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                            } else it
-                    },
-                ) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(1),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    ) {
-                        itemsIndexed(items = viewModel.searchItems) { index, item ->
-                            Card(
+                            Surface(
+                                shape = MaterialTheme.shapes.medium,
+                                tonalElevation = 4.dp,
                                 onClick = {
-                                    setQuery(item.title)
-                                    scope.launch { searchBarState.animateToCollapsed() }
+                                    state.sourceShower[source]?.value = state.sourceShower[source]?.value?.not() == true
                                 },
-                                modifier = Modifier.animateItem()
+                                color = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateItem()
                             ) {
                                 ListItem(
-                                    headlineContent = { Text(item.title) },
-                                    leadingContent = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    modifier = Modifier.padding(4.dp),
+                                    headlineContent = { Text(source) },
+                                    leadingContent = { Text(sourceItems.size.toString()) },
+                                    trailingContent = {
+                                        Icon(
+                                            Icons.Default.ArrowDropDown,
+                                            null,
+                                            modifier = Modifier.rotate(animateFloatAsState(if (showSource) 180f else 0f, label = "").value)
+                                        )
+                                    },
                                     colors = ListItemDefaults.colors(
-                                        containerColor = Color.Transparent
+                                        containerColor = Color.Transparent,
                                     )
+                                )
+                            }
+                        }
+
+                        if (showSource) {
+                            items(
+                                items = sourceItems,
+                                key = { it.title + it.source + it.uniqueId },
+                                contentType = { it }
+                            ) { item ->
+                                CustomItemVertical(
+                                    items = listOf(item),
+                                    title = item.title,
+                                    logo = logoDrawable.logo,
+                                    showLoadingDialog = { showLoadingDialog = it },
+                                    onError = {
+                                        scope.launch {
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            snackbarHostState.showSnackbar(
+                                                "Something went wrong. Source might not be installed",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    },
+                                    onShowBanner = { optionsSheet = listOf(item.toOptionsSheetValues()) },
+                                    modifier = Modifier.animateItem()
                                 )
                             }
                         }
                     }
                 }
-            },
-        ) { padding ->
-            LazyVerticalGrid(
-                columns = adaptiveGridCell(),
-                contentPadding = padding + LocalNavHostPadding.current,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-                    .hazeSource(state = hazeState)
-            ) {
-                when (val state = viewModel.items) {
-                    is OtakuListState.BySource if state.items.isNotEmpty() -> {
-                        state.items.forEach { (source, sourceItems) ->
-                            val showSource = state.sourceShower[source]?.value == true
 
-                            //TODO: Try stickyHeader
-                            item(
-                                span = { GridItemSpan(maxLineSpan) }
-                            ) {
-                                Surface(
-                                    shape = MaterialTheme.shapes.medium,
-                                    tonalElevation = 4.dp,
-                                    onClick = {
-                                        state.sourceShower[source]?.value = state.sourceShower[source]?.value?.not() == true
-                                    },
-                                    color = MaterialTheme.colorScheme.surface,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .animateItem()
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier.padding(4.dp),
-                                        headlineContent = { Text(source) },
-                                        leadingContent = { Text(sourceItems.size.toString()) },
-                                        trailingContent = {
-                                            Icon(
-                                                Icons.Default.ArrowDropDown,
-                                                null,
-                                                modifier = Modifier.rotate(animateFloatAsState(if (showSource) 180f else 0f, label = "").value)
-                                            )
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = Color.Transparent,
-                                        )
+                is OtakuListState.ByTitle if state.items.isNotEmpty() -> {
+                    items(
+                        items = state.items,
+                        key = { it.key },
+                        contentType = { it }
+                    ) { item ->
+                        CustomItemVertical(
+                            items = item.value,
+                            title = item.key,
+                            logo = logoDrawable.logo,
+                            showLoadingDialog = { showLoadingDialog = it },
+                            onError = {
+                                scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    snackbarHostState.showSnackbar(
+                                        "Something went wrong. Source might not be installed",
+                                        duration = SnackbarDuration.Short
                                     )
                                 }
-                            }
-
-                            if (showSource) {
-                                items(
-                                    items = sourceItems,
-                                    key = { it.title + it.source + it.uniqueId },
-                                    contentType = { it }
-                                ) { item ->
-                                    CustomItemVertical(
-                                        items = listOf(item),
-                                        title = item.title,
-                                        logo = logoDrawable.logo,
-                                        showLoadingDialog = { showLoadingDialog = it },
-                                        onError = {
-                                            scope.launch {
-                                                snackbarHostState.currentSnackbarData?.dismiss()
-                                                snackbarHostState.showSnackbar(
-                                                    "Something went wrong. Source might not be installed",
-                                                    duration = SnackbarDuration.Short
-                                                )
-                                            }
-                                        },
-                                        onShowBanner = {
-                                            newItem(if (it) item else null)
-                                            showBanner = it
-                                        },
-                                        modifier = Modifier.animateItem()
-                                    )
-                                }
-                            }
-                        }
+                            },
+                            onShowBanner = { optionsSheet = item.value.map { it.toOptionsSheetValues() } },
+                            modifier = Modifier.animateItem()
+                        )
                     }
+                }
 
-                    is OtakuListState.ByTitle if state.items.isNotEmpty() -> {
-                        items(
-                            items = state.items,
-                            key = { it.key },
-                            contentType = { it }
-                        ) { item ->
-                            CustomItemVertical(
-                                items = item.value,
-                                title = item.key,
-                                logo = logoDrawable.logo,
-                                showLoadingDialog = { showLoadingDialog = it },
-                                onError = {
-                                    scope.launch {
-                                        snackbarHostState.currentSnackbarData?.dismiss()
-                                        snackbarHostState.showSnackbar(
-                                            "Something went wrong. Source might not be installed",
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    }
-                                },
-                                onShowBanner = {
-                                    newItem(if (it) item.value.firstOrNull() else null)
-                                    showBanner = it
-                                },
-                                modifier = Modifier.animateItem()
-                            )
-                        }
-                    }
-
-                    else -> {
-                        item(
-                            span = { GridItemSpan(maxLineSpan) }
+                else -> {
+                    item(
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Text("You haven't added anything to this list yet!")
-                            }
+                            Text("You haven't added anything to this list yet!")
                         }
                     }
                 }
             }
         }
     }
+}
+
+private fun CustomListInfo.toOptionsSheetValues() = object : OptionsSheetValues {
+    override val imageUrl: String get() = this@toOptionsSheetValues.imageUrl
+    override val title: String get() = this@toOptionsSheetValues.title
+    override val description: String get() = this@toOptionsSheetValues.description
+    override val serviceName: String get() = this@toOptionsSheetValues.source
+    override val url: String get() = this@toOptionsSheetValues.url
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
