@@ -21,7 +21,9 @@ class SwipeAwayReceiver : BroadcastReceiver() {
             runCatching {
                 url?.let { dao?.updateNotification(it, false) }
             }.onFailure { recordFirebaseException(it) }
-            id?.let { if (it != -1) context?.notificationManager?.cancel(it) }
+            id
+                ?.takeIf { it != -1 }
+                ?.let { context?.notificationManager?.cancel(it) }
             val g = context?.notificationManager?.activeNotifications?.map { it.notification }?.filter { it.group == "otakuGroup" }.orEmpty()
             if (g.size == 1) context?.notificationManager?.cancel(42)
         }

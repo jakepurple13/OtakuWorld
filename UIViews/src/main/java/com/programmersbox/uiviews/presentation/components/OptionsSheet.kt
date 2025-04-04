@@ -195,7 +195,11 @@ fun <T : OptionsSheetValues> OptionsSheet(
 ) {
     val optionsSheetScope = remember {
         object : OptionsSheetScope {
-            override fun dismiss() = onDismiss()
+            override fun dismiss() {
+                scope.launch {
+                    sheet.hide()
+                }.invokeOnCompletion { onDismiss() }
+            }
         }
     }
     var showLoadingDialog by remember { mutableStateOf(false) }
@@ -242,7 +246,11 @@ fun <T : OptionsSheetValues> OptionsSheet(
 ) {
     val optionsSheetScope = remember {
         object : OptionsSheetScope {
-            override fun dismiss() = onDismiss()
+            override fun dismiss() {
+                scope.launch {
+                    sheet.hide()
+                }.invokeOnCompletion { onDismiss() }
+            }
         }
     }
     var showLoadingDialog by remember { mutableStateOf(false) }
