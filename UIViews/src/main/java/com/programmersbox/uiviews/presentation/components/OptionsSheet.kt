@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -180,7 +181,6 @@ interface OptionsSheetValues {
     val url: String
 }
 
-//TODO: Trying this out...Maybe this is an option?
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : OptionsSheetValues> OptionsSheet(
@@ -410,36 +410,38 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
             onClick = { showLists = true }
         )
 
-        if (!isSaved) {
-            OptionsItem(
-                title = stringResource(id = R.string.save_for_later),
-                onClick = {
-                    scope.launch {
-                        dao.insertNotification(
-                            NotificationItem(
-                                id = "$title$url$imageUrl$serviceName$description".hashCode(),
-                                url = url,
-                                summaryText = "$title had an update",
-                                notiTitle = title,
-                                imageUrl = imageUrl,
-                                source = serviceName,
-                                contentTitle = title
+        Crossfade(isSaved) { target ->
+            if (!target) {
+                OptionsItem(
+                    title = stringResource(id = R.string.save_for_later),
+                    onClick = {
+                        scope.launch {
+                            dao.insertNotification(
+                                NotificationItem(
+                                    id = "$title$url$imageUrl$serviceName$description".hashCode(),
+                                    url = url,
+                                    summaryText = "$title had an update",
+                                    notiTitle = title,
+                                    imageUrl = imageUrl,
+                                    source = serviceName,
+                                    contentTitle = title
+                                )
                             )
-                        )
+                        }
                     }
-                }
-            )
-        } else {
-            OptionsItem(
-                title = stringResource(R.string.removeNotification),
-                onClick = {
-                    scope.launch {
-                        dao.getNotificationItemFlow(url)
-                            .firstOrNull()
-                            ?.let { dao.deleteNotification(it) }
+                )
+            } else {
+                OptionsItem(
+                    title = stringResource(R.string.removeNotification),
+                    onClick = {
+                        scope.launch {
+                            dao.getNotificationItemFlow(url)
+                                .firstOrNull()
+                                ?.let { dao.deleteNotification(it) }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         moreContent(optionsSheetValues)
@@ -455,22 +457,26 @@ interface OptionsSheetScope {
         onClick: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        Card(
-            onClick = onClick,
-            colors = CardDefaults.cardColors(
-                containerColor = Color.Transparent
-            ),
-            modifier = modifier
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            ListItem(
-                headlineContent = { Text(title) },
-                colors = ListItemDefaults.colors(
+            Card(
+                onClick = onClick,
+                colors = CardDefaults.cardColors(
                     containerColor = Color.Transparent
+                ),
+                modifier = modifier
+            ) {
+                ListItem(
+                    headlineContent = { Text(title) },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    )
                 )
-            )
-        }
+            }
 
-        HorizontalDivider()
+            HorizontalDivider()
+        }
     }
 }
 

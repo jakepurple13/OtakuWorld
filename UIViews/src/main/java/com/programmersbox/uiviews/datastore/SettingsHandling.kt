@@ -163,7 +163,7 @@ class SettingsHandling(
     fun rememberIsAmoledMode() = preferences.rememberPreference(
         key = { it.amoledMode },
         update = { setAmoledMode(it) },
-        defaultValue = false
+        defaultValue = true
     )
 
     @Composable
