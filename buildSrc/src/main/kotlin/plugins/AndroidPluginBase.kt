@@ -56,7 +56,7 @@ abstract class AndroidPluginBase<T : BaseExtension>(
             defaultConfig {
                 minSdk = AppInfo.minimumSdk
                 targetSdk = AppInfo.targetSdk
-                versionCode = 1
+                versionCode = AppInfo.versionCode
                 versionName = AppInfo.otakuVersionName
 
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

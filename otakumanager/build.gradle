@@ -12,7 +12,7 @@ android {
         applicationId "com.programmersbox.otakumanager"
         minSdkVersion AppInfo.minimumSdk
         targetSdkVersion AppInfo.targetSdk
-        versionCode 1
+        versionCode AppInfo.versionCode
         versionName AppInfo.otakuVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
