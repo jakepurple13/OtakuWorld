@@ -99,8 +99,9 @@ fun OtakuMaterialTheme(
                 if (isAmoledMode && darkTheme) {
                     it.copy(
                         surface = Color.Black,
-                        inverseSurface = Color.White,
-                        background = Color.Black
+                        onSurface = Color.White,
+                        background = Color.Black,
+                        onBackground = Color.White,
                     )
                 } else {
                     it
