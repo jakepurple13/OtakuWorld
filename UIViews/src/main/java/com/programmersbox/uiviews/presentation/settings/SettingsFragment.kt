@@ -622,7 +622,7 @@ fun SourceChooserScreen(
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
             ListBottomScreen(
-                includeInsetPadding = true,
+                includeInsetPadding = false,
                 title = stringResource(R.string.chooseASource),
                 list = it,
                 onClick = { service ->
@@ -639,7 +639,7 @@ fun SourceChooserScreen(
     }
 
     GroupBottomScreen(
-        includeInsetPadding = true,
+        includeInsetPadding = false,
         title = stringResource(R.string.chooseASource),
         list = remember {
             combine(

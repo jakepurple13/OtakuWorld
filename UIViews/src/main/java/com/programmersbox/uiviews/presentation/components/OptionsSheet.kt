@@ -213,10 +213,13 @@ fun <T : OptionsSheetValues> OptionsSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheet
+        sheetState = sheet,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .animateContentSize(),
         ) {
             with(optionsSheetScope) {
                 OptionsItems(
@@ -267,7 +270,9 @@ fun <T : OptionsSheetValues> OptionsSheet(
         sheetState = sheet
     ) {
         Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .animateContentSize(),
         ) {
             optionsSheetValuesList.forEach {
                 var showInfo by remember { mutableStateOf(optionsSheetValuesList.size == 1) }
@@ -368,10 +373,6 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 }
             }
         )
-
-        //TODO: Add favorite/unfavorite
-        // might have to pass in a class with an action (like details does)
-        // that includes if we can show favorites or not
 
         //TODO: Maybe do some ocr and allow all languages in order to be able to translate?
         // https://github.com/VrajVyas11/AI_Manga_Reader

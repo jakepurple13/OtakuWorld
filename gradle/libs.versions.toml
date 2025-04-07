@@ -74,7 +74,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.1.4"
-ackpineVersion = "0.11.0"
+ackpineVersion = "0.11.1"
 
 arcore = "1.0.0-alpha03"
 composeXr = "1.0.0-alpha03"
@@ -250,7 +250,7 @@ swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
-zoomableModifier = "net.engawapg.lib:zoomable:2.4.0"
+zoomableModifier = "net.engawapg.lib:zoomable:2.5.0"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
