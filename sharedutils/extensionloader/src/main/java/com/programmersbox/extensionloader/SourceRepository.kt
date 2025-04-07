@@ -12,7 +12,7 @@ class SourceRepository {
     val apiServiceList get() = sourcesList.value.map { it.apiService }
 
     fun setSources(sourceList: List<SourceInformation>) {
-        sourcesList.value = sourceList.distinctBy { it.packageName }
+        sourcesList.value = sourceList
     }
 
     fun removeSource(sourceInformation: SourceInformation) {
