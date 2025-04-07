@@ -616,7 +616,7 @@ fun SourceChooserScreen(
 
     var showChooser by remember { mutableStateOf<List<SourceInformation>?>(null) }
 
-    showChooser?.let {
+    showChooser?.let { list ->
         ModalBottomSheet(
             onDismissRequest = { showChooser = null },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -624,7 +624,7 @@ fun SourceChooserScreen(
             ListBottomScreen(
                 includeInsetPadding = false,
                 title = stringResource(R.string.chooseASource),
-                list = it,
+                list = list,
                 onClick = { service ->
                     onChosen()
                     scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
@@ -667,7 +667,8 @@ fun SourceChooserScreen(
     ) {
         ListBottomSheetItemModel(
             primaryText = "${it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
-            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null
+            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
+            overlineText = it.firstOrNull()?.packageName
         )
     }
 }
