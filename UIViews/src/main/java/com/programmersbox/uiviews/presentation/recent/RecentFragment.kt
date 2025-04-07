@@ -118,10 +118,10 @@ fun RecentView(
                 recentVm.favoriteList.any { f -> f.url == it.url }
             ) { target ->
                 if (target) {
-                    OptionsItem(
+                    /*OptionsItem(
                         title = stringResource(R.string.removeFromFavorites),
                         onClick = { recentVm.favoriteAction(RecentViewModel.FavoriteAction.Remove(it.itemModel)) }
-                    )
+                    )*/
                 } else {
                     OptionsItem(
                         title = stringResource(R.string.addToFavorites),

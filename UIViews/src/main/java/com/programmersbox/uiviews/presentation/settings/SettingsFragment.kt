@@ -655,7 +655,14 @@ fun SourceChooserScreen(
             .collectAsStateWithLifecycle(emptyMap())
             .value,
         onClick = { service ->
-            showChooser = service
+            if (service.size == 1) {
+                onChosen()
+                service.firstOrNull()?.apiService?.serviceName?.let {
+                    scope.launch { dataStoreHandling.currentService.set(it) }
+                }
+            } else {
+                showChooser = service
+            }
         }
     ) {
         ListBottomSheetItemModel(
