@@ -1,5 +1,6 @@
 package plugins
 
+import AppInfo
 import com.android.build.gradle.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -23,9 +24,9 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
         )
 
         target.extensions.findByType(LibraryExtension::class.java)?.apply {
-            compileSdk = 33
+            compileSdk = AppInfo.compileVersion
             defaultConfig {
-                minSdk = 23
+                minSdk = AppInfo.minimumSdk
             }
         }
 

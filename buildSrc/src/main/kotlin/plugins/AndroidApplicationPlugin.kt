@@ -1,5 +1,6 @@
 package plugins
 
+import AppInfo
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
@@ -18,6 +19,8 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
     override fun BaseAppModuleExtension.androidConfig(project: Project) {
         buildFeatures.compose = true
         buildFeatures.buildConfig = true
+
+        compileSdk = AppInfo.compileVersion
 
         composeOptions {
 

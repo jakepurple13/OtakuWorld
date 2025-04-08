@@ -170,6 +170,7 @@ fun OtakuCustomListScreen(
     isHorizontal: Boolean = false,
     addSecurityItem: (UUID) -> Unit,
     removeSecurityItem: (UUID) -> Unit,
+    dao: ListDao = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
     val navController = LocalNavController.current
@@ -210,7 +211,7 @@ fun OtakuCustomListScreen(
             text = {
                 Column {
                     Text(stringResource(R.string.are_you_sure_delete_list))
-                    Text(customItem.item.name.orEmpty())
+                    Text(customItem.item.name)
                     OutlinedTextField(
                         value = listName,
                         onValueChange = { listName = it },
@@ -262,16 +263,16 @@ fun OtakuCustomListScreen(
         )
     }*/
 
-    var optionsSheet by optionsSheetList<OptionsSheetValues>(
+    var optionsSheet by optionsSheetList<CustomListItemOptionSheet>(
         onOpen = {
             sourceRepository
                 .toSourceByApiServiceName(it.serviceName)
                 ?.apiService
                 ?.let { source ->
-                    Cached.cache[it.url]?.let {
+                    Cached.cache[it.url]?.let { model ->
                         flow {
                             emit(
-                                it
+                                model
                                     .toDbModel()
                                     .toItemModel(source)
                             )
@@ -280,14 +281,40 @@ fun OtakuCustomListScreen(
                 }
                 ?.dispatchIo()
                 ?.onStart { showLoadingDialog = true }
-                ?.onEach {
+                ?.onEach { item ->
                     showLoadingDialog = false
-                    navController.navigateToDetails(it)
+                    navController.navigateToDetails(item)
                 }
                 ?.onCompletion { showLoadingDialog = false }
                 ?.launchIn(scope)
         }
-    )
+    ) { model ->
+        var showDeleteDialog by remember { mutableStateOf(false) }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Remove item?") },
+                text = { Text("Are you sure you want to remove ${model.title} from ${customItem.item.name}?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                dao.removeItem(model.info)
+                                viewModel.customList?.item?.let { dao.updateFullList(it) }
+                            }
+                        }
+                    ) { Text(stringResource(id = R.string.confirm)) }
+                },
+                dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(id = R.string.cancel)) } }
+            )
+        }
+
+        OptionsItem(
+            "Remove",
+            onClick = { showDeleteDialog = true }
+        )
+    }
 
     var showInfoSheet by rememberSaveable { mutableStateOf(false) }
     val infoSheetState = rememberModalBottomSheetState()
@@ -542,13 +569,23 @@ fun OtakuCustomListScreen(
     }
 }
 
-private fun CustomListInfo.toOptionsSheetValues() = object : OptionsSheetValues {
-    override val imageUrl: String get() = this@toOptionsSheetValues.imageUrl
-    override val title: String get() = this@toOptionsSheetValues.title
-    override val description: String get() = this@toOptionsSheetValues.description
-    override val serviceName: String get() = this@toOptionsSheetValues.source
-    override val url: String get() = this@toOptionsSheetValues.url
-}
+data class CustomListItemOptionSheet(
+    override val imageUrl: String,
+    override val title: String,
+    override val description: String,
+    override val serviceName: String,
+    override val url: String,
+    val info: CustomListInfo,
+) : OptionsSheetValues
+
+private fun CustomListInfo.toOptionsSheetValues() = CustomListItemOptionSheet(
+    imageUrl = imageUrl,
+    title = title,
+    description = description,
+    serviceName = source,
+    url = url,
+    info = this
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

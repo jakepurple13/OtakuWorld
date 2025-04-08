@@ -267,7 +267,8 @@ fun <T : OptionsSheetValues> OptionsSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheet
+        sheetState = sheet,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
