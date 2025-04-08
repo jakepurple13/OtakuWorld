@@ -451,7 +451,37 @@ fun LoadingDialog(
                 }
             }
         }
+
     }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun loadingDialog(): MutableState<Boolean> {
+    val showLoadingDialog = remember { mutableStateOf(false) }
+
+    if (showLoadingDialog.value) {
+        Dialog(
+            onDismissRequest = { showLoadingDialog.value = false },
+            DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
+            ) {
+                Column {
+                    ContainedLoadingIndicator(
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Text(text = stringResource(id = R.string.loading), Modifier.align(Alignment.CenterHorizontally))
+                }
+            }
+        }
+    }
+
+    return showLoadingDialog
 }
 
 val Emerald = Color(0xFF2ecc71)

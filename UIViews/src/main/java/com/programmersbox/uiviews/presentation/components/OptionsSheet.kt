@@ -51,7 +51,6 @@ import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoad
 import com.programmersbox.uiviews.presentation.lists.ListChoiceScreen
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -195,21 +194,14 @@ fun <T : OptionsSheetValues> OptionsSheet(
     dao: ItemDao = koinInject(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
-    val optionsSheetScope = remember {
+    val optionsSheetScope = remember(onDismiss) {
         object : OptionsSheetScope {
             override fun dismiss() {
-                scope.launch {
-                    sheet.hide()
-                }.invokeOnCompletion { onDismiss() }
+                scope.launch { sheet.hide() }
+                    .invokeOnCompletion { onDismiss() }
             }
         }
     }
-    var showLoadingDialog by remember { mutableStateOf(false) }
-
-    LoadingDialog(
-        showLoadingDialog = showLoadingDialog,
-        onDismissRequest = { showLoadingDialog = false }
-    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -249,21 +241,14 @@ fun <T : OptionsSheetValues> OptionsSheet(
     dao: ItemDao = koinInject(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
-    val optionsSheetScope = remember {
+    val optionsSheetScope = remember(onDismiss) {
         object : OptionsSheetScope {
             override fun dismiss() {
-                scope.launch {
-                    sheet.hide()
-                }.invokeOnCompletion { onDismiss() }
+                scope.launch { sheet.hide() }
+                    .invokeOnCompletion { onDismiss() }
             }
         }
     }
-    var showLoadingDialog by remember { mutableStateOf(false) }
-
-    LoadingDialog(
-        showLoadingDialog = showLoadingDialog,
-        onDismissRequest = { showLoadingDialog = false }
-    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
