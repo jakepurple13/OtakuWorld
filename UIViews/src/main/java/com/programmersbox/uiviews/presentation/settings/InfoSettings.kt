@@ -42,6 +42,7 @@ import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.icons.Discord
 import com.programmersbox.uiviews.presentation.components.icons.Github
+import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -131,11 +132,11 @@ fun InfoSettings(
             },
             settingTitle = {
                 Column {
-                    Text(stringResource(R.string.currentVersion, appVersion()))
                     Text(
                         "Version code: ${versionCode()}",
                         style = MaterialTheme.typography.bodySmall
                     )
+                    Text(stringResource(R.string.currentVersion, appVersion()))
                 }
             },
             modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }

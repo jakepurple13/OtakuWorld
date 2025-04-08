@@ -11,12 +11,12 @@ import com.programmersbox.uiviews.presentation.lists.OtakuCustomListViewModel
 import com.programmersbox.uiviews.presentation.lists.OtakuListViewModel
 import com.programmersbox.uiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.uiviews.presentation.recent.RecentViewModel
-import com.programmersbox.uiviews.presentation.settings.MoreInfoViewModel
-import com.programmersbox.uiviews.presentation.settings.NotificationViewModel
-import com.programmersbox.uiviews.presentation.settings.SettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionListViewModel
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseViewModel
+import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
+import com.programmersbox.uiviews.presentation.settings.viewmodels.NotificationViewModel
+import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf

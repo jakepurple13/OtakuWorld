@@ -56,13 +56,13 @@ import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.components.optionsSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
+import com.programmersbox.uiviews.presentation.settings.showSourceChooser
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
-import com.programmersbox.uiviews.utils.showSourceChooser
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel

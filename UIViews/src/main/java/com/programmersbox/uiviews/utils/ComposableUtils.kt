@@ -41,7 +41,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
@@ -51,7 +50,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -65,7 +63,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -98,10 +95,7 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.settings.SourceChooserScreen
-import com.programmersbox.uiviews.presentation.settings.TranslationScreen
 import com.programmersbox.uiviews.repository.ChangingSettingsRepository
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import kotlin.properties.Delegates
 
@@ -531,48 +525,6 @@ fun HideSystemBarsWhileOnScreen() {
         changingSettingsRepository.showNavBar.tryEmit(false)
         onPauseOrDispose { changingSettingsRepository.showNavBar.tryEmit(true) }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun showSourceChooser(): MutableState<Boolean> {
-    val showSourceChooser = remember { mutableStateOf(false) }
-    val state = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
-
-    if (showSourceChooser.value) {
-        ModalBottomSheet(
-            onDismissRequest = { showSourceChooser.value = false },
-            sheetState = state,
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            SourceChooserScreen(
-                onChosen = {
-                    scope.launch { state.hide() }
-                        .invokeOnCompletion { showSourceChooser.value = false }
-                }
-            )
-        }
-    }
-
-    return showSourceChooser
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun showTranslationScreen(): MutableState<Boolean> {
-    val showTranslationScreen = remember { mutableStateOf(false) }
-
-    if (showTranslationScreen.value) {
-        ModalBottomSheet(
-            onDismissRequest = { showTranslationScreen.value = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            TranslationScreen()
-        }
-    }
-
-    return showTranslationScreen
 }
 
 @Composable

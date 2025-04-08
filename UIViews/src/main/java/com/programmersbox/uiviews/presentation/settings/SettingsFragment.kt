@@ -2,21 +2,14 @@ package com.programmersbox.uiviews.presentation.settings
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -25,9 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
@@ -45,10 +35,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,7 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -71,42 +58,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.presentation.components.CategorySetting
-import com.programmersbox.uiviews.presentation.components.ListBottomScreen
-import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
+import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
+import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import com.programmersbox.uiviews.theme.LocalCurrentSource
 import com.programmersbox.uiviews.theme.LocalHistoryDao
-import com.programmersbox.uiviews.theme.LocalItemDao
-import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.appVersion
-import com.programmersbox.uiviews.utils.showSourceChooser
-import com.programmersbox.uiviews.utils.showTranslationScreen
 import com.programmersbox.uiviews.utils.versionCode
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import java.util.Locale
 
 class ComposeSettingsDsl {
     internal var generalSettings: @Composable () -> Unit = {}
@@ -513,17 +488,15 @@ private fun SettingsScreen(
         },
         settingTitle = {
             Column {
-                Text(stringResource(R.string.currentVersion, appVersion()))
                 Text(
                     "Version code: ${versionCode()}",
                     style = MaterialTheme.typography.bodySmall
                 )
+                Text(stringResource(R.string.currentVersion, appVersion()))
             }
         },
     )
 }
-
-//TODO: Move each thing into its own file
 
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewThemeColorsSizes
@@ -609,156 +582,6 @@ private fun AccountSettings(
             .size(40.dp)
             .clickable { showDialog = true }
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SourceChooserScreen(
-    onChosen: () -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    val dataStoreHandling = koinInject<DataStoreHandling>()
-    val sourceRepository = LocalSourcesRepository.current
-    val itemDao = LocalItemDao.current
-
-    val currentService by dataStoreHandling.currentService
-        .asFlow()
-        .collectAsStateWithLifecycle(null)
-
-    var showChooser by remember { mutableStateOf<List<SourceInformation>?>(null) }
-
-    showChooser?.let { list ->
-        ModalBottomSheet(
-            onDismissRequest = { showChooser = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            ListBottomScreen(
-                includeInsetPadding = false,
-                title = stringResource(R.string.chooseASource),
-                list = list,
-                onClick = { service ->
-                    onChosen()
-                    scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
-                }
-            ) {
-                ListBottomSheetItemModel(
-                    primaryText = it.apiService.serviceName,
-                    icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
-                )
-            }
-        }
-    }
-
-    GroupBottomScreen(
-        includeInsetPadding = false,
-        title = stringResource(R.string.chooseASource),
-        list = remember {
-            combine(
-                sourceRepository.sources,
-                itemDao.getSourceOrder()
-            ) { list, order ->
-                list
-                    .filterNot { it.apiService.notWorking }
-                    .sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
-                    .groupBy { it.packageName }
-            }
-        }
-            .collectAsStateWithLifecycle(emptyMap())
-            .value,
-        onClick = { service ->
-            if (service.size == 1) {
-                onChosen()
-                service.firstOrNull()?.apiService?.serviceName?.let {
-                    scope.launch { dataStoreHandling.currentService.set(it) }
-                }
-            } else {
-                showChooser = service
-            }
-        }
-    ) {
-        ListBottomSheetItemModel(
-            primaryText = "${it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
-            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
-            overlineText = it.firstOrNull()?.packageName
-        )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun <T> GroupBottomScreen(
-    title: String,
-    list: Map<String, T>,
-    onClick: (T) -> Unit,
-    includeInsetPadding: Boolean = true,
-    navigationIcon: @Composable () -> Unit = {
-        val navController = LocalNavController.current
-        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
-    },
-    lazyListContent: LazyListScope.() -> Unit = {},
-    itemContent: (T) -> ListBottomSheetItemModel,
-) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = Modifier.navigationBarsPadding()
-    ) {
-        stickyHeader {
-            InsetSmallTopAppBar(
-                insetPadding = if (includeInsetPadding) WindowInsets.statusBars else WindowInsets(0.dp),
-                title = { Text(title) },
-                navigationIcon = navigationIcon,
-                actions = { if (list.isNotEmpty()) Text("(${list.size})") }
-            )
-            HorizontalDivider()
-        }
-        lazyListContent()
-        itemsIndexed(list.entries.toList()) { index, it ->
-            val c = itemContent(it.value)
-            ListItem(
-                modifier = Modifier.clickable { onClick(it.value) },
-                leadingContent = c.icon?.let { i -> { Icon(i, null) } },
-                headlineContent = { Text(c.primaryText) },
-                supportingContent = c.secondaryText?.let { i -> { Text(i) } },
-                overlineContent = c.overlineText?.let { i -> { Text(i) } },
-                trailingContent = c.trailingText?.let { i -> { Text(i) } }
-            )
-            if (index < list.size - 1) HorizontalDivider()
-        }
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun SourceChooserPreview() {
-    PreviewTheme {
-        SourceChooserScreen {}
-    }
-}
-
-@Composable
-fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
-    val scope = rememberCoroutineScope()
-
-    LifecycleResumeEffect(Unit) {
-        vm.loadModels()
-        onPauseOrDispose {}
-    }
-
-    ListBottomScreen(
-        title = stringResource(R.string.chooseModelToDelete),
-        list = vm.translationModels.toList(),
-        onClick = { item -> vm.deleteModel(item) },
-    ) {
-        ListBottomSheetItemModel(
-            primaryText = it.language,
-            overlineText = try {
-                Locale.forLanguageTag(it.language).displayLanguage
-            } catch (_: Exception) {
-                null
-            },
-            icon = Icons.Default.Delete
-        )
-    }
 }
 
 private fun Modifier.click(action: () -> Unit): Modifier = clickable(
