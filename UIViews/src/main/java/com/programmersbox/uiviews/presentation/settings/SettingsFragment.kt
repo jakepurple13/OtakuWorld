@@ -100,6 +100,7 @@ import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.showSourceChooser
 import com.programmersbox.uiviews.utils.showTranslationScreen
+import com.programmersbox.uiviews.utils.versionCode
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -510,9 +511,19 @@ private fun SettingsScreen(
                 modifier = Modifier.fillMaxSize()
             )
         },
-        settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
+        settingTitle = {
+            Column {
+                Text(stringResource(R.string.currentVersion, appVersion()))
+                Text(
+                    "Version code: ${versionCode()}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
     )
 }
+
+//TODO: Move each thing into its own file
 
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewThemeColorsSizes

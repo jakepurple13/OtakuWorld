@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
@@ -46,6 +48,7 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.uiviews.utils.versionCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -126,7 +129,15 @@ fun InfoSettings(
                     modifier = Modifier.fillMaxSize()
                 )
             },
-            settingTitle = { Text(stringResource(R.string.currentVersion, appVersion())) },
+            settingTitle = {
+                Column {
+                    Text(stringResource(R.string.currentVersion, appVersion()))
+                    Text(
+                        "Version code: ${versionCode()}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            },
             modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
         )
 

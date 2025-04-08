@@ -431,6 +431,18 @@ val Context.appVersion: String
         packageManager.getPackageInfo(packageName, 0)?.versionName
     }.orEmpty()
 
+val Context.versionCode: String
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        packageManager.getPackageInfo(
+            packageName,
+            PackageManager.PackageInfoFlags.of(0L)
+        ).longVersionCode
+    } else {
+        packageManager.getPackageInfo(packageName, 0)?.longVersionCode
+    }
+        ?.toString()
+        .orEmpty()
+
 @Composable
 fun appVersion(): String {
     return if (LocalInspectionMode.current) {
@@ -438,5 +450,15 @@ fun appVersion(): String {
     } else {
         val context = LocalContext.current
         remember(context) { context.appVersion }
+    }
+}
+
+@Composable
+fun versionCode(): String {
+    return if (LocalInspectionMode.current) {
+        "1"
+    } else {
+        val context = LocalContext.current
+        remember(context) { context.versionCode }
     }
 }
