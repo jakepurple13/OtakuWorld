@@ -302,7 +302,7 @@ fun OtakuCustomListScreen(
                             scope.launch {
                                 dao.removeItem(model.info)
                                 viewModel.customList?.item?.let { dao.updateFullList(it) }
-                            }
+                            }.invokeOnCompletion { showDeleteDialog = false }
                         }
                     ) { Text(stringResource(id = R.string.confirm)) }
                 },
