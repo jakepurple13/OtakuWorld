@@ -125,10 +125,10 @@ class ItemModelOptionsSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : OptionsSheetValues> optionsSheetList(
+    onOpen: (T) -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController = LocalNavController.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
-    onOpen: (T) -> Unit,
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ): MutableState<List<T>?> {
     val itemInfo = remember { mutableStateOf<List<T>?>(null) }
@@ -185,12 +185,12 @@ interface OptionsSheetValues {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : OptionsSheetValues> OptionsSheet(
-    sheet: SheetState = rememberModalBottomSheetState(true),
-    scope: CoroutineScope,
     optionsSheetValues: T,
     onOpen: () -> Unit,
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
+    scope: CoroutineScope = rememberCoroutineScope(),
+    sheet: SheetState = rememberModalBottomSheetState(true),
     dao: ItemDao = koinInject(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
@@ -232,12 +232,12 @@ fun <T : OptionsSheetValues> OptionsSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : OptionsSheetValues> OptionsSheet(
-    sheet: SheetState = rememberModalBottomSheetState(true),
-    scope: CoroutineScope,
     optionsSheetValuesList: List<T>,
     onOpen: (T) -> Unit,
     onGlobalSearch: (String) -> Unit,
     onDismiss: () -> Unit,
+    scope: CoroutineScope = rememberCoroutineScope(),
+    sheet: SheetState = rememberModalBottomSheetState(true),
     dao: ItemDao = koinInject(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
@@ -359,9 +359,6 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 }
             }
         )
-
-        //TODO: Maybe do some ocr and allow all languages in order to be able to translate?
-        // https://github.com/VrajVyas11/AI_Manga_Reader
 
         OptionsItem(
             title = stringResource(R.string.global_search_by_name),
