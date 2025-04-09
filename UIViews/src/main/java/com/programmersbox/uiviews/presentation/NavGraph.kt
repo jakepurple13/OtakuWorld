@@ -27,8 +27,9 @@ import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
 import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.presentation.history.HistoryUi
 import com.programmersbox.uiviews.presentation.lists.DeleteFromListScreen
-import com.programmersbox.uiviews.presentation.lists.ImportListScreen
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
+import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
+import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
 import com.programmersbox.uiviews.presentation.notifications.NotificationsScreen
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
@@ -255,6 +256,11 @@ private fun NavGraphBuilder.settings(
         composable<Screen.ImportListScreen> {
             trackScreen("import_list")
             ImportListScreen()
+        }
+
+        composable<Screen.ImportFullListScreen> {
+            trackScreen("import_full_list")
+            ImportFullListScreen()
         }
 
         animatedScopeComposable<Screen.NotificationScreen>(

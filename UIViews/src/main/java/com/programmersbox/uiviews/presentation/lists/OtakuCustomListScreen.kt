@@ -871,8 +871,6 @@ private fun CustomListScreenPreview() {
     }
 }
 
-//TODO: Add a bottom sheet for some info about the list.
-// This includes being able to maybe changing the cover and anything else
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class, ExperimentalLayoutApi::class)
 @Composable
 private fun InfoSheet(
@@ -991,7 +989,8 @@ private fun InfoSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),

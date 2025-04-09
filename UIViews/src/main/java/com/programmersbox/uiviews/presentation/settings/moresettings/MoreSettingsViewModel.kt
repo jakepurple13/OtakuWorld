@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.sharedutils.FirebaseDb
@@ -17,6 +18,7 @@ import com.programmersbox.uiviews.repository.FavoritesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import java.io.BufferedReader
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -26,6 +28,7 @@ import java.io.InputStreamReader
 class MoreSettingsViewModel(
     private val dao: ItemDao,
     private val favoritesRepository: FavoritesRepository,
+    private val listDao: ListDao,
 ) : ViewModel() {
 
     var importExportListStatus: ImportExportListStatus by mutableStateOf(ImportExportListStatus.Idle)
@@ -68,6 +71,34 @@ class MoreSettingsViewModel(
                     context.contentResolver.openFileDescriptor(document, "w")?.use {
                         FileOutputStream(it.fileDescriptor).use { f ->
                             f.write(exportFavorites.toJson().toByteArray())
+                        }
+                    }
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+            .onSuccess {
+                println("Written!")
+                importExportListStatus = ImportExportListStatus.Success
+            }
+            .onFailure {
+                it.printStackTrace()
+                importExportListStatus = ImportExportListStatus.Error(it)
+            }
+    }
+
+    fun writeListsToFile(document: Uri, context: Context) {
+        importExportListStatus = ImportExportListStatus.Loading
+        runCatching {
+            viewModelScope.launch {
+                try {
+                    val exportLists = withContext(Dispatchers.IO) { listDao.getAllListsSync() }
+                    context.contentResolver.openFileDescriptor(document, "w")?.use {
+                        FileOutputStream(it.fileDescriptor).use { f ->
+                            f.write(Json.encodeToString(exportLists).toByteArray())
                         }
                     }
                 } catch (e: FileNotFoundException) {

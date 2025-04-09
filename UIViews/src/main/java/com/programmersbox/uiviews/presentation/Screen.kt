@@ -106,6 +106,9 @@ sealed class Screen(val route: String) {
     data class ImportListScreen(val uri: String) : Screen("import_list")
 
     @Serializable
+    data class ImportFullListScreen(val uri: String) : Screen("import_full_list")
+
+    @Serializable
     data class GlobalSearchScreen(
         val title: String? = null,
     ) : Screen("global_search") {

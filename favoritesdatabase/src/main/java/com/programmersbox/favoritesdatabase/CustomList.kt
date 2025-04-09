@@ -19,6 +19,12 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.util.UUID
 
 @Database(
@@ -54,6 +60,10 @@ interface ListDao {
     @Transaction
     @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
     fun getAllLists(): Flow<List<CustomList>>
+
+    @Transaction
+    @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
+    suspend fun getAllListsSync(): List<CustomList>
 
     @Transaction
     @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
@@ -115,6 +125,7 @@ interface ListDao {
     suspend fun updateBiometric(uuid: UUID, useBiometric: Boolean)
 }
 
+@Serializable
 data class CustomList(
     @Embedded
     val item: CustomListItem,
@@ -125,10 +136,12 @@ data class CustomList(
     val list: List<CustomListInfo>,
 )
 
+@Serializable
 @Entity(tableName = "CustomListItem")
 data class CustomListItem(
     @PrimaryKey
     @ColumnInfo(name = "uuid")
+    @Serializable(with = UUIDSerializer::class)
     val uuid: UUID,
     @ColumnInfo(name = "name")
     val name: String,
@@ -138,11 +151,13 @@ data class CustomListItem(
     val useBiometric: Boolean = false,
 )
 
+@Serializable
 @Entity(tableName = "CustomListInfo")
 data class CustomListInfo(
     @PrimaryKey
     @ColumnInfo(defaultValue = "0c65586e-f3dc-4878-be63-b134fb46466c")
     val uniqueId: String = UUID.randomUUID().toString(),
+    @Serializable(with = UUIDSerializer::class)
     @ColumnInfo("uuid")
     val uuid: UUID,
     @ColumnInfo(name = "title")
@@ -156,3 +171,15 @@ data class CustomListInfo(
     @ColumnInfo(name = "sources")
     val source: String,
 )
+
+data object UUIDSerializer : KSerializer<UUID> {
+    override val descriptor = PrimitiveSerialDescriptor("UUID", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): UUID {
+        return UUID.fromString(decoder.decodeString())
+    }
+
+    override fun serialize(encoder: Encoder, value: UUID) {
+        encoder.encodeString(value.toString())
+    }
+}

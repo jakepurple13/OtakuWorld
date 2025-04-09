@@ -6,9 +6,10 @@ import com.programmersbox.uiviews.presentation.details.DetailsViewModel
 import com.programmersbox.uiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.uiviews.presentation.history.HistoryViewModel
-import com.programmersbox.uiviews.presentation.lists.ImportListViewModel
 import com.programmersbox.uiviews.presentation.lists.OtakuCustomListViewModel
 import com.programmersbox.uiviews.presentation.lists.OtakuListViewModel
+import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListViewModel
+import com.programmersbox.uiviews.presentation.lists.imports.ImportListViewModel
 import com.programmersbox.uiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.uiviews.presentation.recent.RecentViewModel
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionListViewModel
@@ -34,6 +35,7 @@ fun Module.viewModels() {
     viewModelOf(::DetailsViewModel)
     viewModelOf(::AllViewModel)
     viewModelOf(::ImportListViewModel)
+    viewModelOf(::ImportFullListViewModel)
     viewModelOf(::NotificationScreenViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::MoreInfoViewModel)

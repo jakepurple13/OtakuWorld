@@ -19,9 +19,11 @@ import androidx.compose.ui.res.stringResource
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.ToasterUtils
 import kotlinx.coroutines.flow.launchIn
@@ -34,6 +36,7 @@ import kotlin.time.Duration
 fun MoreSettingsScreen(
     viewModel: MoreSettingsViewModel = koinViewModel(),
 ) {
+    val navController = LocalNavController.current
     val toaster = rememberToasterState(
         onToastDismissed = { viewModel.importExportListStatus = ImportExportListStatus.Idle }
     )
@@ -99,6 +102,38 @@ fun MoreSettingsScreen(
                 indication = ripple(),
                 interactionSource = null
             ) { importLauncher.launch(arrayOf("application/json")) }
+        )
+
+        HorizontalDivider()
+
+        val exportListLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/json")
+        ) { document -> document?.let { viewModel.writeListsToFile(it, context) } }
+
+        val importListLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument()
+        ) { document ->
+            document?.let {
+                navController.navigate(Screen.ImportFullListScreen(it.toString()))
+            }
+        }
+
+        PreferenceSetting(
+            settingTitle = { Text("Export All Lists") },
+            modifier = Modifier.clickable(
+                enabled = true,
+                indication = ripple(),
+                interactionSource = null
+            ) { exportListLauncher.launch("${appName}_lists.json") }
+        )
+
+        PreferenceSetting(
+            settingTitle = { Text("Import List") },
+            modifier = Modifier.clickable(
+                enabled = true,
+                indication = ripple(),
+                interactionSource = null
+            ) { importListLauncher.launch(arrayOf("application/json")) }
         )
 
         HorizontalDivider()
