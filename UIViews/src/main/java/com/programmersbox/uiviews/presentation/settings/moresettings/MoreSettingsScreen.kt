@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -131,6 +132,12 @@ fun MoreSettingsScreen(
         )
 
         HorizontalDivider()
+
+        CategorySetting(
+            settingIcon = {
+                Icon(Icons.AutoMirrored.Filled.List, null)
+            }
+        ) { Text(stringResource(R.string.custom_lists_title)) }
 
         val exportListLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.CreateDocument("application/json")
