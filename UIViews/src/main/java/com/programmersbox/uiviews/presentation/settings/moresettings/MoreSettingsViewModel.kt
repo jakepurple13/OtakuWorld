@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
@@ -30,6 +31,8 @@ class MoreSettingsViewModel(
     private val favoritesRepository: FavoritesRepository,
     private val listDao: ListDao,
 ) : ViewModel() {
+
+    val lists = listDao.getAllLists()
 
     var importExportListStatus: ImportExportListStatus by mutableStateOf(ImportExportListStatus.Idle)
 
@@ -116,6 +119,31 @@ class MoreSettingsViewModel(
                 it.printStackTrace()
                 importExportListStatus = ImportExportListStatus.Error(it)
             }
+    }
+
+    fun writeListsToFile(
+        document: Uri,
+        context: Context,
+        exportLists: List<CustomList>,
+    ) {
+        importExportListStatus = ImportExportListStatus.Loading
+        viewModelScope.launch {
+            runCatching {
+                context.contentResolver.openFileDescriptor(document, "w")?.use {
+                    FileOutputStream(it.fileDescriptor).use { f ->
+                        f.write(Json.encodeToString(exportLists).toByteArray())
+                    }
+                }
+            }
+                .onSuccess {
+                    println("Written!")
+                    importExportListStatus = ImportExportListStatus.Success
+                }
+                .onFailure {
+                    it.printStackTrace()
+                    importExportListStatus = ImportExportListStatus.Error(it)
+                }
+        }
     }
 }
 

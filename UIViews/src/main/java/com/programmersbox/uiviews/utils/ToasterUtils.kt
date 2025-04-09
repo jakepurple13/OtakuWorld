@@ -52,7 +52,7 @@ fun ToasterSetup(
         darkTheme = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES ||
                 (isSystemInDarkTheme() && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
         alignment = alignment,
-        modifier = modifier
+        modifier = modifier.padding(LocalNavHostPadding.current)
     )
 }
 
