@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,6 +37,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -52,6 +55,7 @@ import com.programmersbox.uiviews.presentation.lists.ListChoiceScreen
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LocalNavController
+import eu.wewox.textflow.material3.TextFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -70,12 +74,12 @@ fun optionsSheet(
     itemInfo
         .value
         ?.let { ItemModelOptionsSheet(itemModel = it) }
-        ?.let {
+        ?.let { item ->
             OptionsSheet(
                 sheet = sheetState,
                 scope = scope,
-                optionsSheetValues = it,
-                onOpen = { navController.navigateToDetails(it.itemModel) },
+                optionsSheetValues = item,
+                onOpen = { navController.navigateToDetails(item.itemModel) },
                 onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
                 onDismiss = { itemInfo.value = null },
                 moreContent = moreContent
@@ -98,11 +102,11 @@ fun optionsSheetList(
     itemInfo
         .value
         ?.map { ItemModelOptionsSheet(it) }
-        ?.let {
+        ?.let { item ->
             OptionsSheet(
                 sheet = sheetState,
                 scope = scope,
-                optionsSheetValuesList = it,
+                optionsSheetValuesList = item,
                 onOpen = { navController.navigateToDetails(it.itemModel) },
                 onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
                 onDismiss = { itemInfo.value = null },
@@ -133,11 +137,11 @@ fun <T : OptionsSheetValues> optionsSheetList(
 ): MutableState<List<T>?> {
     val itemInfo = remember { mutableStateOf<List<T>?>(null) }
 
-    itemInfo.value?.let {
+    itemInfo.value?.let { items ->
         OptionsSheet(
             sheet = sheetState,
             scope = scope,
-            optionsSheetValuesList = it,
+            optionsSheetValuesList = items,
             onOpen = { onOpen(it) },
             onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
             onDismiss = { itemInfo.value = null },
@@ -159,12 +163,12 @@ fun <T : OptionsSheetValues> optionsSheet(
 ): MutableState<T?> {
     val itemInfo = remember { mutableStateOf<T?>(null) }
 
-    itemInfo.value?.let {
+    itemInfo.value?.let { item ->
         OptionsSheet(
             sheet = sheetState,
             scope = scope,
-            optionsSheetValues = it,
-            onOpen = { onOpen(it) },
+            optionsSheetValues = item,
+            onOpen = { onOpen(item) },
             onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
             onDismiss = { itemInfo.value = null },
             moreContent = moreContent
@@ -325,24 +329,42 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         .doesNotificationExistFlow(url)
         .collectAsStateWithLifecycle(false)
 
-    ListItem(
-        leadingContent = {
+    val listItemColors = ListItemDefaults.colors()
+
+    TextFlow(
+        text = buildAnnotatedString {
+            withStyle(
+                MaterialTheme.typography.labelSmall
+                    .copy(color = listItemColors.overlineColor)
+                    .toSpanStyle()
+            ) { appendLine(serviceName) }
+
+            withStyle(
+                MaterialTheme.typography.bodyLarge
+                    .copy(color = listItemColors.headlineColor)
+                    .toSpanStyle()
+            ) { appendLine(title) }
+
+            withStyle(
+                MaterialTheme.typography.bodySmall
+                    .copy(color = listItemColors.supportingTextColor)
+                    .toSpanStyle()
+            ) { appendLine(description.trim()) }
+        },
+        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+        obstacleContent = {
             val logo = koinInject<AppLogo>().logo
             ImageLoaderChoice(
                 imageUrl = imageUrl,
                 name = title,
                 placeHolder = rememberDrawablePainter(logo),
                 modifier = Modifier
+                    .padding(end = 16.dp)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                     .clip(MaterialTheme.shapes.small)
             )
         },
-        overlineContent = { Text(serviceName) },
-        headlineContent = { Text(title) },
-        supportingContent = { Text(description) },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        )
+        modifier = Modifier.padding(16.dp)
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

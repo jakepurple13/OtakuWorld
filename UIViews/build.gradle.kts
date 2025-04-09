@@ -171,4 +171,6 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     implementation(libs.androidx.core.performance)
+
+    implementation(libs.textflow.material3)
 }

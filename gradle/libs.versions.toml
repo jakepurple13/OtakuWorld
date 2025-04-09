@@ -35,6 +35,7 @@ jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.2"
 okhttpVersion = "4.12.0"
 ktorVersion = "3.1.2"
+textflowMaterial3 = "1.2.1"
 workVersion = "2.10.0"
 ziplineVersion = "1.1.0"
 landscapist = "2.4.7"
@@ -138,6 +139,7 @@ composeMaterialIconsExtended = { group = "androidx.compose.material", name = "ma
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+textflow-material3 = { module = "io.github.oleksandrbalan:textflow-material3", version.ref = "textflowMaterial3" }
 tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
 tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha12" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
