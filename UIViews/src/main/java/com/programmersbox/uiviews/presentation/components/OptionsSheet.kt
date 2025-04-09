@@ -349,7 +349,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 MaterialTheme.typography.bodySmall
                     .copy(color = listItemColors.supportingTextColor)
                     .toSpanStyle()
-            ) { appendLine(description.trim()) }
+            ) { appendLine(description.trimIndent()) }
         },
         lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
         obstacleContent = {
