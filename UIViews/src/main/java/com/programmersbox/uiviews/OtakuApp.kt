@@ -5,6 +5,7 @@ package com.programmersbox.uiviews
 import android.app.Application
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import android.util.Log
 import androidx.annotation.CallSuper
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -159,6 +160,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         get<SourceLoader>().load()
 
         val dataStoreHandling = get<DataStoreHandling>()
+        val settingsHandling = get<SettingsHandling>()
 
         GlobalScope.launch(Dispatchers.IO) {
             val forLaterName = getString(R.string.for_later)
@@ -231,12 +233,18 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         shortcutSetup()
 
-        runCatching { if (BuildConfig.FLAVOR != "noFirebase") remoteConfigSetup(dataStoreHandling) }
+        runCatching {
+            if (BuildConfig.FLAVOR != "noFirebase")
+                remoteConfigSetup(
+                    dataStoreHandling = dataStoreHandling,
+                    settingsHandling = settingsHandling
+                )
+        }
     }
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .setMinimumLoggingLevel(Log.DEBUG)
             .build()
 
     open fun onCreated() {}
@@ -265,7 +273,10 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         manager.dynamicShortcuts = shortcuts
     }
 
-    private fun remoteConfigSetup(dataStoreHandling: DataStoreHandling) {
+    private fun remoteConfigSetup(
+        dataStoreHandling: DataStoreHandling,
+        settingsHandling: SettingsHandling,
+    ) {
         val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
             //Official docs say to only have this set for debug builds
@@ -273,6 +284,20 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
         remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
+
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                GlobalScope.launch {
+                    RemoteConfigKeys.entries.forEach {
+                        it.setDataStoreValue(
+                            dataStoreHandling = dataStoreHandling,
+                            settingsHandling = settingsHandling,
+                            remoteConfig = remoteConfig
+                        )
+                    }
+                }
+            }
+        }
 
         //Updates
         remoteConfig.addOnConfigUpdateListener(
@@ -290,6 +315,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                                         .onSuccess {
                                             it.setDataStoreValue(
                                                 dataStoreHandling = dataStoreHandling,
+                                                settingsHandling = settingsHandling,
                                                 remoteConfig = remoteConfig
                                             )
                                         }

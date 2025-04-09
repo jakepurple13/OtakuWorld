@@ -4,4 +4,9 @@
         <key>show_gemini</key>
         <value>false</value>
     </entry>
+
+    <entry>
+        <key>bridge</key>
+        <value>[]</value>
+    </entry>
 </defaults>
