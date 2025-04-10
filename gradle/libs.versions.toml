@@ -175,7 +175,7 @@ glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glide
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
 glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta01"
 
-androidCore = "androidx.core:core-ktx:1.15.0"
+androidCore = "androidx.core:core-ktx:1.16.0"
 appCompat = "androidx.appcompat:appcompat:1.7.0"
 material = "com.google.android.material:material:1.12.0"
 
