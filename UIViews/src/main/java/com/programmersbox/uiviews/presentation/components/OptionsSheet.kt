@@ -447,7 +447,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 )
             } else {
                 OptionsItem(
-                    title = "Remove from saved",
+                    title = "Remove from Saved",
                     onClick = {
                         scope.launch {
                             dao.getNotificationItemFlow(url)
