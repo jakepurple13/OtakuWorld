@@ -40,7 +40,6 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.checkers.AppCheckWorker
-import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.checkers.UpdateNotification
@@ -50,7 +49,8 @@ import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.di.workers
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.PerformanceClass
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -64,7 +64,6 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
@@ -116,6 +115,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
         createNotificationChannel("sourceUpdate", importance = NotificationChannelImportance.DEFAULT)
         createNotificationGroup("sources")
+        createNotificationChannel("download_channel", importance = NotificationChannelImportance.DEFAULT)
 
         startKoin {
             androidLogger()
@@ -135,10 +135,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     single { DataStoreHandling(get()) }
                     single { DownloadAndInstaller(get()) }
                     single { PerformanceClass.create() }
-                    workerOf(::UpdateFlowWorker)
-                    workerOf(::AppCheckWorker)
-                    workerOf(::SourceUpdateChecker)
-                    workerOf(::NotifySingleWorker)
+
+                    workers()
                     viewModels()
                     databases()
                     repository()

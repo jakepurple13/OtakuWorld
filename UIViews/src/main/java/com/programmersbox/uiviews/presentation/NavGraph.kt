@@ -39,6 +39,7 @@ import com.programmersbox.uiviews.presentation.settings.NotificationSettings
 import com.programmersbox.uiviews.presentation.settings.PlaySettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
@@ -137,7 +138,8 @@ private fun NavGraphBuilder.settings(
                 moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
                 moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
                 geminiClick = { navController.navigate(Screen.GeminiScreen) },
-                sourcesOrderClick = { navController.navigate(Screen.OrderScreen) }
+                sourcesOrderClick = { navController.navigate(Screen.OrderScreen) },
+                appDownloadsClick = { navController.navigate(Screen.DownloadInstallScreen) },
             )
         }
 
@@ -299,6 +301,10 @@ private fun NavGraphBuilder.settings(
             composable<Screen.DebugScreen> {
                 DebugView()
             }
+        }
+
+        composable<Screen.DownloadInstallScreen> {
+            DownloadStateScreen()
         }
     }
 

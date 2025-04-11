@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.GetApp
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -120,6 +121,7 @@ fun SettingScreen(
     moreSettingsClick: () -> Unit = {},
     geminiClick: () -> Unit = {},
     sourcesOrderClick: () -> Unit = {},
+    appDownloadsClick: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -158,7 +160,8 @@ fun SettingScreen(
                 moreInfoClick = moreInfoClick,
                 moreSettingsClick = moreSettingsClick,
                 geminiClick = geminiClick,
-                sourcesOrderClick = sourcesOrderClick
+                sourcesOrderClick = sourcesOrderClick,
+                appDownloadsClick = appDownloadsClick
             )
         }
     }
@@ -295,6 +298,7 @@ private fun SettingsScreen(
     moreSettingsClick: () -> Unit,
     geminiClick: () -> Unit,
     sourcesOrderClick: () -> Unit,
+    appDownloadsClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
@@ -364,6 +368,16 @@ private fun SettingsScreen(
             indication = ripple(),
             interactionSource = null,
             onClick = historyClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text("App Downloads") },
+        settingIcon = { Icon(Icons.Default.GetApp, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = ripple(),
+            interactionSource = null,
+            onClick = appDownloadsClick
         )
     )
 
@@ -519,7 +533,8 @@ private fun SettingsPreview() {
                 moreInfoClick = {},
                 moreSettingsClick = {},
                 geminiClick = {},
-                sourcesOrderClick = {}
+                sourcesOrderClick = {},
+                appDownloadsClick = {}
             )
         }
     }

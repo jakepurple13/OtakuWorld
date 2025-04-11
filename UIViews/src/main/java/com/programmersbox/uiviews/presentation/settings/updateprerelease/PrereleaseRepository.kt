@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.settings.updateprerelease
 
+import android.content.Context
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -10,7 +11,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-class PrereleaseRepository {
+class PrereleaseRepository(
+    context: Context,
+) {
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(

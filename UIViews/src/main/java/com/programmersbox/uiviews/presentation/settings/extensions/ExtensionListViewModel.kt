@@ -16,7 +16,8 @@ import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -28,6 +29,7 @@ class ExtensionListViewModel(
     otakuWorldCatalog: OtakuWorldCatalog,
     settingsHandling: SettingsHandling,
     val downloadAndInstaller: DownloadAndInstaller,
+    private val downloadStateRepository: DownloadStateRepository,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<SourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()
@@ -47,9 +49,10 @@ class ExtensionListViewModel(
     }
 
     fun downloadAndInstall(downloadLink: String, destinationPath: String) {
-        downloadAndInstaller
+        /*downloadAndInstaller
             .downloadAndInstall(downloadLink, destinationPath)
-            .launchIn(viewModelScope)
+            .launchIn(viewModelScope)*/
+        downloadStateRepository.downloadAndInstall(downloadLink)
     }
 
     fun uninstall(packageName: String) {

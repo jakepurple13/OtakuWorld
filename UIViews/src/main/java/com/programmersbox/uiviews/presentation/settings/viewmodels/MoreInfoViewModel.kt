@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch

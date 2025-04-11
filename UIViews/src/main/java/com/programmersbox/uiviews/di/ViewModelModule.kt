@@ -12,6 +12,7 @@ import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListViewM
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListViewModel
 import com.programmersbox.uiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.uiviews.presentation.recent.RecentViewModel
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateViewModel
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionListViewModel
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseViewModel
@@ -40,4 +41,5 @@ fun Module.viewModels() {
     viewModelOf(::SettingsViewModel)
     viewModelOf(::MoreInfoViewModel)
     viewModelOf(::PrereleaseViewModel)
+    viewModelOf(::DownloadStateViewModel)
 }

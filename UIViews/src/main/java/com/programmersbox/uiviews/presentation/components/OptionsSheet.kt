@@ -382,6 +382,40 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
             }
         )
 
+        Crossfade(isSaved) { target ->
+            if (!target) {
+                OptionsItem(
+                    title = stringResource(id = R.string.save_for_later),
+                    onClick = {
+                        scope.launch {
+                            dao.insertNotification(
+                                NotificationItem(
+                                    id = "$title$url$imageUrl$serviceName$description".hashCode(),
+                                    url = url,
+                                    summaryText = "$title had an update",
+                                    notiTitle = title,
+                                    imageUrl = imageUrl,
+                                    source = serviceName,
+                                    contentTitle = title
+                                )
+                            )
+                        }
+                    }
+                )
+            } else {
+                OptionsItem(
+                    title = "Remove from Saved",
+                    onClick = {
+                        scope.launch {
+                            dao.getNotificationItemFlow(url)
+                                .firstOrNull()
+                                ?.let { dao.deleteNotification(it) }
+                        }
+                    }
+                )
+            }
+        }
+
         OptionsItem(
             title = stringResource(R.string.global_search_by_name),
             onClick = {
@@ -420,44 +454,11 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 )
             }
         }
+
         OptionsItem(
             title = stringResource(id = R.string.add_to_list),
             onClick = { showLists = true }
         )
-
-        Crossfade(isSaved) { target ->
-            if (!target) {
-                OptionsItem(
-                    title = stringResource(id = R.string.save_for_later),
-                    onClick = {
-                        scope.launch {
-                            dao.insertNotification(
-                                NotificationItem(
-                                    id = "$title$url$imageUrl$serviceName$description".hashCode(),
-                                    url = url,
-                                    summaryText = "$title had an update",
-                                    notiTitle = title,
-                                    imageUrl = imageUrl,
-                                    source = serviceName,
-                                    contentTitle = title
-                                )
-                            )
-                        }
-                    }
-                )
-            } else {
-                OptionsItem(
-                    title = "Remove from Saved",
-                    onClick = {
-                        scope.launch {
-                            dao.getNotificationItemFlow(url)
-                                .firstOrNull()
-                                ?.let { dao.deleteNotification(it) }
-                        }
-                    }
-                )
-            }
-        }
 
         moreContent(optionsSheetValues)
     }

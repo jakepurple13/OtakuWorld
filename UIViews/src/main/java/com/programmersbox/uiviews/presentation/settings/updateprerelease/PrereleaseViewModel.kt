@@ -6,15 +6,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.uiviews.utils.DownloadAndInstallStatus
-import com.programmersbox.uiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class PrereleaseViewModel(
-    private val downloadAndInstaller: DownloadAndInstaller,
     private val prereleaseRepository: PrereleaseRepository,
+    private val downloadStateRepository: DownloadStateRepository,
 ) : ViewModel() {
 
     var uiState by mutableStateOf<PrereleaseUiState>(PrereleaseUiState.Loading)
@@ -23,6 +23,15 @@ class PrereleaseViewModel(
 
     init {
         reload()
+
+        downloadStateRepository
+            .downloadList
+            .onEach { list ->
+                list.forEach {
+                    downloadMap[it.url] = it.status
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun reload() {
@@ -46,10 +55,11 @@ class PrereleaseViewModel(
     fun update(
         apkString: String,
     ) {
-        downloadAndInstaller
+        downloadStateRepository.downloadAndInstall(apkString)
+        /*downloadAndInstaller
             .downloadAndInstall(apkString, "")
             .onEach { downloadMap[apkString] = it }
-            .launchIn(viewModelScope)
+            .launchIn(viewModelScope)*/
     }
 }
 

@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.di
 
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseRepository
 import com.programmersbox.uiviews.repository.ChangingSettingsRepository
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
@@ -16,4 +17,5 @@ fun Module.repository() {
     singleOf(::NotificationRepository)
     singleOf(::FavoritesRepository)
     singleOf(::PrereleaseRepository)
+    singleOf(::DownloadStateRepository)
 }

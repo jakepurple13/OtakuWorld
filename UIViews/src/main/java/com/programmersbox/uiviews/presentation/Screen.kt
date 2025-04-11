@@ -127,6 +127,9 @@ sealed class Screen(val route: String) {
 
     @Serializable
     data object OrderScreen : Screen("order")
+
+    @Serializable
+    data object DownloadInstallScreen : Screen("download_install")
 }
 
 fun NavController.navigateToDetails1(model: ItemModel) = navigate(
