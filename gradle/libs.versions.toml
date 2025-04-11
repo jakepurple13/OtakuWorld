@@ -252,7 +252,7 @@ swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
-zoomableModifier = "net.engawapg.lib:zoomable:2.5.0"
+zoomableModifier = "net.engawapg.lib:zoomable:2.6.0"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
