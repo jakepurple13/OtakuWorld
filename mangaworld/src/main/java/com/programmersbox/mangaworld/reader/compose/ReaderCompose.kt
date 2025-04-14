@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -73,8 +74,9 @@ import eu.wewox.pagecurl.page.PageCurlState
 import eu.wewox.pagecurl.page.rememberPageCurlState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import net.engawapg.lib.zoomable.rememberZoomState
-import net.engawapg.lib.zoomable.zoomable
+import net.engawapg.lib.zoomable.zoomableWithScroll
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import kotlin.math.absoluteValue
@@ -385,7 +387,7 @@ fun ReadView(
                         modifier = if (imageLoaderType == ImageLoaderType.Panpf) {
                             Modifier
                         } else {
-                            Modifier.zoomable(
+                            Modifier.zoomableWithScroll(
                                 zoomState = rememberZoomState(),
                                 enableOneFingerZoom = false,
                                 onTap = { readVm.showInfo = !readVm.showInfo }
