@@ -18,6 +18,8 @@ class AccountViewModel : ViewModel() {
         FirebaseAuthentication.addAuthStateListener { p0 -> accountInfo = p0 }
     }
 
+    fun isLoggedIn(): Boolean = FirebaseAuthentication.isLoggedIn()
+
     fun signInOrOut(context: Context, activity: ComponentActivity) {
         FirebaseAuthentication.signInOrOut(context, activity, R.string.logOut, R.string.areYouSureLogOut, R.string.yes, R.string.no)
     }

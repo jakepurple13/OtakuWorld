@@ -31,6 +31,7 @@ import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
 import com.programmersbox.uiviews.presentation.notifications.NotificationsScreen
+import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.presentation.settings.GeneralSettings
@@ -60,6 +61,12 @@ fun NavGraphBuilder.navGraph(
     navController: NavHostController,
     notificationLogo: NotificationLogo,
 ) {
+    composable<Screen.OnboardingScreen> {
+        OnboardingScreen(
+            navController = navController,
+        )
+    }
+
     animatedScopeComposable<Screen.RecentScreen>(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start) }

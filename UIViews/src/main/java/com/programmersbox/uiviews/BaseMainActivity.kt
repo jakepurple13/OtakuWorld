@@ -150,6 +150,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -202,6 +203,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
             }
             .launchIn(lifecycleScope)
+
+        val startDestination = if (runBlocking { dataStoreHandling.hasGoneThroughOnboarding.getOrNull() } == false) {
+            Screen.OnboardingScreen
+        } else {
+            Screen.RecentScreen
+        }
 
         setContent {
             navController = rememberNavController(
@@ -305,7 +312,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 ) {
                                     NavHost(
                                         navController = navController,
-                                        startDestination = Screen.RecentScreen,
+                                        //startDestination = Screen.RecentScreen,
+                                        startDestination = startDestination,
                                         modifier = Modifier.fillMaxSize()
                                     ) { navGraph(customPreferences, windowSize, genericInfo, navController, notificationLogo) }
                                 }

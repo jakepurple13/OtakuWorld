@@ -69,4 +69,10 @@ class DataStoreHandling(context: Context) {
         key = longPreferencesKey("updateHourCheck"),
         defaultValue = 1
     )
+
+    val hasGoneThroughOnboarding = DataStoreHandler(
+        context = context,
+        key = booleanPreferencesKey("hasGoneThroughOnboarding"),
+        defaultValue = false
+    )
 }
