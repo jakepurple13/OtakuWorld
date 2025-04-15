@@ -65,7 +65,7 @@ object FirebaseAuthentication : KoinComponent {
 
     private var update: ((FirebaseAuth?) -> Unit)? = null
 
-    fun isLoggedIn(): Boolean = currentUser?.let { CustomFirebaseUser(it.displayName, it.photoUrl) }
+    fun isLoggedIn(): Boolean = currentUser?.let { CustomFirebaseUser(it.displayName, it.photoUrl) } != null
 
     fun addAuthStateListener(update: (CustomFirebaseUser?) -> Unit) {
         this.update = { u -> update(u?.currentUser?.let { CustomFirebaseUser(it.displayName, it.photoUrl) }) }

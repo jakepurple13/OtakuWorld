@@ -173,4 +173,6 @@ dependencies {
     implementation(libs.androidx.core.performance)
 
     implementation(libs.textflow.material3)
+
+    implementation(libs.lottie.compose)
 }

@@ -1,5 +1,8 @@
 package com.programmersbox.uiviews.presentation.onboarding
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,11 +19,16 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,10 +41,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.programmersbox.sharedutils.AppLogo
+import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.asState
@@ -44,6 +57,7 @@ import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
+import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.rememberDrawablePainter
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -52,7 +66,6 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(
-    viewModel: AccountViewModel = koinViewModel(),
     appLogo: AppLogo = koinInject(),
     navController: NavController,
     dataStoreHandling: DataStoreHandling = koinInject(),
@@ -76,7 +89,9 @@ fun OnboardingScreen(
     val appName = stringResource(R.string.app_name)
 
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState { 3 }
+    val pagerState = rememberPagerState {
+        2 + if (BuildConfig.FLAVOR == "full") 1 else 0
+    }
 
     NormalOtakuScaffold(
         topBar = {
@@ -92,9 +107,7 @@ fun OnboardingScreen(
             BottomAppBar(
                 actions = {
                     TextButton(
-                        onClick = {
-                            hasSeenOnboarding = true
-                        }
+                        onClick = { hasSeenOnboarding = true }
                     ) { Text("Skip") }
 
                     Row(
@@ -142,6 +155,7 @@ fun OnboardingScreen(
         //TODO: Add login screen
         // add account info screen
         // maybe even see if we can get the account created when
+        // maybe add a theme screen here
 
         HorizontalPager(
             state = pagerState,
@@ -154,8 +168,106 @@ fun OnboardingScreen(
                 0 -> WelcomeContent(
                     appLogo = appLogo,
                 )
+
+                //TODO: Maybe make an enum for the flavors?
+                1 -> if (BuildConfig.FLAVOR == "full") {
+                    AccountContent()
+                } else {
+                    FinishContent()
+                }
+
+                pagerState.pageCount -> FinishContent()
             }
         }
+    }
+}
+
+@Composable
+private fun AccountContent(
+    viewModel: AccountViewModel = koinViewModel(),
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Text("Log in to save all your favorites and chapters/episodes read to the cloud so you can access them on any device!")
+
+        Text("No one who works on these apps get access to your data.")
+
+        Crossfade(
+            viewModel.accountInfo
+        ) { target ->
+            if (target == null) {
+                val context = LocalContext.current
+                val activity = LocalActivity.current
+
+                Card(
+                    onClick = {
+                        (activity as? ComponentActivity)?.let {
+                            viewModel.signInOrOut(context, it)
+                        }
+                    }
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Log in") },
+                        leadingContent = { Icon(Icons.Default.AccountCircle, null) }
+                    )
+                }
+            } else {
+                Card {
+                    ListItem(
+                        headlineContent = { Text(target.displayName.orEmpty()) },
+                        leadingContent = {
+                            GlideImage(
+                                imageModel = { target.photoUrl },
+                                loading = { Icon(Icons.Default.AccountCircle, null) },
+                                failure = { Icon(Icons.Default.AccountCircle, null) },
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .size(40.dp)
+                            )
+                        }
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun FinishContent() {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(150.dp)
+        ) {
+            val composition by rememberLottieComposition(
+                spec = LottieCompositionSpec.RawRes(R.raw.successfully_done)
+            )
+
+            LottieAnimation(
+                composition = composition,
+                modifier = Modifier.matchParentSize()
+            )
+        }
+
+        HorizontalDivider()
+
+        Text(
+            "All done! Press finish to start using the app!",
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
@@ -188,8 +300,7 @@ private fun WelcomeContent(
 
         Text(
             stringResource(R.string.welcome_description, appName),
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
