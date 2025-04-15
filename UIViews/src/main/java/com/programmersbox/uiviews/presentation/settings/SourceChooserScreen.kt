@@ -46,6 +46,7 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,6 +90,8 @@ fun SourceChooserScreen(
 
     var showChooser by remember { mutableStateOf<List<SourceInformation>?>(null) }
 
+    val languageCode = remember { Locale.getDefault().language }
+
     showChooser?.let { list ->
         ModalBottomSheet(
             onDismissRequest = { showChooser = null },
@@ -101,6 +104,34 @@ fun SourceChooserScreen(
                 onClick = { service ->
                     onChosen()
                     scope.launch { dataStoreHandling.currentService.set(service.apiService.serviceName) }
+                },
+                lazyListContent = {
+                    list
+                        .find {
+                            println(it.apiService.serviceName)
+                            println("${it.name}$languageCode")
+                            it.apiService.serviceName == "${it.name}$languageCode"
+                        }
+                        ?.let {
+                            ListBottomSheetItemModel(
+                                primaryText = it.apiService.serviceName,
+                                icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
+                            )
+                        }
+                        ?.let { c ->
+                            item {
+                                ListItem(
+                                    modifier = Modifier.clickable {
+                                        onChosen()
+                                        scope.launch { dataStoreHandling.currentService.set(c.primaryText) }
+                                    },
+                                    leadingContent = c.icon?.let { i -> { Icon(i, null) } },
+                                    headlineContent = { Text("Current Language Source") },
+                                    supportingContent = { Text(c.primaryText) }
+                                )
+                                HorizontalDivider()
+                            }
+                        }
                 }
             ) {
                 ListBottomSheetItemModel(
