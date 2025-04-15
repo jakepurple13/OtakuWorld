@@ -87,6 +87,40 @@ fun <T> rememberPreference(
 }
 
 @Composable
+fun <T> rememberPreferenceNullable(
+    key: Preferences.Key<T>,
+    defaultValue: T?,
+): MutableState<T?> {
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val state by remember {
+        context.dataStore.data
+            .map { it[key] ?: defaultValue }
+    }.collectAsStateWithLifecycle(initialValue = defaultValue)
+
+    return remember(state) {
+        object : MutableState<T?> {
+            override var value: T?
+                get() = state
+                set(value) {
+                    coroutineScope.launch {
+                        context.dataStore.edit {
+                            if (value == null) {
+                                it.remove(key)
+                            } else {
+                                it[key] = value
+                            }
+                        }
+                    }
+                }
+
+            override fun component1() = value
+            override fun component2(): (T?) -> Unit = { value = it }
+        }
+    }
+}
+
+@Composable
 fun <T, R> rememberPreference(
     key: Preferences.Key<T>,
     mapToType: (T) -> R?,

@@ -81,6 +81,8 @@ arcore = "1.0.0-alpha03"
 composeXr = "1.0.0-alpha03"
 scenecore = "1.0.0-alpha03"
 
+lottieCompose = "6.6.6"
+
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -361,6 +363,8 @@ androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore"
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
 androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
 androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha06" }
+
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 
 [bundles]
 compose = [

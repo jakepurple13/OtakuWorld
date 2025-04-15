@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.datastore
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.firstOrNull
@@ -79,3 +80,6 @@ fun <T> DataStoreHandler<T>.asState() = rememberPreference(key, defaultValue)
 
 @Composable
 fun <T, R> DataStoreHandlerObject<T, R>.asState() = rememberPreference(key, mapToType, mapToKey, defaultValue)
+
+@Composable
+fun <T> DataStoreHandlerNullable<T>.asState(): MutableState<T?> = rememberPreferenceNullable(key, null)
