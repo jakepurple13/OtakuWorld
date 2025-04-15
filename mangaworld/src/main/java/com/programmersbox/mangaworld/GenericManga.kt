@@ -51,6 +51,7 @@ import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.compose.ReadView
 import com.programmersbox.mangaworld.reader.compose.ReadViewModel
+import com.programmersbox.mangaworld.reader.compose.TranslatorStuff
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
@@ -94,6 +95,10 @@ val appModule = module {
     single { ChapterHolder() }
     single { MangaSettingsHandling(get()) }
     viewModelOf(::ReadViewModel)
+
+    //TODO: Maybe do some ocr and allow all languages in order to be able to translate?
+    // https://github.com/VrajVyas11/AI_Manga_Reader
+    single { TranslatorStuff() }
 }
 
 class ChapterHolder {

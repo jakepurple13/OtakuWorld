@@ -88,4 +88,12 @@ dependencies {
     implementation(libs.sonner)
 
     //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+
+    // To recognize Latin script
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    // To recognize Japanese script
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+
+    implementation(libs.mlkitTranslate)
+    implementation(libs.mlkitLanguage)
 }
