@@ -87,6 +87,7 @@ import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
 import com.programmersbox.uiviews.datastore.rememberSwatchType
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
+import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.BackButton
@@ -461,6 +462,7 @@ fun ChapterItem(
     markAs: (ChapterModel, Boolean) -> Unit,
 ) {
     val historyDao = LocalHistoryDao.current
+    val favoritesRepository: FavoritesRepository = koinInject()
     val navController = LocalNavController.current
     val genericInfo = LocalGenericInfo.current
     val context = LocalContext.current
@@ -469,6 +471,7 @@ fun ChapterItem(
 
     fun insertRecent() {
         scope.launch(Dispatchers.IO) {
+            if (favoritesRepository.isIncognito(infoModel.source.serviceName)) return@launch
             historyDao.insertRecentlyViewed(
                 RecentModel(
                     title = infoModel.title,
