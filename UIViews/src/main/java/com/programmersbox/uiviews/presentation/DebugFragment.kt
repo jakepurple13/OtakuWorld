@@ -50,6 +50,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.asState
 import com.programmersbox.uiviews.presentation.components.CheckBoxSetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowMoreSetting
@@ -60,6 +62,7 @@ import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
+import org.koin.compose.koinInject
 import java.util.Calendar
 
 @SuppressLint("ComposeContentEmitterReturningValues")
@@ -75,6 +78,8 @@ fun DebugView() {
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val sourceRepo = LocalSourcesRepository.current
+
+    val dataStoreHandling: DataStoreHandling = koinInject()
 
     val sources by sourceRepo.sources.collectAsStateWithLifecycle(initialValue = emptyList())
 
@@ -92,6 +97,21 @@ fun DebugView() {
     ) { p ->
         val moreSettings = remember { genericInfo.debugMenuItem(context) }
         LazyColumn(contentPadding = p) {
+
+            item {
+                var onboarding by dataStoreHandling.hasGoneThroughOnboarding.asState()
+                PreferenceSetting(
+                    settingTitle = { Text("Onboarding") },
+                    settingIcon = { Icon(Icons.Default.Deck, null) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) {
+                        onboarding = false
+                        navController.navigate(Screen.OnboardingScreen)
+                    }
+                )
+            }
             /*item {
                 sources.forEach {
                     PreferenceSetting(

@@ -64,6 +64,7 @@ import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoad
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -80,6 +81,9 @@ fun ImportListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     vm: ImportListViewModel = koinViewModel(),
 ) {
+    //TODO: Might be removing this
+    HideSystemBarsWhileOnScreen()
+
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())

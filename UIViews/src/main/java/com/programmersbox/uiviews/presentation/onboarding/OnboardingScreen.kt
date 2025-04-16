@@ -2,16 +2,20 @@ package com.programmersbox.uiviews.presentation.onboarding
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,9 +27,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,10 +48,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -68,11 +81,21 @@ import com.programmersbox.uiviews.datastore.asState
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.ListSetting
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.uiviews.presentation.components.PreferenceSetting
+import com.programmersbox.uiviews.presentation.components.ShowWhen
+import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.presentation.components.seedColor
+import com.programmersbox.uiviews.presentation.settings.BlurSetting
+import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
+import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
+import com.programmersbox.uiviews.presentation.settings.ShareChapterSettings
+import com.programmersbox.uiviews.presentation.settings.ShowDownloadSettings
+import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
+import com.programmersbox.uiviews.utils.PerformanceClass
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.rememberDrawablePainter
 import kotlinx.coroutines.launch
@@ -82,11 +105,29 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(
-    appLogo: AppLogo = koinInject(),
     navController: NavController,
+    customPreferences: ComposeSettingsDsl,
+    appLogo: AppLogo = koinInject(),
     dataStoreHandling: DataStoreHandling = koinInject(),
 ) {
     HideSystemBarsWhileOnScreen()
+
+    val onboardingScope = remember {
+        OnboardingScopeImpl {
+            item { WelcomeContent(appLogo = appLogo) }
+
+            item { ThemeContent() }
+
+            item { AccountContent(navController = navController) }
+
+            item { GeneralContent() }
+
+            apply(customPreferences.onboardingSettings)
+
+            //This should ALWAYS be last
+            item { FinishContent() }
+        }
+    }
 
     var hasSeenOnboarding by dataStoreHandling
         .hasGoneThroughOnboarding
@@ -105,26 +146,58 @@ fun OnboardingScreen(
     val appName = stringResource(R.string.app_name)
 
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState {
-        3 + if (BuildConfig.FLAVOR == "full") 1 else 0
-    }
+    val pagerState = rememberPagerState { onboardingScope.intervals.size }
 
     NormalOtakuScaffold(
         topBar = {
             Column {
                 TopAppBar(
                     title = { Text("Welcome!") },
-                    subtitle = { Text(appName) }
+                    subtitle = { Text(appName) },
+                    actions = {
+                        var skipOnboarding by remember { mutableStateOf(false) }
+
+                        if (skipOnboarding) {
+                            AlertDialog(
+                                onDismissRequest = { skipOnboarding = false },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            hasSeenOnboarding = true
+                                            skipOnboarding = false
+                                        }
+                                    ) { Text("Confirm") }
+                                },
+                                dismissButton = {
+                                    TextButton(
+                                        onClick = { skipOnboarding = false }
+                                    ) { Text("Dismiss") }
+                                },
+                                title = { Text("Skip Onboarding?") },
+                                text = { Text("Are you sure you want to skip onboarding?") }
+                            )
+                        }
+
+                        TextButton(
+                            onClick = { skipOnboarding = true }
+                        ) { Text("Skip") }
+                    }
                 )
                 HorizontalDivider()
+                Spacer(Modifier.size(4.dp))
             }
         },
         bottomBar = {
             BottomAppBar(
                 actions = {
                     TextButton(
-                        onClick = { hasSeenOnboarding = true }
-                    ) { Text("Skip") }
+                        onClick = {
+                            if (pagerState.canScrollBackward) {
+                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                            }
+                        },
+                        enabled = pagerState.canScrollBackward
+                    ) { Text("Back") }
 
                     Row(
                         horizontalArrangement = Arrangement.Center,
@@ -168,34 +241,14 @@ fun OnboardingScreen(
         }
     ) { padding ->
 
-        //TODO: Add login screen
-        // add account info screen
+        //TODO: add account info screen
         // maybe even see if we can get the account created when
 
         HorizontalPager(
             state = pagerState,
             contentPadding = padding,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 4.dp)
-        ) { page ->
-            when (page) {
-                0 -> WelcomeContent(
-                    appLogo = appLogo,
-                )
-
-                1 -> ThemeContent()
-
-                //TODO: Maybe make an enum for the flavors?
-                2 -> if (BuildConfig.FLAVOR == "full") {
-                    AccountContent()
-                } else {
-                    FinishContent()
-                }
-
-                pagerState.pageCount -> FinishContent()
-            }
-        }
+            modifier = Modifier.fillMaxSize()
+        ) { page -> onboardingScope.intervals[page].value() }
     }
 }
 
@@ -207,16 +260,11 @@ private fun ThemeContent(
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .padding(16.dp)
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
         ListItem(
-            headlineContent = {
-                Text(
-                    "Pick your theme!"
-                )
-            },
+            headlineContent = { Text("Pick your theme!") },
         )
 
         HorizontalDivider()
@@ -270,7 +318,6 @@ private fun ThemeContent(
             modifier = Modifier.fillMaxWidth(),
         ) {
             ThemeColor.entries
-                //TODO: For later
                 .filter { it != ThemeColor.Custom && it != ThemeColor.UNRECOGNIZED }
                 .forEach {
                     ThemeItem(
@@ -298,57 +345,101 @@ private fun ThemeContent(
 
 @Composable
 private fun AccountContent(
+    navController: NavController,
     viewModel: AccountViewModel = koinViewModel(),
+    importViewModel: MoreSettingsViewModel = koinViewModel(),
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .padding(16.dp)
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Log in to save all your favorites and chapters/episodes read to the cloud so you can access them on any device!")
+        ListItem(
+            headlineContent = { Text("Account") }
+        )
 
-        Text("No one who works on these apps get access to your data.")
+        HorizontalDivider()
 
-        Crossfade(
-            viewModel.accountInfo
-        ) { target ->
-            if (target == null) {
-                val context = LocalContext.current
-                val activity = LocalActivity.current
+        if (BuildConfig.FLAVOR == "full") {
+            Text(
+                "Log in to save all your favorites and chapters/episodes read to the cloud so you can access them on any device!",
+                modifier = Modifier.padding(16.dp)
+            )
 
-                Card(
-                    onClick = {
-                        (activity as? ComponentActivity)?.let {
-                            viewModel.signInOrOut(context, it)
+            Text(
+                "No one who works on these apps get access to your data.",
+                modifier = Modifier.padding(16.dp)
+            )
+
+            Crossfade(
+                viewModel.accountInfo
+            ) { target ->
+                if (target == null) {
+                    val context = LocalContext.current
+                    val activity = LocalActivity.current
+
+                    Card(
+                        onClick = {
+                            (activity as? ComponentActivity)?.let {
+                                viewModel.signInOrOut(context, it)
+                            }
                         }
+                    ) {
+                        ListItem(
+                            headlineContent = { Text("Log in") },
+                            leadingContent = { Icon(Icons.Default.AccountCircle, null) }
+                        )
                     }
-                ) {
-                    ListItem(
-                        headlineContent = { Text("Log in") },
-                        leadingContent = { Icon(Icons.Default.AccountCircle, null) }
-                    )
-                }
-            } else {
-                Card {
-                    ListItem(
-                        headlineContent = { Text(target.displayName.orEmpty()) },
-                        leadingContent = {
-                            GlideImage(
-                                imageModel = { target.photoUrl },
-                                loading = { Icon(Icons.Default.AccountCircle, null) },
-                                failure = { Icon(Icons.Default.AccountCircle, null) },
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .size(40.dp)
-                            )
-                        }
-                    )
+                } else {
+                    Card {
+                        ListItem(
+                            headlineContent = { Text(target.displayName.orEmpty()) },
+                            leadingContent = {
+                                GlideImage(
+                                    imageModel = { target.photoUrl },
+                                    loading = { Icon(Icons.Default.AccountCircle, null) },
+                                    failure = { Icon(Icons.Default.AccountCircle, null) },
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .size(40.dp)
+                                )
+                            }
+                        )
+                    }
                 }
             }
+        } else {
+            val context = LocalContext.current
+            val importLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.OpenDocument()
+            ) { document -> document?.let { importViewModel.importFavorites(it, context) } }
+
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(R.string.import_favorites)) },
+                settingIcon = { Icon(Icons.Default.Favorite, null) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null
+                ) { importLauncher.launch(arrayOf("application/json")) }
+            )
         }
 
+        HorizontalDivider()
+
+        val importListLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.OpenDocument()
+        ) { document -> document?.let { navController.navigate(Screen.ImportFullListScreen(it.toString())) } }
+
+        PreferenceSetting(
+            settingTitle = { Text("Import Lists") },
+            settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
+            modifier = Modifier.clickable(
+                enabled = true,
+                indication = ripple(),
+                interactionSource = null
+            ) { importListLauncher.launch(arrayOf("application/json")) }
+        )
     }
 }
 
@@ -378,10 +469,18 @@ private fun FinishContent() {
 
         HorizontalDivider()
 
-        Text(
-            "All done! Press finish to start using the app!",
+        Column(
             modifier = Modifier.padding(16.dp)
-        )
+        ) {
+            Text(
+                "All done!",
+                style = MaterialTheme.typography.headlineMedium,
+            )
+
+            Text("Remember you can change all of these settings at any time.")
+
+            Text("Press finish to start using the app!")
+        }
     }
 }
 
@@ -416,5 +515,109 @@ private fun WelcomeContent(
             stringResource(R.string.welcome_description, appName),
             modifier = Modifier.padding(16.dp)
         )
+    }
+}
+
+@Composable
+private fun GeneralContent() {
+    val handling = koinInject<SettingsHandling>()
+    val dataStoreHandling = koinInject<DataStoreHandling>()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        ListItem(
+            headlineContent = { Text("General Settings") },
+        )
+
+        HorizontalDivider()
+
+        val performanceClass = koinInject<PerformanceClass>()
+
+        if (performanceClass.canBlur) {
+            BlurSetting(handling = handling)
+            HorizontalDivider()
+        }
+
+        ShowDownloadSettings(handling = handling)
+
+        ShareChapterSettings(handling = handling)
+
+        HorizontalDivider()
+
+        //This has a divider with it
+        NavigationBarSettings(handling = handling)
+
+        var notifyOnBoot by handling.notifyOnReboot.rememberPreference()
+
+        SwitchSetting(
+            settingTitle = { Text("Notify on Boot") },
+            value = notifyOnBoot,
+            updateValue = { notifyOnBoot = it },
+            settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) }
+        )
+
+        var canCheck by dataStoreHandling
+            .shouldCheck
+            .asState()
+
+        var showDialog by remember { mutableStateOf(false) }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(stringResource(R.string.are_you_sure_stop_checking)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            canCheck = false
+                            showDialog = false
+                        }
+                    ) { Text(stringResource(R.string.yes)) }
+                },
+                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.no)) } }
+            )
+        }
+
+        SwitchSetting(
+            settingTitle = { Text(stringResource(R.string.check_for_periodic_updates)) },
+            value = canCheck,
+            settingIcon = { Icon(Icons.Default.Timelapse, null, modifier = Modifier.fillMaxSize()) },
+            updateValue = {
+                if (!it) {
+                    showDialog = true
+                } else {
+                    canCheck = it
+                }
+            }
+        )
+
+        ShowWhen(canCheck) {
+            var updateHourCheck by dataStoreHandling
+                .updateHourCheck
+                .asState()
+
+            var sliderValue by remember(updateHourCheck) {
+                mutableFloatStateOf(updateHourCheck.toFloat())
+            }
+
+            SliderSetting(
+                settingTitle = { Text("Check Every $updateHourCheck hours") },
+                settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
+                sliderValue = sliderValue,
+                updateValue = { sliderValue = it },
+                range = 1f..24f,
+                steps = 23,
+                onValueChangedFinished = { updateHourCheck = sliderValue.toLong() },
+                settingIcon = {
+                    Icon(
+                        Icons.Default.HourglassTop,
+                        null,
+                    )
+                }
+            )
+        }
     }
 }

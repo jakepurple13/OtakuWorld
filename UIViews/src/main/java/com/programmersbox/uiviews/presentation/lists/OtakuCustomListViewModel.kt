@@ -15,13 +15,13 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.uiviews.datastore.DataStoreHandler
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
@@ -124,7 +124,10 @@ class OtakuCustomListViewModel(
                 try {
                     context.contentResolver.openFileDescriptor(document, "w")?.use {
                         FileOutputStream(it.fileDescriptor).use { f ->
-                            f.write(customList?.toJson()?.toByteArray())
+                            customList
+                                ?.let { listOf(it) }
+                                ?.let { Json.encodeToString(it).toByteArray() }
+                                ?.let { f.write(it) }
                         }
                     }
                 } catch (e: FileNotFoundException) {

@@ -71,7 +71,7 @@ fun OtakuListView(
 
     val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
-    ) { document -> document?.let { navController.navigate(Screen.ImportListScreen(it.toString())) } }
+    ) { document -> document?.let { navController.navigate(Screen.ImportFullListScreen(it.toString())) } }
 
     var showAdd by remember { mutableStateOf(false) }
 

@@ -98,6 +98,7 @@ import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -113,6 +114,8 @@ import org.koin.compose.koinInject
 fun ImportFullListScreen(
     vm: ImportFullListViewModel = koinViewModel(),
 ) {
+    HideSystemBarsWhileOnScreen()
+
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -121,14 +124,7 @@ fun ImportFullListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(LocalNavHostPadding.current)
-            )
-        }
-    ) { _ ->
+    Scaffold { _ ->
         when (val status = vm.importStatus) {
             ImportFullListStatus.Loading -> {
                 LaunchedEffect(Unit) {
@@ -152,6 +148,7 @@ fun ImportFullListScreen(
                             scrollBehavior = scrollBehavior
                         )
                     },
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
                 ) { padding ->
                     Column(
                         modifier = Modifier
@@ -201,6 +198,7 @@ fun ImportFullListScreen(
                             ) { Text(stringResource(R.string.import_import_list)) }
                         }
                     },
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
                         .nestedScroll(scrollBehavior.nestedScrollConnection)

@@ -136,7 +136,7 @@ fun GeneralSettings(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun NavigationBarSettings(handling: SettingsHandling) {
+fun NavigationBarSettings(handling: SettingsHandling) {
     var floatingNavigation by rememberFloatingNavigation()
 
     SwitchSetting(
@@ -382,7 +382,7 @@ private fun ExpressivenessSetting(handling: SettingsHandling) {
 }
 
 @Composable
-private fun BlurSetting(handling: SettingsHandling) {
+fun BlurSetting(handling: SettingsHandling) {
     var showBlur by handling.rememberShowBlur()
 
     SwitchSetting(
@@ -485,7 +485,7 @@ private fun GridTypeSettings(handling: SettingsHandling) {
 }
 
 @Composable
-private fun ShareChapterSettings(handling: SettingsHandling) {
+fun ShareChapterSettings(handling: SettingsHandling) {
     var shareChapter by handling.rememberShareChapter()
 
     SwitchSetting(
@@ -515,7 +515,7 @@ private fun DetailPaneSettings(handling: SettingsHandling) {
 }
 
 @Composable
-private fun ShowDownloadSettings(handling: SettingsHandling) {
+fun ShowDownloadSettings(handling: SettingsHandling) {
     var showDownload by handling.rememberShowDownload()
 
     SwitchSetting(

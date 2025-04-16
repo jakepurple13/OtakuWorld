@@ -276,7 +276,7 @@ private fun ReaderSettings(
 }
 
 @Composable
-private fun ReaderTypeSetting(
+fun ReaderTypeSetting(
     readerType: ReaderType,
     onReaderTypeChange: (ReaderType) -> Unit = {},
 ) {
@@ -314,7 +314,7 @@ private fun ReaderTypeSetting(
 }
 
 @Composable
-private fun ImageLoaderSetting(
+fun ImageLoaderSetting(
     imageLoaderType: ImageLoaderType,
     onImageLoaderChange: () -> Unit = {},
 ) {
@@ -342,7 +342,7 @@ private fun ImageLoaderSetting(
 
 
 @Composable
-private fun SpacingSetting(
+fun SpacingSetting(
     readerPadding: Float,
     onPaddingChange: (Float) -> Unit = {},
     onPaddingChangeFinished: () -> Unit = {},

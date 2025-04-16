@@ -64,6 +64,7 @@ fun NavGraphBuilder.navGraph(
     composable<Screen.OnboardingScreen> {
         OnboardingScreen(
             navController = navController,
+            customPreferences = customPreferences
         )
     }
 

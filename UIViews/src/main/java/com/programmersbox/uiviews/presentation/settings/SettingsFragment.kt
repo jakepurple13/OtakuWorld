@@ -69,6 +69,7 @@ import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
+import com.programmersbox.uiviews.presentation.onboarding.OnboardingScope
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import com.programmersbox.uiviews.theme.LocalCurrentSource
@@ -89,6 +90,8 @@ class ComposeSettingsDsl {
     internal var viewSettings: @Composable () -> Unit = {}
     internal var playerSettings: @Composable () -> Unit = {}
 
+    internal var onboardingSettings: OnboardingScope.() -> Unit = {}
+
     fun generalSettings(block: @Composable () -> Unit) {
         generalSettings = block
     }
@@ -99,6 +102,10 @@ class ComposeSettingsDsl {
 
     fun playerSettings(block: @Composable () -> Unit) {
         playerSettings = block
+    }
+
+    fun onboardingSettings(block: OnboardingScope.() -> Unit) {
+        onboardingSettings = block
     }
 }
 

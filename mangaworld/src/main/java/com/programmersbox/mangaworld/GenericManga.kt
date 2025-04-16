@@ -48,6 +48,7 @@ import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
+import com.programmersbox.mangaworld.onboarding.ReaderOnboarding
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.compose.ReadView
 import com.programmersbox.mangaworld.reader.compose.ReadViewModel
@@ -391,6 +392,14 @@ class GenericManga(
             PlayerSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
             )
+        }
+
+        onboardingSettings {
+            item {
+                ReaderOnboarding(
+                    mangaSettingsHandling = mangaSettingsHandling,
+                )
+            }
         }
     }
 
