@@ -168,8 +168,8 @@ fun OtakuCustomListScreen(
     setQuery: (String) -> Unit,
     navigateBack: () -> Unit,
     isHorizontal: Boolean = false,
-    addSecurityItem: (UUID) -> Unit,
-    removeSecurityItem: (UUID) -> Unit,
+    addSecurityItem: (String) -> Unit,
+    removeSecurityItem: (String) -> Unit,
     dao: ListDao = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
@@ -853,7 +853,7 @@ private fun CustomListScreenPreview() {
             viewModel = viewModel,
             customItem = CustomList(
                 item = CustomListItem(
-                    uuid = UUID.randomUUID(),
+                    uuid = UUID.randomUUID().toString(),
                     name = "Hello",
                 ),
                 list = emptyList()
@@ -876,8 +876,8 @@ private fun CustomListScreenPreview() {
 private fun InfoSheet(
     customItem: CustomList,
     sheetState: SheetState,
-    addSecurityItem: (UUID) -> Unit,
-    removeSecurityItem: (UUID) -> Unit,
+    addSecurityItem: (String) -> Unit,
+    removeSecurityItem: (String) -> Unit,
     rename: (String) -> Unit,
     onDismiss: () -> Unit,
     logo: AppLogo,

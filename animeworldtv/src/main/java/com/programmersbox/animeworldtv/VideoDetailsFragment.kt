@@ -29,6 +29,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.models.ChapterModel
@@ -146,7 +147,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
             })
     }
 
-    private val itemDao by lazy { ItemDatabase.getInstance(requireContext()).itemDao() }
+    private val itemDao by lazy { ItemDatabase.getInstance(DatabaseBuilder(requireContext())).itemDao() }
     private val itemListener = FirebaseDb.FirebaseListener()
     private val chapterListener = FirebaseDb.FirebaseListener()
 

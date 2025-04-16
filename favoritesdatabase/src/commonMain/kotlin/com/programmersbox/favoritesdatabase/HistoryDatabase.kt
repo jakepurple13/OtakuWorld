@@ -1,9 +1,20 @@
 package com.programmersbox.favoritesdatabase
 
-import android.content.Context
 import androidx.paging.PagingSource
-import androidx.room.*
+import androidx.room.AutoMigration
+import androidx.room.ColumnInfo
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @Database(
     entities = [HistoryItem::class, RecentModel::class],
@@ -17,16 +28,9 @@ abstract class HistoryDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
 
     companion object {
-
-        @Volatile
-        private var INSTANCE: HistoryDatabase? = null
-
-        fun getInstance(context: Context): HistoryDatabase =
-            INSTANCE ?: synchronized(this) { INSTANCE ?: buildDatabase(context).also { INSTANCE = it } }
-
-        private fun buildDatabase(context: Context) =
-            Room.databaseBuilder(context.applicationContext, HistoryDatabase::class.java, "history.db")
-                .build()
+        fun getInstance(databaseBuilder: DatabaseBuilder): HistoryDatabase = databaseBuilder
+            .build<HistoryDatabase>("history.db")
+            .build()
     }
 
 }
@@ -79,7 +83,7 @@ data class HistoryItem(
 )
 
 @Entity(tableName = "RecentlyViewed")
-data class RecentModel(
+data class RecentModel @OptIn(ExperimentalTime::class) constructor(
     @ColumnInfo(name = "title")
     val title: String,
     @ColumnInfo(name = "description")
@@ -92,5 +96,5 @@ data class RecentModel(
     @ColumnInfo(name = "sources")
     val source: String,
     @ColumnInfo(name = "timestamp")
-    var timestamp: Long = System.currentTimeMillis()
+    var timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 )

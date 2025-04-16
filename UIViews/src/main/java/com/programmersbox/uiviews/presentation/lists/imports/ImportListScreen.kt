@@ -270,7 +270,7 @@ private fun ImportItemPreview() {
     PreviewTheme {
         CustomItem(
             item = CustomListInfo(
-                uuid = UUID.randomUUID(),
+                uuid = UUID.randomUUID().toString(),
                 title = "Title",
                 description = "description",
                 url = "",

@@ -88,6 +88,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
@@ -147,7 +148,7 @@ class ReadViewModel(
         }
     }
 
-    private val dao by lazy { ItemDatabase.getInstance(activity!!).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(DatabaseBuilder(activity!!)).itemDao() }
 
     val list by lazy { ChapterList(activity!!, genericInfo).get().orEmpty() }
 

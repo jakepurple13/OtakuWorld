@@ -1,16 +1,8 @@
 package com.programmersbox.favoritesdatabase
 
-import androidx.room.TypeConverter
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
-
-class ItemConverters {
-
-    @TypeConverter
-    fun fromSource(value: ApiService) = value.serviceName
-
-}
 
 fun ItemModel.toDbModel() = DbModel(
     title = title,

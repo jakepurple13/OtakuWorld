@@ -48,7 +48,6 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +66,7 @@ fun DeleteFromListScreen(
     }
 
     val customList by dao
-        .getCustomListItemFlow(UUID.fromString(deleteFromList.uuid))
+        .getCustomListItemFlow(deleteFromList.uuid)
         .collectAsStateWithLifecycle(null)
 
     ModalBottomSheet(

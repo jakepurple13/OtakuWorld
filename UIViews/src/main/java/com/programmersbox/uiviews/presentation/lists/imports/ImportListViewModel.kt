@@ -49,7 +49,7 @@ class ImportListViewModel(
     suspend fun importList(name: String) {
         runCatching {
             (importStatus as? ImportListStatus.Success)?.customList?.let { list ->
-                val newUUID = UUID.randomUUID()
+                val newUUID = UUID.randomUUID().toString()
                 listDao.createList(list.item.copy(uuid = newUUID, name = name, time = System.currentTimeMillis()))
                 list.list.forEach { listDao.addItem(it.copy(uniqueId = UUID.randomUUID().toString(), uuid = newUUID)) }
             }

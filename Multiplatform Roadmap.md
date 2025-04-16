@@ -30,10 +30,15 @@ multiplatform this project grows stronger and stronger.
     - https://github.com/kdroidFilter/ComposeMediaPlayer
     - Casting?
 - Deeplinking
+- Readme updates
 
 ## Things that can be done now
 
 - [ ] Models and FavoritesDatabase can be converted to multiplatform now
+  - [x] FavoritesDatabase
+  - [ ] Models
+    - Uses some Java libraries, so need to figure out a way to keep some of that while also not
+      affecting any other sources
 - [ ] Screens that do not have m3 alpha components can go into a multiplatform module
 - [ ] Move datastore components to a multiplatform module?
     - [ ] Maybe it goes into the same one with that goes in that's above?
