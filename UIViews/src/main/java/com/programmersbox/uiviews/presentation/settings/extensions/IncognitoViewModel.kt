@@ -39,7 +39,7 @@ class IncognitoViewModel(
                         ),
                     sourceInformation = source
                 )
-            }
+            }.sortedBy { it.sourceInformation.name }
         }
             .onEach {
                 incognitoModels.clear()
