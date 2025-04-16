@@ -14,7 +14,7 @@ class FavoritesRepository(
 ) {
 
     suspend fun isIncognito(source: String): Boolean {
-        val incognito = dao.getIncognitoSourceSync(source)
+        val incognito = dao.getIncognitoSourceByNameSync(source)
         return incognito != null && incognito.isIncognito
     }
 

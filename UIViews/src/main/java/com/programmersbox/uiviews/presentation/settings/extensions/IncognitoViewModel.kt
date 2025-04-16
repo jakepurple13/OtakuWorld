@@ -31,9 +31,9 @@ class IncognitoViewModel(
             sources.map { source ->
                 IncognitoModel(
                     incognitoSource = incognitoSources
-                        .find { it.source == source.apiService.serviceName }
+                        .find { it.source == source.packageName }
                         ?: IncognitoSource(
-                            source = source.apiService.serviceName,
+                            source = source.packageName,
                             name = source.name,
                             isIncognito = false
                         ),
@@ -56,7 +56,7 @@ class IncognitoViewModel(
                     .filter { it.packageName == sourceInformation.packageName }
                     .forEach {
                         itemDao.updateIncognitoSource(
-                            source = it.apiService.serviceName,
+                            source = it.packageName,
                             isIncognito = value
                         )
                     }
@@ -67,8 +67,8 @@ class IncognitoViewModel(
                     .forEach {
                         itemDao.insertIncognitoSource(
                             IncognitoSource(
-                                source = it.apiService.serviceName,
-                                name = it.name,
+                                source = it.packageName,
+                                name = it.apiService.serviceName,
                                 isIncognito = value
                             )
                         )

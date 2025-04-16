@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.recent
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.derivedStateOf
@@ -49,6 +50,7 @@ class RecentViewModel(
 
     val filteredSourceList by derivedStateOf { sourceList.distinctBy { it.url } }
 
+    @SuppressLint("MissingPermission")
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
         .flowOn(Dispatchers.IO)

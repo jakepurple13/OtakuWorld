@@ -129,11 +129,17 @@ interface ItemDao {
     @Query("SELECT EXISTS(SELECT 1 FROM IncognitoSourceTable WHERE source = :source)")
     suspend fun doesIncognitoSourceExistSync(source: String): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM IncognitoSourceTable WHERE name = :name)")
+    suspend fun doesIncognitoSourceExistByNameSync(name: String): Boolean
+
     @Query("SELECT * FROM IncognitoSourceTable WHERE source = :source")
     fun getIncognitoSource(source: String): Flow<IncognitoSource?>
 
     @Query("SELECT * FROM IncognitoSourceTable WHERE source = :source")
     suspend fun getIncognitoSourceSync(source: String): IncognitoSource?
+
+    @Query("SELECT * FROM IncognitoSourceTable WHERE name = :name")
+    suspend fun getIncognitoSourceByNameSync(name: String): IncognitoSource?
 
     @Query("UPDATE IncognitoSourceTable SET isIncognito = :isIncognito WHERE source = :source")
     suspend fun updateIncognitoSource(source: String, isIncognito: Boolean)
