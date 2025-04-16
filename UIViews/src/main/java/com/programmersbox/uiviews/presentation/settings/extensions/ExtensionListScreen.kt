@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.HideSource
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
@@ -106,6 +107,7 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.datastore.SettingsHandling
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
@@ -113,6 +115,7 @@ import com.programmersbox.uiviews.theme.LocalCurrentSource
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
+import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.delay
@@ -130,6 +133,8 @@ fun ExtensionList(
     val scope = rememberCoroutineScope()
 
     val context = LocalContext.current
+
+    val navController = LocalNavController.current
 
     fun updateCheck() {
         WorkManager.getInstance(context)
@@ -239,6 +244,15 @@ fun ExtensionList(
                                 viewModel.refreshExtensions()
                             },
                             leadingIcon = { Icon(Icons.Default.Refresh, null) }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Enable Incognito") },
+                            onClick = {
+                                showDropDown = false
+                                navController.navigate(Screen.IncognitoScreen)
+                            },
+                            leadingIcon = { Icon(Icons.Default.HideSource, null) }
                         )
 
                         if (viewModel.hasCustomBridge) {

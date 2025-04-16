@@ -15,19 +15,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.mangaworld.ChapterHolder
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -45,9 +42,8 @@ private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
     savedStateHandle: SavedStateHandle,
-    private val dao: ItemDao,
     private val chapterHolder: ChapterHolder,
-    favoritesRepository: FavoritesRepository,
+    private val favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
 
     private val mangaReader: MangaReader = savedStateHandle.toRoute()
@@ -156,8 +152,9 @@ class ReadViewModel(
             ChapterWatched(item.url, item.name, mangaUrl)
                 .let {
                     viewModelScope.launch {
-                        dao.insertChapter(it)
-                        FirebaseDb.insertEpisodeWatchedFlow(it).collect()
+                        if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                            favoritesRepository.addWatched(it)
+                        }
                         withContext(Dispatchers.Main) { chapter() }
                     }
                 }
@@ -177,10 +174,7 @@ class ReadViewModel(
                 ?.getSourceByUrlFlow(mangaUrl)
                 ?.firstOrNull()
                 ?.toDbModel()
-                ?.let {
-                    dao.insertFavorite(it)
-                    FirebaseDb.insertShowFlow(it).collect()
-                }
+                ?.let { favoritesRepository.addFavorite(it) }
         }
     }
 

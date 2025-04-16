@@ -2,13 +2,16 @@ plugins {
     id("otaku-library")
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
+    alias(libs.plugins.room)
 }
 
 android {
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
+
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
     }
 
     namespace = "com.programmersbox.favoritesdatabase"

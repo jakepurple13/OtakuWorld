@@ -107,11 +107,7 @@ fun SourceChooserScreen(
                 },
                 lazyListContent = {
                     list
-                        .find {
-                            println(it.apiService.serviceName)
-                            println("${it.name}$languageCode")
-                            it.apiService.serviceName == "${it.name}$languageCode"
-                        }
+                        .find { it.apiService.serviceName == "${it.name}$languageCode" }
                         ?.let {
                             ListBottomSheetItemModel(
                                 primaryText = it.apiService.serviceName,

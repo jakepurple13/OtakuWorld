@@ -42,6 +42,7 @@ import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
+import com.programmersbox.uiviews.presentation.settings.extensions.IncognitoScreen
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -66,6 +67,10 @@ fun NavGraphBuilder.navGraph(
             navController = navController,
             customPreferences = customPreferences
         )
+    }
+
+    composable<Screen.IncognitoScreen> {
+        IncognitoScreen()
     }
 
     animatedScopeComposable<Screen.RecentScreen>(

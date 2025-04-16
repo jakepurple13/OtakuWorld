@@ -67,3 +67,14 @@ data class SourceOrder(
     @ColumnInfo(name = "order")
     val order: Int,
 )
+
+@Entity("IncognitoSourceTable")
+data class IncognitoSource(
+    @PrimaryKey
+    @ColumnInfo(name = "source")
+    val source: String,
+    @ColumnInfo(name = "name")
+    val name: String,
+    @ColumnInfo(name = "isIncognito", defaultValue = "0")
+    val isIncognito: Boolean,
+)

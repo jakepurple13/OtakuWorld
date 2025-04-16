@@ -13,12 +13,19 @@ class FavoritesRepository(
     private val dao: ItemDao,
 ) {
 
+    suspend fun isIncognito(source: String): Boolean {
+        val incognito = dao.getIncognitoSourceSync(source)
+        return incognito != null && incognito.isIncognito
+    }
+
     suspend fun addFavorite(db: DbModel) {
+        if (isIncognito(db.source)) return
         dao.insertFavorite(db)
         FirebaseDb.insertShowFlow(db).collect()
     }
 
     suspend fun removeFavorite(db: DbModel) {
+        if (isIncognito(db.source)) return
         dao.deleteFavorite(db)
         FirebaseDb.removeShowFlow(db).collect()
     }

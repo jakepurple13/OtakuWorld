@@ -85,9 +85,6 @@ fun InfoSettings(
             )
         )
 
-
-        //TODO: add an incognito option for each source
-
         var onboarding by dataStoreHandling.hasGoneThroughOnboarding.asState()
         PreferenceSetting(
             settingTitle = { Text("View Onboarding Again") },

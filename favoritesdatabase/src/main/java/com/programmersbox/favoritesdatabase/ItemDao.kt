@@ -104,4 +104,37 @@ interface ItemDao {
 
     @Update
     suspend fun updateSourceOrder(sourceOrder: SourceOrder)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIncognitoSource(incognitoSource: IncognitoSource)
+
+    @Query("SELECT * FROM IncognitoSourceTable")
+    fun getAllIncognitoSources(): Flow<List<IncognitoSource>>
+
+    @Query("SELECT * FROM IncognitoSourceTable")
+    suspend fun getAllIncognitoSourcesSync(): List<IncognitoSource>
+
+    @Query("DELETE FROM IncognitoSourceTable")
+    suspend fun deleteAllIncognitoSources()
+
+    @Query("DELETE FROM IncognitoSourceTable where source = :source")
+    suspend fun deleteIncognitoSource(source: String)
+
+    @Update
+    suspend fun updateIncognitoSource(incognitoSource: IncognitoSource)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM IncognitoSourceTable WHERE source = :source)")
+    fun doesIncognitoSourceExist(source: String): Flow<Boolean>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM IncognitoSourceTable WHERE source = :source)")
+    suspend fun doesIncognitoSourceExistSync(source: String): Boolean
+
+    @Query("SELECT * FROM IncognitoSourceTable WHERE source = :source")
+    fun getIncognitoSource(source: String): Flow<IncognitoSource?>
+
+    @Query("SELECT * FROM IncognitoSourceTable WHERE source = :source")
+    suspend fun getIncognitoSourceSync(source: String): IncognitoSource?
+
+    @Query("UPDATE IncognitoSourceTable SET isIncognito = :isIncognito WHERE source = :source")
+    suspend fun updateIncognitoSource(source: String, isIncognito: Boolean)
 }

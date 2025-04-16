@@ -10,8 +10,9 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [DbModel::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class],
-    version = 5,
+    entities = [DbModel::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class],
+    version = 6,
+    exportSchema = true,
     autoMigrations = [
         AutoMigration(
             from = 2,
@@ -24,8 +25,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         AutoMigration(
             from = 4,
             to = 5
-        )
-    ]
+        ),
+    ],
 )
 @TypeConverters(ItemConverters::class)
 abstract class ItemDatabase : RoomDatabase() {
@@ -40,6 +41,12 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `IncognitoSourceTable` (`source` TEXT NOT NULL, `name` TEXT NOT NULL, `isIncognito` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`source`))")
+            }
+        }
+
         @Volatile
         private var INSTANCE: ItemDatabase? = null
 
@@ -49,6 +56,7 @@ abstract class ItemDatabase : RoomDatabase() {
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(context.applicationContext, ItemDatabase::class.java, "favoriteItems.db")
                 .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_5_6)
                 .build()
     }
 }
