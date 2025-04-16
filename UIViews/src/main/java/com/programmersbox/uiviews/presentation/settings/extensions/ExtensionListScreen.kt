@@ -13,16 +13,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,6 +36,8 @@ import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -49,6 +46,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
@@ -81,6 +79,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -89,7 +88,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.core.net.toUri
@@ -306,98 +304,113 @@ private fun InstalledExtensionItems(
 ) {
     val currentSourceRepository = LocalCurrentSource.current
     val context = LocalContext.current
-    Column(
-        modifier = modifier
-    ) {
-        ListItem(
-            headlineContent = {
-                val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(initialValue = null)
-                Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty()))
-            }
-        )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.fillMaxSize()
+    Surface {
+        Column(
+            modifier = modifier
         ) {
-            installedSources.forEach { (t, u) ->
-                item(
-                    span = { GridItemSpan(maxLineSpan) }
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 4.dp,
-                        onClick = { u.showItems = !u.showItems },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        ListItem(
-                            modifier = Modifier.padding(4.dp),
-                            headlineContent = {
-                                Text(t?.name ?: u.sourceInformation.firstOrNull()?.name?.takeIf { t != null } ?: "Single Source")
-                            },
-                            leadingContent = { Text("(${u.sourceInformation.size})") },
-                            trailingContent = t?.let {
-                                {
-                                    IconButton(
-                                        onClick = { onUninstall(u.sourceInformation.random().packageName) }
-                                    ) { Icon(Icons.Default.Delete, null) }
-                                }
-                            }
-                        )
-                    }
+            ListItem(
+                headlineContent = {
+                    val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(initialValue = null)
+                    Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty()))
                 }
+            )
 
-                if (u.showItems) {
-                    itemsIndexed(
-                        u.sourceInformation,
-                        key = { i, it -> it.apiService.serviceName + i },
-                        contentType = { _, it -> it }
-                    ) { _, source ->
-                        val version = remember(context) {
-                            runCatching {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    context.packageManager.getPackageInfo(
-                                        source.packageName,
-                                        PackageManager.PackageInfoFlags.of(0L)
-                                    )
-                                } else {
-                                    context.packageManager.getPackageInfo(source.packageName, 0)
-                                }
-                            }
-                                .getOrNull()
-                                ?.versionName
-                                .orEmpty()
-                        }
-                        ExtensionItem(
-                            sourceInformation = source,
-                            version = version,
-                            onClick = { currentSourceRepository.tryEmit(source.apiService) },
-                            trailingIcon = {
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceEvenly
-                                ) {
-                                    sourcesList.find {
-                                        it.sources.any { s -> s.baseUrl == source.apiService.baseUrl }
-                                    }?.let { r ->
-                                        if (AppUpdate.checkForUpdate(version, r.version)) {
-                                            IconButton(
-                                                onClick = {
-                                                    onDownloadAndInstall(
-                                                        r.downloadLink,
-                                                        r.downloadLink.toUri().lastPathSegment ?: "${r.name}.apk"
-                                                    )
-                                                }
-                                            ) { Icon(Icons.Default.Update, null) }
-                                        }
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                installedSources.forEach { (t, u) ->
+
+                    val itemList = u
+                        .sourceInformation
+                        .groupBy { it.packageName }
+                        .values
+                        .map { it.first() }
+
+                    item {
+                        Card(
+                            onClick = { u.showItems = !u.showItems },
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 4.dp
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateItem()
+                        ) {
+                            ListItem(
+                                headlineContent = {
+                                    Text(t?.name ?: u.sourceInformation.firstOrNull()?.name?.takeIf { t != null } ?: "Single Source")
+                                },
+                                leadingContent = { Text("(${itemList.size})") },
+                                trailingContent = t?.let {
+                                    {
+                                        IconButton(
+                                            onClick = { onUninstall(u.sourceInformation.random().packageName) }
+                                        ) { Icon(Icons.Default.Delete, null) }
                                     }
+                                },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color.Transparent
+                                ),
+                                modifier = Modifier.padding(4.dp),
+                            )
+                        }
+                    }
 
-                                    IconButton(
-                                        onClick = { onUninstall(source.packageName) }
-                                    ) { Icon(Icons.Default.Delete, null) }
+                    if (u.showItems) {
+                        itemsIndexed(
+                            itemList,
+                            key = { i, it -> it.apiService.serviceName + i },
+                            contentType = { _, it -> it }
+                        ) { index, source ->
+                            val version = remember(context) {
+                                runCatching {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        context.packageManager.getPackageInfo(
+                                            source.packageName,
+                                            PackageManager.PackageInfoFlags.of(0L)
+                                        )
+                                    } else {
+                                        context.packageManager.getPackageInfo(source.packageName, 0)
+                                    }
                                 }
+                                    .getOrNull()
+                                    ?.versionName
+                                    .orEmpty()
                             }
-                        )
+                            ExtensionItem(
+                                sourceInformation = source,
+                                version = version,
+                                onClick = { currentSourceRepository.tryEmit(source.apiService) },
+                                trailingIcon = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        sourcesList.find {
+                                            it.sources.any { s -> s.baseUrl == source.apiService.baseUrl }
+                                        }?.let { r ->
+                                            if (AppUpdate.checkForUpdate(version, r.version)) {
+                                                IconButton(
+                                                    onClick = {
+                                                        onDownloadAndInstall(
+                                                            r.downloadLink,
+                                                            r.downloadLink.toUri().lastPathSegment ?: "${r.name}.apk"
+                                                        )
+                                                    }
+                                                ) { Icon(Icons.Default.Update, null) }
+                                            }
+                                        }
+
+                                        IconButton(
+                                            onClick = { onUninstall(source.packageName) }
+                                        ) { Icon(Icons.Default.Delete, null) }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -411,81 +424,82 @@ private fun RemoteExtensionItems(
     onDownloadAndInstall: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-    ) {
-        var search by remember { mutableStateOf("") }
-        OutlinedTextField(
-            value = search,
-            onValueChange = { search = it },
-            label = { Text("Search Remote Extensions") },
-            trailingIcon = {
-                IconButton(onClick = { search = "" }) { Icon(Icons.Default.Clear, null) }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.fillMaxSize()
+    Surface {
+        Column(
+            modifier = modifier
         ) {
-            remoteSources.forEach { (t, u) ->
-                when (u) {
-                    is RemoteViewState -> {
-                        item(
-                            span = { GridItemSpan(maxLineSpan) }
-                        ) {
-                            ElevatedCard(
-                                onClick = { u.showItems = !u.showItems }
-                            ) {
-                                ListItem(
-                                    headlineContent = { Text(t) },
-                                    leadingContent = { Text("(${u.sources.size})") },
-                                    trailingContent = {
-                                        Icon(
-                                            Icons.Default.ArrowDropDown,
-                                            null,
-                                            modifier = Modifier.rotateWithBoolean(u.showItems)
-                                        )
-                                    }
-                                )
-                            }
-                        }
+            var search by remember { mutableStateOf("") }
+            OutlinedTextField(
+                value = search,
+                onValueChange = { search = it },
+                label = { Text("Search Remote Extensions") },
+                trailingIcon = {
+                    IconButton(onClick = { search = "" }) { Icon(Icons.Default.Clear, null) }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                        if (u.showItems) {
-                            items(u.sources.filter { it.name.contains(search, true) }) {
-                                RemoteItem(
-                                    remoteSource = it,
-                                    onDownloadAndInstall = {
-                                        onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
-                                    },
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                remoteSources.forEach { (t, u) ->
+                    when (u) {
+                        is RemoteViewState -> {
+                            item {
+                                ElevatedCard(
+                                    onClick = { u.showItems = !u.showItems },
                                     modifier = Modifier.animateItem()
-                                )
+                                ) {
+                                    ListItem(
+                                        headlineContent = { Text(t) },
+                                        leadingContent = { Text("(${u.sources.size})") },
+                                        trailingContent = {
+                                            Icon(
+                                                Icons.Default.ArrowDropDown,
+                                                null,
+                                                modifier = Modifier.rotateWithBoolean(u.showItems)
+                                            )
+                                        },
+                                        colors = ListItemDefaults.colors(
+                                            containerColor = Color.Transparent
+                                        )
+                                    )
+                                }
+                            }
+
+                            if (u.showItems) {
+                                items(u.sources.filter { it.name.contains(search, true) }) {
+                                    RemoteItem(
+                                        remoteSource = it,
+                                        onDownloadAndInstall = {
+                                            onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
+                                        },
+                                        modifier = Modifier.animateItem()
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    is RemoteErrorState -> {
-                        item(
-                            span = { GridItemSpan(maxLineSpan) }
-                        ) {
-                            ElevatedCard {
-                                ListItem(
-                                    headlineContent = { Text(t) },
-                                    supportingContent = { Text("Something went wrong") },
-                                    leadingContent = {
-                                        Icon(
-                                            Icons.Default.Warning,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                )
+                        is RemoteErrorState -> {
+                            item {
+                                ElevatedCard {
+                                    ListItem(
+                                        headlineContent = { Text(t) },
+                                        supportingContent = { Text("Something went wrong") },
+                                        leadingContent = {
+                                            Icon(
+                                                Icons.Default.Warning,
+                                                null,
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -505,36 +519,23 @@ private fun ExtensionItem(
 ) {
     OutlinedCard(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 150.dp)
+        modifier = modifier
     ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize()
-                .heightIn(min = 150.dp)
-        ) {
-            Image(
-                rememberDrawablePainter(drawable = sourceInformation.icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(64.dp)
-            )
-
-            Text(
-                sourceInformation.apiService.serviceName,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                "Version: $version",
-                style = MaterialTheme.typography.labelSmall,
-                textAlign = TextAlign.Center
-            )
-
-            trailingIcon?.invoke()
-        }
+        ListItem(
+            overlineContent = { Text(sourceInformation.packageName) },
+            headlineContent = { Text(sourceInformation.name) },
+            supportingContent = { Text("Version: $version") },
+            leadingContent = {
+                Image(
+                    rememberDrawablePainter(drawable = sourceInformation.icon),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(64.dp)
+                )
+            },
+            trailingContent = trailingIcon
+        )
     }
 }
 
@@ -582,34 +583,22 @@ private fun RemoteSourceItem(
 ) {
     OutlinedCard(
         onClick = onExtensionClick,
-        modifier = modifier.heightIn(min = 150.dp)
+        modifier = modifier
     ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize()
-                .heightIn(min = 150.dp)
-        ) {
-            AsyncImage(
-                model = remoteSource.iconUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(64.dp)
-            )
-
-            Text(
-                remoteSource.name,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                "Version: ${remoteSource.version}",
-                style = MaterialTheme.typography.labelSmall,
-                textAlign = TextAlign.Center
-            )
-        }
+        ListItem(
+            overlineContent = { Text(remoteSource.packageName) },
+            headlineContent = { Text(remoteSource.name) },
+            trailingContent = { Text(remoteSource.version) },
+            leadingContent = {
+                AsyncImage(
+                    model = remoteSource.iconUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(32.dp)
+                )
+            },
+        )
     }
 }
 
