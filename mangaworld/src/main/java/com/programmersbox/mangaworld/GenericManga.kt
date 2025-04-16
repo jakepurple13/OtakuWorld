@@ -121,6 +121,7 @@ class GenericManga(
                 else -> mangaFile
             }
         }
+
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(
