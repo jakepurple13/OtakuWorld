@@ -93,8 +93,13 @@ fun InfoSettings(
                 indication = ripple(),
                 interactionSource = null
             ) {
+                navController.clearBackStack<Screen.RecentScreen>()
                 onboarding = false
-                navController.navigate(Screen.OnboardingScreen)
+                navController.navigate(Screen.OnboardingScreen) {
+                    popUpTo(Screen.RecentScreen) {
+                        inclusive = true
+                    }
+                }
             }
         )
 
