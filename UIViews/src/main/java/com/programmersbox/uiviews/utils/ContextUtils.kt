@@ -78,7 +78,7 @@ fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.
 fun Context.openInCustomChromeBrowser(url: String, build: CustomTabsIntent.Builder.() -> Unit = {}) = openInCustomChromeBrowser(Uri.parse(url), build)
 
 fun View.toolTipText(text: CharSequence) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) tooltipText = text
+    tooltipText = text
 }
 
 fun View.toolTipText(@StringRes stringId: Int) = toolTipText(context.getString(stringId))
@@ -99,6 +99,70 @@ fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap {
     alpha.recycle()
     return out
 }
+
+/*data object ChapterModelKSerializer : KSerializer<ChapterModel>, KoinComponent {
+
+    private val sourceRepository: SourceRepository by inject<SourceRepository>()
+    private val genericInfo: GenericInfo by inject<GenericInfo>()
+
+    override val descriptor = buildClassSerialDescriptor("chapter_model") {
+        element<String>("name")
+        element<String>("uploaded")
+        element<String>("source")
+        element<String>("sourceUrl")
+        element<String>("url")
+        element<Map<String, Any>>("extras")
+        element<Map<String, Any>>("otherExtras")
+    }
+
+    override fun deserialize(decoder: Decoder): ChapterModel {
+        return ChapterModel(
+            name = decoder.decodeString(),
+            uploaded = decoder.decodeString(),
+            source = decoder.decodeString().let {
+                sourceRepository
+                    .toSourceByApiServiceName(it)
+                    ?.apiService
+                    ?: genericInfo.toSource(it)!!
+            },
+            sourceUrl = decoder.decodeString(),
+            url = decoder.decodeString()
+        ).apply {
+            extras.putAll(
+                decoder.decodeSerializableValue(
+                    MapSerializer(String.serializer(), String.serializer())
+                )
+            )
+            otherExtras.putAll(
+                decoder.decodeSerializableValue(
+                    MapSerializer(String.serializer(), String.serializer())
+                )
+            )
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: ChapterModel) {
+        encoder.encodeStructure(descriptor) {
+            encodeStringElement(descriptor, 0, value.name)
+            encodeStringElement(descriptor, 1, value.uploaded)
+            encodeStringElement(descriptor, 2, value.source.serviceName)
+            encodeStringElement(descriptor, 3, value.sourceUrl)
+            encodeStringElement(descriptor, 4, value.url)
+            encodeSerializableElement(
+                descriptor,
+                5,
+                MapSerializer(String.serializer(), String.serializer()),
+                value.extras.mapValues { it.value.toString() }
+            )
+            encodeSerializableElement(
+                descriptor,
+                6,
+                MapSerializer(String.serializer(), String.serializer()),
+                value.otherExtras.mapValues { it.value.toString() }
+            )
+        }
+    }
+}*/
 
 //TODO: Kotlinx Serialization this!
 class ChapterModelSerializer : JsonSerializer<ChapterModel> {
