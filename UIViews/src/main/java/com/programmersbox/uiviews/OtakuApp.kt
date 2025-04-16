@@ -162,7 +162,10 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         GlobalScope.launch(Dispatchers.IO) {
             val forLaterName = getString(R.string.for_later)
-            val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray()).also { forLaterUuid = it }
+            val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray())
+                .toString()
+                .also { forLaterUuid = it }
+
             runCatching {
                 get<ListDatabase>()
                     .listDao()
@@ -408,6 +411,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
     }
 
     companion object {
-        var forLaterUuid: UUID? = null
+        var forLaterUuid: String? = null
     }
 }

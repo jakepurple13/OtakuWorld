@@ -36,6 +36,7 @@ data class ChapterWatched(
     val favoriteUrl: String
 )
 
+@Serializable
 @Entity(tableName = "Notifications")
 data class NotificationItem(
     @ColumnInfo(name = "id")

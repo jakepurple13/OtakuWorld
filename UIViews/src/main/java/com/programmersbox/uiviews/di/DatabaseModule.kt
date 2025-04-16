@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.di
 
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.ListDatabase
@@ -7,6 +8,7 @@ import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import org.koin.core.module.Module
 
 fun Module.databases() {
+    single { DatabaseBuilder(get()) }
     single { ItemDatabase.getInstance(get()) }
     single { BlurHashDatabase.getInstance(get()) }
     single { HistoryDatabase.getInstance(get()) }

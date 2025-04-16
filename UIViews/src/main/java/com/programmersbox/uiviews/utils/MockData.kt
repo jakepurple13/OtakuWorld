@@ -44,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -240,13 +241,14 @@ fun PreviewTheme(
                 }
             }
         ) {
+            val databaseBuilder = remember { DatabaseBuilder(context) }
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
                 LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
-                LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
-                LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
-                LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
+                LocalItemDao provides remember { ItemDatabase.getInstance(databaseBuilder).itemDao() },
+                LocalHistoryDao provides remember { HistoryDatabase.getInstance(databaseBuilder).historyDao() },
+                LocalCustomListDao provides remember { ListDatabase.getInstance(databaseBuilder).listDao() },
                 LocalSourcesRepository provides SourceRepository(),
                 LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
                 LocalNavHostPadding provides PaddingValues(0.dp),

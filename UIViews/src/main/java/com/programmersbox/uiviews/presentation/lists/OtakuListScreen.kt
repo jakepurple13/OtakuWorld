@@ -249,15 +249,14 @@ fun calculateStandardPaneScaffoldDirective(
             verticalSpacerSize = 24.dp
         }
     }
-    val maxVerticalPartitions: Int
     val horizontalSpacerSize: Dp = 0.dp
 
     // TODO(conradchen): Confirm the table top mode settings
-    if (windowAdaptiveInfo.windowPosture.isTabletop) {
-        maxVerticalPartitions = 2
+    val maxVerticalPartitions: Int = if (windowAdaptiveInfo.windowPosture.isTabletop) {
+        2
         //horizontalSpacerSize = 24.dp
     } else {
-        maxVerticalPartitions = 1
+        1
         //horizontalSpacerSize = 0.dp
     }
 

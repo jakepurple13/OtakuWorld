@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory
 import androidx.compose.ui.util.fastMap
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.SemanticActions
@@ -123,16 +122,15 @@ object SavedNotifications {
         logo: NotificationLogo,
         info: GenericInfo,
         sourceRepository: SourceRepository,
-        itemDao: ItemDao,
+        dao: ItemDao,
     ) {
-        val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
         val icon = logo.notificationId
         val update = UpdateNotification(context)
         GlobalScope.launch {
             dao.getAllNotifications()
                 .fastMap { n ->
                     println(n)
-                    itemDao.updateNotification(
+                    dao.updateNotification(
                         url = n.url,
                         isShowing = true
                     )

@@ -35,7 +35,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
                             logo = logo,
                             info = info,
                             sourceRepository = sourceRepository,
-                            itemDao = itemDao
+                            dao = itemDao
                         )
                     }
                 }

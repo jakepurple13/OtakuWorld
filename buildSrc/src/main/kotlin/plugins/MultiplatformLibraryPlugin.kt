@@ -1,11 +1,10 @@
 package plugins
 
 import AppInfo
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.androidLibrary
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinDependencyHandler
 import javax.inject.Inject
@@ -14,8 +13,7 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         target.pluginManager.apply("kotlin-multiplatform")
-        target.pluginManager.apply("com.android.library")
-        target.pluginManager.apply("org.jetbrains.compose")
+        target.pluginManager.apply(target.libs.plugins.android.kotlin.multiplatform.library.get().pluginId)
 
         val dependency = target.extensions.create(
             "otakuDependencies",
@@ -23,35 +21,55 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             target
         )
 
-        target.extensions.findByType(LibraryExtension::class.java)?.apply {
+        /*target.extensions.findByType(LibraryExtension::class.java)?.apply {
             compileSdk = AppInfo.compileVersion
             defaultConfig {
                 minSdk = AppInfo.minimumSdk
             }
-        }
+        }*/
 
-        target.afterEvaluate {
-            extensions
+        //target.afterEvaluate {
+        target.extensions
                 .findByType(KotlinMultiplatformExtension::class.java)
                 ?.apply { setup(dependency) }
-        }
+        //}
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
     ) {
-        applyDefaultHierarchyTemplate()
-        androidTarget {
+        /*androidTarget {
             compilations.all {
                 this@androidTarget.compilerOptions {
                     freeCompilerArgs.add("-Xcontext-receivers")
                     jvmTarget.set(JvmTarget.JVM_11)
                 }
             }
+        }*/
+
+        androidLibrary {
+            namespace = dependencyHandling.androidPackageName
+            compileSdk = AppInfo.compileVersion
+            minSdk = AppInfo.minimumSdk
         }
 
-        sourceSets.getByName("commonMain") {
+        val xcfName = "sharedKit"
+
+        listOf(
+            iosX64(),
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = xcfName
+                isStatic = true
+            }
+        }
+
+        jvm()
+
+        /*sourceSets.getByName("commonMain") {
             dependencies {
                 dependencyHandling.commonDependencyBlock(this)
             }
@@ -61,11 +79,13 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             dependencies {
                 dependencyHandling.androidDependencyBlock(this)
             }
-        }
+        }*/
     }
 }
 
 abstract class DependencyHandling @Inject constructor(project: Project) {
+
+    var androidPackageName: String = ""
 
     internal var commonDependencyBlock: KotlinDependencyHandler.() -> Unit = {}
 

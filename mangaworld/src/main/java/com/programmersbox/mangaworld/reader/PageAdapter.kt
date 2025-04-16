@@ -13,6 +13,7 @@ import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.mangaworld.R
@@ -41,7 +42,7 @@ class PageAdapter(
 
     private val context: Context = activity
 
-    private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+    private val dao by lazy { ItemDatabase.getInstance(DatabaseBuilder(context)).itemDao() }
 
     override val itemToModel: (String) -> String = { it }
 
