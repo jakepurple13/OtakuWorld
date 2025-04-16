@@ -18,6 +18,9 @@ import androidx.room.Relation
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -27,7 +30,7 @@ import kotlin.uuid.Uuid
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 8,
+    version = 10,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 7),
@@ -40,9 +43,51 @@ abstract class ListDatabase : RoomDatabase() {
 
     companion object {
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(connection: SQLiteConnection) {
+                //change the uuid of CustomListInfo to text
+                connection.execSQL("DROP TABLE IF EXISTS CustomListInfo")
+            }
+        }
+
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(connection: SQLiteConnection) {
+                //change the uuid of CustomListInfo to text
+                connection.execSQL("DROP TABLE IF EXISTS CustomListInfo")
+                connection.execSQL("DROP TABLE IF EXISTS CustomListItem")
+                connection.execSQL(
+                    """
+                    CREATE TABLE CustomListInfo (
+                        uniqueId TEXT PRIMARY KEY NOT NULL DEFAULT '0c65586e-f3dc-4878-be63-b134fb46466c',
+                        uuid TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        url TEXT NOT NULL,
+                        imageUrl TEXT NOT NULL,
+                        sources TEXT NOT NULL
+                    )
+                """.trimIndent()
+                )
+                connection.execSQL(
+                    """
+                    CREATE TABLE CustomListItem (
+                        uuid TEXT PRIMARY KEY NOT NULL,
+                        name TEXT NOT NULL,
+                        time INTEGER NOT NULL,
+                        useBiometric INTEGER NOT NULL DEFAULT 0
+                    )
+                """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): ListDatabase = databaseBuilder
             .build<ListDatabase>("list.db")
             .fallbackToDestructiveMigration(true)
+            .addMigrations(
+                MIGRATION_8_9,
+                MIGRATION_9_10
+            )
             .build()
     }
 }
