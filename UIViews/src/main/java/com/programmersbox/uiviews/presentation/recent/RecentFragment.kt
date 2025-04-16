@@ -6,7 +6,9 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,6 +25,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.HideSource
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -135,9 +138,17 @@ fun RecentView(
     var showSourceChooser by showSourceChooser()
 
     OtakuHazeScaffold(
-        //state = LocalHazeState.current,
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    AnimatedVisibility(
+                        recentVm.isIncognitoSource,
+                        enter = slideInHorizontally() + fadeIn(),
+                        exit = fadeOut() + slideOutHorizontally()
+                    ) {
+                        Icon(Icons.Default.HideSource, null)
+                    }
+                },
                 title = {
                     AnimatedContent(
                         targetState = pagerState.targetPage,

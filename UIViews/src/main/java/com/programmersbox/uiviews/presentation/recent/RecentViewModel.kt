@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
@@ -67,6 +68,8 @@ class RecentViewModel(
 
     val snackbarHostState = SnackbarHostState()
 
+    var isIncognitoSource by mutableStateOf(false)
+
     init {
         combineSources(sourceRepository, dao)
             .onEach {
@@ -97,6 +100,12 @@ class RecentViewModel(
             .filterNotNull()
             .distinctUntilChanged()
             .onEach { gridState.scrollToItem(0) }
+            .launchIn(viewModelScope)
+
+        snapshotFlow { currentSource }
+            .filterNotNull()
+            .flatMapMerge { dao.getIncognitoSourceByName(it.serviceName) }
+            .onEach { isIncognitoSource = it?.isIncognito ?: false }
             .launchIn(viewModelScope)
 
         observeNetwork

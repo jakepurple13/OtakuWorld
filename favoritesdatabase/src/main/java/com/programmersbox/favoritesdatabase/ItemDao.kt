@@ -135,6 +135,9 @@ interface ItemDao {
     @Query("SELECT * FROM IncognitoSourceTable WHERE source = :source")
     fun getIncognitoSource(source: String): Flow<IncognitoSource?>
 
+    @Query("SELECT * FROM IncognitoSourceTable WHERE name = :name")
+    fun getIncognitoSourceByName(name: String): Flow<IncognitoSource?>
+
     @Query("SELECT * FROM IncognitoSourceTable WHERE source = :source")
     suspend fun getIncognitoSourceSync(source: String): IncognitoSource?
 
