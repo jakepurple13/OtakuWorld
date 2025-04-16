@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Bento
+import androidx.compose.material.icons.filled.CatchingPokemon
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +39,9 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.asState
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.icons.Discord
@@ -68,6 +72,7 @@ fun InfoSettings(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    val dataStoreHandling = koinInject<DataStoreHandling>()
 
     SettingsScaffold(stringResource(R.string.more_info_category)) {
         PreferenceSetting(
@@ -78,6 +83,22 @@ fun InfoSettings(
                 interactionSource = null,
                 onClick = usedLibraryClick
             )
+        )
+
+
+        //TODO: add an incognito option for each source
+
+        var onboarding by dataStoreHandling.hasGoneThroughOnboarding.asState()
+        PreferenceSetting(
+            settingTitle = { Text("View Onboarding Again") },
+            settingIcon = { Icon(Icons.Default.CatchingPokemon, null) },
+            modifier = Modifier.clickable(
+                indication = ripple(),
+                interactionSource = null
+            ) {
+                onboarding = false
+                navController.navigate(Screen.OnboardingScreen)
+            }
         )
 
         PreferenceSetting(
