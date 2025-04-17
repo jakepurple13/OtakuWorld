@@ -53,6 +53,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
+import com.programmersbox.datastore.rememberFloatingNavigation
+import com.programmersbox.datastore.rememberHistorySave
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.R
@@ -60,8 +62,6 @@ import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.copy
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.datastore.rememberFloatingNavigation
-import com.programmersbox.uiviews.datastore.rememberHistorySave
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
 import com.programmersbox.uiviews.datastore.rememberSwatchType
 import com.programmersbox.uiviews.presentation.components.ListSetting
@@ -529,8 +529,6 @@ fun ShowDownloadSettings(handling: SettingsHandling) {
 @Composable
 private fun HistorySettings(handling: SettingsHandling) {
     var sliderValue by rememberHistorySave()
-
-
 
     SliderSetting(
         sliderValue = sliderValue.toFloat(),

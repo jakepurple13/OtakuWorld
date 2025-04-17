@@ -55,9 +55,9 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.navigation.NavController
 import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
+import com.programmersbox.datastore.DataStoreHandler
+import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.uiviews.datastore.DataStoreHandler
-import com.programmersbox.uiviews.datastore.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -71,22 +71,20 @@ var Context.folderLocation: String by sharedPrefNotNullDelegate(
 )
 
 val IGNORE_SSL = booleanPreferencesKey("ignore_ssl")
-val Context.ignoreSsl get() = dataStore.data.map { it[IGNORE_SSL] ?: true }
+val Context.ignoreSsl get() = otakuDataStore.data.map { it[IGNORE_SSL] ?: true }
 
 val USER_NEW_PLAYER = booleanPreferencesKey("useNewPlayer")
-val Context.useNewPlayerFlow get() = dataStore.data.map { it[USER_NEW_PLAYER] ?: true }
+val Context.useNewPlayerFlow get() = otakuDataStore.data.map { it[USER_NEW_PLAYER] ?: true }
 
-class AnimeDataStoreHandling(context: Context) {
+class AnimeDataStoreHandling {
     val useNewPlayer = DataStoreHandler(
         key = booleanPreferencesKey("useNewPlayer"),
         defaultValue = true,
-        context = context
     )
 
     val ignoreSsl = DataStoreHandler(
         key = booleanPreferencesKey("ignore_ssl"),
         defaultValue = true,
-        context = context
     )
 }
 

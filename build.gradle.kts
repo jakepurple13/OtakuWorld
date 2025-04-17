@@ -76,6 +76,7 @@ plugins {
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
     alias(libs.plugins.google.firebase.performance) apply false
     alias(libs.plugins.room) apply false
+    alias(libs.plugins.composeMultiplatform) apply false
 }
 
 projectInfo {

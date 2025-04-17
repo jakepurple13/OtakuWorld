@@ -83,6 +83,7 @@ import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
+import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
@@ -94,7 +95,6 @@ import com.programmersbox.models.ItemModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.datastore.asState
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.SwitchSetting
@@ -119,7 +119,7 @@ val appModule = module {
     single<GenericInfo> { GenericAnime(get(), get(), get()) }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
-    single { AnimeDataStoreHandling(get()) }
+    single { AnimeDataStoreHandling() }
 }
 
 class StorageHolder {

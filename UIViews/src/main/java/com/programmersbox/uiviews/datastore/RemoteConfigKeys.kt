@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.datastore
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.programmersbox.datastore.DataStoreHandling
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
 
@@ -11,11 +12,12 @@ enum class RemoteConfigKeys(val key: String) {
 
     suspend fun setDataStoreValue(
         dataStoreHandling: DataStoreHandling,
+        otakuDataStoreHandling: OtakuDataStoreHandling,
         settingsHandling: SettingsHandling,
         remoteConfig: FirebaseRemoteConfig,
     ) {
         when (this) {
-            ShowGemini -> dataStoreHandling
+            ShowGemini -> otakuDataStoreHandling
                 .showGemini
                 .set(remoteConfig.getBoolean(key))
 

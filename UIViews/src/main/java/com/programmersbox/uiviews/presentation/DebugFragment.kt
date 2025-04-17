@@ -49,9 +49,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.material.datepicker.DateValidatorPointForward
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandling
-import com.programmersbox.uiviews.datastore.asState
 import com.programmersbox.uiviews.presentation.components.CheckBoxSetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowMoreSetting
@@ -97,21 +96,6 @@ fun DebugView() {
     ) { p ->
         val moreSettings = remember { genericInfo.debugMenuItem(context) }
         LazyColumn(contentPadding = p) {
-
-            item {
-                var onboarding by dataStoreHandling.hasGoneThroughOnboarding.asState()
-                PreferenceSetting(
-                    settingTitle = { Text("Onboarding") },
-                    settingIcon = { Icon(Icons.Default.Deck, null) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) {
-                        onboarding = false
-                        navController.navigate(Screen.OnboardingScreen)
-                    }
-                )
-            }
             /*item {
                 sources.forEach {
                     PreferenceSetting(

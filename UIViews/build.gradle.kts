@@ -63,6 +63,7 @@ dependencies {
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
+    api(projects.datastore)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)

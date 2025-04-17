@@ -84,6 +84,13 @@ scenecore = "1.0.0-alpha03"
 lottieCompose = "6.6.6"
 
 sqlite = "2.5.0"
+kotlinTest = "2.1.20"
+runner = "1.6.2"
+core = "1.6.1"
+
+androidx-lifecycle = "2.8.4"
+
+compose-multiplatform = "1.8.0-beta02"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
@@ -97,6 +104,7 @@ google-firebase-performance = { id = "com.google.firebase.firebase-perf", versio
 room = { id = "androidx.room", version.ref = "roomVersion" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "gradle" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 
 [libraries]
 ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpineVersion" }
@@ -166,6 +174,8 @@ coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "c
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+
+multiplatform-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
 #Accompanist
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
@@ -246,7 +256,7 @@ toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.2.0"
 sonner = { module = "io.github.dokar3:sonner", version = "0.3.8" }
 
-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
+datastore = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
 datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 jsoup = "org.jsoup:jsoup:1.19.1"
@@ -372,6 +382,9 @@ androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", ve
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 
 androidx-room-sqlite = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqlite" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 [bundles]
 compose = [

@@ -1,6 +1,6 @@
 package com.programmersbox.uiviews.di
 
-import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.uiviews.presentation.all.AllViewModel
 import com.programmersbox.uiviews.presentation.details.DetailsViewModel
 import com.programmersbox.uiviews.presentation.favorite.FavoriteViewModel
