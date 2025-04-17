@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
@@ -593,7 +593,11 @@ private fun LazyListScope.reader(
     onClick: () -> Unit,
     imageLoaderType: ImageLoaderType,
 ) {
-    items(pages, key = { it }, contentType = { it }) {
+    itemsIndexed(
+        pages,
+        key = { index, it -> "$it$index" },
+        contentType = { index, it -> it }
+    ) { _, it ->
         ChapterPage(
             chapterLink = { it },
             isDownloaded = vm.isDownloaded,

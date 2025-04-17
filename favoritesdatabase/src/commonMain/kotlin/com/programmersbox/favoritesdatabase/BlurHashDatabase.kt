@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.utils.blurhash
+package com.programmersbox.favoritesdatabase
 
-import android.content.Context
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -10,7 +9,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 
@@ -23,16 +21,9 @@ abstract class BlurHashDatabase : RoomDatabase() {
     abstract fun blurDao(): BlurHashDao
 
     companion object {
-
-        @Volatile
-        private var INSTANCE: BlurHashDatabase? = null
-
-        fun getInstance(context: Context): BlurHashDatabase =
-            INSTANCE ?: synchronized(this) { INSTANCE ?: buildDatabase(context).also { INSTANCE = it } }
-
-        private fun buildDatabase(context: Context) =
-            Room.databaseBuilder(context.applicationContext, BlurHashDatabase::class.java, "blurhash.db")
-                .build()
+        fun getInstance(databaseBuilder: DatabaseBuilder): BlurHashDatabase = databaseBuilder
+            .build<BlurHashDatabase>("blurhash.db")
+            .build()
     }
 }
 

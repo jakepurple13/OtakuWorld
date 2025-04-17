@@ -15,6 +15,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.BlurHashDao
+import com.programmersbox.favoritesdatabase.BlurHashItem
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toDbModel
@@ -30,8 +32,6 @@ import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
-import com.programmersbox.uiviews.utils.blurhash.BlurHashItem
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException

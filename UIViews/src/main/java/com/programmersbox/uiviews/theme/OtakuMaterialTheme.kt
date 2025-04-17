@@ -24,6 +24,8 @@ import androidx.navigation.NavHostController
 import com.materialkolor.ktx.animateColorScheme
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.favoritesdatabase.BlurHashDao
+import com.programmersbox.favoritesdatabase.BlurHashDatabase
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -43,8 +45,6 @@ import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.animate
-import com.programmersbox.uiviews.utils.blurhash.BlurHashDao
-import com.programmersbox.uiviews.utils.blurhash.BlurHashDatabase
 import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import io.kamel.core.ExperimentalKamelApi
