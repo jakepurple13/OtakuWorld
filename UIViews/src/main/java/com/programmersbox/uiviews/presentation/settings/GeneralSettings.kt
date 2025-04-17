@@ -53,15 +53,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
+import com.programmersbox.datastore.GridChoice
+import com.programmersbox.datastore.MiddleNavigationAction
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SystemThemeMode
+import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.datastore.rememberHistorySave
-import com.programmersbox.uiviews.GridChoice
-import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SystemThemeMode
-import com.programmersbox.uiviews.ThemeColor
-import com.programmersbox.uiviews.copy
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
 import com.programmersbox.uiviews.datastore.rememberSwatchType
 import com.programmersbox.uiviews.presentation.components.ListSetting
@@ -74,7 +73,6 @@ import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.presentation.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.PerformanceClass
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -94,7 +92,7 @@ fun GeneralSettings(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         val performanceClass = koinInject<PerformanceClass>()
-        val handling = LocalSettingsHandling.current
+        val handling: NewSettingsHandling = koinInject()
 
         var isAmoledMode by handling.rememberIsAmoledMode()
 
@@ -136,7 +134,7 @@ fun GeneralSettings(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun NavigationBarSettings(handling: SettingsHandling) {
+fun NavigationBarSettings(handling: NewSettingsHandling) {
     var floatingNavigation by rememberFloatingNavigation()
 
     SwitchSetting(
@@ -166,7 +164,7 @@ fun NavigationBarSettings(handling: SettingsHandling) {
             summaryValue = { Text(middleNavigationAction.visibleName) },
             confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(R.string.cancel)) } },
             value = middleNavigationAction,
-            options = MiddleNavigationAction.entries.filter { it != MiddleNavigationAction.UNRECOGNIZED },
+            options = MiddleNavigationAction.entries,
             updateValue = { it, d ->
                 d.value = false
                 middleNavigationAction = it
@@ -185,14 +183,14 @@ fun NavigationBarSettings(handling: SettingsHandling) {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MultipleActionsSetting(
-    handling: SettingsHandling,
+    handling: NewSettingsHandling,
     middleNavigationAction: MiddleNavigationAction,
 ) {
     var multipleActions by handling.rememberMiddleMultipleActions()
 
-    val multipleActionOptions = MiddleNavigationAction.entries
+    val multipleActionOptions = MiddleNavigationAction
+        .entries
         .filter { it != MiddleNavigationAction.Multiple }
-        .filter { it != MiddleNavigationAction.UNRECOGNIZED }
 
     ShowWhen(middleNavigationAction == MiddleNavigationAction.Multiple) {
         PreferenceSetting(
@@ -212,9 +210,11 @@ private fun MultipleActionsSetting(
                             ) {
                                 multipleActionOptions.forEach {
                                     DropdownMenuItem(
-                                        text = { Text(it.visibleName) },
+                                        text = { Text(it.name) },
                                         onClick = {
-                                            multipleActions = multipleActions.copy { startAction = it }
+                                            multipleActions = multipleActions?.copy(
+                                                startAction = it,
+                                            )
                                             showMenu = false
                                         }
                                     )
@@ -226,8 +226,8 @@ private fun MultipleActionsSetting(
                             ) {
                                 Icon(
                                     multipleActions
-                                        .startAction
-                                        .item
+                                        ?.startAction
+                                        ?.item
                                         ?.icon
                                         ?.invoke(true)
                                         ?: Icons.Default.Add,
@@ -245,7 +245,7 @@ private fun MultipleActionsSetting(
                                     DropdownMenuItem(
                                         text = { Text(it.visibleName) },
                                         onClick = {
-                                            multipleActions = multipleActions.copy { endAction = it }
+                                            multipleActions = multipleActions?.copy(endAction = it)
                                             showMenu = false
                                         }
                                     )
@@ -256,8 +256,8 @@ private fun MultipleActionsSetting(
                             ) {
                                 Icon(
                                     multipleActions
-                                        .endAction
-                                        .item
+                                        ?.endAction
+                                        ?.item
                                         ?.icon
                                         ?.invoke(true)
                                         ?: Icons.Default.Add,
@@ -286,7 +286,7 @@ private fun MultipleActionsSetting(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun ThemeSetting(
-    handling: SettingsHandling,
+    handling: NewSettingsHandling,
     isAmoledMode: Boolean,
 ) {
     var themeSetting by handling.rememberSystemThemeMode()
@@ -331,7 +331,7 @@ private fun ThemeSetting(
         ) {
             ThemeColor.entries
                 //TODO: For later
-                .filter { it != ThemeColor.Custom && it != ThemeColor.UNRECOGNIZED }
+                .filter { it != ThemeColor.Custom }
                 .forEach {
                     ThemeItem(
                         themeColor = it,
@@ -370,7 +370,7 @@ private fun AmoledModeSetting(
 }
 
 @Composable
-private fun ExpressivenessSetting(handling: SettingsHandling) {
+private fun ExpressivenessSetting(handling: NewSettingsHandling) {
     var showExpressiveness by handling.rememberShowExpressiveness()
     SwitchSetting(
         settingTitle = { Text("Show Expressiveness") },
@@ -382,7 +382,7 @@ private fun ExpressivenessSetting(handling: SettingsHandling) {
 }
 
 @Composable
-fun BlurSetting(handling: SettingsHandling) {
+fun BlurSetting(handling: NewSettingsHandling) {
     var showBlur by handling.rememberShowBlur()
 
     SwitchSetting(
@@ -402,7 +402,7 @@ fun BlurSetting(handling: SettingsHandling) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun PaletteSetting(handling: SettingsHandling) {
+private fun PaletteSetting(handling: NewSettingsHandling) {
     var usePalette by handling.rememberUsePalette()
 
     SwitchSetting(
@@ -452,7 +452,7 @@ private fun PaletteSetting(handling: SettingsHandling) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun GridTypeSettings(handling: SettingsHandling) {
+private fun GridTypeSettings(handling: NewSettingsHandling) {
     var gridChoice by handling.rememberGridChoice()
 
     ListSetting(
@@ -485,7 +485,7 @@ private fun GridTypeSettings(handling: SettingsHandling) {
 }
 
 @Composable
-fun ShareChapterSettings(handling: SettingsHandling) {
+fun ShareChapterSettings(handling: NewSettingsHandling) {
     var shareChapter by handling.rememberShareChapter()
 
     SwitchSetting(
@@ -497,7 +497,7 @@ fun ShareChapterSettings(handling: SettingsHandling) {
 }
 
 @Composable
-private fun DetailPaneSettings(handling: SettingsHandling) {
+private fun DetailPaneSettings(handling: NewSettingsHandling) {
     var showListDetail by handling.rememberShowListDetail()
 
     SwitchSetting(
@@ -515,7 +515,7 @@ private fun DetailPaneSettings(handling: SettingsHandling) {
 }
 
 @Composable
-fun ShowDownloadSettings(handling: SettingsHandling) {
+fun ShowDownloadSettings(handling: NewSettingsHandling) {
     var showDownload by handling.rememberShowDownload()
 
     SwitchSetting(
@@ -527,7 +527,7 @@ fun ShowDownloadSettings(handling: SettingsHandling) {
 }
 
 @Composable
-private fun HistorySettings(handling: SettingsHandling) {
+private fun HistorySettings(handling: NewSettingsHandling) {
     var sliderValue by rememberHistorySave()
 
     SliderSetting(

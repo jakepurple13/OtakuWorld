@@ -36,12 +36,13 @@ multiplatform this project grows stronger and stronger.
 
 - [ ] Models and FavoritesDatabase can be converted to multiplatform now
   - [x] FavoritesDatabase
+  - [x] Datastore
+    - [ ] Protobuf - in progress
+    - [ ] Need to figure out specific apps protobuf. Might need a later change.
   - [ ] Models
     - Uses some Java libraries, so need to figure out a way to keep some of that while also not
       affecting any other sources
 - [ ] Screens that do not have m3 alpha components can go into a multiplatform module
-- [ ] Move datastore components to a multiplatform module?
-    - [ ] Maybe it goes into the same one with that goes in that's above?
 - [ ] Start removal of gson
 - [ ] ViewModels could probably be moved into the kmp module
 

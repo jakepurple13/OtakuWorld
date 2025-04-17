@@ -12,12 +12,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +27,7 @@ fun PlaySettings(
 ) {
     SettingsScaffold(stringResource(R.string.playSettings)) {
         val scope = rememberCoroutineScope()
-        val settingsHandling = LocalSettingsHandling.current
+        val settingsHandling: NewSettingsHandling = koinInject()
         val batteryPercent = settingsHandling.batteryPercent
         val slider by batteryPercent.rememberPreference()
         var sliderValue by remember(slider) { mutableFloatStateOf(slider.toFloat()) }

@@ -5,6 +5,7 @@ plugins {
     //`otaku-protobuf`
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
+    id("com.squareup.wire")
 }
 
 otakuDependencies {
@@ -24,7 +25,14 @@ kotlin {
             //implementation(libs.composeRuntimeLivedata)
             implementation(compose.runtime)
             implementation(libs.multiplatform.lifecycle.runtime.compose)
-
+            implementation("androidx.datastore:datastore-core-okio:${libs.versions.datastore.get()}")
         }
+    }
+}
+
+wire {
+    kotlin {}
+    sourcePath {
+        srcDir("src/commonMain/proto")
     }
 }

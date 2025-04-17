@@ -77,6 +77,7 @@ plugins {
     alias(libs.plugins.google.firebase.performance) apply false
     alias(libs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
+    id("com.squareup.wire") version "5.3.1" apply false
 }
 
 projectInfo {

@@ -8,11 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.uiviews.NotificationSortBy
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.repository.NotificationRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
 
 class NotificationScreenViewModel(
     private val db: ItemDao,
-    settingsHandling: SettingsHandling,
+    settingsHandling: NewSettingsHandling,
     sourceRepository: SourceRepository,
     private val notificationRepository: NotificationRepository,
 ) : ViewModel() {
@@ -98,7 +98,6 @@ class NotificationScreenViewModel(
                 when (sortedBy) {
                     NotificationSortBy.Date -> NotificationSortBy.Grouped
                     NotificationSortBy.Grouped -> NotificationSortBy.Date
-                    NotificationSortBy.UNRECOGNIZED -> NotificationSortBy.Date
                 }
             )
         }

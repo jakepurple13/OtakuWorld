@@ -54,4 +54,9 @@ class DataStoreHandling {
         key = booleanPreferencesKey("hasGoneThroughOnboarding"),
         defaultValue = false
     )
+
+    val hasMigrated = DataStoreHandler(
+        key = booleanPreferencesKey("hasMigrated"),
+        defaultValue = false
+    )
 }
