@@ -59,13 +59,13 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SystemThemeMode
+import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.asState
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SystemThemeMode
-import com.programmersbox.uiviews.ThemeColor
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.ListSetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
@@ -90,7 +90,7 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun ThemeContent(
-    handling: SettingsHandling = koinInject(),
+    handling: NewSettingsHandling = koinInject(),
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -153,7 +153,7 @@ internal fun ThemeContent(
             modifier = Modifier.fillMaxWidth(),
         ) {
             ThemeColor.entries
-                .filter { it != ThemeColor.Custom && it != ThemeColor.UNRECOGNIZED }
+                .filter { it != ThemeColor.Custom }
                 .forEach {
                     ThemeItem(
                         themeColor = it,
@@ -355,7 +355,7 @@ internal fun WelcomeContent(
 
 @Composable
 internal fun GeneralContent() {
-    val handling = koinInject<SettingsHandling>()
+    val handling = koinInject<NewSettingsHandling>()
     val dataStoreHandling = koinInject<DataStoreHandling>()
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),

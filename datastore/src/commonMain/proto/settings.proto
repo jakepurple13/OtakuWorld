@@ -22,6 +22,7 @@ message Settings {
   MiddleMultipleActions multipleActions = 18;
   bool showExpressiveness = 19;
   bool notifyOnReboot = 20;
+  bool hasMigrated = 21;
 }
 
 enum SystemThemeMode {

@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.annotation.CallSuper
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.datastore.preferences.core.edit
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -34,7 +33,6 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDatabase
@@ -52,7 +50,6 @@ import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.datastore.dataStore
 import com.programmersbox.uiviews.datastore.migrateSettings
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
@@ -174,14 +171,10 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         val newSettingsHandling = get<NewSettingsHandling>()
         val settingsHandling = get<SettingsHandling>()
 
-        //TODO: Make sure this only happens once
-        dataStore
-            .data
-            .onEach { old -> otakuDataStore.edit { new -> new += old } }
-            .launchIn(GlobalScope)
-
         //TODO: Remove the migration after the next full release
         migrateSettings(
+            context = this,
+            dataStoreHandling = dataStoreHandling,
             settingsHandling = settingsHandling,
             newSettingsHandling = newSettingsHandling
         )

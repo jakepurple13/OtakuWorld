@@ -78,6 +78,7 @@ object SettingsSerializer : GenericSerializer<Settings> {
             showBlur = true,//PerformanceClass.canBlur(),
             showExpressiveness = true,
             notifyOnReboot = true,
+            hasMigrated = false,
             multipleActions = MiddleMultipleActions(
                 startAction = MiddleNavigationAction.All,
                 endAction = MiddleNavigationAction.Notifications,
@@ -220,6 +221,13 @@ class NewSettingsHandling(
             startAction = MiddleNavigationAction.All,
             endAction = MiddleNavigationAction.Notifications
         )
+    )
+
+    val hasMigrated = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.hasMigrated },
+        update = { copy(hasMigrated = it) },
+        defaultValue = false
     )
 }
 

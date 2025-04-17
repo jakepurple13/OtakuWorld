@@ -370,10 +370,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
         currentDestination: NavDestination?,
         showBlur: Boolean,
         isAmoledMode: Boolean,
-        middleNavItem: MiddleNavigationAction,
+        middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
         modifier: Modifier = Modifier,
         scrollBehavior: BottomAppBarScrollBehavior? = null,
-        multipleActions: MiddleMultipleActions,
+        multipleActions: com.programmersbox.datastore.MiddleMultipleActions?,
     ) {
         val scope = rememberCoroutineScope()
         AnimatedVisibility(
@@ -480,13 +480,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     )
                 }
 
-                MultipleActions(
-                    state = multipleBarState,
-                    middleNavItem = middleNavItem,
-                    multipleActions = multipleActions,
-                    currentDestination = currentDestination,
-                    navController = navController
-                )
+                multipleActions?.let {
+                    MultipleActions(
+                        state = multipleBarState,
+                        middleNavItem = middleNavItem,
+                        multipleActions = it,
+                        currentDestination = currentDestination,
+                        navController = navController
+                    )
+                }
             }
         }
     }
@@ -499,8 +501,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         currentDestination: NavDestination?,
         showBlur: Boolean,
         isAmoledMode: Boolean,
-        middleNavItem: MiddleNavigationAction,
-        multipleActions: MiddleMultipleActions,
+        middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
+        multipleActions: com.programmersbox.datastore.MiddleMultipleActions?,
         modifier: Modifier = Modifier,
     ) {
         val scope = rememberCoroutineScope()
@@ -573,13 +575,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
             }
 
-            MultipleActions(
-                state = multipleBarState,
-                middleNavItem = middleNavItem,
-                multipleActions = multipleActions,
-                currentDestination = currentDestination,
-                navController = navController
-            )
+            multipleActions?.let {
+                MultipleActions(
+                    state = multipleBarState,
+                    middleNavItem = middleNavItem,
+                    multipleActions = it,
+                    currentDestination = currentDestination,
+                    navController = navController
+                )
+            }
         }
     }
 
