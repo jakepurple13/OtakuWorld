@@ -115,6 +115,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -122,7 +123,6 @@ import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.HazeScaffold
 import com.programmersbox.uiviews.presentation.components.MultipleActions
@@ -168,7 +168,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected fun isNavInitialized() = ::navController.isInitialized
 
-    private val settingsHandling: SettingsHandling by inject()
+    private val settingsHandling: NewSettingsHandling by inject()
 
     private val sourceRepository by inject<SourceRepository>()
     private val currentSourceRepository by inject<CurrentSourceRepository>()

@@ -97,6 +97,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
+import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -106,7 +107,6 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.NotificationSortBy
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
@@ -333,8 +333,6 @@ fun NotificationsScreen(
                         }
                     )
                 }
-
-                NotificationSortBy.UNRECOGNIZED -> {}
             }
         }
 

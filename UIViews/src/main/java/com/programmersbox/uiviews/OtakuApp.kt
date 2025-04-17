@@ -32,6 +32,8 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DataStoreSettings
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.favoritesdatabase.CustomListItem
@@ -51,6 +53,7 @@ import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.dataStore
+import com.programmersbox.uiviews.datastore.migrateSettings
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
@@ -88,11 +91,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         ComposeUiFlags.isSemanticAutofillEnabled = true
 
         DataStoreSettings { filesDir.resolve(it).absolutePath }
-
-        dataStore
-            .data
-            .onEach { old -> otakuDataStore.edit { new -> new += old } }
-            .launchIn(GlobalScope)
 
         runCatching {
             FirebaseApp.initializeApp(this)
@@ -145,6 +143,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     }
                     single { UpdateNotification(get()) }
                     single { DataStoreHandling() }
+                    single { NewSettingsHandling(createProtobuf(get())) }
                     single { OtakuDataStoreHandling() }
                     single { DownloadAndInstaller(get()) }
                     single { PerformanceClass.create() }
@@ -172,7 +171,20 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         val dataStoreHandling = get<DataStoreHandling>()
         val otakuDataStoreHandling = get<OtakuDataStoreHandling>()
+        val newSettingsHandling = get<NewSettingsHandling>()
         val settingsHandling = get<SettingsHandling>()
+
+        //TODO: Make sure this only happens once
+        dataStore
+            .data
+            .onEach { old -> otakuDataStore.edit { new -> new += old } }
+            .launchIn(GlobalScope)
+
+        //TODO: Remove the migration after the next full release
+        migrateSettings(
+            settingsHandling = settingsHandling,
+            newSettingsHandling = newSettingsHandling
+        )
 
         GlobalScope.launch(Dispatchers.IO) {
             val forLaterName = getString(R.string.for_later)
@@ -253,7 +265,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                 remoteConfigSetup(
                     dataStoreHandling = dataStoreHandling,
                     otakuDataStoreHandling = otakuDataStoreHandling,
-                    settingsHandling = settingsHandling
+                    settingsHandling = settingsHandling,
+                    newSettingsHandling = newSettingsHandling
                 )
         }
     }
@@ -293,6 +306,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         dataStoreHandling: DataStoreHandling,
         otakuDataStoreHandling: OtakuDataStoreHandling,
         settingsHandling: SettingsHandling,
+        newSettingsHandling: NewSettingsHandling,
     ) {
         val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
@@ -310,6 +324,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                             dataStoreHandling = dataStoreHandling,
                             otakuDataStoreHandling = otakuDataStoreHandling,
                             settingsHandling = settingsHandling,
+                            newSettingsHandling = newSettingsHandling,
                             remoteConfig = remoteConfig,
                         )
                     }
@@ -335,6 +350,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                                                 dataStoreHandling = dataStoreHandling,
                                                 otakuDataStoreHandling = otakuDataStoreHandling,
                                                 settingsHandling = settingsHandling,
+                                                newSettingsHandling = newSettingsHandling,
                                                 remoteConfig = remoteConfig
                                             )
                                         }

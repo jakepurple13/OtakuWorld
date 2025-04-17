@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package com.programmersbox.datastore;
+
+message Settings {
+  SystemThemeMode themeSetting = 1;
+  bool shouldCheckUpdate = 2;
+  int32 batteryPercent = 3;
+  bool shareChapter = 4;
+  bool showAll = 5;
+  int32 historySave = 6;
+  NotificationSortBy notificationSortBy = 7;
+  bool showListDetail = 8;
+  bool showDownload = 9;
+  repeated string customUrls = 10;
+  bool amoledMode = 11;
+  bool usePalette = 12;
+  bool showBlur = 13;
+  GridChoice gridChoice = 15;
+  ThemeColor themeColor = 16;
+  MiddleNavigationAction middleNavigationAction = 17;
+  MiddleMultipleActions multipleActions = 18;
+  bool showExpressiveness = 19;
+  bool notifyOnReboot = 20;
+}
+
+enum SystemThemeMode {
+  FollowSystem = 0;
+  Day = 1;
+  Night = 2;
+}
+
+enum ThemeColor {
+  Dynamic = 0;
+  Blue = 1;
+  Red = 2;
+  Green = 3;
+  Yellow = 4;
+  Cyan = 6;
+  Magenta = 7;
+  Custom = 8;
+}
+
+enum NotificationSortBy {
+  Date = 0;
+  Grouped = 1;
+}
+
+enum GridChoice {
+  FullAdaptive = 0;
+  Adaptive = 1;
+  Fixed = 2;
+}
+
+enum MiddleNavigationAction {
+  All = 0;
+  Notifications = 1;
+  Lists = 2;
+  Favorites = 3;
+  Search = 4;
+  Multiple = 5;
+}
+
+message MiddleMultipleActions {
+  MiddleNavigationAction startAction = 1;
+  MiddleNavigationAction endAction = 2;
+}
