@@ -57,7 +57,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -342,7 +341,6 @@ fun DetailBottomBar(
     canNotify: Boolean,
     notifyAction: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = Color.Transparent,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
     bottomAppBarScrollBehavior: BottomAppBarScrollBehavior? = null,
@@ -410,7 +408,6 @@ fun DetailBottomBar(
                 )
             }
         },
-        containerColor = containerColor,
         scrollBehavior = bottomAppBarScrollBehavior,
         windowInsets = windowInsets,
         modifier = modifier

@@ -357,7 +357,6 @@ private fun DetailsLandscapeContent(
                                     )
                                 }
                             },
-                        containerColor = c,
                         isFavorite = isFavorite,
                         onFavoriteClick = onFavoriteClick,
                         windowInsets = BottomAppBarDefaults.windowInsets
