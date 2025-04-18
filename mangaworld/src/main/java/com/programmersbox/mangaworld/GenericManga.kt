@@ -42,6 +42,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
@@ -65,7 +66,6 @@ import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
@@ -106,7 +106,7 @@ class GenericManga(
     val context: Context,
     val chapterHolder: ChapterHolder,
     val mangaSettingsHandling: MangaSettingsHandling,
-    val settingsHandling: SettingsHandling,
+    val settingsHandling: NewSettingsHandling,
 ) : GenericInfo {
 
     override val sourceType: String get() = "manga"

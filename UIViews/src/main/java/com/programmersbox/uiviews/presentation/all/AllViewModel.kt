@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.all
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,7 @@ class AllViewModel(
     favoritesRepository: FavoritesRepository,
 ) : ViewModel(), ToastItems by DefaultToastItems() {
 
+    @SuppressLint("MissingPermission")
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
         .flowOn(Dispatchers.IO)

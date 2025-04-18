@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.models.ExternalApiServicesCatalog
@@ -15,7 +16,6 @@ import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.combine
@@ -27,7 +27,7 @@ class ExtensionListViewModel(
     sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
     otakuWorldCatalog: OtakuWorldCatalog,
-    settingsHandling: SettingsHandling,
+    settingsHandling: NewSettingsHandling,
     val downloadAndInstaller: DownloadAndInstaller,
     private val downloadStateRepository: DownloadStateRepository,
 ) : ViewModel() {

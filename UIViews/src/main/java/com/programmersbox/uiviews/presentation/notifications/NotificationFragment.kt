@@ -97,6 +97,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -129,7 +130,6 @@ import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -169,7 +169,8 @@ fun NotificationsScreen(
     notificationRepository: NotificationRepository = koinInject(),
     itemDao: ItemDao = koinInject(),
 ) {
-    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+    val settingsHandling: NewSettingsHandling = koinInject()
+    val showBlur by settingsHandling.rememberShowBlur()
 
     var showLoadingDialog by remember { mutableStateOf(false) }
 

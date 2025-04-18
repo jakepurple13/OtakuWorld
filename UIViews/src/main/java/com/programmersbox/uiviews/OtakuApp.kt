@@ -32,7 +32,6 @@ import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDatabase
@@ -42,21 +41,18 @@ import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
-import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.migrateSettings
+import com.programmersbox.uiviews.di.appModule
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.di.workers
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
-import com.programmersbox.uiviews.utils.PerformanceClass
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -73,9 +69,7 @@ import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
-import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -130,31 +124,25 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             loadKoinModules(
                 module {
                     buildModules()
-                    single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                    singleOf(::SettingsHandling)
                     single {
                         AppLogo(
                             logo = applicationInfo.loadIcon(packageManager),
                             logoId = applicationInfo.icon
                         )
                     }
-                    single { UpdateNotification(get()) }
-                    single { DataStoreHandling() }
-                    single { NewSettingsHandling(createProtobuf(get())) }
-                    single { OtakuDataStoreHandling() }
-                    single { DownloadAndInstaller(get()) }
-                    single { PerformanceClass.create() }
 
+                    appModule()
                     workers()
                     viewModels()
                     databases()
                     repository()
 
-                    single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
                     single {
-                        OtakuWorldCatalog(
-                            get<GenericInfo>().sourceType
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                        SourceLoader(
+                            application = this@OtakuApp,
+                            context = get(),
+                            sourceType = get<GenericInfo>().sourceType,
+                            sourceRepository = get()
                         )
                     }
                 }

@@ -173,7 +173,7 @@ class ReadViewModel(
             ) {
                 batteryColor = it.first
                 batteryIcon = it.second
-            }
+            }.collect()
         }
 
         val url = handle.get<String>("novelUrl") ?: ""

@@ -13,6 +13,7 @@ import platform.Foundation.NSUserDomainMask
 actual fun platform() = "iOS"
 
 actual fun getDataStore(
+    serializer: SettingsSerializer,
     producePath: () -> Path,
 ): DataStore<Settings> {
     @OptIn(ExperimentalForeignApi::class)
@@ -27,5 +28,9 @@ actual fun getDataStore(
         requireNotNull(documentDirectory).path + "/Settings"
     }
 
-    return createDataStore(fileSystem = FileSystem.SYSTEM, producePath = { producePath().toPath() })
+    return createDataStore(
+        fileSystem = FileSystem.SYSTEM,
+        producePath = { producePath().toPath() },
+        serializer = serializer
+    )
 }

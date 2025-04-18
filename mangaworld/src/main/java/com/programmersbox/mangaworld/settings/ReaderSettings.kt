@@ -68,6 +68,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
@@ -75,7 +76,6 @@ import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.compose.FloatingBottomBar
 import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
 import com.programmersbox.mangaworld.reader.compose.dpToPx
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.SliderSetting
@@ -97,7 +97,7 @@ data object ReaderSettingsScreen
 @Composable
 fun ReaderSettings(
     mangaSettingsHandling: MangaSettingsHandling,
-    settingsHandling: SettingsHandling,
+    settingsHandling: NewSettingsHandling,
 ) {
     HideSystemBarsWhileOnScreen()
 

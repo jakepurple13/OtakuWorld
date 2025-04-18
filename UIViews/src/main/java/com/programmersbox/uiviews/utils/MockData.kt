@@ -43,6 +43,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SettingsSerializer
+import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
@@ -213,6 +216,12 @@ fun PreviewTheme(
                 }
                 single { DataStoreHandling() }
                 single { OtakuDataStoreHandling() }
+                single {
+                    NewSettingsHandling(
+                        createProtobuf(get(), SettingsSerializer(true)),
+                        false
+                    )
+                }
                 viewModels()
             }
         }
@@ -247,7 +256,13 @@ fun PreviewTheme(
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
+                //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
+                LocalSettingsHandling provides remember {
+                    NewSettingsHandling(
+                        createProtobuf(context, SettingsSerializer(true)),
+                        false
+                    )
+                },
                 LocalItemDao provides remember { ItemDatabase.getInstance(databaseBuilder).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(databaseBuilder).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(databaseBuilder).listDao() },

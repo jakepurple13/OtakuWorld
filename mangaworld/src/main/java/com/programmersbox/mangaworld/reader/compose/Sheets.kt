@@ -61,11 +61,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.SliderSetting
@@ -88,7 +88,7 @@ internal fun SettingsSheet(
     readerType: ReaderType,
     readerTypeChange: (ReaderType) -> Unit,
     modifier: Modifier = Modifier,
-    settingsHandling: SettingsHandling = LocalSettingsHandling.current,
+    settingsHandling: NewSettingsHandling = LocalSettingsHandling.current,
 ) {
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)

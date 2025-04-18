@@ -8,7 +8,12 @@ import okio.Path.Companion.toPath
 actual fun platform() = "Desktop"
 
 actual fun getDataStore(
+    serializer: SettingsSerializer,
     producePath: () -> Path,
 ): DataStore<Settings> {
-    return createDataStore(fileSystem = FileSystem.SYSTEM, producePath = { DATA_STORE_FILE_NAME.toPath() })
+    return createDataStore(
+        fileSystem = FileSystem.SYSTEM,
+        producePath = { DATA_STORE_FILE_NAME.toPath() },
+        serializer = serializer
+    )
 }
