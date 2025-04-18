@@ -59,9 +59,9 @@ import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
-import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.uiviews.presentation.Screen
@@ -124,7 +124,7 @@ fun DownloadScreen() {
 private fun DownloadViewer(
     viewModel: DownloadViewModel,
     p1: PaddingValues,
-    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
+    mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
 ) {
     val useNewReader by mangaSettingsHandling.useNewReader
         .flow

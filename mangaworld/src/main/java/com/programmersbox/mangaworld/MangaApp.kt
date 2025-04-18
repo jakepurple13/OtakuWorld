@@ -19,6 +19,7 @@ class MangaApp : OtakuApp() {
         val mangaSettingsHandling by inject<MangaSettingsHandling>()
         val mangaNewSettingsHandling by inject<MangaNewSettingsHandling>()
 
+        //TODO: Remove the migration after the next full release
         migrateMangaSettings(
             mangaSettingsHandling = mangaSettingsHandling,
             mangaNewSettingsHandling = mangaNewSettingsHandling
