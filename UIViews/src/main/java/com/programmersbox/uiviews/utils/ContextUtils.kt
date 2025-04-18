@@ -42,6 +42,7 @@ import com.google.gson.JsonSerializer
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
@@ -51,7 +52,6 @@ import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
@@ -214,7 +214,7 @@ class BatteryInformation(val context: Context) : KoinComponent {
 
     val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
     val batteryInfo by lazy { MutableSharedFlow<Battery>() }
-    val settingsHandling: SettingsHandling by inject()
+    val settingsHandling: NewSettingsHandling by inject()
 
     private val batteryPercent by lazy { settingsHandling.batteryPercent }
 
@@ -457,7 +457,7 @@ class ExpirableLRUCache<K, V>(
     }
 }
 
-val LocalSettingsHandling = staticCompositionLocalOf<SettingsHandling> { error("Not Set") }
+val LocalSettingsHandling = staticCompositionLocalOf<NewSettingsHandling> { error("Not Set") }
 
 tailrec fun Context.findActivity(): FragmentActivity = when (this) {
     is FragmentActivity -> this

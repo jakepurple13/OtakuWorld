@@ -63,6 +63,7 @@ dependencies {
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
+    api(projects.datastore)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)
@@ -175,4 +176,6 @@ dependencies {
     implementation(libs.textflow.material3)
 
     implementation(libs.lottie.compose)
+
+    implementation(libs.compose.webview)
 }

@@ -7,9 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.uiviews.datastore.DataStoreHandling
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat
 class NotificationViewModel(
     dao: ItemDao,
     private val dataStoreHandling: DataStoreHandling,
-    settingsHandling: SettingsHandling,
+    settingsHandling: NewSettingsHandling,
 ) : ViewModel() {
 
     var savedNotifications by mutableIntStateOf(0)

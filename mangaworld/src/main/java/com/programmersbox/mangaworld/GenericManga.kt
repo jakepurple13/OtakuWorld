@@ -42,10 +42,14 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.onboarding.ReaderOnboarding
@@ -65,7 +69,6 @@ import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
@@ -84,16 +87,26 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
     single<GenericInfo> { GenericManga(get(), get(), get(), get()) }
-    single { NetworkHelper(get()) }
+    singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
-    single { ChapterHolder() }
-    single { MangaSettingsHandling(get()) }
+    singleOf(::ChapterHolder)
+    singleOf(::MangaSettingsHandling)
+    single {
+        MangaNewSettingsHandling(
+            createProtobuf(
+                context = get(),
+                serializer = MangaNewSettingsSerializer,
+                fileName = "MangaSettings.preferences_pb"
+            )
+        )
+    }
     viewModelOf(::ReadViewModel)
 }
 
@@ -105,8 +118,8 @@ class ChapterHolder {
 class GenericManga(
     val context: Context,
     val chapterHolder: ChapterHolder,
-    val mangaSettingsHandling: MangaSettingsHandling,
-    val settingsHandling: SettingsHandling,
+    val mangaSettingsHandling: MangaNewSettingsHandling,
+    val settingsHandling: NewSettingsHandling,
 ) : GenericInfo {
 
     override val sourceType: String get() = "manga"

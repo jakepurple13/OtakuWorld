@@ -42,6 +42,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SettingsSerializer
+import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
@@ -59,7 +63,7 @@ import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
@@ -210,7 +214,14 @@ fun PreviewTheme(
                             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                     )
                 }
-                single { DataStoreHandling(get()) }
+                single { DataStoreHandling() }
+                single { OtakuDataStoreHandling() }
+                single {
+                    NewSettingsHandling(
+                        createProtobuf(get(), SettingsSerializer(true)),
+                        false
+                    )
+                }
                 viewModels()
             }
         }
@@ -245,7 +256,13 @@ fun PreviewTheme(
             CompositionLocalProvider(
                 LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
+                //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
+                LocalSettingsHandling provides remember {
+                    NewSettingsHandling(
+                        createProtobuf(context, SettingsSerializer(true)),
+                        false
+                    )
+                },
                 LocalItemDao provides remember { ItemDatabase.getInstance(databaseBuilder).itemDao() },
                 LocalHistoryDao provides remember { HistoryDatabase.getInstance(databaseBuilder).historyDao() },
                 LocalCustomListDao provides remember { ListDatabase.getInstance(databaseBuilder).listDao() },

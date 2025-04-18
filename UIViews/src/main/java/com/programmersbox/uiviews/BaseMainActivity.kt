@@ -114,15 +114,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
-import com.programmersbox.uiviews.datastore.DataStoreHandling
-import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.datastore.rememberFloatingNavigation
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.HazeScaffold
 import com.programmersbox.uiviews.presentation.components.MultipleActions
@@ -168,7 +168,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     protected fun isNavInitialized() = ::navController.isInitialized
 
-    private val settingsHandling: SettingsHandling by inject()
+    private val settingsHandling: NewSettingsHandling by inject()
 
     private val sourceRepository by inject<SourceRepository>()
     private val currentSourceRepository by inject<CurrentSourceRepository>()
@@ -370,10 +370,10 @@ abstract class BaseMainActivity : AppCompatActivity() {
         currentDestination: NavDestination?,
         showBlur: Boolean,
         isAmoledMode: Boolean,
-        middleNavItem: MiddleNavigationAction,
+        middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
         modifier: Modifier = Modifier,
         scrollBehavior: BottomAppBarScrollBehavior? = null,
-        multipleActions: MiddleMultipleActions,
+        multipleActions: com.programmersbox.datastore.MiddleMultipleActions?,
     ) {
         val scope = rememberCoroutineScope()
         AnimatedVisibility(
@@ -480,13 +480,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     )
                 }
 
-                MultipleActions(
-                    state = multipleBarState,
-                    middleNavItem = middleNavItem,
-                    multipleActions = multipleActions,
-                    currentDestination = currentDestination,
-                    navController = navController
-                )
+                multipleActions?.let {
+                    MultipleActions(
+                        state = multipleBarState,
+                        middleNavItem = middleNavItem,
+                        multipleActions = it,
+                        currentDestination = currentDestination,
+                        navController = navController
+                    )
+                }
             }
         }
     }
@@ -499,8 +501,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
         currentDestination: NavDestination?,
         showBlur: Boolean,
         isAmoledMode: Boolean,
-        middleNavItem: MiddleNavigationAction,
-        multipleActions: MiddleMultipleActions,
+        middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
+        multipleActions: com.programmersbox.datastore.MiddleMultipleActions?,
         modifier: Modifier = Modifier,
     ) {
         val scope = rememberCoroutineScope()
@@ -573,13 +575,15 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 }
             }
 
-            MultipleActions(
-                state = multipleBarState,
-                middleNavItem = middleNavItem,
-                multipleActions = multipleActions,
-                currentDestination = currentDestination,
-                navController = navController
-            )
+            multipleActions?.let {
+                MultipleActions(
+                    state = multipleBarState,
+                    middleNavItem = middleNavItem,
+                    multipleActions = it,
+                    currentDestination = currentDestination,
+                    navController = navController
+                )
+            }
         }
     }
 

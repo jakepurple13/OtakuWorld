@@ -6,14 +6,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class SettingsViewModel(
     dao: ItemDao,
-    dataStoreHandling: DataStoreHandling,
+    dataStoreHandling: OtakuDataStoreHandling,
 ) : ViewModel() {
     val showGemini = dataStoreHandling.showGemini.asFlow()
 

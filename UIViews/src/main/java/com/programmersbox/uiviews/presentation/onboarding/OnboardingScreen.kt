@@ -37,10 +37,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.asState
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandling
-import com.programmersbox.uiviews.datastore.asState
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl

@@ -30,6 +30,7 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.colorFromTheme
@@ -37,15 +38,14 @@ import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.helpfulutils.visible
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.CustomHideBottomViewOnScrollBehavior
-import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
@@ -68,8 +68,8 @@ class ReadActivity : AppCompatActivity() {
     private var isDownloaded = false
     private val loader by lazy { Glide.with(this) }
     private val genericInfo by inject<GenericInfo>()
-    private val settingsHandling: SettingsHandling by inject()
-    private val mangaSettingsHandling: MangaSettingsHandling by inject()
+    private val settingsHandling: NewSettingsHandling by inject()
+    private val mangaSettingsHandling: MangaNewSettingsHandling by inject()
 
     private fun View.slideUp() {
         val layoutParams = this.layoutParams

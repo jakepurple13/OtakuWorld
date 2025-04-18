@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.globalsearch
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,7 @@ class GlobalSearchViewModel(
 
     private val initialSearch: String = savedStateHandle.toRoute<Screen.GlobalSearchScreen>().title ?: ""
 
+    @SuppressLint("MissingPermission")
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
         .flowOn(Dispatchers.IO)

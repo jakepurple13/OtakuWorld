@@ -1,6 +1,7 @@
 [versions]
 biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
+composeWebview = "0.33.6"
 corePerformance = "1.0.0"
 generativeai = "0.9.0"
 gradle = "8.9.1"
@@ -15,7 +16,7 @@ dragselect = "2.4.1"
 easylauncher = "6.4.0"
 firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
-haze = "1.5.3"
+haze = "1.5.4"
 kamelImage = "1.0.3"
 latestAboutLibsRelease = "11.6.3"
 coroutinesVersion = "1.10.2"
@@ -84,6 +85,13 @@ scenecore = "1.0.0-alpha03"
 lottieCompose = "6.6.6"
 
 sqlite = "2.5.0"
+kotlinTest = "2.1.20"
+runner = "1.6.2"
+core = "1.6.1"
+
+androidx-lifecycle = "2.8.4"
+
+compose-multiplatform = "1.8.0-beta02"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
@@ -97,6 +105,7 @@ google-firebase-performance = { id = "com.google.firebase.firebase-perf", versio
 room = { id = "androidx.room", version.ref = "roomVersion" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "gradle" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 
 [libraries]
 ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpineVersion" }
@@ -106,6 +115,7 @@ androidx-core-performance = { module = "androidx.core:core-performance", version
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
 blurhash = { module = "com.vanniktech:blurhash", version.ref = "blurhash" }
 compose-collapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }
+compose-webview = { module = "io.github.kevinnzou:compose-webview", version.ref = "composeWebview" }
 dragselect = { module = "com.dragselectcompose:dragselect", version.ref = "dragselect" }
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
@@ -166,6 +176,8 @@ coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "c
 navCompose = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+
+multiplatform-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
 #Accompanist
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
@@ -237,7 +249,7 @@ pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagi
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
 androidxWindow = "androidx.window:window:1.3.0"
-androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.5.0"
+androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.6.0"
 androidxBrowser = "androidx.browser:browser:1.8.0"
 
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
@@ -246,7 +258,7 @@ toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.2.0"
 sonner = { module = "io.github.dokar3:sonner", version = "0.3.8" }
 
-datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
+datastore = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
 datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 jsoup = "org.jsoup:jsoup:1.19.1"
@@ -372,6 +384,9 @@ androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", ve
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 
 androidx-room-sqlite = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqlite" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 [bundles]
 compose = [

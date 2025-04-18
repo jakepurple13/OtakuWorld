@@ -23,6 +23,9 @@ import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import com.materialkolor.ktx.animateColorScheme
 import com.materialkolor.rememberDynamicColorScheme
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SystemThemeMode
+import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashDatabase
@@ -34,10 +37,8 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SystemThemeMode
-import com.programmersbox.uiviews.ThemeColor
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -65,7 +66,7 @@ fun OtakuMaterialTheme(
     navController: NavHostController,
     genericInfo: GenericInfo,
     isAmoledMode: Boolean = false,
-    settingsHandling: SettingsHandling,
+    settingsHandling: NewSettingsHandling,
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
@@ -155,7 +156,9 @@ fun OtakuMaterialTheme(
                                         }
                                     }
                                 )
-                            }.onFailure { defaultUriHandler.openUri(uri) }
+                            }
+                                .recoverCatching { defaultUriHandler.openUri(uri) }
+                                .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
                         }
                     }
                 }

@@ -104,6 +104,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
+import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
@@ -113,7 +114,6 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandler
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
@@ -843,7 +843,6 @@ private fun CustomListScreenPreview() {
             OtakuCustomListViewModel(
                 listDao,
                 DataStoreHandler(
-                    context = context,
                     defaultValue = false,
                     key = booleanPreferencesKey("asdf")
                 )

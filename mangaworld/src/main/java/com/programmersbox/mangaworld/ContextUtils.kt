@@ -14,20 +14,20 @@ import android.view.View
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
+import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.uiviews.datastore.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 val SHOW_ADULT = booleanPreferencesKey("showAdultSources")
-val Context.showAdultFlow get() = dataStore.data.map { it[SHOW_ADULT] ?: false }
+val Context.showAdultFlow get() = otakuDataStore.data.map { it[SHOW_ADULT] ?: false }
 
 val DOWNLOAD_FILE_PATH get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"
 
 val FOLDER_LOCATION = stringPreferencesKey("folderLocation")
-val Context.folderLocationFlow get() = dataStore.data.map { it[FOLDER_LOCATION] ?: DOWNLOAD_FILE_PATH }
+val Context.folderLocationFlow get() = otakuDataStore.data.map { it[FOLDER_LOCATION] ?: DOWNLOAD_FILE_PATH }
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/MangaWorld/"

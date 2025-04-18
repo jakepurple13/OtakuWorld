@@ -3,12 +3,12 @@ package com.programmersbox.uiviews.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.NotificationLogo
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
@@ -19,7 +19,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     private val logo: NotificationLogo by inject()
     private val info: GenericInfo by inject()
     private val sourceRepository: SourceRepository by inject()
-    private val settingsHandling: SettingsHandling by inject()
+    private val settingsHandling: NewSettingsHandling by inject()
 
     private val itemDao: ItemDao by inject()
 

@@ -27,7 +27,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import com.programmersbox.uiviews.MiddleNavigationAction
+import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.Screen
 
@@ -37,7 +37,7 @@ data class MiddleNavigationItem(
     val label: Int,
 )
 
-val MiddleNavigationAction.visibleName get() = if (this == MiddleNavigationAction.UNRECOGNIZED) "None" else name
+val MiddleNavigationAction.visibleName get() = name
 
 val MiddleNavigationAction.item: MiddleNavigationItem?
     get() = when (this) {

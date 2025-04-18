@@ -70,3 +70,5 @@ rootProject.name = "OtakuWorld"
 //include(":anime_sources:defaultanimesources")
 //include(":MangaWorldbaselineprofile")
 include(":gemini")
+include(":datastore")
+include(":datastore:mangasettings")

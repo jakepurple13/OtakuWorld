@@ -1,6 +1,8 @@
 package com.programmersbox.uiviews.datastore
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
 
@@ -11,17 +13,19 @@ enum class RemoteConfigKeys(val key: String) {
 
     suspend fun setDataStoreValue(
         dataStoreHandling: DataStoreHandling,
+        otakuDataStoreHandling: OtakuDataStoreHandling,
         settingsHandling: SettingsHandling,
+        newSettingsHandling: NewSettingsHandling,
         remoteConfig: FirebaseRemoteConfig,
     ) {
         when (this) {
-            ShowGemini -> dataStoreHandling
+            ShowGemini -> otakuDataStoreHandling
                 .showGemini
                 .set(remoteConfig.getBoolean(key))
 
             ExternalBridge -> {
                 runCatching {
-                    val list = settingsHandling
+                    val list = newSettingsHandling
                         .customUrls
                         .firstOrNull()
                         .orEmpty()
@@ -30,7 +34,7 @@ enum class RemoteConfigKeys(val key: String) {
 
                     list
                         .filter { it !in json }
-                        .forEach { settingsHandling.addCustomUrl(it) }
+                        .forEach { newSettingsHandling.addCustomUrl(it) }
                 }.onFailure { it.printStackTrace() }
             }
         }

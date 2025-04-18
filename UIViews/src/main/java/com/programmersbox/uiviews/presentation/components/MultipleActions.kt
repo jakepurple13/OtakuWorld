@@ -32,8 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
-import com.programmersbox.uiviews.MiddleMultipleActions
-import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
 import com.programmersbox.uiviews.utils.customsettings.item
 import kotlinx.coroutines.delay
@@ -71,14 +69,14 @@ class MultipleBarState(
 @Composable
 fun BoxScope.MultipleActions(
     state: MultipleBarState,
-    middleNavItem: MiddleNavigationAction,
-    multipleActions: MiddleMultipleActions,
+    middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
+    multipleActions: com.programmersbox.datastore.MiddleMultipleActions,
     currentDestination: NavDestination?,
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
-    if (middleNavItem == MiddleNavigationAction.Multiple) {
+    if (middleNavItem == com.programmersbox.datastore.MiddleNavigationAction.Multiple) {
         MultipleActions(
             state = state,
             leadingContent = {

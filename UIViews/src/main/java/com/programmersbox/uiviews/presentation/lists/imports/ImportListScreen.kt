@@ -82,6 +82,7 @@ fun ImportListScreen(
     vm: ImportListViewModel = koinViewModel(),
 ) {
     //TODO: Might be removing this
+    // Need to keep this for legacy
     HideSystemBarsWhileOnScreen()
 
     val scope = rememberCoroutineScope()

@@ -76,14 +76,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kmpalette.color
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.rememberDynamicMaterialThemeState
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.SystemThemeMode
-import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
 import com.programmersbox.uiviews.datastore.rememberSwatchType
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
@@ -154,7 +154,6 @@ private fun DetailsScreenInternal(
             SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
             SystemThemeMode.Day -> false
             SystemThemeMode.Night -> true
-            else -> isSystemInDarkTheme()
         },
         isAmoled = isAmoledMode && (!usePalette || details.palette == null),
         style = paletteStyle

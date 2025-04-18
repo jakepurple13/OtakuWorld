@@ -1,41 +1,58 @@
-package com.programmersbox.uiviews.datastore
+package com.programmersbox.datastore
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import okio.Path.Companion.toPath
+
+lateinit var otakuDataStore: DataStore<Preferences>
+
+class DataStoreSettings(
+    producePath: (String) -> String,
+) {
+    init {
+        if (!::otakuDataStore.isInitialized)
+            otakuDataStore = PreferenceDataStoreFactory.createWithPath(
+                produceFile = { producePath(DATASTORE_FILE_NAME).toPath() },
+            )
+    }
+
+    companion object {
+        const val DATASTORE_FILE_NAME = "otaku.preferences_pb"
+    }
+}
 
 class DataStoreHandler<T>(
     internal val key: Preferences.Key<T>,
     internal val defaultValue: T,
-    private val context: Context,
 ) {
-    fun asFlow() = context.dataStore.data.map { it[key] ?: defaultValue }
+    fun asFlow() = otakuDataStore.data.map { it[key] ?: defaultValue }
 
     suspend fun get() = asFlow().firstOrNull() ?: defaultValue
 
     suspend fun getOrNull() = asFlow().firstOrNull()
 
     suspend fun set(value: T) {
-        context.dataStore.edit { it[key] = value }
+        otakuDataStore.edit { it[key] = value }
     }
 
     suspend fun clear() {
-        context.dataStore.edit { it.remove(key) }
+        otakuDataStore.edit { it.remove(key) }
     }
 }
 
 class DataStoreHandlerObject<T, R>(
     internal val key: Preferences.Key<T>,
     internal val defaultValue: R,
-    private val context: Context,
     internal val mapToType: (T) -> R?,
     internal val mapToKey: (R) -> T,
 ) {
-    fun asFlow() = context.dataStore
+    fun asFlow() = otakuDataStore
         .data
         .map { it[key]?.let(mapToType) ?: defaultValue }
 
@@ -44,24 +61,23 @@ class DataStoreHandlerObject<T, R>(
     suspend fun getOrNull() = asFlow().firstOrNull()
 
     suspend fun set(value: R) {
-        context.dataStore.edit { it[key] = value.let(mapToKey) }
+        otakuDataStore.edit { it[key] = value.let(mapToKey) }
     }
 
     suspend fun clear() {
-        context.dataStore.edit { it.remove(key) }
+        otakuDataStore.edit { it.remove(key) }
     }
 }
 
 class DataStoreHandlerNullable<T>(
     internal val key: Preferences.Key<T>,
-    private val context: Context,
 ) {
-    fun asFlow() = context.dataStore.data.map { it[key] }
+    fun asFlow() = otakuDataStore.data.map { it[key] }
 
     suspend fun getOrNull() = asFlow().firstOrNull()
 
     suspend fun set(value: T?) {
-        context.dataStore.edit {
+        otakuDataStore.edit {
             if (value == null) {
                 it.remove(key)
             } else {
@@ -71,7 +87,7 @@ class DataStoreHandlerNullable<T>(
     }
 
     suspend fun clear() {
-        context.dataStore.edit { it.remove(key) }
+        otakuDataStore.edit { it.remove(key) }
     }
 }
 

@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.checkers
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -37,6 +38,8 @@ class DownloadAndInstallWorker(
         val url = inputData.getString("url") ?: return Result.failure()
 
         logFirebaseMessage("Downloading and installing")
+
+        //TODO: Need to fix so it doesn't start up again when the app starts up after an update
 
         runCatching {
             downloadAndInstaller.downloadAndInstall(
@@ -100,6 +103,7 @@ class DownloadAndInstallWorker(
         return Result.success()
     }
 
+    @SuppressLint("MissingPermission")
     private fun notify(
         logo: NotificationLogo,
         url: String,

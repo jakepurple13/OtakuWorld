@@ -51,8 +51,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandling
 import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.uiviews.presentation.components.OtakuHazeScaffold
@@ -63,7 +64,6 @@ import com.programmersbox.uiviews.presentation.settings.showSourceChooser
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.LocalNavHostPadding
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import dev.chrisbanes.haze.HazeProgressive
@@ -81,13 +81,14 @@ fun RecentView(
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
+    val settingsHandling: NewSettingsHandling = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()
     val state = recentVm.gridState
     val scope = rememberCoroutineScope()
     val source = recentVm.currentSource
     val pull = rememberPullToRefreshState()
 
-    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+    val showBlur by settingsHandling.rememberShowBlur()
 
     val isConnected by recentVm.observeNetwork.collectAsStateWithLifecycle(true)
 
