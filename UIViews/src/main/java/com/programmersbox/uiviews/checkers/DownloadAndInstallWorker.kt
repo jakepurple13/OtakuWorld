@@ -44,7 +44,7 @@ class DownloadAndInstallWorker(
         runCatching {
             downloadAndInstaller.downloadAndInstall(
                 url = url,
-                confirmationType = Confirmation.DEFERRED
+                confirmationType = Confirmation.IMMEDIATE
             )
                 .onEach {
                     notify(notificationLogo, url) {

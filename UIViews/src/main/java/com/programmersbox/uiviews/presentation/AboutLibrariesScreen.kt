@@ -1,8 +1,6 @@
 package com.programmersbox.uiviews.presentation
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -46,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,9 +54,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.entity.Library
-import com.mikepenz.aboutlibraries.ui.compose.m3.LibraryDefaults
-import com.mikepenz.aboutlibraries.ui.compose.m3.LibraryPadding
-import com.mikepenz.aboutlibraries.ui.compose.m3.util.author
+import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
+import com.mikepenz.aboutlibraries.ui.compose.LibraryPadding
+import com.mikepenz.aboutlibraries.ui.compose.util.author
 import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
@@ -83,8 +82,8 @@ private fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Bu
 @ExperimentalComposeUiApi
 @Composable
 internal fun AboutLibrariesScreen() {
+    val uriHandler = LocalUriHandler.current
     val libraries by libraryList()
-    val context = LocalContext.current
 
     //var searchText by remember { mutableStateOf("") }
     val libs = libraries?.libraries/*?.filter { it.name.contains(searchText, true) }*/.orEmpty()
@@ -133,7 +132,11 @@ internal fun AboutLibrariesScreen() {
             val openDialog = rememberSaveable { mutableStateOf(false) }
 
             OutlinedLibrary(
-                library = library
+                library = library,
+                padding = LibraryDefaults.libraryPadding(
+                    badgeContentPadding = PaddingValues(8.dp),
+                    badgePadding = PaddingValues(8.dp)
+                )
             ) { openDialog.value = true }
 
             if (openDialog.value) {
@@ -142,11 +145,7 @@ internal fun AboutLibrariesScreen() {
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                library.website?.let {
-                                    val i = Intent(Intent.ACTION_VIEW)
-                                    i.data = Uri.parse(it)
-                                    context.startActivity(i)
-                                }
+                                library.website?.let { uriHandler.openUri(it) }
                                 openDialog.value = false
                             }
                         ) { Text("Open In Browser") }
@@ -172,7 +171,7 @@ private fun OutlinedLibrariesContainer(
     showVersion: Boolean = true,
     showLicenseBadges: Boolean = true,
     padding: LibraryPadding = LibraryDefaults.libraryPadding(),
-    itemContentPadding: PaddingValues = LibraryDefaults.ContentPadding,
+    itemContentPadding: PaddingValues = padding.contentPadding,
     verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(2.dp),
     header: (LazyListScope.() -> Unit)? = null,
     onLibraryClick: ((Library) -> Unit)? = null,
@@ -185,7 +184,7 @@ private fun OutlinedLibrariesContainer(
             padding,
             itemContentPadding
         ) { onLibraryClick?.invoke(library) }
-    }
+    },
 ) {
     LibrariesContainer(
         libraries,
@@ -214,7 +213,7 @@ private fun LibrariesContainer(
     showVersion: Boolean = true,
     showLicenseBadges: Boolean = true,
     padding: LibraryPadding = LibraryDefaults.libraryPadding(),
-    itemContentPadding: PaddingValues = LibraryDefaults.ContentPadding,
+    itemContentPadding: PaddingValues = padding.contentPadding,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     header: (LazyListScope.() -> Unit)? = null,
     onLibraryClick: ((Library) -> Unit)? = null,
@@ -227,7 +226,7 @@ private fun LibrariesContainer(
             padding,
             itemContentPadding
         ) { onLibraryClick?.invoke(library) }
-    }
+    },
 ) {
     val libs = libraries?.libraries
     if (libs != null) {
@@ -250,7 +249,7 @@ internal fun OutlinedLibrary(
     showVersion: Boolean = true,
     showLicenseBadges: Boolean = true,
     padding: LibraryPadding = LibraryDefaults.libraryPadding(),
-    contentPadding: PaddingValues = LibraryDefaults.ContentPadding,
+    contentPadding: PaddingValues = padding.contentPadding,
     onClick: () -> Unit,
 ) {
     OutlinedCard {
@@ -274,7 +273,7 @@ internal fun Library(
     showVersion: Boolean = true,
     showLicenseBadges: Boolean = true,
     padding: LibraryPadding = LibraryDefaults.libraryPadding(),
-    contentPadding: PaddingValues = LibraryDefaults.ContentPadding,
+    contentPadding: PaddingValues = padding.contentPadding,
     onClick: () -> Unit,
 ) {
     val typography = MaterialTheme.typography
@@ -340,7 +339,7 @@ data class Sites(
     val name: String,
     val url: String,
     val onClick: () -> Unit = {},
-    val content: @Composable RowScope.() -> Unit = { Text(name) }
+    val content: @Composable RowScope.() -> Unit = { Text(name) },
 )
 
 @Composable
@@ -351,7 +350,7 @@ private fun DefaultHeader(
     description: String? = null,
     linkSites: List<Sites> = emptyList(),
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    contentColor: Color = contentColorFor(backgroundColor = backgroundColor)
+    contentColor: Color = contentColorFor(backgroundColor = backgroundColor),
 ) {
     Surface(
         color = backgroundColor,
