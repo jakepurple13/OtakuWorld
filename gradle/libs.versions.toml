@@ -332,7 +332,7 @@ exoplayerdatasource = { module = "androidx.media3:media3-datasource", version.re
 exoplayercommon = { module = "androidx.media3:media3-common", version.ref = "media3Version" }
 exoplayerleanback = { module = "androidx.media3:media3-ui-leanback", version.ref = "media3Version" }
 
-leanback = "androidx.leanback:leanback:1.2.0-alpha02"
+leanback = "androidx.leanback:leanback:1.2.0-rc01"
 leanbackPreference = "androidx.leanback:leanback-preference:1.2.0-alpha02"
 
 duktape = "com.squareup.duktape:duktape-android:1.4.0"
