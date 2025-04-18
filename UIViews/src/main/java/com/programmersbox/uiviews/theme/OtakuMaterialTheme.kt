@@ -38,6 +38,7 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
+import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -155,7 +156,9 @@ fun OtakuMaterialTheme(
                                         }
                                     }
                                 )
-                            }.onFailure { defaultUriHandler.openUri(uri) }
+                            }
+                                .recoverCatching { defaultUriHandler.openUri(uri) }
+                                .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
                         }
                     }
                 }

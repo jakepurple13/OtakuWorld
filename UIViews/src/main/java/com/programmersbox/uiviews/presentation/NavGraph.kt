@@ -45,6 +45,7 @@ import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.uiviews.presentation.settings.extensions.IncognitoScreen
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
+import com.programmersbox.uiviews.presentation.webview.WebViewScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
@@ -66,6 +67,12 @@ fun NavGraphBuilder.navGraph(
         OnboardingScreen(
             navController = navController,
             customPreferences = customPreferences
+        )
+    }
+
+    composable<Screen.WebViewScreen> {
+        WebViewScreen(
+            url = it.toRoute<Screen.WebViewScreen>().url
         )
     }
 

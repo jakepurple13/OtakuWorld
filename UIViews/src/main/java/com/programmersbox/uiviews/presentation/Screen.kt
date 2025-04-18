@@ -136,6 +136,9 @@ sealed class Screen(val route: String) {
 
     @Serializable
     data object IncognitoScreen : Screen("incognito")
+
+    @Serializable
+    data class WebViewScreen(val url: String) : Screen("webview")
 }
 
 fun NavController.navigateToDetails1(model: ItemModel) = navigate(
