@@ -1,6 +1,7 @@
 package com.programmersbox.datastore
 
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.okio.OkioSerializer
 import kotlinx.cinterop.ExperimentalForeignApi
 import okio.FileSystem
 import okio.Path
@@ -12,10 +13,10 @@ import platform.Foundation.NSUserDomainMask
 
 actual fun platform() = "iOS"
 
-actual fun getDataStore(
-    serializer: SettingsSerializer,
+actual fun <T> getDataStore(
+    serializer: OkioSerializer<T>,
     producePath: () -> Path,
-): DataStore<Settings> {
+): DataStore<T> {
     @OptIn(ExperimentalForeignApi::class)
     val producePath = {
         val documentDirectory: NSURL? = NSFileManager.defaultManager.URLForDirectory(

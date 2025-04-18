@@ -28,7 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ReaderTypeSetting
 import com.programmersbox.mangaworld.settings.SpacingSetting
@@ -41,7 +41,7 @@ import kotlinx.coroutines.runBlocking
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderOnboarding(
-    mangaSettingsHandling: MangaSettingsHandling,
+    mangaSettingsHandling: MangaNewSettingsHandling,
 ) {
     val scope = rememberCoroutineScope()
 

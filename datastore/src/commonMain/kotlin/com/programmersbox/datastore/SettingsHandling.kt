@@ -20,8 +20,6 @@ import okio.BufferedSink
 import okio.BufferedSource
 
 interface GenericSerializer<MessageType> : OkioSerializer<MessageType> {
-    /*where MessageType : GeneratedMessageLite<MessageType, BuilderType>,
-          BuilderType : GeneratedMessageLite.Builder<MessageType, BuilderType> {*/
 
     /**
      * Call MessageType::parseFrom here!
@@ -43,24 +41,7 @@ interface GenericSerializer<MessageType> : OkioSerializer<MessageType> {
     }
 
     fun encode(t: MessageType): ByteArray
-
-    /*override suspend fun readFrom(input: InputStream): MessageType =
-        withContext(Dispatchers.IO) {
-            try {
-                parseFrom(input)
-            } catch (exception: InvalidProtocolBufferException) {
-                throw CorruptionException("Cannot read proto.", exception)
-            }
-        }*/
-
-    /*override suspend fun writeTo(t: MessageType, output: OutputStream) =
-        withContext(Dispatchers.IO) { t.writeTo(output) }*/
 }
-
-/*val settings: DataStore<Settings> by dataStore(
-    fileName = "Settings",
-    serializer = SettingsSerializer
-)*/
 
 class SettingsSerializer(val canShowBlur: Boolean) : GenericSerializer<Settings> {
     override val defaultValue: Settings
@@ -275,7 +256,8 @@ class ProtoStoreHandler<T, DS, MessageType>(
     @Composable
     fun rememberPreference(): MutableState<T> {
         val coroutineScope = rememberCoroutineScope()
-        val state by remember { preferences.data.map(key) }.collectAsStateWithLifecycle(initialValue = defaultValue)
+        val state by remember { preferences.data.map(key) }
+            .collectAsStateWithLifecycle(initialValue = defaultValue)
 
         return remember(state) {
             object : MutableState<T> {

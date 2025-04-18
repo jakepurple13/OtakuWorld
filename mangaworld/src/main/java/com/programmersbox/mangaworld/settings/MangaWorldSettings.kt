@@ -11,14 +11,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.presentation.components.SwitchSetting
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun PlayerSettings(
-    mangaSettingsHandling: MangaSettingsHandling,
+    mangaSettingsHandling: MangaNewSettingsHandling,
 ) {
     var reader by mangaSettingsHandling.rememberUseNewReader()
 

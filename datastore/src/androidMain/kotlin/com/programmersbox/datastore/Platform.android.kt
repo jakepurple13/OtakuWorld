@@ -2,16 +2,17 @@ package com.programmersbox.datastore
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.okio.OkioSerializer
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 
 actual fun platform() = "Android"
 
-actual fun getDataStore(
-    serializer: SettingsSerializer,
+actual fun <T> getDataStore(
+    serializer: OkioSerializer<T>,
     producePath: () -> Path,
-): DataStore<Settings> {
+): DataStore<T> {
     //val producePath = { content.filesDir.resolve("Settings").absolutePath.toPath() }
 
     return createDataStore(
@@ -21,10 +22,11 @@ actual fun getDataStore(
     )
 }
 
-fun createProtobuf(
+fun <T> createProtobuf(
     context: Context,
-    serializer: SettingsSerializer,
+    serializer: OkioSerializer<T>,
+    fileName: String = DATA_STORE_FILE_NAME,
 ) = getDataStore(
     serializer = serializer,
-    producePath = { context.filesDir.resolve(DATA_STORE_FILE_NAME).absolutePath.toPath() }
+    producePath = { context.filesDir.resolve(fileName).absolutePath.toPath() }
 )

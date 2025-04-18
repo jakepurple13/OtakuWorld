@@ -62,8 +62,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.mangasettings.ReaderType
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.datastore.mangasettings.ReaderType
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.uiviews.presentation.components.CategorySetting
@@ -84,7 +84,7 @@ import kotlinx.coroutines.runBlocking
 @Composable
 internal fun SettingsSheet(
     onDismiss: () -> Unit,
-    mangaSettingsHandling: MangaSettingsHandling,
+    mangaSettingsHandling: MangaNewSettingsHandling,
     readerType: ReaderType,
     readerTypeChange: (ReaderType) -> Unit,
     modifier: Modifier = Modifier,
@@ -147,22 +147,20 @@ internal fun SettingsSheet(
                         expanded = showReaderTypeDropdown,
                         onDismissRequest = { showReaderTypeDropdown = false }
                     ) {
-                        ReaderType.entries
-                            .filter { it != ReaderType.UNRECOGNIZED }
-                            .forEach {
-                                DropdownMenuItem(
-                                    text = { Text(it.name) },
-                                    leadingIcon = {
-                                        if (it == readerType) {
-                                            Icon(Icons.Default.Check, null)
-                                        }
-                                    },
-                                    onClick = {
-                                        readerTypeChange(it)
-                                        showReaderTypeDropdown = false
+                        ReaderType.entries.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.name) },
+                                leadingIcon = {
+                                    if (it == readerType) {
+                                        Icon(Icons.Default.Check, null)
                                     }
-                                )
-                            }
+                                },
+                                onClick = {
+                                    readerTypeChange(it)
+                                    showReaderTypeDropdown = false
+                                }
+                            )
+                        }
                     }
                     Text(readerType.name)
                 },

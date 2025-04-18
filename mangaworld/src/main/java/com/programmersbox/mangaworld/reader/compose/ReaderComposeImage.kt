@@ -37,7 +37,7 @@ import com.github.panpf.zoomimage.GlideZoomAsyncImage
 import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.github.panpf.zoomimage.rememberGlideZoomState
 import com.github.panpf.zoomimage.zoom.ReadMode
-import com.programmersbox.mangasettings.ImageLoaderType
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.skydoves.landscapist.ImageOptions

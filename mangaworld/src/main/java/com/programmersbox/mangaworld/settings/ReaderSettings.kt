@@ -69,9 +69,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.mangasettings.ImageLoaderType
-import com.programmersbox.mangasettings.ReaderType
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.datastore.mangasettings.ReaderType
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.compose.FloatingBottomBar
 import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
@@ -96,7 +96,7 @@ data object ReaderSettingsScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderSettings(
-    mangaSettingsHandling: MangaSettingsHandling,
+    mangaSettingsHandling: MangaNewSettingsHandling,
     settingsHandling: NewSettingsHandling,
 ) {
     HideSystemBarsWhileOnScreen()
@@ -290,22 +290,20 @@ fun ReaderTypeSetting(
                 expanded = showReaderTypeDropdown,
                 onDismissRequest = { showReaderTypeDropdown = false }
             ) {
-                ReaderType.entries
-                    .filter { it != ReaderType.UNRECOGNIZED }
-                    .forEach {
-                        DropdownMenuItem(
-                            text = { Text(it.name) },
-                            leadingIcon = {
-                                if (it == readerType) {
-                                    Icon(Icons.Default.Check, null)
-                                }
-                            },
-                            onClick = {
-                                onReaderTypeChange(it)
-                                showReaderTypeDropdown = false
+                ReaderType.entries.forEach {
+                    DropdownMenuItem(
+                        text = { Text(it.name) },
+                        leadingIcon = {
+                            if (it == readerType) {
+                                Icon(Icons.Default.Check, null)
                             }
-                        )
-                    }
+                        },
+                        onClick = {
+                            onReaderTypeChange(it)
+                            showReaderTypeDropdown = false
+                        }
+                    )
+                }
             }
             Text(readerType.name)
         },

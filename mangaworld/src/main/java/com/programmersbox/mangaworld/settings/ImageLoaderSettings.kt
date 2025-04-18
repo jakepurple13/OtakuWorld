@@ -1,13 +1,11 @@
 package com.programmersbox.mangaworld.settings
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -35,8 +33,10 @@ import coil3.request.crossfade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
-import com.programmersbox.mangasettings.ImageLoaderType
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.uiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.uiviews.utils.AmoledProvider
 import com.programmersbox.uiviews.utils.BackButton
@@ -53,7 +53,7 @@ const val ImageLoaderSettingsRoute = "imageLoaderSettings"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageLoaderSettings(
-    mangaSettingsHandling: MangaSettingsHandling,
+    mangaSettingsHandling: MangaNewSettingsHandling,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     navigationButton: @Composable () -> Unit = { BackButton() },
 ) {
@@ -132,12 +132,6 @@ fun ImageLoaderType.Composed(
         ImageLoaderType.Coil -> Coil(url, modifier, contentScale)
         ImageLoaderType.Panpf -> Panpf(url, modifier, contentScale)
         ImageLoaderType.Telephoto -> Telephoto(url, modifier, contentScale)
-        ImageLoaderType.UNRECOGNIZED -> Image(
-            imageVector = Icons.Default.Image,
-            contentDescription = null,
-            modifier = modifier,
-            contentScale = contentScale
-        )
     }
 }
 
@@ -226,6 +220,13 @@ private fun ImageLoaderSettingsPreview(
     PreviewTheme(
         isAmoledMode = isAmoledMode
     ) {
-        ImageLoaderSettings(MangaSettingsHandling(LocalContext.current))
+        ImageLoaderSettings(
+            MangaNewSettingsHandling(
+                createProtobuf(
+                    context = LocalContext.current,
+                    serializer = MangaNewSettingsSerializer
+                )
+            )
+        )
     }
 }

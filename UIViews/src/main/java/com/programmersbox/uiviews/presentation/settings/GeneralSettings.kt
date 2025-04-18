@@ -211,6 +211,12 @@ private fun MultipleActionsSetting(
                                 multipleActionOptions.forEach {
                                     DropdownMenuItem(
                                         text = { Text(it.name) },
+                                        leadingIcon = {
+                                            Icon(
+                                                it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                                null,
+                                            )
+                                        },
                                         onClick = {
                                             multipleActions = multipleActions?.copy(
                                                 startAction = it,
@@ -244,6 +250,12 @@ private fun MultipleActionsSetting(
                                 multipleActionOptions.forEach {
                                     DropdownMenuItem(
                                         text = { Text(it.visibleName) },
+                                        leadingIcon = {
+                                            Icon(
+                                                it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                                null,
+                                            )
+                                        },
                                         onClick = {
                                             multipleActions = multipleActions?.copy(endAction = it)
                                             showMenu = false
@@ -297,7 +309,6 @@ private fun ThemeSetting(
                 SystemThemeMode.FollowSystem -> "System"
                 SystemThemeMode.Day -> "Light"
                 SystemThemeMode.Night -> "Dark"
-                else -> "None"
             }
         }
     }
@@ -346,7 +357,6 @@ private fun ThemeSetting(
                                     SystemThemeMode.FollowSystem -> isSystemInDarkTheme()
                                     SystemThemeMode.Day -> false
                                     SystemThemeMode.Night -> true
-                                    else -> isSystemInDarkTheme()
                                 },
                                 isAmoled = isAmoledMode
                             )
@@ -474,7 +484,6 @@ private fun GridTypeSettings(handling: NewSettingsHandling) {
                     GridChoice.FullAdaptive -> "Full Adaptive: This will have a dynamic number of columns."
                     GridChoice.Adaptive -> "Adaptive: This will be adaptive as best it can."
                     GridChoice.Fixed -> "Fixed: Have a fixed amount of columns. This will be 3 for compact, 5 for medium, and 6 for large."
-                    else -> "None selected"
                 }
             )
         },

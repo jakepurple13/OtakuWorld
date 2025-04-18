@@ -54,9 +54,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.mangasettings.ImageLoaderType
-import com.programmersbox.mangasettings.ReaderType
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.datastore.mangasettings.ReaderType
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
@@ -88,7 +88,7 @@ import kotlin.math.absoluteValue
 @Composable
 fun ReadView(
     context: Context = LocalContext.current,
-    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
+    mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
     readVm: ReadViewModel = koinViewModel(),
 ) {
     HideSystemBarsWhileOnScreen()
@@ -270,7 +270,6 @@ fun ReadView(
                     ReaderType.Pager -> 1f
                     ReaderType.FlipPager -> 1f
                     ReaderType.CurlPager -> 1f
-                    ReaderType.UNRECOGNIZED -> 1f
                 }
             }
         }

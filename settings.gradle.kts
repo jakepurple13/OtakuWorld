@@ -71,3 +71,4 @@ rootProject.name = "OtakuWorld"
 //include(":MangaWorldbaselineprofile")
 include(":gemini")
 include(":datastore")
+include(":datastore:mangasettings")

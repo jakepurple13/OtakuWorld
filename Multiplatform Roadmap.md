@@ -34,11 +34,11 @@ multiplatform this project grows stronger and stronger.
 
 ## Things that can be done now
 
-- [ ] Models and FavoritesDatabase can be converted to multiplatform now
+- [x] Models and FavoritesDatabase can be converted to multiplatform now
   - [x] FavoritesDatabase
   - [x] Datastore
-    - [ ] Protobuf - in progress
-    - [ ] Need to figure out specific apps protobuf. Might need a later change.
+    - [x] Protobuf
+    - [x] Need to figure out specific apps protobuf. Might need a later change.
   - [ ] Models
     - Uses some Java libraries, so need to figure out a way to keep some of that while also not
       affecting any other sources
