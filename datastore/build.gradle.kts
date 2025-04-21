@@ -25,7 +25,7 @@ kotlin {
             //implementation(libs.composeRuntimeLivedata)
             implementation(compose.runtime)
             implementation(libs.multiplatform.lifecycle.runtime.compose)
-            implementation("androidx.datastore:datastore-core-okio:${libs.versions.datastore.get()}")
+            implementation(libs.datastoreOkio)
         }
     }
 }

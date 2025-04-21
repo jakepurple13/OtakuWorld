@@ -260,6 +260,7 @@ sonner = { module = "io.github.dokar3:sonner", version = "0.3.8" }
 
 datastore = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
 datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+datastoreOkio = { module = "androidx.datastore:datastore-core-okio", version.ref = "datastore" }
 
 jsoup = "org.jsoup:jsoup:1.19.1"
 
