@@ -22,6 +22,10 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
 
         compileSdk = AppInfo.compileVersion
 
+        lint {
+            checkReleaseBuilds = false
+        }
+
         composeOptions {
 
         }
