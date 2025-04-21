@@ -129,7 +129,8 @@ fun migrateMangaSettings(
                             useFlipPager = old.useFlipPager,
                             allowUserDrawerGesture = old.allowUserDrawerGesture,
                             useFloatingReaderBottomBar = old.useFloatingReaderBottomBar,
-                            hasMigrated = true
+                            hasMigrated = true,
+                            includeInsetsForReader = true
                         )
                     }
                 }

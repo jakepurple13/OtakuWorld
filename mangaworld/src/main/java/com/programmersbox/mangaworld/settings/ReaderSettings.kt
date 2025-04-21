@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.BorderBottom
+import androidx.compose.material.icons.filled.BorderOuter
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FormatLineSpacing
@@ -103,6 +104,8 @@ fun ReaderSettings(
 
     val scope = rememberCoroutineScope()
 
+    var includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
+
     var useFloatingBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
 
     val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
@@ -156,6 +159,8 @@ fun ReaderSettings(
         allowUserGesture = allowUserGesture,
         onAllowUserGestureChange = { allowUserGesture = it },
         readerPadding = padding,
+        includeInsets = includeInsets,
+        onIncludeInsetsChange = { includeInsets = it },
         onPaddingChange = { padding = it },
         onPaddingChangeFinished = { scope.launch { mangaSettingsHandling.pagePadding.updateSetting(padding.toInt()) } },
     )
@@ -170,6 +175,8 @@ private fun ReaderSettings(
     allowUserGesture: Boolean,
     readerType: ReaderType = ReaderType.List,
     onReaderTypeChange: (ReaderType) -> Unit = {},
+    includeInsets: Boolean,
+    onIncludeInsetsChange: (Boolean) -> Unit = {},
     onAllowUserGestureChange: (Boolean) -> Unit = {},
     onPaddingChange: (Float) -> Unit = {},
     onPaddingChangeFinished: () -> Unit = {},
@@ -271,6 +278,14 @@ private fun ReaderSettings(
                 )
             }
 
+            item {
+                SwitchSetting(
+                    value = includeInsets,
+                    updateValue = onIncludeInsetsChange,
+                    settingTitle = { Text("Include insets in Reader") },
+                    settingIcon = { Icon(Icons.Default.BorderOuter, null, modifier = Modifier.fillMaxSize()) }
+                )
+            }
         }
     }
 }
@@ -482,6 +497,7 @@ private fun ReaderScreenPreview() {
             useFloatingBar = false,
             allowUserGesture = true,
             readerType = ReaderType.List,
+            includeInsets = true,
         )
     }
 }

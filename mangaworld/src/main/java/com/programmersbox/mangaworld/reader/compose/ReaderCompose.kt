@@ -15,6 +15,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -101,7 +102,8 @@ fun ReadView(
 ) {
     HideNavBarWhileOnScreen()
 
-    var insetsController by insetController()
+    val includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
+    var insetsController by insetController(includeInsets)
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -198,7 +200,7 @@ fun ReadView(
             showFloatBar = false
         }
 
-        insetsController = showItems
+        if (includeInsets) insetsController = showItems
     }
 
     BackHandler(drawerState.isOpen || showBottomSheet) {
@@ -304,7 +306,7 @@ fun ReadView(
                             ?: "Ch ${readVm.list.size - readVm.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
                         showBlur = showBlur,
-                        windowInsets = TopAppBarDefaults.windowInsets,
+                        windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
                         modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
                             blurEnabled = showBlur
                             progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
@@ -340,7 +342,7 @@ fun ReadView(
                             previousButtonEnabled = readVm.currentChapter < readVm.list.lastIndex && readVm.list.size > 1,
                             nextButtonEnabled = readVm.currentChapter > 0 && readVm.list.size > 1,
                             modifier = Modifier
-                                .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+                                .windowInsetsPadding(if (includeInsets) BottomAppBarDefaults.windowInsets else WindowInsets(0.dp))
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)
                                 .hazeEffect(hazeState, style = HazeMaterials.thin()) {
@@ -631,8 +633,8 @@ private fun LazyListScope.reader(
 }
 
 @Composable
-private fun insetController(): MutableState<Boolean> {
-    val state = remember { mutableStateOf(false) }
+private fun insetController(defaultValue: Boolean): MutableState<Boolean> {
+    val state = remember { mutableStateOf(defaultValue) }
 
     val activity = LocalActivity.current
 

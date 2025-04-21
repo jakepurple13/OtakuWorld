@@ -28,6 +28,7 @@ object MangaNewSettingsSerializer : GenericSerializer<MangaSettings> {
             allowUserDrawerGesture = false,
             useFloatingReaderBottomBar = false,
             hasMigrated = false,
+            includeInsetsForReader = true
         )
     override val parseFrom: (input: BufferedSource) -> MangaSettings get() = MangaSettings.ADAPTER::decode
     override fun encode(t: MangaSettings): ByteArray = t.encode()
@@ -93,6 +94,13 @@ class MangaNewSettingsHandling(
         key = { it.hasMigrated },
         update = { copy(hasMigrated = it) },
         defaultValue = false
+    )
+
+    @Composable
+    fun rememberIncludeInsetsForReader() = preferences.rememberPreference(
+        key = { it.includeInsetsForReader },
+        update = { copy(includeInsetsForReader = it) },
+        defaultValue = true
     )
 
     inner class SettingInfo<T>(

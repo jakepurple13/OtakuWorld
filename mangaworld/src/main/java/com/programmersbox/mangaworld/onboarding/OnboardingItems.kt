@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BorderOuter
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +35,7 @@ import com.programmersbox.mangaworld.settings.ReaderTypeSetting
 import com.programmersbox.mangaworld.settings.SpacingSetting
 import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
+import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -113,6 +115,17 @@ fun ReaderOnboarding(
             readerPadding = padding,
             onPaddingChange = { padding = it },
             onPaddingChangeFinished = { scope.launch { mangaSettingsHandling.pagePadding.updateSetting(padding.toInt()) } },
+        )
+
+        HorizontalDivider()
+
+        var includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
+
+        SwitchSetting(
+            value = includeInsets,
+            updateValue = { includeInsets = it },
+            settingTitle = { Text("Include insets in Reader") },
+            settingIcon = { Icon(Icons.Default.BorderOuter, null, modifier = Modifier.fillMaxSize()) }
         )
     }
 }
