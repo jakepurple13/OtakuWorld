@@ -84,6 +84,32 @@ class DownloadAndInstaller(
             }
     }
 
+    fun download(
+        url: String,
+        destinationPath: String = "",
+    ): Flow<DownloadAndInstallStatus> {
+        val file = File(context.cacheDir, "${url.toUri().lastPathSegment}.apk")
+
+        return channelFlow<DownloadAndInstallStatus> {
+            trace("download") {
+                client.prepareGet(url) {
+                    onDownload { bytesSentTotal, contentLength ->
+                        send(DownloadAndInstallStatus.Downloading(bytesSentTotal.toFloat() / (contentLength ?: 1L)))
+                    }
+                }.execute {
+                    it.bodyAsChannel().copyAndClose(file.writeChannel())
+                    send(DownloadAndInstallStatus.Downloaded)
+                }
+            }
+        }
+            .catch { it.printStackTrace() }
+            .onEach {
+                println(it)
+                if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
+                if (it is DownloadAndInstallStatus.Installed) file.delete()
+            }
+    }
+
     fun install(
         file: File,
         confirmationType: Confirmation = Confirmation.IMMEDIATE,

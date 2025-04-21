@@ -55,7 +55,7 @@ class PrereleaseViewModel(
     fun update(
         apkString: String,
     ) {
-        downloadStateRepository.downloadAndInstall(apkString)
+        downloadStateRepository.downloadThenInstall(apkString)
         /*downloadAndInstaller
             .downloadAndInstall(apkString, "")
             .onEach { downloadMap[apkString] = it }

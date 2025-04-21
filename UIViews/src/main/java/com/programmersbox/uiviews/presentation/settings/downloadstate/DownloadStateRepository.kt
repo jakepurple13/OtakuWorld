@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.net.toUri
 import androidx.work.WorkManager
 import com.programmersbox.uiviews.checkers.DownloadAndInstallWorker
+import com.programmersbox.uiviews.checkers.DownloadWorker
 import java.io.File
 import java.util.UUID
 
@@ -23,5 +24,9 @@ class DownloadStateRepository(
 
     fun downloadAndInstall(url: String) {
         DownloadAndInstallWorker.downloadAndInstall(context, url)
+    }
+
+    fun downloadThenInstall(url: String) {
+        DownloadWorker.downloadThenInstall(context, url)
     }
 }

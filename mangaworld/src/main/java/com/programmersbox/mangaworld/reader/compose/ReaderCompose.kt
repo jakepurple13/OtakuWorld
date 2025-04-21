@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -35,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -342,7 +342,7 @@ fun ReadView(
                             previousButtonEnabled = readVm.currentChapter < readVm.list.lastIndex && readVm.list.size > 1,
                             nextButtonEnabled = readVm.currentChapter > 0 && readVm.list.size > 1,
                             modifier = Modifier
-                                .windowInsetsPadding(if (includeInsets) BottomAppBarDefaults.windowInsets else WindowInsets(0.dp))
+                                .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)
                                 .hazeEffect(hazeState, style = HazeMaterials.thin()) {
