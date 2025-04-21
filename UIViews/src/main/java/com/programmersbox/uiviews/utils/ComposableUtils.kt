@@ -522,6 +522,16 @@ fun HideSystemBarsWhileOnScreen() {
     val changingSettingsRepository: ChangingSettingsRepository = koinInject()
 
     LifecycleResumeEffect(Unit) {
+        changingSettingsRepository.showInsets.tryEmit(false)
+        onPauseOrDispose { changingSettingsRepository.showInsets.tryEmit(true) }
+    }
+}
+
+@Composable
+fun HideNavBarWhileOnScreen() {
+    val changingSettingsRepository: ChangingSettingsRepository = koinInject()
+
+    LifecycleResumeEffect(Unit) {
         changingSettingsRepository.showNavBar.tryEmit(false)
         onPauseOrDispose { changingSettingsRepository.showNavBar.tryEmit(true) }
     }

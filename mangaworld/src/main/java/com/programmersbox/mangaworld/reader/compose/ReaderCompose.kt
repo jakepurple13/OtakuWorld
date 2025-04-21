@@ -2,6 +2,7 @@ package com.programmersbox.mangaworld.reader.compose
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -24,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -34,12 +37,14 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,13 +58,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.ReaderType
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
@@ -91,7 +99,9 @@ fun ReadView(
     mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
     readVm: ReadViewModel = koinViewModel(),
 ) {
-    HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
+
+    var insetsController by insetController()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -187,6 +197,8 @@ fun ReadView(
         } else {
             showFloatBar = false
         }
+
+        insetsController = showItems
     }
 
     BackHandler(drawerState.isOpen || showBottomSheet) {
@@ -285,21 +297,20 @@ fun ReadView(
                         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
                     )
                 ) {
-                    key(scrollAlpha) {
-                        ReaderTopBar(
-                            currentChapter = readVm
-                                .currentChapterModel
-                                ?.name
-                                ?: "Ch ${readVm.list.size - readVm.currentChapter}",
-                            onSettingsClick = { settingsPopup = true },
-                            showBlur = showBlur,
-                            modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                blurEnabled = showBlur
-                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                                alpha = scrollAlpha
-                            }
-                        )
-                    }
+                    ReaderTopBar(
+                        currentChapter = readVm
+                            .currentChapterModel
+                            ?.name
+                            ?: "Ch ${readVm.list.size - readVm.currentChapter}",
+                        onSettingsClick = { settingsPopup = true },
+                        showBlur = showBlur,
+                        windowInsets = TopAppBarDefaults.windowInsets,
+                        modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                            blurEnabled = showBlur
+                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                            alpha = scrollAlpha
+                        }
+                    )
                 }
             },
             bottomBar = {
@@ -329,6 +340,7 @@ fun ReadView(
                             previousButtonEnabled = readVm.currentChapter < readVm.list.lastIndex && readVm.list.size > 1,
                             nextButtonEnabled = readVm.currentChapter > 0 && readVm.list.size > 1,
                             modifier = Modifier
+                                .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)
                                 .hazeEffect(hazeState, style = HazeMaterials.thin()) {
@@ -616,4 +628,29 @@ private fun LazyListScope.reader(
             previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
         )
     }
+}
+
+@Composable
+private fun insetController(): MutableState<Boolean> {
+    val state = remember { mutableStateOf(false) }
+
+    val activity = LocalActivity.current
+
+    val insetsController = remember {
+        activity?.let {
+            WindowCompat.getInsetsController(it.window, it.window.decorView)
+        }
+    }
+    DisposableEffect(state.value) {
+        insetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (state.value) {
+            insetsController?.show(WindowInsetsCompat.Type.systemBars())
+        } else {
+            insetsController?.hide(WindowInsetsCompat.Type.systemBars())
+        }
+
+        onDispose { insetsController?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
+
+    return state
 }

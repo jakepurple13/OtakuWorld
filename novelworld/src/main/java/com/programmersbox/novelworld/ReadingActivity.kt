@@ -102,6 +102,7 @@ import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -226,6 +227,7 @@ fun NovelReader(
     readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) },
 ) {
     HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
 
     val context = LocalContext.current
 

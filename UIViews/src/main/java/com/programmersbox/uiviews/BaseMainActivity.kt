@@ -194,7 +194,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         changingSettingsRepository
-            .showNavBar
+            .showInsets
             .onEach {
                 if (it) {
                     insetsController.show(WindowInsetsCompat.Type.systemBars())

@@ -53,6 +53,10 @@ abstract class AndroidPluginBase<T : BaseExtension>(
             androidConfig(this@configureAndroidBase)
             compileSdkVersion(AppInfo.compileVersion)
 
+            lintOptions {
+                isCheckReleaseBuilds = false
+            }
+
             defaultConfig {
                 minSdk = AppInfo.minimumSdk
                 targetSdk = AppInfo.targetSdk

@@ -69,10 +69,11 @@ fun ReaderTopBar(
     currentChapter: String,
     onSettingsClick: () -> Unit,
     showBlur: Boolean,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        windowInsets = WindowInsets(0.dp),
+        windowInsets = windowInsets,
         modifier = modifier,
         navigationIcon = { BackButton() },
         title = {

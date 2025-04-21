@@ -82,7 +82,7 @@ import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.flow.first
@@ -99,7 +99,7 @@ fun ReaderSettings(
     mangaSettingsHandling: MangaNewSettingsHandling,
     settingsHandling: NewSettingsHandling,
 ) {
-    HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
 
     val scope = rememberCoroutineScope()
 

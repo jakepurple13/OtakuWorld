@@ -98,7 +98,7 @@ import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalNavController
@@ -114,7 +114,7 @@ import org.koin.compose.koinInject
 fun ImportFullListScreen(
     vm: ImportFullListViewModel = koinViewModel(),
 ) {
-    HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
 
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current

@@ -44,7 +44,7 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -56,7 +56,7 @@ fun OnboardingScreen(
     appLogo: AppLogo = koinInject(),
     dataStoreHandling: DataStoreHandling = koinInject(),
 ) {
-    HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
 
     val onboardingScope = remember {
         OnboardingScopeImpl {

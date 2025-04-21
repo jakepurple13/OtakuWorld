@@ -102,6 +102,7 @@ import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.AirBar
 import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -139,6 +140,7 @@ fun VideoPlayerUi(
     val originalScreenBrightness = remember { getScreenBrightness(context) }
 
     HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
 
     LifecycleHandle(
         onStop = {
