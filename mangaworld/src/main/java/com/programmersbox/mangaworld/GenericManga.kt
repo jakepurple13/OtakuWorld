@@ -48,6 +48,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.downloads.DownloadScreen
@@ -70,7 +71,6 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.ComponentState

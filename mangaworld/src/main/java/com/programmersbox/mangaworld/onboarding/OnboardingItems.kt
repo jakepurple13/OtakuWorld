@@ -29,13 +29,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
+import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ReaderTypeSetting
 import com.programmersbox.mangaworld.settings.SpacingSetting
-import com.programmersbox.uiviews.presentation.components.CategorySetting
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

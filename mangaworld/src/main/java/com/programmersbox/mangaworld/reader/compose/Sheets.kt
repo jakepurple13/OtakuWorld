@@ -63,13 +63,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.mangasettings.ReaderType
+import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
+import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
-import com.programmersbox.uiviews.presentation.components.CategorySetting
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.adaptiveGridCell
