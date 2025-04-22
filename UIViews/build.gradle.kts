@@ -64,6 +64,7 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
     api(projects.datastore)
+    api(projects.kmpuiviews)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)

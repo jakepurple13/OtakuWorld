@@ -72,3 +72,4 @@ rootProject.name = "OtakuWorld"
 include(":gemini")
 include(":datastore")
 include(":datastore:mangasettings")
+include(":kmpuiviews")

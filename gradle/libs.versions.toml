@@ -211,6 +211,11 @@ koinCompose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-workmanager = { module = "io.insert-koin:koin-androidx-workmanager" }
 
+koinCores = { module = "io.insert-koin:koin-core" }
+koinComposeKmp = { module = "io.insert-koin:koin-compose" }
+koinViewModel = { module = "io.insert-koin:koin-compose-viewmodel" }
+koinViewModelNavigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation" }
+
 roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
 roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
 roomKtx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
@@ -433,9 +438,16 @@ media3 = [
 leanbackLibs = ["leanback", "leanbackPreference"]
 
 okHttpLibs = ["okhttpLib", "okhttpDns"]
-koinLibs = ["koin-android", "koin-core", "koin-workmanager", "koinCompose"]
 firebaseCrashLibs = ["crashlytics", "analytics", "firebase-perf"]
 datastoreLibs = ["datastore", "datastorePref"]
+
+koinLibs = ["koin-android", "koin-core", "koin-workmanager", "koinCompose"]
+koinKmp = [
+    "koinCores",
+    "koinComposeKmp",
+    "koinViewModel",
+    "koinViewModelNavigation"
+]
 
 piasyLibs = ["bigImageViewer", "bigImageGlideLoader", "progressPieIndicator"]
 ziplineLibs = ["ziplineLoader", "ziplineProfiler"]

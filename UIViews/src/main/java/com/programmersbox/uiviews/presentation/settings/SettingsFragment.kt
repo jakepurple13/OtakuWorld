@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
@@ -69,7 +70,6 @@ import com.programmersbox.uiviews.presentation.components.CategorySetting
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.components.ShowWhen
-import com.programmersbox.uiviews.presentation.onboarding.OnboardingScope
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import com.programmersbox.uiviews.theme.LocalCurrentSource
