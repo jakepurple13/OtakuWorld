@@ -28,13 +28,13 @@ fun Module.appModule() {
     singleOf(::DownloadAndInstaller)
 
     single {
-        val performanceClass = get<PerformanceClass>()
+        //val performanceClass = get<PerformanceClass>()
         NewSettingsHandling(
             createProtobuf(
                 context = get(),
-                serializer = SettingsSerializer(performanceClass.canBlur)
+                serializer = SettingsSerializer(true)
             ),
-            canShowBlur = performanceClass.canBlur
+            canShowBlur = true
         )
     }
 

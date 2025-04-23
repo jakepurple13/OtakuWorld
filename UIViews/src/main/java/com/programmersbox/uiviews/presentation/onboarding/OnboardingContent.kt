@@ -63,15 +63,15 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.asState
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.ListSetting
+import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.ListSetting
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.presentation.settings.BlurSetting
@@ -80,7 +80,6 @@ import com.programmersbox.uiviews.presentation.settings.ShareChapterSettings
 import com.programmersbox.uiviews.presentation.settings.ShowDownloadSettings
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
-import com.programmersbox.uiviews.utils.PerformanceClass
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.rememberDrawablePainter
 import org.koin.androidx.compose.koinViewModel
@@ -369,12 +368,9 @@ internal fun GeneralContent() {
 
         HorizontalDivider()
 
-        val performanceClass = koinInject<PerformanceClass>()
+        BlurSetting(handling = handling)
 
-        if (performanceClass.canBlur) {
-            BlurSetting(handling = handling)
-            HorizontalDivider()
-        }
+        HorizontalDivider()
 
         ShowDownloadSettings(handling = handling)
 

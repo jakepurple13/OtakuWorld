@@ -31,9 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
-import com.programmersbox.uiviews.utils.customsettings.item
+import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
+import com.programmersbox.kmpuiviews.presentation.components.item
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -82,15 +83,27 @@ fun BoxScope.MultipleActions(
             leadingContent = {
                 multipleActions.startAction.item?.ScreenBottomItem(
                     currentDestination = currentDestination,
-                    navController = navController,
-                    additionalOnClick = { scope.launch { if (state.hideOnClick) state.hide() } }
+                    onClick = {
+                        scope.launch { if (state.hideOnClick) state.hide() }
+                        navController.navigate(it.screen) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             },
             trailingContent = {
                 multipleActions.endAction.item?.ScreenBottomItem(
                     currentDestination = currentDestination,
-                    navController = navController,
-                    additionalOnClick = { scope.launch { if (state.hideOnClick) state.hide() } }
+                    onClick = {
+                        scope.launch { if (state.hideOnClick) state.hide() }
+                        navController.navigate(it.screen) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             },
             modifier = modifier

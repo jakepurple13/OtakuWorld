@@ -11,8 +11,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ItemModel
-import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -32,7 +32,10 @@ class GlobalSearchViewModel(
     val dao: HistoryDao,
 ) : ViewModel() {
 
-    private val initialSearch: String = savedStateHandle.toRoute<Screen.GlobalSearchScreen>().title ?: ""
+    private val initialSearch: String = savedStateHandle
+        .toRoute<Screen.GlobalSearchScreen>()
+        .title
+        ?: ""
 
     @SuppressLint("MissingPermission")
     val observeNetwork = ReactiveNetwork()

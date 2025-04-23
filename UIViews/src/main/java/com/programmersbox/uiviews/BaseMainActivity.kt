@@ -120,11 +120,12 @@ import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.SourceOrder
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
+import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
-import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.HazeScaffold
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.uiviews.presentation.navGraph
@@ -138,7 +139,6 @@ import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.currentDetailsUrl
-import com.programmersbox.uiviews.utils.customsettings.ScreenBottomItem
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.sharedelements.LocalSharedElementScope
 import dev.chrisbanes.haze.HazeState
@@ -459,7 +459,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     middleNavItem.ScreenBottomItem(
                         rowScope = this,
                         currentDestination = currentDestination,
-                        navController = navController,
                         colors = colors,
                         multipleClick = {
                             scope.launch {
@@ -468,6 +467,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                 } else {
                                     multipleBarState.show()
                                 }
+                            }
+                        },
+                        onClick = {
+                            navController.navigate(it.screen) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
                     )
@@ -553,7 +559,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         middleNavItem.ScreenBottomItem(
                             rowScope = this,
                             currentDestination = currentDestination,
-                            navController = navController,
                             multipleClick = {
                                 scope.launch {
                                     if (multipleBarState.showHorizontalBar) {
@@ -561,6 +566,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     } else {
                                         multipleBarState.show()
                                     }
+                                }
+                            },
+                            onClick = {
+                                navController.navigate(it.screen) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
                             }
                         )

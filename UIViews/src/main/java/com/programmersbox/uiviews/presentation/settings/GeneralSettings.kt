@@ -60,24 +60,23 @@ import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.datastore.rememberHistorySave
+import com.programmersbox.kmpuiviews.presentation.components.ListSetting
+import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.ShowMoreSetting
+import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.item
+import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.rememberSwatchStyle
 import com.programmersbox.uiviews.datastore.rememberSwatchType
-import com.programmersbox.uiviews.presentation.components.ListSetting
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.ShowMoreSetting
-import com.programmersbox.uiviews.presentation.components.ShowWhen
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
 import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.presentation.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
-import com.programmersbox.uiviews.utils.PerformanceClass
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.customsettings.item
-import com.programmersbox.uiviews.utils.customsettings.visibleName
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -91,7 +90,6 @@ fun GeneralSettings(
         title = stringResource(R.string.general_menu_title),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        val performanceClass = koinInject<PerformanceClass>()
         val handling: NewSettingsHandling = koinInject()
 
         var isAmoledMode by handling.rememberIsAmoledMode()
@@ -108,7 +106,7 @@ fun GeneralSettings(
 
         ExpressivenessSetting(handling = handling)
 
-        if (performanceClass.canBlur) BlurSetting(handling = handling)
+        BlurSetting(handling = handling)
 
         HorizontalDivider()
 

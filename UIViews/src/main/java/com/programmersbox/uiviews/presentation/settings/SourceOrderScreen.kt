@@ -47,7 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.SourceOrder
-import com.programmersbox.uiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.BackButton

@@ -43,10 +43,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
+import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.CategorySetting
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
 import com.programmersbox.uiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalNavController

@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.Screen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.BufferedReader

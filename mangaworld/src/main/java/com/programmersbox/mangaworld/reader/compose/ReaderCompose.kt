@@ -634,7 +634,7 @@ private fun LazyListScope.reader(
 
 @Composable
 private fun insetController(defaultValue: Boolean): MutableState<Boolean> {
-    val state = remember { mutableStateOf(defaultValue) }
+    val state = remember(defaultValue) { mutableStateOf(defaultValue) }
 
     val activity = LocalActivity.current
 
