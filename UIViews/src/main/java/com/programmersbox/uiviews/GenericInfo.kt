@@ -18,12 +18,12 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
 

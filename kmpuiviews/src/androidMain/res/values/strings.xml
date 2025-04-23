@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all_kmp">All</string>
+    <string name="notifications_kmp">Notifications</string>
+    <string name="custom_lists_title_kmp">Lists</string>
+    <string name="viewFavoritesMenu_kmp">Favorites</string>
+    <string name="more_kmp">More</string>
+    <string name="global_search_kmp">Global Search</string>
+
+</resources>

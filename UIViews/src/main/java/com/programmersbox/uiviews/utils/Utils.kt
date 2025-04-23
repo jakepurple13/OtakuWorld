@@ -10,7 +10,7 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.Screen
 import kotlinx.coroutines.flow.combine
 import kotlin.experimental.ExperimentalTypeInference
 

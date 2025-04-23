@@ -9,11 +9,12 @@ plugins {
 otakuDependencies {
     androidPackageName = "com.programmersbox.kmpuiviews"
 }
+
 kotlin {
     androidLibrary {
         namespace = "com.programmersbox.kmpuiviews"
+        experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true
     }
-
 
     sourceSets {
         commonMain {
@@ -25,6 +26,7 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.foundation)
                 implementation(compose.material3AdaptiveNavigationSuite)
+                implementation(compose.components.resources)
                 implementation(libs.haze)
                 implementation(libs.hazeMaterials)
                 implementation(libs.material.kolor)

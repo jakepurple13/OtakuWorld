@@ -43,9 +43,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.BannerBox
 import com.programmersbox.uiviews.presentation.components.GlideGradientImage
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight

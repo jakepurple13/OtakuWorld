@@ -106,13 +106,13 @@ import androidx.work.WorkManager
 import coil3.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
-import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective

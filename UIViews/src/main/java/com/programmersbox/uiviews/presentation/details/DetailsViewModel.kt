@@ -21,13 +21,14 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.Screen
+import com.programmersbox.uiviews.presentation.toItemModel
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached

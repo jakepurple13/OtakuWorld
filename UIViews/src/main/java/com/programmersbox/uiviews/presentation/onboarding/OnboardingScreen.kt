@@ -27,12 +27,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.onboarding.Onboarding
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingIndicator
 import com.programmersbox.kmpuiviews.presentation.onboarding.rememberOnboardingScope
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.Screen
 import com.programmersbox.uiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
