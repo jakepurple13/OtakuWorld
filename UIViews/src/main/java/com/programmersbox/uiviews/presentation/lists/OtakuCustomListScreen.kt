@@ -112,6 +112,7 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
@@ -121,7 +122,6 @@ import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemMod
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.uiviews.presentation.components.optionsSheetList
-import com.programmersbox.uiviews.presentation.components.plus
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
