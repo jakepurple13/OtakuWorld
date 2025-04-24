@@ -27,10 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus
 import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import kotlinx.datetime.Instant
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat

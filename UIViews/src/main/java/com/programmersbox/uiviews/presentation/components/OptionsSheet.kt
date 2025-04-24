@@ -53,6 +53,7 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.presentation.lists.ListChoiceScreen
 import com.programmersbox.uiviews.presentation.navigateToDetails
+import com.programmersbox.uiviews.repository.NotificationRepository
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LocalNavController
 import eu.wewox.textflow.material3.TextFlow
@@ -316,6 +317,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     sheet: SheetState,
     dao: ItemDao = koinInject(),
     listDao: ListDao = koinInject(),
+    notificationRepository: NotificationRepository = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ) {
@@ -409,7 +411,10 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                         scope.launch {
                             dao.getNotificationItemFlow(url)
                                 .firstOrNull()
-                                ?.let { dao.deleteNotification(it) }
+                                ?.let {
+                                    notificationRepository.cancelNotification(it)
+                                    dao.deleteNotification(it)
+                                }
                         }
                     }
                 )

@@ -565,8 +565,6 @@ fun BoxWithConstraintsScope.topBounds(paddingValues: PaddingValues): Rect {
     }
 }
 
-val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
-
 @Composable
 fun hapticInteractionSource(
     hapticFeedbackType: HapticFeedbackType = HapticFeedbackType.LongPress,
