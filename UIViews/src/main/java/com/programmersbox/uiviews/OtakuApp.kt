@@ -53,6 +53,7 @@ import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.di.workers
+import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -317,12 +318,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         remoteConfig.addOnConfigUpdateListener(
             object : ConfigUpdateListener {
                 override fun onUpdate(configUpdate: ConfigUpdate) {
-                    remoteConfig.activate().addOnCompleteListener {
-                        if (it.isSuccessful) {
+                    remoteConfig.activate().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
                             GlobalScope.launch {
                                 val dataStoreKeys = RemoteConfigKeys.entries
                                 configUpdate.updatedKeys.forEach { t ->
-                                    if (BuildConfig.DEBUG) println("Updated key: $t")
+                                    logFirebaseMessage("Updated key: $t")
                                     runCatching {
                                         dataStoreKeys.first { keys -> keys.key == t }
                                     }

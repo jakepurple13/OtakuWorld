@@ -23,6 +23,7 @@ fun recordFirebaseException(throwable: Throwable) = runCatching {
 }
 
 fun logFirebaseMessage(message: String) = runCatching {
+    println(message)
     Firebase.crashlytics.log(message)
 }.onFailure { println(message) }
 
