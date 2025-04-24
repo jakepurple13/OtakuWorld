@@ -113,6 +113,7 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
@@ -131,7 +132,6 @@ import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell

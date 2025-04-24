@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
@@ -63,7 +64,6 @@ import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.presentation.settings.showSourceChooser
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import dev.chrisbanes.haze.HazeProgressive

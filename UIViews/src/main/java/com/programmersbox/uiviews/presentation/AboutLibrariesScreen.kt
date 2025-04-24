@@ -85,8 +85,7 @@ internal fun AboutLibrariesScreen() {
     val uriHandler = LocalUriHandler.current
     val libraries by libraryList()
 
-    //var searchText by remember { mutableStateOf("") }
-    val libs = libraries?.libraries/*?.filter { it.name.contains(searchText, true) }*/.orEmpty()
+    val libs = libraries?.libraries.orEmpty()
 
     val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -100,20 +99,6 @@ internal fun AboutLibrariesScreen() {
                 scrollBehavior = topAppBarScrollBehavior
             )
         },
-        /*bottomBar = {
-            BottomAppBar {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    label = { Text("Search Libraries") },
-                    trailingIcon = { IconButton(onClick = { searchText = "" }) { Icon(Icons.Default.Clear, null) } },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                )
-            }
-        }*/
     ) { p ->
         OutlinedLibrariesContainer(
             modifier = Modifier.fillMaxSize(),

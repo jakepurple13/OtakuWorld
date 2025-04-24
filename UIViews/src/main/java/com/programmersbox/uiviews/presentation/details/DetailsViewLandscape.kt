@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.OtakuApp
@@ -88,7 +89,6 @@ import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.utils.NotificationLogo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull

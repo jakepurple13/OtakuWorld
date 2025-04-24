@@ -26,7 +26,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -158,11 +157,6 @@ fun OtakuBannerBox(
 
     val bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
 
-    /*DisposableEffect(Unit) {
-        bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
-        onDispose { bannerScope = null }
-    }*/
-
     BannerBox(
         modifier = modifier,
         showBanner = showBanner,
@@ -215,15 +209,12 @@ fun <T> CustomBannerBox(
 ) {
     var itemInfo by remember { mutableStateOf<T?>(null) }
 
-    var bannerScope by remember { mutableStateOf<CustomBannerScope<T>?>(null) }
-
-    DisposableEffect(Unit) {
-        bannerScope = object : CustomBannerScope<T> {
+    val bannerScope = remember {
+        object : CustomBannerScope<T> {
             override fun newItem(item: T?) {
                 itemInfo = item
             }
         }
-        onDispose { bannerScope = null }
     }
 
     BannerBox(
@@ -241,7 +232,7 @@ fun <T> CustomBannerBox(
                 bannerContent(itemInfo)
             }
         },
-        content = { bannerScope?.content() }
+        content = { bannerScope.content() }
     )
 }
 
