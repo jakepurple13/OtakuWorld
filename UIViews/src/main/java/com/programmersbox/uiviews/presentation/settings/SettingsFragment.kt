@@ -628,9 +628,9 @@ fun SettingsScaffold(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     OtakuScaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { topBar(scrollBehavior) },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { p ->
         Column(
             verticalArrangement = verticalArrangement,

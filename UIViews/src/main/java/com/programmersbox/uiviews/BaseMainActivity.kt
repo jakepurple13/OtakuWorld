@@ -227,7 +227,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
                 OtakuMaterialTheme(
                     navController = navController,
                     genericInfo = genericInfo,
-                    isAmoledMode = isAmoledMode,
                     settingsHandling = settingsHandling
                 ) {
                     AskForNotificationPermissions()

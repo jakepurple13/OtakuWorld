@@ -56,10 +56,13 @@ import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.PaletteSwatchType
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.datastore.rememberHistorySave
+import com.programmersbox.datastore.rememberSwatchStyle
+import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowMoreSetting
@@ -68,12 +71,9 @@ import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.rememberSwatchStyle
-import com.programmersbox.uiviews.datastore.rememberSwatchType
 import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.presentation.components.seedColor
-import com.programmersbox.uiviews.presentation.details.PaletteSwatchType
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.PreviewTheme

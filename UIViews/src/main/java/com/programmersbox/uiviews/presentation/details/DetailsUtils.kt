@@ -68,7 +68,6 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -87,16 +86,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-
-enum class PaletteSwatchType(val swatch: (Palette) -> Palette.Swatch?) {
-    Vibrant(Palette::vibrantSwatch),
-    Muted(Palette::mutedSwatch),
-    Dominant(Palette::dominantSwatch),
-    LightVibrant(Palette::lightVibrantSwatch),
-    DarkVibrant(Palette::darkVibrantSwatch),
-    LightMuted(Palette::lightMutedSwatch),
-    DarkMuted(Palette::darkMutedSwatch),
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

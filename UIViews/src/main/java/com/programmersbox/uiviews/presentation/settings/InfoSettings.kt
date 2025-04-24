@@ -36,6 +36,7 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
@@ -160,6 +161,10 @@ fun InfoSettings(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(stringResource(R.string.currentVersion, appVersion()))
+                    Text(
+                        platform(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             },
             modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }

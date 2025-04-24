@@ -78,14 +78,14 @@ import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.rememberDynamicMaterialThemeState
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.SystemThemeMode
+import com.programmersbox.datastore.rememberSwatchStyle
+import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.rememberSwatchStyle
-import com.programmersbox.uiviews.datastore.rememberSwatchType
 import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.theme.LocalHistoryDao

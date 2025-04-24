@@ -26,6 +26,8 @@ kotlin {
             implementation(compose.runtime)
             implementation(libs.multiplatform.lifecycle.runtime.compose)
             implementation(libs.datastoreOkio)
+            implementation(libs.material.kolor)
+            implementation(libs.kmpalette.core)
         }
     }
 }

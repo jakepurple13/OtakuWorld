@@ -9,7 +9,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.materialkolor.PaletteStyle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -114,4 +116,20 @@ fun rememberHistorySave() = rememberPreference(
 fun rememberFloatingNavigation() = rememberPreference(
     key = booleanPreferencesKey("floatingNavigation"),
     defaultValue = true
+)
+
+@Composable
+fun rememberSwatchStyle() = rememberPreference(
+    key = stringPreferencesKey("swatchStyle"),
+    mapToType = { runCatching { PaletteStyle.valueOf(it) }.getOrDefault(PaletteStyle.TonalSpot) },
+    mapToKey = { it.name },
+    defaultValue = PaletteStyle.TonalSpot
+)
+
+@Composable
+fun rememberSwatchType() = rememberPreference(
+    key = stringPreferencesKey("swatchType"),
+    mapToType = { runCatching { PaletteSwatchType.valueOf(it) }.getOrDefault(PaletteSwatchType.Vibrant) },
+    mapToKey = { it.name },
+    defaultValue = PaletteSwatchType.Vibrant
 )

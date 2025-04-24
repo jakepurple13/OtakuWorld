@@ -55,6 +55,8 @@ googlePerformancePlugin = "1.4.2"
 
 firebaseBom = "33.12.0"
 
+kmpalette = "3.1.0"
+
 ### MangaWorld
 piasy = "1.8.1"
 
@@ -393,6 +395,8 @@ androidx-room-sqlite = { group = "androidx.sqlite", name = "sqlite-bundled", ver
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
+
+kmpalette-core = { module = "com.kmpalette:kmpalette-core", version.ref = "kmpalette" }
 
 [bundles]
 compose = [
