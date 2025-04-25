@@ -58,9 +58,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.LocalNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi

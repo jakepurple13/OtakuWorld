@@ -99,14 +99,14 @@ import androidx.media3.ui.PlayerView
 import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.helpfulutils.audioManager
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.AirBar
-import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.findActivity
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope

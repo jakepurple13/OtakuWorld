@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.kevinnzou.web.WebView
 import com.kevinnzou.web.rememberWebViewState
-import com.programmersbox.uiviews.utils.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

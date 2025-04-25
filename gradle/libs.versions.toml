@@ -93,7 +93,7 @@ core = "1.6.1"
 
 androidx-lifecycle = "2.8.4"
 
-compose-multiplatform = "1.8.0-beta02"
+compose-multiplatform = "1.8.0-rc01"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }

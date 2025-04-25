@@ -4,9 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,7 +40,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -63,20 +60,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
+import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
+import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import com.programmersbox.uiviews.theme.LocalCurrentSource
 import com.programmersbox.uiviews.theme.LocalHistoryDao
-import com.programmersbox.uiviews.utils.BackButton
 import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.programmersbox.uiviews.utils.appVersion
@@ -611,34 +607,3 @@ private fun Modifier.click(action: () -> Unit): Modifier = clickable(
     interactionSource = null,
     onClick = action
 )
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsScaffold(
-    title: String,
-    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
-    topBar: @Composable (TopAppBarScrollBehavior) -> Unit = {
-        InsetSmallTopAppBar(
-            title = { Text(title) },
-            navigationIcon = { BackButton() },
-            scrollBehavior = it,
-        )
-    },
-    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    OtakuScaffold(
-        topBar = { topBar(scrollBehavior) },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-    ) { p ->
-        Column(
-            verticalArrangement = verticalArrangement,
-            content = content,
-            modifier = Modifier
-                .padding(p)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        )
-    }
-}

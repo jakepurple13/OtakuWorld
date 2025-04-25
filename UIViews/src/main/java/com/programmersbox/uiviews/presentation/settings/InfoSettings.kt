@@ -40,6 +40,8 @@ import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
@@ -50,7 +52,6 @@ import com.programmersbox.uiviews.presentation.components.icons.Github
 import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.navigateChromeCustomTabs

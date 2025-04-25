@@ -32,7 +32,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -47,6 +46,7 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -482,7 +482,6 @@ fun rememberBackStackEntry(
     return remember(controller.currentBackStackEntry) { controller.getBackStackEntry(route) }
 }
 
-val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
 
 val Context.appVersion: String
