@@ -13,8 +13,10 @@ import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.customUriHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
+import io.kamel.image.config.LocalKamelConfig
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
 
@@ -40,6 +42,7 @@ fun KmpLocalCompositionSetup(
             LocalHistoryDao provides koinInject(),
             LocalCustomListDao provides koinInject(),
             LocalSettingsHandling provides koinInject(),
+            LocalKamelConfig provides customKamelConfig(),
             LocalUriHandler provides remember {
                 object : UriHandler {
                     private val customHandler = customUriHandler(navController)

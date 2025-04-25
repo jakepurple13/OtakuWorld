@@ -19,13 +19,6 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import io.kamel.core.ExperimentalKamelApi
-import io.kamel.core.config.KamelConfig
-import io.kamel.core.config.takeFrom
-import io.kamel.image.config.Default
-import io.kamel.image.config.LocalKamelConfig
-import io.kamel.image.config.animatedImageDecoder
-import io.kamel.image.config.imageBitmapResizingDecoder
-import io.kamel.image.config.resourcesFetcher
 import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.compose.koinInject
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -46,12 +39,6 @@ fun OtakuMaterialTheme(
                 LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
                 LocalSourcesRepository provides koinInject(),
                 LocalCurrentSource provides koinInject(),
-                LocalKamelConfig provides KamelConfig {
-                    takeFrom(KamelConfig.Default)
-                    imageBitmapResizingDecoder()
-                    animatedImageDecoder()
-                    resourcesFetcher(context)
-                },
             ) {
                 MaterialExpressiveTheme(
                     colorScheme = generateColorScheme(settingsHandling),

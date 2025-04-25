@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import io.kamel.core.config.KamelConfig
 import org.koin.core.module.Module
 
 expect fun platform(): String
@@ -17,6 +18,9 @@ expect fun createColorScheme(
 expect fun customUriHandler(navController: NavHostController): UriHandler
 
 expect val databaseBuilder: Module
+
+@Composable
+expect fun customKamelConfig(): KamelConfig
 
 /*
 val format = LocalDateTime.Format {

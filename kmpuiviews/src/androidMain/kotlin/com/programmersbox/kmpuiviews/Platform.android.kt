@@ -13,6 +13,13 @@ import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
+import io.kamel.core.ExperimentalKamelApi
+import io.kamel.core.config.KamelConfig
+import io.kamel.core.config.takeFrom
+import io.kamel.image.config.Default
+import io.kamel.image.config.animatedImageDecoder
+import io.kamel.image.config.imageBitmapResizingDecoder
+import io.kamel.image.config.resourcesFetcher
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -56,4 +63,16 @@ actual fun customUriHandler(navController: NavHostController): UriHandler = obje
 
 actual val databaseBuilder: Module = module {
     single { DatabaseBuilder(get()) }
+}
+
+@OptIn(ExperimentalKamelApi::class)
+@Composable
+actual fun customKamelConfig(): KamelConfig {
+    val context = LocalContext.current
+    return KamelConfig {
+        takeFrom(KamelConfig.Default)
+        imageBitmapResizingDecoder()
+        animatedImageDecoder()
+        resourcesFetcher(context)
+    }
 }
