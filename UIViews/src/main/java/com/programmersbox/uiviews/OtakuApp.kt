@@ -38,6 +38,7 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
+import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
@@ -49,7 +50,6 @@ import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.migrateSettings
 import com.programmersbox.uiviews.di.appModule
-import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.di.workers

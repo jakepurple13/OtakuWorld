@@ -42,11 +42,11 @@ import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.settings.viewmodels.NotificationViewModel
-import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.Dispatchers

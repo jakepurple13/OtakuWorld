@@ -24,11 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
-import com.programmersbox.uiviews.theme.LocalCustomListDao
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch

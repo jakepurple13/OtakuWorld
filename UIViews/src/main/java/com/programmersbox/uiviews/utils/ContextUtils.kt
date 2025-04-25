@@ -457,8 +457,6 @@ class ExpirableLRUCache<K, V>(
     }
 }
 
-val LocalSettingsHandling = staticCompositionLocalOf<NewSettingsHandling> { error("Not Set") }
-
 tailrec fun Context.findActivity(): FragmentActivity = when (this) {
     is FragmentActivity -> this
     is ContextWrapper -> this.baseContext.findActivity()

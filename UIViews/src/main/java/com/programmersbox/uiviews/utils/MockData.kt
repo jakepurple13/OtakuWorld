@@ -48,13 +48,11 @@ import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.favoritesdatabase.ListDatabase
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
@@ -67,13 +65,9 @@ import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.di.databases
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.theme.LocalCustomListDao
-import com.programmersbox.uiviews.theme.LocalHistoryDao
-import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -254,25 +248,22 @@ fun PreviewTheme(
                 }
             }
         ) {
-            val databaseBuilder = remember { DatabaseBuilder(context) }
-            CompositionLocalProvider(
-                LocalNavController provides navController,
-                LocalGenericInfo provides genericInfo,
-                //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
-                LocalSettingsHandling provides remember {
-                    NewSettingsHandling(
-                        createProtobuf(context, SettingsSerializer(true)),
-                        false
-                    )
-                },
-                LocalItemDao provides remember { ItemDatabase.getInstance(databaseBuilder).itemDao() },
-                LocalHistoryDao provides remember { HistoryDatabase.getInstance(databaseBuilder).historyDao() },
-                LocalCustomListDao provides remember { ListDatabase.getInstance(databaseBuilder).listDao() },
-                LocalSourcesRepository provides SourceRepository(),
-                LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
-                LocalNavHostPadding provides PaddingValues(0.dp),
-                LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
-            ) { Surface { content() } }
+            KmpLocalCompositionSetup(navController) {
+                CompositionLocalProvider(
+                    LocalGenericInfo provides genericInfo,
+                    //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
+                    LocalSettingsHandling provides remember {
+                        NewSettingsHandling(
+                            createProtobuf(context, SettingsSerializer(true)),
+                            false
+                        )
+                    },
+                    LocalSourcesRepository provides SourceRepository(),
+                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
+                    LocalNavHostPadding provides PaddingValues(0.dp),
+                    LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
+                ) { Surface { content() } }
+            }
         }
     }
 }

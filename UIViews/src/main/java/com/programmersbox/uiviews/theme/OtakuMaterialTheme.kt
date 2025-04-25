@@ -11,20 +11,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.favoritesdatabase.BlurHashDao
-import com.programmersbox.favoritesdatabase.BlurHashDatabase
-import com.programmersbox.favoritesdatabase.HistoryDao
-import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.kmpuiviews.theme.generateColorScheme
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import io.kamel.core.ExperimentalKamelApi
@@ -52,11 +43,6 @@ fun OtakuMaterialTheme(
         KmpLocalCompositionSetup(navController) {
             CompositionLocalProvider(
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides koinInject(),
-                LocalItemDao provides koinInject<ItemDatabase>().itemDao(),
-                LocalBlurDao provides koinInject<BlurHashDatabase>().blurDao(),
-                LocalHistoryDao provides koinInject<HistoryDatabase>().historyDao(),
-                LocalCustomListDao provides koinInject<ListDatabase>().listDao(),
                 LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
                 LocalSourcesRepository provides koinInject(),
                 LocalCurrentSource provides koinInject(),
@@ -80,9 +66,5 @@ fun OtakuMaterialTheme(
     }
 }
 
-val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
-val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }
-val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
-val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
 val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }

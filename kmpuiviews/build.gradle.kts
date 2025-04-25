@@ -49,6 +49,8 @@ kotlin {
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 implementation(libs.bundles.datastoreLibs)
+
+                implementation(libs.roomRuntime)
             }
         }
 

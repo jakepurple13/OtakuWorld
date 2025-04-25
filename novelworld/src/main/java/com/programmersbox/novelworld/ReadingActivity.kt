@@ -95,6 +95,7 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
@@ -107,7 +108,6 @@ import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

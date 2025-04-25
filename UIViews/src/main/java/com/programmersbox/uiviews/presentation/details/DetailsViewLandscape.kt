@@ -77,6 +77,8 @@ import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
+import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.models.ChapterModel
@@ -85,8 +87,6 @@ import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
 import com.programmersbox.uiviews.repository.NotificationRepository
-import com.programmersbox.uiviews.theme.LocalCustomListDao
-import com.programmersbox.uiviews.theme.LocalItemDao
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo

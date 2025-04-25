@@ -56,6 +56,7 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
+import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
@@ -64,7 +65,6 @@ import com.programmersbox.uiviews.presentation.components.placeholder.Placeholde
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetMediumTopAppBar

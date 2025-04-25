@@ -65,11 +65,11 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.ReaderType
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect

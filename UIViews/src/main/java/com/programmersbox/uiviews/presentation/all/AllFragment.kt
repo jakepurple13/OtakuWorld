@@ -56,6 +56,7 @@ import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
@@ -69,7 +70,6 @@ import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.theme.LocalCurrentSource
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import dev.chrisbanes.haze.HazeProgressive

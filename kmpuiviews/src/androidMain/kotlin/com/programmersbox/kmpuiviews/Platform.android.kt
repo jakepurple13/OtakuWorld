@@ -11,7 +11,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
+import org.koin.core.module.Module
+import org.koin.dsl.module
 
 actual fun platform() = "Android"
 
@@ -49,4 +52,8 @@ actual fun customUriHandler(navController: NavHostController): UriHandler = obje
             }
         )
     }
+}
+
+actual val databaseBuilder: Module = module {
+    single { DatabaseBuilder(get()) }
 }

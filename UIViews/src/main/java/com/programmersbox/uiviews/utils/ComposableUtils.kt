@@ -90,6 +90,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.programmersbox.datastore.GridChoice
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.repository.ChangingSettingsRepository
 import org.koin.compose.koinInject

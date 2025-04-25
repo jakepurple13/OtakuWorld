@@ -65,13 +65,13 @@ import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import com.programmersbox.uiviews.theme.LocalCurrentSource
-import com.programmersbox.uiviews.theme.LocalHistoryDao
 import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes

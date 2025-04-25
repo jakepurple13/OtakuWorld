@@ -8,11 +8,23 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.favoritesdatabase.BlurHashDao
+import com.programmersbox.favoritesdatabase.HistoryDao
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.customUriHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
+import org.koin.compose.KoinContext
+import org.koin.compose.koinInject
 
 val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
 val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
+val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
+val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }
+val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
+val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
+val LocalSettingsHandling = staticCompositionLocalOf<NewSettingsHandling> { error("Not Set") }
 
 @Composable
 fun KmpLocalCompositionSetup(
@@ -20,21 +32,28 @@ fun KmpLocalCompositionSetup(
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
-    CompositionLocalProvider(
-        LocalNavController provides navController,
-        LocalUriHandler provides remember {
-            object : UriHandler {
-                private val customHandler = customUriHandler(navController)
+    KoinContext {
+        CompositionLocalProvider(
+            LocalNavController provides navController,
+            LocalItemDao provides koinInject(),
+            LocalBlurDao provides koinInject(),
+            LocalHistoryDao provides koinInject(),
+            LocalCustomListDao provides koinInject(),
+            LocalSettingsHandling provides koinInject(),
+            LocalUriHandler provides remember {
+                object : UriHandler {
+                    private val customHandler = customUriHandler(navController)
 
-                override fun openUri(uri: String) {
-                    runCatching { customHandler.openUri(uri) }
-                        .onFailure { it.printStackTrace() }
-                        .recoverCatching { defaultUriHandler.openUri(uri) }
-                        .onFailure { it.printStackTrace() }
-                        .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
+                    override fun openUri(uri: String) {
+                        runCatching { customHandler.openUri(uri) }
+                            .onFailure { it.printStackTrace() }
+                            .recoverCatching { defaultUriHandler.openUri(uri) }
+                            .onFailure { it.printStackTrace() }
+                            .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
+                    }
                 }
-            }
-        },
-        content = content
-    )
+            },
+            content = content
+        )
+    }
 }

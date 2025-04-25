@@ -58,8 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.uiviews.theme.LocalCustomListDao
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt

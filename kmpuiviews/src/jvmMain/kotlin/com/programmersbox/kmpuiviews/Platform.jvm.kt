@@ -7,6 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.programmersbox.favoritesdatabase.DatabaseBuilder
+import org.koin.core.module.Module
+import org.koin.dsl.module
 
 actual fun platform(): String = "Desktop"
 
@@ -28,4 +31,8 @@ actual fun customUriHandler(navController: NavHostController): UriHandler = obje
     override fun openUri(uri: String) {
         error("No Jvm implementation")
     }
+}
+
+actual val databaseBuilder: Module = module {
+    single { DatabaseBuilder() }
 }
