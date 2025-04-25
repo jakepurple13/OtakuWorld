@@ -63,6 +63,8 @@ kotlin {
                 implementation(libs.kamel.decoder.image.bitmap.resizing)
                 implementation(libs.kamel.decoder.svg.batik)
                 implementation(libs.ktorAndroid)
+                implementation(androidx.browser.browser)
+                implementation(libs.androidBrowserHelper)
             }
         }
 

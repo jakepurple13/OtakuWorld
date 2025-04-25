@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils
+package com.programmersbox.kmpuiviews.utils
 
 import android.app.Activity
 import android.content.Context
@@ -25,7 +25,7 @@ import java.net.URLEncoder
 
 @Navigator.Name("chrome")
 class ChromeCustomTabsNavigator(
-    private val context: Context
+    private val context: Context,
 ) : Navigator<ChromeCustomTabsNavigator.Destination>() {
 
     override fun createDestination() = Destination(this)
@@ -34,7 +34,7 @@ class ChromeCustomTabsNavigator(
         destination: Destination,
         args: Bundle?,
         navOptions: NavOptions?,
-        navigatorExtras: Navigator.Extras?
+        navigatorExtras: Navigator.Extras?,
     ): NavDestination? {
         val url = checkNotNull(args!!.getString(KEY_URL)) {
             "Destination ${destination.id} does not have an url."
@@ -51,7 +51,7 @@ class ChromeCustomTabsNavigator(
     override fun popBackStack() = true // Managed by Chrome Custom Tabs
 
     private fun CustomTabsIntent.Builder.buildCustomTabsIntent(
-        extras: Extras
+        extras: Extras,
     ): CustomTabsIntent {
         val colorBuilder = CustomTabColorSchemeParams.Builder()
         if (extras.toolbarColor != null) {
@@ -77,7 +77,7 @@ class ChromeCustomTabsNavigator(
     class Destination(navigator: ChromeCustomTabsNavigator) : NavDestination(navigator)
 
     class Extras internal constructor(
-        internal val toolbarColor: Int?
+        internal val toolbarColor: Int?,
     ) : Navigator.Extras {
         class Builder {
             @ColorInt

@@ -9,6 +9,9 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.UriHandler
+import androidx.navigation.NavHostController
+import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
 
 actual fun platform() = "Android"
 
@@ -29,5 +32,21 @@ actual fun createColorScheme(
         isExpressive -> lightColorScheme()//expressiveLightColorScheme()
 
         else -> lightColorScheme()
+    }
+}
+
+actual fun customUriHandler(navController: NavHostController): UriHandler = object : UriHandler {
+    override fun openUri(uri: String) {
+        navController.navigateChromeCustomTabs(
+            url = uri,
+            builder = {
+                anim {
+                    enter = R.anim.slide_in_right
+                    popEnter = R.anim.slide_in_right
+                    exit = R.anim.slide_out_left
+                    popExit = R.anim.slide_out_left
+                }
+            }
+        )
     }
 }

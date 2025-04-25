@@ -5,6 +5,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.UriHandler
+import androidx.navigation.NavHostController
 
 actual fun platform(): String = "Desktop"
 
@@ -19,5 +21,11 @@ actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorSc
         isExpressive -> lightColorScheme()//expressiveLightColorScheme()
 
         else -> lightColorScheme()
+    }
+}
+
+actual fun customUriHandler(navController: NavHostController): UriHandler = object : UriHandler {
+    override fun openUri(uri: String) {
+        error("No Jvm implementation")
     }
 }

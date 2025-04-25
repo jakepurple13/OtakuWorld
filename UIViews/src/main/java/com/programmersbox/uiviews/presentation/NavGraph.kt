@@ -20,6 +20,7 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.programmersbox.gemini.GeminiRecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.all.AllView
@@ -48,7 +49,6 @@ import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSetting
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
 import com.programmersbox.uiviews.presentation.webview.WebViewScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.chromeCustomTabs
 import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.utils.trackScreen
 

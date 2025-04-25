@@ -8,8 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceRepository
@@ -21,17 +19,14 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.ListDatabase
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.theme.generateColorScheme
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -52,57 +47,35 @@ fun OtakuMaterialTheme(
     settingsHandling: NewSettingsHandling,
     content: @Composable () -> Unit,
 ) {
-    val defaultUriHandler = LocalUriHandler.current
-
     KoinAndroidContext {
         val context = LocalContext.current
-        CompositionLocalProvider(
-            LocalNavController provides navController,
-            LocalGenericInfo provides genericInfo,
-            LocalSettingsHandling provides koinInject(),
-            LocalItemDao provides koinInject<ItemDatabase>().itemDao(),
-            LocalBlurDao provides koinInject<BlurHashDatabase>().blurDao(),
-            LocalHistoryDao provides koinInject<HistoryDatabase>().historyDao(),
-            LocalCustomListDao provides koinInject<ListDatabase>().listDao(),
-            LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
-            LocalSourcesRepository provides koinInject(),
-            LocalCurrentSource provides koinInject(),
-            LocalKamelConfig provides KamelConfig {
-                takeFrom(KamelConfig.Default)
-                imageBitmapResizingDecoder()
-                animatedImageDecoder()
-                resourcesFetcher(context)
-            },
-            LocalUriHandler provides remember {
-                object : UriHandler {
-                    override fun openUri(uri: String) {
-                        runCatching {
-                            navController.navigateChromeCustomTabs(
-                                uri,
-                                {
-                                    anim {
-                                        enter = R.anim.slide_in_right
-                                        popEnter = R.anim.slide_in_right
-                                        exit = R.anim.slide_out_left
-                                        popExit = R.anim.slide_out_left
-                                    }
-                                }
-                            )
-                        }
-                            .recoverCatching { defaultUriHandler.openUri(uri) }
-                            .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
-                    }
-                }
+        KmpLocalCompositionSetup(navController) {
+            CompositionLocalProvider(
+                LocalGenericInfo provides genericInfo,
+                LocalSettingsHandling provides koinInject(),
+                LocalItemDao provides koinInject<ItemDatabase>().itemDao(),
+                LocalBlurDao provides koinInject<BlurHashDatabase>().blurDao(),
+                LocalHistoryDao provides koinInject<HistoryDatabase>().historyDao(),
+                LocalCustomListDao provides koinInject<ListDatabase>().listDao(),
+                LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
+                LocalSourcesRepository provides koinInject(),
+                LocalCurrentSource provides koinInject(),
+                LocalKamelConfig provides KamelConfig {
+                    takeFrom(KamelConfig.Default)
+                    imageBitmapResizingDecoder()
+                    animatedImageDecoder()
+                    resourcesFetcher(context)
+                },
+            ) {
+                MaterialExpressiveTheme(
+                    colorScheme = generateColorScheme(settingsHandling),
+                    motionScheme = if (settingsHandling.rememberShowExpressiveness().value)
+                        MotionScheme.expressive()
+                    else
+                        MotionScheme.standard(),
+                    content = content
+                )
             }
-        ) {
-            MaterialExpressiveTheme(
-                colorScheme = generateColorScheme(settingsHandling),
-                motionScheme = if (settingsHandling.rememberShowExpressiveness().value)
-                    MotionScheme.expressive()
-                else
-                    MotionScheme.standard(),
-                content = content
-            )
         }
     }
 }

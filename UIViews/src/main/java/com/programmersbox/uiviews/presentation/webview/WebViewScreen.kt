@@ -11,12 +11,14 @@ import androidx.compose.ui.Modifier
 import com.kevinnzou.web.WebView
 import com.kevinnzou.web.rememberWebViewState
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewScreen(
     url: String,
 ) {
+    HideNavBarWhileOnScreen()
     val state = rememberWebViewState(url = url)
     Scaffold(
         topBar = {

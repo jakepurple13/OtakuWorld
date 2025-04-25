@@ -54,7 +54,6 @@ import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.appVersion
-import com.programmersbox.uiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.uiviews.utils.versionCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -208,7 +207,7 @@ fun InfoSettings(
                         TextButton(onClick = { showDialog = false }) { Text(stringResource(R.string.notNow)) }
                         TextButton(
                             onClick = {
-                                navController.navigateChromeCustomTabs("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                                uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest")
                                 showDialog = false
                             }
                         ) { Text(stringResource(R.string.gotoBrowser)) }
