@@ -51,6 +51,7 @@ class RecentViewModel(
 
     val filteredSourceList by derivedStateOf { sourceList.distinctBy { it.url } }
 
+    //TODO: Use https://github.com/jordond/connectivity for this
     @SuppressLint("MissingPermission")
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
