@@ -49,6 +49,8 @@ import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -123,13 +125,13 @@ val MockInfo = object : GenericInfo {
     @ExperimentalFoundationApi
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -172,7 +174,7 @@ val MockInfo = object : GenericInfo {
     }
 }
 
-val MockApiService = object : ApiService {
+val MockApiService = object : KmpApiService {
     override val baseUrl: String = ""
 }
 

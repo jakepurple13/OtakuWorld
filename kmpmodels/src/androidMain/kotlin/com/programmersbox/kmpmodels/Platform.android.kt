@@ -1,10 +1,12 @@
 package com.programmersbox.kmpmodels
 
 import com.programmersbox.models.ApiService
+import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.RemoteSources
+import com.programmersbox.models.SourceInformation
 import com.programmersbox.models.Sources
 import com.programmersbox.models.Storage
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +34,46 @@ object ModelMapper {
             downloadLink = remoteSources.downloadLink,
             sources = remoteSources.sources.map { mapSources(it) }
         )
+    }
+
+    fun mapSourceInformation(sourceInformation: SourceInformation): KmpSourceInformation {
+        return KmpSourceInformation(
+            name = sourceInformation.name,
+            packageName = sourceInformation.packageName,
+            icon = null,
+            apiService = mapApiService(sourceInformation.apiService),
+            catalog = sourceInformation.catalog?.let { mapCatalog(it) }
+        )
+    }
+
+    fun mapSourceInformation(sourceInformation: KmpSourceInformation): SourceInformation {
+        return SourceInformation(
+            name = sourceInformation.name,
+            packageName = sourceInformation.packageName,
+            icon = null,
+            apiService = mapApiService(sourceInformation.apiService),
+            catalog = sourceInformation.catalog?.let { mapCatalog(it) }
+        )
+    }
+
+    fun mapCatalog(catalog: KmpApiServicesCatalog): ApiServicesCatalog {
+        return object : ApiServicesCatalog {
+            override fun createSources(): List<ApiService> {
+                return catalog.createSources().map { mapApiService(it) }
+            }
+
+            override val name: String = catalog.name
+        }
+    }
+
+    fun mapCatalog(catalog: ApiServicesCatalog): KmpApiServicesCatalog {
+        return object : KmpApiServicesCatalog {
+            override fun createSources(): List<KmpApiService> {
+                return catalog.createSources().map { mapApiService(it) }
+            }
+
+            override val name: String = catalog.name
+        }
     }
 
     fun mapSources(sources: Sources) = KmpSources(

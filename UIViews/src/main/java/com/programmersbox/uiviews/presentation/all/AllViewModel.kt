@@ -10,8 +10,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.DefaultToastItems
@@ -40,12 +40,12 @@ class AllViewModel(
         .flowOn(Dispatchers.IO)
 
     var searchText by mutableStateOf("")
-    var searchList by mutableStateOf<List<ItemModel>>(emptyList())
+    var searchList by mutableStateOf<List<KmpItemModel>>(emptyList())
 
     var isSearching by mutableStateOf(false)
 
     var isRefreshing by mutableStateOf(false)
-    val sourceList = mutableStateListOf<ItemModel>()
+    val sourceList = mutableStateListOf<KmpItemModel>()
     var favoriteList = mutableStateListOf<DbModel>()
 
     var count = 1
@@ -68,18 +68,18 @@ class AllViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun reset(sources: ApiService) {
+    fun reset(sources: KmpApiService) {
         count = 1
         sourceList.clear()
         sourceLoadCompose(sources)
     }
 
-    fun loadMore(sources: ApiService) {
+    fun loadMore(sources: KmpApiService) {
         count++
         sourceLoadCompose(sources)
     }
 
-    private fun sourceLoadCompose(sources: ApiService) {
+    private fun sourceLoadCompose(sources: KmpApiService) {
         sources
             .getListFlow(count)
             .dispatchIoAndCatchList { showError() }

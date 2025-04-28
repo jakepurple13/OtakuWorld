@@ -60,7 +60,7 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.presentation.components.optionsSheet
+import com.programmersbox.uiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.presentation.settings.showSourceChooser
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -116,7 +116,7 @@ fun RecentView(
             }
     }
 
-    var optionsSheet by optionsSheet(
+    var optionsSheet by optionsKmpSheet(
         moreContent = {
             Crossfade(
                 recentVm.favoriteList.any { f -> f.url == it.url }

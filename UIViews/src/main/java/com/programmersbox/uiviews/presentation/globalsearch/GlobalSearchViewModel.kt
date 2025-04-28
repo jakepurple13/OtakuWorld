@@ -11,8 +11,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -67,6 +68,7 @@ class GlobalSearchViewModel(
                             .apiService
                             .searchSourceList(searchText.text.toString(), list = emptyList())
                             .dispatchIoAndCatchList()
+                            .map { itemModels -> itemModels.map { ModelMapper.mapItemModel(it) } }
                             .map { SearchModel(a.apiService.serviceName, it) }
                             .filter { it.data.isNotEmpty() }
                             .onEach { searchListPublisher += it }
@@ -104,4 +106,4 @@ class GlobalSearchViewModel(
 
 }
 
-data class SearchModel(val apiName: String, val data: List<ItemModel>)
+data class SearchModel(val apiName: String, val data: List<KmpItemModel>)

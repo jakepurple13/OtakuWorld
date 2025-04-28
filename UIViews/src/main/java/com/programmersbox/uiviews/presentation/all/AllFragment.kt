@@ -52,19 +52,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshDefaults
-import com.programmersbox.uiviews.presentation.components.optionsSheet
+import com.programmersbox.uiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.theme.LocalCurrentSource
@@ -109,7 +109,7 @@ fun AllView(
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val hazeState = remember { HazeState() }
 
-    var optionsSheet by optionsSheet()
+    var optionsSheet by optionsKmpSheet()
 
     OtakuScaffold(
         topBar = {
@@ -266,11 +266,11 @@ fun AllView(
 @Composable
 fun AllScreen(
     isRefreshing: Boolean,
-    sourceList: List<ItemModel>,
+    sourceList: List<KmpItemModel>,
     favoriteList: List<DbModel>,
-    onLoadMore: (ApiService) -> Unit,
-    onReset: (ApiService) -> Unit,
-    itemInfoChange: (ItemModel?) -> Unit,
+    onLoadMore: (KmpApiService) -> Unit,
+    onReset: (KmpApiService) -> Unit,
+    itemInfoChange: (KmpItemModel?) -> Unit,
     state: LazyGridState,
     paddingValues: PaddingValues,
     modifier: Modifier = Modifier,

@@ -15,8 +15,8 @@ import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.repository.FavoritesRepository
@@ -46,7 +46,7 @@ class RecentViewModel(
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
-    private val sourceList = mutableStateListOf<ItemModel>()
+    private val sourceList = mutableStateListOf<KmpItemModel>()
     val favoriteList = mutableStateListOf<DbModel>()
 
     val filteredSourceList by derivedStateOf { sourceList.distinctBy { it.url } }
@@ -61,7 +61,7 @@ class RecentViewModel(
 
     private val itemListener = fireListener()
 
-    var currentSource by mutableStateOf<ApiService?>(null)
+    var currentSource by mutableStateOf<KmpApiService?>(null)
 
     val gridState = LazyGridState(0, 0)
 
@@ -163,7 +163,7 @@ class RecentViewModel(
     }
 
     sealed class FavoriteAction {
-        data class Add(val info: ItemModel) : FavoriteAction()
-        data class Remove(val info: ItemModel) : FavoriteAction()
+        data class Add(val info: KmpItemModel) : FavoriteAction()
+        data class Remove(val info: KmpItemModel) : FavoriteAction()
     }
 }

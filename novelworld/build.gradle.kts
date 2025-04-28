@@ -33,6 +33,7 @@ dependencies {
 
     implementation(projects.uiViews)
     implementation(projects.models)
+    implementation(projects.kmpmodels)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
 

@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.navigation.NavController
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ItemModel
@@ -17,6 +18,16 @@ fun NavController.navigateToDetails1(model: ItemModel) = navigate(
 ) { launchSingleTop = true }
 
 fun NavController.navigateToDetails(model: ItemModel) = navigate(
+    Screen.DetailsScreen.Details(
+        title = model.title.ifEmpty { "NA" },
+        description = model.description.ifEmpty { "NA" },
+        url = model.url.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) },
+        imageUrl = model.imageUrl.let { URLEncoder.encode(it, StandardCharsets.UTF_8.toString()) },
+        source = model.source.serviceName
+    )
+) { launchSingleTop = true }
+
+fun NavController.navigateToDetails(model: KmpItemModel) = navigate(
     Screen.DetailsScreen.Details(
         title = model.title.ifEmpty { "NA" },
         description = model.description.ifEmpty { "NA" },

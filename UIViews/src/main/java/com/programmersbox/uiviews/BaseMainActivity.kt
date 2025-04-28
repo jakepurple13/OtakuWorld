@@ -120,6 +120,7 @@ import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.SourceOrder
+import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
@@ -147,6 +148,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -772,6 +774,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     sourceRepository.toSourceByApiServiceName(it)
                 }
             }
+            .map { ModelMapper.mapSourceInformation(it) }
             .onEach { currentSourceRepository.emit(it.apiService) }
             .launchIn(lifecycleScope)
 
