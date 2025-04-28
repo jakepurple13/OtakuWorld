@@ -1,4 +1,4 @@
-package com.programmersbox.extensionloader
+package com.programmersbox.kmpextensionloader
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -10,13 +10,7 @@ import dalvik.system.PathClassLoader
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 
-private val PACKAGE_FLAGS =
-    PackageManager.GET_CONFIGURATIONS or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        PackageManager.GET_SIGNING_CERTIFICATES
-    } else {
-        @Suppress("DEPRECATION")
-        PackageManager.GET_SIGNATURES
-    }
+private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
 
 /**
  * Use this to load code from other apks!
@@ -41,7 +35,7 @@ class ExtensionLoader<T, R>(
     private val context: Context,
     private val extensionFeature: String,
     private val metadataClass: String,
-    private val mapping: (T, ApplicationInfo, PackageInfo) -> R
+    private val mapping: (T, ApplicationInfo, PackageInfo) -> R,
 ) {
     @SuppressLint("QueryPermissionsNeeded")
     fun loadExtensions(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {

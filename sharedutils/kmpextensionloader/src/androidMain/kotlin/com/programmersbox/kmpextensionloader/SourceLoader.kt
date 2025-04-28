@@ -1,4 +1,4 @@
-package com.programmersbox.extensionloader
+package com.programmersbox.kmpextensionloader
 
 import android.app.Application
 import android.content.BroadcastReceiver
@@ -25,11 +25,11 @@ private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
 // expect/actual class
 // koin for DI
 // It'll have the load and blockingLoad functions
-class SourceLoader(
+actual class SourceLoader(
     application: Application,
     private val context: Context,
     sourceType: String,
-    private val sourceRepository: SourceRepository
+    private val sourceRepository: SourceRepository,
 ) {
     private val extensionLoader = ExtensionLoader<Any, List<SourceInformation>>(
         context,
@@ -70,13 +70,7 @@ class SourceLoader(
         }
     }
 
-    private val PACKAGE_FLAGS =
-        PackageManager.GET_CONFIGURATIONS or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            PackageManager.GET_SIGNING_CERTIFICATES
-        } else {
-            @Suppress("DEPRECATION")
-            PackageManager.GET_SIGNATURES
-        }
+    private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
 
     private val extensionType = "$EXTENSION_FEATURE.$sourceType"
 
@@ -115,7 +109,7 @@ class SourceLoader(
         context.registerReceiver(uninstallApplication, intentFilter)
     }
 
-    fun load() {
+    actual fun load() {
         sourceRepository.setSources(
             extensionLoader
                 .loadExtensions()
@@ -125,7 +119,7 @@ class SourceLoader(
         )
     }
 
-    suspend fun blockingLoad() {
+    actual suspend fun blockingLoad() {
         sourceRepository.setSources(
             extensionLoader
                 .loadExtensionsBlocking()

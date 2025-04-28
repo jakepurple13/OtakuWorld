@@ -66,6 +66,9 @@ dependencies {
     api(projects.datastore)
     api(projects.kmpuiviews)
 
+    //Extension Loader
+    api(projects.sharedutils.kmpextensionloader)
+
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)
     implementation(libs.coroutinesAndroid)
@@ -126,9 +129,6 @@ dependencies {
     //Multiplatform
     //implementation(projects.imageloader)
     api(libs.bundles.kamel)
-
-    //Extension Loader
-    api(projects.sharedutils.extensionloader)
 
     api(libs.haze)
     api(libs.hazeMaterials)

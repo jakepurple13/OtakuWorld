@@ -57,7 +57,6 @@ include(
     ":sharedutils",
     ":source_utilities",
     //":imageloader",
-    ":sharedutils:extensionloader"
     //":otakumanager",
 )
 
@@ -74,3 +73,4 @@ include(":datastore")
 include(":datastore:mangasettings")
 include(":kmpuiviews")
 include(":kmpmodels")
+include(":sharedutils:kmpextensionloader")
