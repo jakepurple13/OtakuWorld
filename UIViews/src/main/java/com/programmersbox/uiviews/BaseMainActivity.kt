@@ -117,12 +117,13 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberFloatingNavigation
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.SourceOrder
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
+import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.sharedutils.AppLogo
@@ -132,7 +133,6 @@ import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.uiviews.presentation.navGraph
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.repository.ChangingSettingsRepository
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.theme.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
@@ -759,7 +759,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
             }
             .launchIn(lifecycleScope)
 
-        dataStoreHandling.currentService
+        dataStoreHandling
+            .currentService
             .asFlow()
             .mapNotNull {
                 if (it == null) {

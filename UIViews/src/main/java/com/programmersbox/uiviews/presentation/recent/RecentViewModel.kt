@@ -11,13 +11,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.SourceInformation
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.combineSources
@@ -46,11 +46,12 @@ class RecentViewModel(
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
-    private val sourceList = mutableStateListOf<ItemModel>()
+    private val sourceList = mutableStateListOf<KmpItemModel>()
     val favoriteList = mutableStateListOf<DbModel>()
 
     val filteredSourceList by derivedStateOf { sourceList.distinctBy { it.url } }
 
+    //TODO: Use https://github.com/jordond/connectivity for this
     @SuppressLint("MissingPermission")
     val observeNetwork = ReactiveNetwork()
         .observeInternetConnectivity()
@@ -60,11 +61,11 @@ class RecentViewModel(
 
     private val itemListener = fireListener()
 
-    var currentSource by mutableStateOf<ApiService?>(null)
+    var currentSource by mutableStateOf<KmpApiService?>(null)
 
     val gridState = LazyGridState(0, 0)
 
-    val sources = mutableStateListOf<SourceInformation>()
+    val sources = mutableStateListOf<KmpSourceInformation>()
 
     val snackbarHostState = SnackbarHostState()
 
@@ -162,7 +163,7 @@ class RecentViewModel(
     }
 
     sealed class FavoriteAction {
-        data class Add(val info: ItemModel) : FavoriteAction()
-        data class Remove(val info: ItemModel) : FavoriteAction()
+        data class Add(val info: KmpItemModel) : FavoriteAction()
+        data class Remove(val info: KmpItemModel) : FavoriteAction()
     }
 }

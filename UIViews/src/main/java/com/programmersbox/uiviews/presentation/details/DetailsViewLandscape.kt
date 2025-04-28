@@ -75,14 +75,14 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
@@ -103,13 +103,13 @@ import org.koin.compose.koinInject
 @ExperimentalFoundationApi
 @Composable
 fun DetailsViewLandscape(
-    info: InfoModel,
+    info: KmpInfoModel,
     isSaved: Boolean,
     shareChapter: Boolean,
     chapters: List<ChapterWatched>,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
-    markAs: (ChapterModel, Boolean) -> Unit,
+    markAs: (KmpChapterModel, Boolean) -> Unit,
     logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
@@ -261,12 +261,12 @@ fun DetailsViewLandscape(
 )
 @Composable
 private fun DetailsLandscapeContent(
-    info: InfoModel,
+    info: KmpInfoModel,
     shareChapter: Boolean,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
     isSaved: Boolean,
-    markAs: (ChapterModel, Boolean) -> Unit,
+    markAs: (KmpChapterModel, Boolean) -> Unit,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     chapters: List<ChapterWatched>,

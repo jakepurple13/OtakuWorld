@@ -94,10 +94,10 @@ import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
@@ -125,9 +125,9 @@ class ReadViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     model: Flow<List<String>>? = handle.get<String>("currentChapter")
-        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
+        ?.fromJson<KmpChapterModel>(KmpChapterModel::class.java to ChapterModelDeserializer())
         ?.getChapterInfo()
-        ?.map { it.mapNotNull(Storage::link) },
+        ?.map { it.mapNotNull(KmpStorage::link) },
 ) : ViewModel() {
 
     companion object {
@@ -136,12 +136,14 @@ class ReadViewModel(
 
         fun navigateToNovelReader(
             navController: NavController,
-            currentChapter: ChapterModel,
+            currentChapter: KmpChapterModel,
             novelTitle: String,
             novelUrl: String,
             novelInfoUrl: String,
         ) {
-            val current = Uri.encode(currentChapter.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            val current = Uri.encode(
+                currentChapter.toJson(KmpChapterModel::class.java to ChapterModelSerializer())
+            )
 
             navController.navigate(
                 "novelreader?currentChapter=$current&novelTitle=${novelTitle}&novelUrl=${novelUrl}&novelInfoUrl=${novelInfoUrl}"
@@ -390,7 +392,7 @@ fun NovelReader(
                     readVm.loadPages(
                         readVm.list.getOrNull(readVm.currentChapter)
                             ?.getChapterInfo()
-                            ?.map { it.mapNotNull(Storage::link) }
+                            ?.map { it.mapNotNull(KmpStorage::link) }
                     )
                 },
                 modifier = Modifier.padding(p)

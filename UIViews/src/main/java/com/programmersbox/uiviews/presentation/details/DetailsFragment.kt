@@ -83,14 +83,14 @@ import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
@@ -275,9 +275,9 @@ private fun DetailContent(
 @Composable
 fun MarkAsScreen(
     drawerState: DrawerState,
-    info: InfoModel,
+    info: KmpInfoModel,
     chapters: List<ChapterWatched>,
-    markAs: (ChapterModel, Boolean) -> Unit,
+    markAs: (KmpChapterModel, Boolean) -> Unit,
 ) {
     val scrollBehaviorMarkAs = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val scope = rememberCoroutineScope()
@@ -452,13 +452,13 @@ private fun DetailError(
 @ExperimentalMaterial3Api
 @Composable
 fun ChapterItem(
-    infoModel: InfoModel,
-    c: ChapterModel,
+    infoModel: KmpInfoModel,
+    c: KmpChapterModel,
     read: List<ChapterWatched>,
-    chapters: List<ChapterModel>,
+    chapters: List<KmpChapterModel>,
     shareChapter: Boolean,
     showDownload: () -> Boolean,
-    markAs: (ChapterModel, Boolean) -> Unit,
+    markAs: (KmpChapterModel, Boolean) -> Unit,
 ) {
     val historyDao = LocalHistoryDao.current
     val favoritesRepository: FavoritesRepository = koinInject()

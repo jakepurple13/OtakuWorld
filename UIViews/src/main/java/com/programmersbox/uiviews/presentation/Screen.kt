@@ -2,21 +2,14 @@ package com.programmersbox.uiviews.presentation
 
 import android.net.Uri
 import androidx.navigation.NavController
-import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.gsonutils.toJson
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ApiServiceSerializer
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-fun NavController.navigateToDetails1(model: ItemModel) = navigate(
-    Screen.DetailsScreen.route + "/${Uri.encode(model.toJson(ApiService::class.java to ApiServiceSerializer()))}"
-) { launchSingleTop = true }
-
-fun NavController.navigateToDetails(model: ItemModel) = navigate(
+fun NavController.navigateToDetails(model: KmpItemModel) = navigate(
     Screen.DetailsScreen.Details(
         title = model.title.ifEmpty { "NA" },
         description = model.description.ifEmpty { "NA" },
@@ -29,10 +22,15 @@ fun NavController.navigateToDetails(model: ItemModel) = navigate(
 fun Screen.DetailsScreen.Details.toItemModel(
     sourceRepository: SourceRepository,
     genericInfo: GenericInfo,
-): ItemModel? = Uri.decode(source)
-    .let { sourceRepository.toSourceByApiServiceName(it)?.apiService ?: genericInfo.toSource(it) }
+): KmpItemModel? = Uri.decode(source)
+    .let {
+        sourceRepository.toSourceByApiServiceName(it)
+            ?.apiService
+            ?: genericInfo
+                .toSource(it)
+    }
     ?.let {
-        ItemModel(
+        KmpItemModel(
             title = Uri.decode(title),
             description = Uri.decode(description),
             url = Uri.decode(url),

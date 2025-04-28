@@ -16,11 +16,11 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.PageEndChapterItemBinding
 import com.programmersbox.mangaworld.databinding.PageItemBinding
 import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding
-import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
 import kotlinx.coroutines.flow.collect
@@ -34,10 +34,10 @@ class PageAdapter(
     dataList: MutableList<String>,
     private val onTap: () -> Unit,
     private val coordinatorLayout: CoordinatorLayout,
-    private val chapterModels: List<ChapterModel>,
+    private val chapterModels: List<KmpChapterModel>,
     var currentChapter: Int,
     private val mangaUrl: String,
-    private val loadNewPages: (ChapterModel) -> Unit = {}
+    private val loadNewPages: (KmpChapterModel) -> Unit = {},
 ) : DragSwipeGlideAdapter<String, PageHolder, String>(dataList) {
 
     private val context: Context = activity

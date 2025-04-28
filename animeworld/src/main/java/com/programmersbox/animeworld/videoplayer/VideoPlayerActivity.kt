@@ -53,7 +53,7 @@ import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.startDrawable
-import com.programmersbox.models.ChapterModel
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
@@ -165,9 +165,9 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val genericInfo: GenericInfo by inject()
 
-    private val chapterModel: ChapterModel? by lazy {
+    private val chapterModel: KmpChapterModel? by lazy {
         intent.getStringExtra("chapterModel")
-            ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer())
+            ?.fromJson(KmpChapterModel::class.java to ChapterModelDeserializer())
     }
 
     private lateinit var videoBinding: ActivityVideoPlayerBinding

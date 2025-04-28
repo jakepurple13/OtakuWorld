@@ -75,10 +75,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
@@ -86,7 +87,6 @@ import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.R
@@ -94,7 +94,7 @@ import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.presentation.components.optionsSheetList
+import com.programmersbox.uiviews.presentation.components.optionsKmpSheetList
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import com.programmersbox.uiviews.utils.InsetCenterAlignedTopAppBar
@@ -124,7 +124,7 @@ fun FavoriteUi(
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
-    var optionsSheet by optionsSheetList()
+    var optionsSheet by optionsKmpSheetList()
     val scope = rememberCoroutineScope()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -458,7 +458,7 @@ private fun FavoritesGrid(
     sourceRepository: SourceRepository,
     navController: NavController,
     moreInfoClick: (DbModel) -> Unit,
-    onLongPress: (List<ItemModel>) -> Unit,
+    onLongPress: (List<KmpItemModel>) -> Unit,
     logo: Drawable,
     modifier: Modifier = Modifier,
 ) {

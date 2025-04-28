@@ -16,9 +16,9 @@ import androidx.navigation.NavController
 import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.toDbModel
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.mangaworld.ChapterHolder
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener
@@ -55,7 +55,7 @@ class ReadViewModel(
         ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { h -> h.headers.toList() })
-            it.mapNotNull(Storage::link)
+            it.mapNotNull(KmpStorage::link)
         }
 
     val filePath: File? = runCatching { mangaReader.filePath?.let { File(it) } }.getOrNull()
@@ -106,7 +106,7 @@ class ReadViewModel(
 
     val title by lazy { mangaReader.mangaTitle ?: "" }
 
-    var list by mutableStateOf<List<ChapterModel>>(emptyList())
+    var list by mutableStateOf<List<KmpChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { mangaReader.mangaInfoUrl ?: "" }
 
@@ -161,7 +161,7 @@ class ReadViewModel(
 
             item
                 .getChapterInfo()
-                .map { it.mapNotNull(Storage::link) }
+                .map { it.mapNotNull(KmpStorage::link) }
                 .let { loadPages(it) }
         }
     }
@@ -196,7 +196,7 @@ class ReadViewModel(
                 ?.getChapterInfo()
                 ?.map {
                     headers.putAll(it.flatMap { h -> h.headers.toList() })
-                    it.mapNotNull(Storage::link)
+                    it.mapNotNull(KmpStorage::link)
                 }
         )
     }

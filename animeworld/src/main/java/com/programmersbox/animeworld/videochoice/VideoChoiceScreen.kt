@@ -22,10 +22,10 @@ import com.programmersbox.animeworld.Qualities
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.getQualityFromName
 import com.programmersbox.animeworld.navigateToVideoPlayer
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
@@ -35,16 +35,16 @@ import com.programmersbox.uiviews.utils.LocalGenericInfo
 @Composable
 fun VideoChoiceScreen(
     context: Context = LocalContext.current,
-    items: List<Storage>,
-    infoModel: InfoModel,
+    items: List<KmpStorage>,
+    infoModel: KmpInfoModel,
     isStreaming: Boolean,
-    model: ChapterModel,
+    model: KmpChapterModel,
     genericInfo: GenericInfo = LocalGenericInfo.current,
 ) {
     val navController = LocalNavController.current
     val activity = LocalActivity.current
 
-    val onAction: (Storage) -> Unit = {
+    val onAction: (KmpStorage) -> Unit = {
         VideoSourceModel.showVideoSources = null
         if (isStreaming) {
             if (MainActivity.cast.isCastActive()) {

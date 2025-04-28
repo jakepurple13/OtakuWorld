@@ -14,18 +14,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.kmpalette.palette.graphics.Palette
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashItem
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.toItemModel
@@ -60,13 +60,14 @@ class DetailsViewModel(
 
     private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
-    val itemModel: ItemModel? = details?.toItemModel(sourceRepository, genericInfo)
+    val itemModel: KmpItemModel? = details?.toItemModel(sourceRepository, genericInfo)
+    //TODO: Fix this
         ?: handle.get<String>("model")
-            ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
+            ?.fromJson<KmpItemModel>(KmpApiService::class.java to ApiServiceDeserializer(genericInfo))
 
     private var detailState by mutableStateOf<DetailState>(DetailState.Loading)
 
-    var info: InfoModel? by mutableStateOf(null)
+    var info: KmpInfoModel? by mutableStateOf(null)
 
     var palette by mutableStateOf<Palette?>(null)
 
@@ -186,7 +187,7 @@ class DetailsViewModel(
         }
     }
 
-    private fun setup(info: InfoModel) {
+    private fun setup(info: KmpInfoModel) {
         favoritesRepository
             .isFavorite(
                 url = info.url,
@@ -213,7 +214,7 @@ class DetailsViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun markAs(c: ChapterModel, b: Boolean) {
+    fun markAs(c: KmpChapterModel, b: Boolean) {
         val chapter = ChapterWatched(
             url = c.url,
             name = c.name,
@@ -260,7 +261,7 @@ sealed class DetailState {
     object Loading : DetailState()
 
     data class Success(
-        val info: InfoModel,
+        val info: KmpInfoModel,
         val action: DetailFavoriteAction,
     ) : DetailState()
 
@@ -268,6 +269,6 @@ sealed class DetailState {
 }
 
 sealed class DetailFavoriteAction {
-    data class Add(val info: InfoModel) : DetailFavoriteAction()
-    data class Remove(val info: InfoModel) : DetailFavoriteAction()
+    data class Add(val info: KmpInfoModel) : DetailFavoriteAction()
+    data class Remove(val info: KmpInfoModel) : DetailFavoriteAction()
 }

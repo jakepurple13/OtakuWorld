@@ -46,17 +46,17 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.extensionloader.SourceLoader
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseUIStyle
@@ -80,12 +80,12 @@ import java.util.Locale
 val MockInfo = object : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
     override val deepLinkUri: String = ""
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? = null
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? = null
     override fun deepLinkSettings(context: Context): PendingIntent? = null
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -93,14 +93,14 @@ val MockInfo = object : GenericInfo {
 
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -123,13 +123,13 @@ val MockInfo = object : GenericInfo {
     @ExperimentalFoundationApi
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -172,7 +172,7 @@ val MockInfo = object : GenericInfo {
     }
 }
 
-val MockApiService = object : ApiService {
+val MockApiService = object : KmpApiService {
     override val baseUrl: String = ""
 }
 

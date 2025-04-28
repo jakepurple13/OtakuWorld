@@ -80,9 +80,10 @@ import com.bumptech.glide.integration.compose.CrossFade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.plus
@@ -90,14 +91,13 @@ import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.LimitedBottomSheetScaffold
 import com.programmersbox.uiviews.presentation.components.LimitedBottomSheetScaffoldDefaults
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.presentation.components.optionsSheet
+import com.programmersbox.uiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
@@ -149,7 +149,7 @@ fun GlobalSearchView(
         .collectAsStateWithLifecycle(emptyList())
 
     val bottomScaffold = rememberBottomSheetScaffoldState()
-    var optionsSheet by optionsSheet()
+    var optionsSheet by optionsKmpSheet()
     var searchModelBottom by remember { mutableStateOf<SearchModel?>(null) }
 
     BackHandler(bottomScaffold.bottomSheetState.currentValue == SheetValue.Expanded) {
@@ -340,7 +340,7 @@ private fun Content(
     notificationLogo: NotificationLogo,
     mainLogoDrawable: AppLogo,
     onSearchModel: (SearchModel) -> Unit,
-    onLongPress: (ItemModel) -> Unit,
+    onLongPress: (KmpItemModel) -> Unit,
     bottomScaffold: BottomSheetScaffoldState,
 ) {
     OtakuPullToRefreshBox(
@@ -495,7 +495,7 @@ private fun NoNetwork(padding: PaddingValues) {
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun SearchCoverCard(
-    model: ItemModel,
+    model: KmpItemModel,
     placeHolder: Drawable?,
     onLongPress: (ComponentState) -> Unit,
     modifier: Modifier = Modifier,
@@ -579,7 +579,7 @@ private fun GlobalScreenPreview() {
 private fun GlobalSearchCoverPreview() {
     PreviewTheme {
         SearchCoverCard(
-            model = ItemModel(
+            model = KmpItemModel(
                 title = "Title",
                 description = "Description",
                 url = "url",

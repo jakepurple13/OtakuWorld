@@ -46,9 +46,9 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
@@ -64,17 +64,17 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun optionsSheet(
+fun optionsKmpSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController = LocalNavController.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
-    moreContent: @Composable OptionsSheetScope.(ItemModelOptionsSheet) -> Unit = {},
-): MutableState<ItemModel?> {
-    val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
+    moreContent: @Composable OptionsSheetScope.(KmpItemModelOptionsSheet) -> Unit = {},
+): MutableState<KmpItemModel?> {
+    val itemInfo = remember { mutableStateOf<KmpItemModel?>(null) }
 
     itemInfo
         .value
-        ?.let { ItemModelOptionsSheet(itemModel = it) }
+        ?.let { KmpItemModelOptionsSheet(itemModel = it) }
         ?.let { item ->
             OptionsSheet(
                 sheet = sheetState,
@@ -92,17 +92,17 @@ fun optionsSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun optionsSheetList(
+fun optionsKmpSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController = LocalNavController.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
-    moreContent: @Composable OptionsSheetScope.(ItemModelOptionsSheet) -> Unit = {},
-): MutableState<List<ItemModel>?> {
-    val itemInfo = remember { mutableStateOf<List<ItemModel>?>(null) }
+    moreContent: @Composable OptionsSheetScope.(KmpItemModelOptionsSheet) -> Unit = {},
+): MutableState<List<KmpItemModel>?> {
+    val itemInfo = remember { mutableStateOf<List<KmpItemModel>?>(null) }
 
     itemInfo
         .value
-        ?.map { ItemModelOptionsSheet(it) }
+        ?.map { KmpItemModelOptionsSheet(it) }
         ?.let { item ->
             OptionsSheet(
                 sheet = sheetState,
@@ -118,8 +118,8 @@ fun optionsSheetList(
     return itemInfo
 }
 
-class ItemModelOptionsSheet(
-    val itemModel: ItemModel,
+class KmpItemModelOptionsSheet(
+    val itemModel: KmpItemModel,
     override val imageUrl: String = itemModel.imageUrl,
     override val title: String = itemModel.title,
     override val description: String = itemModel.description,

@@ -18,11 +18,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
@@ -35,11 +35,15 @@ interface GenericInfo {
 
     val sourceType: String get() = ""
 
-    fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
+    //TODO: Would need to be different
+    // Probably pass a context into the constructor?
+    fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent?
+
+    //TODO: Would need to be different
     fun deepLinkSettings(context: Context): PendingIntent?
 
     @SuppressLint("RestrictedApi")
-    fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
+    fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
         @Suppress("UNCHECKED_CAST")
         val route = generateRouteWithArgs(
             Screen.DetailsScreen.Details(
@@ -63,30 +67,35 @@ interface GenericInfo {
 
     fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
 
+    //TODO: Would need to be different
     fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
     )
 
-    fun sourceList(): List<ApiService>
-    fun searchList(): List<ApiService> = sourceList()
-    fun toSource(s: String): ApiService?
+    fun sourceList(): List<KmpApiService>
+    fun searchList(): List<KmpApiService> = sourceList()
+
+    //TODO: Can be removed
+    fun toSource(s: String): KmpApiService?
     fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}
+
+    //TODO: Would need to be different
     fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
     )
 
     @Composable
-    fun DetailActions(infoModel: InfoModel, tint: Color) = Unit
+    fun DetailActions(infoModel: KmpInfoModel, tint: Color) = Unit
 
     @Composable
     fun ComposeShimmerItem()
@@ -94,39 +103,40 @@ interface GenericInfo {
     @ExperimentalFoundationApi
     @Composable
     fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     )
 
     @ExperimentalFoundationApi
     @Composable
     fun AllListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
     @ExperimentalFoundationApi
     @Composable
     fun SearchListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
+    //TODO: Would need to be different
     fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
     fun NavGraphBuilder.globalNavSetup() = Unit

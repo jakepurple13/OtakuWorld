@@ -9,10 +9,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.HistoryDao
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -104,4 +104,4 @@ class GlobalSearchViewModel(
 
 }
 
-data class SearchModel(val apiName: String, val data: List<ItemModel>)
+data class SearchModel(val apiName: String, val data: List<KmpItemModel>)

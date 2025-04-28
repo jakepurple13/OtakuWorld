@@ -38,13 +38,13 @@ import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.helpfulutils.visible
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.CustomHideBottomViewOnScrollBehavior
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
@@ -63,7 +63,7 @@ import java.io.File
 import kotlin.math.roundToInt
 
 class ReadActivity : AppCompatActivity() {
-    private var model: ChapterModel? = null
+    private var model: KmpChapterModel? = null
     private var mangaTitle: String? = null
     private var isDownloaded = false
     private val loader by lazy { Glide.with(this) }
@@ -108,7 +108,7 @@ class ReadActivity : AppCompatActivity() {
     private val adapter2: PageAdapter by lazy {
         loader.let {
             val list = intent.getStringExtra("allChapters")
-                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer())
+                ?.fromJson<List<KmpChapterModel>>(KmpChapterModel::class.java to ChapterModelDeserializer())
                 .orEmpty().also(::println)
             //intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
             val url = intent.getStringExtra("mangaUrl") ?: ""
@@ -187,7 +187,7 @@ class ReadActivity : AppCompatActivity() {
 
         mangaTitle = intent.getStringExtra("mangaTitle")
         model = intent.getStringExtra("currentChapter")
-            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
+            ?.fromJson<KmpChapterModel>(KmpChapterModel::class.java to ChapterModelDeserializer())
 
         isDownloaded = intent.getBooleanExtra("downloaded", false)
         val file = intent.getSerializableExtra("filePath") as? File
@@ -295,7 +295,7 @@ class ReadActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadPages(model: ChapterModel?) {
+    private fun loadPages(model: KmpChapterModel?) {
         Glide.get(this).clearMemory()
         binding.readLoading
             .animate()
@@ -305,7 +305,7 @@ class ReadActivity : AppCompatActivity() {
         adapter2.setListNotify(emptyList())
         lifecycleScope.launch {
             model?.getChapterInfo()
-                ?.map { it.mapNotNull(Storage::link) }
+                ?.map { it.mapNotNull(KmpStorage::link) }
                 ?.catch { runOnUiThread { Toast.makeText(this@ReadActivity, it.localizedMessage, Toast.LENGTH_SHORT).show() } }
                 ?.flowOn(Dispatchers.Main)
                 ?.onEach { pages: List<String> ->

@@ -48,6 +48,11 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
@@ -63,11 +68,6 @@ import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
 import com.programmersbox.mangaworld.settings.ReaderSettings
 import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
@@ -111,8 +111,8 @@ val appModule = module {
 }
 
 class ChapterHolder {
-    var chapterModel: ChapterModel? = null
-    var chapters: List<ChapterModel>? = null
+    var chapterModel: KmpChapterModel? = null
+    var chapters: List<KmpChapterModel>? = null
 }
 
 class GenericManga(
@@ -138,9 +138,9 @@ class GenericManga(
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -157,8 +157,8 @@ class GenericManga(
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
-                    putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                    putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("currentChapter", model.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("allChapters", allChapters.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
                     putExtra("mangaTitle", infoModel.title)
                     putExtra("mangaUrl", model.url)
                     putExtra("mangaInfoUrl", model.sourceUrl)
@@ -167,7 +167,7 @@ class GenericManga(
         }
     }
 
-    private fun downloadFullChapter(model: ChapterModel, title: String) {
+    private fun downloadFullChapter(model: KmpChapterModel, title: String) {
         //val fileLocation = runBlocking { context.folderLocationFlow.first() }
         val fileLocation = DOWNLOAD_FILE_PATH
 
@@ -177,7 +177,7 @@ class GenericManga(
         GlobalScope.launch {
             model.getChapterInfo()
                 .dispatchIo()
-                .map { it.mapNotNull(Storage::link) }
+                .map { it.mapNotNull(KmpStorage::link) }
                 .map {
                     it.mapIndexed { index, s ->
                         //val location = "/$fileLocation/$title/${model.name}"
@@ -205,9 +205,9 @@ class GenericManga(
     }
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -218,9 +218,9 @@ class GenericManga(
         ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     @Composable
     override fun ComposeShimmerItem() {
@@ -237,13 +237,13 @@ class GenericManga(
     )
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -464,7 +464,7 @@ class GenericManga(
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

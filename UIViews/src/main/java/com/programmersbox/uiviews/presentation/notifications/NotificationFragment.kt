@@ -99,17 +99,17 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.NotificationSortBy
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.gsonutils.toJson
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -379,7 +379,7 @@ private fun DateSort(
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
     p: PaddingValues,
-    toSource: (String) -> ApiService?,
+    toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
     notificationLogo: NotificationLogo,
@@ -479,7 +479,7 @@ private fun NotificationOptionsSheet(
     i: NotificationItem,
     scope: CoroutineScope,
     navController: NavController,
-    toSource: (String) -> ApiService?,
+    toSource: (String) -> KmpApiService?,
     onLoadingChange: (Boolean) -> Unit,
     notificationLogo: NotificationLogo,
     genericInfo: GenericInfo = LocalGenericInfo.current,
@@ -576,7 +576,7 @@ private fun NotificationOptionsSheet(
 private fun NotiItem(
     i: NotificationItem,
     scope: CoroutineScope,
-    toSource: (String) -> ApiService?,
+    toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
     notificationLogo: NotificationLogo,
@@ -709,7 +709,7 @@ private fun GroupedSort(
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
     p: PaddingValues,
-    toSource: (String) -> ApiService?,
+    toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
     notificationLogo: NotificationLogo,
@@ -817,7 +817,7 @@ private fun NotificationItem(
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
     genericInfo: GenericInfo,
-    toSource: (String) -> ApiService?,
+    toSource: (String) -> KmpApiService?,
     logoDrawable: Drawable?,
     notificationLogo: NotificationLogo,
     onError: (NotificationItem) -> Unit,

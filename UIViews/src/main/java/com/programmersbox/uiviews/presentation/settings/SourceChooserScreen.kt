@@ -33,9 +33,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
 import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
@@ -88,7 +88,7 @@ fun SourceChooserScreen(
         .asFlow()
         .collectAsStateWithLifecycle(null)
 
-    var showChooser by remember { mutableStateOf<List<SourceInformation>?>(null) }
+    var showChooser by remember { mutableStateOf<List<KmpSourceInformation>?>(null) }
 
     val languageCode = remember { Locale.getDefault().language }
 

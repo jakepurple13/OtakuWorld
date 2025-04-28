@@ -73,8 +73,8 @@ import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
@@ -92,7 +92,7 @@ import org.koin.compose.koinInject
 internal fun AddToList(
     showLists: Boolean,
     showListsChange: (Boolean) -> Unit,
-    info: InfoModel,
+    info: KmpInfoModel,
     listDao: ListDao,
     hostState: SnackbarHostState?,
     scope: CoroutineScope,
@@ -146,7 +146,7 @@ internal fun DetailActions(
     navController: NavHostController,
     scope: CoroutineScope,
     context: Context,
-    info: InfoModel,
+    info: KmpInfoModel,
     isSaved: Boolean,
     dao: ItemDao,
     isFavorite: Boolean,
@@ -295,7 +295,7 @@ internal fun DetailActions(
 
 @Composable
 internal fun ShareButton(
-    info: InfoModel,
+    info: KmpInfoModel,
 ) {
     val context = LocalContext.current
     val shareItem = rememberLauncherForActivityResult(
@@ -323,7 +323,7 @@ internal fun ShareButton(
 fun DetailBottomBar(
     navController: NavController,
     onShowLists: () -> Unit,
-    info: InfoModel,
+    info: KmpInfoModel,
     customActions: @Composable () -> Unit,
     removeFromSaved: () -> Unit,
     isSaved: Boolean,
@@ -411,7 +411,7 @@ fun DetailFloatingActionButtonMenu(
     onFabMenuExpandedChange: (Boolean) -> Unit,
     isVisible: Boolean,
     onShowLists: () -> Unit,
-    info: InfoModel,
+    info: KmpInfoModel,
     removeFromSaved: () -> Unit,
     addToSaved: () -> Unit,
     isSaved: Boolean,

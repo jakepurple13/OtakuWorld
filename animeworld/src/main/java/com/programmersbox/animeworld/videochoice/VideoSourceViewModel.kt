@@ -3,15 +3,15 @@ package com.programmersbox.animeworld.videochoice
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.Storage
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpStorage
 
 data class VideoSourceModel(
-    val c: List<Storage>,
-    val infoModel: InfoModel,
+    val c: List<KmpStorage>,
+    val infoModel: KmpInfoModel,
     val isStreaming: Boolean,
-    val model: ChapterModel,
+    val model: KmpChapterModel,
 ) {
     companion object {
         var showVideoSources by mutableStateOf<VideoSourceModel?>(null)

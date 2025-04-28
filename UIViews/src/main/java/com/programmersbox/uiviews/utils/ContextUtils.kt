@@ -42,14 +42,14 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -165,8 +165,8 @@ fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap {
 }*/
 
 //TODO: Kotlinx Serialization this!
-class ChapterModelSerializer : JsonSerializer<ChapterModel> {
-    override fun serialize(src: ChapterModel, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+class ChapterModelSerializer : JsonSerializer<KmpChapterModel> {
+    override fun serialize(src: KmpChapterModel, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val json = JsonObject()
         json.addProperty("name", src.name)
         json.addProperty("uploaded", src.uploaded)
@@ -177,14 +177,14 @@ class ChapterModelSerializer : JsonSerializer<ChapterModel> {
     }
 }
 
-class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
+class ChapterModelDeserializer : JsonDeserializer<KmpChapterModel>, KoinComponent {
     private val sourceRepository: SourceRepository by inject<SourceRepository>()
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterModel? {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): KmpChapterModel? {
         return json.asJsonObject.let {
             sourceRepository.toSourceByApiServiceName(it["source"].asString)
                 ?.apiService
                 ?.let { it1 ->
-                    ChapterModel(
+                    KmpChapterModel(
                         name = it["name"].asString,
                         uploaded = it["uploaded"].asString,
                         source = it1,
@@ -196,16 +196,18 @@ class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
     }
 }
 
-class ApiServiceSerializer : JsonSerializer<ApiService> {
-    override fun serialize(src: ApiService, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+class ApiServiceSerializer : JsonSerializer<KmpApiService> {
+    override fun serialize(src: KmpApiService, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return context.serialize(src.serviceName)
     }
 }
 
-class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService>, KoinComponent {
+class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<KmpApiService>, KoinComponent {
     private val sourceRepository: SourceRepository by inject()
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
-        return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService ?: genericInfo.toSource(json.asString)
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): KmpApiService? {
+        return sourceRepository.toSourceByApiServiceName(json.asString)
+            ?.apiService
+            ?: genericInfo.toSource(json.asString)
     }
 }
 
@@ -296,9 +298,9 @@ val LocalSystemDateTimeFormat = staticCompositionLocalOf<java.text.DateFormat> {
 
 object Cached {
 
-    private val map = mutableMapOf<String, InfoModel>()
+    private val map = mutableMapOf<String, KmpInfoModel>()
 
-    val cache = ExpirableLRUCache<String, InfoModel>(
+    val cache = ExpirableLRUCache<String, KmpInfoModel>(
         minimalSize = 10,
         flushInterval = TimeUnit.MINUTES.toMillis(5)
     ) {

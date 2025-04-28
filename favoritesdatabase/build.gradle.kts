@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.kotlinxSerialization)
             implementation(libs.roomRuntime)
             implementation(libs.roomPaging)
+            implementation(projects.kmpmodels)
         }
 
         jvmMain.dependencies {

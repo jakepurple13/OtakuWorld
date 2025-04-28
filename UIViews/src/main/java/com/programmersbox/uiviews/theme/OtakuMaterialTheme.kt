@@ -10,7 +10,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.theme.generateColorScheme
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.uiviews.GenericInfo

@@ -9,12 +9,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.extensionloader.SourceLoader
-import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.models.ExternalApiServicesCatalog
-import com.programmersbox.models.ExternalCustomApiServicesCatalog
-import com.programmersbox.models.RemoteSources
-import com.programmersbox.models.SourceInformation
+import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
+import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
+import com.programmersbox.kmpmodels.KmpRemoteSources
+import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
@@ -31,7 +31,7 @@ class ExtensionListViewModel(
     val downloadAndInstaller: DownloadAndInstaller,
     private val downloadStateRepository: DownloadStateRepository,
 ) : ViewModel() {
-    private val installedSources = mutableStateListOf<SourceInformation>()
+    private val installedSources = mutableStateListOf<KmpSourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()
 
     val installed by derivedStateOf {
@@ -45,7 +45,7 @@ class ExtensionListViewModel(
     }
 
     val hasCustomBridge by derivedStateOf {
-        installedSources.any { it.catalog is ExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
+        installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
     fun downloadAndInstall(downloadLink: String, destinationPath: String) {
@@ -72,7 +72,7 @@ class ExtensionListViewModel(
                 remoteSources["${otakuWorldCatalog.name}World"] = RemoteViewState(otakuWorldCatalog.getRemoteSources())
                 sources.asSequence()
                     .map { it.catalog }
-                    .filterIsInstance<ExternalApiServicesCatalog>()
+                    .filterIsInstance<KmpExternalApiServicesCatalog>()
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
@@ -88,7 +88,7 @@ class ExtensionListViewModel(
             .combine(settingsHandling.customUrls) { sources, urls ->
                 sources.asSequence()
                     .map { it.catalog }
-                    .filterIsInstance<ExternalCustomApiServicesCatalog>()
+                    .filterIsInstance<KmpExternalCustomApiServicesCatalog>()
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
@@ -110,7 +110,7 @@ class ExtensionListViewModel(
 }
 
 class InstalledViewState(
-    val sourceInformation: List<SourceInformation>,
+    val sourceInformation: List<KmpSourceInformation>,
 ) {
     var showItems by mutableStateOf(false)
 }
@@ -118,7 +118,7 @@ class InstalledViewState(
 sealed class RemoteState
 
 class RemoteViewState(
-    val sources: List<RemoteSources>,
+    val sources: List<KmpRemoteSources>,
 ) : RemoteState() {
     var showItems by mutableStateOf(false)
 }

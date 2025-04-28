@@ -42,9 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ItemModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.BannerBox
 import com.programmersbox.uiviews.presentation.components.GlideGradientImage
@@ -154,7 +154,7 @@ fun OtakuBannerBox(
     showBanner: Boolean = false,
     content: @Composable BannerScope.() -> Unit,
 ) {
-    var itemInfo by remember { mutableStateOf<ItemModel?>(null) }
+    var itemInfo by remember { mutableStateOf<KmpItemModel?>(null) }
 
     val bannerScope = BannerScope { itemModel -> itemInfo = itemModel }
 
@@ -197,7 +197,7 @@ fun OtakuBannerBox(
 
 fun interface BannerScope {
     //TODO: Maybe add a modifier into here for onLongClick?
-    fun newItemModel(itemModel: ItemModel?)
+    fun newItemModel(itemModel: KmpItemModel?)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

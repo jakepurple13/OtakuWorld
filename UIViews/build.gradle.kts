@@ -60,11 +60,14 @@ dependencies {
     api(platform(libs.koin.bom))
     api(libs.bundles.koinLibs)
 
-    implementation(projects.models)
+    implementation(projects.kmpmodels)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
     api(projects.datastore)
     api(projects.kmpuiviews)
+
+    //Extension Loader
+    api(projects.sharedutils.kmpextensionloader)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)
@@ -126,9 +129,6 @@ dependencies {
     //Multiplatform
     //implementation(projects.imageloader)
     api(libs.bundles.kamel)
-
-    //Extension Loader
-    api(projects.sharedutils.extensionloader)
 
     api(libs.haze)
     api(libs.hazeMaterials)

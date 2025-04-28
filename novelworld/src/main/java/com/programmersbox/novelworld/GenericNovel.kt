@@ -38,10 +38,10 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -61,15 +61,15 @@ val appModule = module {
 }
 
 class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
-    fun set(item: List<ChapterModel>?) {
-        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
+    fun set(item: List<KmpChapterModel>?) {
+        val i = item.toJson(KmpChapterModel::class.java to ChapterModelSerializer())
         context.defaultSharedPref.edit().putString("chapterList", i).commit()
     }
 
-    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
+    fun get(): List<KmpChapterModel>? = context.defaultSharedPref.getObject(
         "chapterList",
         null,
-        ChapterModel::class.java to ChapterModelDeserializer()
+        KmpChapterModel::class.java to ChapterModelDeserializer()
     )
 }
 
@@ -80,9 +80,9 @@ class GenericNovel(val context: Context) : GenericInfo {
     override val sourceType: String get() = "novel"
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -97,18 +97,19 @@ class GenericNovel(val context: Context) : GenericInfo {
         )
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
     ) {
+
     }
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
@@ -153,13 +154,13 @@ class GenericNovel(val context: Context) : GenericInfo {
     )
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
@@ -214,7 +215,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

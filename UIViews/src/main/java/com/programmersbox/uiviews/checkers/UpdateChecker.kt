@@ -14,14 +14,14 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.google.firebase.perf.trace
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.extensionloader.SourceLoader
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.helpfulutils.intersect
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
+import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -180,7 +180,7 @@ class UpdateFlowWorker(
     //TODO: This will be tested out for now.
     // I'll see how it works.
     // If it does a good job, it'll be kept.
-    private suspend fun getRecents(service: ApiService): List<ItemModel>? = runCatching {
+    private suspend fun getRecents(service: KmpApiService): List<KmpItemModel>? = runCatching {
         callbackFlow {
             var thread: Thread? = null
             val job = launch {

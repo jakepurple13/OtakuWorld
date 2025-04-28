@@ -8,6 +8,8 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 
 private const val GROUP_ID = 42
 
+//TODO: Will go into kmpuiviews
+// expect/actual?
 class NotificationRepository(
     context: Context,
     private val itemDao: ItemDao,

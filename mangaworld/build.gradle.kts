@@ -38,11 +38,12 @@ dependencies {
     implementation(libs.fileChooser)
 
     implementation(projects.uiViews)
-    implementation(projects.models)
+    implementation(projects.kmpmodels)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
     implementation(projects.sourceUtilities)
     implementation(projects.datastore.mangasettings)
+
     implementation(libs.kamel.image)
     implementation(libs.duktape)
     implementation(libs.bundles.ziplineLibs)

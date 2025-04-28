@@ -33,7 +33,7 @@ import androidx.navigation.NavController
 import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
-import com.programmersbox.models.ChapterModel
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
@@ -70,8 +70,8 @@ class VideoViewModel(
         }
     }
 
-    val chapterModel: ChapterModel? = handle.get<String>("chapterModel")
-        ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer())
+    val chapterModel: KmpChapterModel? = handle.get<String>("chapterModel")
+        ?.fromJson(KmpChapterModel::class.java to ChapterModelDeserializer())
     val showPath = storageHolder.storageModel?.link ?: handle.get<String>("showPath").orEmpty()
     val showName = handle.get<String>("showName")
     val downloadOrStream = handle.get<String>("downloadOrStream")?.toBoolean() ?: true

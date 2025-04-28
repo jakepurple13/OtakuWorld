@@ -88,15 +88,15 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -123,7 +123,7 @@ val appModule = module {
 }
 
 class StorageHolder {
-    var storageModel: Storage? = null
+    var storageModel: KmpStorage? = null
 }
 
 class GenericAnime(
@@ -145,9 +145,9 @@ class GenericAnime(
     override val sourceType: String get() = "anime"
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -187,9 +187,9 @@ class GenericAnime(
     }
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -231,14 +231,14 @@ class GenericAnime(
 
     private fun getEpisodes(
         errorId: Int,
-        model: ChapterModel,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
-        filter: (Storage) -> Boolean = { true },
+        filter: (KmpStorage) -> Boolean = { true },
         navController: NavController,
         isStreaming: Boolean,
-        onAction: (Storage) -> Unit,
+        onAction: (KmpStorage) -> Unit,
     ) {
         val dialog = MaterialAlertDialogBuilder(context)
             .setTitle(R.string.loading_please_wait)
@@ -283,7 +283,7 @@ class GenericAnime(
         }
     }
 
-    fun downloadVideo(context: Context, model: ChapterModel, storage: Storage) {
+    fun downloadVideo(context: Context, model: KmpChapterModel, storage: KmpStorage) {
         fun getNameFromUrl(url: String): String {
             return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { model.name } } ?: model.name
         }
@@ -315,14 +315,14 @@ class GenericAnime(
             }
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun searchList(): List<ApiService> = emptyList()
+    override fun searchList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     @Composable
-    override fun DetailActions(infoModel: InfoModel, tint: Color) {
+    override fun DetailActions(infoModel: KmpInfoModel, tint: Color) {
         val showCast by MainActivity.cast.sessionConnected()
             .collectAsStateWithLifecycle(true)
 
@@ -383,13 +383,13 @@ class GenericAnime(
     )
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
@@ -583,7 +583,7 @@ class GenericAnime(
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),
