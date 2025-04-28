@@ -35,7 +35,11 @@ interface GenericInfo {
 
     val sourceType: String get() = ""
 
+    //TODO: Would need to be different
+    // Probably pass a context into the constructor?
     fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
+
+    //TODO: Would need to be different
     fun deepLinkSettings(context: Context): PendingIntent?
 
     @SuppressLint("RestrictedApi")
@@ -63,6 +67,7 @@ interface GenericInfo {
 
     fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
 
+    //TODO: Would need to be different
     fun chapterOnClick(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
@@ -74,8 +79,12 @@ interface GenericInfo {
 
     fun sourceList(): List<ApiService>
     fun searchList(): List<ApiService> = sourceList()
+
+    //TODO: Can be removed
     fun toSource(s: String): ApiService?
     fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}
+
+    //TODO: Would need to be different
     fun downloadChapter(
         model: ChapterModel,
         allChapters: List<ChapterModel>,
@@ -127,6 +136,7 @@ interface GenericInfo {
         onClick: (ItemModel) -> Unit,
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
+    //TODO: Would need to be different
     fun debugMenuItem(context: Context): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
     fun NavGraphBuilder.globalNavSetup() = Unit

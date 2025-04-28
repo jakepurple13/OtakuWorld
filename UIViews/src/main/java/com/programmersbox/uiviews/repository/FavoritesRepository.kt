@@ -73,5 +73,4 @@ class FavoritesRepository(
         fireListenerClosable.getAllShowsFlow(),
         dao.getAllFavorites()
     ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
-
 }

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.repository
+package com.programmersbox.kmpuiviews.repository
 
 import kotlinx.coroutines.flow.MutableStateFlow
 
