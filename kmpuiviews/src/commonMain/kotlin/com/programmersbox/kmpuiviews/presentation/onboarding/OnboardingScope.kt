@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.layout.MutableIntervalList
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerDefaults
-import androidx.compose.foundation.pager.PagerScope
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -27,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,19 +79,17 @@ fun Onboarding(
     userScrollEnabled: Boolean = true,
     reverseLayout: Boolean = false,
     key: ((index: Int) -> Any)? = null,
-    pageNestedScrollConnection: NestedScrollConnection =
-        PagerDefaults.pageNestedScrollConnection(state, Orientation.Horizontal),
+    pageNestedScrollConnection: NestedScrollConnection = PagerDefaults.pageNestedScrollConnection(state, Orientation.Horizontal),
     snapPosition: SnapPosition = SnapPosition.Start,
     overscrollEffect: OverscrollEffect? = rememberOverscrollEffect(),
-    pageContent: @Composable PagerScope.(page: Int) -> Unit = { page -> onboardingScope[page]() },
 ) {
+    val stateHolder = rememberSaveableStateHolder()
     HorizontalPager(
         state = state,
         modifier = modifier,
         contentPadding = contentPadding,
         pageSize = pageSize,
         beyondViewportPageCount = beyondViewportPageCount,
-        pageContent = pageContent,
         pageNestedScrollConnection = pageNestedScrollConnection,
         flingBehavior = flingBehavior,
         userScrollEnabled = userScrollEnabled,
@@ -100,7 +98,8 @@ fun Onboarding(
         snapPosition = snapPosition,
         overscrollEffect = overscrollEffect,
         pageSpacing = pageSpacing,
-        verticalAlignment = verticalAlignment
+        verticalAlignment = verticalAlignment,
+        pageContent = { page -> stateHolder.SaveableStateProvider(page) { onboardingScope[page]() } }
     )
 }
 
