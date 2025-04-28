@@ -60,7 +60,6 @@ dependencies {
     api(platform(libs.koin.bom))
     api(libs.bundles.koinLibs)
 
-    implementation(projects.models)
     implementation(projects.kmpmodels)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)

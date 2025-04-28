@@ -57,7 +57,6 @@ import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseUIStyle
@@ -94,9 +93,9 @@ val MockInfo = object : GenericInfo {
 
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     override fun downloadChapter(
         model: KmpChapterModel,

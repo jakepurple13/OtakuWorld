@@ -38,12 +38,10 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
+import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpmodels.ModelMapper
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -63,15 +61,15 @@ val appModule = module {
 }
 
 class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
-    fun set(item: List<ChapterModel>?) {
-        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
+    fun set(item: List<KmpChapterModel>?) {
+        val i = item.toJson(KmpChapterModel::class.java to ChapterModelSerializer())
         context.defaultSharedPref.edit().putString("chapterList", i).commit()
     }
 
-    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
+    fun get(): List<KmpChapterModel>? = context.defaultSharedPref.getObject(
         "chapterList",
         null,
-        ChapterModel::class.java to ChapterModelDeserializer()
+        KmpChapterModel::class.java to ChapterModelDeserializer()
     )
 }
 
@@ -89,7 +87,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         activity: FragmentActivity,
         navController: NavController,
     ) {
-        ChapterList(context, this@GenericNovel).set(allChapters.map { ModelMapper.mapChapterModel(it) })
+        ChapterList(context, this@GenericNovel).set(allChapters)
         ReadViewModel.navigateToNovelReader(
             navController,
             model,
@@ -99,9 +97,9 @@ class GenericNovel(val context: Context) : GenericInfo {
         )
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     override fun downloadChapter(
         model: KmpChapterModel,

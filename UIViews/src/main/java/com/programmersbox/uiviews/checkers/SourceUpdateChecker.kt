@@ -9,9 +9,8 @@ import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.helpfulutils.GroupBehavior
 import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.kmpmodels.ModelMapper
+import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -33,11 +32,10 @@ class SourceUpdateChecker(
             if (sourceRepository.list.isEmpty()) {
                 sourceLoader.blockingLoad()
             }
-            val remoteSources = otakuWorldCatalog.getRemoteSources()
-                .map { ModelMapper.mapRemoteSources(it) } +
+            val remoteSources = otakuWorldCatalog.getRemoteSources() +
                     sourceRepository.list
-                        .filter { it.catalog is ExternalApiServicesCatalog }
-                        .flatMap { (it.catalog as? ExternalApiServicesCatalog)?.getRemoteSources().orEmpty() }
+                        .filter { it.catalog is KmpExternalApiServicesCatalog }
+                        .flatMap { (it.catalog as? KmpExternalApiServicesCatalog)?.getRemoteSources().orEmpty() }
 
             val updateList = sourceRepository.list
                 .filter { l -> remoteSources.any { it.packageName == l.packageName } }

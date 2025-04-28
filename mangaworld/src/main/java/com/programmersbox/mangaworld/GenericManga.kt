@@ -48,6 +48,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -67,8 +68,6 @@ import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
 import com.programmersbox.mangaworld.settings.ReaderSettings
 import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
@@ -158,8 +157,8 @@ class GenericManga(
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
-                    putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                    putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("currentChapter", model.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("allChapters", allChapters.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
                     putExtra("mangaTitle", infoModel.title)
                     putExtra("mangaUrl", model.url)
                     putExtra("mangaInfoUrl", model.sourceUrl)
@@ -219,9 +218,9 @@ class GenericManga(
         ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     @Composable
     override fun ComposeShimmerItem() {

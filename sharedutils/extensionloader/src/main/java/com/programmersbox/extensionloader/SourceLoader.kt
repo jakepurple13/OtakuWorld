@@ -21,6 +21,10 @@ private const val METADATA_NAME = "programmersbox.otaku.name"
 private const val METADATA_CLASS = "programmersbox.otaku.class"
 private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
 
+//TODO: Abstract this out to a kmp library
+// expect/actual class
+// koin for DI
+// It'll have the load and blockingLoad functions
 class SourceLoader(
     application: Application,
     private val context: Context,

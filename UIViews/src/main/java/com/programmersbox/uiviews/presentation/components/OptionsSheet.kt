@@ -49,7 +49,6 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
@@ -62,62 +61,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun optionsSheet(
-    scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
-    sheetState: SheetState = rememberModalBottomSheetState(true),
-    moreContent: @Composable OptionsSheetScope.(ItemModelOptionsSheet) -> Unit = {},
-): MutableState<ItemModel?> {
-    val itemInfo = remember { mutableStateOf<ItemModel?>(null) }
-
-    itemInfo
-        .value
-        ?.let { ItemModelOptionsSheet(itemModel = it) }
-        ?.let { item ->
-            OptionsSheet(
-                sheet = sheetState,
-                scope = scope,
-                optionsSheetValues = item,
-                onOpen = { navController.navigateToDetails(item.itemModel) },
-                onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
-                onDismiss = { itemInfo.value = null },
-                moreContent = moreContent
-            )
-        }
-
-    return itemInfo
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun optionsSheetList(
-    scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
-    sheetState: SheetState = rememberModalBottomSheetState(true),
-    moreContent: @Composable OptionsSheetScope.(ItemModelOptionsSheet) -> Unit = {},
-): MutableState<List<ItemModel>?> {
-    val itemInfo = remember { mutableStateOf<List<ItemModel>?>(null) }
-
-    itemInfo
-        .value
-        ?.map { ItemModelOptionsSheet(it) }
-        ?.let { item ->
-            OptionsSheet(
-                sheet = sheetState,
-                scope = scope,
-                optionsSheetValuesList = item,
-                onOpen = { navController.navigateToDetails(it.itemModel) },
-                onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
-                onDismiss = { itemInfo.value = null },
-                moreContent = moreContent
-            )
-        }
-
-    return itemInfo
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -174,15 +117,6 @@ fun optionsKmpSheetList(
 
     return itemInfo
 }
-
-class ItemModelOptionsSheet(
-    val itemModel: ItemModel,
-    override val imageUrl: String = itemModel.imageUrl,
-    override val title: String = itemModel.title,
-    override val description: String = itemModel.description,
-    override val serviceName: String = itemModel.source.serviceName,
-    override val url: String = itemModel.url,
-) : OptionsSheetValues
 
 class KmpItemModelOptionsSheet(
     val itemModel: KmpItemModel,

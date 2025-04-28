@@ -10,12 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceLoader
+import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
+import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
-import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.models.ExternalApiServicesCatalog
-import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
@@ -46,7 +45,7 @@ class ExtensionListViewModel(
     }
 
     val hasCustomBridge by derivedStateOf {
-        installedSources.any { it.catalog is ExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
+        installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
     }
 
     fun downloadAndInstall(downloadLink: String, destinationPath: String) {
@@ -73,14 +72,13 @@ class ExtensionListViewModel(
                 remoteSources["${otakuWorldCatalog.name}World"] = RemoteViewState(otakuWorldCatalog.getRemoteSources())
                 sources.asSequence()
                     .map { it.catalog }
-                    .filterIsInstance<ExternalApiServicesCatalog>()
+                    .filterIsInstance<KmpExternalApiServicesCatalog>()
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources() }
                             .onFailure { it.printStackTrace() }
-                            .map { it.map { ModelMapper.mapRemoteSources(it) } }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }
@@ -90,14 +88,13 @@ class ExtensionListViewModel(
             .combine(settingsHandling.customUrls) { sources, urls ->
                 sources.asSequence()
                     .map { it.catalog }
-                    .filterIsInstance<ExternalCustomApiServicesCatalog>()
+                    .filterIsInstance<KmpExternalCustomApiServicesCatalog>()
                     .filter { it.hasRemoteSources }
                     .distinct()
                     .toList()
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources(urls) }
                             .onFailure { it.printStackTrace() }
-                            .map { it.map { ModelMapper.mapRemoteSources(it) } }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }

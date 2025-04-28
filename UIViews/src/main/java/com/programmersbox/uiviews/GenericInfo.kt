@@ -18,11 +18,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
@@ -77,11 +77,11 @@ interface GenericInfo {
         navController: NavController,
     )
 
-    fun sourceList(): List<ApiService>
-    fun searchList(): List<ApiService> = sourceList()
+    fun sourceList(): List<KmpApiService>
+    fun searchList(): List<KmpApiService> = sourceList()
 
     //TODO: Can be removed
-    fun toSource(s: String): ApiService?
+    fun toSource(s: String): KmpApiService?
     fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}
 
     //TODO: Would need to be different

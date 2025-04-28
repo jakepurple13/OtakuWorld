@@ -88,6 +88,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -96,7 +97,6 @@ import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ApiService
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -315,11 +315,11 @@ class GenericAnime(
             }
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
+    override fun sourceList(): List<KmpApiService> = emptyList()
 
-    override fun searchList(): List<ApiService> = emptyList()
+    override fun searchList(): List<KmpApiService> = emptyList()
 
-    override fun toSource(s: String): ApiService? = null
+    override fun toSource(s: String): KmpApiService? = null
 
     @Composable
     override fun DetailActions(infoModel: KmpInfoModel, tint: Color) {

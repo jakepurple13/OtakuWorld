@@ -45,12 +45,11 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
-import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -166,8 +165,8 @@ fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap {
 }*/
 
 //TODO: Kotlinx Serialization this!
-class ChapterModelSerializer : JsonSerializer<ChapterModel> {
-    override fun serialize(src: ChapterModel, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+class ChapterModelSerializer : JsonSerializer<KmpChapterModel> {
+    override fun serialize(src: KmpChapterModel, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val json = JsonObject()
         json.addProperty("name", src.name)
         json.addProperty("uploaded", src.uploaded)
@@ -178,17 +177,17 @@ class ChapterModelSerializer : JsonSerializer<ChapterModel> {
     }
 }
 
-class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
+class ChapterModelDeserializer : JsonDeserializer<KmpChapterModel>, KoinComponent {
     private val sourceRepository: SourceRepository by inject<SourceRepository>()
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ChapterModel? {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): KmpChapterModel? {
         return json.asJsonObject.let {
             sourceRepository.toSourceByApiServiceName(it["source"].asString)
                 ?.apiService
                 ?.let { it1 ->
-                    ChapterModel(
+                    KmpChapterModel(
                         name = it["name"].asString,
                         uploaded = it["uploaded"].asString,
-                        source = ModelMapper.mapApiService(it1),
+                        source = it1,
                         sourceUrl = it["sourceUrl"].asString,
                         url = it["url"].asString
                     )
@@ -197,18 +196,17 @@ class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
     }
 }
 
-class ApiServiceSerializer : JsonSerializer<ApiService> {
-    override fun serialize(src: ApiService, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+class ApiServiceSerializer : JsonSerializer<KmpApiService> {
+    override fun serialize(src: KmpApiService, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return context.serialize(src.serviceName)
     }
 }
 
-class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService>, KoinComponent {
+class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<KmpApiService>, KoinComponent {
     private val sourceRepository: SourceRepository by inject()
-    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): KmpApiService? {
         return sourceRepository.toSourceByApiServiceName(json.asString)
             ?.apiService
-            ?.let(ModelMapper::mapApiService)
             ?: genericInfo.toSource(json.asString)
     }
 }

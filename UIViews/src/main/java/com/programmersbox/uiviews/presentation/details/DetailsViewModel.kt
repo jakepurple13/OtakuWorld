@@ -20,14 +20,12 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.gsonutils.fromJson
+import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.toItemModel
@@ -63,9 +61,9 @@ class DetailsViewModel(
     private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
     val itemModel: KmpItemModel? = details?.toItemModel(sourceRepository, genericInfo)
+    //TODO: Fix this
         ?: handle.get<String>("model")
-            ?.fromJson<ItemModel>(ApiService::class.java to ApiServiceDeserializer(genericInfo))
-            ?.let(ModelMapper::mapItemModel)
+            ?.fromJson<KmpItemModel>(KmpApiService::class.java to ApiServiceDeserializer(genericInfo))
 
     private var detailState by mutableStateOf<DetailState>(DetailState.Loading)
 
