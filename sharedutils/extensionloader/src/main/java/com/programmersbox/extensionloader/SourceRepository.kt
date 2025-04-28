@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+//TODO: Move to kmpuiviews
+// In the SourceLoader, it will map to the kmp versions before sending them here
 class SourceRepository {
     private val sourcesList = MutableStateFlow<List<SourceInformation>>(emptyList())
     val sources = sourcesList.asStateFlow()
