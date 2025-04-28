@@ -1,11 +1,10 @@
 package com.programmersbox.uiviews
 
-import android.app.Application
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ExternalApiServicesCatalog
-import com.programmersbox.models.RemoteSources
-import com.programmersbox.models.SourceInformation
-import com.programmersbox.models.Sources
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
+import com.programmersbox.kmpmodels.KmpRemoteSources
+import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.KmpSources
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
@@ -18,7 +17,7 @@ import org.koin.core.component.inject
 
 class OtakuWorldCatalog(
     override val name: String,
-) : ExternalApiServicesCatalog, KoinComponent {
+) : KmpExternalApiServicesCatalog, KoinComponent {
 
     val genericInfo: GenericInfo by inject()
 
@@ -43,12 +42,12 @@ class OtakuWorldCatalog(
         .getOrNull()
         .orEmpty()
 
-    override suspend fun initialize(app: Application) {}
+    override suspend fun initialize() {}
 
-    override fun getSources(): List<SourceInformation> = listOf(
+    override fun getSources(): List<KmpSourceInformation> = listOf(
         //TODO: Gotta think about this....Not a fan of it...
-        SourceInformation(
-            apiService = object : ApiService {
+        KmpSourceInformation(
+            apiService = object : KmpApiService {
                 override val baseUrl: String get() = "https://github.com/jakepurple13/OtakuWorld"
                 override val serviceName: String get() = name
                 override val notWorking: Boolean get() = true
@@ -60,10 +59,10 @@ class OtakuWorldCatalog(
         )
     )
 
-    override suspend fun getRemoteSources(): List<RemoteSources> = remoteSources()
+    override suspend fun getRemoteSources(): List<KmpRemoteSources> = remoteSources()
         .filter { genericInfo.sourceType == it.feature }
         .map {
-            RemoteSources(
+            KmpRemoteSources(
                 name = it.name,
                 packageName = it.pkg,
                 version = it.version,
@@ -71,7 +70,7 @@ class OtakuWorldCatalog(
                 downloadLink = "${REPO_URL_PREFIX}apk/${it.apk}",
                 sources = it.sources
                     ?.map { j ->
-                        Sources(
+                        KmpSources(
                             name = j.name,
                             baseUrl = j.baseUrl,
                             version = it.version

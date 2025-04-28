@@ -11,9 +11,10 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceLoader
 import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.kmpmodels.KmpRemoteSources
+import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
-import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
@@ -79,6 +80,7 @@ class ExtensionListViewModel(
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources() }
                             .onFailure { it.printStackTrace() }
+                            .map { it.map { ModelMapper.mapRemoteSources(it) } }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }
@@ -95,6 +97,7 @@ class ExtensionListViewModel(
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources(urls) }
                             .onFailure { it.printStackTrace() }
+                            .map { it.map { ModelMapper.mapRemoteSources(it) } }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }
@@ -118,7 +121,7 @@ class InstalledViewState(
 sealed class RemoteState
 
 class RemoteViewState(
-    val sources: List<RemoteSources>,
+    val sources: List<KmpRemoteSources>,
 ) : RemoteState() {
     var showItems by mutableStateOf(false)
 }

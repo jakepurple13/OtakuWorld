@@ -106,12 +106,12 @@ import androidx.work.WorkManager
 import coil3.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.models.ApiServicesCatalog
-import com.programmersbox.models.RemoteSources
 import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.R
@@ -329,7 +329,7 @@ fun ExtensionList(
 @Composable
 private fun InstalledExtensionItems(
     installedSources: Map<ApiServicesCatalog?, InstalledViewState>,
-    sourcesList: List<RemoteSources>,
+    sourcesList: List<KmpRemoteSources>,
     onDownloadAndInstall: (String, String) -> Unit,
     onUninstall: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -573,7 +573,7 @@ private fun ExtensionItem(
 
 @Composable
 private fun RemoteItem(
-    remoteSource: RemoteSources,
+    remoteSource: KmpRemoteSources,
     onDownloadAndInstall: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -609,7 +609,7 @@ private fun RemoteItem(
 
 @Composable
 private fun RemoteSourceItem(
-    remoteSource: RemoteSources,
+    remoteSource: KmpRemoteSources,
     onExtensionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

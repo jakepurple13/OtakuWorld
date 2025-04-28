@@ -4,11 +4,48 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
+import com.programmersbox.models.RemoteSources
+import com.programmersbox.models.Sources
 import com.programmersbox.models.Storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 object ModelMapper {
+
+    fun mapRemoteSources(remoteSources: RemoteSources): KmpRemoteSources {
+        return KmpRemoteSources(
+            name = remoteSources.name,
+            packageName = remoteSources.packageName,
+            version = remoteSources.version,
+            iconUrl = remoteSources.iconUrl,
+            downloadLink = remoteSources.downloadLink,
+            sources = remoteSources.sources.map { mapSources(it) }
+        )
+    }
+
+    fun mapRemoteSources(remoteSources: KmpRemoteSources): RemoteSources {
+        return RemoteSources(
+            name = remoteSources.name,
+            packageName = remoteSources.packageName,
+            version = remoteSources.version,
+            iconUrl = remoteSources.iconUrl,
+            downloadLink = remoteSources.downloadLink,
+            sources = remoteSources.sources.map { mapSources(it) }
+        )
+    }
+
+    fun mapSources(sources: Sources) = KmpSources(
+        name = sources.name,
+        baseUrl = sources.baseUrl,
+        version = sources.version
+    )
+
+    fun mapSources(sources: KmpSources) = Sources(
+        name = sources.name,
+        baseUrl = sources.baseUrl,
+        version = sources.version
+    )
+
     fun mapItemModel(itemModel: ItemModel): KmpItemModel {
         return KmpItemModel(
             title = itemModel.title,
