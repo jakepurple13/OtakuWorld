@@ -11,10 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.theme.generateColorScheme
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.getSystemDateTimeFormat

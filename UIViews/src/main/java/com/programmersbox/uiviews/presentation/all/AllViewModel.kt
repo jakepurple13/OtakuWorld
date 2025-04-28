@@ -12,7 +12,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.uiviews.repository.CurrentSourceRepository
+import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.ToastItems

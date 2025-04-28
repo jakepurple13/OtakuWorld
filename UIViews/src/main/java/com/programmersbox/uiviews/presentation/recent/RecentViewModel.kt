@@ -18,7 +18,7 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.uiviews.repository.CurrentSourceRepository
+import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.combineSources
 import com.programmersbox.uiviews.utils.dispatchIo

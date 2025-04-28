@@ -48,6 +48,7 @@ kotlin {
 
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
+                api(projects.kmpmodels)
                 implementation(libs.bundles.datastoreLibs)
 
                 implementation(libs.roomRuntime)
