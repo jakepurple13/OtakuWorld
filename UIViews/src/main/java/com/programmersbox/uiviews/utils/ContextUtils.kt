@@ -42,14 +42,15 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.helpfulutils.Battery
 import com.programmersbox.helpfulutils.BatteryHealth
 import com.programmersbox.helpfulutils.runOnUIThread
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.ModelMapper
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -187,7 +188,7 @@ class ChapterModelDeserializer : JsonDeserializer<ChapterModel>, KoinComponent {
                     ChapterModel(
                         name = it["name"].asString,
                         uploaded = it["uploaded"].asString,
-                        source = it1,
+                        source = ModelMapper.mapApiService(it1),
                         sourceUrl = it["sourceUrl"].asString,
                         url = it["url"].asString
                     )
@@ -205,7 +206,10 @@ class ApiServiceSerializer : JsonSerializer<ApiService> {
 class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<ApiService>, KoinComponent {
     private val sourceRepository: SourceRepository by inject()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ApiService? {
-        return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService ?: genericInfo.toSource(json.asString)
+        return sourceRepository.toSourceByApiServiceName(json.asString)
+            ?.apiService
+            ?.let(ModelMapper::mapApiService)
+            ?: genericInfo.toSource(json.asString)
     }
 }
 
@@ -296,9 +300,9 @@ val LocalSystemDateTimeFormat = staticCompositionLocalOf<java.text.DateFormat> {
 
 object Cached {
 
-    private val map = mutableMapOf<String, InfoModel>()
+    private val map = mutableMapOf<String, KmpInfoModel>()
 
-    val cache = ExpirableLRUCache<String, InfoModel>(
+    val cache = ExpirableLRUCache<String, KmpInfoModel>(
         minimalSize = 10,
         flushInterval = TimeUnit.MINUTES.toMillis(5)
     ) {

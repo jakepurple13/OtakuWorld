@@ -3,10 +3,10 @@ package com.programmersbox.uiviews.presentation.settings.extensions
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.models.SourceInformation
+import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -48,7 +48,7 @@ class IncognitoViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun toggleIncognito(sourceInformation: SourceInformation, value: Boolean) {
+    fun toggleIncognito(sourceInformation: KmpSourceInformation, value: Boolean) {
         viewModelScope.launch {
             if (itemDao.doesIncognitoSourceExistSync(sourceInformation.packageName)) {
                 sourceRepository
@@ -80,5 +80,5 @@ class IncognitoViewModel(
 
 data class IncognitoModel(
     val incognitoSource: IncognitoSource,
-    val sourceInformation: SourceInformation,
+    val sourceInformation: KmpSourceInformation,
 )

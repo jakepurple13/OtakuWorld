@@ -94,6 +94,8 @@ import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.models.ChapterModel
@@ -136,12 +138,16 @@ class ReadViewModel(
 
         fun navigateToNovelReader(
             navController: NavController,
-            currentChapter: ChapterModel,
+            currentChapter: KmpChapterModel,
             novelTitle: String,
             novelUrl: String,
             novelInfoUrl: String,
         ) {
-            val current = Uri.encode(currentChapter.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            val current = Uri.encode(
+                currentChapter
+                    .let(ModelMapper::mapChapterModel)
+                    .toJson(ChapterModel::class.java to ChapterModelSerializer())
+            )
 
             navController.navigate(
                 "novelreader?currentChapter=$current&novelTitle=${novelTitle}&novelUrl=${novelUrl}&novelInfoUrl=${novelInfoUrl}"

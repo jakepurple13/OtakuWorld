@@ -65,14 +65,14 @@ import androidx.core.graphics.ColorUtils
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
@@ -101,7 +101,7 @@ import org.koin.compose.koinInject
 @ExperimentalFoundationApi
 @Composable
 fun DetailsView(
-    info: InfoModel,
+    info: KmpInfoModel,
     isSaved: Boolean,
     shareChapter: Boolean,
     chapters: List<ChapterWatched>,
@@ -109,7 +109,7 @@ fun DetailsView(
     onFavoriteClick: (Boolean) -> Unit,
     canNotify: Boolean,
     notifyAction: () -> Unit,
-    markAs: (ChapterModel, Boolean) -> Unit,
+    markAs: (KmpChapterModel, Boolean) -> Unit,
     logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,

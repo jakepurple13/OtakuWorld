@@ -48,7 +48,10 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
@@ -66,9 +69,6 @@ import com.programmersbox.mangaworld.settings.ReaderSettings
 import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
@@ -112,8 +112,8 @@ val appModule = module {
 }
 
 class ChapterHolder {
-    var chapterModel: ChapterModel? = null
-    var chapters: List<ChapterModel>? = null
+    var chapterModel: KmpChapterModel? = null
+    var chapters: List<KmpChapterModel>? = null
 }
 
 class GenericManga(
@@ -139,9 +139,9 @@ class GenericManga(
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -168,7 +168,7 @@ class GenericManga(
         }
     }
 
-    private fun downloadFullChapter(model: ChapterModel, title: String) {
+    private fun downloadFullChapter(model: KmpChapterModel, title: String) {
         //val fileLocation = runBlocking { context.folderLocationFlow.first() }
         val fileLocation = DOWNLOAD_FILE_PATH
 
@@ -178,7 +178,7 @@ class GenericManga(
         GlobalScope.launch {
             model.getChapterInfo()
                 .dispatchIo()
-                .map { it.mapNotNull(Storage::link) }
+                .map { it.mapNotNull(KmpStorage::link) }
                 .map {
                     it.mapIndexed { index, s ->
                         //val location = "/$fileLocation/$title/${model.name}"
@@ -206,9 +206,9 @@ class GenericManga(
     }
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -465,7 +465,7 @@ class GenericManga(
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

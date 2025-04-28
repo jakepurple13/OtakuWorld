@@ -18,12 +18,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ComponentState
@@ -38,13 +37,13 @@ interface GenericInfo {
 
     //TODO: Would need to be different
     // Probably pass a context into the constructor?
-    fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent?
+    fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent?
 
     //TODO: Would need to be different
     fun deepLinkSettings(context: Context): PendingIntent?
 
     @SuppressLint("RestrictedApi")
-    fun deepLinkDetailsUri(itemModel: ItemModel?): Uri {
+    fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
         @Suppress("UNCHECKED_CAST")
         val route = generateRouteWithArgs(
             Screen.DetailsScreen.Details(
@@ -70,9 +69,9 @@ interface GenericInfo {
 
     //TODO: Would need to be different
     fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
@@ -87,16 +86,16 @@ interface GenericInfo {
 
     //TODO: Would need to be different
     fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
     )
 
     @Composable
-    fun DetailActions(infoModel: InfoModel, tint: Color) = Unit
+    fun DetailActions(infoModel: KmpInfoModel, tint: Color) = Unit
 
     @Composable
     fun ComposeShimmerItem()

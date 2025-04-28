@@ -38,11 +38,12 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -81,14 +82,14 @@ class GenericNovel(val context: Context) : GenericInfo {
     override val sourceType: String get() = "novel"
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
     ) {
-        ChapterList(context, this@GenericNovel).set(allChapters)
+        ChapterList(context, this@GenericNovel).set(allChapters.map { ModelMapper.mapChapterModel(it) })
         ReadViewModel.navigateToNovelReader(
             navController,
             model,
@@ -103,13 +104,14 @@ class GenericNovel(val context: Context) : GenericInfo {
     override fun toSource(s: String): ApiService? = null
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
         context: Context,
         activity: FragmentActivity,
         navController: NavController,
     ) {
+
     }
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
@@ -215,7 +217,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

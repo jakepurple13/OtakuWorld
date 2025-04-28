@@ -5,9 +5,9 @@ import android.util.Log
 import com.bumptech.glide.GlideBuilder
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.module.AppGlideModule
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.coroutines.flow.flow
 
 fun tryThis(block: () -> Unit) = try {

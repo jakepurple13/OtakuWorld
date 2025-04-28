@@ -64,7 +64,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
 import com.bumptech.glide.load.model.GlideUrl
 import com.kmpalette.palette.graphics.Palette
-import com.programmersbox.models.InfoModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
@@ -91,7 +91,7 @@ import me.saket.telephoto.zoomable.zoomablePeekOverlay
 @ExperimentalFoundationApi
 @Composable
 internal fun DetailsHeader(
-    model: InfoModel,
+    model: KmpInfoModel,
     logo: Any?,
     isFavorite: Boolean,
     favoriteClick: (Boolean) -> Unit,

@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -104,15 +103,14 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import coil3.compose.AsyncImage
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpmodels.KmpApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.models.ApiServicesCatalog
-import com.programmersbox.models.SourceInformation
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
@@ -328,7 +326,7 @@ fun ExtensionList(
 
 @Composable
 private fun InstalledExtensionItems(
-    installedSources: Map<ApiServicesCatalog?, InstalledViewState>,
+    installedSources: Map<KmpApiServicesCatalog?, InstalledViewState>,
     sourcesList: List<KmpRemoteSources>,
     onDownloadAndInstall: (String, String) -> Unit,
     onUninstall: (String) -> Unit,
@@ -543,7 +541,7 @@ private fun RemoteExtensionItems(
 
 @Composable
 private fun ExtensionItem(
-    sourceInformation: SourceInformation,
+    sourceInformation: KmpSourceInformation,
     version: String,
     onClick: () -> Unit,
     trailingIcon: (@Composable () -> Unit)?,
@@ -558,13 +556,14 @@ private fun ExtensionItem(
             headlineContent = { Text(sourceInformation.name) },
             supportingContent = { Text("Version: $version") },
             leadingContent = {
-                Image(
+                //TODO: Need to deal with this
+                /*Image(
                     rememberDrawablePainter(drawable = sourceInformation.icon),
                     contentDescription = null,
                     modifier = Modifier
                         .clip(CircleShape)
                         .size(64.dp)
-                )
+                )*/
             },
             trailingContent = trailingIcon
         )

@@ -14,7 +14,7 @@ import com.programmersbox.helpfulutils.GroupBehavior
 import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.SemanticActions
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.models.InfoModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -32,7 +32,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
 
     private val icon: NotificationLogo by inject()
 
-    suspend fun updateManga(dao: ItemDao, triple: List<Pair<InfoModel?, DbModel>>) {
+    suspend fun updateManga(dao: ItemDao, triple: List<Pair<KmpInfoModel?, DbModel>>) {
         triple.fastForEach {
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
@@ -44,7 +44,7 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         }
     }
 
-    suspend fun mapDbModel(dao: ItemDao, list: List<Pair<InfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
+    suspend fun mapDbModel(dao: ItemDao, list: List<Pair<KmpInfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
         sendRunningNotification(list.size, index, pair.second.title)
         //index + 3 + (Math.random() * 50).toInt() //for a possible new notification value
 
@@ -115,7 +115,9 @@ class UpdateNotification(private val context: Context) : KoinComponent {
                 intent.putExtra("url", pair.second.url)
                 PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
             }
-            pendingIntent { context -> info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source)) }
+            pendingIntent { context ->
+                info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source))
+            }
         }
     }
 

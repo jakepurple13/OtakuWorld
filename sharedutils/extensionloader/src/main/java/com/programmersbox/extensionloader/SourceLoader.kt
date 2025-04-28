@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import com.programmersbox.kmpmodels.ModelMapper
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
@@ -110,10 +112,22 @@ class SourceLoader(
     }
 
     fun load() {
-        sourceRepository.setSources(extensionLoader.loadExtensions().flatten().sortedBy { it.apiService.serviceName })
+        sourceRepository.setSources(
+            extensionLoader
+                .loadExtensions()
+                .flatten()
+                .sortedBy { it.apiService.serviceName }
+                .map { ModelMapper.mapSourceInformation(it) }
+        )
     }
 
     suspend fun blockingLoad() {
-        sourceRepository.setSources(extensionLoader.loadExtensionsBlocking().flatten().sortedBy { it.apiService.serviceName })
+        sourceRepository.setSources(
+            extensionLoader
+                .loadExtensionsBlocking()
+                .flatten()
+                .sortedBy { it.apiService.serviceName }
+                .map { ModelMapper.mapSourceInformation(it) }
+        )
     }
 }

@@ -1,6 +1,6 @@
 package com.programmersbox.uiviews.di
 
-import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseRepository

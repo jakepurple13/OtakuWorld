@@ -9,6 +9,7 @@ android {
 
 dependencies {
     implementation(projects.models)
+    implementation(projects.kmpmodels)
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 }

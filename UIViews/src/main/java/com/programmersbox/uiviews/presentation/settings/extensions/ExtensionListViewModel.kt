@@ -10,12 +10,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.extensionloader.SourceLoader
-import com.programmersbox.extensionloader.SourceRepository
 import com.programmersbox.kmpmodels.KmpRemoteSources
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.ModelMapper
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
-import com.programmersbox.models.SourceInformation
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
@@ -32,7 +32,7 @@ class ExtensionListViewModel(
     val downloadAndInstaller: DownloadAndInstaller,
     private val downloadStateRepository: DownloadStateRepository,
 ) : ViewModel() {
-    private val installedSources = mutableStateListOf<SourceInformation>()
+    private val installedSources = mutableStateListOf<KmpSourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()
 
     val installed by derivedStateOf {
@@ -113,7 +113,7 @@ class ExtensionListViewModel(
 }
 
 class InstalledViewState(
-    val sourceInformation: List<SourceInformation>,
+    val sourceInformation: List<KmpSourceInformation>,
 ) {
     var showItems by mutableStateOf(false)
 }
