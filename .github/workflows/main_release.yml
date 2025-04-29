@@ -11,19 +11,19 @@ on:
 
 jobs:
   mangaworld:
-    uses: ./.github/workflows/mangaworld/mangaworld_build.yaml
+    uses: ./.github/workflows/mangaworld_build.yaml
     secrets: inherit # pass all secrets
 
   animeworld:
-    uses: ./.github/workflows/animeworld/animeworld_build.yaml
+    uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
 
   animeworldtv:
-    uses: ./.github/workflows/animeworld/animeworldtv_build.yaml
+    uses: ./.github/workflows/animeworldtv_build.yaml
     secrets: inherit # pass all secrets
 
   novelworld:
-    uses: ./.github/workflows/novelworld/novelworld_build.yaml
+    uses: ./.github/workflows/novelworld_build.yaml
     secrets: inherit # pass all secrets
         #  apk:
         #    name: Generate APK
