@@ -269,7 +269,7 @@ datastore = { module = "androidx.datastore:datastore-core", version.ref = "datas
 datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 datastoreOkio = { module = "androidx.datastore:datastore-core-okio", version.ref = "datastore" }
 
-jsoup = "org.jsoup:jsoup:1.19.1"
+jsoup = "org.jsoup:jsoup:1.20.1"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
 
