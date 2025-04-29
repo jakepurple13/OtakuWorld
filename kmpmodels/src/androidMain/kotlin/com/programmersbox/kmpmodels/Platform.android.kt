@@ -183,6 +183,7 @@ object ModelMapper {
             override val canPlay: Boolean = apiService.canPlay
             override val canDownload: Boolean = apiService.canDownload
             override val notWorking: Boolean = apiService.notWorking
+            override val serviceName: String = apiService.serviceName
 
             override fun getRecentFlow(page: Int): Flow<List<KmpItemModel>> = apiService
                 .getRecentFlow(page)
@@ -219,8 +220,6 @@ object ModelMapper {
                 .map { mapItemModel(it) }
 
             override suspend fun sourceByUrl(url: String): KmpItemModel = mapItemModel(apiService.sourceByUrl(url))
-
-            override val serviceName: String = apiService.serviceName
         }
     }
 
@@ -233,6 +232,7 @@ object ModelMapper {
             override val canPlay: Boolean = apiService.canPlay
             override val canDownload: Boolean = apiService.canDownload
             override val notWorking: Boolean = apiService.notWorking
+            override val serviceName: String = apiService.serviceName
 
             override fun getRecentFlow(page: Int): Flow<List<ItemModel>> = apiService
                 .getRecentFlow(page)
@@ -269,8 +269,6 @@ object ModelMapper {
                 .map { mapItemModel(it) }
 
             override suspend fun sourceByUrl(url: String): ItemModel = mapItemModel(apiService.sourceByUrl(url))
-
-            override val serviceName: String = apiService.serviceName
         }
     }
 }
