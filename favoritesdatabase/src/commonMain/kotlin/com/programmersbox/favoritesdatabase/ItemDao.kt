@@ -22,10 +22,10 @@ interface ItemDao {
     fun getAllFavorites(): Flow<List<DbModel>>
 
     @Query("SELECT * FROM FavoriteItem")
-    fun getAllFavoritesSync(): List<DbModel>
+    suspend fun getAllFavoritesSync(): List<DbModel>
 
     @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
-    fun getAllNotifyingFavoritesSync(): List<DbModel>
+    suspend fun getAllNotifyingFavoritesSync(): List<DbModel>
 
     @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
     fun getAllNotifyingFavorites(): Flow<List<DbModel>>
@@ -64,7 +64,7 @@ interface ItemDao {
     suspend fun deleteAllNotifications(): Int
 
     @Query("SELECT * FROM Notifications where url = :url")
-    fun getNotificationItem(url: String): NotificationItem?
+    suspend fun getNotificationItem(url: String): NotificationItem?
 
     @Query("SELECT * FROM Notifications where url = :url")
     fun getNotificationItemFlow(url: String): Flow<NotificationItem?>

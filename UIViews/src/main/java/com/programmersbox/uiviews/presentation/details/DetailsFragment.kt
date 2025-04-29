@@ -96,7 +96,6 @@ import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.findActivity
 import com.programmersbox.uiviews.utils.launchCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -573,7 +572,7 @@ fun ChapterItem(
                 if (infoModel.source.canPlay) {
                     OutlinedButton(
                         onClick = {
-                            genericInfo.chapterOnClick(c, chapters, infoModel, context, context.findActivity(), navController)
+                            genericInfo.chapterOnClick(c, chapters, infoModel, navController)
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) markAs(c, true)
                         },
@@ -600,7 +599,7 @@ fun ChapterItem(
                 if (infoModel.source.canDownload && showDownload()) {
                     OutlinedButton(
                         onClick = {
-                            genericInfo.downloadChapter(c, chapters, infoModel, context, context.findActivity(), navController)
+                            genericInfo.downloadChapter(c, chapters, infoModel, navController)
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) markAs(c, true)
                         },

@@ -33,7 +33,7 @@ jobs:
   mangaworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/mangaworld_build.yaml
+    uses: ./.github/workflows/mangaworld/mangaworld_build.yaml
     secrets: inherit # pass all secrets
     with:
       IS_PRERELEASE: true
@@ -41,7 +41,7 @@ jobs:
   animeworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/animeworld_build.yaml
+    uses: ./.github/workflows/animeworld/animeworld_build.yaml
     secrets: inherit # pass all secrets
     with:
       IS_PRERELEASE: true
@@ -49,7 +49,7 @@ jobs:
   animeworldtv:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/animeworldtv_build.yaml
+    uses: ./.github/workflows/animeworld/animeworldtv_build.yaml
     secrets: inherit # pass all secrets
     with:
       IS_PRERELEASE: true
@@ -57,7 +57,7 @@ jobs:
   novelworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/novelworld_build.yaml
+    uses: ./.github/workflows/novelworld/novelworld_build.yaml
     secrets: inherit # pass all secrets
     with:
       IS_PRERELEASE: true

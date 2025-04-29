@@ -22,8 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.bounceClick
 import com.programmersbox.uiviews.utils.combineClickableWithIndication

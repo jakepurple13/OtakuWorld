@@ -95,6 +95,8 @@ androidx-lifecycle = "2.8.4"
 
 compose-multiplatform = "1.8.0-rc01"
 
+kotlinx-coroutines = "1.10.1"
+
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -397,6 +399,8 @@ androidx-runner = { group = "androidx.test", name = "runner", version.ref = "run
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 kmpalette-core = { module = "com.kmpalette:kmpalette-core", version.ref = "kmpalette" }
+
+kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 
 [bundles]
 compose = [

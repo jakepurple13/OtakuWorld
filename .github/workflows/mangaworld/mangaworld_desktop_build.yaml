@@ -1,0 +1,66 @@
+name: Compose Desktop Build
+
+env:
+  GITHUB_DEPLOY: 'false'
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      IS_PRERELEASE:
+        required: false
+        type: boolean
+        default: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build Package
+    timeout-minutes: 15
+    continue-on-error: true
+    # if: github.event_name  == 'pull_request'
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        jdk: [ 18 ]
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 18
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: current
+          arguments: ":mangaworld:desktop:packageDistributionForCurrentOS"
+
+      - name: Upload ${{ matrix.os }} Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            mangaworld/desktop/build/compose/binaries/main/dmg/*.dmg
+            mangaworld/desktop/build/compose/binaries/main/deb/*.deb
+            mangaworld/desktop/build/compose/binaries/main/msi/*.msi
