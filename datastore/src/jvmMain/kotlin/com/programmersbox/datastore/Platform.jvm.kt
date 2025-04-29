@@ -14,7 +14,15 @@ actual fun <T> getDataStore(
 ): DataStore<T> {
     return createDataStore(
         fileSystem = FileSystem.SYSTEM,
-        producePath = { DATA_STORE_FILE_NAME.toPath() },
+        producePath = producePath,
         serializer = serializer
     )
 }
+
+fun <T> createProtobuf(
+    serializer: OkioSerializer<T>,
+    fileName: String = DATA_STORE_FILE_NAME,
+) = getDataStore(
+    serializer = serializer,
+    producePath = { fileName.toPath() }
+)

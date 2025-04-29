@@ -18,7 +18,6 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 
 interface GenericInfo {
     val scrollBuffer: Int get() = 2
-    val deepLinkUri: String
     val sourceType: String get() = ""
 
     fun chapterOnClick(

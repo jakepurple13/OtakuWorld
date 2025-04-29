@@ -110,6 +110,8 @@ class ChapterHolder {
     var chapters: List<KmpChapterModel>? = null
 }
 
+//TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides
+// while ios and desktop just use the open class?
 class GenericManga(
     val context: Context,
     val chapterHolder: ChapterHolder,

@@ -36,7 +36,7 @@ class MoreSettingsViewModel(
 
     var importExportListStatus: ImportExportListStatus by mutableStateOf(ImportExportListStatus.Idle)
 
-    fun exportFavorites() = listOf(
+    suspend fun exportFavorites() = listOf(
         dao.getAllFavoritesSync(),
         FirebaseDb.getAllShows().requireNoNulls()
     )

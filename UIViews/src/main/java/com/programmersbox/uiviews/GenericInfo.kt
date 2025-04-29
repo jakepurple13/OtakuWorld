@@ -16,6 +16,8 @@ interface GenericInfo : KmpGenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
 
+    val deepLinkUri: String
+
     fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent?
 
     fun deepLinkSettings(context: Context): PendingIntent?
