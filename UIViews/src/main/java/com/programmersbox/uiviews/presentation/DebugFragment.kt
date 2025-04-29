@@ -94,7 +94,7 @@ fun DebugView() {
             )
         }
     ) { p ->
-        val moreSettings = remember { genericInfo.debugMenuItem(context) }
+        val moreSettings = remember { genericInfo.debugMenuItem() }
         LazyColumn(contentPadding = p) {
             /*item {
                 sources.forEach {

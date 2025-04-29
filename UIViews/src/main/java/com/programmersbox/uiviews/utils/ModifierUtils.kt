@@ -34,8 +34,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
-enum class ComponentState { Pressed, Released }
+import com.programmersbox.kmpuiviews.utils.ComponentState
 
 fun Modifier.combineClickableWithIndication(
     onLongPress: (ComponentState) -> Unit = {},

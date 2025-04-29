@@ -38,7 +38,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -54,6 +53,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
@@ -77,7 +77,7 @@ import org.koin.dsl.module
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-val MockInfo = object : GenericInfo {
+class MockInfo(private val context: Context) : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
     override val deepLinkUri: String = ""
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? = null
@@ -86,23 +86,15 @@ val MockInfo = object : GenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
 
     }
 
-    override fun sourceList(): List<KmpApiService> = emptyList()
-
-    override fun toSource(s: String): KmpApiService? = null
-
     override fun downloadChapter(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
 
@@ -185,7 +177,7 @@ class AmoledProvider : PreviewParameterProvider<Boolean> {
 @Composable
 fun PreviewTheme(
     navController: NavHostController = rememberNavController(),
-    genericInfo: GenericInfo = MockInfo,
+    genericInfo: GenericInfo = MockInfo(LocalContext.current),
     isAmoledMode: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -200,7 +192,7 @@ fun PreviewTheme(
                 single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
             }
             module {
-                single<GenericInfo> { MockInfo }
+                single<GenericInfo> { MockInfo(get()) }
                 repository()
                 databases()
                 single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }

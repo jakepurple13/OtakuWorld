@@ -1119,7 +1119,7 @@ private fun NotificationItemPreview() {
             item = NotificationItem(1, "", "world", "hello", null, "MANGA_READ", "Title"),
             navController = rememberNavController(),
             deleteNotification = { _, _ -> },
-            genericInfo = MockInfo,
+            genericInfo = MockInfo(LocalContext.current),
             cancelNotification = {},
             logoDrawable = null,
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),

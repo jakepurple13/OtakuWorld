@@ -14,3 +14,5 @@ val ThemeColor.seedColor
         ThemeColor.Magenta -> Color.Magenta
         ThemeColor.Custom -> Color.Transparent
     }
+
+enum class ComponentState { Pressed, Released }

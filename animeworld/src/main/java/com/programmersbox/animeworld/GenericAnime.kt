@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
@@ -64,7 +63,6 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
@@ -88,7 +86,6 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -96,23 +93,27 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
-import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.trackScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.dsl.module
 
 val appModule = module {
@@ -148,8 +149,6 @@ class GenericAnime(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
         /*if ((model.source as? ShowApi)?.canPlay == false) {
@@ -157,11 +156,10 @@ class GenericAnime(
             return
         }*/
         getEpisodes(
-            R.string.source_no_stream,
-            model,
-            infoModel,
-            context,
-            activity,
+            errorId = R.string.source_no_stream,
+            model = model,
+            infoModel = infoModel,
+            context = context,
             navController = navController,
             isStreaming = true,
         ) {
@@ -190,8 +188,6 @@ class GenericAnime(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
         /* if ((model.source as? ShowApi)?.canDownload == false) {
@@ -202,7 +198,7 @@ class GenericAnime(
              ).show()
              return
          }*/
-        activity.requestPermissions(
+        /*activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33)
                 arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
             else arrayOf(
@@ -213,19 +209,31 @@ class GenericAnime(
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
                 getEpisodes(
-                    R.string.source_no_download,
-                    model,
-                    infoModel,
-                    context,
-                    activity,
-                    { !it.link.orEmpty().endsWith(".m3u8") },
-                    navController,
-                    false
+                    errorId = R.string.source_no_download,
+                    model = model,
+                    infoModel = infoModel,
+                    context = context,
+                    filter = { !it.link.orEmpty().endsWith(".m3u8") },
+                    navController = navController,
+                    isStreaming = false
                 ) {
                     //fetchIt(it, model, activity)
-                    downloadVideo(activity, model, it)
+                    downloadVideo(context, model, it)
                 }
             }
+        }*/
+        Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
+        getEpisodes(
+            errorId = R.string.source_no_download,
+            model = model,
+            infoModel = infoModel,
+            context = context,
+            filter = { !it.link.orEmpty().endsWith(".m3u8") },
+            navController = navController,
+            isStreaming = false
+        ) {
+            //fetchIt(it, model, activity)
+            downloadVideo(context, model, it)
         }
     }
 
@@ -234,7 +242,6 @@ class GenericAnime(
         model: KmpChapterModel,
         infoModel: KmpInfoModel,
         context: Context,
-        activity: FragmentActivity,
         filter: (KmpStorage) -> Boolean = { true },
         navController: NavController,
         isStreaming: Boolean,
@@ -246,9 +253,9 @@ class GenericAnime(
             .setIcon(R.mipmap.ic_launcher)
             .setCancelable(false)
             .create()
-        activity.lifecycleScope.launch {
+        CoroutineScope(Job() + Dispatchers.IO).launch {
             model.getChapterInfo()
-                .onStart { runOnUIThread { dialog.show() } }
+                .onStart { withContext(Dispatchers.Main) { dialog.show() } }
                 .catch {
                     runOnUIThread {
                         Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
@@ -314,12 +321,6 @@ class GenericAnime(
                 Toast.makeText(context, "Something went wrong...", Toast.LENGTH_SHORT).show()
             }
     }
-
-    override fun sourceList(): List<KmpApiService> = emptyList()
-
-    override fun searchList(): List<KmpApiService> = emptyList()
-
-    override fun toSource(s: String): KmpApiService? = null
 
     @Composable
     override fun DetailActions(infoModel: KmpInfoModel, tint: Color) {

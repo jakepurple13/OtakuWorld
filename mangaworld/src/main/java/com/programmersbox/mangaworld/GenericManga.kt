@@ -1,11 +1,9 @@
 package com.programmersbox.mangaworld
 
-import android.Manifest
 import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Environment
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -38,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -47,13 +44,13 @@ import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
-import com.programmersbox.helpfulutils.requestPermissions
-import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
@@ -72,9 +69,7 @@ import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -141,8 +136,6 @@ class GenericManga(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
         chapterHolder.chapters = allChapters
@@ -208,19 +201,15 @@ class GenericManga(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
-        activity.requestPermissions(
+        /*activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
             else arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
+        ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }*/
+
+        downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
     }
-
-    override fun sourceList(): List<KmpApiService> = emptyList()
-
-    override fun toSource(s: String): KmpApiService? = null
 
     @Composable
     override fun ComposeShimmerItem() {
@@ -288,7 +277,6 @@ class GenericManga(
 
     @OptIn(ExperimentalAnimationApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
-
         viewSettings {
             val navController = LocalNavController.current
             PreferenceSetting(

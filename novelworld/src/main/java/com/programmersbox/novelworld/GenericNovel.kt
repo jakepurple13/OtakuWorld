@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.core.app.TaskStackBuilder
-import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -38,10 +37,10 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
-import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -49,7 +48,6 @@ import com.programmersbox.uiviews.presentation.components.placeholder.m3placehol
 import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.trackScreen
@@ -83,8 +81,6 @@ class GenericNovel(val context: Context) : GenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
         ChapterList(context, this@GenericNovel).set(allChapters)
@@ -97,19 +93,12 @@ class GenericNovel(val context: Context) : GenericInfo {
         )
     }
 
-    override fun sourceList(): List<KmpApiService> = emptyList()
-
-    override fun toSource(s: String): KmpApiService? = null
-
     override fun downloadChapter(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        context: Context,
-        activity: FragmentActivity,
         navController: NavController,
     ) {
-
     }
 
     override val apkString: AppUpdate.AppUpdates.() -> String?

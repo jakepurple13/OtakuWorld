@@ -23,12 +23,7 @@ fun Screen.DetailsScreen.Details.toItemModel(
     sourceRepository: SourceRepository,
     genericInfo: GenericInfo,
 ): KmpItemModel? = Uri.decode(source)
-    .let {
-        sourceRepository.toSourceByApiServiceName(it)
-            ?.apiService
-            ?: genericInfo
-                .toSource(it)
-    }
+    .let { sourceRepository.toSourceByApiServiceName(it)?.apiService }
     ?.let {
         KmpItemModel(
             title = Uri.decode(title),

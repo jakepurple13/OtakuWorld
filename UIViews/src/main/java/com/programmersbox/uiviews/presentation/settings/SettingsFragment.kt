@@ -63,8 +63,8 @@ import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
@@ -80,30 +80,6 @@ import com.programmersbox.uiviews.utils.versionCode
 import com.skydoves.landscapist.glide.GlideImage
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
-class ComposeSettingsDsl {
-    internal var generalSettings: @Composable () -> Unit = {}
-    internal var viewSettings: @Composable () -> Unit = {}
-    internal var playerSettings: @Composable () -> Unit = {}
-
-    internal var onboardingSettings: OnboardingScope.() -> Unit = {}
-
-    fun generalSettings(block: @Composable () -> Unit) {
-        generalSettings = block
-    }
-
-    fun viewSettings(block: @Composable () -> Unit) {
-        viewSettings = block
-    }
-
-    fun playerSettings(block: @Composable () -> Unit) {
-        playerSettings = block
-    }
-
-    fun onboardingSettings(block: OnboardingScope.() -> Unit) {
-        onboardingSettings = block
-    }
-}
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api

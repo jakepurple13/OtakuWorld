@@ -205,9 +205,7 @@ class ApiServiceSerializer : JsonSerializer<KmpApiService> {
 class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeserializer<KmpApiService>, KoinComponent {
     private val sourceRepository: SourceRepository by inject()
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): KmpApiService? {
-        return sourceRepository.toSourceByApiServiceName(json.asString)
-            ?.apiService
-            ?: genericInfo.toSource(json.asString)
+        return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService
     }
 }
 
