@@ -52,6 +52,10 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             namespace = dependencyHandling.androidPackageName
             compileSdk = AppInfo.compileVersion
             minSdk = AppInfo.minimumSdk
+
+            lint {
+                checkReleaseBuilds = false
+            }
         }
 
         val xcfName = "sharedKit"

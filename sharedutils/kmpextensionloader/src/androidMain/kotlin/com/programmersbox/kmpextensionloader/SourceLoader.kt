@@ -81,7 +81,10 @@ actual class SourceLoader(
                 val packageString = intent.dataString.orEmpty().removePrefix("package:")
                 val isOtakuExtension = runCatching {
                     val p = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        context?.packageManager?.getPackageInfo(packageString, PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
+                        context?.packageManager?.getPackageInfo(
+                            packageString,
+                            PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong())
+                        )
                     } else {
                         context?.packageManager?.getPackageInfo(packageString, PACKAGE_FLAGS)
                     }

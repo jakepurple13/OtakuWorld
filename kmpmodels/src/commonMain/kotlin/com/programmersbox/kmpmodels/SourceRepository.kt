@@ -12,10 +12,6 @@ class SourceRepository {
 
     fun setSources(sourceList: List<KmpSourceInformation>) {
         sourcesList.value = sourceList
-
-        sourceList.forEach {
-            println(it)
-        }
     }
 
     fun removeSource(sourceInformation: KmpSourceInformation) {
