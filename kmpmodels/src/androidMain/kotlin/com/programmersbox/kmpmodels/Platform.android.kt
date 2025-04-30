@@ -291,6 +291,17 @@ class ModelMapper(private val application: Application) {
                 .map { mapItemModel(it) }
 
             override suspend fun sourceByUrl(url: String): KmpItemModel = mapItemModel(apiService.sourceByUrl(url))
+
+            override suspend fun search(searchText: CharSequence, page: Int, list: List<KmpItemModel>): List<KmpItemModel> =
+                apiService.search(searchText, page, list.map { mapItemModel(it) }).map { mapItemModel(it) }
+
+            override fun searchListFlow(searchText: CharSequence, page: Int, list: List<KmpItemModel>): Flow<List<KmpItemModel>> = apiService
+                .searchListFlow(searchText, page, list.map { mapItemModel(it) })
+                .map { it.map { mapItemModel(it) } }
+
+            override fun searchSourceList(searchText: CharSequence, page: Int, list: List<KmpItemModel>): Flow<List<KmpItemModel>> =
+                apiService.searchSourceList(searchText, page, list.map { mapItemModel(it) })
+                    .map { it.map { mapItemModel(it) } }
         }
     }
 
@@ -340,6 +351,21 @@ class ModelMapper(private val application: Application) {
                 .map { mapItemModel(it) }
 
             override suspend fun sourceByUrl(url: String): ItemModel = mapItemModel(apiService.sourceByUrl(url))
+
+            override suspend fun search(searchText: CharSequence, page: Int, list: List<ItemModel>): List<ItemModel> =
+                apiService.search(
+                    searchText,
+                    page,
+                    list.map { mapItemModel(it) }
+                ).map { mapItemModel(it) }
+
+            override fun searchListFlow(searchText: CharSequence, page: Int, list: List<ItemModel>): Flow<List<ItemModel>> = apiService
+                .searchListFlow(searchText, page, list.map { mapItemModel(it) })
+                .map { it.map { mapItemModel(it) } }
+
+            override fun searchSourceList(searchText: CharSequence, page: Int, list: List<ItemModel>): Flow<List<ItemModel>> =
+                apiService.searchSourceList(searchText, page, list.map { mapItemModel(it) })
+                    .map { it.map { mapItemModel(it) } }
         }
     }
 }

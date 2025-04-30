@@ -72,12 +72,14 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -104,7 +106,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import coil3.compose.AsyncImage
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.kmpmodels.KmpApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -313,6 +314,7 @@ fun ExtensionList(
                 AnimatedPane(modifier = Modifier.fillMaxSize()) {
                     RemoteExtensionItems(
                         remoteSources = viewModel.remoteSources,
+                        remoteSourcesShowing = viewModel.remoteSourcesShowing,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
                             viewModel.downloadAndInstall(downloadLink, destinationPath)
                         },
@@ -326,7 +328,7 @@ fun ExtensionList(
 
 @Composable
 private fun InstalledExtensionItems(
-    installedSources: Map<KmpApiServicesCatalog?, InstalledViewState>,
+    installedSources: Map<String?, InstalledViewState>,
     sourcesList: List<KmpRemoteSources>,
     onDownloadAndInstall: (String, String) -> Unit,
     onUninstall: (String) -> Unit,
@@ -372,7 +374,7 @@ private fun InstalledExtensionItems(
                         ) {
                             ListItem(
                                 headlineContent = {
-                                    Text(t?.name ?: u.sourceInformation.firstOrNull()?.name?.takeIf { t != null } ?: "Single Source")
+                                    Text(t ?: u.sourceInformation.firstOrNull()?.name ?: "Single Source")
                                 },
                                 leadingContent = { Text("(${itemList.size})") },
                                 trailingContent = t?.let {
@@ -451,6 +453,7 @@ private fun InstalledExtensionItems(
 @Composable
 private fun RemoteExtensionItems(
     remoteSources: Map<String, RemoteState>,
+    remoteSourcesShowing: SnapshotStateMap<String, Boolean>,
     onDownloadAndInstall: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -478,11 +481,15 @@ private fun RemoteExtensionItems(
                 modifier = Modifier.fillMaxSize()
             ) {
                 remoteSources.forEach { (t, u) ->
+                    val showing by derivedStateOf {
+                        runCatching { remoteSourcesShowing[t]!! }.getOrDefault(false)
+                    }
+
                     when (u) {
                         is RemoteViewState -> {
                             item {
                                 ElevatedCard(
-                                    onClick = { u.showItems = !u.showItems },
+                                    onClick = { remoteSourcesShowing[t] = !showing },
                                     modifier = Modifier.animateItem()
                                 ) {
                                     ListItem(
@@ -492,7 +499,7 @@ private fun RemoteExtensionItems(
                                             Icon(
                                                 Icons.Default.ArrowDropDown,
                                                 null,
-                                                modifier = Modifier.rotateWithBoolean(u.showItems)
+                                                modifier = Modifier.rotateWithBoolean(showing)
                                             )
                                         },
                                         colors = ListItemDefaults.colors(
@@ -502,7 +509,7 @@ private fun RemoteExtensionItems(
                                 }
                             }
 
-                            if (u.showItems) {
+                            if (showing) {
                                 items(u.sources.filter { it.name.contains(search, true) }) {
                                     RemoteItem(
                                         remoteSource = it,
