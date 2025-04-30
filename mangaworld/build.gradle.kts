@@ -20,11 +20,6 @@ android {
         dataBinding = true
         viewBinding = true
     }
-    buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
-        }
-    }
 }
 
 dependencies {
@@ -48,6 +43,7 @@ dependencies {
     implementation(projects.sharedutils)
     implementation(projects.sourceUtilities)
     implementation(projects.datastore.mangasettings)
+    implementation(projects.mangaworld.shared)
 
     implementation(libs.kamel.image)
     implementation(libs.duktape)

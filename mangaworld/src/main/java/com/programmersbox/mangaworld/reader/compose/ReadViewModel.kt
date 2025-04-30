@@ -18,7 +18,7 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
-import com.programmersbox.mangaworld.ChapterHolder
+import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.fireListener

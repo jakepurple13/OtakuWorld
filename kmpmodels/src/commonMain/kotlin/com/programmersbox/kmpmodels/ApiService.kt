@@ -113,6 +113,7 @@ interface KmpExternalCustomApiServicesCatalog : KmpApiServicesCatalog {
 
     suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = emptyList()
 }
+
 @Serializable
 data class KmpRemoteSources(
     val name: String,

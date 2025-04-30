@@ -27,6 +27,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3AdaptiveNavigationSuite)
                 implementation(compose.components.resources)
+                implementation(libs.material3.window.size)
                 implementation(libs.haze)
                 implementation(libs.hazeMaterials)
                 implementation(libs.material.kolor)
