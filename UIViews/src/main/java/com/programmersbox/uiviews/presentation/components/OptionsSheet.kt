@@ -12,8 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,6 +46,9 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.KmpItemModelOptionsSheet
+import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetScope
+import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
@@ -118,15 +119,6 @@ fun optionsKmpSheetList(
     return itemInfo
 }
 
-class KmpItemModelOptionsSheet(
-    val itemModel: KmpItemModel,
-    override val imageUrl: String = itemModel.imageUrl,
-    override val title: String = itemModel.title,
-    override val description: String = itemModel.description,
-    override val serviceName: String = itemModel.source.serviceName,
-    override val url: String = itemModel.url,
-) : OptionsSheetValues
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T : OptionsSheetValues> optionsSheetList(
@@ -177,14 +169,6 @@ fun <T : OptionsSheetValues> optionsSheet(
     }
 
     return itemInfo
-}
-
-interface OptionsSheetValues {
-    val imageUrl: String
-    val title: String
-    val description: String
-    val serviceName: String
-    val url: String
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -466,38 +450,6 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         )
 
         moreContent(optionsSheetValues)
-    }
-}
-
-interface OptionsSheetScope {
-    fun dismiss()
-
-    @Composable
-    fun OptionsItem(
-        title: String,
-        onClick: () -> Unit,
-        modifier: Modifier = Modifier,
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Card(
-                onClick = onClick,
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Transparent
-                ),
-                modifier = modifier
-            ) {
-                ListItem(
-                    headlineContent = { Text(title) },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    )
-                )
-            }
-
-            HorizontalDivider()
-        }
     }
 }
 
