@@ -1,8 +1,12 @@
 package com.programmersbox.kmpmodels
 
+import android.app.Application
+import android.content.pm.PackageInfo
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ChapterModel
+import com.programmersbox.models.ExternalApiServicesCatalog
+import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.InfoModel
 import com.programmersbox.models.ItemModel
 import com.programmersbox.models.RemoteSources
@@ -12,7 +16,7 @@ import com.programmersbox.models.Storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-object ModelMapper {
+class ModelMapper(private val application: Application) {
 
     fun mapRemoteSources(remoteSources: RemoteSources): KmpRemoteSources {
         return KmpRemoteSources(
@@ -57,22 +61,89 @@ object ModelMapper {
     }
 
     fun mapCatalog(catalog: KmpApiServicesCatalog): ApiServicesCatalog {
-        return object : ApiServicesCatalog {
-            override fun createSources(): List<ApiService> {
-                return catalog.createSources().map { mapApiService(it) }
+        return when (catalog) {
+            is KmpExternalApiServicesCatalog -> object : ExternalApiServicesCatalog {
+                override val hasRemoteSources: Boolean = catalog.hasRemoteSources
+                override val name: String = catalog.name
+                override suspend fun initialize(app: Application) = catalog.initialize()
+                override fun getSources(): List<SourceInformation> = catalog.getSources()
+                    .map { mapSourceInformation(it) }
+
+                override fun createSources(): List<ApiService> = catalog.createSources().map { mapApiService(it) }
+
+                override suspend fun getRemoteSources(): List<RemoteSources> = catalog.getRemoteSources()
+                    .map { mapRemoteSources(it) }
+
+                override fun shouldReload(packageName: String, packageInfo: PackageInfo): Boolean = false
             }
 
-            override val name: String = catalog.name
+            is KmpExternalCustomApiServicesCatalog -> object : ExternalCustomApiServicesCatalog {
+                override val hasRemoteSources: Boolean = catalog.hasRemoteSources
+                override val name: String = catalog.name
+
+                override suspend fun initialize(app: Application) = catalog.initialize()
+                override fun getSources(): List<SourceInformation> = catalog.getSources()
+                    .map { mapSourceInformation(it) }
+
+                override fun createSources(): List<ApiService> = catalog.createSources().map { mapApiService(it) }
+
+                override suspend fun getRemoteSources(customUrls: List<String>): List<RemoteSources> = catalog
+                    .getRemoteSources(customUrls)
+                    .map { mapRemoteSources(it) }
+
+                override fun shouldReload(packageName: String, packageInfo: PackageInfo): Boolean = false
+            }
+
+            else -> object : ApiServicesCatalog {
+                override fun createSources(): List<ApiService> {
+                    return catalog.createSources().map { mapApiService(it) }
+                }
+
+                override val name: String = catalog.name
+            }
         }
     }
 
     fun mapCatalog(catalog: ApiServicesCatalog): KmpApiServicesCatalog {
-        return object : KmpApiServicesCatalog {
-            override fun createSources(): List<KmpApiService> {
-                return catalog.createSources().map { mapApiService(it) }
+        return when (catalog) {
+            is ExternalApiServicesCatalog -> object : KmpExternalApiServicesCatalog {
+                override val hasRemoteSources: Boolean = catalog.hasRemoteSources
+                override val name: String = catalog.name
+                override suspend fun initialize() = catalog.initialize(application)
+                override fun getSources(): List<KmpSourceInformation> = catalog.getSources()
+                    .map { mapSourceInformation(it) }
+
+                override fun createSources(): List<KmpApiService> = catalog.createSources().map { mapApiService(it) }
+                override suspend fun getRemoteSources(): List<KmpRemoteSources> = catalog.getRemoteSources()
+                    .map { mapRemoteSources(it) }
+
+                override fun shouldReload(packageName: String): Boolean = false
             }
 
-            override val name: String = catalog.name
+            is ExternalCustomApiServicesCatalog -> object : KmpExternalCustomApiServicesCatalog {
+                override val hasRemoteSources: Boolean = catalog.hasRemoteSources
+                override val name: String = catalog.name
+
+                override suspend fun initialize() = catalog.initialize(application)
+                override fun getSources(): List<KmpSourceInformation> = catalog.getSources()
+                    .map { mapSourceInformation(it) }
+
+                override fun createSources(): List<KmpApiService> = catalog.createSources().map { mapApiService(it) }
+
+                override suspend fun getRemoteSources(customUrls: List<String>): List<KmpRemoteSources> = catalog
+                    .getRemoteSources(customUrls)
+                    .map { mapRemoteSources(it) }
+
+                override fun shouldReload(packageName: String): Boolean = false
+            }
+
+            else -> object : KmpApiServicesCatalog {
+                override fun createSources(): List<KmpApiService> {
+                    return catalog.createSources().map { mapApiService(it) }
+                }
+
+                override val name: String = catalog.name
+            }
         }
     }
 

@@ -31,6 +31,7 @@ actual class SourceLoader(
     private val context: Context,
     sourceType: String,
     private val sourceRepository: SourceRepository,
+    private val modelMapper: ModelMapper = ModelMapper(application),
 ) {
     private val extensionLoader = ExtensionLoader<Any, List<KmpSourceInformation>>(
         context,
@@ -68,7 +69,7 @@ actual class SourceLoader(
             }
 
             else -> emptyList()
-        }.map { ModelMapper.mapSourceInformation(it) }
+        }.map { modelMapper.mapSourceInformation(it) }
     }
 
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
