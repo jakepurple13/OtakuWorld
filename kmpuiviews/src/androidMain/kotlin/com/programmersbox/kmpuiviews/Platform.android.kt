@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
@@ -74,5 +75,15 @@ actual fun customKamelConfig(): KamelConfig {
         imageBitmapResizingDecoder()
         animatedImageDecoder()
         resourcesFetcher(context)
+    }
+}
+
+actual class IconLoader(
+    context: Context,
+) {
+    private val packageManager by lazy { context.packageManager }
+
+    actual fun load(packageName: String): Any {
+        return packageManager.getApplicationIcon(packageName)
     }
 }

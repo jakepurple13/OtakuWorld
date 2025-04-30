@@ -50,3 +50,9 @@ actual fun customKamelConfig(): KamelConfig {
         animatedImageDecoder()
     }
 }
+
+actual class IconLoader {
+    actual fun load(packageName: String): Any {
+        return ""
+    }
+}

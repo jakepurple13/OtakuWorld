@@ -22,6 +22,10 @@ expect val databaseBuilder: Module
 @Composable
 expect fun customKamelConfig(): KamelConfig
 
+expect class IconLoader {
+    fun load(packageName: String): Any
+}
+
 /*
 val format = LocalDateTime.Format {
     monthName(MonthNames.ENGLISH_FULL)

@@ -4,6 +4,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
@@ -26,6 +27,7 @@ fun Module.appModule() {
     singleOf(::SettingsHandling)
     singleOf(::OtakuDataStoreHandling)
     singleOf(::DownloadAndInstaller)
+    singleOf(::IconLoader)
 
     single {
         //val performanceClass = get<PerformanceClass>()

@@ -3,10 +3,12 @@ package com.programmersbox.uiviews.presentation.settings.extensions
 import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -105,9 +107,11 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import coil3.compose.AsyncImage
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
@@ -135,6 +139,7 @@ fun ExtensionList(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
+    val iconLoader = koinInject<IconLoader>()
 
     val context = LocalContext.current
 
@@ -296,6 +301,7 @@ fun ExtensionList(
                     InstalledExtensionItems(
                         installedSources = viewModel.installed,
                         sourcesList = viewModel.remoteSourcesVersions,
+                        iconLoader = iconLoader,
                         onDownloadAndInstall = { downloadLink, destinationPath ->
                             //TODO: Need to show some ui for download progress and installing progress
                             viewModel.downloadAndInstall(downloadLink, destinationPath)
@@ -330,6 +336,7 @@ fun ExtensionList(
 private fun InstalledExtensionItems(
     installedSources: Map<String?, InstalledViewState>,
     sourcesList: List<KmpRemoteSources>,
+    iconLoader: IconLoader,
     onDownloadAndInstall: (String, String) -> Unit,
     onUninstall: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -417,6 +424,7 @@ private fun InstalledExtensionItems(
                                 sourceInformation = source,
                                 version = version,
                                 onClick = { currentSourceRepository.tryEmit(source.apiService) },
+                                iconLoader = iconLoader,
                                 trailingIcon = {
                                     Row(
                                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -552,6 +560,7 @@ private fun ExtensionItem(
     version: String,
     onClick: () -> Unit,
     trailingIcon: (@Composable () -> Unit)?,
+    iconLoader: IconLoader,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
@@ -564,13 +573,15 @@ private fun ExtensionItem(
             supportingContent = { Text("Version: $version") },
             leadingContent = {
                 //TODO: Need to deal with this
-                /*Image(
-                    rememberDrawablePainter(drawable = sourceInformation.icon),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .size(64.dp)
-                )*/
+                (iconLoader.load(sourceInformation.packageName) as? Drawable)?.let {
+                    Image(
+                        rememberDrawablePainter(drawable = it),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .size(64.dp)
+                    )
+                }
             },
             trailingContent = trailingIcon
         )
