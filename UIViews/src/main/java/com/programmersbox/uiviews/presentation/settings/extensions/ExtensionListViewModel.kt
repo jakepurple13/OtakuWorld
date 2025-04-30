@@ -36,13 +36,15 @@ class ExtensionListViewModel(
 
     val installed by derivedStateOf {
         installedSources
-            .groupBy { it.catalog }
+            .groupBy { it.catalog?.name }
             .mapValues { InstalledViewState(it.value) }
     }
 
     val remoteSourcesVersions by derivedStateOf {
         remoteSources.values.filterIsInstance<RemoteViewState>().flatMap { it.sources }
     }
+
+    val remoteSourcesShowing = mutableStateMapOf<String, Boolean>()
 
     val hasCustomBridge by derivedStateOf {
         installedSources.any { it.catalog is KmpExternalCustomApiServicesCatalog && it.name == "Custom Tachiyomi Bridge" }
@@ -69,8 +71,11 @@ class ExtensionListViewModel(
                 installedSources.addAll(it)
             }
             .onEach { sources ->
+                remoteSourcesShowing.clear()
                 remoteSources["${otakuWorldCatalog.name}World"] = RemoteViewState(otakuWorldCatalog.getRemoteSources())
-                sources.asSequence()
+                remoteSourcesShowing["${otakuWorldCatalog.name}World"] = false
+                sources
+                    .asSequence()
                     .map { it.catalog }
                     .filterIsInstance<KmpExternalApiServicesCatalog>()
                     .filter { it.hasRemoteSources }
@@ -83,6 +88,8 @@ class ExtensionListViewModel(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }
                             )
+
+                        remoteSourcesShowing[c.name] = false
                     }
             }
             .combine(settingsHandling.customUrls) { sources, urls ->
@@ -119,8 +126,6 @@ sealed class RemoteState
 
 class RemoteViewState(
     val sources: List<KmpRemoteSources>,
-) : RemoteState() {
-    var showItems by mutableStateOf(false)
-}
+) : RemoteState()
 
 class RemoteErrorState : RemoteState()

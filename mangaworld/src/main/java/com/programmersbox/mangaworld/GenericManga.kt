@@ -52,6 +52,7 @@ import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.downloads.DownloadScreen
@@ -103,11 +104,6 @@ val appModule = module {
         )
     }
     viewModelOf(::ReadViewModel)
-}
-
-class ChapterHolder {
-    var chapterModel: KmpChapterModel? = null
-    var chapters: List<KmpChapterModel>? = null
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides

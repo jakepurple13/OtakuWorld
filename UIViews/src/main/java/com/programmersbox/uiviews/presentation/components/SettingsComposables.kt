@@ -61,6 +61,7 @@ private fun CheckboxSettingPreview() {
     }
 }
 
+
 @Composable
 fun SliderSetting(
     sliderValue: Float,
@@ -85,7 +86,7 @@ fun SliderSetting(
             icon,
             info,
             slider,
-            value
+            value,
         ) = createRefs()
 
         Box(

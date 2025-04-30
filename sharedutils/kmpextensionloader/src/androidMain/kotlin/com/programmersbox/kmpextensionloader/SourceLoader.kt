@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.ModelMapper
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.models.ApiService
@@ -30,8 +31,9 @@ actual class SourceLoader(
     private val context: Context,
     sourceType: String,
     private val sourceRepository: SourceRepository,
+    private val modelMapper: ModelMapper = ModelMapper(application),
 ) {
-    private val extensionLoader = ExtensionLoader<Any, List<SourceInformation>>(
+    private val extensionLoader = ExtensionLoader<Any, List<KmpSourceInformation>>(
         context,
         "$EXTENSION_FEATURE.$sourceType",
         METADATA_CLASS,
@@ -67,7 +69,7 @@ actual class SourceLoader(
             }
 
             else -> emptyList()
-        }
+        }.map { modelMapper.mapSourceInformation(it) }
     }
 
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
@@ -118,7 +120,6 @@ actual class SourceLoader(
                 .loadExtensions()
                 .flatten()
                 .sortedBy { it.apiService.serviceName }
-                .map { ModelMapper.mapSourceInformation(it) }
         )
     }
 
@@ -128,7 +129,6 @@ actual class SourceLoader(
                 .loadExtensionsBlocking()
                 .flatten()
                 .sortedBy { it.apiService.serviceName }
-                .map { ModelMapper.mapSourceInformation(it) }
         )
     }
 }
