@@ -67,11 +67,11 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.presentation.settings.BlurSetting

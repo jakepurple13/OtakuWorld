@@ -2,6 +2,7 @@
 biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebview = "0.33.6"
+constraintlayoutComposeMultiplatform = "0.5.1"
 corePerformance = "1.0.0"
 generativeai = "0.9.0"
 gradle = "8.9.2"
@@ -122,6 +123,7 @@ biometric = { module = "androidx.biometric:biometric", version.ref = "biometricV
 blurhash = { module = "com.vanniktech:blurhash", version.ref = "blurhash" }
 compose-collapsable = { module = "me.tatarka.compose.collapsable:compose-collapsable", version.ref = "composeCollapsable" }
 compose-webview = { module = "io.github.kevinnzou:compose-webview", version.ref = "composeWebview" }
+constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version.ref = "constraintlayoutComposeMultiplatform" }
 dragselect = { module = "com.dragselectcompose:dragselect", version.ref = "dragselect" }
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }

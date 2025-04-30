@@ -53,6 +53,8 @@ kotlin {
                 implementation(libs.bundles.datastoreLibs)
 
                 implementation(libs.roomRuntime)
+
+                implementation(libs.constraintlayout.compose.multiplatform)
             }
         }
 
