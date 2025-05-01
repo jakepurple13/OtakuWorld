@@ -13,11 +13,12 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
-import com.programmersbox.uiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.DefaultToastItems
 import com.programmersbox.uiviews.utils.ToastItems
 import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
-import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
@@ -32,6 +33,7 @@ class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
     favoritesRepository: FavoritesRepository,
+    firebaseListenerImpl: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel(), ToastItems by DefaultToastItems() {
 
     @SuppressLint("MissingPermission")
@@ -50,7 +52,7 @@ class AllViewModel(
 
     var count = 1
 
-    private val itemListener = fireListener()
+    private val itemListener = fireListener(itemListener = firebaseListenerImpl)
 
     init {
         favoritesRepository

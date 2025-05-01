@@ -11,17 +11,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.uiviews.repository.FavoritesRepository
-import com.programmersbox.uiviews.utils.fireListener
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.fireListener
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class FavoriteViewModel(
     private val sourceRepository: SourceRepository,
     favoritesRepository: FavoritesRepository,
+    firebaseFavoriteListener: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
-    private val fireListener = fireListener("favorite")
+    private val fireListener = fireListener("favorite", firebaseFavoriteListener)
 
     private val favoriteList = mutableStateListOf<DbModel>()
 

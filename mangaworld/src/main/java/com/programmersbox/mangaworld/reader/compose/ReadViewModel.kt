@@ -18,10 +18,11 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.manga.shared.ChapterHolder
-import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -44,6 +45,7 @@ class ReadViewModel(
     savedStateHandle: SavedStateHandle,
     private val chapterHolder: ChapterHolder,
     private val favoritesRepository: FavoritesRepository,
+    itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
     private val mangaReader: MangaReader = savedStateHandle.toRoute()
@@ -117,7 +119,7 @@ class ReadViewModel(
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
-    private val itemListener = fireListener()
+    private val itemListener = fireListener(itemListener = itemListenerFirebase)
     var addToFavorites by mutableStateOf(FavoriteChecker(false, 0))
 
     data class FavoriteChecker(val hasShown: Boolean, val count: Int, val isFavorite: Boolean = false) {

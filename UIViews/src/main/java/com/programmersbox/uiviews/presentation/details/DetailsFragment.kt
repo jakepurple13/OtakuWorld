@@ -87,12 +87,12 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
