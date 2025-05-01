@@ -19,10 +19,11 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
-import com.programmersbox.uiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.combineSources
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -43,6 +44,7 @@ class RecentViewModel(
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
     private val favoritesRepository: FavoritesRepository,
+    itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -59,7 +61,7 @@ class RecentViewModel(
 
     var count = 1
 
-    private val itemListener = fireListener()
+    private val itemListener = fireListener(itemListener = itemListenerFirebase)
 
     var currentSource by mutableStateOf<KmpApiService?>(null)
 

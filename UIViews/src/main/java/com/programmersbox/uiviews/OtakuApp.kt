@@ -50,6 +50,7 @@ import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.migrateSettings
 import com.programmersbox.uiviews.di.appModule
+import com.programmersbox.uiviews.di.kmpInterop
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.di.workers
@@ -137,6 +138,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     viewModels()
                     databases()
                     repository()
+                    includes(kmpInterop)
 
                     single {
                         SourceLoader(

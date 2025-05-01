@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.util.fastMaxBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
@@ -14,8 +13,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,13 +34,7 @@ class MoreSettingsViewModel(
 
     var importExportListStatus: ImportExportListStatus by mutableStateOf(ImportExportListStatus.Idle)
 
-    suspend fun exportFavorites() = listOf(
-        dao.getAllFavoritesSync(),
-        FirebaseDb.getAllShows().requireNoNulls()
-    )
-        .flatten()
-        .groupBy(DbModel::url)
-        .map { it.value.fastMaxBy(DbModel::numChapters)!! }
+    suspend fun exportFavorites() = favoritesRepository.getAllFavorites()
 
     fun importFavorites(document: Uri, context: Context) {
         viewModelScope.launch {

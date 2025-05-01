@@ -26,15 +26,16 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.toItemModel
-import com.programmersbox.uiviews.repository.FavoritesRepository
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.fireListener
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import com.vanniktech.blurhash.BlurHash
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +57,9 @@ class DetailsViewModel(
     private val blurHashDao: BlurHashDao,
     sourceRepository: SourceRepository,
     private val favoritesRepository: FavoritesRepository,
+    firebaseItemListener: KmpFirebaseConnection.KmpFirebaseListener,
+    firebaseDbModelListener: KmpFirebaseConnection.KmpFirebaseListener,
+    firebaseChapterListener: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
     private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -73,9 +77,9 @@ class DetailsViewModel(
 
     private var addRemoveFavoriteJob: Job? = null
 
-    private val itemListener = fireListener("favorite")
-    private val dbModelListener = fireListener("update")
-    private val chapterListener = fireListener("chapter")
+    private val itemListener = fireListener("favorite", firebaseItemListener)
+    private val dbModelListener = fireListener("update", firebaseDbModelListener)
+    private val chapterListener = fireListener("chapter", firebaseChapterListener)
 
     var favoriteListener by mutableStateOf(false)
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())

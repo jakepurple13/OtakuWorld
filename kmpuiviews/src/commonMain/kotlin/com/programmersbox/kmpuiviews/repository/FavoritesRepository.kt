@@ -47,6 +47,14 @@ class FavoritesRepository(
         firebaseDb.toggleUpdateCheckShowFlow(db).collect()
     }
 
+    suspend fun getAllFavorites() = listOf(
+        dao.getAllFavoritesSync(),
+        firebaseDb.getAllShows().requireNoNulls()
+    )
+        .flatten()
+        .groupBy(DbModel::url)
+        .map { it.value.fastMaxBy(DbModel::numChapters)!! }
+
     fun isFavorite(
         url: String,
         fireListenerClosable: FireListenerClosable,
