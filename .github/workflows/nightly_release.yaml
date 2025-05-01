@@ -38,6 +38,15 @@ jobs:
     with:
       IS_PRERELEASE: true
 
+  # TODO: Will come eventually once everything is migrated
+  #  mangaworldDesktop:
+  #    needs: checkNightly
+  #    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+  #    uses: ./.github/workflows/mangaworld_desktop_build.yaml
+  #    secrets: inherit # pass all secrets
+  #    with:
+  #      IS_PRERELEASE: true
+
   animeworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
