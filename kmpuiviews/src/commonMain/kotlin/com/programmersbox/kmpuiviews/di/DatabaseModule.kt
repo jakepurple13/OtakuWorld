@@ -6,8 +6,9 @@ import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.kmpuiviews.databaseBuilder
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
-fun Module.databases() {
+val databases: Module = module {
     includes(databaseBuilder)
     single { ItemDatabase.getInstance(get()) }
     single { BlurHashDatabase.getInstance(get()) }

@@ -192,7 +192,7 @@ fun PreviewTheme(
             module {
                 single<GenericInfo> { MockInfo(get()) }
                 repository()
-                databases()
+                includes(databases)
                 single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
                 single {
                     OtakuWorldCatalog(

@@ -47,9 +47,9 @@ fun KmpLocalCompositionSetup(
             LocalHistoryDao provides koinInject(),
             LocalCustomListDao provides koinInject(),
             LocalSettingsHandling provides koinInject(),
-            LocalKamelConfig provides customKamelConfig(),
             LocalCurrentSource provides koinInject(),
             LocalSourcesRepository provides koinInject(),
+            LocalKamelConfig provides customKamelConfig(),
             LocalUriHandler provides remember {
                 object : UriHandler {
                     private val customHandler = customUriHandler(navController)

@@ -136,8 +136,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     appModule()
                     workers()
                     viewModels()
-                    databases()
                     repository()
+                    includes(databases)
                     includes(kmpInterop)
 
                     single {
