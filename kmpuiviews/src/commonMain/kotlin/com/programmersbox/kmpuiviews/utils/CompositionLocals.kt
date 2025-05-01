@@ -13,9 +13,11 @@ import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.customUriHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
@@ -27,6 +29,9 @@ val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here")
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
 val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSettingsHandling = staticCompositionLocalOf<NewSettingsHandling> { error("Not Set") }
+val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
+val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
+
 
 @Composable
 fun KmpLocalCompositionSetup(
@@ -43,6 +48,8 @@ fun KmpLocalCompositionSetup(
             LocalCustomListDao provides koinInject(),
             LocalSettingsHandling provides koinInject(),
             LocalKamelConfig provides customKamelConfig(),
+            LocalCurrentSource provides koinInject(),
+            LocalSourcesRepository provides koinInject(),
             LocalUriHandler provides remember {
                 object : UriHandler {
                     private val customHandler = customUriHandler(navController)

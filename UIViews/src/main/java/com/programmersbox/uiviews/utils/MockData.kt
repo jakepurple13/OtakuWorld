@@ -51,7 +51,6 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -68,7 +67,6 @@ import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
@@ -250,7 +248,6 @@ fun PreviewTheme(
                             false
                         )
                     },
-                    LocalSourcesRepository provides SourceRepository(),
                     LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
                     LocalNavHostPadding provides PaddingValues(0.dp),
                     LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
