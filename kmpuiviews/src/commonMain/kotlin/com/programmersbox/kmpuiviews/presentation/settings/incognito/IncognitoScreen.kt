@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.extensions
+package com.programmersbox.kmpuiviews.presentation.settings.incognito
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -22,9 +21,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IncognitoScreen(
     viewModel: IncognitoViewModel = koinViewModel(),
@@ -34,7 +33,8 @@ fun IncognitoScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Incognito Sources") },
-                subtitle = { Text("Choose what sources you don't want to have recorded or saved") },
+                //TODO: To add back when its supported
+                //subtitle = { Text("Choose what sources you don't want to have recorded or saved") },
                 navigationIcon = { BackButton() },
                 scrollBehavior = scrollBehavior
             )

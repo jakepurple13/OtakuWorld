@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.extensions
+package com.programmersbox.kmpuiviews.presentation.settings.incognito
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
