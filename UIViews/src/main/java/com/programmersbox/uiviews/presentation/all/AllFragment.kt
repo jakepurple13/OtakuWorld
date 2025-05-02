@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
@@ -71,7 +72,6 @@ import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.ToasterItemsSetup
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -254,11 +254,6 @@ fun AllView(
                 )
             }
         }
-        ToasterItemsSetup(
-            toastItems = allVm,
-            alignment = Alignment.TopCenter,
-            modifier = Modifier.padding(p1)
-        )
     }
 }
 

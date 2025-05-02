@@ -2,7 +2,6 @@ package com.programmersbox.uiviews.di
 
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.di.viewModels
-import com.programmersbox.uiviews.presentation.all.AllViewModel
 import com.programmersbox.uiviews.presentation.details.DetailsViewModel
 import com.programmersbox.uiviews.presentation.history.HistoryViewModel
 import com.programmersbox.uiviews.presentation.lists.OtakuCustomListViewModel
@@ -28,7 +27,6 @@ fun Module.viewModels() {
     viewModelOf(::ExtensionListViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::DetailsViewModel)
-    viewModelOf(::AllViewModel)
     viewModelOf(::ImportListViewModel)
     viewModelOf(::ImportFullListViewModel)
     viewModelOf(::NotificationScreenViewModel)

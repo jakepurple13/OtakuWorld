@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.presentation.all
+package com.programmersbox.kmpuiviews.presentation.all
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -12,33 +11,33 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.createConnectivity
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.dispatchIoAndCatchList
 import com.programmersbox.kmpuiviews.utils.fireListener
-import com.programmersbox.uiviews.utils.DefaultToastItems
-import com.programmersbox.uiviews.utils.ToastItems
-import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
     favoritesRepository: FavoritesRepository,
     firebaseListenerImpl: KmpFirebaseConnection.KmpFirebaseListener,
-) : ViewModel(), ToastItems by DefaultToastItems() {
+) : ViewModel() {
 
-    @SuppressLint("MissingPermission")
-    val observeNetwork = ReactiveNetwork()
-        .observeInternetConnectivity()
+    val observeNetwork = createConnectivity()
+        .statusUpdates
+        .map { it.isConnected }
         .flowOn(Dispatchers.IO)
 
     var searchText by mutableStateOf("")
@@ -84,7 +83,7 @@ class AllViewModel(
     private fun sourceLoadCompose(sources: KmpApiService) {
         sources
             .getListFlow(count)
-            .dispatchIoAndCatchList { showError() }
+            .dispatchIoAndCatchList()
             .onStart { isRefreshing = true }
             .onEach { sourceList.addAll(it) }
             .onCompletion { isRefreshing = false }

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.di
 
+import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
@@ -15,4 +16,5 @@ val viewModels: Module = module {
     viewModelOf(::FavoriteViewModel)
     viewModelOf(::GlobalSearchViewModel)
     viewModelOf(::RecentViewModel)
+    viewModelOf(::AllViewModel)
 }
