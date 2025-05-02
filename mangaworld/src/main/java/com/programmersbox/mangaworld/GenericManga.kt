@@ -68,6 +68,7 @@ import com.programmersbox.mangaworld.settings.ReaderSettings
 import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
+import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
@@ -121,10 +122,10 @@ class GenericManga(
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildConfig.FLAVOR) {
-                "noFirebase" -> mangaNoFirebaseFile
-                "noCloudFirebase" -> mangaNoCloudFile
-                else -> mangaFile
+            when (BuildType.current) {
+                BuildType.NoFirebase -> mangaNoFirebaseFile
+                BuildType.NoCloudFirebase -> mangaNoCloudFile
+                BuildType.Full -> mangaFile
             }
         }
 

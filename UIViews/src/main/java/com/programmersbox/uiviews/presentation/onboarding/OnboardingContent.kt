@@ -72,7 +72,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.seedColor
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.BuildConfig
+import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.settings.BlurSetting
@@ -197,7 +197,7 @@ internal fun AccountContent(
 
         HorizontalDivider()
 
-        if (BuildConfig.FLAVOR == "full") {
+        if (BuildType.current == BuildType.Full) {
             Text(
                 "Log in to save all your favorites and chapters/episodes read to the cloud so you can access them on any device!",
                 modifier = Modifier.padding(16.dp)

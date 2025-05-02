@@ -42,6 +42,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
@@ -103,10 +104,10 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildConfig.FLAVOR) {
-                "noFirebase" -> novelNoFirebaseFile
-                "noCloudFirebase" -> novelNoCloudFile
-                else -> novelFile
+            when (BuildType.current) {
+                BuildType.NoFirebase -> novelNoFirebaseFile
+                BuildType.NoCloudFirebase -> novelNoCloudFile
+                BuildType.Full -> novelFile
             }
         }
 

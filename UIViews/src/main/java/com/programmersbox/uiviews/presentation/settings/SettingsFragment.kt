@@ -69,6 +69,7 @@ import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
+import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
@@ -110,7 +111,7 @@ fun SettingScreen(
                 title = { Text(stringResource(R.string.settings)) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    if (BuildConfig.FLAVOR == "full") {
+                    if (BuildType.current == BuildType.Full) {
                         AccountSettings()
                     }
                 }
