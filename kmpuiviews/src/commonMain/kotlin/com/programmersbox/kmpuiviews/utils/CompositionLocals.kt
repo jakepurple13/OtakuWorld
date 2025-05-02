@@ -32,7 +32,6 @@ val LocalSettingsHandling = staticCompositionLocalOf<NewSettingsHandling> { erro
 val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
 
-
 @Composable
 fun KmpLocalCompositionSetup(
     navController: NavHostController,

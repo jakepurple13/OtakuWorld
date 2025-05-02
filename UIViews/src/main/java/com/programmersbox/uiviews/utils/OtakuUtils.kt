@@ -8,6 +8,7 @@ import com.bumptech.glide.module.AppGlideModule
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.utils.Cached
 import kotlinx.coroutines.flow.flow
 
 fun tryThis(block: () -> Unit) = try {
