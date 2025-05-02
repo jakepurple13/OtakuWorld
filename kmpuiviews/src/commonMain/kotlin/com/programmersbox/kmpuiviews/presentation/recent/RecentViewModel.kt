@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.presentation.recent
+package com.programmersbox.kmpuiviews.presentation.recent
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.derivedStateOf
@@ -18,26 +17,28 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.createConnectivity
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.combineSources
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.fireListener
-import com.programmersbox.uiviews.utils.combineSources
-import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class RecentViewModel(
     dao: ItemDao,
@@ -53,10 +54,9 @@ class RecentViewModel(
 
     val filteredSourceList by derivedStateOf { sourceList.distinctBy { it.url } }
 
-    //TODO: Use https://github.com/jordond/connectivity for this
-    @SuppressLint("MissingPermission")
-    val observeNetwork = ReactiveNetwork()
-        .observeInternetConnectivity()
+    val observeNetwork = createConnectivity()
+        .statusUpdates
+        .map { it.isConnected }
         .flowOn(Dispatchers.IO)
 
     var count = 1

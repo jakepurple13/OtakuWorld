@@ -10,7 +10,6 @@ import com.programmersbox.uiviews.presentation.lists.OtakuListViewModel
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListViewModel
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListViewModel
 import com.programmersbox.uiviews.presentation.notifications.NotificationScreenViewModel
-import com.programmersbox.uiviews.presentation.recent.RecentViewModel
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateViewModel
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionListViewModel
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
@@ -25,7 +24,6 @@ import org.koin.core.module.dsl.viewModelOf
 fun Module.viewModels() {
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
     viewModelOf(::OtakuListViewModel)
-    viewModelOf(::RecentViewModel)
     viewModelOf(::MoreSettingsViewModel)
     viewModelOf(::ExtensionListViewModel)
     viewModelOf(::HistoryViewModel)

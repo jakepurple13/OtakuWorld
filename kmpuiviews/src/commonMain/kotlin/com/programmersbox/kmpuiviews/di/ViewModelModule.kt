@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.di
 
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
+import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettingsViewModel
 import org.koin.core.module.Module
@@ -13,4 +14,5 @@ val viewModels: Module = module {
     viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::FavoriteViewModel)
     viewModelOf(::GlobalSearchViewModel)
+    viewModelOf(::RecentViewModel)
 }

@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
 import io.kamel.core.ExperimentalKamelApi
@@ -101,9 +103,7 @@ actual class DateTimeFormatHandler(private val context: Context) {
 }
 
 actual fun recordFirebaseException(throwable: Throwable) {
-    runCatching {
-        Firebase.crashlytics.recordException(throwable)
-    }
+    runCatching { Firebase.crashlytics.recordException(throwable) }
 }
 
 actual fun logFirebaseMessage(message: String) {
