@@ -289,8 +289,6 @@ fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
     Locale.getDefault()
 )
 
-val LocalSystemDateTimeFormat = staticCompositionLocalOf<java.text.DateFormat> { error("Nothing here!") }
-
 tailrec fun Context.findActivity(): FragmentActivity = when (this) {
     is FragmentActivity -> this
     is ContextWrapper -> this.baseContext.findActivity()

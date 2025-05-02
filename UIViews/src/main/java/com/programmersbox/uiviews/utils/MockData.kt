@@ -72,7 +72,6 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
-import java.text.SimpleDateFormat
 import java.util.Locale
 
 class MockInfo(private val context: Context) : GenericInfo {
@@ -248,7 +247,6 @@ fun PreviewTheme(
                             false
                         )
                     },
-                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
                     LocalNavHostPadding provides PaddingValues(0.dp),
                     LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
                 ) { Surface { content() } }

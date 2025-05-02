@@ -26,23 +26,5 @@ expect class IconLoader {
     fun load(packageName: String): Any
 }
 
-/*
-val format = LocalDateTime.Format {
-    monthName(MonthNames.ENGLISH_FULL)
-    char(' ')
-    dayOfMonth()
-    char(' ')
-    year()
-    chars(", ")
-    if (isUsing24HourTime) {
-        hour()
-        char(':')
-        minute()
-    } else {
-        amPmHour()
-        char(':')
-        minute()
-        char(' ')
-        amPmMarker("AM", "PM")
-    }
-}*/
+@Composable
+expect fun is24Time(): Boolean

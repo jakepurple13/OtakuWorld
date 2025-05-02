@@ -5,16 +5,12 @@ import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.theme.generateColorScheme
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
-import com.programmersbox.uiviews.utils.getSystemDateTimeFormat
 import io.kamel.core.ExperimentalKamelApi
 import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -28,11 +24,9 @@ fun OtakuMaterialTheme(
     content: @Composable () -> Unit,
 ) {
     KoinAndroidContext {
-        val context = LocalContext.current
         KmpLocalCompositionSetup(navController) {
             CompositionLocalProvider(
                 LocalGenericInfo provides genericInfo,
-                LocalSystemDateTimeFormat provides remember { context.getSystemDateTimeFormat() },
             ) {
                 MaterialExpressiveTheme(
                     colorScheme = generateColorScheme(settingsHandling),

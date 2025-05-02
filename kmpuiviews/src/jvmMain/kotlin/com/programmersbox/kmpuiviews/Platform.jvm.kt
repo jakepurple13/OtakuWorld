@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
@@ -15,6 +16,10 @@ import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 
 actual fun platform(): String = "Desktop"
 
@@ -54,5 +59,19 @@ actual fun customKamelConfig(): KamelConfig {
 actual class IconLoader {
     actual fun load(packageName: String): Any {
         return ""
+    }
+}
+
+@Composable
+actual fun is24Time(): Boolean {
+    return remember {
+        val df = SimpleDateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault())
+        if (df is SimpleDateFormat) {
+            val sdf = df
+            val pattern = sdf.toPattern()
+            !pattern.contains("a")
+        } else {
+            true
+        }
     }
 }

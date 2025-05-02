@@ -60,6 +60,8 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
@@ -70,7 +72,6 @@ import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.InsetMediumTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.dispatchIo
@@ -138,7 +139,9 @@ fun HistoryUi(
                 title = { Text(stringResource(R.string.history)) },
                 actions = {
                     Text("$recentSize")
-                    IconButton(onClick = { clearAllDialog = true }) { Icon(Icons.Default.DeleteForever, null) }
+                    IconButton(
+                        onClick = { clearAllDialog = true }
+                    ) { Icon(Icons.Default.DeleteForever, null) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
@@ -252,7 +255,10 @@ private fun HistoryItem(
                 SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
                 else -> Icons.Default.Delete
             }
-            val scale by animateFloatAsState(if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f, label = "")
+            val scale by animateFloatAsState(
+                if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
+                label = ""
+            )
 
             Box(
                 Modifier
@@ -309,7 +315,7 @@ private fun HistoryItem(
                         )
                     },
                     overlineContent = { Text(item.source) },
-                    supportingContent = { Text(LocalSystemDateTimeFormat.current.format(item.timestamp)) },
+                    supportingContent = { Text(LocalSystemDateTimeFormat.current.format(item.timestamp.toLocalDateTime())) },
                     leadingContent = {
                         GradientImage(
                             model = item.imageUrl,
@@ -329,7 +335,9 @@ private fun HistoryItem(
                     },
                     trailingContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { showPopup = true }) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
+                            IconButton(
+                                onClick = { showPopup = true }
+                            ) { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
                             IconButton(
                                 onClick = {
                                     scope.launch {

@@ -15,8 +15,9 @@ import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import platform.UIKit.UIDevice
 
-actual fun platform() = "iOS"
+actual fun platform() = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
 
 @Composable
 actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorScheme {
@@ -55,4 +56,9 @@ actual class IconLoader {
     actual fun load(packageName: String): Any {
         return ""
     }
+}
+
+@Composable
+actual fun is24Time(): Boolean {
+    return true
 }

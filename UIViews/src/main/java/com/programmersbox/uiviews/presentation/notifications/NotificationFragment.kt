@@ -114,6 +114,8 @@ import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -130,7 +132,6 @@ import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -1026,7 +1027,7 @@ private fun NotifyAt(
                             context,
                             context.getString(
                                 R.string.willNotifyAt,
-                                dateTimeFormatter.format(c.timeInMillis)
+                                dateTimeFormatter.format(c.timeInMillis.toLocalDateTime())
                             ),
                             Toast.LENGTH_SHORT
                         ).show()

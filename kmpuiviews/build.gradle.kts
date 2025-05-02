@@ -52,6 +52,8 @@ kotlin {
                 api(projects.kmpmodels)
                 implementation(libs.bundles.datastoreLibs)
 
+                implementation(libs.kotlinx.datetime)
+
                 implementation(libs.roomRuntime)
 
                 implementation(libs.compose.webview.multiplatform)
