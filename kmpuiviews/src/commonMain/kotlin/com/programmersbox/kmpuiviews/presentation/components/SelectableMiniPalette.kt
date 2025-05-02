@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -35,19 +35,6 @@ import com.materialkolor.ktx.from
 import com.materialkolor.palettes.TonalPalette
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.ThemeColor
-
-val com.programmersbox.uiviews.ThemeColor.seedColor
-    get() = when (this) {
-        com.programmersbox.uiviews.ThemeColor.Dynamic -> Color.Transparent
-        com.programmersbox.uiviews.ThemeColor.Blue -> Color.Blue
-        com.programmersbox.uiviews.ThemeColor.Red -> Color.Red
-        com.programmersbox.uiviews.ThemeColor.Green -> Color.Green
-        com.programmersbox.uiviews.ThemeColor.Yellow -> Color.Yellow
-        com.programmersbox.uiviews.ThemeColor.Cyan -> Color.Cyan
-        com.programmersbox.uiviews.ThemeColor.Magenta -> Color.Magenta
-        com.programmersbox.uiviews.ThemeColor.Custom -> Color.Transparent
-        else -> Color.Transparent
-    }
 
 val ThemeColor.seedColor
     get() = when (this) {

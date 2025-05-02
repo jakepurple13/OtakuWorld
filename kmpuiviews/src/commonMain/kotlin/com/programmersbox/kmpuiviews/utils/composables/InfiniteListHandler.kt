@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.kmpuiviews.utils.composables
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListState
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.drop
 fun InfiniteListHandler(
     listState: LazyListState,
     buffer: Int = 2,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
     val loadMore = remember {
         derivedStateOf {
@@ -40,7 +40,7 @@ fun InfiniteListHandler(
 fun InfiniteListHandler(
     listState: LazyGridState,
     buffer: Int = 2,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
     var lastTotalItems = remember { -1 }
     val loadMore = remember {

@@ -68,12 +68,12 @@ import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
+import com.programmersbox.kmpuiviews.presentation.components.seedColor
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.components.ThemeItem
-import com.programmersbox.uiviews.presentation.components.seedColor
 import com.programmersbox.uiviews.presentation.settings.BlurSetting
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
 import com.programmersbox.uiviews.presentation.settings.ShareChapterSettings

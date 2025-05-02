@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components.icons
+package com.programmersbox.kmpuiviews.utils.composables.icons
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.Color

@@ -68,13 +68,13 @@ import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.seedColor
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.components.ThemeItem
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.PreviewTheme

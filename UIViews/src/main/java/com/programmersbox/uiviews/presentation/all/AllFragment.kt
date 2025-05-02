@@ -61,9 +61,9 @@ import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
-import com.programmersbox.uiviews.presentation.components.InfiniteListHandler
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshDefaults
 import com.programmersbox.uiviews.presentation.components.optionsKmpSheet

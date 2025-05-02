@@ -42,13 +42,13 @@ import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.composables.icons.Discord
+import com.programmersbox.kmpuiviews.utils.composables.icons.Github
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.icons.Discord
-import com.programmersbox.uiviews.presentation.components.icons.Github
 import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -190,11 +190,6 @@ fun InfoSettings(
                                     if (it.isGranted) {
                                         updateAppCheck.value
                                             ?.let { a ->
-                                                /*val isApkAlreadyThere = File(
-                                                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.absolutePath + "/",
-                                                    a.let(genericInfo.apkString).toString()
-                                                )
-                                                if (isApkAlreadyThere.exists()) isApkAlreadyThere.delete()*/
                                                 infoViewModel.update(a)
                                             }
                                     }
