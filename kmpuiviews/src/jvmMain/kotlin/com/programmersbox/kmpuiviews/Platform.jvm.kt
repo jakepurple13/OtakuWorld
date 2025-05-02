@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
+import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -81,13 +82,11 @@ actual class DateTimeFormatHandler {
 }
 
 actual fun recordFirebaseException(throwable: Throwable) {
-    runCatching {
-        throwable.printStackTrace()
-    }
+    throwable.printStackTrace()
 }
 
 actual fun logFirebaseMessage(message: String) {
-    runCatching {
-        println(message)
-    }
+    println(message)
 }
+
+actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)

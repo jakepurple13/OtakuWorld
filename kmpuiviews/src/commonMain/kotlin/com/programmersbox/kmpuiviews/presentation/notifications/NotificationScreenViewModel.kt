@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.notifications
+package com.programmersbox.kmpuiviews.presentation.notifications
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -13,7 +13,7 @@ import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.uiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn

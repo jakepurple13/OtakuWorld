@@ -60,6 +60,12 @@ kotlin {
 
                 implementation(libs.connectivity.core)
                 implementation(libs.connectivity.compose)
+
+                implementation(libs.filekit.core)
+                implementation(libs.filekit.dialogs.compose)
+
+                implementation(libs.lifecycle.viewmodel.compose)
+                implementation(libs.navigation.compose)
             }
         }
 

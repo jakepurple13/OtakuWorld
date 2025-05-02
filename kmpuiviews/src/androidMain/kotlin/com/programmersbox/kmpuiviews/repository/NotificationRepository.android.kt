@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.repository
+package com.programmersbox.kmpuiviews.repository
 
 import android.app.NotificationManager
 import android.content.Context
@@ -8,9 +8,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 
 private const val GROUP_ID = 42
 
-//TODO: Will go into kmpuiviews
-// expect/actual?
-class NotificationRepository(
+actual class NotificationRepository(
     context: Context,
     private val itemDao: ItemDao,
 ) {
@@ -18,7 +16,7 @@ class NotificationRepository(
         context.getSystemService<NotificationManager>()
     }
 
-    fun cancelById(id: Int) {
+    actual fun cancelById(id: Int) {
         notificationManager?.cancel(id)
 
         val g = notificationManager
@@ -29,7 +27,7 @@ class NotificationRepository(
         if (g.size == 1) notificationManager?.cancel(GROUP_ID)
     }
 
-    fun cancelNotification(item: NotificationItem) {
+    actual fun cancelNotification(item: NotificationItem) {
         notificationManager?.cancel(item.id)
         val g = notificationManager
             ?.activeNotifications
@@ -39,7 +37,7 @@ class NotificationRepository(
         if (g.size == 1) notificationManager?.cancel(GROUP_ID)
     }
 
-    fun cancelGroup() {
+    actual fun cancelGroup() {
         notificationManager?.cancel(GROUP_ID)
     }
 }

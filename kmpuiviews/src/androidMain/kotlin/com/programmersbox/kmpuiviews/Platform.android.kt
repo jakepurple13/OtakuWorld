@@ -13,11 +13,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.UriHandler
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.google.firebase.Firebase
 import com.google.firebase.crashlytics.crashlytics
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
+import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
@@ -112,3 +114,5 @@ actual fun logFirebaseMessage(message: String) {
         Firebase.crashlytics.log(message)
     }.onFailure { println(message) }
 }
+
+actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri.toUri())

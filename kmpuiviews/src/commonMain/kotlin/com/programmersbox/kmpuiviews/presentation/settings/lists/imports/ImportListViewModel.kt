@@ -1,7 +1,5 @@
-package com.programmersbox.uiviews.presentation.lists.imports
+package com.programmersbox.kmpuiviews.presentation.settings.lists.imports
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,23 +9,23 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.readPlatformFile
+import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.UUID
+import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class ImportListViewModel(
     private val listDao: ListDao,
     savedStateHandle: SavedStateHandle,
-    context: Context,
 ) : ViewModel() {
 
     private val document = savedStateHandle
         .toRoute<Screen.ImportListScreen>()
         .uri
-        .let(Uri::parse)
 
     var importStatus: ImportListStatus by mutableStateOf(ImportListStatus.Loading)
         private set
@@ -35,9 +33,13 @@ class ImportListViewModel(
     init {
         viewModelScope.launch {
             importStatus = runCatching {
-                context.contentResolver.openInputStream(document!!)
+                /*context.contentResolver.openInputStream(document!!)
                     ?.use { inputStream -> BufferedReader(InputStreamReader(inputStream)).readText() }
                     .fromJson<CustomList>()
+                    .let { requireNotNull(it) }*/
+                readPlatformFile(document)
+                    .readString()
+                    .let { Json.decodeFromString<CustomList>(it) }
                     .let { requireNotNull(it) }
             }.fold(
                 onSuccess = { ImportListStatus.Success(it) },
@@ -46,12 +48,13 @@ class ImportListViewModel(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     suspend fun importList(name: String) {
         runCatching {
             (importStatus as? ImportListStatus.Success)?.customList?.let { list ->
-                val newUUID = UUID.randomUUID().toString()
-                listDao.createList(list.item.copy(uuid = newUUID, name = name, time = System.currentTimeMillis()))
-                list.list.forEach { listDao.addItem(it.copy(uniqueId = UUID.randomUUID().toString(), uuid = newUUID)) }
+                val newUUID = Uuid.random().toString()
+                listDao.createList(list.item.copy(uuid = newUUID, name = name, time = Clock.System.now().toEpochMilliseconds()))
+                list.list.forEach { listDao.addItem(it.copy(uniqueId = Uuid.random().toString(), uuid = newUUID)) }
             }
         }
             .onSuccess { println("Read!") }

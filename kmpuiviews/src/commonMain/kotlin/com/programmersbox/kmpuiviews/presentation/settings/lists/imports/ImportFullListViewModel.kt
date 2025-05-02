@@ -1,7 +1,5 @@
-package com.programmersbox.uiviews.presentation.lists.imports
+package com.programmersbox.kmpuiviews.presentation.settings.lists.imports
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -13,21 +11,19 @@ import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.readPlatformFile
+import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class ImportFullListViewModel(
     private val listDao: ListDao,
     savedStateHandle: SavedStateHandle,
-    context: Context,
 ) : ViewModel() {
 
     private val document = savedStateHandle
         .toRoute<Screen.ImportFullListScreen>()
         .uri
-        .let(Uri::parse)
 
     val importingList = mutableStateListOf<CustomList>()
 
@@ -37,9 +33,15 @@ class ImportFullListViewModel(
     init {
         viewModelScope.launch {
             importStatus = runCatching {
+                /*
                 context.contentResolver.openInputStream(document!!)
                     ?.use { inputStream -> BufferedReader(InputStreamReader(inputStream)).readText() }
                     ?.let { Json.decodeFromString<List<CustomList>>(it) }
+                    .let { requireNotNull(it) }
+                 */
+                readPlatformFile(document)
+                    .readString()
+                    .let { Json.decodeFromString<List<CustomList>>(it) }
                     .let { requireNotNull(it) }
             }.fold(
                 onSuccess = {

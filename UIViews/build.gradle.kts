@@ -178,4 +178,7 @@ dependencies {
     implementation(libs.textflow.material3)
 
     implementation(libs.lottie.compose)
+
+    implementation(libs.filekit.core)
+    implementation(libs.filekit.dialogs.compose)
 }

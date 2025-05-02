@@ -1,9 +1,7 @@
 package com.programmersbox.uiviews.presentation.lists
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.view.WindowManager
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -114,6 +112,8 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListState
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
@@ -145,6 +145,8 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -161,7 +163,7 @@ import java.util.UUID
 fun OtakuCustomListScreen(
     viewModel: OtakuCustomListViewModel,
     customItem: CustomList,
-    writeToFile: (Uri, Context) -> Unit,
+    writeToFile: (PlatformFile) -> Unit,
     deleteAll: suspend () -> Unit,
     rename: suspend (String) -> Unit,
     searchQuery: TextFieldState,
@@ -193,9 +195,11 @@ fun OtakuCustomListScreen(
 
     val logoDrawable = koinInject<AppLogo>()
 
-    val pickDocumentLauncher = rememberLauncherForActivityResult(
+    /*val pickDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { writeToFile(it, context) } }
+    ) { document -> document?.let { writeToFile(it, context) } }*/
+
+    val pickDocumentLauncher = rememberFileSaverLauncher { document -> document?.let { writeToFile(it) } }
 
     val shareItem = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -333,15 +337,14 @@ fun OtakuCustomListScreen(
                 customItem
                     .item
                     .uuid
-                    .toString()
                     .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
             },
-            onExportAction = { pickDocumentLauncher.launch("${customItem.item.name}.json") },
+            onExportAction = { pickDocumentLauncher.launch(customItem.item.name, "json") },
             filtered = viewModel.filtered,
             onFilterAction = viewModel::filter,
             onClearFilterAction = viewModel::clearFilter,
             showBySource = viewModel.showBySource,
-            onShowBySource = { viewModel.toggleShowSource(context, it) },
+            onShowBySource = { viewModel.toggleShowSource(it) },
         )
     }
 

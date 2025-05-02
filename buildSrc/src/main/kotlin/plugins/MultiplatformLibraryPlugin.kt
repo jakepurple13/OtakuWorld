@@ -73,6 +73,8 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
 
         jvm()
 
+        applyDefaultHierarchyTemplate()
+
         /*sourceSets.getByName("commonMain") {
             dependencies {
                 dependencyHandling.commonDependencyBlock(this)

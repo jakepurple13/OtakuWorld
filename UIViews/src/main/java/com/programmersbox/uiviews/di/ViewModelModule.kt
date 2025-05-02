@@ -1,14 +1,8 @@
 package com.programmersbox.uiviews.di
 
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.di.viewModels
 import com.programmersbox.uiviews.presentation.details.DetailsViewModel
 import com.programmersbox.uiviews.presentation.history.HistoryViewModel
-import com.programmersbox.uiviews.presentation.lists.OtakuCustomListViewModel
-import com.programmersbox.uiviews.presentation.lists.OtakuListViewModel
-import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListViewModel
-import com.programmersbox.uiviews.presentation.lists.imports.ImportListViewModel
-import com.programmersbox.uiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateViewModel
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionListViewModel
 import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
@@ -17,19 +11,13 @@ import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewMo
 import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 
 fun Module.viewModels() {
-    viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
-    viewModelOf(::OtakuListViewModel)
     viewModelOf(::MoreSettingsViewModel)
     viewModelOf(::ExtensionListViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::DetailsViewModel)
-    viewModelOf(::ImportListViewModel)
-    viewModelOf(::ImportFullListViewModel)
-    viewModelOf(::NotificationScreenViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::MoreInfoViewModel)
     viewModelOf(::PrereleaseViewModel)

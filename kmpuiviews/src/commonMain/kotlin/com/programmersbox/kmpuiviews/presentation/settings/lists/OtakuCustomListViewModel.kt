@@ -1,7 +1,5 @@
-package com.programmersbox.uiviews.presentation.lists
+package com.programmersbox.kmpuiviews.presentation.settings.lists
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -16,15 +14,16 @@ import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.createDirectories
+import io.github.vinceglb.filekit.exists
+import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
 
 class OtakuCustomListViewModel(
     private val listDao: ListDao,
@@ -71,7 +70,7 @@ class OtakuCustomListViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun toggleShowSource(context: Context, value: Boolean) {
+    fun toggleShowSource(value: Boolean) {
         viewModelScope.launch {
             //context.updatePref(SHOW_BY_SOURCE, value)
             showBySourceFlow.set(value)
@@ -91,8 +90,11 @@ class OtakuCustomListViewModel(
     }
 
     fun filter(source: String) {
-        if (filtered.contains(source)) filtered.removeIf { t -> t == source }
-        else filtered.add(source)
+        if (filtered.contains(source)) {
+            filtered.removeAll { it == source }
+        } else {
+            filtered.add(source)
+        }
     }
 
     fun clearFilter() {
@@ -118,10 +120,17 @@ class OtakuCustomListViewModel(
         searchQuery = TextFieldState(query)
     }
 
-    fun writeToFile(document: Uri, context: Context) {
+    fun writeToFile(document: PlatformFile) {
         runCatching {
             viewModelScope.launch {
-                try {
+                runCatching {
+                    if (!document.exists()) document.createDirectories()
+                    customList
+                        ?.let { listOf(it) }
+                        ?.let { Json.encodeToString(it) }
+                        ?.let { document.writeString(it) }
+                }.onFailure { it.printStackTrace() }
+                /*try {
                     context.contentResolver.openFileDescriptor(document, "w")?.use {
                         FileOutputStream(it.fileDescriptor).use { f ->
                             customList
@@ -134,7 +143,7 @@ class OtakuCustomListViewModel(
                     e.printStackTrace()
                 } catch (e: IOException) {
                     e.printStackTrace()
-                }
+                }*/
             }
         }
             .onSuccess { println("Written!") }

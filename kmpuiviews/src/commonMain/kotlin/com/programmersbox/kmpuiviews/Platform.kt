@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import dev.jordond.connectivity.Connectivity
+import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.config.KamelConfig
 import org.koin.core.module.Module
 
@@ -39,3 +40,5 @@ expect fun createConnectivity(): Connectivity
 expect fun recordFirebaseException(throwable: Throwable)
 
 expect fun logFirebaseMessage(message: String)
+
+expect fun readPlatformFile(uri: String): PlatformFile

@@ -3,6 +3,7 @@ biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "1.9.40"
 corePerformance = "1.0.0"
+filekitCore = "0.10.0-beta02"
 generativeai = "0.9.0"
 gradle = "8.9.2"
 
@@ -100,6 +101,9 @@ kotlinx-coroutines = "1.10.2"
 material3WindowSizeClassVersion = "1.7.3"
 connectivity = "2.0.0"
 
+cmpLifecycle = "2.9.0-alpha07"
+navigationCmp = "2.9.0-alpha17"
+
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -115,6 +119,9 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 
 [libraries]
+lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
+navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCmp" }
+
 connectivity-core = { module = "dev.jordond.connectivity:connectivity-core", version.ref = "connectivity" }
 connectivity-compose = { module = "dev.jordond.connectivity:connectivity-compose", version.ref = "connectivity" }
 connectivity-device = { module = "dev.jordond.connectivity:connectivity-device", version.ref = "connectivity" }
@@ -132,6 +139,8 @@ compose-collapsable = { module = "me.tatarka.compose.collapsable:compose-collaps
 compose-webview-multiplatform = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "composeWebviewMultiplatform" }
 dragselect = { module = "com.dragselectcompose:dragselect", version.ref = "dragselect" }
 easylauncher = { module = "com.project.starter:easylauncher", version.ref = "easylauncher" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekitCore" }
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
 firebase-crashlytics-gradle = { module = "com.google.firebase:firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }

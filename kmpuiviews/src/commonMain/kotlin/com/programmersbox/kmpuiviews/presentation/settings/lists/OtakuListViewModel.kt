@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.lists
+package com.programmersbox.kmpuiviews.presentation.settings.lists
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class OtakuListViewModel(
-    private val listDao: ListDao,
+    listDao: ListDao,
 ) : ViewModel() {
     val customLists = mutableStateListOf<CustomList>()
 

@@ -24,6 +24,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 
+//TODO: Move to kmpuiviews
 class MoreSettingsViewModel(
     private val dao: ItemDao,
     private val favoritesRepository: FavoritesRepository,
