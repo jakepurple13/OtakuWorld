@@ -90,8 +90,12 @@ actual class IconLoader(
     }
 }
 
-@Composable
-actual fun is24Time(): Boolean {
-    LocalConfiguration.current
-    return DateFormat.is24HourFormat(LocalContext.current)
+actual class DateTimeFormatHandler(private val context: Context) {
+    actual fun is24HourTime() = DateFormat.is24HourFormat(context)
+
+    @Composable
+    actual fun is24Time(): Boolean {
+        LocalConfiguration.current
+        return DateFormat.is24HourFormat(LocalContext.current)
+    }
 }

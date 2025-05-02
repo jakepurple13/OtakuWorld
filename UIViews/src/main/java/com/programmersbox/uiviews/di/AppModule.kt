@@ -4,6 +4,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
@@ -28,6 +29,7 @@ fun Module.appModule() {
     singleOf(::OtakuDataStoreHandling)
     singleOf(::DownloadAndInstaller)
     singleOf(::IconLoader)
+    singleOf(::DateTimeFormatHandler)
 
     single {
         //val performanceClass = get<PerformanceClass>()

@@ -14,9 +14,9 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.customUriHandler
-import com.programmersbox.kmpuiviews.is24Time
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
@@ -43,6 +43,7 @@ fun KmpLocalCompositionSetup(
 ) {
     val defaultUriHandler = LocalUriHandler.current
     KoinContext {
+        val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
         CompositionLocalProvider(
             LocalNavController provides navController,
             LocalItemDao provides koinInject(),
@@ -53,7 +54,7 @@ fun KmpLocalCompositionSetup(
             LocalCurrentSource provides koinInject(),
             LocalSourcesRepository provides koinInject(),
             LocalKamelConfig provides customKamelConfig(),
-            LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = is24Time()),
+            LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = dateTimeFormatHandler.is24Time()),
             LocalUriHandler provides remember {
                 object : UriHandler {
                     private val customHandler = customUriHandler(navController)

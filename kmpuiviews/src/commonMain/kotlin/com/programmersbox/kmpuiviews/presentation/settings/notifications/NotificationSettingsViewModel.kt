@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.viewmodels
+package com.programmersbox.kmpuiviews.presentation.settings.notifications
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -10,18 +10,21 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
+import com.programmersbox.kmpuiviews.utils.dispatchIo
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 
-class NotificationViewModel(
+class NotificationSettingsViewModel(
     dao: ItemDao,
     private val dataStoreHandling: DataStoreHandling,
     settingsHandling: NewSettingsHandling,
+    dateTimeFormatHandler: DateTimeFormatHandler,
 ) : ViewModel() {
 
     var savedNotifications by mutableIntStateOf(0)
@@ -34,7 +37,9 @@ class NotificationViewModel(
 
     val notifyOnBoot = settingsHandling.notifyOnReboot
 
-    private val dateTimeFormatter by lazy { SimpleDateFormat.getDateTimeInstance() }
+    private val dateTimeFormatter by lazy {
+        DateTimeFormatItem(dateTimeFormatHandler.is24HourTime())
+    }
 
     init {
         dao.getAllNotificationCount()
@@ -58,11 +63,11 @@ class NotificationViewModel(
             dataStoreHandling
                 .updateCheckingStart
                 .asFlow()
-                .map { "Start: ${dateTimeFormatter.format(it)}" },
+                .map { "Start: ${dateTimeFormatter.format(it.toLocalDateTime())}" },
             dataStoreHandling
                 .updateCheckingEnd
                 .asFlow()
-                .map { "End: ${dateTimeFormatter.format(it)}" }
+                .map { "End: ${dateTimeFormatter.format(it.toLocalDateTime())}" }
         ) { s, e -> s to e }
             .map { "${it.first}\n${it.second}" }
             .onEach { time = it }

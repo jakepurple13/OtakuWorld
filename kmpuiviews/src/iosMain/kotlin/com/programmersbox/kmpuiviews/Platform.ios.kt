@@ -58,7 +58,11 @@ actual class IconLoader {
     }
 }
 
-@Composable
-actual fun is24Time(): Boolean {
-    return true
+actual class DateTimeFormatHandler {
+    actual fun is24HourTime() = true
+
+    @Composable
+    actual fun is24Time(): Boolean {
+        return true
+    }
 }

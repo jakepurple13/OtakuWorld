@@ -26,5 +26,9 @@ expect class IconLoader {
     fun load(packageName: String): Any
 }
 
-@Composable
-expect fun is24Time(): Boolean
+expect class DateTimeFormatHandler {
+    fun is24HourTime(): Boolean
+
+    @Composable
+    fun is24Time(): Boolean
+}

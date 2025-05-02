@@ -62,16 +62,20 @@ actual class IconLoader {
     }
 }
 
-@Composable
-actual fun is24Time(): Boolean {
-    return remember {
+actual class DateTimeFormatHandler {
+    actual fun is24HourTime(): Boolean {
         val df = SimpleDateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault())
-        if (df is SimpleDateFormat) {
+        return if (df is SimpleDateFormat) {
             val sdf = df
             val pattern = sdf.toPattern()
             !pattern.contains("a")
         } else {
             true
         }
+    }
+
+    @Composable
+    actual fun is24Time(): Boolean {
+        return remember { is24HourTime() }
     }
 }
