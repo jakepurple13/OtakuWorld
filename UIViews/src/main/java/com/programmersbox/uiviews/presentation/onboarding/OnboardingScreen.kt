@@ -33,9 +33,9 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.Onboarding
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingIndicator
 import com.programmersbox.kmpuiviews.presentation.onboarding.rememberOnboardingScope
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

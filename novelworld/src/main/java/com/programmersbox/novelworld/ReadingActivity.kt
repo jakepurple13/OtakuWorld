@@ -96,6 +96,8 @@ import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.sharedutils.FirebaseDb
@@ -104,8 +106,6 @@ import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import kotlinx.coroutines.CoroutineScope

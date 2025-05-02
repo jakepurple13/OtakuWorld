@@ -178,6 +178,4 @@ dependencies {
     implementation(libs.textflow.material3)
 
     implementation(libs.lottie.compose)
-
-    implementation(libs.compose.webview)
 }
