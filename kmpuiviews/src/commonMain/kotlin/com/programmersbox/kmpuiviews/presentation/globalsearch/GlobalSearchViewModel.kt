@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.presentation.globalsearch
+package com.programmersbox.kmpuiviews.presentation.globalsearch
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,9 +11,11 @@ import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.createConnectivity
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.uiviews.utils.dispatchIoAndCatchList
+import com.programmersbox.kmpuiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -24,7 +25,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import ru.beryukhov.reactivenetwork.ReactiveNetwork
 
 class GlobalSearchViewModel(
     savedStateHandle: SavedStateHandle,
@@ -37,9 +37,9 @@ class GlobalSearchViewModel(
         .title
         ?: ""
 
-    @SuppressLint("MissingPermission")
-    val observeNetwork = ReactiveNetwork()
-        .observeInternetConnectivity()
+    val observeNetwork = createConnectivity()
+        .statusUpdates
+        .map { it.isConnected }
         .flowOn(Dispatchers.IO)
 
     var searchText by mutableStateOf(TextFieldState(initialSearch))

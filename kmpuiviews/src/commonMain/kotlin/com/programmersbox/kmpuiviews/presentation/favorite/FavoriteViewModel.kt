@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.favorite
+package com.programmersbox.kmpuiviews.presentation.favorite
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.derivedStateOf

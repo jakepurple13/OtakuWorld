@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import dev.jordond.connectivity.Connectivity
 import io.kamel.core.config.KamelConfig
 import org.koin.core.module.Module
 
@@ -32,3 +33,5 @@ expect class DateTimeFormatHandler {
     @Composable
     fun is24Time(): Boolean
 }
+
+expect fun createConnectivity(): Connectivity

@@ -49,6 +49,14 @@ fun IncognitoScreen(
             item {
                 ListItem(
                     headlineContent = {
+                        Text("Choose what sources you don't want to have recorded or saved")
+                    }
+                )
+            }
+
+            item {
+                ListItem(
+                    headlineContent = {
                         Text("This affects favoriting, marking a chapter as read, and adding to history.")
                     }
                 )

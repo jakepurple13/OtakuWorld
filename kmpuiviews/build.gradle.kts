@@ -57,6 +57,9 @@ kotlin {
                 implementation(libs.roomRuntime)
 
                 implementation(libs.compose.webview.multiplatform)
+
+                implementation(libs.connectivity.core)
+                implementation(libs.connectivity.compose)
             }
         }
 
@@ -85,6 +88,25 @@ kotlin {
         jvmMain {
             dependencies {
 
+            }
+        }
+
+        val deviceMain by creating {
+            dependsOn(commonMain.get())
+            androidMain.get().dependsOn(this)
+            iosMain.get().dependsOn(this)
+            dependencies {
+                implementation(libs.connectivity.device)
+                implementation(libs.connectivity.compose.device)
+            }
+        }
+
+        val httpMain by creating {
+            dependsOn(commonMain.get())
+            jvmMain.get().dependsOn(this)
+            dependencies {
+                implementation(libs.connectivity.http)
+                implementation(libs.connectivity.compose.http)
             }
         }
     }

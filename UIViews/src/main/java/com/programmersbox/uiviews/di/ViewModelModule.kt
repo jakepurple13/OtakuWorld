@@ -4,8 +4,6 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.di.viewModels
 import com.programmersbox.uiviews.presentation.all.AllViewModel
 import com.programmersbox.uiviews.presentation.details.DetailsViewModel
-import com.programmersbox.uiviews.presentation.favorite.FavoriteViewModel
-import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.uiviews.presentation.history.HistoryViewModel
 import com.programmersbox.uiviews.presentation.lists.OtakuCustomListViewModel
 import com.programmersbox.uiviews.presentation.lists.OtakuListViewModel
@@ -31,8 +29,6 @@ fun Module.viewModels() {
     viewModelOf(::MoreSettingsViewModel)
     viewModelOf(::ExtensionListViewModel)
     viewModelOf(::HistoryViewModel)
-    viewModelOf(::GlobalSearchViewModel)
-    viewModelOf(::FavoriteViewModel)
     viewModelOf(::DetailsViewModel)
     viewModelOf(::AllViewModel)
     viewModelOf(::ImportListViewModel)

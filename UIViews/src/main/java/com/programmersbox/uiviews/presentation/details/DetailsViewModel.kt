@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+//TODO: Maybe can kmp this?
 class DetailsViewModel(
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
