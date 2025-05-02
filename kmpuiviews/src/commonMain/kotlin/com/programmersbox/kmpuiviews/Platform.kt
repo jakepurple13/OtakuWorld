@@ -35,3 +35,7 @@ expect class DateTimeFormatHandler {
 }
 
 expect fun createConnectivity(): Connectivity
+
+expect fun recordFirebaseException(throwable: Throwable)
+
+expect fun logFirebaseMessage(message: String)

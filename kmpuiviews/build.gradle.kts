@@ -76,6 +76,10 @@ kotlin {
                 implementation(libs.ktorAndroid)
                 implementation(androidx.browser.browser)
                 implementation(libs.androidBrowserHelper)
+                implementation(project.dependencies.platform(libs.firebasePlatform))
+                implementation(libs.firebaseAuth)
+                implementation(libs.playServices)
+                implementation(libs.bundles.firebaseCrashLibs)
             }
         }
 

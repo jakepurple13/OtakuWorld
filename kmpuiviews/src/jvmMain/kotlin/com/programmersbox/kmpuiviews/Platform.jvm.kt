@@ -79,3 +79,15 @@ actual class DateTimeFormatHandler {
         return remember { is24HourTime() }
     }
 }
+
+actual fun recordFirebaseException(throwable: Throwable) {
+    runCatching {
+        throwable.printStackTrace()
+    }
+}
+
+actual fun logFirebaseMessage(message: String) {
+    runCatching {
+        println(message)
+    }
+}

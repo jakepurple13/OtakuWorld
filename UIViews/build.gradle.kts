@@ -51,6 +51,7 @@ dependencies {
     implementation(platform(libs.firebasePlatform))
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)
+    implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(androidx.browser.browser)
     implementation(libs.androidBrowserHelper)
@@ -143,7 +144,6 @@ dependencies {
 
     implementation(libs.dragselect)
 
-    implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.sonner)
     implementation(libs.glideCompose)

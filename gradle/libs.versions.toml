@@ -98,7 +98,7 @@ compose-multiplatform = "1.8.0-rc01"
 kotlinx-coroutines = "1.10.2"
 
 material3WindowSizeClassVersion = "1.7.3"
-connectivity = "1.2.0"
+connectivity = "2.0.0"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }

@@ -99,3 +99,16 @@ actual class DateTimeFormatHandler(private val context: Context) {
         return DateFormat.is24HourFormat(LocalContext.current)
     }
 }
+
+actual fun recordFirebaseException(throwable: Throwable) {
+    runCatching {
+        Firebase.crashlytics.recordException(throwable)
+    }
+}
+
+actual fun logFirebaseMessage(message: String) {
+    runCatching {
+        println(message)
+        Firebase.crashlytics.log(message)
+    }.onFailure { println(message) }
+}

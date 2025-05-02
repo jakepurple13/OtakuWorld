@@ -66,3 +66,15 @@ actual class DateTimeFormatHandler {
         return true
     }
 }
+
+actual fun recordFirebaseException(throwable: Throwable) {
+    runCatching {
+        throwable.printStackTrace()
+    }
+}
+
+actual fun logFirebaseMessage(message: String) {
+    runCatching {
+        println(message)
+    }
+}
