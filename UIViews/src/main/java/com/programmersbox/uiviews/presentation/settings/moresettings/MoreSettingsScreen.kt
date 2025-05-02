@@ -1,8 +1,5 @@
 package com.programmersbox.uiviews.presentation.settings.moresettings
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,7 +33,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,11 +43,17 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.moresettings.ImportExportListStatus
+import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.ToasterSetup
 import com.programmersbox.uiviews.utils.ToasterUtils
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -97,14 +99,13 @@ fun MoreSettingsScreen(
     }
 
     val appName = stringResource(id = R.string.app_name)
-    val context = LocalContext.current
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { viewModel.writeToFile(it, context) } }
+    val exportLauncher = rememberFileSaverLauncher { document ->
+        document?.let { viewModel.writeToFile(it) }
+    }
 
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { document -> document?.let { viewModel.importFavorites(it, context) } }
+    val importLauncher = rememberFilePickerLauncher(
+        type = FileKitType.File("json")
+    ) { document -> document?.let { viewModel.importFavorites(it) } }
 
     SettingsScaffold(stringResource(R.string.more_settings)) {
         CategorySetting(
@@ -119,7 +120,7 @@ fun MoreSettingsScreen(
                 enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                 indication = ripple(),
                 interactionSource = null
-            ) { exportLauncher.launch("${appName}_favorites.json") }
+            ) { exportLauncher.launch("${appName}_favorites", "json") }
         )
 
         PreferenceSetting(
@@ -128,7 +129,7 @@ fun MoreSettingsScreen(
                 enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                 indication = ripple(),
                 interactionSource = null
-            ) { importLauncher.launch(arrayOf("application/json")) }
+            ) { importLauncher.launch() }
         )
 
         HorizontalDivider()
@@ -139,12 +140,12 @@ fun MoreSettingsScreen(
             }
         ) { Text(stringResource(R.string.custom_lists_title)) }
 
-        val exportListLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("application/json")
-        ) { document -> document?.let { viewModel.writeListsToFile(it, context) } }
+        val exportListLauncher = rememberFileSaverLauncher { document ->
+            document?.let { viewModel.writeListsToFile(it) }
+        }
 
-        val importListLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.OpenDocument()
+        val importListLauncher = rememberFilePickerLauncher(
+            type = FileKitType.File("json")
         ) { document ->
             document?.let {
                 navController.navigate(Screen.ImportFullListScreen(it.toString()))
@@ -165,7 +166,7 @@ fun MoreSettingsScreen(
         if (showListSelection) {
             ExportListSelection(
                 onExport = { uri, list ->
-                    viewModel.writeListsToFile(uri, context, list)
+                    viewModel.writeListsToFile(uri, list)
                 },
                 onDismiss = { showListSelection = false },
                 list = viewModel
@@ -190,7 +191,7 @@ fun MoreSettingsScreen(
                 enabled = true,
                 indication = ripple(),
                 interactionSource = null
-            ) { importListLauncher.launch(arrayOf("application/json")) }
+            ) { importListLauncher.launch() }
         )
 
         HorizontalDivider()
@@ -203,7 +204,7 @@ fun MoreSettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExportListSelection(
-    onExport: (Uri, List<CustomList>) -> Unit,
+    onExport: (PlatformFile, List<CustomList>) -> Unit,
     list: List<CustomList>,
     onDismiss: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(true),
@@ -219,11 +220,9 @@ private fun ExportListSelection(
         )
     }
 
-    val exportListSelectionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { document ->
+    val exportListSelectionLauncher = rememberFileSaverLauncher { document ->
         document?.let {
-            onExport(it, selection.filterValues { it }.keys.toList())
+            onExport(it, selection.filterValues { b -> b }.keys.toList())
             scope.launch { sheetState.hide() }
                 .invokeOnCompletion { onDismiss() }
         }
@@ -244,7 +243,7 @@ private fun ExportListSelection(
             bottomBar = {
                 BottomAppBar {
                     Button(
-                        onClick = { exportListSelectionLauncher.launch("${appName}_lists.json") },
+                        onClick = { exportListSelectionLauncher.launch("${appName}_lists", "json") },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("Export") }
                 }

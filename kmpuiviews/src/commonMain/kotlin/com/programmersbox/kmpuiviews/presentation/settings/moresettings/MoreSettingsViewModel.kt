@@ -1,7 +1,5 @@
-package com.programmersbox.uiviews.presentation.settings.moresettings
+package com.programmersbox.kmpuiviews.presentation.settings.moresettings
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,18 +9,17 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.createDirectories
+import io.github.vinceglb.filekit.exists
+import io.github.vinceglb.filekit.readString
+import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import java.io.BufferedReader
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStreamReader
 
 //TODO: Move to kmpuiviews
 class MoreSettingsViewModel(
@@ -37,18 +34,12 @@ class MoreSettingsViewModel(
 
     suspend fun exportFavorites() = favoritesRepository.getAllFavorites()
 
-    fun importFavorites(document: Uri, context: Context) {
+    fun importFavorites(document: PlatformFile) {
         viewModelScope.launch {
             importExportListStatus = ImportExportListStatus.Loading
-            runCatching {
-                context.contentResolver.openInputStream(document)
-                    ?.use { inputStream -> BufferedReader(InputStreamReader(inputStream)).readText() }
-                    .fromJson<List<DbModel>>()
-            }
+            runCatching { Json.decodeFromString<List<DbModel>>(document.readString()) }
                 .onSuccess { list ->
-                    list?.forEach {
-                        favoritesRepository.addFavorite(it)
-                    }
+                    list.forEach { favoritesRepository.addFavorite(it) }
                     importExportListStatus = ImportExportListStatus.Success
                 }
                 .onFailure {
@@ -58,22 +49,20 @@ class MoreSettingsViewModel(
         }
     }
 
-    fun writeToFile(document: Uri, context: Context) {
+    fun writeToFile(document: PlatformFile) {
         importExportListStatus = ImportExportListStatus.Loading
         runCatching {
             viewModelScope.launch {
-                try {
+                runCatching {
                     val exportFavorites = withContext(Dispatchers.IO) { exportFavorites() }
-                    context.contentResolver.openFileDescriptor(document, "w")?.use {
+                    if (!document.exists()) document.createDirectories()
+                    document.writeString(Json.encodeToString(exportFavorites))
+                    /*context.contentResolver.openFileDescriptor(document, "w")?.use {
                         FileOutputStream(it.fileDescriptor).use { f ->
                             f.write(exportFavorites.toJson().toByteArray())
                         }
-                    }
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
+                    }*/
+                }.onFailure { it.printStackTrace() }
             }
         }
             .onSuccess {
@@ -86,22 +75,15 @@ class MoreSettingsViewModel(
             }
     }
 
-    fun writeListsToFile(document: Uri, context: Context) {
+    fun writeListsToFile(document: PlatformFile) {
         importExportListStatus = ImportExportListStatus.Loading
         runCatching {
             viewModelScope.launch {
-                try {
+                runCatching {
                     val exportLists = withContext(Dispatchers.IO) { listDao.getAllListsSync() }
-                    context.contentResolver.openFileDescriptor(document, "w")?.use {
-                        FileOutputStream(it.fileDescriptor).use { f ->
-                            f.write(Json.encodeToString(exportLists).toByteArray())
-                        }
-                    }
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
+                    if (!document.exists()) document.createDirectories()
+                    document.writeString(Json.encodeToString(exportLists))
+                }.onFailure { it.printStackTrace() }
             }
         }
             .onSuccess {
@@ -115,18 +97,14 @@ class MoreSettingsViewModel(
     }
 
     fun writeListsToFile(
-        document: Uri,
-        context: Context,
+        document: PlatformFile,
         exportLists: List<CustomList>,
     ) {
         importExportListStatus = ImportExportListStatus.Loading
         viewModelScope.launch {
             runCatching {
-                context.contentResolver.openFileDescriptor(document, "w")?.use {
-                    FileOutputStream(it.fileDescriptor).use { f ->
-                        f.write(Json.encodeToString(exportLists).toByteArray())
-                    }
-                }
+                if (!document.exists()) document.createDirectories()
+                document.writeString(Json.encodeToString(exportLists))
             }
                 .onSuccess {
                     println("Written!")

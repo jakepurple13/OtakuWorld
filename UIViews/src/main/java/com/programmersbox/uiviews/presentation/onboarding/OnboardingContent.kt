@@ -70,6 +70,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.seedColor
+import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
@@ -78,10 +79,11 @@ import com.programmersbox.uiviews.presentation.settings.BlurSetting
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
 import com.programmersbox.uiviews.presentation.settings.ShareChapterSettings
 import com.programmersbox.uiviews.presentation.settings.ShowDownloadSettings
-import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.rememberDrawablePainter
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -245,9 +247,9 @@ internal fun AccountContent(
             }
         } else {
             val context = LocalContext.current
-            val importLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.OpenDocument()
-            ) { document -> document?.let { importViewModel.importFavorites(it, context) } }
+            val importLauncher = rememberFilePickerLauncher(
+                type = FileKitType.File("json")
+            ) { document -> document?.let { importViewModel.importFavorites(it) } }
 
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.import_favorites)) },
@@ -255,7 +257,7 @@ internal fun AccountContent(
                 modifier = Modifier.clickable(
                     indication = ripple(),
                     interactionSource = null
-                ) { importLauncher.launch(arrayOf("application/json")) }
+                ) { importLauncher.launch() }
             )
         }
 

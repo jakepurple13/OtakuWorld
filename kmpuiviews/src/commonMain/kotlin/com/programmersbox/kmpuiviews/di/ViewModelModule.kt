@@ -11,6 +11,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomList
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettingsViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
@@ -18,16 +19,16 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val viewModels: Module = module {
-    viewModelOf(::IncognitoViewModel)
     viewModelOf(::NotificationSettingsViewModel)
+    viewModelOf(::NotificationScreenViewModel)
+    viewModelOf(::IncognitoViewModel)
     viewModelOf(::FavoriteViewModel)
     viewModelOf(::GlobalSearchViewModel)
-    //viewModel { GlobalSearchViewModel(createSavedStateHandle(), get(), get()) }
     viewModelOf(::RecentViewModel)
     viewModelOf(::AllViewModel)
     viewModelOf(::ImportFullListViewModel)
     viewModelOf(::ImportListViewModel)
     viewModelOf(::OtakuListViewModel)
-    viewModelOf(::NotificationScreenViewModel)
+    viewModelOf(::MoreSettingsViewModel)
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
 }
