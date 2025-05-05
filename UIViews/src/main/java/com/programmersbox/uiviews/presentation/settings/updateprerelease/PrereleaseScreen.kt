@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import kotlinx.datetime.Instant
