@@ -196,7 +196,7 @@ private fun NavGraphBuilder.settings(
             trackScreen(Screen.MoreInfoSettings)
             InfoSettings(
                 usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } },
-                onPreleaseClick = { navController.navigate(Screen.PrereleaseScreen) { launchSingleTop = true } },
+                onPrereleaseClick = { navController.navigate(Screen.PrereleaseScreen) { launchSingleTop = true } },
             )
         }
 

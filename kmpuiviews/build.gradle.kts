@@ -1,9 +1,12 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
+
 plugins {
     `otaku-multiplatform`
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.buildKonfig)
 }
 
 otakuDependencies {
@@ -127,5 +130,23 @@ kotlin {
                 implementation(libs.connectivity.compose.http)
             }
         }
+    }
+}
+
+buildkonfig {
+    packageName = "com.programmersbox.kmpuiviews"
+
+    defaultConfigs {
+        buildConfigField(
+            type = BOOLEAN,
+            const = true,
+            name = "IS_PRERELEASE",
+            value = runCatching { System.getenv("IS_PRERELEASE") }
+                .onFailure { it.printStackTrace() }
+                .mapCatching { it.toBoolean() }
+                .getOrDefault(false)
+                .toString()
+                .also { println("IS_PRERELEASE: $it") }
+        )
     }
 }

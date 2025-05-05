@@ -79,6 +79,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform) apply false
     id("com.squareup.wire") version "5.3.1" apply false
     id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha09" apply false
+    alias(libs.plugins.buildKonfig) apply false
 }
 
 projectInfo {
