@@ -5,6 +5,8 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import com.google.firebase.perf.trace
 import com.programmersbox.kmpuiviews.logFirebaseMessage
+import io.github.vinceglb.filekit.AndroidFile
+import io.github.vinceglb.filekit.PlatformFile
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.prepareGet
@@ -17,7 +19,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.Serializable
 import ru.solrudev.ackpine.installer.InstallFailure
 import ru.solrudev.ackpine.installer.PackageInstaller
 import ru.solrudev.ackpine.installer.createSession
@@ -35,14 +36,14 @@ import kotlin.time.Duration.Companion.minutes
 
 //TODO: Also need a wrapper for it.
 // Probably an expect/actual class
-class DownloadAndInstaller(
+actual class DownloadAndInstaller(
     private val context: Context,
 ) {
     private val packageInstaller by lazy { PackageInstaller.getInstance(context) }
     private val packageUninstaller by lazy { PackageUninstaller.getInstance(context) }
     private val client = HttpClient()
 
-    suspend fun uninstall(packageName: String) {
+    actual suspend fun uninstall(packageName: String) {
         packageUninstaller.createSession(packageName) {
             confirmation = Confirmation.IMMEDIATE
         }
@@ -53,10 +54,10 @@ class DownloadAndInstaller(
             }
     }
 
-    fun downloadAndInstall(
+    actual fun downloadAndInstall(
         url: String,
-        destinationPath: String = "",
-        confirmationType: Confirmation = Confirmation.IMMEDIATE,
+        destinationPath: String,
+        confirmationType: ConfirmationType,
     ): Flow<DownloadAndInstallStatus> {
         val file = File(context.cacheDir, "${url.toUri().lastPathSegment}.apk")
 
@@ -73,7 +74,10 @@ class DownloadAndInstaller(
 
                 println("Starting Install Session")
 
-                install(file, confirmationType)
+                install(
+                    PlatformFile(file),
+                    confirmationType
+                )
                     .onEach { send(it) }
                     .launchIn(this@channelFlow)
             }
@@ -86,9 +90,9 @@ class DownloadAndInstaller(
             }
     }
 
-    fun download(
+    actual fun download(
         url: String,
-        destinationPath: String = "",
+        destinationPath: String,
     ): Flow<DownloadAndInstallStatus> {
         val file = File(context.cacheDir, "${url.toUri().lastPathSegment}.apk")
 
@@ -112,14 +116,22 @@ class DownloadAndInstaller(
             }
     }
 
-    fun install(
-        file: File,
-        confirmationType: Confirmation = Confirmation.IMMEDIATE,
+    actual fun install(
+        file: PlatformFile,
+        confirmationType: ConfirmationType,
     ): Flow<DownloadAndInstallStatus> = channelFlow {
-        val sess = packageInstaller.createSession(file.toUri()) {
+        val sess = packageInstaller.createSession(
+            when (val f = file.androidFile) {
+                is AndroidFile.FileWrapper -> f.file.toUri()
+                is AndroidFile.UriWrapper -> f.uri
+            }
+        ) {
             packageSource = PackageSource.DownloadedFile
 
-            confirmation = confirmationType
+            confirmation = when (confirmationType) {
+                ConfirmationType.IMMEDIATE -> Confirmation.IMMEDIATE
+                ConfirmationType.DEFERRED -> Confirmation.DEFERRED
+            }
             installerType = InstallerType.SESSION_BASED
 
             constraints = InstallConstraints.gentleUpdate(
@@ -159,22 +171,4 @@ class DownloadAndInstaller(
 
         sess.await()
     }
-}
-
-@Serializable
-sealed class DownloadAndInstallStatus {
-    @Serializable
-    data class Downloading(val progress: Float) : DownloadAndInstallStatus()
-
-    @Serializable
-    data object Downloaded : DownloadAndInstallStatus()
-
-    @Serializable
-    data object Installing : DownloadAndInstallStatus()
-
-    @Serializable
-    data object Installed : DownloadAndInstallStatus()
-
-    @Serializable
-    data class Error(val message: String) : DownloadAndInstallStatus()
 }

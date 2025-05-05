@@ -90,6 +90,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
@@ -115,10 +116,14 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get(), get(), get()) }
+    single<GenericInfo> { GenericAnime(get(), get(), get()) } binds arrayOf(
+        KmpGenericInfo::class,
+        GenericInfo::class
+    )
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single { AnimeDataStoreHandling() }

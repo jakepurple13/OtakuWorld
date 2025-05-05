@@ -40,6 +40,7 @@ import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.uiviews.BuildType
@@ -52,10 +53,14 @@ import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.trackScreen
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericNovel(get()) }
+    single<GenericInfo> { GenericNovel(get()) } binds arrayOf(
+        KmpGenericInfo::class,
+        GenericInfo::class
+    )
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 

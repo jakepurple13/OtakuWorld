@@ -27,7 +27,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.FragmentActivity
@@ -43,15 +42,14 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoViewModel
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.composables.icons.Discord
 import com.programmersbox.kmpuiviews.utils.composables.icons.Github
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.appVersion
 import com.programmersbox.uiviews.utils.versionCode
@@ -68,10 +66,8 @@ fun InfoSettings(
     onPreleaseClick: () -> Unit,
 ) {
     val activity = LocalActivity.current
-    val genericInfo = LocalGenericInfo.current
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val dataStoreHandling = koinInject<DataStoreHandling>()
     val appUpdateCheck: AppUpdateCheck = koinInject()
@@ -168,7 +164,7 @@ fun InfoSettings(
                     )
                 }
             },
-            modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker(context) } }
+            modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker() } }
         )
 
         ShowWhen(

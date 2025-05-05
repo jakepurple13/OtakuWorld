@@ -13,12 +13,15 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 
-interface GenericInfo {
+interface KmpGenericInfo {
     val scrollBuffer: Int get() = 2
     val sourceType: String get() = ""
+
+    val apkString: AppUpdate.AppUpdates.() -> String?
 
     fun chapterOnClick(
         model: KmpChapterModel,
