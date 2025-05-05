@@ -24,11 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
+import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.ListBottomScreen
-import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
@@ -38,13 +38,17 @@ fun ListChoiceScreen(
     url: String? = null,
     navigationIcon: @Composable () -> Unit = {
         val navController = LocalNavController.current
-        IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
+        IconButton(
+            onClick = { navController.popBackStack() }
+        ) { Icon(Icons.Default.Close, null) }
     },
     onClick: (CustomList) -> Unit,
 ) {
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
-    val list by dao.getAllLists().collectAsStateWithLifecycle(emptyList())
+    val list by dao
+        .getAllLists()
+        .collectAsStateWithLifecycle(emptyList())
     ListBottomScreen(
         title = stringResource(R.string.choose_list_title),
         list = list,

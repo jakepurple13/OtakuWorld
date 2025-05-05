@@ -25,10 +25,10 @@ import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
+import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.ListBottomScreen
-import com.programmersbox.uiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
