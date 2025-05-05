@@ -70,15 +70,15 @@ import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.seedColor
+import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
+import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
+import com.programmersbox.kmpuiviews.presentation.settings.general.ShowDownloadSettings
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.settings.BlurSetting
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
-import com.programmersbox.uiviews.presentation.settings.ShareChapterSettings
-import com.programmersbox.uiviews.presentation.settings.ShowDownloadSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.rememberDrawablePainter
@@ -246,7 +246,6 @@ internal fun AccountContent(
                 }
             }
         } else {
-            val context = LocalContext.current
             val importLauncher = rememberFilePickerLauncher(
                 type = FileKitType.File("json")
             ) { document -> document?.let { importViewModel.importFavorites(it) } }
