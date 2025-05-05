@@ -2,6 +2,7 @@ package com.programmersbox.uiviews.di
 
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.sharedutils.FirebaseConnection
 import com.programmersbox.sharedutils.FirebaseDb
@@ -12,6 +13,7 @@ import org.koin.dsl.module
 val kmpInterop = module {
     singleOf<KmpFirebaseConnection>(::KmpFirebaseConnectionImpl)
     factory<KmpFirebaseConnection.KmpFirebaseListener> { KmpFirebaseConnectionImpl.KmpFirebaseListenerImpl() }
+    singleOf(::AboutLibraryBuilder)
 }
 
 class KmpFirebaseConnectionImpl : KmpFirebaseConnection {

@@ -10,7 +10,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
@@ -64,8 +63,6 @@ class TranslationViewModel : ViewModel() {
 
 @Composable
 fun TranslationScreen(vm: TranslationViewModel = viewModel()) {
-    val scope = rememberCoroutineScope()
-
     LifecycleResumeEffect(Unit) {
         vm.loadModels()
         onPauseOrDispose {}

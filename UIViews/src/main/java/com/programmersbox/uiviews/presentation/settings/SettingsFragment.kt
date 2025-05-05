@@ -2,45 +2,21 @@ package com.programmersbox.uiviews.presentation.settings
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Extension
-import androidx.compose.material.icons.filled.GetApp
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.PlayCircleOutline
-import androidx.compose.material.icons.filled.Reorder
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Source
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,36 +27,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
-import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
-import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
-import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
-import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
-import com.programmersbox.uiviews.utils.InsetLargeTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
-import com.programmersbox.uiviews.utils.appVersion
-import com.programmersbox.uiviews.utils.versionCode
 import com.skydoves.landscapist.glide.GlideImage
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
@@ -102,50 +62,75 @@ fun SettingScreen(
     geminiClick: () -> Unit = {},
     sourcesOrderClick: () -> Unit = {},
     appDownloadsClick: () -> Unit = {},
+    accountSettings: @Composable () -> Unit = {
+        if (BuildType.current == BuildType.Full) {
+            AccountSettings()
+        }
+    },
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    /*
+    //TODO: This will be for the future when this works again
+    // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
+    // once it doesn't, this will be fully implemented
+    val showGemini by vm.showGemini.collectAsStateWithLifecycle(false)
+    if (showGemini) {
+        PreferenceSetting(
+            settingTitle = { Text("Gemini Recommendations") },
+            settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
+            modifier = Modifier.clickable(
+                indication = ripple(),
+                interactionSource = null,
+                onClick = geminiClick
+            )
+        )
+    }
+     */
+    SettingScreen(
+        composeSettingsDsl = composeSettingsDsl,
+        notificationClick = notificationClick,
+        favoritesClick = favoritesClick,
+        historyClick = historyClick,
+        globalSearchClick = globalSearchClick,
+        listClick = listClick,
+        extensionClick = extensionClick,
+        notificationSettingsClick = notificationSettingsClick,
+        generalClick = generalClick,
+        otherClick = otherClick,
+        moreInfoClick = moreInfoClick,
+        moreSettingsClick = moreSettingsClick,
+        geminiClick = geminiClick,
+        sourcesOrderClick = sourcesOrderClick,
+        appDownloadsClick = appDownloadsClick,
+        accountSettings = accountSettings,
+        translationItem = {
+            var showTranslationScreen by showTranslationScreen()
 
-    OtakuScaffold(
-        topBar = {
-            InsetLargeTopAppBar(
-                title = { Text(stringResource(R.string.settings)) },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    if (BuildType.current == BuildType.Full) {
-                        AccountSettings()
-                    }
-                }
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
+                settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = { showTranslationScreen = true }
+                )
             )
         },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-    ) { p ->
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(p)
-        ) {
-            SettingsScreen(
-                notificationClick = notificationClick,
-                composeSettingsDsl = composeSettingsDsl,
-                debugMenuClick = debugMenuClick,
-                favoritesClick = favoritesClick,
-                historyClick = historyClick,
-                globalSearchClick = globalSearchClick,
-                listClick = listClick,
-                extensionClick = extensionClick,
-                notificationSettingsClick = notificationSettingsClick,
-                generalClick = generalClick,
-                otherClick = otherClick,
-                moreInfoClick = moreInfoClick,
-                moreSettingsClick = moreSettingsClick,
-                geminiClick = geminiClick,
-                sourcesOrderClick = sourcesOrderClick,
-                appDownloadsClick = appDownloadsClick
-            )
+        onDebugBuild = {
+            if (BuildConfig.DEBUG) {
+                PreferenceSetting(
+                    settingTitle = { Text("Debug Menu") },
+                    settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null,
+                        onClick = debugMenuClick
+                    )
+                )
+            }
         }
-    }
+    )
 }
+
 /*
 //TODO: This will be for the future when this works again
 internal enum class SettingChoice {
@@ -260,263 +245,31 @@ internal fun SettingScreen(
     )
 }*/
 
-@Composable
-private fun SettingsScreen(
-    vm: SettingsViewModel = koinViewModel(),
-    notificationClick: () -> Unit,
-    composeSettingsDsl: ComposeSettingsDsl,
-    debugMenuClick: () -> Unit,
-    favoritesClick: () -> Unit,
-    historyClick: () -> Unit,
-    globalSearchClick: () -> Unit,
-    listClick: () -> Unit,
-    extensionClick: () -> Unit,
-    notificationSettingsClick: () -> Unit,
-    generalClick: () -> Unit,
-    otherClick: () -> Unit,
-    moreInfoClick: () -> Unit,
-    moreSettingsClick: () -> Unit,
-    geminiClick: () -> Unit,
-    sourcesOrderClick: () -> Unit,
-    appDownloadsClick: () -> Unit,
-) {
-    val uriHandler = LocalUriHandler.current
-    val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
-
-    if (BuildConfig.DEBUG) {
-        PreferenceSetting(
-            settingTitle = { Text("Debug Menu") },
-            settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = debugMenuClick
-            )
-        )
-    }
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.view_notifications_title)) },
-        settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-        summaryValue = { Text(stringResource(R.string.pending_saved_notifications, vm.savedNotifications)) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = notificationClick
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.viewFavoritesMenu)) },
-        settingIcon = { Icon(Icons.Default.Star, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = favoritesClick
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(id = R.string.custom_lists_title)) },
-        settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = listClick
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.global_search)) },
-        settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = globalSearchClick
-        )
-    )
-
-    val historyCount by LocalHistoryDao.current
-        .getAllRecentHistoryCount()
-        .collectAsStateWithLifecycle(0)
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.history)) },
-        summaryValue = { Text(historyCount.toString()) },
-        settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = historyClick
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text("App Downloads") },
-        settingIcon = { Icon(Icons.Default.GetApp, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = appDownloadsClick
-        )
-    )
-
-    composeSettingsDsl.viewSettings()
-
-    HorizontalDivider()
-
-    CategorySetting { Text(stringResource(R.string.general_menu_title)) }
-
-    var showSourceChooser by showSourceChooser()
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty())) },
-        settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null
-        ) { showSourceChooser = true }
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text("Sources Order") },
-        settingIcon = { Icon(Icons.Default.Reorder, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = sourcesOrderClick
-        )
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.view_extensions)) },
-        settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = extensionClick
-        )
-    )
-
-    ShowWhen(visibility = source != null) {
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.view_source_in_browser)) },
-            settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                enabled = source != null,
-                indication = ripple(),
-                interactionSource = null
-            ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
-        )
-    }
-
-    var showTranslationScreen by showTranslationScreen()
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
-        settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.clickable(
-            indication = ripple(),
-            interactionSource = null,
-            onClick = { showTranslationScreen = true }
-        )
-    )
-
-    //TODO: This will be for the future when this works again
-    // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
-    // once it doesn't, this will be fully implemented
-    val showGemini by vm.showGemini.collectAsStateWithLifecycle(false)
-    if (showGemini) {
-        PreferenceSetting(
-            settingTitle = { Text("Gemini Recommendations") },
-            settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = geminiClick
-            )
-        )
-    }
-
-    HorizontalDivider()
-
-    CategorySetting { Text(stringResource(R.string.additional_settings)) }
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.notifications_category_title)) },
-        settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click(notificationSettingsClick)
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.general_menu_title)) },
-        settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click(generalClick)
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.playSettings)) },
-        settingIcon = { Icon(Icons.Default.PlayCircleOutline, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click(otherClick)
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.more_settings)) },
-        settingIcon = { Icon(Icons.Default.Settings, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click(moreSettingsClick)
-    )
-
-    PreferenceSetting(
-        settingTitle = { Text(stringResource(R.string.more_info_category)) },
-        settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
-        modifier = Modifier.click(moreInfoClick)
-    )
-
-    PreferenceSetting(
-        settingIcon = {
-            Image(
-                rememberDrawablePainter(drawable = koinInject<AppLogo>().logo),
-                null,
-                modifier = Modifier.fillMaxSize()
-            )
-        },
-        settingTitle = {
-            Column {
-                Text(
-                    "Version code: ${versionCode()}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(stringResource(R.string.currentVersion, appVersion()))
-            }
-        },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @PreviewThemeColorsSizes
 @Composable
 private fun SettingsPreview() {
     PreviewTheme {
-        SettingsScaffold(title = "Settings") {
-            SettingsScreen(
-                composeSettingsDsl = ComposeSettingsDsl(),
-                notificationClick = {},
-                debugMenuClick = {},
-                favoritesClick = {},
-                historyClick = {},
-                globalSearchClick = {},
-                listClick = {},
-                extensionClick = {},
-                notificationSettingsClick = {},
-                generalClick = {},
-                otherClick = {},
-                moreInfoClick = {},
-                moreSettingsClick = {},
-                geminiClick = {},
-                sourcesOrderClick = {},
-                appDownloadsClick = {}
-            )
-        }
+        SettingScreen(
+            composeSettingsDsl = ComposeSettingsDsl(),
+            notificationClick = {},
+            favoritesClick = {},
+            historyClick = {},
+            globalSearchClick = {},
+            listClick = {},
+            extensionClick = {},
+            notificationSettingsClick = {},
+            generalClick = {},
+            otherClick = {},
+            moreInfoClick = {},
+            moreSettingsClick = {},
+            geminiClick = {},
+            sourcesOrderClick = {},
+            appDownloadsClick = {},
+            accountSettings = {},
+            translationItem = {},
+            onDebugBuild = {}
+        )
     }
 }
 

@@ -2,8 +2,11 @@ package com.programmersbox.kmpuiviews
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.mikepenz.aboutlibraries.Libs
 import dev.jordond.connectivity.Connectivity
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.config.KamelConfig
@@ -42,3 +45,17 @@ expect fun recordFirebaseException(throwable: Throwable)
 expect fun logFirebaseMessage(message: String)
 
 expect fun readPlatformFile(uri: String): PlatformFile
+
+@Composable
+expect fun versionCode(): String
+
+@Composable
+expect fun appVersion(): String
+
+@Composable
+expect fun painterLogo(): Painter
+
+expect class AboutLibraryBuilder {
+    @Composable
+    fun buildLibs(): State<Libs?>
+}

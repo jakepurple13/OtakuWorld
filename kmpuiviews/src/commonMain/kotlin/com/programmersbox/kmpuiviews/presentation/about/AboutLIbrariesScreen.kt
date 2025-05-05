@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.presentation
+package com.programmersbox.kmpuiviews.presentation.about
 
-import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -28,62 +27,47 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.DialogProperties
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.entity.Library
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.LibraryPadding
 import com.mikepenz.aboutlibraries.ui.compose.util.author
-import com.mikepenz.aboutlibraries.util.withContext
+import com.programmersbox.kmpuiviews.AboutLibraryBuilder
+import com.programmersbox.kmpuiviews.appVersion
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.appVersion
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
-
-@Composable
-private fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
-    val context = LocalContext.current
-    return produceState<Libs?>(null) {
-        value = withContext(Dispatchers.IO) {
-            librariesBlock(context)
-        }
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @Composable
-internal fun AboutLibrariesScreen() {
+fun AboutLibrariesScreen(
+    appName: String? = null,
+) {
     val uriHandler = LocalUriHandler.current
-    val libraries by libraryList()
+    val aboutLibraryBuilder = koinInject<AboutLibraryBuilder>()
+    val libraries by aboutLibraryBuilder.buildLibs()
 
     val libs = libraries?.libraries.orEmpty()
 
@@ -92,7 +76,7 @@ internal fun AboutLibrariesScreen() {
     OtakuScaffold(
         modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 title = { Text("Libraries Used") },
                 navigationIcon = { BackButton() },
                 actions = { Text("${libs.size} libraries") },
@@ -108,8 +92,9 @@ internal fun AboutLibrariesScreen() {
             header = {
                 stickyHeader {
                     DefaultHeader(
-                        logo = { Image(rememberDrawablePainter(drawable = koinInject<AppLogo>().logo), null) },
+                        logo = { Image(painterLogo(), null) },
                         version = appVersion(),
+                        appName = appName
                     )
                 }
             },
@@ -329,8 +314,8 @@ data class Sites(
 
 @Composable
 private fun DefaultHeader(
+    appName: String?,
     logo: (@Composable () -> Unit)? = null,
-    appName: String? = stringResource(id = R.string.app_name),
     version: String? = null,
     description: String? = null,
     linkSites: List<Sites> = emptyList(),

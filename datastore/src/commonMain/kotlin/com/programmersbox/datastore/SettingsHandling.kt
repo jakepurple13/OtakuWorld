@@ -43,7 +43,7 @@ interface GenericSerializer<MessageType> : OkioSerializer<MessageType> {
     fun encode(t: MessageType): ByteArray
 }
 
-class SettingsSerializer(val canShowBlur: Boolean) : GenericSerializer<Settings> {
+class SettingsSerializer : GenericSerializer<Settings> {
     override val defaultValue: Settings
         get() = Settings(
             batteryPercent = 20,
@@ -56,7 +56,7 @@ class SettingsSerializer(val canShowBlur: Boolean) : GenericSerializer<Settings>
             showDownload = true,
             amoledMode = false,
             usePalette = true,
-            showBlur = canShowBlur,//PerformanceClass.canBlur(),
+            showBlur = true,
             showExpressiveness = true,
             notifyOnReboot = true,
             hasMigrated = false,
@@ -73,8 +73,6 @@ class SettingsSerializer(val canShowBlur: Boolean) : GenericSerializer<Settings>
 
 class NewSettingsHandling(
     val preferences: DataStore<Settings>,
-    val canShowBlur: Boolean,
-    //private val performanceClass: PerformanceClass,
 ) {
     private val all: Flow<Settings> get() = preferences.data
 
@@ -164,7 +162,7 @@ class NewSettingsHandling(
     fun rememberShowBlur() = preferences.rememberPreference(
         key = { it.showBlur },
         update = { copy(showBlur = it) },
-        defaultValue = canShowBlur//performanceClass.canBlur
+        defaultValue = true
     )
 
     @Composable

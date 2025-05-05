@@ -66,6 +66,9 @@ kotlin {
 
                 implementation(libs.lifecycle.viewmodel.compose)
                 implementation(libs.navigation.compose)
+
+                implementation(libs.aboutLibrariesCore)
+                implementation(libs.aboutLibrariesCompose)
             }
         }
 
@@ -86,6 +89,7 @@ kotlin {
                 implementation(libs.firebaseAuth)
                 implementation(libs.playServices)
                 implementation(libs.bundles.firebaseCrashLibs)
+                implementation(libs.drawablePainter)
             }
         }
 

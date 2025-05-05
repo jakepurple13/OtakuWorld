@@ -132,6 +132,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                             logoId = applicationInfo.icon
                         )
                     }
+                    single {
+                        com.programmersbox.kmpuiviews.utils.AppLogo(
+                            logo = applicationInfo.loadIcon(packageManager),
+                            logoId = applicationInfo.icon
+                        )
+                    }
 
                     appModule()
                     workers()

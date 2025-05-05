@@ -55,6 +55,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
@@ -63,7 +64,6 @@ import com.programmersbox.uiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.presentation.settings.showSourceChooser
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes

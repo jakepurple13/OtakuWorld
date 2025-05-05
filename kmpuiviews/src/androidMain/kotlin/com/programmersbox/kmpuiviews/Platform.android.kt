@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.text.format.DateFormat
 import androidx.compose.material3.ColorScheme
@@ -9,15 +10,24 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.UriHandler
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.firebase.Firebase
 import com.google.firebase.crashlytics.crashlytics
+import com.mikepenz.aboutlibraries.Libs
+import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
+import com.programmersbox.kmpuiviews.utils.AppLogo
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
@@ -27,6 +37,9 @@ import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
 import io.kamel.image.config.imageBitmapResizingDecoder
 import io.kamel.image.config.resourcesFetcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -116,3 +129,65 @@ actual fun logFirebaseMessage(message: String) {
 }
 
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri.toUri())
+
+@Composable
+actual fun painterLogo(): Painter = rememberDrawablePainter(drawable = koinInject<AppLogo>().logo)
+
+val Context.appVersion: String
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        packageManager.getPackageInfo(
+            packageName,
+            PackageManager.PackageInfoFlags.of(0L)
+        ).versionName
+    } else {
+        packageManager.getPackageInfo(packageName, 0)?.versionName
+    }.orEmpty()
+
+val Context.versionCode: String
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        packageManager.getPackageInfo(
+            packageName,
+            PackageManager.PackageInfoFlags.of(0L)
+        ).longVersionCode
+    } else {
+        packageManager.getPackageInfo(packageName, 0)?.longVersionCode
+    }
+        ?.toString()
+        .orEmpty()
+
+@Composable
+actual fun appVersion(): String {
+    return if (LocalInspectionMode.current) {
+        "1.0.0"
+    } else {
+        val context = LocalContext.current
+        remember(context) { context.appVersion }
+    }
+}
+
+@Composable
+actual fun versionCode(): String {
+    return if (LocalInspectionMode.current) {
+        "1"
+    } else {
+        val context = LocalContext.current
+        remember(context) { context.versionCode }
+    }
+}
+
+actual class AboutLibraryBuilder {
+
+    @Composable
+    actual fun buildLibs(): State<Libs?> = libraryList()
+
+    @Composable
+    fun libraryList(librariesBlock: (Context) -> Libs = { context -> Libs.Builder().withContext(context).build() }): State<Libs?> {
+        val context = LocalContext.current
+        return produceState<Libs?>(null) {
+            value = withContext(Dispatchers.IO) {
+                librariesBlock(context)
+            }
+        }
+    }
+}
+

@@ -6,6 +6,7 @@ import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListViewModel
@@ -30,5 +31,7 @@ val viewModels: Module = module {
     viewModelOf(::ImportListViewModel)
     viewModelOf(::OtakuListViewModel)
     viewModelOf(::MoreSettingsViewModel)
+    viewModelOf(::SettingViewModel)
+
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
 }

@@ -6,6 +6,7 @@ import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
+import com.programmersbox.kmpuiviews.di.appModule
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
@@ -32,13 +33,11 @@ fun Module.appModule() {
     singleOf(::DateTimeFormatHandler)
 
     single {
-        //val performanceClass = get<PerformanceClass>()
         NewSettingsHandling(
             createProtobuf(
                 context = get(),
-                serializer = SettingsSerializer(true)
+                serializer = SettingsSerializer()
             ),
-            canShowBlur = true
         )
     }
 
@@ -48,4 +47,6 @@ fun Module.appModule() {
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         )
     }
+
+    includes(appModule)
 }
