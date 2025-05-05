@@ -89,7 +89,7 @@ fun SourceChooserScreen(
 
     var showChooser by remember { mutableStateOf<List<KmpSourceInformation>?>(null) }
 
-    val languageCode = remember { Locale.current.toLanguageTag() }
+    val languageCode = remember { Locale.current.language }
 
     showChooser?.let { list ->
         ModalBottomSheet(
