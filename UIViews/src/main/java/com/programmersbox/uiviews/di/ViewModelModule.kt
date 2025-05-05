@@ -8,7 +8,6 @@ import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.MoreInfoViewModel
-import com.programmersbox.uiviews.presentation.settings.viewmodels.SettingsViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
 
@@ -16,7 +15,6 @@ fun Module.viewModels() {
     viewModelOf(::ExtensionListViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::DetailsViewModel)
-    viewModelOf(::SettingsViewModel)
     viewModelOf(::MoreInfoViewModel)
     viewModelOf(::PrereleaseViewModel)
     viewModelOf(::DownloadStateViewModel)

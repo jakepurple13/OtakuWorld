@@ -40,8 +40,8 @@ import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight

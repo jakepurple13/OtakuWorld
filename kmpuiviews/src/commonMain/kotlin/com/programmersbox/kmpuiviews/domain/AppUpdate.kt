@@ -1,4 +1,4 @@
-package com.programmersbox.sharedutils
+package com.programmersbox.kmpuiviews.domain
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -93,4 +93,6 @@ object AppUpdate {
     }
 }
 
-val updateAppCheck = MutableStateFlow<AppUpdate.AppUpdates?>(null)
+class AppUpdateCheck {
+    val updateAppCheck = MutableStateFlow<AppUpdate.AppUpdates?>(null)
+}

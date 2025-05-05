@@ -1,6 +1,10 @@
 package com.programmersbox.sharedutils
 
-import androidx.compose.ui.util.*
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMaxBy
+import androidx.compose.ui.util.fastSumBy
 import com.jakewharton.picnic.table
 import com.lordcodes.turtle.shellRun
 import com.programmersbox.gsonutils.fromJson
@@ -38,7 +42,7 @@ class ExampleUnitTest {
     @Test
     fun newUpdateCheckTest() {
 
-        val oldVersion = "1.5.1"
+        /*val oldVersion = "1.5.1"
         val newVersion = "1.0.1"
 
         println(AppUpdate.checkForUpdate(oldVersion, newVersion))
@@ -53,7 +57,7 @@ class ExampleUnitTest {
         newVersion2 = "2.0.0"
         println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
         newVersion2 = "1.1.1"
-        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))
+        println(AppUpdate.checkForUpdate(oldVersion, newVersion2))*/
 
     }
 

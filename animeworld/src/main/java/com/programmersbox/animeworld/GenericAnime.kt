@@ -90,13 +90,13 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight

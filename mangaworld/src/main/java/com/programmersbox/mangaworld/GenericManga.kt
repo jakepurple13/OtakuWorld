@@ -48,6 +48,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -66,7 +67,6 @@ import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
 import com.programmersbox.mangaworld.settings.ReaderSettings
 import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo

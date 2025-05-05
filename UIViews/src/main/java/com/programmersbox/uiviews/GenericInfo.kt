@@ -8,8 +8,8 @@ import androidx.core.net.toUri
 import androidx.navigation.NavType
 import androidx.navigation.serialization.generateRouteWithArgs
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.kmpuiviews.GenericInfo as KmpGenericInfo
 
 interface GenericInfo : KmpGenericInfo {

@@ -52,12 +52,12 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog

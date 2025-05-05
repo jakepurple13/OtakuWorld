@@ -11,7 +11,7 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.recordFirebaseException

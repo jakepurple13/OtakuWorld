@@ -112,12 +112,12 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.IconLoader
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.presentation.components.ToolTipWrapper
