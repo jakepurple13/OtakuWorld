@@ -57,14 +57,13 @@ import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalComposeUiApi
 @Composable
-fun AboutLibrariesScreen(
-    appName: String? = null,
-) {
+fun AboutLibrariesScreen() {
     val uriHandler = LocalUriHandler.current
     val aboutLibraryBuilder = koinInject<AboutLibraryBuilder>()
     val libraries by aboutLibraryBuilder.buildLibs()
@@ -72,6 +71,8 @@ fun AboutLibrariesScreen(
     val libs = libraries?.libraries.orEmpty()
 
     val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    val appConfig = koinInject<AppConfig>()
 
     OtakuScaffold(
         modifier = Modifier.nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
@@ -94,7 +95,7 @@ fun AboutLibrariesScreen(
                     DefaultHeader(
                         logo = { Image(painterLogo(), null) },
                         version = appVersion(),
-                        appName = appName
+                        appName = appConfig.appName
                     )
                 }
             },

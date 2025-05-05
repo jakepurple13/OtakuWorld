@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.moresettings
+package com.programmersbox.kmpuiviews.presentation.settings.moresettings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -33,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.sonner.ToastType
@@ -43,13 +43,10 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
-import com.programmersbox.kmpuiviews.presentation.settings.moresettings.ImportExportListStatus
-import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.ToasterSetup
-import com.programmersbox.uiviews.utils.ToasterUtils
+import com.programmersbox.kmpuiviews.utils.ToasterSetup
+import com.programmersbox.kmpuiviews.utils.ToasterUtils
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -57,7 +54,15 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.custom_lists_title
+import otakuworld.kmpuiviews.generated.resources.export_favorites
+import otakuworld.kmpuiviews.generated.resources.import_favorites
+import otakuworld.kmpuiviews.generated.resources.more_settings
+import otakuworld.kmpuiviews.generated.resources.viewFavoritesMenu
 import kotlin.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +103,9 @@ fun MoreSettingsScreen(
             .launchIn(this)
     }
 
-    val appName = stringResource(id = R.string.app_name)
+    val appConfig = koinInject<AppConfig>()
+
+    val appName = appConfig
     val exportLauncher = rememberFileSaverLauncher { document ->
         document?.let { viewModel.writeToFile(it) }
     }
@@ -107,15 +114,15 @@ fun MoreSettingsScreen(
         type = FileKitType.File("json")
     ) { document -> document?.let { viewModel.importFavorites(it) } }
 
-    SettingsScaffold(stringResource(R.string.more_settings)) {
+    SettingsScaffold(stringResource(Res.string.more_settings)) {
         CategorySetting(
             settingIcon = {
                 Icon(Icons.Default.Star, null)
             }
-        ) { Text(stringResource(R.string.viewFavoritesMenu)) }
+        ) { Text(stringResource(Res.string.viewFavoritesMenu)) }
 
         PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.export_favorites)) },
+            settingTitle = { Text(stringResource(Res.string.export_favorites)) },
             modifier = Modifier.clickable(
                 enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                 indication = ripple(),
@@ -124,7 +131,7 @@ fun MoreSettingsScreen(
         )
 
         PreferenceSetting(
-            settingTitle = { Text(stringResource(R.string.import_favorites)) },
+            settingTitle = { Text(stringResource(Res.string.import_favorites)) },
             modifier = Modifier.clickable(
                 enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                 indication = ripple(),
@@ -138,7 +145,7 @@ fun MoreSettingsScreen(
             settingIcon = {
                 Icon(Icons.AutoMirrored.Filled.List, null)
             }
-        ) { Text(stringResource(R.string.custom_lists_title)) }
+        ) { Text(stringResource(Res.string.custom_lists_title)) }
 
         val exportListLauncher = rememberFileSaverLauncher { document ->
             document?.let { viewModel.writeListsToFile(it) }
@@ -209,8 +216,9 @@ private fun ExportListSelection(
     onDismiss: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(true),
 ) {
+    val appConfig = koinInject<AppConfig>()
     val scope = rememberCoroutineScope()
-    val appName = stringResource(id = R.string.app_name)
+    val appName = appConfig.appName
 
     val selection = remember(list) {
         mutableStateMapOf(
@@ -235,9 +243,9 @@ private fun ExportListSelection(
     ) {
         Scaffold(
             topBar = {
-                InsetSmallTopAppBar(
+                TopAppBar(
                     title = { Text("Select Lists to Export") },
-                    insetPadding = WindowInsets(0.dp)
+                    windowInsets = WindowInsets(0.dp)
                 )
             },
             bottomBar = {

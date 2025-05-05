@@ -203,8 +203,7 @@ fun PreviewTheme(
                 single { OtakuDataStoreHandling() }
                 single {
                     NewSettingsHandling(
-                        createProtobuf(get(), SettingsSerializer(true)),
-                        false
+                        createProtobuf(get(), SettingsSerializer()),
                     )
                 }
                 viewModels()
@@ -243,8 +242,7 @@ fun PreviewTheme(
                     //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
                     LocalSettingsHandling provides remember {
                         NewSettingsHandling(
-                            createProtobuf(context, SettingsSerializer(true)),
-                            false
+                            createProtobuf(context, SettingsSerializer()),
                         )
                     },
                     LocalNavHostPadding provides PaddingValues(0.dp),

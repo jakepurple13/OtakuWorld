@@ -69,6 +69,8 @@ kotlin {
 
                 implementation(libs.aboutLibrariesCore)
                 implementation(libs.aboutLibrariesCompose)
+
+                implementation(libs.sonner)
             }
         }
 
