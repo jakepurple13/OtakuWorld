@@ -58,9 +58,10 @@ import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import org.koin.compose.koinInject
 import java.util.Calendar
 
@@ -163,10 +164,14 @@ fun DebugView() {
                                     c[Calendar.MINUTE] = timeState.minute
 
                                     println("Time: ${dateState.selectedDateMillis}")
-                                    println("Time: ${dateTimeFormatter.format(dateState.selectedDateMillis)}")
+                                    dateState.selectedDateMillis?.toLocalDateTime()
+                                        ?.let { "Time: ${dateTimeFormatter.format(it)}" }
+                                        ?.let(::println)
                                     println("Time: ${timeState.hour}")
                                     println("Time: ${timeState.minute}")
-                                    println("Time: ${dateTimeFormatter.format(c.timeInMillis)}")
+                                    c.timeInMillis.toLocalDateTime()
+                                        .let { "Time: ${dateTimeFormatter.format(it)}" }
+                                        .let(::println)
                                     println("Time: ${c.timeInMillis - System.currentTimeMillis()}")
                                 }
                             ) { Text(stringResource(R.string.ok)) }

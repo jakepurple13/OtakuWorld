@@ -57,6 +57,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -93,6 +94,9 @@ import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListStatus
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListViewModel
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -100,7 +104,6 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -124,15 +127,15 @@ fun ImportFullListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold { _ ->
         when (val status = vm.importStatus) {
             ImportFullListStatus.Loading -> {
                 LaunchedEffect(Unit) {
                     snackbarHostState.showSnackbar("Importing...")
                 }
-                Box(Modifier.fillMaxSize()) {
-                    CircularWavyProgressIndicator()
-                }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) { CircularWavyProgressIndicator() }
             }
 
             is ImportFullListStatus.Error -> {
@@ -148,7 +151,8 @@ fun ImportFullListScreen(
                             scrollBehavior = scrollBehavior
                         )
                     },
-                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
                 ) { padding ->
                     Column(
                         modifier = Modifier
@@ -198,6 +202,7 @@ fun ImportFullListScreen(
                             ) { Text(stringResource(R.string.import_import_list)) }
                         }
                     },
+                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
@@ -264,7 +269,6 @@ fun ImportFullListScreen(
                         }
                     }
                 }
-            }
         }
     }
 }
@@ -275,7 +279,7 @@ private fun ImportScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
         val context: Context = LocalContext.current
-        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(listDao, createSavedStateHandle(), context) }
+        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(listDao, createSavedStateHandle()) }
         ImportFullListScreen(
             vm = vm
         )

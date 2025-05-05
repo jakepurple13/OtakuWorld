@@ -77,6 +77,10 @@ internal fun ChapterWatched.toFirebaseChapterWatched() = FirebaseChapterWatched(
 internal fun String.urlToPath() = replace("/", "<")
 internal fun String.pathToUrl() = replace("<", "/")
 
+//TODO: Find out all firebase uses and abstract them out.
+// The android applications themselves will hold that information and pass them out to kmpuiviews.
+// With a firebaseShared module that will house them.
+
 interface FirebaseConnection {
     fun getAllShows(): List<DbModel>
     fun insertShowFlow(showDbModel: DbModel): Flow<Unit>

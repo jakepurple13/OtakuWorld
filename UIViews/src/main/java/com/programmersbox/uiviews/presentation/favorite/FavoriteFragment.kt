@@ -83,13 +83,15 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
+import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
+import com.programmersbox.kmpuiviews.presentation.favorite.SortFavoritesBy
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.ListBottomScreen
@@ -103,7 +105,6 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import dev.chrisbanes.haze.HazeProgressive
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -117,6 +118,7 @@ fun FavoriteUi(
     isHorizontal: Boolean = false,
     dao: ItemDao = LocalItemDao.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    favoritesRepository: FavoritesRepository = koinInject(),
     viewModel: FavoriteViewModel = koinViewModel(),
 ) {
     val navController = LocalNavController.current
@@ -146,8 +148,7 @@ fun FavoriteUi(
             modifier = Modifier.clickable {
                 showDbModel?.let {
                     scope.launch {
-                        dao.deleteFavorite(it)
-                        FirebaseDb.removeShowFlow(it).collect()
+                        favoritesRepository.removeFavorite(it)
                     }
                 }
                 showDbModel = null

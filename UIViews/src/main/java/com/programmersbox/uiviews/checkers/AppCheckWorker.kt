@@ -5,7 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.appVersion

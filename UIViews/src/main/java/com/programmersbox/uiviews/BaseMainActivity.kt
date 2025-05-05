@@ -120,6 +120,8 @@ import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
@@ -129,8 +131,6 @@ import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.updateAppCheck
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.uiviews.presentation.navGraph
@@ -158,12 +158,15 @@ import kotlin.math.roundToInt
 abstract class BaseMainActivity : AppCompatActivity() {
 
     protected val genericInfo: GenericInfo by inject()
-    private val customPreferences = ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+    private val customPreferences = ComposeSettingsDsl()
+        .apply(genericInfo.composeCustomPreferences())
     private val appLogo: AppLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
     private val changingSettingsRepository: ChangingSettingsRepository by inject()
     private val itemDatabase: ItemDatabase by inject()
     private val dataStoreHandling: DataStoreHandling by inject()
+    private val appUpdateCheck: AppUpdateCheck by inject()
+
     protected lateinit var navController: NavHostController
 
     protected fun isNavInitialized() = ::navController.isInitialized
@@ -736,7 +739,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @Composable
     fun updateCheck(): Boolean {
-        val appUpdate by updateAppCheck.collectAsStateWithLifecycle(null)
+        val appUpdate by appUpdateCheck.updateAppCheck.collectAsStateWithLifecycle(null)
         return AppUpdate.checkForUpdate(
             appVersion(),
             appUpdate?.updateRealVersion.orEmpty()
@@ -778,7 +781,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
         flow { emit(AppUpdate.getUpdate()) }
             .catch { emit(null) }
             .dispatchIo()
-            .onEach(updateAppCheck::emit)
+            .onEach(appUpdateCheck.updateAppCheck::emit)
             .launchIn(lifecycleScope)
 
         itemDatabase

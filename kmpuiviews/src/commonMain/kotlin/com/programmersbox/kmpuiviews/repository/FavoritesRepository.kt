@@ -9,7 +9,6 @@ import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 
-//TODO: Can't use until cmp supports built variants
 class FavoritesRepository(
     private val dao: ItemDao,
     private val firebaseDb: KmpFirebaseConnection,

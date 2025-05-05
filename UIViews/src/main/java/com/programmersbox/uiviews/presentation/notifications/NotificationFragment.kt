@@ -107,30 +107,32 @@ import com.programmersbox.gsonutils.toJson
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
+import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.presentation.components.GradientImage
 import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.M3CoverCard2
 import com.programmersbox.uiviews.presentation.components.M3ImageCard
 import com.programmersbox.uiviews.presentation.components.ModalBottomSheetDelete
 import com.programmersbox.uiviews.presentation.components.optionsSheet
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.repository.NotificationRepository
-import com.programmersbox.uiviews.utils.Cached
 import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.MockInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -1026,7 +1028,7 @@ private fun NotifyAt(
                             context,
                             context.getString(
                                 R.string.willNotifyAt,
-                                dateTimeFormatter.format(c.timeInMillis)
+                                dateTimeFormatter.format(c.timeInMillis.toLocalDateTime())
                             ),
                             Toast.LENGTH_SHORT
                         ).show()

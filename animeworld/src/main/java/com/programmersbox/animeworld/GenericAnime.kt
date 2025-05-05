@@ -90,13 +90,14 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
@@ -135,10 +136,10 @@ class GenericAnime(
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildConfig.FLAVOR) {
-                "noFirebase" -> animeNoFirebaseFile
-                "noCloudFirebase" -> animeNoCloudFile
-                else -> animeFile
+            when (BuildType.current) {
+                BuildType.NoFirebase -> animeNoFirebaseFile
+                BuildType.NoCloudFirebase -> animeNoCloudFile
+                BuildType.Full -> animeFile
             }
         }
     override val deepLinkUri: String get() = "animeworld://"

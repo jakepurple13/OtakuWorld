@@ -52,12 +52,12 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.OtakuWorldCatalog
@@ -72,7 +72,6 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
-import java.text.SimpleDateFormat
 import java.util.Locale
 
 class MockInfo(private val context: Context) : GenericInfo {
@@ -204,8 +203,7 @@ fun PreviewTheme(
                 single { OtakuDataStoreHandling() }
                 single {
                     NewSettingsHandling(
-                        createProtobuf(get(), SettingsSerializer(true)),
-                        false
+                        createProtobuf(get(), SettingsSerializer()),
                     )
                 }
                 viewModels()
@@ -244,11 +242,9 @@ fun PreviewTheme(
                     //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
                     LocalSettingsHandling provides remember {
                         NewSettingsHandling(
-                            createProtobuf(context, SettingsSerializer(true)),
-                            false
+                            createProtobuf(context, SettingsSerializer()),
                         )
                     },
-                    LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
                     LocalNavHostPadding provides PaddingValues(0.dp),
                     LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
                 ) { Surface { content() } }

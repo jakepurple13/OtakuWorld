@@ -509,26 +509,6 @@ fun ManagedActivityResultLauncher<Intent, ActivityResult>.launchCatching(
 }
 
 @Composable
-fun HideSystemBarsWhileOnScreen() {
-    val changingSettingsRepository: ChangingSettingsRepository = koinInject()
-
-    LifecycleResumeEffect(Unit) {
-        changingSettingsRepository.showInsets.tryEmit(false)
-        onPauseOrDispose { changingSettingsRepository.showInsets.tryEmit(true) }
-    }
-}
-
-@Composable
-fun HideNavBarWhileOnScreen() {
-    val changingSettingsRepository: ChangingSettingsRepository = koinInject()
-
-    LifecycleResumeEffect(Unit) {
-        changingSettingsRepository.showNavBar.tryEmit(false)
-        onPauseOrDispose { changingSettingsRepository.showNavBar.tryEmit(true) }
-    }
-}
-
-@Composable
 fun BoxWithConstraintsScope.bounds(paddingValues: PaddingValues): Array<Rect> {
     val topBarBounds = with(LocalDensity.current) {
         Rect(

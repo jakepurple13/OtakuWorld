@@ -68,24 +68,26 @@ import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
+import com.programmersbox.kmpuiviews.presentation.components.seedColor
+import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
+import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
+import com.programmersbox.kmpuiviews.presentation.settings.general.ShowDownloadSettings
+import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.BuildConfig
+import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.presentation.components.ThemeItem
-import com.programmersbox.uiviews.presentation.components.seedColor
-import com.programmersbox.uiviews.presentation.settings.BlurSetting
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
-import com.programmersbox.uiviews.presentation.settings.ShareChapterSettings
-import com.programmersbox.uiviews.presentation.settings.ShowDownloadSettings
-import com.programmersbox.uiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.rememberDrawablePainter
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-
+//TODO: Most of these can be moved to kmpuiviews
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun ThemeContent(
@@ -195,7 +197,7 @@ internal fun AccountContent(
 
         HorizontalDivider()
 
-        if (BuildConfig.FLAVOR == "full") {
+        if (BuildType.current == BuildType.Full) {
             Text(
                 "Log in to save all your favorites and chapters/episodes read to the cloud so you can access them on any device!",
                 modifier = Modifier.padding(16.dp)
@@ -244,10 +246,9 @@ internal fun AccountContent(
                 }
             }
         } else {
-            val context = LocalContext.current
-            val importLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.OpenDocument()
-            ) { document -> document?.let { importViewModel.importFavorites(it, context) } }
+            val importLauncher = rememberFilePickerLauncher(
+                type = FileKitType.File("json")
+            ) { document -> document?.let { importViewModel.importFavorites(it) } }
 
             PreferenceSetting(
                 settingTitle = { Text(stringResource(R.string.import_favorites)) },
@@ -255,7 +256,7 @@ internal fun AccountContent(
                 modifier = Modifier.clickable(
                     indication = ripple(),
                     interactionSource = null
-                ) { importLauncher.launch(arrayOf("application/json")) }
+                ) { importLauncher.launch() }
             )
         }
 

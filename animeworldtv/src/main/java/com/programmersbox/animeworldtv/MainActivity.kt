@@ -6,14 +6,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.anime_sources.Sources
 import com.programmersbox.animeworldtv.compose.HomeScreen
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.updateAppCheck
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
@@ -38,13 +30,13 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        lifecycleScope.launch {
+        /*lifecycleScope.launch {
             flow { emit(AppUpdate.getUpdate()) }
                 .catch { emit(null) }
                 .flowOn(Dispatchers.IO)
                 .onEach(updateAppCheck::emit)
                 .collect()
-        }
+        }*/
         if (true) {
             setContentView(R.layout.activity_main)
             if (savedInstanceState == null) {

@@ -15,8 +15,8 @@ import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.OtakuWorldCatalog
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn

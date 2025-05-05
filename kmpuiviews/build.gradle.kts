@@ -52,7 +52,25 @@ kotlin {
                 api(projects.kmpmodels)
                 implementation(libs.bundles.datastoreLibs)
 
+                implementation(libs.kotlinx.datetime)
+
                 implementation(libs.roomRuntime)
+
+                implementation(libs.compose.webview.multiplatform)
+
+                implementation(libs.connectivity.core)
+                implementation(libs.connectivity.compose)
+
+                implementation(libs.filekit.core)
+                implementation(libs.filekit.dialogs.compose)
+
+                implementation(libs.lifecycle.viewmodel.compose)
+                implementation(libs.navigation.compose)
+
+                implementation(libs.aboutLibrariesCore)
+                implementation(libs.aboutLibrariesCompose)
+
+                implementation(libs.sonner)
             }
         }
 
@@ -69,6 +87,13 @@ kotlin {
                 implementation(libs.ktorAndroid)
                 implementation(androidx.browser.browser)
                 implementation(libs.androidBrowserHelper)
+                implementation(project.dependencies.platform(libs.firebasePlatform))
+                implementation(libs.firebaseAuth)
+                implementation(libs.playServices)
+                implementation(libs.bundles.firebaseCrashLibs)
+                implementation(libs.drawablePainter)
+                implementation(libs.ackpine.core)
+                implementation(libs.ackpine.ktx)
             }
         }
 
@@ -81,6 +106,25 @@ kotlin {
         jvmMain {
             dependencies {
 
+            }
+        }
+
+        val deviceMain by creating {
+            dependsOn(commonMain.get())
+            androidMain.get().dependsOn(this)
+            iosMain.get().dependsOn(this)
+            dependencies {
+                implementation(libs.connectivity.device)
+                implementation(libs.connectivity.compose.device)
+            }
+        }
+
+        val httpMain by creating {
+            dependsOn(commonMain.get())
+            jvmMain.get().dependsOn(this)
+            dependencies {
+                implementation(libs.connectivity.http)
+                implementation(libs.connectivity.compose.http)
             }
         }
     }

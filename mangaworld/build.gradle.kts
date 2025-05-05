@@ -90,5 +90,7 @@ dependencies {
 
     implementation(libs.sonner)
 
+    implementation(libs.lifecycle.viewmodel.compose)
+
     //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }

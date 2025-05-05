@@ -132,6 +132,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                             logoId = applicationInfo.icon
                         )
                     }
+                    single {
+                        com.programmersbox.kmpuiviews.utils.AppLogo(
+                            logo = applicationInfo.loadIcon(packageManager),
+                            logoId = applicationInfo.icon
+                        )
+                    }
 
                     appModule()
                     workers()
@@ -245,13 +251,14 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         shortcutSetup()
 
         runCatching {
-            if (BuildConfig.FLAVOR != "noFirebase")
+            if (BuildType.current != BuildType.NoFirebase) {
                 remoteConfigSetup(
                     dataStoreHandling = dataStoreHandling,
                     otakuDataStoreHandling = otakuDataStoreHandling,
                     settingsHandling = settingsHandling,
                     newSettingsHandling = newSettingsHandling
                 )
+            }
         }
     }
 

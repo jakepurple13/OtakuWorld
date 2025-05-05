@@ -47,11 +47,12 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.thenIf
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
 
@@ -142,7 +143,7 @@ fun OtakuListView(
                             )
                         }
                 ) {
-                    val time = remember { dateTimeFormatter.format(it.item.time) }
+                    val time = remember { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
                     ListItem(
                         overlineContent = { Text(stringResource(id = R.string.custom_list_updated_at, time)) },
                         trailingContent = { Text("(${it.list.size})") },

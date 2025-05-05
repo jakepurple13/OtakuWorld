@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -59,6 +60,9 @@ import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListStatus
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -66,7 +70,6 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -75,14 +78,14 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.UUID
 
+//TODO: Might be removing this
+// Need to keep this for legacy
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ImportListScreen(
     listDao: ListDao = LocalCustomListDao.current,
     vm: ImportListViewModel = koinViewModel(),
 ) {
-    //TODO: Might be removing this
-    // Need to keep this for legacy
     HideNavBarWhileOnScreen()
 
     val scope = rememberCoroutineScope()
@@ -106,9 +109,10 @@ fun ImportListScreen(
                 LaunchedEffect(Unit) {
                     snackbarHostState.showSnackbar("Importing...")
                 }
-                Box(Modifier.fillMaxSize()) {
-                    CircularWavyProgressIndicator()
-                }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) { CircularWavyProgressIndicator() }
             }
 
             is ImportListStatus.Error -> {
@@ -191,6 +195,7 @@ fun ImportListScreen(
                             ) { Text(stringResource(R.string.import_import_list)) }
                         }
                     },
+                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
                     modifier = Modifier
                         .padding(LocalNavHostPadding.current)
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -257,7 +262,7 @@ private fun ImportScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
         val context: Context = LocalContext.current
-        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle(), context) }
+        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle()) }
         ImportListScreen(
             listDao = listDao,
             vm = vm

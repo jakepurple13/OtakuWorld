@@ -2,8 +2,13 @@ package com.programmersbox.kmpuiviews
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.mikepenz.aboutlibraries.Libs
+import dev.jordond.connectivity.Connectivity
+import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.config.KamelConfig
 import org.koin.core.module.Module
 
@@ -26,23 +31,31 @@ expect class IconLoader {
     fun load(packageName: String): Any
 }
 
-/*
-val format = LocalDateTime.Format {
-    monthName(MonthNames.ENGLISH_FULL)
-    char(' ')
-    dayOfMonth()
-    char(' ')
-    year()
-    chars(", ")
-    if (isUsing24HourTime) {
-        hour()
-        char(':')
-        minute()
-    } else {
-        amPmHour()
-        char(':')
-        minute()
-        char(' ')
-        amPmMarker("AM", "PM")
-    }
-}*/
+expect class DateTimeFormatHandler {
+    fun is24HourTime(): Boolean
+
+    @Composable
+    fun is24Time(): Boolean
+}
+
+expect fun createConnectivity(): Connectivity
+
+expect fun recordFirebaseException(throwable: Throwable)
+
+expect fun logFirebaseMessage(message: String)
+
+expect fun readPlatformFile(uri: String): PlatformFile
+
+@Composable
+expect fun versionCode(): String
+
+@Composable
+expect fun appVersion(): String
+
+@Composable
+expect fun painterLogo(): Painter
+
+expect class AboutLibraryBuilder {
+    @Composable
+    fun buildLibs(): State<Libs?>
+}

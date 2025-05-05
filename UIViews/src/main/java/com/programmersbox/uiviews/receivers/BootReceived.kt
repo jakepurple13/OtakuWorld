@@ -6,7 +6,6 @@ import android.content.Intent
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.loggingutils.Loged
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.checkers.SavedNotifications
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -24,7 +23,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     private val itemDao: ItemDao by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Loged.d("BootReceived")
+        println("BootReceived")
         println(intent?.action)
         runCatching {
             runBlocking {

@@ -8,10 +8,7 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
-import kotlinx.coroutines.flow.combine
 import kotlin.experimental.ExperimentalTypeInference
 
 @OptIn(ExperimentalTypeInference::class)
@@ -27,19 +24,6 @@ fun logFirebaseMessage(message: String) = runCatching {
     Firebase.crashlytics.log(message)
 }.onFailure { println(message) }
 
-//TODO: This could probably go...somewhere
-fun combineSources(
-    sourceRepository: SourceRepository,
-    dao: ItemDao,
-) = combine(
-    sourceRepository.sources,
-    dao.getSourceOrder()
-) { list, order ->
-    list
-        .filterNot { it.apiService.notWorking }
-        .sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
-}
-
 @SuppressLint("ComposableNaming")
 @Composable
 fun trackScreen(screenName: Screen) {
@@ -48,7 +32,7 @@ fun trackScreen(screenName: Screen) {
             Firebase.analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, screenName.toString())
             }
-        }.onFailure { it.printStackTrace() }
+        }
     }
 }
 
@@ -60,6 +44,6 @@ fun trackScreen(screenName: String) {
             Firebase.analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
             }
-        }.onFailure { it.printStackTrace() }
+        }
     }
 }
