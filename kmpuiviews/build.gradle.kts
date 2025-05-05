@@ -92,6 +92,8 @@ kotlin {
                 implementation(libs.playServices)
                 implementation(libs.bundles.firebaseCrashLibs)
                 implementation(libs.drawablePainter)
+                implementation(libs.ackpine.core)
+                implementation(libs.ackpine.ktx)
             }
         }
 

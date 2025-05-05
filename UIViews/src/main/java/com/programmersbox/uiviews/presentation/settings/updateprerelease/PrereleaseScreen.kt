@@ -30,7 +30,6 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus
 import kotlinx.datetime.Instant
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat

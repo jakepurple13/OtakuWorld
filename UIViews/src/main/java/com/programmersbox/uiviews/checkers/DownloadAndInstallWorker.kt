@@ -15,8 +15,8 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
+import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
+import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import kotlinx.coroutines.delay

@@ -14,7 +14,6 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.PerformanceClass
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -28,7 +27,6 @@ fun Module.appModule() {
     singleOf(::DataStoreHandling)
     singleOf(::SettingsHandling)
     singleOf(::OtakuDataStoreHandling)
-    singleOf(::DownloadAndInstaller)
     singleOf(::IconLoader)
     singleOf(::DateTimeFormatHandler)
 

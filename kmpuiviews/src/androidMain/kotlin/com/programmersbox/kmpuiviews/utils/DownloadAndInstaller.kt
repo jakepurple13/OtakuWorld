@@ -1,10 +1,10 @@
-package com.programmersbox.uiviews.presentation.settings.downloadstate
+package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
 import android.widget.Toast
 import androidx.core.net.toUri
 import com.google.firebase.perf.trace
-import com.programmersbox.uiviews.utils.logFirebaseMessage
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.prepareGet
@@ -33,6 +33,8 @@ import ru.solrudev.ackpine.uninstaller.createSession
 import java.io.File
 import kotlin.time.Duration.Companion.minutes
 
+//TODO: Also need a wrapper for it.
+// Probably an expect/actual class
 class DownloadAndInstaller(
     private val context: Context,
 ) {
