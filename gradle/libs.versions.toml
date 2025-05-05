@@ -102,7 +102,7 @@ material3WindowSizeClassVersion = "1.7.3"
 connectivity = "2.0.0"
 
 cmpLifecycle = "2.9.0-alpha07"
-navigationCmp = "2.9.0-alpha17"
+navigationCmp = "2.9.0-SNAPSHOT+igor-demin-fix-pinning-for-poms"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
