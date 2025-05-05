@@ -171,16 +171,16 @@ class DownloadAndInstallWorker(
                             DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
                         } else {
                             when (it.progress.getString("progress")) {
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloading" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloading" ->
                                     DownloadAndInstallStatus.Downloading(it.progress.getFloat("progressAmount", 0f))
 
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloaded" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloaded" ->
                                     DownloadAndInstallStatus.Downloaded
 
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installing" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installing" ->
                                     DownloadAndInstallStatus.Installing
 
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installed" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installed" ->
                                     DownloadAndInstallStatus.Installed
 
                                 else -> DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
