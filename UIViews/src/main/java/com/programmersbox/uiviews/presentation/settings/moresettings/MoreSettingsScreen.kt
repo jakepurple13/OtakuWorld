@@ -158,7 +158,7 @@ fun MoreSettingsScreen(
                 enabled = true,
                 indication = ripple(),
                 interactionSource = null
-            ) { exportListLauncher.launch("${appName}_lists.json") }
+            ) { exportListLauncher.launch("${appName}_lists", "json") }
         )
 
         var showListSelection by remember { mutableStateOf(false) }
