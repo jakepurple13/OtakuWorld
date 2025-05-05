@@ -51,6 +51,7 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
@@ -70,6 +71,7 @@ import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
+import org.koin.dsl.binds
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.util.Locale
@@ -189,7 +191,10 @@ fun PreviewTheme(
                 single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
             }
             module {
-                single<GenericInfo> { MockInfo(get()) }
+                single<GenericInfo> { MockInfo(get()) } binds arrayOf(
+                    KmpGenericInfo::class,
+                    GenericInfo::class
+                )
                 repository()
                 includes(databases)
                 single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }

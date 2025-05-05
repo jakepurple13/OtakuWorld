@@ -15,13 +15,16 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.GenericInfo
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 
 class GenericMangaDesktop(
     val settingsHandling: NewSettingsHandling,
-) : GenericInfo {
+) : KmpGenericInfo {
+
+    override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
 
     override val sourceType: String get() = "manga"
 

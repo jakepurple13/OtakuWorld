@@ -1,30 +1,26 @@
-package com.programmersbox.uiviews.presentation.settings.viewmodels
+package com.programmersbox.kmpuiviews.presentation.settings.moreinfo
 
-import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
-import com.programmersbox.uiviews.GenericInfo
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 class MoreInfoViewModel(
     val downloadAndInstaller: DownloadAndInstaller,
-    private val genericInfo: GenericInfo,
+    private val genericInfo: KmpGenericInfo,
     private val appUpdateCheck: AppUpdateCheck,
 ) : ViewModel() {
 
+    @OptIn(ExperimentalAtomicApi::class)
     private val checker = AtomicBoolean(false)
 
-    fun update(
-        a: AppUpdate.AppUpdates,
-    ) {
+    fun update(a: AppUpdate.AppUpdates) {
         viewModelScope.launch {
             val url = a.downloadUrl(genericInfo.apkString)
 
@@ -37,17 +33,17 @@ class MoreInfoViewModel(
         }
     }
 
-    suspend fun updateChecker(context: Context) {
+    @OptIn(ExperimentalAtomicApi::class)
+    suspend fun updateChecker() {
         try {
-            if (!checker.get()) {
-                checker.set(true)
+            if (!checker.load()) {
+                checker.store(true)
                 AppUpdate.getUpdate()?.let(appUpdateCheck.updateAppCheck::tryEmit)
             }
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            checker.set(false)
-            withContext(Dispatchers.Main) { context.let { c -> Toast.makeText(c, "Done Checking", Toast.LENGTH_SHORT).show() } }
+            checker.store(false)
         }
     }
 }

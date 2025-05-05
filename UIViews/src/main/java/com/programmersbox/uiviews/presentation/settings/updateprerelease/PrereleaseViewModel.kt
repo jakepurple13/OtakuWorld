@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.kmpuiviews.repository.GitHubPrerelease
+import com.programmersbox.kmpuiviews.repository.PrereleaseRepository
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.launchIn

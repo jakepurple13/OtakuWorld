@@ -20,9 +20,8 @@ fun main() = application {
                     single {
                         NewSettingsHandling(
                             createProtobuf(
-                                serializer = SettingsSerializer(true)
+                                serializer = SettingsSerializer()
                             ),
-                            canShowBlur = true
                         )
                     }
 

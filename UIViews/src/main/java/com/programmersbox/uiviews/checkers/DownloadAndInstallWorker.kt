@@ -15,15 +15,16 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import ru.solrudev.ackpine.session.parameters.Confirmation
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -45,7 +46,7 @@ class DownloadAndInstallWorker(
         runCatching {
             downloadAndInstaller.downloadAndInstall(
                 url = url,
-                confirmationType = Confirmation.IMMEDIATE
+                confirmationType = ConfirmationType.IMMEDIATE
             )
                 .onEach {
                     notify(notificationLogo, url) {
@@ -170,16 +171,16 @@ class DownloadAndInstallWorker(
                             DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
                         } else {
                             when (it.progress.getString("progress")) {
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloading" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloading" ->
                                     DownloadAndInstallStatus.Downloading(it.progress.getFloat("progressAmount", 0f))
 
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloaded" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloaded" ->
                                     DownloadAndInstallStatus.Downloaded
 
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installing" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installing" ->
                                     DownloadAndInstallStatus.Installing
 
-                                "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installed" ->
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installed" ->
                                     DownloadAndInstallStatus.Installed
 
                                 else -> DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
@@ -321,6 +322,7 @@ class DownloadWorker(
         fun downloadThenInstall(context: Context, url: String) {
             WorkManager.getInstance(context)
                 .beginWith(
+                    //TODO: Work on this
                     OneTimeWorkRequestBuilder<DownloadAndInstallWorker>()
                         .setInputData(workDataOf("url" to url))
                         .addTag("downloadAndInstall")
@@ -394,8 +396,8 @@ class InstallWorker(
 
         runCatching {
             downloadAndInstaller.install(
-                file = url,
-                confirmationType = Confirmation.IMMEDIATE
+                file = PlatformFile(url),
+                confirmationType = ConfirmationType.IMMEDIATE
             )
                 .onEach {
                     notify(notificationLogo, notificationId) {

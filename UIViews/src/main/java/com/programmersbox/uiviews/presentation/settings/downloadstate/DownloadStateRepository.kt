@@ -6,6 +6,7 @@ import androidx.work.WorkManager
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.uiviews.checkers.DownloadAndInstallWorker
 import com.programmersbox.uiviews.checkers.DownloadWorker
+import io.github.vinceglb.filekit.PlatformFile
 import java.io.File
 import java.util.UUID
 
@@ -20,8 +21,9 @@ class DownloadStateRepository(
         workManager.cancelWorkById(id)
     }
 
-    fun install(url: String) =
-        downloadAndInstaller.install(File(context.cacheDir, "${url.toUri().lastPathSegment}.apk"))
+    fun install(url: String) = downloadAndInstaller.install(
+        PlatformFile(File(context.cacheDir, "${url.toUri().lastPathSegment}.apk"))
+    )
 
     fun downloadAndInstall(url: String) {
         DownloadAndInstallWorker.downloadAndInstall(context, url)

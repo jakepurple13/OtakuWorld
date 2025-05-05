@@ -48,6 +48,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.utils.ComponentState
@@ -86,11 +87,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.binds
 import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get(), get(), get(), get()) }
+    single<GenericInfo> { GenericManga(get(), get(), get(), get()) } binds arrayOf(
+        KmpGenericInfo::class,
+        GenericInfo::class
+    )
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     singleOf(::ChapterHolder)
