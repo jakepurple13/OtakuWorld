@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.lists
+package com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -21,17 +21,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.cancel
+import otakuworld.kmpuiviews.generated.resources.choose_list_title
+import otakuworld.kmpuiviews.generated.resources.confirm
+import otakuworld.kmpuiviews.generated.resources.create_new_list
+import otakuworld.kmpuiviews.generated.resources.create_new_list_option
+import otakuworld.kmpuiviews.generated.resources.list_name
 
 @Composable
 fun ListChoiceScreen(
@@ -50,7 +54,7 @@ fun ListChoiceScreen(
         .getAllLists()
         .collectAsStateWithLifecycle(emptyList())
     ListBottomScreen(
-        title = stringResource(R.string.choose_list_title),
+        title = stringResource(Res.string.choose_list_title),
         list = list,
         navigationIcon = navigationIcon,
         onClick = onClick,
@@ -61,7 +65,12 @@ fun ListChoiceScreen(
                     onClick = { showAdd = !showAdd }
                 ) {
                     ListItem(
-                        headlineContent = { Text(stringResource(R.string.create_new_list_option), style = MaterialTheme.typography.titleLarge) },
+                        headlineContent = {
+                            Text(
+                                stringResource(Res.string.create_new_list_option),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
                         trailingContent = { Icon(Icons.Default.Add, null) }
                     )
                 }
@@ -69,12 +78,12 @@ fun ListChoiceScreen(
                     var name by remember { mutableStateOf("") }
                     AlertDialog(
                         onDismissRequest = { showAdd = false },
-                        title = { Text(stringResource(R.string.create_new_list)) },
+                        title = { Text(stringResource(Res.string.create_new_list)) },
                         text = {
                             OutlinedTextField(
                                 value = name,
                                 onValueChange = { name = it },
-                                label = { Text(stringResource(id = R.string.list_name)) },
+                                label = { Text(stringResource(Res.string.list_name)) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -88,9 +97,13 @@ fun ListChoiceScreen(
                                     }
                                 },
                                 enabled = name.isNotEmpty()
-                            ) { Text(stringResource(id = R.string.confirm)) }
+                            ) { Text(stringResource(Res.string.confirm)) }
                         },
-                        dismissButton = { TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) } }
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showAdd = false }
+                            ) { Text(stringResource(Res.string.cancel)) }
+                        }
                     )
                 }
             }
@@ -103,15 +116,4 @@ fun ListChoiceScreen(
             )
         }
     )
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun ListChoiceScreenPreview() {
-    PreviewTheme {
-        ListChoiceScreen(
-            url = "",
-            onClick = {}
-        )
-    }
 }
