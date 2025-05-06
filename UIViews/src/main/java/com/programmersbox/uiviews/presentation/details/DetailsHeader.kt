@@ -69,10 +69,10 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.animate
-import com.programmersbox.uiviews.utils.fadeInAnimation
-import com.programmersbox.uiviews.utils.scaleRotateOffsetReset
 import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
 import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
 import com.programmersbox.uiviews.utils.sharedelements.customSharedElement

@@ -26,8 +26,8 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
-import com.programmersbox.uiviews.utils.bounceClick
-import com.programmersbox.uiviews.utils.combineClickableWithIndication
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.bounceClick
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
 import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
 import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
