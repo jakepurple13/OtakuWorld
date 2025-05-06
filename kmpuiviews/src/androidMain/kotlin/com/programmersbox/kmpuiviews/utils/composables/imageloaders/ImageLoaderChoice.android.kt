@@ -17,7 +17,7 @@ actual fun CustomImageChoice(
     modifier: Modifier,
     headers: Map<String, Any>,
     placeHolder: @Composable (() -> Painter),
-    error: @Composable (() -> Painter),
+    onError: @Composable (() -> Painter),
     contentScale: ContentScale,
 ) {
     val url = remember(imageUrl) {
@@ -35,7 +35,7 @@ actual fun CustomImageChoice(
             contentDescription = name,
         ),
         loading = { Image(painter = placeHolder(), contentDescription = name) },
-        failure = { Image(painter = error(), contentDescription = name) },
+        failure = { Image(painter = onError(), contentDescription = name) },
         modifier = modifier
     )
 }

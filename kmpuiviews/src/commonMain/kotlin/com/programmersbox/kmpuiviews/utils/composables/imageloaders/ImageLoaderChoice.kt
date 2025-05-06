@@ -43,6 +43,6 @@ expect fun CustomImageChoice(
     modifier: Modifier = Modifier,
     headers: Map<String, Any> = emptyMap(),
     placeHolder: @Composable () -> Painter,
-    error: @Composable () -> Painter = placeHolder,
+    onError: @Composable () -> Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
 )
