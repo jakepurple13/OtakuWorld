@@ -4,10 +4,12 @@ import android.content.Context
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpuiviews.AboutLibraryBuilder
+import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.sharedutils.FirebaseConnection
 import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.module.dsl.singleOf
@@ -23,6 +25,21 @@ val kmpInterop = module {
             appName = get<Context>().getString(R.string.app_name)
         )
     }
+
+    factory<TranslationHandler> { TranslationItemHandler() }
+}
+
+class TranslationItemHandler(
+    private val translateItems: TranslateItems = TranslateItems(),
+) : TranslationHandler {
+    override fun translateDescription(
+        textToTranslate: String,
+        progress: (Boolean) -> Unit,
+        translatedText: (String) -> Unit,
+    ) = translateItems.translateDescription(textToTranslate, progress, translatedText)
+
+    override suspend fun translate(textToTranslate: String): String = translateItems.translate(textToTranslate)
+    override fun clear() = translateItems.clear()
 }
 
 class KmpFirebaseConnectionImpl : KmpFirebaseConnection {

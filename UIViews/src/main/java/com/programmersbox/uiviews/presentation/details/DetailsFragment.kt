@@ -88,6 +88,9 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.details.DetailFavoriteAction
+import com.programmersbox.kmpuiviews.presentation.details.DetailState
+import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao

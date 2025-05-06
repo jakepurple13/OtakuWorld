@@ -1,44 +1,42 @@
-package com.programmersbox.uiviews.presentation.details
+package com.programmersbox.kmpuiviews.presentation.details
 
-import android.graphics.Bitmap
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.kmpalette.generatePalette
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashItem
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toDbModel
-import com.programmersbox.gsonutils.fromJson
-import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.toItemModel
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
-import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.fireListener
-import com.programmersbox.sharedutils.TranslateItems
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ApiServiceDeserializer
-import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.recordFirebaseException
-import com.vanniktech.blurhash.BlurHash
+import io.github.vinceglb.filekit.dialogs.compose.util.encodeToByteArray
+import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -51,24 +49,23 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-//TODO: Maybe can kmp this?
 class DetailsViewModel(
     handle: SavedStateHandle,
-    genericInfo: GenericInfo,
     private val blurHashDao: BlurHashDao,
     sourceRepository: SourceRepository,
     private val favoritesRepository: FavoritesRepository,
     firebaseItemListener: KmpFirebaseConnection.KmpFirebaseListener,
     firebaseDbModelListener: KmpFirebaseConnection.KmpFirebaseListener,
     firebaseChapterListener: KmpFirebaseConnection.KmpFirebaseListener,
+    private val translationHandler: TranslationHandler,
 ) : ViewModel() {
 
     private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
     val itemModel: KmpItemModel? = details?.toItemModel(sourceRepository)
     //TODO: Fix this
-        ?: handle.get<String>("model")
-            ?.fromJson<KmpItemModel>(KmpApiService::class.java to ApiServiceDeserializer(genericInfo))
+    //?: handle.get<String>("model")
+    //  ?.fromJson<KmpItemModel>(KmpApiService::class.java to ApiServiceDeserializer(genericInfo))
 
     private var detailState by mutableStateOf<DetailState>(DetailState.Loading)
 
@@ -89,7 +86,7 @@ class DetailsViewModel(
 
     var dbModel by mutableStateOf<DbModel?>(null)
 
-    var imageBitmap: Bitmap? by mutableStateOf(null)
+    var imageBitmap: ImageBitmap? by mutableStateOf(null)
     var blurHash by mutableStateOf<BitmapPainter?>(null)
     private var blurHashItem: BlurHashItem? = null
 
@@ -128,15 +125,16 @@ class DetailsViewModel(
             .getHash(itemModel?.imageUrl)
             .onEach { blurHashItem = it }
             .filterNotNull()
-            .mapNotNull {
-                BlurHash.decode(
+            .mapNotNull { it.blurHash.decodeBase64Bytes().decodeToImageBitmap() }
+            /*
+            /*BlurHash.decode(
                     it.blurHash,
                     width = ComposableUtils.IMAGE_WIDTH_PX,
                     height = ComposableUtils.IMAGE_HEIGHT_PX
-                )?.asImageBitmap()
-            }
-            .onEach { blurHash = BitmapPainter(it) }
-            .onEach { if (palette == null) palette = Palette.from(it).generate() }
+                )?.asImageBitmap()*/
+             */
+            .onEach { blurHash = runCatching { BitmapPainter(it) }.getOrNull() }
+            .onEach { if (palette == null) palette = it.generatePalette() }
             .dispatchIo()
             .launchIn(viewModelScope)
 
@@ -159,7 +157,7 @@ class DetailsViewModel(
                     blurHashDao.insertHash(
                         BlurHashItem(
                             it.imageUrl,
-                            BlurHash.encode(it.bitmap, 4, 3)
+                            it.bitmap.encodeToByteArray().decodeToString()//BlurHash.encode(it.bitmap, 4, 3)
                         )
                     )
                 } else if (it.blurHashItem != null && !it.isFavorite) {
@@ -170,7 +168,7 @@ class DetailsViewModel(
     }
 
     class BlurAdd(
-        val bitmap: Bitmap?,
+        val bitmap: ImageBitmap?,
         val isFavorite: Boolean,
         val blurHashItem: BlurHashItem?,
         val imageUrl: String?,
@@ -182,12 +180,11 @@ class DetailsViewModel(
             ?.let { favoritesRepository.toggleNotify(it) }
     }
 
-    private val englishTranslator = TranslateItems()
 
     fun translateDescription(progress: MutableState<Boolean>) {
         viewModelScope.launch {
             progress.value = true
-            description = englishTranslator.translate(info!!.description)
+            description = translationHandler.translate(info!!.description)
             progress.value = false
         }
     }
@@ -258,7 +255,7 @@ class DetailsViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        englishTranslator.clear()
+        translationHandler.clear()
     }
 }
 

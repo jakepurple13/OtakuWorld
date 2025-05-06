@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.presentation.details
 
-import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
@@ -54,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -116,7 +116,7 @@ fun DetailsView(
     showDownloadButton: () -> Boolean,
     onPaletteSet: (Palette) -> Unit,
     blurHash: BitmapPainter?,
-    onBitmapSet: (Bitmap) -> Unit,
+    onBitmapSet: (ImageBitmap) -> Unit,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
     val hazeState = remember { HazeState() }

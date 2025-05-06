@@ -78,6 +78,7 @@ kotlin {
                 implementation(libs.sonner)
 
                 implementation("net.thauvin.erik.urlencoder:urlencoder-lib:1.6.0")
+                implementation(libs.blurhash)
             }
         }
 

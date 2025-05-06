@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.presentation.details
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -47,7 +46,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -99,7 +98,7 @@ internal fun DetailsHeader(
     possibleDescription: @Composable () -> Unit = {},
     onPaletteSet: (Palette) -> Unit,
     blurHash: BitmapPainter? = null,
-    onBitmapSet: (Bitmap) -> Unit = {},
+    onBitmapSet: (ImageBitmap) -> Unit = {},
 ) {
     val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
@@ -197,7 +196,7 @@ internal fun DetailsHeader(
                         },
                         onImageStateChanged = {
                             if (it is GlideImageState.Success) {
-                                it.imageBitmap?.asAndroidBitmap()?.let { it1 -> onBitmapSet(it1) }
+                                it.imageBitmap?.let(onBitmapSet)
                             }
                         },
                         modifier = Modifier
