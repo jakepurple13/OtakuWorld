@@ -85,6 +85,7 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
+import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.SortFavoritesBy
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
@@ -102,7 +103,6 @@ import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.InsetCenterAlignedTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.launch

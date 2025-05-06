@@ -38,8 +38,8 @@ import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.github.panpf.zoomimage.rememberGlideZoomState
 import com.github.panpf.zoomimage.zoom.ReadMode
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import io.kamel.image.KamelImage

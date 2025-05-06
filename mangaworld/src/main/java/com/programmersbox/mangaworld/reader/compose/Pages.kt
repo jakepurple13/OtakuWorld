@@ -59,8 +59,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.skydoves.landscapist.ImageOptions

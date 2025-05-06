@@ -88,12 +88,10 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.programmersbox.datastore.GridChoice
-import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.R
-import org.koin.compose.koinInject
 import kotlin.properties.Delegates
 
 @OptIn(ExperimentalMaterial3Api::class)

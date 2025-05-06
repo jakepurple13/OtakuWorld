@@ -66,12 +66,12 @@ import com.programmersbox.datastore.mangasettings.ReaderType
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource

@@ -118,6 +118,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomList
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListState
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -130,7 +131,6 @@ import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.optionsSheetList
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.PreviewTheme

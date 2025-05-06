@@ -68,8 +68,8 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.animate
 import com.programmersbox.uiviews.utils.fadeInAnimation
 import com.programmersbox.uiviews.utils.scaleRotateOffsetReset

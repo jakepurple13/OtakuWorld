@@ -51,12 +51,12 @@ import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetScope
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.utils.ComposableUtils
 import eu.wewox.textflow.material3.TextFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
