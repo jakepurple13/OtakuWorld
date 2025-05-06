@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
@@ -59,3 +60,6 @@ expect class AboutLibraryBuilder {
     @Composable
     fun buildLibs(): State<Libs?>
 }
+
+@Composable
+expect fun Modifier.zoomOverlay(): Modifier
