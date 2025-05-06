@@ -100,6 +100,10 @@ kotlin {
                 implementation(libs.ackpine.core)
                 implementation(libs.ackpine.ktx)
                 implementation(libs.glideCompose)
+                implementation(libs.landscapist.bom)
+                implementation(libs.landscapistGlide)
+                implementation(libs.landscapistPalette)
+                implementation(libs.landscapistPlaceholder)
             }
         }
 

@@ -15,7 +15,17 @@ fun ImageLoaderChoice(
     error: @Composable () -> Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
 ) {
-    CustomKamelImage(
+    /*CustomKamelImage(
+        imageUrl = imageUrl,
+        name = name,
+        modifier = modifier,
+        headers = headers,
+        placeHolder = placeHolder,
+        onError = error,
+        contentScale = contentScale,
+    )*/
+
+    CustomImageChoice(
         imageUrl = imageUrl,
         name = name,
         modifier = modifier,
@@ -25,3 +35,14 @@ fun ImageLoaderChoice(
         contentScale = contentScale,
     )
 }
+
+@Composable
+expect fun CustomImageChoice(
+    imageUrl: String,
+    name: String,
+    modifier: Modifier = Modifier,
+    headers: Map<String, Any> = emptyMap(),
+    placeHolder: @Composable () -> Painter,
+    error: @Composable () -> Painter = placeHolder,
+    contentScale: ContentScale = ContentScale.FillBounds,
+)
