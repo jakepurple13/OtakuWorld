@@ -40,11 +40,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.KmpItemModelOptionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetScope
@@ -53,9 +53,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListC
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.sharedutils.AppLogo
+import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.presentation.navigateToDetails
 import eu.wewox.textflow.material3.TextFlow
 import kotlinx.coroutines.CoroutineScope
@@ -339,11 +338,10 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         },
         lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
         obstacleContent = {
-            val logo = koinInject<AppLogo>().logo
             ImageLoaderChoice(
                 imageUrl = imageUrl,
                 name = title,
-                placeHolder = rememberDrawablePainter(logo),
+                placeHolder = { painterLogo() },
                 modifier = Modifier
                     .padding(end = 16.dp)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

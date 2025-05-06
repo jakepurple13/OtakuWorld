@@ -18,13 +18,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
+import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.uiviews.utils.bounceClick
 import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
@@ -89,8 +90,8 @@ fun M3CoverCard(
                 imageUrl = imageUrl,
                 headers = headers,
                 name = name,
-                placeHolder = placeHolder,
-                error = error,
+                placeHolder = { painterResource(placeHolder) },
+                error = { painterResource(error) },
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.matchParentSize()
             )
@@ -155,8 +156,8 @@ fun M3ImageCard(
             ImageLoaderChoice(
                 imageUrl = imageUrl,
                 headers = headers,
-                placeHolder = placeHolder,
-                error = error,
+                placeHolder = { painterResource(placeHolder) },
+                error = { painterResource(error) },
                 contentScale = ContentScale.FillBounds,
                 name = name,
                 modifier = Modifier.matchParentSize()
@@ -241,8 +242,8 @@ fun M3CoverCard(
                 contentScale = ContentScale.FillBounds,
                 name = name,
                 headers = headers,
-                placeHolder = rememberDrawablePainter(placeHolder),
-                error = rememberDrawablePainter(error),
+                placeHolder = { rememberDrawablePainter(placeHolder) },
+                error = { rememberDrawablePainter(error) },
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(
@@ -319,8 +320,8 @@ fun M3CoverCard(
                 contentScale = ContentScale.FillBounds,
                 name = name,
                 headers = headers,
-                placeHolder = rememberDrawablePainter(placeHolder),
-                error = rememberDrawablePainter(error),
+                placeHolder = { rememberDrawablePainter(placeHolder) },
+                error = { rememberDrawablePainter(error) },
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(
@@ -394,8 +395,8 @@ fun M3CoverCard2(
                 contentScale = ContentScale.FillBounds,
                 name = name,
                 headers = headers,
-                placeHolder = placeHolder,
-                error = error,
+                placeHolder = { painterResource(placeHolder) },
+                error = { painterResource(error) },
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(
