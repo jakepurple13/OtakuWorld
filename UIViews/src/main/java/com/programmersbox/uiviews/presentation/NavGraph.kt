@@ -26,6 +26,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSett
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.all.AllView
@@ -50,7 +51,6 @@ import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadSt
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.utils.trackScreen
 
 //TODO: MAYBE give each screen an enum of where they are and the transitions are based off of that?

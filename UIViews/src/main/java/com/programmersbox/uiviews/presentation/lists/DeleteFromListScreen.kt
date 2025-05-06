@@ -39,12 +39,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -174,7 +175,7 @@ fun DeleteFromListScreen(
                             M3CoverCard(
                                 imageUrl = item.imageUrl,
                                 name = item.title,
-                                placeHolder = logoDrawable.logo,
+                                placeHolder = { painterLogo() },
                                 onClick = {
                                     if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
                                 },

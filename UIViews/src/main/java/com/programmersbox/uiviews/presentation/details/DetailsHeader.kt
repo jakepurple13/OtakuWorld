@@ -71,11 +71,11 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.animate
-import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
-import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
-import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
 import com.programmersbox.uiviews.utils.toComposeColor
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent

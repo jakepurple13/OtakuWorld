@@ -55,6 +55,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -69,7 +70,6 @@ import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
@@ -142,7 +142,7 @@ class MockInfo(private val context: Context) : GenericInfo {
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = R.drawable.ic_site_settings,
+                    placeHolder = { painterResource(R.drawable.ic_site_settings) },
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(

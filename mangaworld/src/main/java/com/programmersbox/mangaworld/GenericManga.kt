@@ -51,6 +51,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.utils.ComponentState
@@ -73,7 +74,6 @@ import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -257,7 +257,7 @@ class GenericManga(
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = R.drawable.manga_world_round_logo,
+                    placeHolder = { painterResource(R.drawable.manga_world_round_logo) },
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(
