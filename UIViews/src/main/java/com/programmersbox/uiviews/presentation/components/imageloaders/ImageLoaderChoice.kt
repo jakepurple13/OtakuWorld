@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 
+//TODO: Move to kmpuiviews
 @Composable
 fun ImageLoaderChoice(
     imageUrl: String,

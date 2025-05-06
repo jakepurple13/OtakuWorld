@@ -14,6 +14,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +42,6 @@ import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.uiviews.utils.AmoledProvider
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.kamel.image.KamelImage
@@ -66,11 +66,11 @@ fun ImageLoaderSettings(
     SettingsScaffold(
         title = "Image Loader Settings",
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 title = { Text("Image Loader Settings") },
                 scrollBehavior = it,
                 navigationIcon = navigationButton,
-                insetPadding = windowInsets
+                windowInsets = windowInsets
             )
         }
     ) {

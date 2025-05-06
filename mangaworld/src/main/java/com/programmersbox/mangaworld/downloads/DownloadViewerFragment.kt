@@ -36,6 +36,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
@@ -71,7 +72,6 @@ import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import com.programmersbox.uiviews.presentation.components.animatedItems
 import com.programmersbox.uiviews.presentation.components.updateAnimatedItemsState
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
@@ -95,7 +95,7 @@ fun DownloadScreen() {
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(R.string.downloaded_chapters)) },
                 navigationIcon = { BackButton() }

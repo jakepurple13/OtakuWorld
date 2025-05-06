@@ -33,6 +33,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -70,7 +71,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
@@ -122,7 +122,7 @@ fun ImportListScreen(
                 }
                 NormalOtakuScaffold(
                     topBar = {
-                        InsetSmallTopAppBar(
+                        TopAppBar(
                             title = { Text(stringResource(R.string.importing_import_list)) },
                             navigationIcon = { BackButton() },
                             scrollBehavior = scrollBehavior
@@ -158,7 +158,7 @@ fun ImportListScreen(
                 NormalOtakuScaffold(
                     topBar = {
                         Column {
-                            InsetSmallTopAppBar(
+                            TopAppBar(
                                 title = { Text(stringResource(R.string.importing_import_list)) },
                                 navigationIcon = { BackButton() },
                                 actions = { Text("(${status.customList?.list.orEmpty().size})") },

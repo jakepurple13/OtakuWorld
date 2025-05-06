@@ -100,7 +100,6 @@ import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
 import com.programmersbox.uiviews.presentation.components.optionsKmpSheetList
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.utils.InsetCenterAlignedTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -161,9 +160,9 @@ fun FavoriteUi(
             onDismissRequest = { showSort = false },
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
-            InsetCenterAlignedTopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Sort By") },
-                insetPadding = WindowInsets(0.dp)
+                windowInsets = WindowInsets(0.dp)
             )
 
             val rotateIcon: @Composable (SortFavoritesBy<*>) -> Float = {

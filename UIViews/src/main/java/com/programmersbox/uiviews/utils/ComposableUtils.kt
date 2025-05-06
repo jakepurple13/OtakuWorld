@@ -19,29 +19,19 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBarScrollBehavior
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -319,94 +309,6 @@ fun <T : Any> broadcastReceiverNullable(defaultValue: T?, intentFilter: IntentFi
         onDispose { context.unregisterReceiver(receiver) }
     }
     return item
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InsetSmallTopAppBar(
-    modifier: Modifier = Modifier,
-    insetPadding: WindowInsets = TopAppBarDefaults.windowInsets,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
-    scrollBehavior: TopAppBarScrollBehavior? = null,
-    title: @Composable () -> Unit = {},
-    navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    TopAppBar(
-        title = title,
-        modifier = modifier,
-        navigationIcon = navigationIcon,
-        actions = actions,
-        windowInsets = insetPadding,
-        colors = colors,
-        scrollBehavior = scrollBehavior
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InsetCenterAlignedTopAppBar(
-    modifier: Modifier = Modifier,
-    insetPadding: WindowInsets = WindowInsets.statusBars,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
-    scrollBehavior: TopAppBarScrollBehavior? = null,
-    title: @Composable () -> Unit = {},
-    navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    CenterAlignedTopAppBar(
-        modifier = modifier,
-        windowInsets = insetPadding,
-        title = title,
-        navigationIcon = navigationIcon,
-        actions = actions,
-        scrollBehavior = scrollBehavior,
-        colors = colors
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InsetMediumTopAppBar(
-    modifier: Modifier = Modifier,
-    insetPadding: WindowInsets = WindowInsets.statusBars,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
-    scrollBehavior: TopAppBarScrollBehavior? = null,
-    title: @Composable () -> Unit = {},
-    navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    MediumTopAppBar(
-        modifier = modifier,
-        windowInsets = insetPadding,
-        title = title,
-        navigationIcon = navigationIcon,
-        actions = actions,
-        scrollBehavior = scrollBehavior,
-        colors = colors
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun InsetLargeTopAppBar(
-    modifier: Modifier = Modifier,
-    insetPadding: WindowInsets = WindowInsets.statusBars,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
-    scrollBehavior: TopAppBarScrollBehavior? = null,
-    title: @Composable () -> Unit = {},
-    navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {},
-) {
-    LargeFlexibleTopAppBar(
-        modifier = modifier,
-        windowInsets = insetPadding,
-        title = title,
-        navigationIcon = navigationIcon,
-        actions = actions,
-        scrollBehavior = scrollBehavior,
-        colors = colors
-    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

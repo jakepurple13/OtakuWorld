@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -51,7 +52,6 @@ import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
@@ -107,7 +107,7 @@ fun OtakuListView(
 
     OtakuScaffold(
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 title = { Text(stringResource(R.string.custom_lists_title)) },
                 navigationIcon = { BackButton() },
                 actions = {

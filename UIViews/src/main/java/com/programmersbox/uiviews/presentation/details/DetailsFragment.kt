@@ -52,6 +52,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
@@ -93,7 +94,6 @@ import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.launchCatching
@@ -283,7 +283,7 @@ fun MarkAsScreen(
 
     OtakuScaffold(
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 title = { Text(stringResource(id = R.string.markAs)) },
 
                 navigationIcon = {
@@ -337,7 +337,7 @@ private fun DetailLoading(
 ) {
     Scaffold(
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 modifier = Modifier.zIndex(2f),
                 title = {
                     Text(
@@ -388,7 +388,7 @@ private fun DetailError(
 ) {
     Scaffold(
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 modifier = Modifier.zIndex(2f),
                 title = {
                     Text(
