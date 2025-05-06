@@ -103,30 +103,6 @@ fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/*data class OptionsSheetInfo(
-    val imageUrl: String,
-    val title: String,
-    val description: String,
-    val serviceName: String,
-    val url: String,
-)
-
-class OptionsSheetHandler {
-    val info = mutableStateOf<OptionsSheetInfo?>(null)
-}
-
-fun OptionsSheetHandler.setItemModel(itemModel: ItemModel?) {
-    info.value = itemModel?.let {
-        OptionsSheetInfo(
-            imageUrl = it.imageUrl,
-            title = it.title,
-            description = it.description,
-            serviceName = it.source.serviceName,
-            url = it.url
-        )
-    }
-}*/
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtakuBannerBox(
