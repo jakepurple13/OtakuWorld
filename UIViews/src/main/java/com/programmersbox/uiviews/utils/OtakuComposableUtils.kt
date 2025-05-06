@@ -44,13 +44,13 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.BannerBox
 import com.programmersbox.uiviews.presentation.components.GlideGradientImage
-import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360

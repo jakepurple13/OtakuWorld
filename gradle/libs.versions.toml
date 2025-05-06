@@ -3,7 +3,7 @@ biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "1.9.40"
 corePerformance = "1.0.0"
-filekitCore = "0.10.0-beta02"
+filekitCore = "0.10.0-beta03"
 generativeai = "0.9.0"
 gradle = "8.9.2"
 
@@ -303,7 +303,7 @@ swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
-zoomableModifier = "net.engawapg.lib:zoomable:2.6.0"
+zoomableModifier = "net.engawapg.lib:zoomable:2.7.0"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
