@@ -26,6 +26,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.toItemModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
@@ -33,7 +34,6 @@ import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.toItemModel
 import com.programmersbox.uiviews.utils.ApiServiceDeserializer
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -65,7 +65,7 @@ class DetailsViewModel(
 
     private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
-    val itemModel: KmpItemModel? = details?.toItemModel(sourceRepository, genericInfo)
+    val itemModel: KmpItemModel? = details?.toItemModel(sourceRepository)
     //TODO: Fix this
         ?: handle.get<String>("model")
             ?.fromJson<KmpItemModel>(KmpApiService::class.java to ApiServiceDeserializer(genericInfo))

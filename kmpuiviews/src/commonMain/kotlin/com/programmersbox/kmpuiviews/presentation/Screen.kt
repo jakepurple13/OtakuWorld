@@ -1,6 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation
 
+import androidx.navigation.NavController
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.serialization.Serializable
+import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 @Serializable
 sealed class Screen(val route: String) {
@@ -115,3 +119,26 @@ sealed class Screen(val route: String) {
     @Serializable
     data class WebViewScreen(val url: String) : Screen("webview")
 }
+
+fun NavController.navigateToDetails(model: KmpItemModel) = navigate(
+    Screen.DetailsScreen.Details(
+        title = model.title.ifEmpty { "NA" },
+        description = model.description.ifEmpty { "NA" },
+        url = model.url.let { UrlEncoderUtil.encode(it) },
+        imageUrl = model.imageUrl.let { UrlEncoderUtil.encode(it) },
+        source = model.source.serviceName
+    )
+) { launchSingleTop = true }
+
+fun Screen.DetailsScreen.Details.toItemModel(
+    sourceRepository: SourceRepository,
+): KmpItemModel? = sourceRepository.toSourceByApiServiceName(source)?.apiService
+    ?.let {
+        KmpItemModel(
+            title = UrlEncoderUtil.decode(title),
+            description = UrlEncoderUtil.decode(description),
+            url = UrlEncoderUtil.decode(url),
+            imageUrl = UrlEncoderUtil.decode(imageUrl),
+            source = it
+        )
+    }

@@ -76,6 +76,8 @@ kotlin {
                 implementation(libs.aboutLibrariesCompose)
 
                 implementation(libs.sonner)
+
+                implementation("net.thauvin.erik.urlencoder:urlencoder-lib:1.6.0")
             }
         }
 
@@ -104,6 +106,7 @@ kotlin {
                 implementation(libs.landscapistGlide)
                 implementation(libs.landscapistPalette)
                 implementation(libs.landscapistPlaceholder)
+                implementation(libs.zoomable.peek.overlay)
             }
         }
 
