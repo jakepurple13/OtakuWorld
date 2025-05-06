@@ -3,10 +3,9 @@ package com.programmersbox.uiviews.presentation.settings.downloadstate
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.uiviews.checkers.DownloadAndInstallState
+import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.util.UUID
 
 class DownloadStateViewModel(
     private val downloadStateRepository: DownloadStateRepository,
@@ -24,7 +23,7 @@ class DownloadStateViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun cancelWorker(id: UUID) {
+    fun cancelWorker(id: String) {
         downloadStateRepository.cancelDownload(id)
     }
 
