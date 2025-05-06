@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -57,6 +58,11 @@ import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
+import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -64,16 +70,10 @@ import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.presentation.navigateToDetails
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetMediumTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.SourceNotInstalledModal
 import com.programmersbox.uiviews.utils.dispatchIo
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.CoroutineScope
@@ -133,7 +133,7 @@ fun HistoryUi(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            InsetMediumTopAppBar(
+            MediumTopAppBar(
                 scrollBehavior = scrollBehavior,
                 navigationIcon = { BackButton() },
                 title = { Text(stringResource(R.string.history)) },

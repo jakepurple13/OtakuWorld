@@ -36,6 +36,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -87,7 +88,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import kotlinx.coroutines.Dispatchers
@@ -171,7 +171,7 @@ fun DetailsViewLandscape(
     ) {
         OtakuScaffold(
             topBar = {
-                InsetSmallTopAppBar(
+                TopAppBar(
                     modifier = Modifier.zIndex(2f),
                     scrollBehavior = scrollBehavior,
                     title = { Text(info.title) },

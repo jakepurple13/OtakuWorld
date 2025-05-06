@@ -42,12 +42,12 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo

@@ -42,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -77,15 +78,14 @@ import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
-import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.Emerald
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -151,7 +151,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     ) {
         BottomSheetDeleteScaffold(
             topBar = {
-                InsetSmallTopAppBar(
+                TopAppBar(
                     navigationIcon = { BackButton() },
                     title = { Text(stringResource(R.string.downloaded_videos)) },
                     actions = {

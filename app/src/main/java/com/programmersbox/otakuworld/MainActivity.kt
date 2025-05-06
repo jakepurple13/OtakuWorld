@@ -79,7 +79,7 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.itemRangeOf
 import com.programmersbox.models.ItemModel
-import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.Coordinator
 import com.programmersbox.uiviews.utils.CoordinatorModel
 import com.programmersbox.uiviews.presentation.components.MaterialCard

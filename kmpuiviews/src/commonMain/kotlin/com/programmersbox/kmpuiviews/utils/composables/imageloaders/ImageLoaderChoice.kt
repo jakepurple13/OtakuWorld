@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components.imageloaders
+package com.programmersbox.kmpuiviews.utils.composables.imageloaders
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,38 +11,38 @@ fun ImageLoaderChoice(
     name: String,
     modifier: Modifier = Modifier,
     headers: Map<String, Any> = emptyMap(),
-    placeHolder: Int,
-    error: Int = placeHolder,
+    placeHolder: @Composable () -> Painter,
+    error: @Composable () -> Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
 ) {
-    CustomGlideImage(
+    /*CustomKamelImage(
         imageUrl = imageUrl,
         name = name,
         modifier = modifier,
         headers = headers,
         placeHolder = placeHolder,
-        error = error,
+        onError = error,
+        contentScale = contentScale,
+    )*/
+
+    CustomImageChoice(
+        imageUrl = imageUrl,
+        name = name,
+        modifier = modifier,
+        headers = headers,
+        placeHolder = placeHolder,
+        onError = error,
         contentScale = contentScale,
     )
 }
 
 @Composable
-fun ImageLoaderChoice(
+expect fun CustomImageChoice(
     imageUrl: String,
     name: String,
     modifier: Modifier = Modifier,
     headers: Map<String, Any> = emptyMap(),
-    placeHolder: Painter,
-    error: Painter = placeHolder,
+    placeHolder: @Composable () -> Painter,
+    onError: @Composable () -> Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
-) {
-    CustomGlideImage(
-        imageUrl = imageUrl,
-        name = name,
-        modifier = modifier,
-        headers = headers,
-        placeHolder = placeHolder,
-        error = error,
-        contentScale = contentScale,
-    )
-}
+)

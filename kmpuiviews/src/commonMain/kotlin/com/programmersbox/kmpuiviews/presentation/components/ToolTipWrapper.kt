@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.RichTooltip
@@ -18,7 +18,7 @@ fun ToolTipWrapper(
     content: @Composable () -> Unit,
 ) {
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+        positionProvider = TooltipDefaults.rememberRichTooltipPositionProvider(),
         tooltip = { RichTooltip { info() } },
         state = tooltipState,
         modifier = modifier,

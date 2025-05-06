@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components.placeholder
+package com.programmersbox.kmpuiviews.presentation.components.placeholder
 
 import androidx.annotation.FloatRange
 import androidx.compose.animation.core.AnimationSpec

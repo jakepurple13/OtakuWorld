@@ -33,6 +33,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -55,22 +56,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListStatus
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.imageloaders.ImageLoaderChoice
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
@@ -122,7 +122,7 @@ fun ImportListScreen(
                 }
                 NormalOtakuScaffold(
                     topBar = {
-                        InsetSmallTopAppBar(
+                        TopAppBar(
                             title = { Text(stringResource(R.string.importing_import_list)) },
                             navigationIcon = { BackButton() },
                             scrollBehavior = scrollBehavior
@@ -158,7 +158,7 @@ fun ImportListScreen(
                 NormalOtakuScaffold(
                     topBar = {
                         Column {
-                            InsetSmallTopAppBar(
+                            TopAppBar(
                                 title = { Text(stringResource(R.string.importing_import_list)) },
                                 navigationIcon = { BackButton() },
                                 actions = { Text("(${status.customList?.list.orEmpty().size})") },
@@ -234,8 +234,8 @@ private fun CustomItem(
         Row {
             ImageLoaderChoice(
                 imageUrl = item.imageUrl,
-                placeHolder = rememberDrawablePainter(logoDrawable),
-                error = rememberDrawablePainter(logoDrawable),
+                placeHolder = { painterLogo() },
+                error = { painterLogo() },
                 contentScale = ContentScale.Crop,
                 name = item.title,
                 modifier = Modifier

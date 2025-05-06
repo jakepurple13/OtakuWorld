@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.FiniteAnimationSpec
@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun LimitedBottomSheetScaffold(
+fun LimitedBottomSheetScaffold(
     sheetContent: @Composable ColumnScope.(PaddingValues) -> Unit,
     modifier: Modifier = Modifier,
     scaffoldState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
@@ -126,7 +126,7 @@ internal fun LimitedBottomSheetScaffold(
     }
 }
 
-internal object LimitedBottomSheetScaffoldDefaults {
+object LimitedBottomSheetScaffoldDefaults {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -209,26 +209,26 @@ internal object LimitedBottomSheetScaffoldDefaults {
 }
 
 @Immutable
-internal data class LimitedBottomSheetScaffoldColors(
-    internal val topAppBarContainerColor: Color,
-    internal val topAppBarSheetExpandedContainerColor: Color,
-    internal val containerColor: Color,
-    internal val contentColor: Color,
-    internal val bottomSheetContainerColor: Color,
-    internal val bottomSheetContentColor: Color,
+data class LimitedBottomSheetScaffoldColors(
+    val topAppBarContainerColor: Color,
+    val topAppBarSheetExpandedContainerColor: Color,
+    val containerColor: Color,
+    val contentColor: Color,
+    val bottomSheetContainerColor: Color,
+    val bottomSheetContentColor: Color,
 ) {
     internal fun containerColor(enabled: Boolean) =
         if (enabled) topAppBarSheetExpandedContainerColor else topAppBarContainerColor
 }
 
 @Immutable
-internal data class LimitedBottomSheetScaffoldCornerRadius(
+data class LimitedBottomSheetScaffoldCornerRadius(
     val expanded: Dp,
     val unexpanded: Dp,
 )
 
 @Immutable
-internal data class LimitedBottomSheetScaffoldSheet(
+data class LimitedBottomSheetScaffoldSheet(
     val sheetPeekHeight: Dp,
     val sheetTonalElevation: Dp,
     val sheetShadowElevation: Dp,
@@ -237,7 +237,7 @@ internal data class LimitedBottomSheetScaffoldSheet(
 )
 
 @Immutable
-internal class LimitedBottomSheetScaffoldAnimations @OptIn(ExperimentalMaterial3Api::class) constructor(
+class LimitedBottomSheetScaffoldAnimations @OptIn(ExperimentalMaterial3Api::class) constructor(
     val colorAnimation: @Composable Transition.Segment<SheetValue>.() -> FiniteAnimationSpec<Color>,
     val cornerRadiusAnimation: @Composable Transition.Segment<SheetValue>.() -> FiniteAnimationSpec<Dp>,
     val dragHandleAlphaAnimation: @Composable Transition.Segment<SheetValue>.() -> FiniteAnimationSpec<Float>,

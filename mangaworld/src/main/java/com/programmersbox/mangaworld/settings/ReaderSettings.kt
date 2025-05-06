@@ -78,6 +78,7 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
@@ -85,7 +86,6 @@ import com.programmersbox.mangaworld.reader.compose.FloatingBottomBar
 import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
 import com.programmersbox.mangaworld.reader.compose.dpToPx
 import com.programmersbox.uiviews.presentation.components.SliderSetting
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.flow.first

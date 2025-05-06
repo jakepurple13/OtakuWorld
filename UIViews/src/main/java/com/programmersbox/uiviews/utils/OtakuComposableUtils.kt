@@ -2,27 +2,19 @@
 
 package com.programmersbox.uiviews.utils
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,29 +27,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.uiviews.R
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.presentation.components.BannerBox
 import com.programmersbox.uiviews.presentation.components.GlideGradientImage
-import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
-
-object ComposableUtils {
-    const val IMAGE_WIDTH_PX = 360
-    const val IMAGE_HEIGHT_PX = 480
-    val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { IMAGE_WIDTH_PX.toDp() }
-    val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { IMAGE_HEIGHT_PX.toDp() }
-}
 
 @Composable
 fun M3PlaceHolderCoverCard(placeHolder: Int, modifier: Modifier = Modifier) {
@@ -239,40 +220,4 @@ fun <T> CustomBannerBox(
 
 interface CustomBannerScope<T> {
     fun newItem(item: T?)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SourceNotInstalledModal(
-    showItem: String?,
-    onShowItemDismiss: (String?) -> Unit,
-    source: String?,
-    additionOptions: @Composable ColumnScope.() -> Unit = {},
-) {
-    val navController = LocalNavController.current
-
-    if (showItem != null) {
-        BackHandler { onShowItemDismiss(null) }
-
-        ModalBottomSheet(
-            onDismissRequest = { onShowItemDismiss(null) },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            Text(
-                source.orEmpty(),
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            CenterAlignedTopAppBar(title = { Text(showItem) })
-            ListItem(
-                headlineContent = { Text(stringResource(id = R.string.global_search)) },
-                leadingContent = { Icon(Icons.Default.Search, contentDescription = null) },
-                modifier = Modifier.clickable {
-                    onShowItemDismiss(null)
-                    navController.navigate(Screen.GlobalSearchScreen(showItem))
-                }
-            )
-            additionOptions()
-        }
-    }
 }

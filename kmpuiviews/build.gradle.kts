@@ -30,6 +30,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3AdaptiveNavigationSuite)
                 implementation(compose.components.resources)
+                implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0-rc01")
                 implementation(libs.material3.window.size)
                 implementation(libs.haze)
                 implementation(libs.hazeMaterials)
@@ -39,6 +40,7 @@ kotlin {
                 implementation(libs.kamel.decoder.image.bitmap)
                 implementation(libs.kamel.decoder.image.vector)
                 implementation(libs.kamel.decoder.svg.std)
+                implementation(libs.coilCompose)
                 implementation(libs.kotlinxSerialization)
                 implementation(libs.ktorCore)
                 implementation(libs.ktorAuth)
@@ -97,6 +99,11 @@ kotlin {
                 implementation(libs.drawablePainter)
                 implementation(libs.ackpine.core)
                 implementation(libs.ackpine.ktx)
+                implementation(libs.glideCompose)
+                implementation(libs.landscapist.bom)
+                implementation(libs.landscapistGlide)
+                implementation(libs.landscapistPalette)
+                implementation(libs.landscapistPlaceholder)
             }
         }
 

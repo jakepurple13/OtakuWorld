@@ -64,6 +64,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
@@ -96,6 +97,7 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListStatus
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListViewModel
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
@@ -103,8 +105,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -145,7 +145,7 @@ fun ImportFullListScreen(
                 }
                 NormalOtakuScaffold(
                     topBar = {
-                        InsetSmallTopAppBar(
+                        TopAppBar(
                             title = { Text(stringResource(R.string.importing_import_list)) },
                             navigationIcon = { BackButton() },
                             scrollBehavior = scrollBehavior
@@ -180,7 +180,7 @@ fun ImportFullListScreen(
                 }
                 NormalOtakuScaffold(
                     topBar = {
-                        InsetSmallTopAppBar(
+                        TopAppBar(
                             title = { Text(stringResource(R.string.importing_import_list)) },
                             navigationIcon = { BackButton() },
                             actions = { Text("(${vm.importingList.size})") },
