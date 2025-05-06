@@ -30,7 +30,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3AdaptiveNavigationSuite)
                 implementation(compose.components.resources)
-                implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0-rc01")
+                implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0")
                 implementation(libs.material3.window.size)
                 implementation(libs.haze)
                 implementation(libs.hazeMaterials)
