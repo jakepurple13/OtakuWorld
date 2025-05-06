@@ -94,7 +94,7 @@ core = "1.6.1"
 
 androidx-lifecycle = "2.8.4"
 
-compose-multiplatform = "1.8.0-rc01"
+compose-multiplatform = "1.8.0"
 
 kotlinx-coroutines = "1.10.2"
 
