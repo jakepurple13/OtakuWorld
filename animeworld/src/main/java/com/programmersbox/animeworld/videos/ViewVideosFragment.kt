@@ -78,11 +78,11 @@ import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.BottomSheetDeleteScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteScaffold
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import com.programmersbox.uiviews.utils.Emerald
