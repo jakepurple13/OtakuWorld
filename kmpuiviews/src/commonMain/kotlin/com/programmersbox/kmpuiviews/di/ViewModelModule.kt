@@ -16,6 +16,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportL
 import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettingsViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -36,6 +38,8 @@ val viewModels: Module = module {
     viewModelOf(::SettingViewModel)
     viewModelOf(::MoreInfoViewModel)
     viewModelOf(::DetailsViewModel)
+    viewModelOf(::TranslationViewModel)
+    viewModelOf(::PrereleaseViewModel)
 
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
 }

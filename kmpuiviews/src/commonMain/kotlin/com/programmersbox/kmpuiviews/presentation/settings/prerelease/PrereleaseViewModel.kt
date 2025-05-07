@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.updateprerelease
+package com.programmersbox.kmpuiviews.presentation.settings.prerelease
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -6,17 +6,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.repository.GitHubPrerelease
 import com.programmersbox.kmpuiviews.repository.PrereleaseRepository
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class PrereleaseViewModel(
     private val prereleaseRepository: PrereleaseRepository,
-    private val downloadStateRepository: DownloadStateRepository,
+    private val downloadStateRepository: DownloadStateInterface,
 ) : ViewModel() {
 
     var uiState by mutableStateOf<PrereleaseUiState>(PrereleaseUiState.Loading)
@@ -54,9 +54,7 @@ class PrereleaseViewModel(
         }
     }
 
-    fun update(
-        apkString: String,
-    ) {
+    fun update(apkString: String) {
         downloadStateRepository.downloadThenInstall(apkString)
         /*downloadAndInstaller
             .downloadAndInstall(apkString, "")

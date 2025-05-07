@@ -15,9 +15,10 @@ import com.programmersbox.kmpmodels.KmpExternalCustomApiServicesCatalog
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.OtakuWorldCatalog
-import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,7 +30,7 @@ class ExtensionListViewModel(
     otakuWorldCatalog: OtakuWorldCatalog,
     settingsHandling: NewSettingsHandling,
     val downloadAndInstaller: DownloadAndInstaller,
-    private val downloadStateRepository: DownloadStateRepository,
+    private val downloadStateRepository: DownloadStateInterface,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()
@@ -83,7 +84,7 @@ class ExtensionListViewModel(
                     .toList()
                     .forEach { c ->
                         remoteSources[c.name] = runCatching { c.getRemoteSources() }
-                            .onFailure { it.printStackTrace() }
+                            .onFailure { if (BuildConfig.DEBUG) it.printStackTrace() }
                             .fold(
                                 onSuccess = { RemoteViewState(it) },
                                 onFailure = { RemoteErrorState() }

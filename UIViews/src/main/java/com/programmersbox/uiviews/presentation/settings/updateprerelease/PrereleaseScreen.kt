@@ -28,18 +28,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseUiState
+import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseViewModel
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.androidx.compose.koinViewModel
-import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PrereleaseScreen(
     viewModel: PrereleaseViewModel = koinViewModel(),
 ) {
+    val localTimeFormat = LocalSystemDateTimeFormat.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -47,7 +51,15 @@ fun PrereleaseScreen(
                 subtitle = {
                     when (val state = viewModel.uiState) {
                         is PrereleaseUiState.Error -> Text(state.message)
-                        is PrereleaseUiState.Success -> Text(state.latestRelease.getUpdatedTime().formatTime())
+                        is PrereleaseUiState.Success -> Text(
+                            localTimeFormat.format(
+                                state
+                                    .latestRelease
+                                    .getUpdatedTime()
+                                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                            )
+                        )
+
                         else -> {}
                     }
                 },
@@ -85,8 +97,13 @@ fun PrereleaseScreen(
                             OutlinedCard(
                                 modifier = Modifier.animateContentSize()
                             ) {
+                                val updatedAtTime = localTimeFormat.format(
+                                    it
+                                        .updatedAt
+                                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                                )
                                 ListItem(
-                                    overlineContent = { Text("Updated at: ${it.updatedAt.formatTime()}") },
+                                    overlineContent = { Text("Updated at: $updatedAtTime") },
                                     headlineContent = { Text(it.name) },
                                     trailingContent = {
                                         IconButton(
@@ -95,9 +112,9 @@ fun PrereleaseScreen(
                                     },
                                 )
 
-                                viewModel.downloadMap[it.url]?.let {
+                                viewModel.downloadMap[it.url]?.let { status ->
                                     HorizontalDivider()
-                                    DownloadStatus(it)
+                                    DownloadStatus(status)
                                 }
                             }
                         }
@@ -152,8 +169,4 @@ private fun DownloadStatus(
             )
         }
     }
-}
-
-fun Instant.formatTime(): String {
-    return SimpleDateFormat.getDateTimeInstance().format(this.toEpochMilliseconds())
 }

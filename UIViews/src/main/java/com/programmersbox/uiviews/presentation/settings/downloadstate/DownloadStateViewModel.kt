@@ -4,11 +4,12 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
+import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class DownloadStateViewModel(
-    private val downloadStateRepository: DownloadStateRepository,
+    private val downloadStateRepository: DownloadStateInterface,
 ) : ViewModel() {
 
     val downloadList = mutableStateListOf<DownloadAndInstallState>()
