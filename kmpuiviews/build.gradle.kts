@@ -55,6 +55,7 @@ kotlin {
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 api(projects.kmpmodels)
+                implementation(projects.sharedutils.kmpextensionloader)
                 implementation(libs.bundles.datastoreLibs)
 
                 implementation(libs.kotlinx.datetime)

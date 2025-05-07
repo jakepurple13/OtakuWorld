@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.extensions
+package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -18,7 +18,6 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
-import com.programmersbox.uiviews.BuildConfig
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -83,12 +82,10 @@ class ExtensionListViewModel(
                     .distinct()
                     .toList()
                     .forEach { c ->
-                        remoteSources[c.name] = runCatching { c.getRemoteSources() }
-                            .onFailure { if (BuildConfig.DEBUG) it.printStackTrace() }
-                            .fold(
-                                onSuccess = { RemoteViewState(it) },
-                                onFailure = { RemoteErrorState() }
-                            )
+                        remoteSources[c.name] = runCatching { c.getRemoteSources() }.fold(
+                            onSuccess = { RemoteViewState(it) },
+                            onFailure = { RemoteErrorState() }
+                        )
 
                         remoteSourcesShowing[c.name] = false
                     }

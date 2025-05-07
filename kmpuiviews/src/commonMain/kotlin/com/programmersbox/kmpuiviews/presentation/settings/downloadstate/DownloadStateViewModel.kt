@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.downloadstate
+package com.programmersbox.kmpuiviews.presentation.settings.downloadstate
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -32,8 +32,10 @@ class DownloadStateViewModel(
         downloadStateRepository
             .install(url = url)
             .onEach {
-                downloadList.replaceAll { item ->
-                    if (item.url == url) item.copy(status = it) else item
+                for ((index, item) in downloadList.withIndex()) {
+                    if (item.url == url) {
+                        downloadList[index] = item.copy(status = it)
+                    }
                 }
             }
             .launchIn(viewModelScope)

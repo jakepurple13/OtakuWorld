@@ -8,6 +8,8 @@ import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewM
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListViewModel
@@ -26,6 +28,8 @@ import org.koin.dsl.module
 val viewModels: Module = module {
     viewModelOf(::NotificationSettingsViewModel)
     viewModelOf(::NotificationScreenViewModel)
+    viewModelOf(::PrereleaseViewModel)
+    viewModelOf(::ExtensionListViewModel)
     viewModelOf(::IncognitoViewModel)
     viewModelOf(::FavoriteViewModel)
     viewModelOf(::GlobalSearchViewModel)
@@ -39,7 +43,7 @@ val viewModels: Module = module {
     viewModelOf(::MoreInfoViewModel)
     viewModelOf(::DetailsViewModel)
     viewModelOf(::TranslationViewModel)
-    viewModelOf(::PrereleaseViewModel)
+    viewModelOf(::DownloadStateViewModel)
 
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
 }
