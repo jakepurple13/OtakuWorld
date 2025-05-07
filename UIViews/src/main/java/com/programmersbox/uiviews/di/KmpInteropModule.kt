@@ -36,24 +36,28 @@ val kmpInterop = module {
 
 class TranslationModelHandlerImpl : TranslationModelHandler {
     override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) = TranslatorUtils.getModels {
-        onSuccess(it.map(::toKmpCustomRemoteModel))
+        onSuccess(it.map(::toRemoteModel))
     }
 
     override suspend fun deleteModel(model: KmpCustomRemoteModel) = TranslatorUtils
-        .deleteModel(toCustomRemoteModel(model))
+        .deleteModel(toRemoteModel(model))
 
     override suspend fun modelList(): List<KmpCustomRemoteModel> = TranslatorUtils
         .modelList()
-        .map(::toKmpCustomRemoteModel)
+        .map(::toRemoteModel)
 
     override suspend fun delete(model: KmpCustomRemoteModel) = TranslatorUtils
-        .delete(toCustomRemoteModel(model))
+        .delete(toRemoteModel(model))
 
-    private fun toCustomRemoteModel(kmpCustomRemoteModel: KmpCustomRemoteModel) =
-        CustomRemoteModel(kmpCustomRemoteModel.hash, kmpCustomRemoteModel.language)
+    private fun toRemoteModel(kmpCustomRemoteModel: KmpCustomRemoteModel) = CustomRemoteModel(
+        hash = kmpCustomRemoteModel.hash,
+        language = kmpCustomRemoteModel.language
+    )
 
-    private fun toKmpCustomRemoteModel(customRemoteModel: CustomRemoteModel) =
-        KmpCustomRemoteModel(customRemoteModel.hash, customRemoteModel.language)
+    private fun toRemoteModel(customRemoteModel: CustomRemoteModel) = KmpCustomRemoteModel(
+        hash = customRemoteModel.hash,
+        language = customRemoteModel.language
+    )
 }
 
 
