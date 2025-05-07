@@ -55,7 +55,7 @@ class TranslationModelHandlerImpl : TranslationModelHandler {
     )
 
     private fun toRemoteModel(customRemoteModel: CustomRemoteModel) = KmpCustomRemoteModel(
-        hash = customRemoteModel.hash,
+        hash = customRemoteModel.hash.orEmpty(),
         language = customRemoteModel.language
     )
 }
