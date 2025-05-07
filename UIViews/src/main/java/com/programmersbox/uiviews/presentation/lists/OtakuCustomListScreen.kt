@@ -128,6 +128,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
@@ -139,7 +140,6 @@ import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
@@ -684,7 +684,8 @@ private fun CustomItemVertical(
             if (items.size == 1) {
                 runCatching {
                     val listItem = items.first()
-                    sourceRepository.loadItem(listItem.source, listItem.url)
+                    sourceRepository
+                        .loadItem(listItem.source, listItem.url)
                         ?.onStart { showLoadingDialog(true) }
                         ?.onEach {
                             showLoadingDialog(false)
