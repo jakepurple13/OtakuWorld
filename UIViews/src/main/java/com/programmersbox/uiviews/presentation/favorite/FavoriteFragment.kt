@@ -80,14 +80,18 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheetList
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.SortFavoritesBy
+import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
@@ -97,9 +101,6 @@ import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
-import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.presentation.components.optionsKmpSheetList
-import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
@@ -521,7 +522,7 @@ private fun FavoritesGrid(
                 },
                 imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                 name = info.key,
-                placeHolder = logo,
+                placeHolder = { painterLogo() },
                 favoriteIcon = {
                     if (info.value.size > 1) {
                         Box(

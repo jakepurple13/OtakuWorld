@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
+import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.BuildType

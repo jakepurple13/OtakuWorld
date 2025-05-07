@@ -109,11 +109,15 @@ import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
+import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListState
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -124,13 +128,11 @@ import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
-import com.programmersbox.uiviews.presentation.components.M3CoverCard
-import com.programmersbox.uiviews.presentation.components.optionsSheetList
-import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -138,7 +140,6 @@ import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.loadItem
 import com.programmersbox.uiviews.utils.rememberBiometricPrompt
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
@@ -657,7 +658,7 @@ private fun CustomItemVertical(
         onLongPress = { c -> onShowBanner(c == ComponentState.Pressed) },
         imageUrl = remember(items) { items.firstOrNull()?.imageUrl.orEmpty() },
         name = title,
-        placeHolder = logo,
+        placeHolder = { painterLogo() },
         favoriteIcon = {
             if (items.size > 1) {
                 Box(
@@ -683,7 +684,8 @@ private fun CustomItemVertical(
             if (items.size == 1) {
                 runCatching {
                     val listItem = items.first()
-                    sourceRepository.loadItem(listItem.source, listItem.url)
+                    sourceRepository
+                        .loadItem(listItem.source, listItem.url)
                         ?.onStart { showLoadingDialog(true) }
                         ?.onEach {
                             showLoadingDialog(false)
@@ -815,7 +817,7 @@ private fun DeleteItemsModal(
                         M3CoverCard(
                             imageUrl = item.imageUrl,
                             name = item.title,
-                            placeHolder = drawable,
+                            placeHolder = { painterLogo() },
                             onClick = {
                                 if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
                             },

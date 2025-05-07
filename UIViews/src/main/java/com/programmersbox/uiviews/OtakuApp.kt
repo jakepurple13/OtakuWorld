@@ -145,15 +145,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     repository()
                     includes(databases)
                     includes(kmpInterop)
-
-                    single {
-                        SourceLoader(
-                            application = this@OtakuApp,
-                            context = get(),
-                            sourceType = get<GenericInfo>().sourceType,
-                            sourceRepository = get()
-                        )
-                    }
                 }
             )
             workManagerFactory()

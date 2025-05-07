@@ -2,14 +2,12 @@ package com.programmersbox.uiviews.utils
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
-import android.os.Build
 import android.text.format.DateFormat
 import android.view.View
 import android.widget.Toast
@@ -25,8 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -313,45 +309,3 @@ fun rememberBackStackEntry(
 }
 
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }
-
-val Context.appVersion: String
-    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        packageManager.getPackageInfo(
-            packageName,
-            PackageManager.PackageInfoFlags.of(0L)
-        ).versionName
-    } else {
-        packageManager.getPackageInfo(packageName, 0)?.versionName
-    }.orEmpty()
-
-val Context.versionCode: String
-    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        packageManager.getPackageInfo(
-            packageName,
-            PackageManager.PackageInfoFlags.of(0L)
-        ).longVersionCode
-    } else {
-        packageManager.getPackageInfo(packageName, 0)?.longVersionCode
-    }
-        ?.toString()
-        .orEmpty()
-
-@Composable
-fun appVersion(): String {
-    return if (LocalInspectionMode.current) {
-        "1.0.0"
-    } else {
-        val context = LocalContext.current
-        remember(context) { context.appVersion }
-    }
-}
-
-@Composable
-fun versionCode(): String {
-    return if (LocalInspectionMode.current) {
-        "1"
-    } else {
-        val context = LocalContext.current
-        remember(context) { context.versionCode }
-    }
-}

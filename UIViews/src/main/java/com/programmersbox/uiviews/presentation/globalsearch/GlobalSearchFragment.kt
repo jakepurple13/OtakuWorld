@@ -69,6 +69,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -88,31 +89,31 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffold
 import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffoldDefaults
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchModel
+import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.presentation.components.optionsKmpSheet
-import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.MockApiService
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.adaptiveGridCell
-import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -390,7 +391,11 @@ private fun Content(
                                     modifier = Modifier.align(Alignment.CenterEnd)
                                 ) { Icon(Icons.Default.ChevronRight, null) }
                             }
-                            LazyRow { items(3) { M3PlaceHolderCoverCard(placeHolder = notificationLogo.notificationId) } }
+                            LazyRow {
+                                items(3) {
+                                    M3PlaceHolderCoverCard(placeHolder = painterResource(notificationLogo.notificationId))
+                                }
+                            }
                         }
                     }
                 }

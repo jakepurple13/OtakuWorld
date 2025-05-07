@@ -87,6 +87,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -109,9 +110,14 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard2
+import com.programmersbox.kmpuiviews.presentation.components.M3ImageCard
+import com.programmersbox.kmpuiviews.presentation.components.ModalBottomSheetDelete
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -126,11 +132,6 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.presentation.components.M3CoverCard2
-import com.programmersbox.uiviews.presentation.components.M3ImageCard
-import com.programmersbox.uiviews.presentation.components.ModalBottomSheetDelete
-import com.programmersbox.uiviews.presentation.components.optionsSheet
-import com.programmersbox.uiviews.presentation.navigateToDetails
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -214,6 +215,7 @@ fun NotificationsScreen(
                     *it.second.map { NotificationInfo.Noti(it) }.toTypedArray()
                 )
             },
+            gridCells = adaptiveGridCell(),
             state = sheetState,
             multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
             onRemove = { item ->
@@ -233,12 +235,13 @@ fun NotificationsScreen(
             },
             deleteTitle = { stringResource(R.string.removeNoti, (it as NotificationInfo.Noti).item.notiTitle) },
             itemUi = { item ->
-                if (item is NotificationInfo.Noti)
+                if (item is NotificationInfo.Noti) {
                     M3ImageCard(
                         imageUrl = item.item.imageUrl.orEmpty(),
                         name = item.item.notiTitle,
-                        placeHolder = R.drawable.ic_site_settings
+                        placeHolder = { painterResource(R.drawable.ic_site_settings) }
                     )
+                }
             },
             isTitle = { it is NotificationInfo.Source },
             titleUi = {
@@ -673,7 +676,7 @@ private fun NotiItem(
             M3CoverCard2(
                 imageUrl = i.imageUrl.orEmpty(),
                 name = i.notiTitle,
-                placeHolder = R.drawable.ic_site_settings,
+                placeHolder = { painterResource(R.drawable.ic_site_settings) },
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
                     .combinedClickable(

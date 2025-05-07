@@ -30,7 +30,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3AdaptiveNavigationSuite)
                 implementation(compose.components.resources)
-                implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0-rc01")
+                implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0")
                 implementation(libs.material3.window.size)
                 implementation(libs.haze)
                 implementation(libs.hazeMaterials)
@@ -55,6 +55,7 @@ kotlin {
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 api(projects.kmpmodels)
+                implementation(projects.sharedutils.kmpextensionloader)
                 implementation(libs.bundles.datastoreLibs)
 
                 implementation(libs.kotlinx.datetime)
@@ -76,6 +77,11 @@ kotlin {
                 implementation(libs.aboutLibrariesCompose)
 
                 implementation(libs.sonner)
+
+                implementation("net.thauvin.erik.urlencoder:urlencoder-lib:1.6.0")
+                implementation(libs.blurhash)
+
+                implementation(libs.dragselect)
             }
         }
 
@@ -104,6 +110,7 @@ kotlin {
                 implementation(libs.landscapistGlide)
                 implementation(libs.landscapistPalette)
                 implementation(libs.landscapistPlaceholder)
+                implementation(libs.zoomable.peek.overlay)
             }
         }
 

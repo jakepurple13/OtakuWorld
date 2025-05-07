@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils.sharedelements
+package com.programmersbox.kmpuiviews.utils.composables.sharedelements
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -18,6 +18,7 @@ import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import kotlin.jvm.JvmSuppressWildcards
 import kotlin.reflect.KType
 
 @OptIn(ExperimentalSharedTransitionApi::class)

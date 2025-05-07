@@ -1,15 +1,15 @@
-package com.programmersbox.uiviews.presentation.settings.downloadstate
+package com.programmersbox.kmpuiviews.presentation.settings.downloadstate
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.uiviews.checkers.DownloadAndInstallState
+import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
+import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import java.util.UUID
 
 class DownloadStateViewModel(
-    private val downloadStateRepository: DownloadStateRepository,
+    private val downloadStateRepository: DownloadStateInterface,
 ) : ViewModel() {
 
     val downloadList = mutableStateListOf<DownloadAndInstallState>()
@@ -24,7 +24,7 @@ class DownloadStateViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun cancelWorker(id: UUID) {
+    fun cancelWorker(id: String) {
         downloadStateRepository.cancelDownload(id)
     }
 
@@ -32,8 +32,10 @@ class DownloadStateViewModel(
         downloadStateRepository
             .install(url = url)
             .onEach {
-                downloadList.replaceAll { item ->
-                    if (item.url == url) item.copy(status = it) else item
+                for ((index, item) in downloadList.withIndex()) {
+                    if (item.url == url) {
+                        downloadList[index] = item.copy(status = it)
+                    }
                 }
             }
             .launchIn(viewModelScope)

@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
@@ -39,6 +40,8 @@ import io.kamel.image.config.imageBitmapResizingDecoder
 import io.kamel.image.config.resourcesFetcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
+import me.saket.telephoto.zoomable.zoomablePeekOverlay
 import org.koin.compose.koinInject
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -191,3 +194,5 @@ actual class AboutLibraryBuilder {
     }
 }
 
+@Composable
+actual fun Modifier.zoomOverlay(): Modifier = zoomablePeekOverlay(state = rememberZoomablePeekOverlayState())

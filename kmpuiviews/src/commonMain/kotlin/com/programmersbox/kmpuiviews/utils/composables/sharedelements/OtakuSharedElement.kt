@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.utils.sharedelements
+package com.programmersbox.kmpuiviews.utils.composables.sharedelements
 
 data class OtakuSharedElement(
     val source: String,

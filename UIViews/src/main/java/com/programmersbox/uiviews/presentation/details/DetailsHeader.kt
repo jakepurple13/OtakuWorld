@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.presentation.details
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -47,7 +46,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -69,14 +68,14 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.animate
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
+import com.programmersbox.kmpuiviews.utils.toComposeColor
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.animate
-import com.programmersbox.uiviews.utils.fadeInAnimation
-import com.programmersbox.uiviews.utils.scaleRotateOffsetReset
-import com.programmersbox.uiviews.utils.sharedelements.OtakuImageElement
-import com.programmersbox.uiviews.utils.sharedelements.OtakuTitleElement
-import com.programmersbox.uiviews.utils.sharedelements.customSharedElement
-import com.programmersbox.uiviews.utils.toComposeColor
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.glide.GlideImage
@@ -99,7 +98,7 @@ internal fun DetailsHeader(
     possibleDescription: @Composable () -> Unit = {},
     onPaletteSet: (Palette) -> Unit,
     blurHash: BitmapPainter? = null,
-    onBitmapSet: (Bitmap) -> Unit = {},
+    onBitmapSet: (ImageBitmap) -> Unit = {},
 ) {
     val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
@@ -197,7 +196,7 @@ internal fun DetailsHeader(
                         },
                         onImageStateChanged = {
                             if (it is GlideImageState.Success) {
-                                it.imageBitmap?.asAndroidBitmap()?.let { it1 -> onBitmapSet(it1) }
+                                it.imageBitmap?.let(onBitmapSet)
                             }
                         },
                         modifier = Modifier

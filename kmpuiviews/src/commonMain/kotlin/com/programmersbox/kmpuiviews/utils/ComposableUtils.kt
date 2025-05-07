@@ -1,11 +1,16 @@
 package com.programmersbox.kmpuiviews.utils
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -92,4 +97,31 @@ private fun calculateCellsCrossAxisSizeImpl(
     return List(slotCount) {
         slotSize + if (it < remainingPixels) 1 else 0
     }
+}
+
+fun Int.toComposeColor() = Color(this)
+
+@Composable
+fun Color.animate(label: String = "") = animateColorAsState(this, label = label)
+
+@Composable
+fun Color?.animate(default: Color, label: String = "") =
+    animateColorAsState(this ?: default, label = label)
+
+@Composable
+fun LazyListState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
 }

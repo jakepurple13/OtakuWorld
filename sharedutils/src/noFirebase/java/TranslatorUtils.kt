@@ -17,4 +17,4 @@ object TranslatorUtils {
     suspend fun delete(model: CustomRemoteModel) = Unit
 }
 
-data class CustomRemoteModel(val hash: String, val language: String)
+data class CustomRemoteModel(val hash: String?, val language: String)

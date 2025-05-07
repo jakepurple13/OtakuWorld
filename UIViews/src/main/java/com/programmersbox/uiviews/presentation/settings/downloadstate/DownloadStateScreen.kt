@@ -30,8 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
+import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
+import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
-import com.programmersbox.uiviews.checkers.DownloadAndInstallState
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

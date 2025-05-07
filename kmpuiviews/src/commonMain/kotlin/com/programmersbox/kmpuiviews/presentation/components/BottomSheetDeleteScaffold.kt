@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
@@ -10,13 +10,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemSpanScope
 import androidx.compose.foundation.lazy.items
@@ -46,7 +46,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -64,22 +63,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMap
 import com.dragselectcompose.core.rememberDragSelectState
 import com.dragselectcompose.extensions.dragSelectToggleableItem
 import com.dragselectcompose.grid.LazyDragSelectVerticalGrid
 import com.dragselectcompose.grid.indicator.SelectedIcon
 import com.dragselectcompose.grid.indicator.UnselectedIcon
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.areYouSureRemove
+import otakuworld.kmpuiviews.generated.resources.are_you_sure_delete_notifications
+import otakuworld.kmpuiviews.generated.resources.cancel
+import otakuworld.kmpuiviews.generated.resources.delete_multiple
+import otakuworld.kmpuiviews.generated.resources.no
+import otakuworld.kmpuiviews.generated.resources.remove
+import otakuworld.kmpuiviews.generated.resources.yes
 
 @ExperimentalMaterial3Api
 @Composable
@@ -91,7 +93,7 @@ fun <T> BottomSheetDeleteScaffold(
     itemUi: @Composable (T) -> Unit,
     modifier: Modifier = Modifier,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    deleteTitle: @Composable (T) -> String = { stringResource(Res.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
@@ -99,7 +101,6 @@ fun <T> BottomSheetDeleteScaffold(
     mainView: @Composable (PaddingValues, List<T>) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     BottomSheetScaffold(
         scaffoldState = state,
@@ -127,8 +128,8 @@ fun <T> BottomSheetDeleteScaffold(
                     title = { Text(multipleTitle) },
                     text = {
                         Text(
-                            context.resources.getQuantityString(
-                                R.plurals.areYouSureRemove,
+                            pluralStringResource(
+                                Res.plurals.areYouSureRemove,
                                 itemsToDelete.size,
                                 itemsToDelete.size
                             )
@@ -141,9 +142,13 @@ fun <T> BottomSheetDeleteScaffold(
                                 scope.launch { state.bottomSheetState.partialExpand() }
                                 onMultipleRemove(itemsToDelete)
                             }
-                        ) { Text(stringResource(R.string.yes)) }
+                        ) { Text(stringResource(Res.string.yes)) }
                     },
-                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                    dismissButton = {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(Res.string.no))
+                        }
+                    }
                 )
             }
 
@@ -153,7 +158,7 @@ fun <T> BottomSheetDeleteScaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     CenterAlignedTopAppBar(
-                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        title = { Text(stringResource(Res.string.delete_multiple)) },
                         windowInsets = WindowInsets(0.dp),
                         scrollBehavior = scrollBehavior
                     )
@@ -168,7 +173,7 @@ fun <T> BottomSheetDeleteScaffold(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
-                        ) { Text(stringResource(id = R.string.cancel)) }
+                        ) { Text(stringResource(Res.string.cancel)) }
 
                         Button(
                             onClick = { showPopup = true },
@@ -176,30 +181,32 @@ fun <T> BottomSheetDeleteScaffold(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
-                        ) { Text(stringResource(id = R.string.remove)) }
+                        ) { Text(stringResource(Res.string.remove)) }
                     }
                 }
             ) {
-                AnimatedLazyColumn(
+                LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
                     modifier = Modifier.padding(4.dp),
-                    items = listOfItems.fastMap { i ->
-                        AnimatedLazyListItem(key = i.hashCode().toString(), value = i) {
-                            DeleteItemView(
-                                item = i,
-                                isInList = i in itemsToDelete,
-                                onAddOrRemove = { item ->
-                                    if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
-                                },
-                                deleteTitle = deleteTitle,
-                                customSingleRemoveDialog = customSingleRemoveDialog,
-                                onRemove = onRemove,
-                                itemUi = itemUi
-                            )
-                        }
+                ) {
+                    items(
+                        listOfItems,
+                        key = { i -> i.hashCode().toString() }
+                    ) { i ->
+                        DeleteItemView(
+                            item = i,
+                            isInList = i in itemsToDelete,
+                            onAddOrRemove = { item ->
+                                if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
+                            },
+                            deleteTitle = deleteTitle,
+                            customSingleRemoveDialog = customSingleRemoveDialog,
+                            onRemove = onRemove,
+                            itemUi = itemUi
+                        )
                     }
-                )
+                }
                 /*LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     contentPadding = it,
@@ -232,9 +239,10 @@ fun <T> BottomSheetDeleteGridScaffold(
     onRemove: (T) -> Unit,
     onMultipleRemove: (List<T>) -> Unit,
     itemUi: @Composable (T) -> Unit,
+    gridCells: GridCells,
     modifier: Modifier = Modifier,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    deleteTitle: @Composable (T) -> String = { stringResource(Res.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
@@ -242,7 +250,6 @@ fun <T> BottomSheetDeleteGridScaffold(
     mainView: @Composable (PaddingValues, List<T>) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     BottomSheetScaffold(
         scaffoldState = state,
@@ -269,8 +276,8 @@ fun <T> BottomSheetDeleteGridScaffold(
                     title = { Text(multipleTitle) },
                     text = {
                         Text(
-                            context.resources.getQuantityString(
-                                R.plurals.areYouSureRemove,
+                            pluralStringResource(
+                                Res.plurals.areYouSureRemove,
                                 dragState.selected.size,
                                 dragState.selected.size
                             )
@@ -283,9 +290,13 @@ fun <T> BottomSheetDeleteGridScaffold(
                                 scope.launch { state.bottomSheetState.partialExpand() }
                                 onMultipleRemove(dragState.selected)
                             }
-                        ) { Text(stringResource(R.string.yes)) }
+                        ) { Text(stringResource(Res.string.yes)) }
                     },
-                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                    dismissButton = {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(Res.string.no))
+                        }
+                    }
                 )
             }
 
@@ -295,7 +306,7 @@ fun <T> BottomSheetDeleteGridScaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     CenterAlignedTopAppBar(
-                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        title = { Text(stringResource(Res.string.delete_multiple)) },
                         windowInsets = WindowInsets(0.dp),
                         scrollBehavior = scrollBehavior
                     )
@@ -310,7 +321,7 @@ fun <T> BottomSheetDeleteGridScaffold(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
-                        ) { Text(stringResource(id = R.string.cancel)) }
+                        ) { Text(stringResource(Res.string.cancel)) }
 
                         Button(
                             onClick = { showPopup = true },
@@ -318,12 +329,12 @@ fun <T> BottomSheetDeleteGridScaffold(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
-                        ) { Text(stringResource(id = R.string.remove)) }
+                        ) { Text(stringResource(Res.string.remove)) }
                     }
                 }
             ) { p ->
                 LazyDragSelectVerticalGrid(
-                    columns = adaptiveGridCell(),
+                    columns = gridCells,
                     items = listOfItems,
                     contentPadding = p,
                     state = dragState,
@@ -375,12 +386,13 @@ fun <T> BottomSheetDeleteGridScaffold(
     onRemove: (T) -> Unit,
     onMultipleRemove: (List<T>) -> Unit,
     itemUi: @Composable (T) -> Unit,
+    gridCells: GridCells,
     modifier: Modifier = Modifier,
     isTitle: (T) -> Boolean = { false },
     titleUi: @Composable (T) -> Unit = {},
     span: (LazyGridItemSpanScope.(item: T) -> GridItemSpan)? = null,
     state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    deleteTitle: @Composable (T) -> String = { stringResource(Res.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
     bottomScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()),
     topBar: @Composable (() -> Unit)? = null,
@@ -388,7 +400,6 @@ fun <T> BottomSheetDeleteGridScaffold(
     mainView: @Composable (PaddingValues, List<T>) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     BottomSheetScaffold(
         scaffoldState = state,
@@ -415,8 +426,8 @@ fun <T> BottomSheetDeleteGridScaffold(
                     title = { Text(multipleTitle) },
                     text = {
                         Text(
-                            context.resources.getQuantityString(
-                                R.plurals.areYouSureRemove,
+                            pluralStringResource(
+                                Res.plurals.areYouSureRemove,
                                 dragState.selected.size,
                                 dragState.selected.size
                             )
@@ -429,9 +440,13 @@ fun <T> BottomSheetDeleteGridScaffold(
                                 scope.launch { state.bottomSheetState.partialExpand() }
                                 onMultipleRemove(dragState.selected)
                             }
-                        ) { Text(stringResource(R.string.yes)) }
+                        ) { Text(stringResource(Res.string.yes)) }
                     },
-                    dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                    dismissButton = {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(Res.string.no))
+                        }
+                    }
                 )
             }
 
@@ -441,7 +456,7 @@ fun <T> BottomSheetDeleteGridScaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     CenterAlignedTopAppBar(
-                        title = { Text(stringResource(R.string.delete_multiple)) },
+                        title = { Text(stringResource(Res.string.delete_multiple)) },
                         windowInsets = WindowInsets(0.dp),
                         scrollBehavior = scrollBehavior
                     )
@@ -456,7 +471,7 @@ fun <T> BottomSheetDeleteGridScaffold(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
-                        ) { Text(stringResource(id = R.string.cancel)) }
+                        ) { Text(stringResource(Res.string.cancel)) }
 
                         Button(
                             onClick = { showPopup = true },
@@ -464,12 +479,12 @@ fun <T> BottomSheetDeleteGridScaffold(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 4.dp)
-                        ) { Text(stringResource(id = R.string.remove)) }
+                        ) { Text(stringResource(Res.string.remove)) }
                     }
                 }
             ) { p ->
                 LazyDragSelectVerticalGrid(
-                    columns = adaptiveGridCell(),
+                    columns = gridCells,
                     items = listOfItems,
                     contentPadding = p,
                     state = dragState,
@@ -527,15 +542,14 @@ fun <T> ModalBottomSheetDelete(
     onMultipleRemove: (List<T>) -> Unit,
     onDismiss: () -> Unit,
     itemUi: @Composable (T) -> Unit,
+    gridCells: GridCells,
     isTitle: (T) -> Boolean = { false },
     titleUi: @Composable (T) -> Unit = {},
     span: (LazyGridItemSpanScope.(item: T) -> GridItemSpan)? = null,
     state: SheetState = rememberModalBottomSheetState(),
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    deleteTitle: @Composable (T) -> String = { stringResource(Res.string.remove) },
     customSingleRemoveDialog: (T) -> Boolean = { true },
 ) {
-    val context = LocalContext.current
-
     val dragState = rememberDragSelectState<T>()
 
     var showPopup by remember { mutableStateOf(false) }
@@ -548,8 +562,8 @@ fun <T> ModalBottomSheetDelete(
             title = { Text(multipleTitle) },
             text = {
                 Text(
-                    context.resources.getQuantityString(
-                        R.plurals.areYouSureRemove,
+                    pluralStringResource(
+                        Res.plurals.areYouSureRemove,
                         dragState.selected.size,
                         dragState.selected.size
                     )
@@ -561,15 +575,16 @@ fun <T> ModalBottomSheetDelete(
                         onDismiss()
                         onMultipleRemove(dragState.selected)
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } }
         )
     }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = state,
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -577,7 +592,7 @@ fun <T> ModalBottomSheetDelete(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.delete_multiple)) },
+                    title = { Text(stringResource(Res.string.delete_multiple)) },
                     actions = {
                         var showPopup by remember { mutableStateOf(false) }
 
@@ -585,16 +600,20 @@ fun <T> ModalBottomSheetDelete(
                             val onDismiss = { showPopup = false }
                             AlertDialog(
                                 onDismissRequest = onDismiss,
-                                title = { Text(stringResource(R.string.are_you_sure_delete_notifications)) },
+                                title = { Text(stringResource(Res.string.are_you_sure_delete_notifications)) },
                                 confirmButton = {
                                     TextButton(
                                         onClick = {
                                             onDismiss()
                                             onMultipleRemove(listOfItems)
                                         }
-                                    ) { Text(stringResource(R.string.yes)) }
+                                    ) { Text(stringResource(Res.string.yes)) }
                                 },
-                                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                                dismissButton = {
+                                    TextButton(onClick = onDismiss) {
+                                        Text(stringResource(Res.string.no))
+                                    }
+                                }
                             )
                         }
 
@@ -614,7 +633,7 @@ fun <T> ModalBottomSheetDelete(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 4.dp)
-                    ) { Text(stringResource(id = R.string.cancel)) }
+                    ) { Text(stringResource(Res.string.cancel)) }
 
                     Button(
                         onClick = { showPopup = true },
@@ -622,12 +641,12 @@ fun <T> ModalBottomSheetDelete(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 4.dp)
-                    ) { Text(stringResource(id = R.string.remove)) }
+                    ) { Text(stringResource(Res.string.remove)) }
                 }
             }
         ) { p ->
             LazyDragSelectVerticalGrid(
-                columns = adaptiveGridCell(),
+                columns = gridCells,
                 items = listOfItems,
                 contentPadding = p,
                 state = dragState,
@@ -676,35 +695,6 @@ fun <T> ModalBottomSheetDelete(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@LightAndDarkPreviews
-@Composable
-private fun BottomSheetDeleteScaffoldPreview() {
-    PreviewTheme {
-        val state: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-            bottomSheetState = rememberStandardBottomSheetState(SheetValue.Expanded)
-        )
-        BottomSheetDeleteScaffold(
-            listOfItems = listOf(1, 2, 3, 4, 5),
-            multipleTitle = "Delete",
-            customSingleRemoveDialog = { false },
-            onRemove = {},
-            onMultipleRemove = {},
-            itemUi = { Text(it.toString()) },
-            state = state
-        ) { padding, list ->
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = padding
-            ) {
-                items(list) {
-                    Text(it.toString())
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun <T> DeleteItemView(
     item: T,
@@ -714,7 +704,7 @@ private fun <T> DeleteItemView(
     onRemove: (T) -> Unit,
     itemUi: @Composable (T) -> Unit,
     modifier: Modifier = Modifier,
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    deleteTitle: @Composable (T) -> String = { stringResource(Res.string.remove) },
 ) {
     var showPopup by remember { mutableStateOf(false) }
 
@@ -729,9 +719,9 @@ private fun <T> DeleteItemView(
                         onDismiss()
                         onRemove(item)
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } }
         )
     }
 
@@ -802,7 +792,7 @@ private fun <T> DeleteItemDragSelectView(
     onRemove: (T) -> Unit,
     itemUi: @Composable (T) -> Unit,
     modifier: Modifier = Modifier,
-    deleteTitle: @Composable (T) -> String = { stringResource(R.string.remove) },
+    deleteTitle: @Composable (T) -> String = { stringResource(Res.string.remove) },
 ) {
     var showPopup by remember { mutableStateOf(false) }
 
@@ -817,9 +807,9 @@ private fun <T> DeleteItemDragSelectView(
                         onDismiss()
                         onRemove(item)
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } }
         )
     }
 
@@ -872,30 +862,4 @@ private fun <T> DeleteItemDragSelectView(
         content = { itemUi(item) },
         modifier = modifier
     )
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun DeleteItemPreview() {
-    PreviewTheme {
-        Column {
-            DeleteItemView(
-                item = 1,
-                isInList = false,
-                onAddOrRemove = {},
-                customSingleRemoveDialog = { false },
-                onRemove = {},
-                itemUi = { Text(it.toString()) }
-            )
-
-            DeleteItemView(
-                item = 1,
-                isInList = true,
-                onAddOrRemove = {},
-                customSingleRemoveDialog = { false },
-                onRemove = {},
-                itemUi = { Text(it.toString()) }
-            )
-        }
-    }
 }

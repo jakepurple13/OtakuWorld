@@ -46,12 +46,12 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.dsl.binds
 import org.koin.dsl.module

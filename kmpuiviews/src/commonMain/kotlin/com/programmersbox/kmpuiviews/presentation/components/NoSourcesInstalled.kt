@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
 
 @Composable
 fun NoSourcesInstalled(modifier: Modifier = Modifier) {
@@ -43,13 +41,5 @@ fun NoSourcesInstalled(modifier: Modifier = Modifier) {
                 Text("Cannot find any extensions. Please install some!")
             }
         }
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun NoSourcesInstalledPreview() {
-    PreviewTheme {
-        NoSourcesInstalled()
     }
 }

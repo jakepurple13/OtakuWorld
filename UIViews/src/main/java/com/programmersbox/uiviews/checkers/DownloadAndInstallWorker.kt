@@ -15,6 +15,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import java.io.File
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class DownloadAndInstallWorker(
@@ -79,6 +79,7 @@ class DownloadAndInstallWorker(
                         }
                     }
 
+                    //TODO: Replace this with the repository
                     setProgress(
                         workDataOf(
                             "url" to url,
@@ -166,7 +167,8 @@ class DownloadAndInstallWorker(
                 list.map {
                     DownloadAndInstallState(
                         url = it.progress.getString("url") ?: "",
-                        id = it.id,
+                        name = it.progress.getString("url")?.toUri()?.lastPathSegment ?: "",
+                        id = it.id.toString(),
                         status = if (it.state == WorkInfo.State.CANCELLED) {
                             DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
                         } else {
@@ -350,7 +352,8 @@ class DownloadWorker(
                 list.map {
                     DownloadAndInstallState(
                         url = it.progress.getString("url") ?: "",
-                        id = it.id,
+                        name = it.progress.getString("url")?.toUri()?.lastPathSegment ?: "",
+                        id = it.id.toString(),
                         status = if (it.state == WorkInfo.State.CANCELLED) {
                             DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
                         } else {
@@ -495,10 +498,3 @@ class InstallWorker(
         private const val NOTIFICATION_ID = 40234
     }
 }
-
-data class DownloadAndInstallState(
-    val url: String,
-    val name: String = url.toUri().lastPathSegment ?: "",
-    val id: UUID,
-    val status: DownloadAndInstallStatus,
-)
