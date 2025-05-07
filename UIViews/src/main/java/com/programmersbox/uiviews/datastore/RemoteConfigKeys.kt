@@ -33,8 +33,8 @@ enum class RemoteConfigKeys(val key: String) {
 
                     val json = Json.decodeFromString<List<String>>(remoteConfig.getString(key))
 
-                    list
-                        .filter { it !in json }
+                    json
+                        .filter { it !in list }
                         .forEach { newSettingsHandling.addCustomUrl(it) }
                 }.onFailure {
                     it.printStackTrace()
