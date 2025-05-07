@@ -53,6 +53,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
@@ -64,7 +65,6 @@ import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling

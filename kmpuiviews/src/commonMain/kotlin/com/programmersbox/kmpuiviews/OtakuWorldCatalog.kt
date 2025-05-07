@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews
+package com.programmersbox.kmpuiviews
 
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
@@ -19,7 +19,7 @@ class OtakuWorldCatalog(
     override val name: String,
 ) : KmpExternalApiServicesCatalog, KoinComponent {
 
-    val genericInfo: GenericInfo by inject()
+    val genericInfo: KmpGenericInfo by inject()
 
     private val json = Json {
         isLenient = true
