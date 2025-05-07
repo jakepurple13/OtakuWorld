@@ -76,11 +76,11 @@ import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.isScrollingUp
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.isScrollingUp
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
