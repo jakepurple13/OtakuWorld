@@ -14,7 +14,7 @@ fun Module.appModule() {
     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
 
     single { PerformanceClass.create() }
-    single { UpdateNotification(get()) }
+    singleOf(::UpdateNotification)
     singleOf(::OtakuDataStoreHandling)
     singleOf(::SettingsHandling)
 

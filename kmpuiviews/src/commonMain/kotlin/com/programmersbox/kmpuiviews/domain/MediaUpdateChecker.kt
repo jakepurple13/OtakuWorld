@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.domain
 import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -15,6 +16,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
 
 class MediaUpdateChecker(
     private val dao: ItemDao,
@@ -122,6 +126,50 @@ class MediaUpdateChecker(
         return items
     }
 
+    suspend fun mapDbModel(
+        list: List<Pair<KmpInfoModel?, DbModel>>,
+        notificationUpdate: suspend (max: Int, progress: Int, source: String) -> Unit,
+    ) = list.mapIndexed { index, pair ->
+        notificationUpdate(list.size, index, pair.second.title)
+        val item = dao.getNotificationItem(pair.second.url)
+        val isShowing = item?.isShowing == true
+
+        val notificationId = if (isShowing)
+            item.id
+        else
+            pair.second.hashCode()
+
+        dao.insertNotification(
+            NotificationItem(
+                id = notificationId,
+                url = pair.second.url,
+                summaryText = getString(
+                    Res.string.hadAnUpdate,
+                    pair.second.title,
+                    pair.first?.chapters?.firstOrNull()?.name ?: ""
+                ),
+                notiTitle = pair.second.title,
+                imageUrl = pair.second.imageUrl,
+                source = pair.second.source,
+                contentTitle = pair.second.title,
+                isShowing = true
+            )
+        )
+
+        UpdateModel(
+            notificationId = notificationId,
+            infoModel = pair.first,
+            dbModel = pair.second
+        )
+    }
+
+
     private fun <T, R> Iterable<T>.intersect(uList: Iterable<R>, filterPredicate: (T, R) -> Boolean) =
         filter { m -> uList.any { filterPredicate(m, it) } }
 }
+
+data class UpdateModel(
+    val notificationId: Int,
+    val infoModel: KmpInfoModel?,
+    val dbModel: DbModel,
+)

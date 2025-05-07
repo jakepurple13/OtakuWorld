@@ -8,13 +8,13 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.helpfulutils.GroupBehavior
 import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.SemanticActions
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
@@ -28,7 +28,10 @@ import kotlinx.coroutines.flow.collect
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class UpdateNotification(private val context: Context) : KoinComponent {
+class UpdateNotification(
+    private val context: Context,
+    private val mediaUpdateChecker: MediaUpdateChecker,
+) : KoinComponent {
 
     private val icon: NotificationLogo by inject()
 
@@ -44,82 +47,66 @@ class UpdateNotification(private val context: Context) : KoinComponent {
         }
     }
 
-    suspend fun mapDbModel(dao: ItemDao, list: List<Pair<KmpInfoModel?, DbModel>>, info: GenericInfo) = list.mapIndexed { index, pair ->
-        sendRunningNotification(list.size, index, pair.second.title)
-        //index + 3 + (Math.random() * 50).toInt() //for a possible new notification value
-
-        val item = dao.getNotificationItem(pair.second.url)
-        val isShowing = item?.isShowing == true
-
-        val notificationId = if (isShowing)
-            item.id
-        else
-            pair.second.hashCode()
-
-        dao.insertNotification(
-            NotificationItem(
-                id = notificationId,
-                url = pair.second.url,
-                summaryText = context.getString(R.string.hadAnUpdate, pair.second.title, pair.first?.chapters?.firstOrNull()?.name ?: ""),
-                notiTitle = pair.second.title,
-                imageUrl = pair.second.imageUrl,
-                source = pair.second.source,
-                contentTitle = pair.second.title,
-                isShowing = true
-            )
+    suspend fun mapDbModel(list: List<Pair<KmpInfoModel?, DbModel>>, info: GenericInfo) =
+        mediaUpdateChecker.mapDbModel(
+            list = list,
+            notificationUpdate = { max, progress, source -> sendRunningNotification(max, progress, source) }
         )
-        notificationId to NotificationDslBuilder.builder(
-            context,
-            "otakuChannel",
-            icon.notificationId
-        ) {
-            title = pair.second.title
-            subText = pair.second.source
-            getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
-                largeIconBitmap = it
-                pictureStyle {
-                    bigPicture = it
-                    largeIcon = it
-                    contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
-                    summaryText = context.getString(
-                        R.string.hadAnUpdate,
-                        pair.second.title,
-                        pair.first?.chapters?.firstOrNull()?.name ?: ""
-                    )
+            .map { updateModel ->
+                val notificationId = updateModel.notificationId
+                val pair = updateModel.infoModel to updateModel.dbModel
+                notificationId to NotificationDslBuilder.builder(
+                    context,
+                    "otakuChannel",
+                    icon.notificationId
+                ) {
+                    title = pair.second.title
+                    subText = pair.second.source
+                    getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
+                        largeIconBitmap = it
+                        pictureStyle {
+                            bigPicture = it
+                            largeIcon = it
+                            contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
+                            summaryText = context.getString(
+                                R.string.hadAnUpdate,
+                                pair.second.title,
+                                pair.first?.chapters?.firstOrNull()?.name ?: ""
+                            )
+                        }
+                    } ?: bigTextStyle {
+                        contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
+                        bigText = context.getString(
+                            R.string.hadAnUpdate,
+                            pair.second.title,
+                            pair.first?.chapters?.firstOrNull()?.name.orEmpty()
+                        )
+                    }
+                    showWhen = true
+                    groupId = "otakuGroup"
+                    addAction {
+                        actionTitle = context.getString(R.string.mark_read)
+                        actionIcon = icon.notificationId
+                        semanticAction = SemanticActions.MARK_AS_READ
+                        pendingActionIntent {
+                            val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                            intent.action = "NOTIFICATION_DELETED_ACTION"
+                            intent.putExtra("url", pair.second.url)
+                            intent.putExtra("id", notificationId)
+                            PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE)
+                        }
+                    }
+                    deleteIntent { context ->
+                        val intent = Intent(context, SwipeAwayReceiver::class.java)
+                        intent.action = "NOTIFICATION_DELETED_ACTION"
+                        intent.putExtra("url", pair.second.url)
+                        PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+                    }
+                    pendingIntent { context ->
+                        info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source))
+                    }
                 }
-            } ?: bigTextStyle {
-                contentTitle = pair.first?.chapters?.firstOrNull()?.name ?: ""
-                bigText = context.getString(
-                    R.string.hadAnUpdate,
-                    pair.second.title,
-                    pair.first?.chapters?.firstOrNull()?.name.orEmpty()
-                )
             }
-            showWhen = true
-            groupId = "otakuGroup"
-            addAction {
-                actionTitle = context.getString(R.string.mark_read)
-                actionIcon = icon.notificationId
-                semanticAction = SemanticActions.MARK_AS_READ
-                pendingActionIntent {
-                    val intent = Intent(context, DeleteNotificationReceiver::class.java)
-                    intent.action = "NOTIFICATION_DELETED_ACTION"
-                    intent.putExtra("url", pair.second.url)
-                    intent.putExtra("id", notificationId)
-                    PendingIntent.getBroadcast(context, notificationId, intent, PendingIntent.FLAG_IMMUTABLE)
-                }
-            }
-            deleteIntent { context ->
-                val intent = Intent(context, SwipeAwayReceiver::class.java)
-                intent.action = "NOTIFICATION_DELETED_ACTION"
-                intent.putExtra("url", pair.second.url)
-                PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-            }
-            pendingIntent { context ->
-                info.deepLinkDetails(context, pair.second.toItemModel(pair.first!!.source))
-            }
-        }
-    }
 
     fun onEnd(
         list: List<Pair<Int, Notification>>,

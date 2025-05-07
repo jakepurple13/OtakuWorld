@@ -74,7 +74,7 @@ class UpdateFlowWorker(
             )
 
             update.onEnd(
-                update.mapDbModel(dao, items, genericInfo),
+                update.mapDbModel(items, genericInfo),
                 info = genericInfo
             )/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
