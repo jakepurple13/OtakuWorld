@@ -6,6 +6,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.ktx.animateColorScheme
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.NewSettingsHandling
@@ -50,6 +51,7 @@ fun generateColorScheme(
             isAmoled = isAmoledMode,
             isDark = darkTheme,
             style = swatchStyle,
+            specVersion = ColorSpec.SpecVersion.SPEC_2025
         )
     }
 
