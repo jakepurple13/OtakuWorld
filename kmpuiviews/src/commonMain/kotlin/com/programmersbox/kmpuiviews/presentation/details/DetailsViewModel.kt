@@ -134,7 +134,11 @@ class DetailsViewModel(
                 )?.asImageBitmap()*/
              */
             .onEach { blurHash = runCatching { BitmapPainter(it) }.getOrNull() }
-            .onEach { if (palette == null) palette = it.generatePalette() }
+            .onEach {
+                runCatching {
+                    if (palette == null) palette = it.generatePalette()
+                }
+            }
             .dispatchIo()
             .launchIn(viewModelScope)
 
@@ -154,14 +158,18 @@ class DetailsViewModel(
             .dispatchIo()
             .onEach {
                 if (it.blurHashItem == null && it.bitmap != null && it.isFavorite && it.imageUrl != null) {
-                    blurHashDao.insertHash(
-                        BlurHashItem(
-                            it.imageUrl,
-                            it.bitmap.encodeToByteArray().decodeToString()//BlurHash.encode(it.bitmap, 4, 3)
+                    runCatching {
+                        blurHashDao.insertHash(
+                            BlurHashItem(
+                                it.imageUrl,
+                                it.bitmap.encodeToByteArray().decodeToString()//BlurHash.encode(it.bitmap, 4, 3)
+                            )
                         )
-                    )
+                    }
                 } else if (it.blurHashItem != null && !it.isFavorite) {
-                    blurHashDao.deleteHash(it.blurHashItem)
+                    runCatching {
+                        blurHashDao.deleteHash(it.blurHashItem)
+                    }
                 }
             }
             .launchIn(viewModelScope)
