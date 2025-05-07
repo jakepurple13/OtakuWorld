@@ -132,6 +132,7 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.NotifySingleWorker
 import com.programmersbox.uiviews.checkers.SavedNotifications
+import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -516,6 +517,7 @@ private fun NotificationOptionsSheet(
     }
 ) {
     if (!it.item.isShowing) {
+        val updateNotification: UpdateNotification = koinInject()
         Card(
             onClick = {
                 scope.launch(Dispatchers.IO) {
@@ -525,7 +527,8 @@ private fun NotificationOptionsSheet(
                         notificationLogo = notificationLogo,
                         info = genericInfo,
                         sourceRepository = sourceRepository,
-                        itemDao = itemDao
+                        itemDao = itemDao,
+                        update = updateNotification
                     )
                 }.invokeOnCompletion { dismiss() }
             },

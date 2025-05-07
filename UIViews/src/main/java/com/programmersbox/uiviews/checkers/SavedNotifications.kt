@@ -35,9 +35,9 @@ object SavedNotifications {
         info: GenericInfo,
         sourceRepository: SourceRepository,
         itemDao: ItemDao,
+        update: UpdateNotification,
     ) {
         val icon = notificationLogo.notificationId
-        val update = UpdateNotification(context)
         itemDao.updateNotification(
             url = n.url,
             isShowing = true
@@ -123,9 +123,9 @@ object SavedNotifications {
         info: GenericInfo,
         sourceRepository: SourceRepository,
         dao: ItemDao,
+        update: UpdateNotification,
     ) {
         val icon = logo.notificationId
-        val update = UpdateNotification(context)
         GlobalScope.launch {
             dao.getAllNotifications()
                 .fastMap { n ->

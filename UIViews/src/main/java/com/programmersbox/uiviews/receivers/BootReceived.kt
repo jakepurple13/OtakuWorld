@@ -8,6 +8,7 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.checkers.SavedNotifications
+import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.utils.NotificationLogo
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
@@ -19,7 +20,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     private val info: GenericInfo by inject()
     private val sourceRepository: SourceRepository by inject()
     private val settingsHandling: NewSettingsHandling by inject()
-
+    private val updateNotification: UpdateNotification by inject()
     private val itemDao: ItemDao by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -34,7 +35,8 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
                             logo = logo,
                             info = info,
                             sourceRepository = sourceRepository,
-                            dao = itemDao
+                            dao = itemDao,
+                            update = updateNotification
                         )
                     }
                 }

@@ -18,6 +18,7 @@ class NotifySingleWorker(
     private val genericInfo: GenericInfo,
     private val sourceRepository: SourceRepository,
     private val itemDao: ItemDao,
+    private val updateNotification: UpdateNotification,
 ) : CoroutineWorker(context, workerParams), KoinComponent {
     override suspend fun doWork(): Result {
         inputData.getString("notiData")
@@ -29,7 +30,8 @@ class NotifySingleWorker(
                     notificationLogo = logo,
                     info = genericInfo,
                     sourceRepository = sourceRepository,
-                    itemDao = itemDao
+                    itemDao = itemDao,
+                    update = updateNotification
                 )
             }
         return Result.success()
