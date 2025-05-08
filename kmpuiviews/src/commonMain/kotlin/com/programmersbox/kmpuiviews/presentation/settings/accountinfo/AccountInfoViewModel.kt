@@ -52,7 +52,6 @@ class AccountInfoViewModel(
                 .sources
                 .map { list ->
                     list
-                        .distinctBy { it.packageName }
                         .filter { it.apiService.notWorking }
                         .size
                 }
