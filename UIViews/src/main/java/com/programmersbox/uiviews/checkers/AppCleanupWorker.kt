@@ -8,6 +8,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.google.firebase.perf.trace
 import com.programmersbox.kmpuiviews.logFirebaseMessage
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 class AppCleanupWorker(
