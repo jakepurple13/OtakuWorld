@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.CatchingPokemon
@@ -70,6 +71,7 @@ fun MoreInfoScreen(
     infoViewModel: MoreInfoViewModel = koinViewModel(),
     usedLibraryClick: () -> Unit,
     onPrereleaseClick: () -> Unit,
+    onViewAccountInfoClick: () -> Unit,
     shouldShowPrerelease: Boolean,
 ) {
     val navController = LocalNavController.current
@@ -86,6 +88,16 @@ fun MoreInfoScreen(
                 indication = ripple(),
                 interactionSource = null,
                 onClick = usedLibraryClick
+            )
+        )
+
+        PreferenceSetting(
+            settingTitle = { Text("View Account Info") },
+            settingIcon = { Icon(Icons.Default.AccountCircle, null, modifier = Modifier.fillMaxSize()) },
+            modifier = Modifier.clickable(
+                indication = ripple(),
+                interactionSource = null,
+                onClick = onViewAccountInfoClick
             )
         )
 

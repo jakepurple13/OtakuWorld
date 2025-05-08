@@ -30,11 +30,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
@@ -42,6 +43,7 @@ import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewMo
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.skydoves.landscapist.glide.GlideImage
+import org.koin.compose.viewmodel.koinViewModel
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
@@ -276,10 +278,11 @@ private fun SettingsPreview() {
 
 @Composable
 private fun AccountSettings(
-    viewModel: AccountViewModel = viewModel(),
+    viewModel: AccountViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
+    val navController = LocalNavController.current
 
     val accountInfo = viewModel.accountInfo
 
@@ -315,6 +318,14 @@ private fun AccountSettings(
                         modifier = Modifier.clickable {
                             showDialog = false
                             (activity as? ComponentActivity)?.let { viewModel.signInOrOut(context, it) }
+                        }
+                    )
+
+                    ListItem(
+                        headlineContent = { Text("View Account Info") },
+                        modifier = Modifier.clickable {
+                            showDialog = false
+                            navController.navigate(Screen.AccountInfo) { launchSingleTop = true }
                         }
                     )
                 }

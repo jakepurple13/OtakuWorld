@@ -99,6 +99,9 @@ interface ListDao {
     @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
     fun getAllLists(): Flow<List<CustomList>>
 
+    @Query("SELECT COUNT(uuid) FROM CustomListItem")
+    fun getAllListsCount(): Flow<Int>
+
     @Transaction
     @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
     suspend fun getAllListsSync(): List<CustomList>

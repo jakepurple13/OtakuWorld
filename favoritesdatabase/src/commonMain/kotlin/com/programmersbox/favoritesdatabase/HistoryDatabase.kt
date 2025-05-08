@@ -41,6 +41,9 @@ interface HistoryDao {
     @Query("SELECT * FROM History ORDER BY time DESC")
     fun getAllHistory(): Flow<List<HistoryItem>>
 
+    @Query("SELECT COUNT(search_text) FROM History")
+    fun getAllHistoryCount(): Flow<Int>
+
     @Query("SELECT * FROM History WHERE search_text LIKE :searchText ORDER BY time DESC")
     fun searchHistory(searchText: String): Flow<List<HistoryItem>>
 

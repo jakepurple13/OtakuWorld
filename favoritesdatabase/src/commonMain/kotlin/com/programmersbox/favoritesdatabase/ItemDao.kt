@@ -21,6 +21,9 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem")
     fun getAllFavorites(): Flow<List<DbModel>>
 
+    @Query("SELECT COUNT(url) FROM FavoriteItem")
+    fun getAllFavoritesCount(): Flow<Int>
+
     @Query("SELECT * FROM FavoriteItem")
     suspend fun getAllFavoritesSync(): List<DbModel>
 
@@ -110,6 +113,9 @@ interface ItemDao {
 
     @Query("SELECT * FROM IncognitoSourceTable")
     fun getAllIncognitoSources(): Flow<List<IncognitoSource>>
+
+    @Query("SELECT COUNT(source) FROM IncognitoSourceTable")
+    fun getAllIncognitoSourcesCount(): Flow<Int>
 
     @Query("SELECT * FROM IncognitoSourceTable")
     suspend fun getAllIncognitoSourcesSync(): List<IncognitoSource>

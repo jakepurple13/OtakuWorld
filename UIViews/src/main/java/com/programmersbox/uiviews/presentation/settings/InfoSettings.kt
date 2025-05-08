@@ -12,10 +12,12 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 fun InfoSettings(
     usedLibraryClick: () -> Unit,
     onPrereleaseClick: () -> Unit,
+    onViewAccountInfoClick: () -> Unit,
 ) {
     MoreInfoScreen(
         usedLibraryClick = usedLibraryClick,
         onPrereleaseClick = onPrereleaseClick,
+        onViewAccountInfoClick = onViewAccountInfoClick,
         shouldShowPrerelease = BuildConfig.DEBUG
     )
 }
@@ -26,7 +28,8 @@ private fun InfoSettingsPreview() {
     PreviewTheme {
         InfoSettings(
             usedLibraryClick = {},
-            onPrereleaseClick = {}
+            onPrereleaseClick = {},
+            onViewAccountInfoClick = {}
         )
     }
 }
