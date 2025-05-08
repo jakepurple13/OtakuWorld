@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.checkers
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.helpfulutils.NotificationDslBuilder
@@ -13,12 +14,13 @@ import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
+import android.content.Contextimport java.io.File
 
 class AppCheckWorker(
     context: Context,
     workerParams: WorkerParameters,
     private val logo: NotificationLogo,
-) : CoroutineWorker(context, workerParams), KoinComponent {
+) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {

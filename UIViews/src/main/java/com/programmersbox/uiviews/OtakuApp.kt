@@ -42,6 +42,7 @@ import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.checkers.AppCheckWorker
+import com.programmersbox.uiviews.checkers.AppCleanupWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
@@ -180,6 +181,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         runCatching {
             val work = WorkManager.getInstance(this)
+
+            AppCleanupWorker.setupWorker(work)
 
             work.enqueueUniquePeriodicWork(
                 "appChecks",

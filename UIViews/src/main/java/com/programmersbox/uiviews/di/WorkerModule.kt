@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.di
 
 import com.programmersbox.uiviews.checkers.AppCheckWorker
+import com.programmersbox.uiviews.checkers.AppCleanupWorker
 import com.programmersbox.uiviews.checkers.DownloadAndInstallWorker
 import com.programmersbox.uiviews.checkers.DownloadWorker
 import com.programmersbox.uiviews.checkers.InstallWorker
@@ -18,4 +19,5 @@ fun Module.workers() {
     workerOf(::DownloadAndInstallWorker)
     workerOf(::DownloadWorker)
     workerOf(::InstallWorker)
+    workerOf(::AppCleanupWorker)
 }
