@@ -27,6 +27,7 @@ class AccountInfoViewModel(
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
 
     var accountInfo by mutableStateOf(AccountInfoCount.Empty)
+        private set
 
     init {
         combine(
@@ -57,7 +58,6 @@ class AccountInfoViewModel(
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
-
 }
 
 data class AccountInfoCount(
