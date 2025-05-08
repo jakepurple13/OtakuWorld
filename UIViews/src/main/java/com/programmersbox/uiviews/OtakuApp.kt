@@ -40,7 +40,6 @@ import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.loggingutils.Loged
-import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
@@ -49,10 +48,10 @@ import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.datastore.migrateSettings
-import com.programmersbox.uiviews.di.appModule
+import com.programmersbox.uiviews.di.androidViewModels
+import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
 import com.programmersbox.uiviews.di.repository
-import com.programmersbox.uiviews.di.viewModels
 import com.programmersbox.uiviews.di.workers
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -125,26 +124,15 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             androidContext(this@OtakuApp)
             loadKoinModules(
                 module {
-                    buildModules()
-                    single {
-                        AppLogo(
-                            logo = applicationInfo.loadIcon(packageManager),
-                            logoId = applicationInfo.icon
-                        )
-                    }
-                    single {
-                        com.programmersbox.kmpuiviews.utils.AppLogo(
-                            logo = applicationInfo.loadIcon(packageManager),
-                            logoId = applicationInfo.icon
-                        )
-                    }
-
-                    appModule()
+                    includes(
+                        buildModules,
+                        appModules,
+                        androidViewModels,
+                        repository,
+                        databases,
+                        kmpInterop
+                    )
                     workers()
-                    viewModels()
-                    repository()
-                    includes(databases)
-                    includes(kmpInterop)
                 }
             )
             workManagerFactory()
@@ -260,7 +248,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
     open fun onCreated() {}
 
-    abstract fun Module.buildModules()
+    abstract val buildModules: Module
     abstract fun createFirebaseIds(): FirebaseIds
 
     protected open fun shortcuts(): List<ShortcutInfo> = emptyList()

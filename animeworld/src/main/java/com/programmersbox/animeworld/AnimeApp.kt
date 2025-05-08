@@ -13,11 +13,10 @@ import com.mikepenz.iconics.utils.icon
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.uiviews.OtakuApp
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
 class AnimeApp : OtakuApp() {
-    override fun Module.buildModules() {
-        includes(appModule)
-    }
+    override val buildModules: Module = module { includes(appModule) }
 
     override fun createFirebaseIds(): FirebaseIds = FirebaseIds(
         documentId = "favoriteShows",

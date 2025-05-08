@@ -7,11 +7,10 @@ import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.uiviews.OtakuApp
 import org.koin.android.ext.android.inject
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
 class MangaApp : OtakuApp() {
-    override fun Module.buildModules() {
-        includes(appModule)
-    }
+    override val buildModules: Module = module { includes(appModule) }
 
     override fun onCreated() {
         SubsamplingScaleImageView.setPreferredBitmapConfig(Bitmap.Config.ARGB_8888)

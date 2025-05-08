@@ -2,11 +2,10 @@ package com.programmersbox.novelworld
 
 import com.programmersbox.uiviews.OtakuApp
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
 class NovelApp : OtakuApp() {
-    override fun Module.buildModules() {
-        includes(appModule)
-    }
+    override val buildModules: Module = module { includes(appModule) }
 
     override fun createFirebaseIds(): FirebaseIds = FirebaseIds(
         documentId = "favoriteNovels",

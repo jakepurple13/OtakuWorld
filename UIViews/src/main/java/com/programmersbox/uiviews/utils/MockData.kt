@@ -68,8 +68,8 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
+import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.repository
-import com.programmersbox.uiviews.di.viewModels
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinIsolatedContext
@@ -197,8 +197,7 @@ fun PreviewTheme(
                     KmpGenericInfo::class,
                     GenericInfo::class
                 )
-                repository()
-                includes(databases)
+                includes(androidViewModels, databases, repository)
                 single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
                 single {
                     OtakuWorldCatalog(
@@ -213,7 +212,6 @@ fun PreviewTheme(
                         createProtobuf(get(), SettingsSerializer()),
                     )
                 }
-                viewModels()
             }
         }
     ) {

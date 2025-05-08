@@ -61,7 +61,9 @@ class GlobalSearchViewModel(
             searchListPublisher = emptyList()
             //TODO: Add option to have live population or all at once
             async {
-                sourceRepository.list
+                sourceRepository
+                    .list
+                    .distinctBy { it.packageName }
                     .apmap { a ->
                         a
                             .apiService

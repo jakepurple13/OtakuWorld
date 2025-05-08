@@ -93,10 +93,18 @@ import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get(), get(), get(), get()) } binds arrayOf(
+    single<GenericInfo> {
+        GenericManga(
+            context = get(),
+            chapterHolder = get(),
+            mangaSettingsHandling = get(),
+            settingsHandling = get()
+        )
+    } binds arrayOf(
         KmpGenericInfo::class,
         GenericInfo::class
     )
+
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     singleOf(::ChapterHolder)
