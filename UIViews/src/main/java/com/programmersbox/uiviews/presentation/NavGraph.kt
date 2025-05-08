@@ -282,12 +282,18 @@ private fun NavGraphBuilder.settings(
             )
         }
 
-        composable<Screen.ImportListScreen> {
+        composable<Screen.ImportListScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        ) {
             trackScreen("import_list")
             ImportListScreen()
         }
 
-        composable<Screen.ImportFullListScreen> {
+        composable<Screen.ImportFullListScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        ) {
             trackScreen("import_full_list")
             ImportFullListScreen()
         }
@@ -322,7 +328,10 @@ private fun NavGraphBuilder.settings(
             )
         }
 
-        composable<Screen.AccountInfo> {
+        composable<Screen.AccountInfo>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        ) {
             AccountInfoScreen(
                 profileUrl = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString(),
                 hasCloudBackup = BuildType.current == BuildType.Full

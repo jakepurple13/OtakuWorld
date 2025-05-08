@@ -3,6 +3,7 @@ package com.programmersbox.uiviews.presentation.settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
@@ -312,7 +314,9 @@ private fun AccountSettings(
                 }
             },
             text = {
-                Column {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     ListItem(
                         headlineContent = { Text(stringResource(if (accountInfo != null) R.string.logOut else R.string.logIn)) },
                         modifier = Modifier.clickable {
@@ -320,6 +324,8 @@ private fun AccountSettings(
                             (activity as? ComponentActivity)?.let { viewModel.signInOrOut(context, it) }
                         }
                     )
+
+                    HorizontalDivider()
 
                     ListItem(
                         headlineContent = { Text("View Account Info") },
