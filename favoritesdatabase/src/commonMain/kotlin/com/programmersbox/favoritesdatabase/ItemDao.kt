@@ -51,6 +51,9 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 
+    @Query("SELECT COUNT(url) FROM ChapterWatched")
+    fun getAllChaptersCount(): Flow<Int>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(notificationItem: NotificationItem)
 

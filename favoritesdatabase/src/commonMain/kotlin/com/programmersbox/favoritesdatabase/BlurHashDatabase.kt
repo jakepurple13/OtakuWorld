@@ -29,9 +29,11 @@ abstract class BlurHashDatabase : RoomDatabase() {
 
 @Dao
 interface BlurHashDao {
-
     @Query("SELECT * FROM BlurHashItem")
     fun getAllHashes(): Flow<List<BlurHashItem>>
+
+    @Query("SELECT COUNT(url) FROM BlurHashItem")
+    fun getAllHashesCount(): Flow<Int>
 
     @Query("SELECT * FROM BlurHashItem WHERE url=:url")
     fun getHash(url: String?): Flow<BlurHashItem?>

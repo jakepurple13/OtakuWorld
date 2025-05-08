@@ -349,9 +349,3 @@ private fun AccountSettings(
             .clickable { showDialog = true }
     )
 }
-
-private fun Modifier.click(action: () -> Unit): Modifier = clickable(
-    indication = ripple(),
-    interactionSource = null,
-    onClick = action
-)

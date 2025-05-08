@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -57,71 +58,83 @@ fun AccountInfoScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            item {
-                AccountInfoItem(
-                    "Total Favorites",
-                    state.totalFavorites
-                )
-            }
+            accountInfoItem(
+                title = "Total Favorites",
+                description = "The amount of total favorites",
+                amount = state.totalFavorites
+            )
 
             if (hasCloudBackup) {
-                item {
-                    AccountInfoItem(
-                        "Cloud Favorites",
-                        state.cloudFavorites
-                    )
-                }
-            }
-
-            item {
-                AccountInfoItem(
-                    "Local Favorites",
-                    state.localFavorites
+                accountInfoItem(
+                    title = "Cloud Favorites",
+                    description = "The amount of favorites in the cloud",
+                    amount = state.cloudFavorites
                 )
             }
 
-            item {
-                AccountInfoItem(
-                    "Notifications",
-                    state.notifications
-                )
-            }
+            accountInfoItem(
+                title = "Local Favorites",
+                description = "The amount of favorites in the local database",
+                amount = state.localFavorites
+            )
 
-            item {
-                AccountInfoItem(
-                    "Incognito Sources",
-                    state.incognitoSources
-                )
-            }
+            accountInfoItem(
+                title = "Local Chapters",
+                description = "The amount of chapters in the local database",
+                amount = state.chapters
+            )
 
-            item {
-                AccountInfoItem(
-                    "History",
-                    state.history
-                )
-            }
+            accountInfoItem(
+                title = "Notifications",
+                description = "The amount of notifications saved",
+                amount = state.notifications
+            )
 
-            item {
-                AccountInfoItem(
-                    "Lists",
-                    state.lists
-                )
-            }
+            accountInfoItem(
+                title = "Incognito Sources",
+                description = "The amount of sources you have in incognito mode",
+                amount = state.incognitoSources
+            )
+
+            accountInfoItem(
+                title = "History",
+                description = "The amount of history items",
+                amount = state.history
+            )
+
+            accountInfoItem(
+                title = "Lists",
+                description = "The amount of lists",
+                amount = state.lists
+            )
+
+            accountInfoItem(
+                title = "Items in Lists",
+                description = "The amount of items in lists",
+                amount = state.itemsInLists
+            )
+
+            accountInfoItem(
+                title = "Blur Hashes",
+                description = "Used to speed up loading images",
+                amount = state.blurHashes
+            )
         }
     }
 }
 
-@Composable
-private fun AccountInfoItem(
+private fun LazyListScope.accountInfoItem(
     title: String,
+    description: String,
     amount: Int,
     modifier: Modifier = Modifier,
-) {
+) = item {
     OutlinedCard(
         modifier = modifier
     ) {
         ListItem(
             headlineContent = { Text(title) },
+            supportingContent = { Text(description) },
             trailingContent = { Text(animateIntAsState(amount).value.toString()) },
         )
     }
