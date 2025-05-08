@@ -13,7 +13,7 @@ kspVersion = "2.1.20-2.0.1"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
-dragselect = "2.4.3"
+dragselect = "3.0.0"
 easylauncher = "6.4.0"
 firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
@@ -99,7 +99,7 @@ compose-multiplatform = "1.8.0"
 kotlinx-coroutines = "1.10.2"
 
 material3WindowSizeClassVersion = "1.8.0"
-connectivity = "2.0.0"
+connectivity = "2.0.1"
 
 cmpLifecycle = "2.9.0-beta01"
 navigationCmp = "2.9.0-beta01"
@@ -411,7 +411,7 @@ workinspector = { module = "com.github.koitharu:workinspector", version.ref = "w
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
 androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
-androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha06" }
+androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha07" }
 
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 
