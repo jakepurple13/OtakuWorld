@@ -72,7 +72,7 @@ class MediaUpdateChecker(
                         //getRecents(m)
                     }
                         .onFailure {
-                            recordFirebaseException(it)
+                            logFirebaseMessage(it.stackTraceToString())
                             it.printStackTrace()
                         }
                         .getOrNull()
