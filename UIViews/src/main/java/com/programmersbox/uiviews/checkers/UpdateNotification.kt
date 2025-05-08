@@ -25,13 +25,12 @@ import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import org.koin.core.component.KoinComponent
 
 class UpdateNotification(
     private val context: Context,
     private val mediaUpdateChecker: MediaUpdateChecker,
     private val icon: NotificationLogo,
-) : KoinComponent {
+) {
 
     suspend fun updateManga(dao: ItemDao, triple: List<Pair<KmpInfoModel?, DbModel>>) {
         triple.fastForEach {
