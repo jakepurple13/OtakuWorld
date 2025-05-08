@@ -85,6 +85,12 @@ fun AccountInfoScreen(
             )
 
             accountInfoItem(
+                title = "Source Count",
+                description = "The amount of sources",
+                amount = state.sourceCount
+            )
+
+            accountInfoItem(
                 title = "Notifications",
                 description = "The amount of notifications saved",
                 amount = state.notifications
@@ -118,6 +124,12 @@ fun AccountInfoScreen(
                 title = "Blur Hashes",
                 description = "Used to speed up loading images",
                 amount = state.blurHashes
+            )
+
+            accountInfoItem(
+                title = "Translation Models",
+                description = "The amount of translation models",
+                amount = state.translationModels
             )
         }
     }

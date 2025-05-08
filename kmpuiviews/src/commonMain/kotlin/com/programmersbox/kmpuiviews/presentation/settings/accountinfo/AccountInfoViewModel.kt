@@ -9,9 +9,12 @@ import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.fireListener
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -21,6 +24,8 @@ class AccountInfoViewModel(
     listDao: ListDao,
     historyDao: HistoryDao,
     blurHashDao: BlurHashDao,
+    translationModelHandler: TranslationModelHandler,
+    sourceRepository: SourceRepository,
     firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
@@ -41,20 +46,17 @@ class AccountInfoViewModel(
             listDao.getAllListsCount(),
             listDao.getAllListItemsCount(),
             itemDao.getAllChaptersCount(),
-            blurHashDao.getAllHashesCount()
-        ) {
-            AccountInfoCount(
-                cloudFavorites = it[0],
-                localFavorites = it[1],
-                notifications = it[2],
-                incognitoSources = it[3],
-                history = it[4],
-                lists = it[5] - 1,
-                itemsInLists = it[6],
-                chapters = it[7],
-                blurHashes = it[8]
-            )
-        }
+            blurHashDao.getAllHashesCount(),
+            flow { emit(translationModelHandler.modelList().size) },
+            sourceRepository
+                .sources
+                .map { list ->
+                    list
+                        .distinctBy { it.packageName }
+                        .filter { it.apiService.notWorking }
+                        .size
+                }
+        ) { AccountInfoCount(it) }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
@@ -70,7 +72,22 @@ data class AccountInfoCount(
     val itemsInLists: Int,
     val chapters: Int,
     val blurHashes: Int,
+    val translationModels: Int,
+    val sourceCount: Int,
 ) {
+    constructor(array: Array<Int>) : this(
+        cloudFavorites = array[0],
+        localFavorites = array[1],
+        notifications = array[2],
+        incognitoSources = array[3],
+        history = array[4],
+        lists = array[5],
+        itemsInLists = array[6],
+        chapters = array[7],
+        blurHashes = array[8],
+        translationModels = array[9],
+        sourceCount = array[10]
+    )
 
     val totalFavorites: Int
         get() = cloudFavorites + localFavorites
@@ -85,7 +102,9 @@ data class AccountInfoCount(
             lists = 0,
             itemsInLists = 0,
             chapters = 0,
-            blurHashes = 0
+            blurHashes = 0,
+            translationModels = 0,
+            sourceCount = 0
         )
     }
 }

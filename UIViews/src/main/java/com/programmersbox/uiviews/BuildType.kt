@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews
 
+//TODO: Maybe move this to kmp and have the current as an extension value?
 enum class BuildType {
     NoFirebase,
     NoCloudFirebase,
