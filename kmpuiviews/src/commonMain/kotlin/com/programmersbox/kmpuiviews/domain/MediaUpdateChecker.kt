@@ -105,7 +105,7 @@ class MediaUpdateChecker(
                     .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
             }
                 .onFailure {
-                    recordFirebaseException(it)
+                    logFirebaseMessage(it.stackTraceToString())
                     it.printStackTrace()
                 }
                 .getOrNull()
