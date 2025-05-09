@@ -148,7 +148,7 @@ fun GlobalSearchView(
     val networkState by viewModel.observeNetwork.collectAsStateWithLifecycle(true)
 
     val history by dao
-        .searchHistory("%${viewModel.searchText}%")
+        .searchHistory("%${viewModel.searchText.text}%")
         .collectAsStateWithLifecycle(emptyList())
 
     val bottomScaffold = rememberBottomSheetScaffoldState()

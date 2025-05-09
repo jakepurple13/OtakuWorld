@@ -42,7 +42,7 @@ class AccountInfoViewModel(
             itemDao.getAllFavoritesCount(),
             itemDao.getAllNotificationCount(),
             itemDao.getAllIncognitoSourcesCount(),
-            historyDao.getAllHistoryCount(),
+            historyDao.getAllRecentHistoryCount(),
             listDao.getAllListsCount(),
             listDao.getAllListItemsCount(),
             itemDao.getAllChaptersCount(),
@@ -55,7 +55,8 @@ class AccountInfoViewModel(
                         .filterNot { it.apiService.notWorking }
                         .groupBy { it.packageName }
                         .size
-                }
+                },
+            historyDao.getAllHistoryCount(),
         ) { AccountInfoCount(it) }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
@@ -74,6 +75,7 @@ data class AccountInfoCount(
     val blurHashes: Int,
     val translationModels: Int,
     val sourceCount: Int,
+    val globalSearchHistory: Int,
 ) {
     constructor(array: Array<Int>) : this(
         cloudFavorites = array[0],
@@ -86,7 +88,8 @@ data class AccountInfoCount(
         chapters = array[7],
         blurHashes = array[8],
         translationModels = array[9],
-        sourceCount = array[10]
+        sourceCount = array[10],
+        globalSearchHistory = array[11],
     )
 
     val totalFavorites: Int
@@ -104,7 +107,8 @@ data class AccountInfoCount(
             chapters = 0,
             blurHashes = 0,
             translationModels = 0,
-            sourceCount = 0
+            sourceCount = 0,
+            globalSearchHistory = 0,
         )
     }
 }

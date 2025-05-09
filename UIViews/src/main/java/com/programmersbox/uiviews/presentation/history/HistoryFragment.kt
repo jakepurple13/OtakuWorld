@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.presentation.history
 
-import android.graphics.drawable.Drawable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -52,9 +51,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
@@ -62,6 +61,7 @@ import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledM
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -69,7 +69,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
-import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
@@ -84,7 +83,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @ExperimentalMaterial3Api
 @Composable
@@ -98,8 +96,6 @@ fun HistoryUi(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var clearAllDialog by remember { mutableStateOf(false) }
-
-    val logoDrawable = koinInject<AppLogo>().logo
 
     if (clearAllDialog) {
         val onDismissRequest = { clearAllDialog = false }
@@ -169,7 +165,6 @@ fun HistoryUi(
                     HistoryItem(
                         item = item,
                         dao = dao,
-                        logoDrawable = logoDrawable,
                         scope = scope,
                         onError = {
                             scope.launch {
@@ -199,7 +194,6 @@ fun HistoryUi(
 private fun HistoryItem(
     item: RecentModel,
     dao: HistoryDao,
-    logoDrawable: Drawable?,
     scope: CoroutineScope,
     modifier: Modifier = Modifier,
     onError: () -> Unit,
@@ -317,10 +311,11 @@ private fun HistoryItem(
                     overlineContent = { Text(item.source) },
                     supportingContent = { Text(LocalSystemDateTimeFormat.current.format(item.timestamp.toLocalDateTime())) },
                     leadingContent = {
+                        val logo = painterLogo()
                         GradientImage(
                             model = item.imageUrl,
-                            placeholder = rememberDrawablePainter(logoDrawable),
-                            error = rememberDrawablePainter(logoDrawable),
+                            placeholder = logo,
+                            error = logo,
                             contentDescription = item.title,
                             modifier = Modifier
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -426,8 +421,7 @@ private fun HistoryItemPreview() {
             ),
             dao = LocalHistoryDao.current,
             scope = rememberCoroutineScope(),
-            onError = {},
-            logoDrawable = null
+            onError = {}
         )
     }
 }

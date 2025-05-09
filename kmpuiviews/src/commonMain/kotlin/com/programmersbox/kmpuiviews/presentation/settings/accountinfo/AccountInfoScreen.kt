@@ -112,6 +112,12 @@ fun AccountInfoScreen(
             )
 
             accountInfoItem(
+                title = "Global Search History",
+                description = "The amount of global search history items",
+                amount = state.globalSearchHistory
+            )
+
+            accountInfoItem(
                 title = "Lists",
                 description = "The amount of lists",
                 amount = state.lists

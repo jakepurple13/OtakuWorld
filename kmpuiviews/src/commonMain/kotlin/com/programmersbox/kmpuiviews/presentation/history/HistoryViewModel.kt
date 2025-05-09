@@ -1,13 +1,14 @@
-package com.programmersbox.uiviews.presentation.history
+package com.programmersbox.kmpuiviews.presentation.history
 
 import androidx.lifecycle.ViewModel
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.programmersbox.favoritesdatabase.HistoryDao
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.flowOn
 
-class HistoryViewModel1(private val dao: HistoryDao) : ViewModel() {
+class HistoryViewModel(private val dao: HistoryDao) : ViewModel() {
     val historyItems = Pager(
         config = PagingConfig(
             pageSize = 10,
