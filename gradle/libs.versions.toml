@@ -106,6 +106,8 @@ navigationCmp = "2.9.0-beta01"
 
 buildKonfig = "0.17.1"
 
+compottie = "2.0.0-rc04"
+
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -204,6 +206,8 @@ navCompose = { module = "androidx.navigation:navigation-compose", version.ref = 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 
 multiplatform-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+
+compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
 
 #Accompanist
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }

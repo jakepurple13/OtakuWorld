@@ -1,166 +1,117 @@
 package com.programmersbox.uiviews.presentation.onboarding
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
-import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.onboarding.Onboarding
-import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingIndicator
-import com.programmersbox.kmpuiviews.presentation.onboarding.rememberOnboardingScope
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.R
-import kotlinx.coroutines.launch
+import com.programmersbox.uiviews.presentation.components.SliderSetting
+import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
+import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
+import com.skydoves.landscapist.glide.GlideImage
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
+//TODO: Move to kmpuiviews
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(
     navController: NavController,
     customPreferences: ComposeSettingsDsl,
-    appLogo: AppLogo = koinInject(),
     dataStoreHandling: DataStoreHandling = koinInject(),
 ) {
-    HideNavBarWhileOnScreen()
+    OnboardingScreen(
+        navController = navController,
+        customPreferences = customPreferences,
+        navigationBarSettings = { NavigationBarSettings(koinInject()) },
+        accountContent = {
+            val viewModel: AccountViewModel = koinViewModel()
+            Crossfade(
+                viewModel.accountInfo
+            ) { target ->
+                if (target == null) {
+                    val context = LocalContext.current
+                    val activity = LocalActivity.current
 
-    val onboardingScope = rememberOnboardingScope {
-            item { WelcomeContent(appLogo = appLogo) }
-
-            item { ThemeContent() }
-
-            item { AccountContent(navController = navController) }
-
-            item { GeneralContent() }
-
-            apply(customPreferences.onboardingSettings)
-
-            //This should ALWAYS be last
-            item { FinishContent() }
-    }
-
-    var hasSeenOnboarding by dataStoreHandling
-        .hasGoneThroughOnboarding
-        .asState()
-
-    LaunchedEffect(hasSeenOnboarding) {
-        if (hasSeenOnboarding) {
-            navController.navigate(Screen.RecentScreen) {
-                popUpTo(Screen.OnboardingScreen) {
-                    inclusive = true
-                }
-            }
-        }
-    }
-
-    val appName = stringResource(R.string.app_name)
-
-    val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState { onboardingScope.size }
-
-    NormalOtakuScaffold(
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = { Text("Welcome!") },
-                    subtitle = { Text(appName) },
-                    actions = {
-                        var skipOnboarding by remember { mutableStateOf(false) }
-
-                        if (skipOnboarding) {
-                            AlertDialog(
-                                onDismissRequest = { skipOnboarding = false },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            hasSeenOnboarding = true
-                                            skipOnboarding = false
-                                        }
-                                    ) { Text("Confirm") }
-                                },
-                                dismissButton = {
-                                    TextButton(
-                                        onClick = { skipOnboarding = false }
-                                    ) { Text("Dismiss") }
-                                },
-                                title = { Text("Skip Onboarding?") },
-                                text = { Text("Are you sure you want to skip onboarding?") }
-                            )
-                        }
-
-                        TextButton(
-                            onClick = { skipOnboarding = true }
-                        ) { Text("Skip") }
-                    }
-                )
-                HorizontalDivider()
-                Spacer(Modifier.size(4.dp))
-            }
-        },
-        bottomBar = {
-            BottomAppBar(
-                actions = {
-                    TextButton(
+                    Card(
                         onClick = {
-                            if (pagerState.canScrollBackward) {
-                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-                            }
-                        },
-                        enabled = pagerState.canScrollBackward
-                    ) { Text("Back") }
-
-                    OnboardingIndicator(pagerState)
-                },
-                floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = {
-                            if (pagerState.canScrollForward) {
-                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                            } else {
-                                hasSeenOnboarding = true
+                            (activity as? ComponentActivity)?.let {
+                                viewModel.signInOrOut(context, it)
                             }
                         }
                     ) {
-                        if (pagerState.canScrollForward) {
-                            Text("Next")
-                        } else {
-                            Text("Finish!")
-                        }
+                        ListItem(
+                            headlineContent = { Text("Log in") },
+                            leadingContent = { Icon(Icons.Default.AccountCircle, null) }
+                        )
+                    }
+                } else {
+                    Card {
+                        ListItem(
+                            headlineContent = { Text(target.displayName.orEmpty()) },
+                            leadingContent = {
+                                GlideImage(
+                                    imageModel = { target.photoUrl },
+                                    loading = { Icon(Icons.Default.AccountCircle, null) },
+                                    failure = { Icon(Icons.Default.AccountCircle, null) },
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .size(40.dp)
+                                )
+                            }
+                        )
                     }
                 }
+            }
+        },
+        sourceUpdateCheckContent = {
+            var updateHourCheck by dataStoreHandling
+                .updateHourCheck
+                .asState()
+
+            var sliderValue by remember(updateHourCheck) {
+                mutableFloatStateOf(updateHourCheck.toFloat())
+            }
+
+            SliderSetting(
+                settingTitle = { Text("Check Every $updateHourCheck hours") },
+                settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
+                sliderValue = sliderValue,
+                updateValue = { sliderValue = it },
+                range = 1f..24f,
+                steps = 23,
+                onValueChangedFinished = { updateHourCheck = sliderValue.toLong() },
+                settingIcon = {
+                    Icon(
+                        Icons.Default.HourglassTop,
+                        null,
+                    )
+                }
             )
-        }
-    ) { padding ->
-        Onboarding(
-            onboardingScope = onboardingScope,
-            state = pagerState,
-            contentPadding = padding,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+        },
+        appConfig = koinInject(),
+    )
 }

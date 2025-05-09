@@ -82,6 +82,8 @@ kotlin {
                 implementation(libs.blurhash)
 
                 implementation(libs.dragselect)
+
+                implementation(libs.compottie)
             }
         }
 
