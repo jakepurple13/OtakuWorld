@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings
+package com.programmersbox.kmpuiviews.presentation.settings.player
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
@@ -11,23 +11,23 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.battery_alert_percentage
+import otakuworld.kmpuiviews.generated.resources.battery_default
+import otakuworld.kmpuiviews.generated.resources.playSettings
 
-//TODO: This can be moved to kmpuiviews
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaySettings(
     customSettings: @Composable () -> Unit = {},
 ) {
-    SettingsScaffold(stringResource(R.string.playSettings)) {
+    SettingsScaffold(stringResource(Res.string.playSettings)) {
         val scope = rememberCoroutineScope()
         val settingsHandling: NewSettingsHandling = koinInject()
         val batteryPercent = settingsHandling.batteryPercent
@@ -36,8 +36,8 @@ fun PlaySettings(
 
         SliderSetting(
             sliderValue = sliderValue,
-            settingTitle = { Text(stringResource(R.string.battery_alert_percentage)) },
-            settingSummary = { Text(stringResource(R.string.battery_default)) },
+            settingTitle = { Text(stringResource(Res.string.battery_alert_percentage)) },
+            settingSummary = { Text(stringResource(Res.string.battery_default)) },
             settingIcon = { Icon(Icons.Default.BatteryAlert, null) },
             range = 1f..100f,
             updateValue = { sliderValue = it },
@@ -45,13 +45,5 @@ fun PlaySettings(
         )
 
         customSettings()
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun PlaySettingsPreview() {
-    PreviewTheme {
-        PlaySettings()
     }
 }

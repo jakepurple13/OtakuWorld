@@ -25,6 +25,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountIn
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
+import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
@@ -45,7 +46,6 @@ import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.GeneralSettings
 import com.programmersbox.uiviews.presentation.settings.InfoSettings
-import com.programmersbox.uiviews.presentation.settings.PlaySettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateScreen
