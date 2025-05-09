@@ -13,14 +13,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
+//TODO: This can be moved to kmpuiviews
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaySettings(

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -15,20 +14,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.skydoves.landscapist.glide.GlideImage
@@ -86,31 +79,6 @@ fun OnboardingScreen(
                     }
                 }
             }
-        },
-        sourceUpdateCheckContent = {
-            var updateHourCheck by dataStoreHandling
-                .updateHourCheck
-                .asState()
-
-            var sliderValue by remember(updateHourCheck) {
-                mutableFloatStateOf(updateHourCheck.toFloat())
-            }
-
-            SliderSetting(
-                settingTitle = { Text("Check Every $updateHourCheck hours") },
-                settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
-                sliderValue = sliderValue,
-                updateValue = { sliderValue = it },
-                range = 1f..24f,
-                steps = 23,
-                onValueChangedFinished = { updateHourCheck = sliderValue.toLong() },
-                settingIcon = {
-                    Icon(
-                        Icons.Default.HourglassTop,
-                        null,
-                    )
-                }
-            )
         },
         appConfig = koinInject(),
     )

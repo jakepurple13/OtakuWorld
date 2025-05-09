@@ -45,7 +45,6 @@ fun OnboardingScreen(
     customPreferences: ComposeSettingsDsl,
     navigationBarSettings: @Composable () -> Unit,
     accountContent: @Composable () -> Unit,
-    sourceUpdateCheckContent: @Composable () -> Unit,
     dataStoreHandling: DataStoreHandling = koinInject(),
     appConfig: AppConfig = koinInject(),
 ) {
@@ -66,7 +65,6 @@ fun OnboardingScreen(
         item {
             GeneralContent(
                 navigationBarSettings = navigationBarSettings,
-                sourceUpdateCheckContent = sourceUpdateCheckContent
             )
         }
 

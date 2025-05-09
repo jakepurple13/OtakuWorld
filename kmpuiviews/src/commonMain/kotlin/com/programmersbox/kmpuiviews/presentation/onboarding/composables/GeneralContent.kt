@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material3.AlertDialog
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,6 +27,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
@@ -40,7 +43,6 @@ import otakuworld.kmpuiviews.generated.resources.yes
 @Composable
 internal fun GeneralContent(
     navigationBarSettings: @Composable () -> Unit,
-    sourceUpdateCheckContent: @Composable () -> Unit,
 ) {
     val handling = koinInject<NewSettingsHandling>()
     val dataStoreHandling = koinInject<DataStoreHandling>()
@@ -115,8 +117,7 @@ internal fun GeneralContent(
         )
 
         ShowWhen(canCheck) {
-            sourceUpdateCheckContent()
-            /*var updateHourCheck by dataStoreHandling
+            var updateHourCheck by dataStoreHandling
                 .updateHourCheck
                 .asState()
 
@@ -138,7 +139,7 @@ internal fun GeneralContent(
                         null,
                     )
                 }
-            )*/
+            )
         }
     }
 }

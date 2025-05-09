@@ -40,13 +40,13 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettingsViewModel
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
-import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +55,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 
+//TODO: This can be moved to kmpuiviews
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NotificationSettings(

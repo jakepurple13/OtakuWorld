@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Navigation
@@ -39,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberFloatingNavigation
-import com.programmersbox.datastore.rememberHistorySave
 import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
@@ -48,7 +46,6 @@ import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.utils.PreviewTheme
@@ -65,7 +62,6 @@ fun GeneralSettings(
 
     GeneralSettings(
         customSettings = customSettings,
-        historySettings = { HistorySettings(handling = handling) },
         navigationBarSettings = { NavigationBarSettings(handling = handling) }
     )
 }
@@ -231,20 +227,6 @@ private fun MultipleActionsSetting(
         )
         Spacer(Modifier.height(8.dp))
     }
-}
-
-@Composable
-private fun HistorySettings(handling: NewSettingsHandling) {
-    var sliderValue by rememberHistorySave()
-
-    SliderSetting(
-        sliderValue = sliderValue.toFloat(),
-        settingTitle = { Text(stringResource(R.string.history_save_title)) },
-        settingSummary = { Text(stringResource(R.string.history_save_summary)) },
-        settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
-        range = -1f..100f,
-        updateValue = { sliderValue = it.toInt() }
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)

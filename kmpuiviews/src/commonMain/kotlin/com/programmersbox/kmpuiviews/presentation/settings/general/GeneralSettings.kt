@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.BlurOff
 import androidx.compose.material.icons.filled.BlurOn
+import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Menu
@@ -40,11 +41,13 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.PaletteSwatchType
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.datastore.rememberHistorySave
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
@@ -56,6 +59,8 @@ import otakuworld.kmpuiviews.generated.resources.amoled_mode
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.choose_a_theme
 import otakuworld.kmpuiviews.generated.resources.general_menu_title
+import otakuworld.kmpuiviews.generated.resources.history_save_summary
+import otakuworld.kmpuiviews.generated.resources.history_save_title
 import otakuworld.kmpuiviews.generated.resources.share_chapters
 import otakuworld.kmpuiviews.generated.resources.show_download_button
 import otakuworld.kmpuiviews.generated.resources.show_list_detail_pane_for_lists
@@ -67,7 +72,6 @@ import otakuworld.kmpuiviews.generated.resources.theme_choice_title
 @Composable
 fun GeneralSettings(
     customSettings: @Composable () -> Unit = {},
-    historySettings: @Composable () -> Unit = {},
     navigationBarSettings: @Composable () -> Unit = {},
 ) {
     SettingsScaffold(
@@ -108,7 +112,7 @@ fun GeneralSettings(
 
         ShowDownloadSettings(handling = handling)
 
-        historySettings()
+        HistorySettings(handling = handling)
 
         customSettings()
     }
@@ -351,5 +355,19 @@ fun ShowDownloadSettings(handling: NewSettingsHandling) {
         settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
         value = showDownload,
         updateValue = { showDownload = it }
+    )
+}
+
+@Composable
+private fun HistorySettings(handling: NewSettingsHandling) {
+    var sliderValue by rememberHistorySave()
+
+    SliderSetting(
+        sliderValue = sliderValue.toFloat(),
+        settingTitle = { Text(stringResource(Res.string.history_save_title)) },
+        settingSummary = { Text(stringResource(Res.string.history_save_summary)) },
+        settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
+        range = -1f..100f,
+        updateValue = { sliderValue = it.toInt() }
     )
 }
