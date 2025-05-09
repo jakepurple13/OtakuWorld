@@ -13,7 +13,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ContainedLoadingIndicator
@@ -21,8 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -46,10 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityOptionsCompat
-import com.programmersbox.datastore.GridChoice
-import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.CustomAdaptive
-import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,30 +55,6 @@ fun <T : Any> rememberMutableStateListOf(vararg elements: T): SnapshotStateList<
         restore = { it.toMutableStateList() }
     )
 ) { elements.toList().toMutableStateList() }
-
-val LocalWindowSizeClass = staticCompositionLocalOf<WindowSizeClass> {
-    error("No WindowSizeClass available")
-}
-
-val gridColumns: Int
-    @Composable get() = when (LocalWindowSizeClass.current.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> 3
-        WindowWidthSizeClass.Medium -> 5
-        else -> 6
-    }
-
-//TODO: Remove and use the kmpuiviews once we get the above in cmp
-@Composable
-fun adaptiveGridCell(): GridCells {
-    val gridChoice by LocalSettingsHandling.current.rememberGridChoice()
-    val width = ComposableUtils.IMAGE_WIDTH
-    return when (gridChoice) {
-        GridChoice.FullAdaptive -> remember { CustomAdaptive(width) }
-        GridChoice.Adaptive -> remember { GridCells.Adaptive(width) }
-        GridChoice.Fixed -> GridCells.Fixed(gridColumns)
-        else -> GridCells.Fixed(gridColumns)
-    }
-}
 
 /**
  * Registers a broadcast receiver and unregisters at the end of the composable lifecycle
