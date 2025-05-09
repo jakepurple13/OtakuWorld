@@ -21,12 +21,12 @@
         android:fullBackupOnly="true">
 
         <receiver
-            android:name=".receivers.DeleteNotificationReceiver"
+            android:name="com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver"
             android:enabled="true"
             android:exported="true" />
 
         <receiver
-            android:name=".receivers.SwipeAwayReceiver"
+            android:name="com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver"
             android:enabled="true"
             android:exported="true" />
 

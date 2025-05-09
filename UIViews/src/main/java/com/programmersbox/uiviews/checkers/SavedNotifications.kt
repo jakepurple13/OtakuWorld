@@ -11,10 +11,10 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.helpfulutils.NotificationDslBuilder
 import com.programmersbox.helpfulutils.SemanticActions
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
+import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.receivers.DeleteNotificationReceiver
-import com.programmersbox.uiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException

@@ -12,6 +12,7 @@ multiplatform this project grows stronger and stronger.
 - Firebase
     - Maybe? We'd need to do all the different variants too.
         - https://github.com/Tweener/passage?
+      - https://github.com/mirzemehdi/KMPAuth?
 - Notifications
 - Workers
     - Maybe only for ios and desktop?

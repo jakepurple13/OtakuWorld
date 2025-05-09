@@ -1,11 +1,12 @@
-package com.programmersbox.uiviews.receivers
+package com.programmersbox.kmpuiviews.receivers
 
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.core.content.getSystemService
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.helpfulutils.notificationManager
-import com.programmersbox.uiviews.utils.recordFirebaseException
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -16,6 +17,9 @@ class SwipeAwayReceiver : BroadcastReceiver(), KoinComponent {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         val dao: ItemDao by inject()
+        val notificationManager by lazy {
+            context?.getSystemService<NotificationManager>()
+        }
         val url = intent?.getStringExtra("url")
         val id = intent?.getIntExtra("id", -1)
         println(url)
@@ -25,9 +29,13 @@ class SwipeAwayReceiver : BroadcastReceiver(), KoinComponent {
             }.onFailure { recordFirebaseException(it) }
             id
                 ?.takeIf { it != -1 }
-                ?.let { context?.notificationManager?.cancel(it) }
-            val g = context?.notificationManager?.activeNotifications?.map { it.notification }?.filter { it.group == "otakuGroup" }.orEmpty()
-            if (g.size == 1) context?.notificationManager?.cancel(42)
+                ?.let { notificationManager?.cancel(it) }
+            val g = notificationManager
+                ?.activeNotifications
+                ?.map { it.notification }
+                ?.filter { it.group == "otakuGroup" }
+                .orEmpty()
+            if (g.size == 1) notificationManager?.cancel(42)
         }
     }
 }
