@@ -11,6 +11,8 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
+import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
@@ -25,7 +27,9 @@ class NotificationSettingsViewModel(
     private val dataStoreHandling: DataStoreHandling,
     settingsHandling: NewSettingsHandling,
     dateTimeFormatHandler: DateTimeFormatHandler,
-) : ViewModel() {
+    workRepository: WorkRepository,
+    private val notificationRepository: NotificationRepository,
+) : ViewModel(), WorkRepository by workRepository {
 
     var savedNotifications by mutableIntStateOf(0)
         private set
@@ -37,7 +41,7 @@ class NotificationSettingsViewModel(
 
     val notifyOnBoot = settingsHandling.notifyOnReboot
 
-    private val dateTimeFormatter by lazy {
+    val dateTimeFormatter by lazy {
         DateTimeFormatItem(dateTimeFormatHandler.is24HourTime())
     }
 
@@ -81,4 +85,6 @@ class NotificationSettingsViewModel(
     fun updateHourCheck(value: Long) {
         viewModelScope.launch { dataStoreHandling.updateHourCheck.set(value) }
     }
+
+    fun cancelGroup() = notificationRepository.cancelGroup()
 }

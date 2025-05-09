@@ -28,7 +28,6 @@ import com.skydoves.landscapist.glide.GlideImage
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-//TODO: Move to kmpuiviews
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(

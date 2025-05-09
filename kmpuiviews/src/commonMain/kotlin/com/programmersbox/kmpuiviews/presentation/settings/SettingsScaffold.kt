@@ -33,11 +33,13 @@ fun SettingsScaffold(
         )
     },
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     OtakuScaffold(
         topBar = { topBar(scrollBehavior) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+        snackbarHost = snackbarHost,
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { p ->
         Column(
