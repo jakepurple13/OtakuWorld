@@ -52,7 +52,8 @@ class AccountInfoViewModel(
                 .sources
                 .map { list ->
                     list
-                        .filter { it.apiService.notWorking }
+                        .filterNot { it.apiService.notWorking }
+                        .groupBy { it.packageName }
                         .size
                 }
         ) { AccountInfoCount(it) }

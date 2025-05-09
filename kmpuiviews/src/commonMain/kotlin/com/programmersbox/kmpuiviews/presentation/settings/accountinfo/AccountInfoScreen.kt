@@ -116,7 +116,7 @@ fun AccountInfoScreen(
 
             accountInfoItem(
                 title = "Items in Lists",
-                description = "The amount of items in lists",
+                description = "The total amount of items in lists",
                 amount = state.itemsInLists
             )
 

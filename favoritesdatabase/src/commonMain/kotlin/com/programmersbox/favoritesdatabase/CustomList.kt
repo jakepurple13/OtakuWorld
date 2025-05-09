@@ -102,7 +102,7 @@ interface ListDao {
     @Query("SELECT COUNT(uuid) FROM CustomListItem")
     fun getAllListsCount(): Flow<Int>
 
-    @Query("SELECT COUNT(uuid) FROM CustomListItem")
+    @Query("SELECT COUNT(uuid) FROM CustomListInfo")
     fun getAllListItemsCount(): Flow<Int>
 
     @Transaction
