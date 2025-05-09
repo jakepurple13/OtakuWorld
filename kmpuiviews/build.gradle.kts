@@ -90,7 +90,7 @@ kotlin {
                 /// Compose 1.7.3 with different tech.annexflow.constraintlayout.core package
                 implementation("tech.annexflow.compose:constraintlayout-compose-multiplatform:0.5.1-shaded-core")
                 /// Compose 1.7.3 with different tech.annexflow.constraintlayout package
-                implementation("tech.annexflow.compose:constraintlayout-compose-multiplatform:0.5.1-shaded")
+                implementation("tech.annexflow.compose:constraintlayout-compose-multiplatform:0.5.1")
             }
         }
 
