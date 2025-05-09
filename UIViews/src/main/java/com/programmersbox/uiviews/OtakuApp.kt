@@ -38,7 +38,9 @@ import com.programmersbox.helpfulutils.NotificationChannelImportance
 import com.programmersbox.helpfulutils.createNotificationChannel
 import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.checkers.AppCheckWorker
@@ -232,8 +234,10 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         shortcutSetup()
 
+        val appConfig = get<AppConfig>()
+
         runCatching {
-            if (BuildType.current != BuildType.NoFirebase) {
+            if (appConfig.buildType != BuildType.NoFirebase) {
                 remoteConfigSetup(
                     dataStoreHandling = dataStoreHandling,
                     otakuDataStoreHandling = otakuDataStoreHandling,

@@ -40,14 +40,15 @@ import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
-import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
@@ -57,7 +58,12 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericNovel(get()) } binds arrayOf(
+    single<GenericInfo> {
+        GenericNovel(
+            context = get(),
+            appConfig = get()
+        )
+    } binds arrayOf(
         KmpGenericInfo::class,
         GenericInfo::class
     )
@@ -77,7 +83,10 @@ class ChapterList(private val context: Context, private val genericInfo: Generic
     )
 }
 
-class GenericNovel(val context: Context) : GenericInfo {
+class GenericNovel(
+    val context: Context,
+    val appConfig: AppConfig,
+) : GenericInfo {
 
     override val deepLinkUri: String get() = "novelworld://"
 
@@ -109,7 +118,7 @@ class GenericNovel(val context: Context) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildType.current) {
+            when (appConfig.buildType) {
                 BuildType.NoFirebase -> novelNoFirebaseFile
                 BuildType.NoCloudFirebase -> novelNoCloudFile
                 BuildType.Full -> novelFile

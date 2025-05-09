@@ -4,6 +4,7 @@ import android.content.Context
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpuiviews.AboutLibraryBuilder
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
@@ -14,6 +15,7 @@ import com.programmersbox.sharedutils.FirebaseConnection
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.sharedutils.TranslatorUtils
+import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.module.dsl.singleOf
@@ -26,7 +28,12 @@ val kmpInterop = module {
 
     single {
         AppConfig(
-            appName = get<Context>().getString(R.string.app_name)
+            appName = get<Context>().getString(R.string.app_name),
+            buildType = when (BuildConfig.FLAVOR) {
+                "noFirebase" -> BuildType.NoFirebase
+                "noCloudFirebase" -> BuildType.NoCloudFirebase
+                else -> BuildType.Full
+            }
         )
     }
 

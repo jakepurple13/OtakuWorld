@@ -63,6 +63,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.asState
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
@@ -74,8 +75,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShowDownloadSettings
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.SliderSetting
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
@@ -184,6 +185,7 @@ internal fun AccountContent(
     navController: NavController,
     viewModel: AccountViewModel = koinViewModel(),
     importViewModel: MoreSettingsViewModel = koinViewModel(),
+    appConfig: AppConfig = koinInject(),
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -197,7 +199,7 @@ internal fun AccountContent(
 
         HorizontalDivider()
 
-        if (BuildType.current == BuildType.Full) {
+        if (appConfig.buildType == BuildType.Full) {
             Text(
                 "Log in to save all your favorites and chapters/episodes read to the cloud so you can access them on any device!",
                 modifier = Modifier.padding(16.dp)

@@ -49,11 +49,13 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
@@ -72,7 +74,6 @@ import com.programmersbox.mangaworld.settings.PlayerSettings
 import com.programmersbox.mangaworld.settings.ReaderSettings
 import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
 import com.programmersbox.source_utilities.NetworkHelper
-import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -98,7 +99,8 @@ val appModule = module {
             context = get(),
             chapterHolder = get(),
             mangaSettingsHandling = get(),
-            settingsHandling = get()
+            settingsHandling = get(),
+            appConfig = get()
         )
     } binds arrayOf(
         KmpGenericInfo::class,
@@ -128,6 +130,7 @@ class GenericManga(
     val chapterHolder: ChapterHolder,
     val mangaSettingsHandling: MangaNewSettingsHandling,
     val settingsHandling: NewSettingsHandling,
+    val appConfig: AppConfig,
 ) : GenericInfo {
 
     override val sourceType: String get() = "manga"
@@ -136,7 +139,7 @@ class GenericManga(
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildType.current) {
+            when (appConfig.buildType) {
                 BuildType.NoFirebase -> mangaNoFirebaseFile
                 BuildType.NoCloudFirebase -> mangaNoCloudFile
                 BuildType.Full -> mangaFile

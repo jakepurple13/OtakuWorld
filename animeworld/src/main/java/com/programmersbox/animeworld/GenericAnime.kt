@@ -90,6 +90,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
@@ -98,11 +99,11 @@ import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
-import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen
@@ -120,7 +121,14 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get(), get(), get()) } binds arrayOf(
+    single<GenericInfo> {
+        GenericAnime(
+            context = get(),
+            storageHolder = get(),
+            animeDataStoreHandling = get(),
+            appConfig = get()
+        )
+    } binds arrayOf(
         KmpGenericInfo::class,
         GenericInfo::class
     )
@@ -137,11 +145,12 @@ class GenericAnime(
     val context: Context,
     val storageHolder: StorageHolder,
     val animeDataStoreHandling: AnimeDataStoreHandling,
+    val appConfig: AppConfig,
 ) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildType.current) {
+            when (appConfig.buildType) {
                 BuildType.NoFirebase -> animeNoFirebaseFile
                 BuildType.NoCloudFirebase -> animeNoCloudFile
                 BuildType.Full -> animeFile

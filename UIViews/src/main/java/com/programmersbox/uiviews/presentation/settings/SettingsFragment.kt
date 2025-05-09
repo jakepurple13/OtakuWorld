@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -32,19 +31,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
-import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.BuildConfig
-import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.skydoves.landscapist.glide.GlideImage
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @ExperimentalComposeUiApi
@@ -68,7 +68,8 @@ fun SettingScreen(
     sourcesOrderClick: () -> Unit = {},
     appDownloadsClick: () -> Unit = {},
     accountSettings: @Composable () -> Unit = {
-        if (BuildType.current == BuildType.Full) {
+        val appConfig: AppConfig = koinInject()
+        if (appConfig.buildType == BuildType.Full) {
             AccountSettings()
         }
     },
@@ -107,19 +108,6 @@ fun SettingScreen(
         sourcesOrderClick = sourcesOrderClick,
         appDownloadsClick = appDownloadsClick,
         accountSettings = accountSettings,
-        translationItem = {
-            var showTranslationScreen by showTranslationScreen()
-
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.viewTranslationModels)) },
-                settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null,
-                    onClick = { showTranslationScreen = true }
-                )
-            )
-        },
         onDebugBuild = {
             if (BuildConfig.DEBUG) {
                 PreferenceSetting(
@@ -272,7 +260,6 @@ private fun SettingsPreview() {
             sourcesOrderClick = {},
             appDownloadsClick = {},
             accountSettings = {},
-            translationItem = {},
             onDebugBuild = {}
         )
     }

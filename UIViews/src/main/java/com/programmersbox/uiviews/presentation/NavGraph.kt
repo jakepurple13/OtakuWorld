@@ -29,7 +29,6 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.BuildConfig
-import com.programmersbox.uiviews.BuildType
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.all.AllView
 import com.programmersbox.uiviews.presentation.details.DetailsScreen
@@ -334,7 +333,6 @@ private fun NavGraphBuilder.settings(
         ) {
             AccountInfoScreen(
                 profileUrl = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString(),
-                hasCloudBackup = BuildType.current == BuildType.Full
             )
         }
 

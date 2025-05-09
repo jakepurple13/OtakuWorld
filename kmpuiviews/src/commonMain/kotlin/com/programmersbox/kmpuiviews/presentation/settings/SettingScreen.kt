@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.GetApp
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -46,6 +47,7 @@ import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
@@ -68,6 +70,7 @@ import otakuworld.kmpuiviews.generated.resources.pending_saved_notifications
 import otakuworld.kmpuiviews.generated.resources.playSettings
 import otakuworld.kmpuiviews.generated.resources.settings
 import otakuworld.kmpuiviews.generated.resources.viewFavoritesMenu
+import otakuworld.kmpuiviews.generated.resources.viewTranslationModels
 import otakuworld.kmpuiviews.generated.resources.view_extensions
 import otakuworld.kmpuiviews.generated.resources.view_notifications_title
 import otakuworld.kmpuiviews.generated.resources.view_source_in_browser
@@ -93,7 +96,6 @@ fun SettingScreen(
     appDownloadsClick: () -> Unit = {},
     onDebugBuild: @Composable () -> Unit,
     accountSettings: @Composable () -> Unit,
-    translationItem: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -129,7 +131,6 @@ fun SettingScreen(
                 geminiClick = geminiClick,
                 sourcesOrderClick = sourcesOrderClick,
                 appDownloadsClick = appDownloadsClick,
-                translationItem = translationItem,
                 onDebugBuild = onDebugBuild
             )
         }
@@ -154,7 +155,6 @@ private fun SettingsScreen(
     geminiClick: () -> Unit,
     sourcesOrderClick: () -> Unit,
     appDownloadsClick: () -> Unit,
-    translationItem: @Composable () -> Unit,
     onDebugBuild: @Composable () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -277,7 +277,17 @@ private fun SettingsScreen(
         )
     }
 
-    translationItem()
+    var showTranslationScreen by showTranslationScreen()
+
+    PreferenceSetting(
+        settingTitle = { Text(stringResource(Res.string.viewTranslationModels)) },
+        settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = ripple(),
+            interactionSource = null,
+            onClick = { showTranslationScreen = true }
+        )
+    )
 
     //TODO: This will be for the future when this works again
     // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;

@@ -20,16 +20,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountInfoScreen(
-    hasCloudBackup: Boolean,
     profileUrl: String?,
+    appConfig: AppConfig = koinInject(),
     viewModel: AccountInfoViewModel = koinViewModel(),
 ) {
     val state = viewModel.accountInfo
@@ -64,7 +67,7 @@ fun AccountInfoScreen(
                 amount = state.totalFavorites
             )
 
-            if (hasCloudBackup) {
+            if (appConfig.buildType == BuildType.Full) {
                 accountInfoItem(
                     title = "Cloud Favorites",
                     description = "The amount of favorites in the cloud",
@@ -126,11 +129,13 @@ fun AccountInfoScreen(
                 amount = state.blurHashes
             )
 
-            accountInfoItem(
-                title = "Translation Models",
-                description = "The amount of translation models",
-                amount = state.translationModels
-            )
+            if (appConfig.buildType != BuildType.NoFirebase) {
+                accountInfoItem(
+                    title = "Translation Models",
+                    description = "The amount of translation models",
+                    amount = state.translationModels
+                )
+            }
         }
     }
 }
