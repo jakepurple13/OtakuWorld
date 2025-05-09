@@ -48,4 +48,8 @@ val viewModels: Module = module {
     viewModelOf(::AccountInfoViewModel)
 
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
+
+    includes(platformViewModels())
 }
+
+expect fun platformViewModels(): Module

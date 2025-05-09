@@ -27,43 +27,88 @@ import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SettingsSerializer
+import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.kmpuiviews.di.appModule
+import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.di.repositories
+import com.programmersbox.kmpuiviews.di.viewModels
+import com.programmersbox.kmpuiviews.presentation.UrlOpenerScreen
+import org.koin.compose.KoinApplication
+import org.koin.core.KoinApplication
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
 import java.awt.Cursor
 
 @Composable
 fun ApplicationScope.BaseDesktopUi(
     title: String,
+    moduleBlock: KoinApplication.() -> Unit,
 ) {
-    val windowState = rememberWindowState()
+    //TODO: add a screen where you paste a url and select a source that then opens the details screen
 
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = title,
-        state = windowState,
-        undecorated = true,
-        transparent = true,
-    ) {
-        MaterialTheme(
-            createColorScheme(
-                isSystemInDarkTheme(),
-                isExpressive = true
+
+    //TODO: Also need to create a generic module in kmpuiviews
+    KoinApplication(
+        application = {
+            modules(
+                module {
+                    includes(
+                        appModule,
+                        viewModels,
+                        repositories,
+                        databases,
+                    )
+
+                    singleOf(::DataStoreHandling)
+                    single {
+                        NewSettingsHandling(
+                            createProtobuf(
+                                serializer = SettingsSerializer()
+                            ),
+                        )
+                    }
+
+                    moduleBlock()
+                }
             )
+        }
+    ) {
+        val windowState = rememberWindowState()
+
+        Window(
+            onCloseRequest = ::exitApplication,
+            title = title,
+            state = windowState,
+            undecorated = true,
+            transparent = true,
         ) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                shape = MaterialTheme.shapes.medium,
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outlineVariant
+            MaterialTheme(
+                createColorScheme(
+                    isSystemInDarkTheme(),
+                    isExpressive = true
                 )
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    CustomTitleBar(
-                        title = title,
-                        onMinimizeClick = { windowState.isMinimized = true },
-                        onCloseClick = ::exitApplication
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant
                     )
-                    HorizontalDivider()
-                    //TODO: UI Goes here!
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        CustomTitleBar(
+                            title = title,
+                            onMinimizeClick = { windowState.isMinimized = true },
+                            onCloseClick = ::exitApplication
+                        )
+                        HorizontalDivider()
+                        //TODO: UI Goes here!
+                        UrlOpenerScreen()
+                    }
                 }
             }
         }
