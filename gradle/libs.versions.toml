@@ -320,7 +320,7 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 slideToAct = "com.ncorti:slidetoact:0.11.0"
 mediaRouter = "androidx.mediarouter:mediarouter:1.7.0"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
-castFramework = "com.google.android.gms:play-services-cast-framework:22.0.0"
+castFramework = "com.google.android.gms:play-services-cast-framework:22.1.0"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
 
