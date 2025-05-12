@@ -143,6 +143,7 @@ private fun DownloadStatus(
         is DownloadAndInstallStatus.Downloading -> {
             ListItem(
                 headlineContent = { Text("Downloading ${state.progress * 100}%") },
+                //TODO: Gotta fix this
                 supportingContent = { LinearWavyProgressIndicator(progress = { state.progress }) },
             )
         }

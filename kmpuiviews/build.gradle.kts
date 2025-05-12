@@ -62,7 +62,7 @@ kotlin {
 
                 implementation(libs.roomRuntime)
 
-                implementation(libs.compose.webview.multiplatform)
+                api(libs.compose.webview.multiplatform)
 
                 implementation(libs.connectivity.core)
                 implementation(libs.connectivity.compose)

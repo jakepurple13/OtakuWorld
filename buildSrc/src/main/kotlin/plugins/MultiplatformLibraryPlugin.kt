@@ -30,8 +30,8 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
 
         //target.afterEvaluate {
         target.extensions
-                .findByType(KotlinMultiplatformExtension::class.java)
-                ?.apply { setup(dependency) }
+            .findByType(KotlinMultiplatformExtension::class.java)
+            ?.apply { setup(dependency) }
         //}
     }
 
@@ -47,6 +47,8 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
                 }
             }
         }*/
+
+        jvmToolchain(11)
 
         androidLibrary {
             namespace = dependencyHandling.androidPackageName
@@ -71,7 +73,11 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             }
         }
 
-        jvm()
+        jvm {
+            compilations.all {
+                kotlinOptions.jvmTarget = "17"
+            }
+        }
 
         applyDefaultHierarchyTemplate()
 
