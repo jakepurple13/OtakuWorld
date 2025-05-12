@@ -5,13 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface DownloadStateInterface {
     val downloadList: Flow<List<DownloadAndInstallState>>
-
     fun cancelDownload(id: String)
-
     fun install(url: String): Flow<DownloadAndInstallStatus>
-
     fun downloadAndInstall(url: String)
-
     fun downloadThenInstall(url: String)
 }
 
