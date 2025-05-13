@@ -155,7 +155,7 @@ dependencies {
 
     implementation(libs.biometric)
 
-    implementation(projects.gemini)
+    //implementation(projects.gemini)
 
     implementation(libs.reorderable)
 

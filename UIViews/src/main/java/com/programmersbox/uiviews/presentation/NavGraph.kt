@@ -3,11 +3,7 @@ package com.programmersbox.uiviews.presentation
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -18,7 +14,6 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
-import com.programmersbox.gemini.GeminiRecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
@@ -162,7 +157,7 @@ private fun NavGraphBuilder.settings(
                 otherClick = { navController.navigate(Screen.OtherSettings) },
                 moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
                 moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
-                geminiClick = { navController.navigate(Screen.GeminiScreen) },
+                geminiClick = { /*navController.navigate(Screen.GeminiScreen)*/ },
                 sourcesOrderClick = { navController.navigate(Screen.OrderScreen) },
                 appDownloadsClick = { navController.navigate(Screen.DownloadInstallScreen) },
             )
@@ -316,7 +311,7 @@ private fun NavGraphBuilder.settings(
             ExtensionList()
         }
 
-        composable<Screen.GeminiScreen> {
+        /*composable<Screen.GeminiScreen> {
             trackScreen(Screen.GeminiScreen)
             GeminiRecommendationScreen(
                 navigationIcon = {
@@ -325,7 +320,7 @@ private fun NavGraphBuilder.settings(
                     }
                 }
             )
-        }
+        }*/
 
         composable<Screen.AccountInfo>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
