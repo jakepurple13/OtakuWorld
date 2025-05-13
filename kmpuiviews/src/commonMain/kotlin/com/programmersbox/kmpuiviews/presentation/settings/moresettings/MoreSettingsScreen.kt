@@ -202,6 +202,17 @@ fun MoreSettingsScreen(
         )
 
         HorizontalDivider()
+
+        PreferenceSetting(
+            settingTitle = { Text("Pull Cloud Favorites") },
+            summaryValue = { Text("Pulls favorites from cloud into the local database") },
+            modifier = Modifier.clickable(
+                enabled = true,
+                indication = ripple(),
+                interactionSource = null,
+                onClick = viewModel::pullCloudToLocal
+            )
+        )
     }
 
     //TODO: Remove toaster and switch back to snackbar

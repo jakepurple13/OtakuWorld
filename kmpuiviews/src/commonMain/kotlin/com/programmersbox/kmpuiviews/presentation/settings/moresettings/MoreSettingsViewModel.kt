@@ -10,6 +10,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
@@ -26,6 +27,7 @@ class MoreSettingsViewModel(
     private val dao: ItemDao,
     private val favoritesRepository: FavoritesRepository,
     private val listDao: ListDao,
+    private val kmpFirebaseConnection: KmpFirebaseConnection,
 ) : ViewModel() {
 
     val lists = listDao.getAllLists()
@@ -114,6 +116,15 @@ class MoreSettingsViewModel(
                     it.printStackTrace()
                     importExportListStatus = ImportExportListStatus.Error(it)
                 }
+        }
+    }
+
+    fun pullCloudToLocal() {
+        viewModelScope.launch {
+            val allShows = dao.getAllFavoritesSync()
+            val cloudShows = kmpFirebaseConnection.getAllShows()
+            val newShows = cloudShows.filter { it !in allShows }
+            newShows.forEach { dao.insertFavorite(it) }
         }
     }
 }
