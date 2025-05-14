@@ -16,6 +16,7 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
+import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
@@ -36,7 +37,6 @@ import com.programmersbox.uiviews.presentation.lists.DeleteFromListScreen
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
-import com.programmersbox.uiviews.presentation.notifications.NotificationsScreen
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.GeneralSettings
@@ -54,7 +54,9 @@ import org.koin.androidx.compose.koinViewModel
 //TODO: MAYBE give each screen an enum of where they are and the transitions are based off of that?
 
 @OptIn(
-    ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class
+    ExperimentalAnimationApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
 )
 fun NavGraphBuilder.navGraph(
     customPreferences: ComposeSettingsDsl,
@@ -298,9 +300,7 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             trackScreen(Screen.NotificationScreen)
-            NotificationsScreen(
-                notificationLogo = notificationLogo,
-            )
+            NotificationScreen()
         }
 
         composable<Screen.ExtensionListScreen>(
@@ -372,9 +372,7 @@ private fun NavGraphBuilder.settings(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
         trackScreen(Screen.NotificationScreen.Home)
-        NotificationsScreen(
-            notificationLogo = notificationLogo,
-        )
+        NotificationScreen()
     }
 
     animatedScopeComposable<Screen.FavoriteScreen.Home>(

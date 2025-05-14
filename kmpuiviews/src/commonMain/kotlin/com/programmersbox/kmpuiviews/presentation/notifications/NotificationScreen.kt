@@ -1,12 +1,5 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+package com.programmersbox.kmpuiviews.presentation.notifications
 
-package com.programmersbox.uiviews.presentation.notifications
-
-import android.content.Context
-import android.graphics.drawable.Drawable
-import android.text.format.DateFormat
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -19,7 +12,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,13 +28,10 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -53,7 +42,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
@@ -62,54 +50,43 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
-import com.programmersbox.gsonutils.toJson
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard2
 import com.programmersbox.kmpuiviews.presentation.components.M3ImageCard
 import com.programmersbox.kmpuiviews.presentation.components.ModalBottomSheetDelete
@@ -118,29 +95,14 @@ import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledM
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
-import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
-import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
-import com.programmersbox.kmpuiviews.utils.toLocalDateTime
-import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.checkers.NotifySingleWorker
-import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.checkers.UpdateNotification
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LoadingDialog
-import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.MockInfo
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.dispatchIo
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -148,26 +110,33 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.areYouSureRemoveNoti
+import otakuworld.kmpuiviews.generated.resources.current_notification_count
+import otakuworld.kmpuiviews.generated.resources.no
+import otakuworld.kmpuiviews.generated.resources.notify
+import otakuworld.kmpuiviews.generated.resources.notifyAtTime
+import otakuworld.kmpuiviews.generated.resources.removeNoti
+import otakuworld.kmpuiviews.generated.resources.yes
 
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class,
 )
 @Composable
-fun NotificationsScreen(
-    notificationLogo: NotificationLogo,
+fun NotificationScreen(
     navController: NavController = LocalNavController.current,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     vm: NotificationScreenViewModel = koinViewModel(),
     notificationRepository: NotificationRepository = koinInject(),
@@ -184,8 +153,6 @@ fun NotificationsScreen(
     )
 
     val items = vm.items
-
-    val logoDrawable = koinInject<AppLogo>().logo
 
     val state = rememberBottomSheetScaffoldState()
     val scope = rememberCoroutineScope()
@@ -218,7 +185,7 @@ fun NotificationsScreen(
             },
             gridCells = adaptiveGridCell(),
             state = sheetState,
-            multipleTitle = stringResource(R.string.areYouSureRemoveNoti),
+            multipleTitle = stringResource(Res.string.areYouSureRemoveNoti),
             onRemove = { item ->
                 if (item is NotificationInfo.Noti) {
                     vm.deleteNotification(item.item)
@@ -234,13 +201,13 @@ fun NotificationsScreen(
                     }
                 }
             },
-            deleteTitle = { stringResource(R.string.removeNoti, (it as NotificationInfo.Noti).item.notiTitle) },
+            deleteTitle = { stringResource(Res.string.removeNoti, (it as NotificationInfo.Noti).item.notiTitle) },
             itemUi = { item ->
                 if (item is NotificationInfo.Noti) {
                     M3ImageCard(
                         imageUrl = item.item.imageUrl.orEmpty(),
                         name = item.item.notiTitle,
-                        placeHolder = { painterResource(R.drawable.ic_site_settings) }
+                        placeHolder = { rememberVectorPainter(Icons.Default.Settings) }
                     )
                 }
             },
@@ -262,7 +229,7 @@ fun NotificationsScreen(
         topBar = {
             TopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(stringResource(id = R.string.current_notification_count, items.size)) },
+                title = { Text(stringResource(Res.string.current_notification_count, items.size)) },
                 actions = {
                     IconToggleButton(
                         checked = vm.sortedBy == NotificationSortBy.Grouped,
@@ -289,7 +256,6 @@ fun NotificationsScreen(
                         onLoadingChange = { showLoadingDialog = it },
                         deleteNotification = vm::deleteNotification,
                         cancelNotification = vm::cancelNotification,
-                        notificationLogo = notificationLogo,
                         showBlur = showBlur,
                         itemDao = itemDao,
                         onError = {
@@ -315,29 +281,9 @@ fun NotificationsScreen(
                         navController = navController,
                         vm = vm,
                         p = LocalNavHostPadding.current,
-                        toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
                         onLoadingChange = { showLoadingDialog = it },
-                        deleteNotification = vm::deleteNotification,
-                        cancelNotification = vm::cancelNotification,
-                        notificationLogo = notificationLogo,
-                        logoDrawable = logoDrawable,
                         showBlur = showBlur,
                         itemDao = itemDao,
-                        onError = {
-                            scope.launch {
-                                state.snackbarHostState.currentSnackbarData?.dismiss()
-                                val result = state.snackbarHostState.showSnackbar(
-                                    "Something went wrong. Source might not be installed",
-                                    duration = SnackbarDuration.Long,
-                                    actionLabel = "More Options",
-                                    withDismissAction = true
-                                )
-                                showNotificationItem = when (result) {
-                                    SnackbarResult.Dismissed -> null
-                                    SnackbarResult.ActionPerformed -> it
-                                }
-                            }
-                        }
                     )
                 }
             }
@@ -388,12 +334,8 @@ private fun DateSort(
     toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
-    notificationLogo: NotificationLogo,
     showBlur: Boolean,
     itemDao: ItemDao,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    context: Context = LocalContext.current,
-    sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
     val hazeState = remember { HazeState() }
 
@@ -454,11 +396,7 @@ private fun DateSort(
                         toSource = toSource,
                         onError = onError,
                         onLoadingChange = onLoadingChange,
-                        notificationLogo = notificationLogo,
                         navController = navController,
-                        genericInfo = genericInfo,
-                        context = context,
-                        sourceRepository = sourceRepository,
                         deleteNotification = deleteNotification,
                         cancelNotification = cancelNotification,
                         itemDao = itemDao,
@@ -481,16 +419,12 @@ data class NotificationItemOptionsSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NotificationOptionsSheet(
+private fun notificationOptionsSheet(
     i: NotificationItem,
     scope: CoroutineScope,
     navController: NavController,
     toSource: (String) -> KmpApiService?,
     onLoadingChange: (Boolean) -> Unit,
-    notificationLogo: NotificationLogo,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    context: Context = LocalContext.current,
-    sourceRepository: SourceRepository = LocalSourcesRepository.current,
     notificationRepository: NotificationRepository = koinInject(),
     itemDao: ItemDao,
     onError: (NotificationItem) -> Unit,
@@ -516,20 +450,12 @@ private fun NotificationOptionsSheet(
             ?.launchIn(scope) ?: onError(i)
     }
 ) {
+    val notificationScreenInterface: NotificationScreenInterface = koinInject()
     if (!it.item.isShowing) {
-        val updateNotification: UpdateNotification = koinInject()
         Card(
             onClick = {
                 scope.launch(Dispatchers.IO) {
-                    SavedNotifications.viewNotificationFromDb(
-                        context = context,
-                        n = i,
-                        notificationLogo = notificationLogo,
-                        info = genericInfo,
-                        sourceRepository = sourceRepository,
-                        itemDao = itemDao,
-                        update = updateNotification
-                    )
+                    notificationScreenInterface.notifyItem(i)
                 }.invokeOnCompletion { dismiss() }
             },
             colors = CardDefaults.cardColors(
@@ -537,7 +463,7 @@ private fun NotificationOptionsSheet(
             )
         ) {
             ListItem(
-                headlineContent = { Text(stringResource(R.string.notify)) },
+                headlineContent = { Text(stringResource(Res.string.notify)) },
                 colors = ListItemDefaults.colors(
                     containerColor = Color.Transparent
                 )
@@ -546,7 +472,7 @@ private fun NotificationOptionsSheet(
 
         HorizontalDivider()
 
-        NotifyAt(
+        notificationScreenInterface.NotifyAt(
             item = i,
         ) { dateShow ->
             Card(
@@ -556,7 +482,7 @@ private fun NotificationOptionsSheet(
                 )
             ) {
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.notifyAtTime)) },
+                    headlineContent = { Text(stringResource(Res.string.notifyAtTime)) },
                     colors = ListItemDefaults.colors(
                         containerColor = Color.Transparent
                     )
@@ -587,26 +513,18 @@ private fun NotiItem(
     toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
-    notificationLogo: NotificationLogo,
     navController: NavController,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    context: Context = LocalContext.current,
     itemDao: ItemDao,
-    sourceRepository: SourceRepository = LocalSourcesRepository.current,
+    modifier: Modifier = Modifier,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    var optionsSheet by NotificationOptionsSheet(
+    var optionsSheet by notificationOptionsSheet(
         i = i,
         scope = scope,
         navController = navController,
         toSource = toSource,
         itemDao = itemDao,
-        context = context,
-        notificationLogo = notificationLogo,
-        genericInfo = genericInfo,
-        sourceRepository = sourceRepository,
         onError = onError,
         onLoadingChange = onLoadingChange,
     )
@@ -618,7 +536,7 @@ private fun NotiItem(
 
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.removeNoti, i.notiTitle)) },
+            title = { Text(stringResource(Res.string.removeNoti, i.notiTitle)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -626,9 +544,9 @@ private fun NotiItem(
                         deleteNotification(i, onDismiss)
                         cancelNotification(i)
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } }
         )
     }
 
@@ -679,7 +597,7 @@ private fun NotiItem(
             M3CoverCard2(
                 imageUrl = i.imageUrl.orEmpty(),
                 name = i.notiTitle,
-                placeHolder = { painterResource(R.drawable.ic_site_settings) },
+                placeHolder = { rememberVectorPainter(Icons.Default.Settings) },
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
                     .combinedClickable(
@@ -714,18 +632,10 @@ private fun NotiItem(
 private fun GroupedSort(
     navController: NavController,
     vm: NotificationScreenViewModel,
-    deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
-    cancelNotification: (NotificationItem) -> Unit,
     p: PaddingValues,
-    toSource: (String) -> KmpApiService?,
-    onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
-    notificationLogo: NotificationLogo,
-    logoDrawable: Drawable?,
     showBlur: Boolean,
     itemDao: ItemDao,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
-    context: Context = LocalContext.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
     val scope = rememberCoroutineScope()
@@ -785,11 +695,7 @@ private fun GroupedSort(
                                 navController = navController,
                                 deleteNotification = vm::deleteNotification,
                                 cancelNotification = vm::cancelNotification,
-                                genericInfo = genericInfo,
-                                logoDrawable = logoDrawable,
-                                notificationLogo = notificationLogo,
                                 toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
-                                sourceRepository = sourceRepository,
                                 onLoadingChange = onLoadingChange,
                                 itemDao = itemDao,
                                 onError = {
@@ -824,29 +730,20 @@ private fun NotificationItem(
     navController: NavController,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
-    genericInfo: GenericInfo,
     toSource: (String) -> KmpApiService?,
-    logoDrawable: Drawable?,
-    notificationLogo: NotificationLogo,
     onError: (NotificationItem) -> Unit,
-    sourceRepository: SourceRepository,
     onLoadingChange: (Boolean) -> Unit,
     itemDao: ItemDao,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var optionsSheet by NotificationOptionsSheet(
+    var optionsSheet by notificationOptionsSheet(
         i = item,
         scope = scope,
         navController = navController,
         toSource = toSource,
         itemDao = itemDao,
-        context = context,
-        notificationLogo = notificationLogo,
-        genericInfo = genericInfo,
-        sourceRepository = sourceRepository,
         onError = onError,
         onLoadingChange = onLoadingChange
     )
@@ -857,16 +754,16 @@ private fun NotificationItem(
 
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.removeNoti, item.notiTitle)) },
+            title = { Text(stringResource(Res.string.removeNoti, item.notiTitle)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         deleteNotification(item, onDismiss)
                         cancelNotification(item)
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } }
         )
     }
 
@@ -946,8 +843,8 @@ private fun NotificationItem(
                     leadingContent = {
                         GradientImage(
                             model = item.imageUrl.orEmpty(),
-                            placeholder = rememberDrawablePainter(logoDrawable),
-                            error = rememberDrawablePainter(logoDrawable),
+                            placeholder = painterLogo(),
+                            error = painterLogo(),
                             contentDescription = item.notiTitle,
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
@@ -967,108 +864,7 @@ private fun NotificationItem(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NotifyAt(
-    item: NotificationItem,
-    content: @Composable (() -> Unit) -> Unit,
-) {
-    val context = LocalContext.current
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-
-    val dateState = rememberDatePickerState(
-        initialSelectedDateMillis = System.currentTimeMillis(),
-        selectableDates = remember {
-            object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    return DateValidatorPointForward.now().isValid(utcTimeMillis)
-                }
-            }
-        }
-    )
-    val calendar = remember { Calendar.getInstance() }
-    val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
-    val timeState = rememberTimePickerState(
-        initialHour = calendar[Calendar.HOUR_OF_DAY],
-        initialMinute = calendar[Calendar.MINUTE],
-        is24Hour = is24HourFormat
-    )
-
-    if (showTimePicker) {
-        TimePickerDialog(
-            onDismissRequest = { showTimePicker = false },
-            title = { Text(stringResource(id = R.string.selectTime)) },
-            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel)) } },
-            confirmButton = {
-                val dateTimeFormatter = LocalSystemDateTimeFormat.current
-                TextButton(
-                    onClick = {
-                        showTimePicker = false
-                        val c = Calendar.getInstance()
-                        c.timeInMillis = dateState.selectedDateMillis ?: 0L
-                        c[Calendar.DAY_OF_YEAR] += 1
-                        c[Calendar.HOUR_OF_DAY] = timeState.hour
-                        c[Calendar.MINUTE] = timeState.minute
-                        c[Calendar.SECOND] = 0
-                        c[Calendar.MILLISECOND] = 0
-
-                        WorkManager.getInstance(context)
-                            .enqueueUniqueWork(
-                                item.notiTitle,
-                                ExistingWorkPolicy.REPLACE,
-                                OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                    .setInputData(
-                                        Data.Builder()
-                                            .putString("notiData", item.toJson())
-                                            .build()
-                                    )
-                                    .setInitialDelay(
-                                        duration = c.timeInMillis - System.currentTimeMillis(),
-                                        timeUnit = TimeUnit.MILLISECONDS
-                                    )
-                                    .build()
-                            )
-
-                        Toast.makeText(
-                            context,
-                            context.getString(
-                                R.string.willNotifyAt,
-                                dateTimeFormatter.format(c.timeInMillis.toLocalDateTime())
-                            ),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                ) { Text(stringResource(R.string.ok)) }
-            }
-        ) { TimePicker(state = timeState) }
-    }
-
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) } },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDatePicker = false
-                        showTimePicker = true
-                    }
-                ) { Text(stringResource(R.string.ok)) }
-            }
-        ) {
-            DatePicker(
-                state = dateState,
-                title = { Text(stringResource(R.string.selectDate)) }
-            )
-        }
-    }
-
-    content(
-        { showDatePicker = true }
-    )
-}
-
+/*
 @Composable
 private fun NotificationDeleteItem(
     item: NotificationItem,
@@ -1096,7 +892,7 @@ private fun NotificationDeleteItem(
                 onDismissRequest = { showDropDown = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(id = R.string.remove_same_name)) },
+                    text = { Text(stringResource(Res.string.remove_same_name)) },
                     onClick = {
                         showDropDown = false
                         onRemoveAllWithSameName()
@@ -1107,49 +903,4 @@ private fun NotificationDeleteItem(
             IconButton(onClick = { showDropDown = true }) { Icon(Icons.Default.MoreVert, null) }
         }
     )
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun NotificationPreview() {
-    PreviewTheme {
-        NotificationsScreen(
-            notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
-        )
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun NotificationItemPreview() {
-    PreviewTheme {
-        NotificationItem(
-            item = NotificationItem(1, "", "world", "hello", null, "MANGA_READ", "Title"),
-            navController = rememberNavController(),
-            deleteNotification = { _, _ -> },
-            genericInfo = MockInfo(LocalContext.current),
-            cancelNotification = {},
-            logoDrawable = null,
-            notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
-            toSource = { null },
-            onError = {},
-            sourceRepository = SourceRepository(),
-            onLoadingChange = {},
-            itemDao = koinInject()
-        )
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun NotificationDeleteItemPreview() {
-    PreviewTheme {
-        Column {
-            NotificationDeleteItem(
-                item = NotificationItem(1, "", "world", "hello", "", "MANGA_READ", "Title"),
-                logoDrawable = null,
-                onRemoveAllWithSameName = {}
-            )
-        }
-    }
-}
+}*/
