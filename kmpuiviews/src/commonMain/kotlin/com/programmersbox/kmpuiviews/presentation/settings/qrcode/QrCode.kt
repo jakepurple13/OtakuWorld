@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -203,8 +205,9 @@ fun ScanQrCode(
                     }
                 }
 
-                Button(
-                    onClick = { filePicker.launch() }
+                FilledTonalButton(
+                    onClick = { filePicker.launch() },
+                    modifier = Modifier.fillMaxWidth(.75f)
                 ) { Text("Upload Image") }
 
                 Crossfade(qrCodeInfo) { target ->
@@ -229,9 +232,9 @@ fun ScanQrCode(
                     ?.let { info.toSourceByApiServiceName(it) }
 
                 if (source == null && qrCodeInfo != null) {
-                    Text("Source not found. Please install the source")
+                    Text("Source not found. Please install the source.")
 
-                    Button(
+                    ElevatedButton(
                         onClick = {
                             scope.launch {
                                 qrCodeInfo.let {
@@ -248,7 +251,8 @@ fun ScanQrCode(
                                     )
                                 }
                             }.invokeOnCompletion { onDismiss() }
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Save for later") }
                 }
 
@@ -272,7 +276,8 @@ fun ScanQrCode(
                             }
                         }
                     },
-                    enabled = qrCodeInfo != null && source != null
+                    enabled = qrCodeInfo != null && source != null,
+                    modifier = Modifier.fillMaxWidth(.75f)
                 ) { Text("Open") }
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
@@ -237,25 +238,26 @@ internal fun DetailsHeader(
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
-
-                    Text(
-                        model.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .customSharedElement(
-                                OtakuTitleElement(
-                                    origin = model.title,
-                                    source = model.title
+                    SelectionContainer {
+                        Text(
+                            model.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .customSharedElement(
+                                    OtakuTitleElement(
+                                        origin = model.title,
+                                        source = model.title
+                                    )
                                 )
-                            )
-                            .clickable(
-                                interactionSource = null,
-                                indication = ripple()
-                            ) { descriptionVisibility = !descriptionVisibility }
-                            .fillMaxWidth(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                    )
+                                .clickable(
+                                    interactionSource = null,
+                                    indication = ripple()
+                                ) { descriptionVisibility = !descriptionVisibility }
+                                .fillMaxWidth(),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                        )
+                    }
                     Crossfade(targetState = isFavorite, label = "") { target ->
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
