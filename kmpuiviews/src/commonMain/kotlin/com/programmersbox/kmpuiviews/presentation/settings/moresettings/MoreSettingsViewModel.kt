@@ -18,6 +18,7 @@ import io.github.vinceglb.filekit.readString
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -119,12 +120,36 @@ class MoreSettingsViewModel(
         }
     }
 
+    var cloudToLocalSync: CloudLocalSync by mutableStateOf(CloudLocalSync.Idle)
+    var localToCloudSync: CloudLocalSync by mutableStateOf(CloudLocalSync.Idle)
+
     fun pullCloudToLocal() {
         viewModelScope.launch {
-            val allShows = dao.getAllFavoritesSync()
-            val cloudShows = kmpFirebaseConnection.getAllShows()
-            val newShows = cloudShows.filter { it !in allShows }
-            newShows.forEach { dao.insertFavorite(it) }
+            cloudToLocalSync = CloudLocalSync.Loading
+            runCatching {
+                val allShows = dao.getAllFavoritesSync()
+                val cloudShows = kmpFirebaseConnection.getAllShows()
+                val newShows = cloudShows.filter { allShows.any { s -> s.url != it.url } }
+                newShows.forEach { dao.insertFavorite(it) }
+                newShows.size
+            }
+                .onSuccess { cloudToLocalSync = CloudLocalSync.Success(it) }
+                .onFailure { cloudToLocalSync = CloudLocalSync.Error(it) }
+        }
+    }
+
+    fun pullLocalToCloud() {
+        viewModelScope.launch {
+            localToCloudSync = CloudLocalSync.Loading
+            runCatching {
+                val allShows = dao.getAllFavoritesSync()
+                val cloudShows = kmpFirebaseConnection.getAllShows()
+                val newShows = allShows.filter { cloudShows.any { s -> s.url != it.url } }
+                newShows.forEach { kmpFirebaseConnection.insertShowFlow(it).collect() }
+                newShows.size
+            }
+                .onSuccess { localToCloudSync = CloudLocalSync.Success(it) }
+                .onFailure { localToCloudSync = CloudLocalSync.Error(it) }
         }
     }
 }
@@ -134,4 +159,11 @@ sealed class ImportExportListStatus {
     data object Loading : ImportExportListStatus()
     class Error(val throwable: Throwable) : ImportExportListStatus()
     data object Success : ImportExportListStatus()
+}
+
+sealed class CloudLocalSync {
+    data object Idle : CloudLocalSync()
+    data object Loading : CloudLocalSync()
+    class Error(val throwable: Throwable) : CloudLocalSync()
+    data class Success(val size: Int) : CloudLocalSync()
 }

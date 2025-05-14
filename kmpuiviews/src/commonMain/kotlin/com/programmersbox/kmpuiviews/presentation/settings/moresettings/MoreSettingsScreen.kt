@@ -1,9 +1,12 @@
 package com.programmersbox.kmpuiviews.presentation.settings.moresettings
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -14,6 +17,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -33,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -139,6 +144,65 @@ fun MoreSettingsScreen(
             ) { importLauncher.launch() }
         )
 
+        PreferenceSetting(
+            settingTitle = { Text("Sync Cloud To Local Favorites") },
+            summaryValue = {
+                Column {
+                    Text("Syncs favorites from the cloud to the local database")
+                    Crossfade(
+                        viewModel.cloudToLocalSync,
+                        label = "Cloud Local Sync"
+                    ) { target ->
+                        when (target) {
+                            is CloudLocalSync.Error -> Text(target.throwable.message ?: "Unknown Error")
+                            CloudLocalSync.Idle -> {}
+                            CloudLocalSync.Loading -> LinearProgressIndicator()
+                            is CloudLocalSync.Success -> Text("Added ${target.size} favorites")
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.clickable(
+                enabled = true,
+                indication = ripple(),
+                interactionSource = null,
+                onClick = viewModel::pullCloudToLocal
+            )
+        )
+
+        HorizontalDivider(
+            modifier = Modifier
+                .fillMaxWidth(.75f)
+                .padding(vertical = 4.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+
+        PreferenceSetting(
+            settingTitle = { Text("Sync Local To Cloud Favorites") },
+            summaryValue = {
+                Column {
+                    Text("Syncs favorites from the local database to the cloud")
+                    Crossfade(
+                        viewModel.localToCloudSync,
+                        label = "Cloud Local Sync"
+                    ) { target ->
+                        when (target) {
+                            is CloudLocalSync.Error -> Text(target.throwable.message ?: "Unknown Error")
+                            CloudLocalSync.Idle -> {}
+                            CloudLocalSync.Loading -> LinearProgressIndicator()
+                            is CloudLocalSync.Success -> Text("Added ${target.size} favorites")
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.clickable(
+                enabled = true,
+                indication = ripple(),
+                interactionSource = null,
+                onClick = viewModel::pullLocalToCloud
+            )
+        )
+
         HorizontalDivider()
 
         CategorySetting(
@@ -202,17 +266,6 @@ fun MoreSettingsScreen(
         )
 
         HorizontalDivider()
-
-        PreferenceSetting(
-            settingTitle = { Text("Pull Cloud Favorites") },
-            summaryValue = { Text("Pulls favorites from cloud into the local database") },
-            modifier = Modifier.clickable(
-                enabled = true,
-                indication = ripple(),
-                interactionSource = null,
-                onClick = viewModel::pullCloudToLocal
-            )
-        )
     }
 
     //TODO: Remove toaster and switch back to snackbar

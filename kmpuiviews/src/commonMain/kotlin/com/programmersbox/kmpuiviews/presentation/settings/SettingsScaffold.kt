@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -47,6 +48,7 @@ fun SettingsScaffold(
             content = content,
             modifier = Modifier
                 .padding(p)
+                .animateContentSize()
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         )
