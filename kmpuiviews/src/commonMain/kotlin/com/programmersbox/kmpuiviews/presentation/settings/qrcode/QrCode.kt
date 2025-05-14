@@ -30,12 +30,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
+import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -98,6 +109,9 @@ fun ShareViaQrCode(
         onClose()
     }
 
+    val qrCodeRepository = koinInject<QrCodeRepository>()
+    val painter = rememberQrKitPainter(remember { Json.encodeToString(qrCodeInfo) })
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -117,16 +131,58 @@ fun ShareViaQrCode(
                     .padding(padding)
                     .fillMaxWidth()
             ) {
-                Image(
-                    painter = rememberQrKitPainter(remember { Json.encodeToString(qrCodeInfo) }),
-                    contentDescription = "QR code",
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
-                        .padding(16.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val graphicsLayer = rememberGraphicsLayer()
+                    Box(
+                        modifier = Modifier.drawWithContent {
+                            // call record to capture the content in the graphics layer
+                            graphicsLayer.record {
+                                // draw the contents of the composable into the graphics layer
+                                this@drawWithContent.drawContent()
+                            }
+                            // draw the graphics layer on the visible canvas
+                            drawLayer(graphicsLayer)
+                        }
+                    ) {
+                        Image(
+                            painter = painter,
+                            contentDescription = "QR code",
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
+                                .padding(16.dp)
+                        )
+                    }
+
+                    FilledTonalButton(
+                        onClick = {
+                            scope.launch {
+                                qrCodeRepository.shareImage(
+                                    bitmap = graphicsLayer.toImageBitmap(),
+                                    title = qrCodeInfo.title
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(.75f)
+                    ) { Text("Share") }
+                }
             }
         }
     }
+}
+
+fun Painter.toImageBitmap(
+    size: Size,
+    density: Density,
+    layoutDirection: LayoutDirection,
+): ImageBitmap {
+    val bitmap = ImageBitmap(size.width.toInt(), size.height.toInt())
+    val canvas = Canvas(bitmap)
+    CanvasDrawScope().draw(density, layoutDirection, canvas, size) {
+        draw(size)
+    }
+    return bitmap
 }
 
 

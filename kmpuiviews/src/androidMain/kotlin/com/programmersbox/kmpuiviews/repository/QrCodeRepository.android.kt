@@ -1,11 +1,20 @@
 package com.programmersbox.kmpuiviews.repository
 
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.createChooser
+import android.graphics.Bitmap
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Environment
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import kotlin.coroutines.resume
 
 actual class QrCodeRepository(
     private val context: Context,
@@ -18,4 +27,61 @@ actual class QrCodeRepository(
         .mapCatching { barcodes ->
             barcodes.mapNotNull { it.displayValue }
         }
+
+    actual suspend fun shareImage(
+        bitmap: ImageBitmap,
+        title: String,
+    ) {
+        runCatching { bitmap.asAndroidBitmap().saveToDisk(title) }
+            .onSuccess { shareBitmap(context, it, title) }
+    }
+
+    //Copied from https://github.com/android/snippets/blob/latest/compose/snippets/src/main/java/com/example/compose/snippets/graphics/AdvancedGraphicsSnippets.kt#L123
+    private suspend fun Bitmap.saveToDisk(title: String): Uri {
+        val file = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+            "$title-${System.currentTimeMillis()}.png"
+        )
+
+        file.writeBitmap(this, Bitmap.CompressFormat.PNG, 100)
+
+        return scanFilePath(context, file.path) ?: throw Exception("File could not be saved")
+    }
+
+    private suspend fun scanFilePath(context: Context, filePath: String): Uri? {
+        return suspendCancellableCoroutine { continuation ->
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(filePath),
+                arrayOf("image/png")
+            ) { _, scannedUri ->
+                if (scannedUri == null) {
+                    continuation.cancel(Exception("File $filePath could not be scanned"))
+                } else {
+                    continuation.resume(scannedUri)
+                }
+            }
+        }
+    }
+
+    private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+        outputStream().use { out ->
+            bitmap.compress(format, quality, out)
+            out.flush()
+        }
+    }
+
+    private fun shareBitmap(context: Context, uri: Uri, title: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_TITLE, title)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(
+            createChooser(intent, "Share your image")
+                .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) },
+            null
+        )
+    }
 }
