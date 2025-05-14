@@ -66,6 +66,10 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
+import qrgenerator.qrkitpainter.QrKitLogo
+import qrgenerator.qrkitpainter.QrKitLogoKitShape
+import qrgenerator.qrkitpainter.QrKitLogoPadding
+import qrgenerator.qrkitpainter.createCircle
 import qrgenerator.qrkitpainter.rememberQrKitPainter
 
 @Serializable
@@ -110,7 +114,14 @@ fun ShareViaQrCode(
     }
 
     val qrCodeRepository = koinInject<QrCodeRepository>()
-    val painter = rememberQrKitPainter(remember { Json.encodeToString(qrCodeInfo) })
+    val logoPainter = painterLogo()
+    val painter = rememberQrKitPainter(remember { Json.encodeToString(qrCodeInfo) }) {
+        logo = QrKitLogo(
+            painter = logoPainter,
+            padding = QrKitLogoPadding.Natural(.1f),
+            shape = QrKitLogoKitShape.createCircle()
+        )
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

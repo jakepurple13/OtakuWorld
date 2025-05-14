@@ -24,9 +24,7 @@ actual class QrCodeRepository(
         bitmap: ImageBitmap,
     ): Result<List<String>> = runCatching { InputImage.fromBitmap(bitmap.asAndroidBitmap(), 0) }
         .mapCatching { scanner.process(it).await() }
-        .mapCatching { barcodes ->
-            barcodes.mapNotNull { it.displayValue }
-        }
+        .mapCatching { barcodes -> barcodes.mapNotNull { it.displayValue } }
 
     actual suspend fun shareImage(
         bitmap: ImageBitmap,
