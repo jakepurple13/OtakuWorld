@@ -121,6 +121,7 @@ kotlin {
                 implementation(libs.landscapistPalette)
                 implementation(libs.landscapistPlaceholder)
                 implementation(libs.zoomable.peek.overlay)
+                implementation(libs.barcode.scanning)
             }
         }
 

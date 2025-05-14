@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.qrcode
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -38,6 +39,9 @@ import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.dispatchIo
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.util.toImageBitmap
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -113,7 +117,7 @@ fun ShareViaQrCode(
             ) {
                 Image(
                     painter = rememberQrKitPainter(remember { Json.encodeToString(qrCodeInfo) }),
-                    contentDescription = "QR code referring to the example.com website",
+                    contentDescription = "QR code",
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
                         .padding(16.dp)
@@ -162,6 +166,7 @@ fun ScanQrCode(
             },
         ) { padding ->
             Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .padding(padding)
@@ -182,7 +187,25 @@ fun ScanQrCode(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .size(250.dp)
+                        .clip(MaterialTheme.shapes.medium)
                 )
+
+                val filePicker = rememberFilePickerLauncher(
+                    type = FileKitType.Image
+                ) { file ->
+                    scope.launch {
+                        runCatching { file?.toImageBitmap()!! }
+                            .onSuccess {
+                                viewModel.scanQrCodeFromImage(it)
+                                scope.launch { sheetState.expand() }
+                            }
+                            .onFailure { it.printStackTrace() }
+                    }
+                }
+
+                Button(
+                    onClick = { filePicker.launch() }
+                ) { Text("Upload Image") }
 
                 Crossfade(qrCodeInfo) { target ->
                     ListItem(

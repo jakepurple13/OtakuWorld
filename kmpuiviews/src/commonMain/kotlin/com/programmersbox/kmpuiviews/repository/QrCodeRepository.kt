@@ -1,0 +1,9 @@
+package com.programmersbox.kmpuiviews.repository
+
+import androidx.compose.ui.graphics.ImageBitmap
+
+expect class QrCodeRepository {
+    suspend fun getInfoFromQRCode(
+        bitmap: ImageBitmap,
+    ): Result<List<String>>
+}

@@ -1,4 +1,5 @@
 [versions]
+barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "1.9.40"
@@ -128,6 +129,7 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-mu
 buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
 
 [libraries]
+barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.5.1-shaded-core" }
 constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.5.1-shaded" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
