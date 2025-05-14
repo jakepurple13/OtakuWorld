@@ -133,3 +133,9 @@ fun rememberSwatchType() = rememberPreference(
     mapToKey = { it.name },
     defaultValue = PaletteSwatchType.Vibrant
 )
+
+@Composable
+fun rememberUseLogoInQrCode() = rememberPreference(
+    key = booleanPreferencesKey("useLogoInQrCode"),
+    defaultValue = true
+)

@@ -1,11 +1,13 @@
 package com.programmersbox.kmpuiviews.presentation.settings.qrcode
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +21,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -34,6 +37,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.rememberUseLogoInQrCode
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
@@ -106,14 +110,19 @@ fun ShareViaQrCode(
         onClose()
     }
 
+    var includeLogo by rememberUseLogoInQrCode()
     val qrCodeRepository = koinInject<QrCodeRepository>()
     val logoPainter = painterLogo()
-    val painter = rememberQrKitPainter(remember { Json.encodeToString(qrCodeInfo) }) {
-        logo = QrKitLogo(
-            painter = logoPainter,
-            padding = QrKitLogoPadding.Natural(.1f),
-            shape = QrKitLogoKitShape.createCircle()
-        )
+    val painter = rememberQrKitPainter(
+        remember { Json.encodeToString(qrCodeInfo) }
+    ) {
+        if (includeLogo) {
+            logo = QrKitLogo(
+                painter = logoPainter,
+                padding = QrKitLogoPadding.Natural(.1f),
+                shape = QrKitLogoKitShape.createCircle()
+            )
+        }
     }
 
     ModalBottomSheet(
@@ -134,9 +143,12 @@ fun ShareViaQrCode(
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxWidth()
+                    .animateContentSize()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.animateContentSize()
                 ) {
                     val graphicsLayer = rememberGraphicsLayer()
                     Box(
@@ -156,6 +168,19 @@ fun ShareViaQrCode(
                             modifier = Modifier
                                 .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
                                 .padding(16.dp)
+                                .animateContentSize()
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text("Include Logo")
+
+                        Switch(
+                            checked = includeLogo,
+                            onCheckedChange = { includeLogo = it }
                         )
                     }
 
