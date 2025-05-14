@@ -117,21 +117,19 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.dsl.binds
+import org.koin.core.module.dsl.binds
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> {
-        GenericAnime(
-            context = get(),
-            storageHolder = get(),
-            animeDataStoreHandling = get(),
-            appConfig = get()
+    singleOf(::GenericAnime) {
+        binds(
+            listOf(
+                KmpGenericInfo::class,
+                GenericInfo::class
+            )
         )
-    } binds arrayOf(
-        KmpGenericInfo::class,
-        GenericInfo::class
-    )
+    }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single { AnimeDataStoreHandling() }

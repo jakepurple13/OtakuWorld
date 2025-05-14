@@ -54,19 +54,19 @@ import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen
-import org.koin.dsl.binds
+import org.koin.core.module.dsl.binds
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> {
-        GenericNovel(
-            context = get(),
-            appConfig = get()
+    singleOf(::GenericNovel) {
+        binds(
+            listOf(
+                KmpGenericInfo::class,
+                GenericInfo::class
+            )
         )
-    } binds arrayOf(
-        KmpGenericInfo::class,
-        GenericInfo::class
-    )
+    }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 

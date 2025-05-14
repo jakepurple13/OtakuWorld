@@ -87,25 +87,21 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
-import org.koin.dsl.binds
 import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> {
-        GenericManga(
-            context = get(),
-            chapterHolder = get(),
-            mangaSettingsHandling = get(),
-            settingsHandling = get(),
-            appConfig = get()
+    singleOf(::GenericManga) {
+        binds(
+            listOf(
+                KmpGenericInfo::class,
+                GenericInfo::class
+            )
         )
-    } binds arrayOf(
-        KmpGenericInfo::class,
-        GenericInfo::class
-    )
+    }
 
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
