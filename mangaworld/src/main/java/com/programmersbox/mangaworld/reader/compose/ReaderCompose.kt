@@ -98,7 +98,7 @@ import kotlin.math.absoluteValue
 fun ReadView(
     context: Context = LocalContext.current,
     mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
-    readVm: ReadViewModel = koinViewModel(),
+    viewModel: ReadViewModel = koinViewModel(),
 ) {
     HideNavBarWhileOnScreen()
 
@@ -109,7 +109,7 @@ fun ReadView(
 
     val scope = rememberCoroutineScope()
 
-    val pages = readVm.pageList
+    val pages = viewModel.pageList
 
     val settings = LocalSettingsHandling.current
 
@@ -155,10 +155,10 @@ fun ReadView(
     val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && readerType != ReaderType.List } }
 
     val listIndex by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0 } }
-    LaunchedEffect(listIndex, pagerState.currentPage, readVm.showInfo) {
-        if (readVm.firstScroll && (listIndex > 0 || pagerState.currentPage > 0)) {
-            readVm.showInfo = false
-            readVm.firstScroll = false
+    LaunchedEffect(listIndex, pagerState.currentPage, viewModel.showInfo) {
+        if (viewModel.firstScroll && (listIndex > 0 || pagerState.currentPage > 0)) {
+            viewModel.showInfo = false
+            viewModel.firstScroll = false
         }
     }
 
@@ -183,7 +183,7 @@ fun ReadView(
         }
     }
 
-    val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
+    val showItems by remember { derivedStateOf { viewModel.showInfo || listShowItems || pagerShowItems } }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -193,14 +193,13 @@ fun ReadView(
     var showFloatBar by remember { mutableStateOf(false) }
 
     LaunchedEffect(showItems) {
+        if (includeInsets) insetsController = showItems
         if (showItems) {
             delay(250)
             showFloatBar = true
         } else {
             showFloatBar = false
         }
-
-        if (includeInsets) insetsController = showItems
     }
 
     BackHandler(drawerState.isOpen || showBottomSheet) {
@@ -213,9 +212,9 @@ fun ReadView(
     }
 
     AddToFavoritesDialog(
-        show = readVm.addToFavorites.shouldShow,
-        onDismiss = { readVm.addToFavorites = readVm.addToFavorites.copy(hasShown = true) },
-        onAddToFavorites = readVm::addToFavorites
+        show = viewModel.addToFavorites.shouldShow,
+        onDismiss = { viewModel.addToFavorites = viewModel.addToFavorites.copy(hasShown = true) },
+        onAddToFavorites = viewModel::addToFavorites
     )
 
     var settingsPopup by remember { mutableStateOf(false) }
@@ -235,7 +234,7 @@ fun ReadView(
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
             SheetView(
-                readVm = readVm,
+                readVm = viewModel,
                 onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = pages,
@@ -260,12 +259,12 @@ fun ReadView(
                 drawerContainerColor = MaterialTheme.colorScheme.surface,
             ) {
                 DrawerView(
-                    readVm = readVm,
+                    readVm = viewModel,
                     showToast = ::showToast
                 )
             }
         },
-        gesturesEnabled = (readVm.list.size > 1 && userGestureAllowed) || drawerState.isOpen
+        gesturesEnabled = (viewModel.list.size > 1 && userGestureAllowed) || drawerState.isOpen
     ) {
         //TODO: Maybe make this an option?
         val scrollAlpha by remember {
@@ -300,10 +299,10 @@ fun ReadView(
                     )
                 ) {
                     ReaderTopBar(
-                        currentChapter = readVm
+                        currentChapter = viewModel
                             .currentChapterModel
                             ?.name
-                            ?: "Ch ${readVm.list.size - readVm.currentChapter}",
+                            ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
                         showBlur = showBlur,
                         windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
@@ -330,17 +329,17 @@ fun ReadView(
                         //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onNextChapter = { readVm.addChapterToWatched(--readVm.currentChapter, ::showToast) },
-                            onPreviousChapter = { readVm.addChapterToWatched(++readVm.currentChapter, ::showToast) },
+                            onNextChapter = { viewModel.addChapterToWatched(--viewModel.currentChapter, ::showToast) },
+                            onPreviousChapter = { viewModel.addChapterToWatched(++viewModel.currentChapter, ::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = showBlur,
                             isAmoledMode = isAmoledMode,
-                            chapterNumber = (readVm.list.size - readVm.currentChapter).toString(),
-                            chapterCount = readVm.list.size.toString(),
+                            chapterNumber = (viewModel.list.size - viewModel.currentChapter).toString(),
+                            chapterCount = viewModel.list.size.toString(),
                             currentPage = currentPage,
                             pages = animateIntAsState(pages.size).value,
-                            previousButtonEnabled = readVm.currentChapter < readVm.list.lastIndex && readVm.list.size > 1,
-                            nextButtonEnabled = readVm.currentChapter > 0 && readVm.list.size > 1,
+                            previousButtonEnabled = viewModel.currentChapter < viewModel.list.lastIndex && viewModel.list.size > 1,
+                            nextButtonEnabled = viewModel.currentChapter > 0 && viewModel.list.size > 1,
                             modifier = Modifier
                                 .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
                                 .padding(16.dp)
@@ -372,7 +371,7 @@ fun ReadView(
                             onSettingsClick = { settingsPopup = true },
                             chapterChange = ::showToast,
                             onChapterShow = { scope.launch { drawerState.open() } },
-                            vm = readVm,
+                            vm = viewModel,
                             showFloatBar = showFloatBar,
                             onShowFloatBarChange = { showFloatBar = it },
                         )
@@ -388,8 +387,8 @@ fun ReadView(
                     Modifier,
             ) {
                 OtakuPullToRefreshBox(
-                    isRefreshing = readVm.isLoadingPages,
-                    onRefresh = readVm::refresh,
+                    isRefreshing = viewModel.isLoadingPages,
+                    onRefresh = viewModel::refresh,
                     paddingValues = p
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
@@ -402,7 +401,7 @@ fun ReadView(
                             Modifier.zoomableWithScroll(
                                 zoomState = rememberZoomState(),
                                 enableOneFingerZoom = false,
-                                onTap = { readVm.showInfo = !readVm.showInfo }
+                                onTap = { viewModel.showInfo = !viewModel.showInfo }
                             )
                         }
                     ) {
@@ -411,39 +410,39 @@ fun ReadView(
                                 ListView(
                                     listState = listState,
                                     pages = pages,
-                                    readVm = readVm,
+                                    readVm = viewModel,
                                     itemSpacing = spacing,
                                     paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                ) { viewModel.showInfo = !viewModel.showInfo }
                             }
 
                             ReaderType.Pager -> {
                                 PagerView(
                                     pagerState = pagerState,
                                     pages = pages,
-                                    vm = readVm,
+                                    vm = viewModel,
                                     itemSpacing = spacing,
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                ) { viewModel.showInfo = !viewModel.showInfo }
                             }
 
                             ReaderType.FlipPager -> {
                                 FlipPagerView(
                                     pagerState = pagerState,
                                     pages = pages,
-                                    vm = readVm,
+                                    vm = viewModel,
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                ) { viewModel.showInfo = !viewModel.showInfo }
                             }
 
                             ReaderType.CurlPager -> {
                                 CurlPagerView(
                                     pagerState = curlState,
                                     pages = pages,
-                                    vm = readVm,
+                                    vm = viewModel,
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                ) { viewModel.showInfo = !viewModel.showInfo }
                             }
 
                             else -> {}
