@@ -50,6 +50,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
+import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
@@ -496,6 +497,22 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         OptionsItem(
             title = stringResource(Res.string.add_to_list),
             onClick = { showLists = true }
+        )
+
+        var showQr by remember { mutableStateOf(false) }
+        if (showQr) {
+            ShareViaQrCode(
+                url = url,
+                title = title,
+                imageUrl = imageUrl,
+                apiService = serviceName,
+                onClose = { showQr = false }
+            )
+        }
+
+        OptionsItem(
+            title = "Share via QR Code",
+            onClick = { showQr = true }
         )
 
         moreContent(optionsSheetValues)

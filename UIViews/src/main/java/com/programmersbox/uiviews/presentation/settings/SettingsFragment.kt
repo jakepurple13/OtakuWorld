@@ -67,6 +67,7 @@ fun SettingScreen(
     geminiClick: () -> Unit = {},
     sourcesOrderClick: () -> Unit = {},
     appDownloadsClick: () -> Unit = {},
+    scanQrCode: () -> Unit,
     accountSettings: @Composable () -> Unit = {
         val appConfig: AppConfig = koinInject()
         if (appConfig.buildType == BuildType.Full) {
@@ -108,6 +109,7 @@ fun SettingScreen(
         sourcesOrderClick = sourcesOrderClick,
         appDownloadsClick = appDownloadsClick,
         accountSettings = accountSettings,
+        scanQrCode = scanQrCode,
         onDebugBuild = {
             if (BuildConfig.DEBUG) {
                 PreferenceSetting(
@@ -260,7 +262,8 @@ private fun SettingsPreview() {
             sourcesOrderClick = {},
             appDownloadsClick = {},
             accountSettings = {},
-            onDebugBuild = {}
+            onDebugBuild = {},
+            scanQrCode = {}
         )
     }
 }

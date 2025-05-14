@@ -22,6 +22,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoSc
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
+import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
@@ -65,6 +66,8 @@ fun NavGraphBuilder.navGraph(
     navController: NavHostController,
     notificationLogo: NotificationLogo,
 ) {
+
+    dialog<Screen.ScanQrCodeScreen> { ScanQrCode() }
     composable<Screen.OnboardingScreen> {
         OnboardingScreen(
             navController = navController,
@@ -162,6 +165,7 @@ private fun NavGraphBuilder.settings(
                 geminiClick = { /*navController.navigate(Screen.GeminiScreen)*/ },
                 sourcesOrderClick = { navController.navigate(Screen.OrderScreen) },
                 appDownloadsClick = { navController.navigate(Screen.DownloadInstallScreen) },
+                scanQrCode = { navController.navigate(Screen.ScanQrCodeScreen) },
             )
         }
 

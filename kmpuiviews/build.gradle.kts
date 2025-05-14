@@ -30,7 +30,7 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3AdaptiveNavigationSuite)
                 implementation(compose.components.resources)
-                implementation("org.jetbrains.compose.ui:ui-backhandler:1.8.0")
+                implementation(libs.ui.backhandler)
                 implementation(libs.material3.window.size)
                 implementation(libs.haze)
                 implementation(libs.hazeMaterials)
@@ -78,7 +78,7 @@ kotlin {
 
                 implementation(libs.sonner)
 
-                implementation("net.thauvin.erik.urlencoder:urlencoder-lib:1.6.0")
+                implementation(libs.urlencoder.lib)
                 implementation(libs.blurhash)
 
                 implementation(libs.dragselect)
@@ -87,10 +87,11 @@ kotlin {
 
                 implementation(libs.roomPaging)
 
-                /// Compose 1.7.3 with different tech.annexflow.constraintlayout.core package
-                implementation("tech.annexflow.compose:constraintlayout-compose-multiplatform:0.5.1-shaded-core")
-                /// Compose 1.7.3 with different tech.annexflow.constraintlayout package
-                implementation("tech.annexflow.compose:constraintlayout-compose-multiplatform:0.5.1-shaded")
+                implementation(libs.constraintlayout.compose.multiplatform)
+                implementation(libs.compose.constraintlayout.compose.multiplatform)
+
+                implementation(libs.qr.kit)
+                implementation(libs.scanner)
             }
         }
 

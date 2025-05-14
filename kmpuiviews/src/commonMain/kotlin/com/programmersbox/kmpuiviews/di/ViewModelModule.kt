@@ -21,6 +21,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoView
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.qrcode.QrCodeScannerViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
@@ -48,6 +49,7 @@ val viewModels: Module = module {
     viewModelOf(::DownloadStateViewModel)
     viewModelOf(::AccountInfoViewModel)
     viewModelOf(::HistoryViewModel)
+    viewModelOf(::QrCodeScannerViewModel)
 
     viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
 

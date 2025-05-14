@@ -13,6 +13,7 @@ multiplatform this project grows stronger and stronger.
     - Maybe? We'd need to do all the different variants too.
         - https://github.com/Tweener/passage?
       - https://github.com/mirzemehdi/KMPAuth?
+        https://github.com/GitLiveApp/firebase-kotlin-sdk?
 - Notifications
 - Workers
     - Maybe only for ios and desktop?
@@ -20,7 +21,6 @@ multiplatform this project grows stronger and stronger.
 - Need to figure our initial setup like what is done in the application class
 - Better handling of large screen devices
 - Github Actions workflows
-- Gotta see if protobuf works in multiplatform
 - Version getting
 - Image loaders would get cut down
 - Some libraries would get cut most probably
@@ -40,10 +40,11 @@ multiplatform this project grows stronger and stronger.
   - [x] Datastore
     - [x] Protobuf
     - [x] Need to figure out specific apps protobuf. Might need a later change.
-  - [ ] Models
+  - [x] Models
     - Uses some Java libraries, so need to figure out a way to keep some of that while also not
       affecting any other sources
 - [ ] Screens that do not have m3 alpha components can go into a multiplatform module
 - [ ] Start removal of gson
-- [ ] ViewModels could probably be moved into the kmp module
+- [x] ViewModels could probably be moved into the kmp module
+
 

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Reorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -94,6 +95,7 @@ fun SettingScreen(
     geminiClick: () -> Unit = {},
     sourcesOrderClick: () -> Unit = {},
     appDownloadsClick: () -> Unit = {},
+    scanQrCode: () -> Unit,
     onDebugBuild: @Composable () -> Unit,
     accountSettings: @Composable () -> Unit,
 ) {
@@ -131,6 +133,7 @@ fun SettingScreen(
                 geminiClick = geminiClick,
                 sourcesOrderClick = sourcesOrderClick,
                 appDownloadsClick = appDownloadsClick,
+                scanQrCode = scanQrCode,
                 onDebugBuild = onDebugBuild
             )
         }
@@ -155,6 +158,7 @@ private fun SettingsScreen(
     geminiClick: () -> Unit,
     sourcesOrderClick: () -> Unit,
     appDownloadsClick: () -> Unit,
+    scanQrCode: () -> Unit,
     onDebugBuild: @Composable () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -200,6 +204,16 @@ private fun SettingsScreen(
             indication = ripple(),
             interactionSource = null,
             onClick = globalSearchClick
+        )
+    )
+
+    PreferenceSetting(
+        settingTitle = { Text("Scan QR Code") },
+        settingIcon = { Icon(Icons.Default.QrCodeScanner, null, modifier = Modifier.fillMaxSize()) },
+        modifier = Modifier.clickable(
+            indication = ripple(),
+            interactionSource = null,
+            onClick = scanQrCode
         )
     )
 

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -77,6 +78,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
+import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.launchCatching
@@ -457,6 +459,25 @@ fun DetailFloatingActionButtonMenu(
         },
         modifier = modifier
     ) {
+        var showQr by remember { mutableStateOf(false) }
+        if (showQr) {
+            ShareViaQrCode(
+                url = info.url,
+                title = info.title,
+                imageUrl = info.imageUrl,
+                apiService = info.source.serviceName,
+                onClose = { showQr = false }
+            )
+        }
+        FloatingActionButtonMenuItem(
+            onClick = {
+                onFabMenuExpandedChange(false)
+                showQr = true
+            },
+            icon = { Icon(Icons.Default.QrCodeScanner, contentDescription = null) },
+            text = { Text(text = "Share Via QrCode") },
+        )
+
         if (isSaved) {
             FloatingActionButtonMenuItem(
                 onClick = {
