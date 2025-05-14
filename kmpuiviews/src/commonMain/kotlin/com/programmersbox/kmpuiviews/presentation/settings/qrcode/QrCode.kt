@@ -28,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
@@ -43,6 +45,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
@@ -131,11 +134,11 @@ fun ScanQrCode(
     val sheetState = rememberModalBottomSheetState()
     val onDismiss: () -> Unit = {
         scope.launch { sheetState.hide() }
-        navController.popBackStack()
+            .invokeOnCompletion { navController.popBackStack() }
     }
 
     val qrCodeInfo = viewModel.qrCodeInfo
-
+    val dao: ItemDao = koinInject()
     val info = LocalSourcesRepository.current
 
     var showLoadingDialog by remember { mutableStateOf(false) }
@@ -167,7 +170,10 @@ fun ScanQrCode(
                 ScannerWithPermissions(
                     onScanned = { scan ->
                         runCatching { Json.decodeFromString<QrCodeInfo>(scan) }
-                            .onSuccess { viewModel.qrCodeInfo = it }
+                            .onSuccess {
+                                viewModel.qrCodeInfo = it
+                                scope.launch { sheetState.expand() }
+                            }
                             .onFailure { it.printStackTrace() }
 
                         false
@@ -201,6 +207,26 @@ fun ScanQrCode(
 
                 if (source == null && qrCodeInfo != null) {
                     Text("Source not found. Please install the source")
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                qrCodeInfo.let {
+                                    dao.insertNotification(
+                                        NotificationItem(
+                                            id = it.toString().hashCode(),
+                                            url = it.url,
+                                            summaryText = "Waiting for source",
+                                            notiTitle = it.title,
+                                            imageUrl = it.imageUrl,
+                                            source = it.apiService,
+                                            contentTitle = it.title
+                                        )
+                                    )
+                                }
+                            }.invokeOnCompletion { onDismiss() }
+                        }
+                    ) { Text("Save for later") }
                 }
 
                 Button(
