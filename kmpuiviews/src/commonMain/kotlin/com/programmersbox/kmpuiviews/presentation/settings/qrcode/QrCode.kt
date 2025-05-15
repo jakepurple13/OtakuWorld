@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.rememberUseLogoInQrCode
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -131,14 +132,7 @@ fun ShareViaQrCode(
         containerColor = MaterialTheme.colorScheme.surface,
         sheetState = sheetState
     ) {
-        Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text(qrCodeInfo.title) },
-                    windowInsets = WindowInsets(0.dp),
-                )
-            },
-        ) { padding ->
+        Scaffold { padding ->
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -153,7 +147,8 @@ fun ShareViaQrCode(
                 ) {
                     val graphicsLayer = rememberGraphicsLayer()
                     SelectionContainer {
-                        Box(
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.drawWithContent {
                                 // call record to capture the content in the graphics layer
                                 graphicsLayer.record {
@@ -164,6 +159,11 @@ fun ShareViaQrCode(
                                 drawLayer(graphicsLayer)
                             }
                         ) {
+                            Text(
+                                qrCodeInfo.title,
+                                style = MaterialTheme.typography.titleLarge,
+                                textAlign = TextAlign.Center
+                            )
                             Image(
                                 painter = painter,
                                 contentDescription = "QR code",
