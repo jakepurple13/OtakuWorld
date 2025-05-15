@@ -8,4 +8,5 @@ expect class QrCodeRepository {
     ): Result<List<String>>
 
     suspend fun shareImage(bitmap: ImageBitmap, title: String)
+    suspend fun saveImage(bitmap: ImageBitmap, title: String)
 }

@@ -19,10 +19,6 @@ actual class QrCodeRepository {
         // 1. Load the image
         val image: BufferedImage? = bitmap.toBufferedImage()
 
-
-        // 2. Create a MultiFormatReader
-
-
         // 3. Read the barcode
         val result = reader.decode(
             BinaryBitmap(
@@ -35,6 +31,10 @@ actual class QrCodeRepository {
     }
 
     actual suspend fun shareImage(bitmap: ImageBitmap, title: String) {
+
+    }
+
+    actual suspend fun saveImage(bitmap: ImageBitmap, title: String) {
 
     }
 }

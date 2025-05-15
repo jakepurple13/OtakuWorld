@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
+import android.widget.Toast
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -32,6 +33,11 @@ actual class QrCodeRepository(
     ) {
         runCatching { bitmap.asAndroidBitmap().saveToDisk(title) }
             .onSuccess { shareBitmap(context, it, title) }
+    }
+
+    actual suspend fun saveImage(bitmap: ImageBitmap, title: String) {
+        runCatching { bitmap.asAndroidBitmap().saveToDisk(title) }
+            .onSuccess { Toast.makeText(context, "Qr Code Saved!", Toast.LENGTH_LONG).show() }
     }
 
     //Copied from https://github.com/android/snippets/blob/latest/compose/snippets/src/main/java/com/example/compose/snippets/graphics/AdvancedGraphicsSnippets.kt#L123

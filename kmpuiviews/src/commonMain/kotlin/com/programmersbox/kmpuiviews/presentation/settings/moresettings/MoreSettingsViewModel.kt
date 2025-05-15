@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
-//TODO: Move to kmpuiviews
 class MoreSettingsViewModel(
     private val dao: ItemDao,
     private val favoritesRepository: FavoritesRepository,
@@ -124,7 +123,7 @@ class MoreSettingsViewModel(
     var localToCloudSync: CloudLocalSync by mutableStateOf(CloudLocalSync.Idle)
 
     fun pullCloudToLocal() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             cloudToLocalSync = CloudLocalSync.Loading
             runCatching {
                 val allShows = dao.getAllFavoritesSync()
@@ -139,7 +138,7 @@ class MoreSettingsViewModel(
     }
 
     fun pullLocalToCloud() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             localToCloudSync = CloudLocalSync.Loading
             runCatching {
                 val allShows = dao.getAllFavoritesSync()

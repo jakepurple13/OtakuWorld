@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedButton
@@ -151,25 +152,27 @@ fun ShareViaQrCode(
                     modifier = Modifier.animateContentSize()
                 ) {
                     val graphicsLayer = rememberGraphicsLayer()
-                    Box(
-                        modifier = Modifier.drawWithContent {
-                            // call record to capture the content in the graphics layer
-                            graphicsLayer.record {
-                                // draw the contents of the composable into the graphics layer
-                                this@drawWithContent.drawContent()
+                    SelectionContainer {
+                        Box(
+                            modifier = Modifier.drawWithContent {
+                                // call record to capture the content in the graphics layer
+                                graphicsLayer.record {
+                                    // draw the contents of the composable into the graphics layer
+                                    this@drawWithContent.drawContent()
+                                }
+                                // draw the graphics layer on the visible canvas
+                                drawLayer(graphicsLayer)
                             }
-                            // draw the graphics layer on the visible canvas
-                            drawLayer(graphicsLayer)
+                        ) {
+                            Image(
+                                painter = painter,
+                                contentDescription = "QR code",
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
+                                    .padding(16.dp)
+                                    .animateContentSize()
+                            )
                         }
-                    ) {
-                        Image(
-                            painter = painter,
-                            contentDescription = "QR code",
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
-                                .padding(16.dp)
-                                .animateContentSize()
-                        )
                     }
 
                     Row(
@@ -187,6 +190,7 @@ fun ShareViaQrCode(
                     FilledTonalButton(
                         onClick = {
                             scope.launch {
+                                //TODO: In an update, change to copy to clipboard
                                 qrCodeRepository.shareImage(
                                     bitmap = graphicsLayer.toImageBitmap(),
                                     title = qrCodeInfo.title
@@ -195,6 +199,18 @@ fun ShareViaQrCode(
                         },
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Share") }
+
+                    FilledTonalButton(
+                        onClick = {
+                            scope.launch {
+                                qrCodeRepository.saveImage(
+                                    bitmap = graphicsLayer.toImageBitmap(),
+                                    title = qrCodeInfo.title
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(.75f)
+                    ) { Text("Save") }
                 }
             }
         }
