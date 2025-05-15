@@ -83,6 +83,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.createSavedStateHandle
@@ -128,148 +129,148 @@ fun ImportFullListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-        when (val status = vm.importStatus) {
-            ImportFullListStatus.Loading -> {
-                LaunchedEffect(Unit) {
-                    snackbarHostState.showSnackbar("Importing...")
-                }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) { CircularWavyProgressIndicator() }
+    when (val status = vm.importStatus) {
+        ImportFullListStatus.Loading -> {
+            LaunchedEffect(Unit) {
+                snackbarHostState.showSnackbar("Importing...")
             }
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) { CircularWavyProgressIndicator() }
+        }
 
-            is ImportFullListStatus.Error -> {
-                LaunchedEffect(Unit) {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar("Error")
-                }
-                NormalOtakuScaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text(stringResource(R.string.importing_import_list)) },
-                            navigationIcon = { BackButton() },
-                            scrollBehavior = scrollBehavior
-                        )
-                    },
-                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-                ) { padding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            Icons.Default.Warning,
-                            null,
-                            modifier = Modifier.size(50.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
-                        )
-                        Text(stringResource(id = R.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
-                        Text(status.throwable.localizedMessage.orEmpty())
-                    }
-                }
+        is ImportFullListStatus.Error -> {
+            LaunchedEffect(Unit) {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar("Error")
             }
-
-            is ImportFullListStatus.Success -> {
-                LaunchedEffect(Unit) {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar("Completed!")
-                }
-                NormalOtakuScaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text(stringResource(R.string.importing_import_list)) },
-                            navigationIcon = { BackButton() },
-                            actions = { Text("(${vm.importingList.size})") },
-                            scrollBehavior = scrollBehavior
-                        )
-                    },
-                    bottomBar = {
-                        BottomAppBar(
-                            windowInsets = WindowInsets(0.dp)
-                        ) {
-                            OutlinedButton(
-                                onClick = {
-                                    scope.launch {
-                                        vm.importList()
-                                        navController.popBackStack()
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) { Text(stringResource(R.string.import_import_list)) }
-                        }
-                    },
-                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            NormalOtakuScaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.importing_import_list)) },
+                        navigationIcon = { BackButton() },
+                        scrollBehavior = scrollBehavior
+                    )
+                },
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+            ) { padding ->
+                Column(
                     modifier = Modifier
-                        .padding(LocalNavHostPadding.current)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                ) { padding ->
-                    LazyColumn(
-                        contentPadding = padding,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
+                        .fillMaxSize()
+                        .padding(padding),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        Icons.Default.Warning,
+                        null,
+                        modifier = Modifier.size(50.dp),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
+                    )
+                    Text(stringResource(id = R.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
+                    Text(status.throwable.localizedMessage.orEmpty())
+                }
+            }
+        }
+
+        is ImportFullListStatus.Success -> {
+            LaunchedEffect(Unit) {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar("Completed!")
+            }
+            NormalOtakuScaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.importing_import_list)) },
+                        navigationIcon = { BackButton() },
+                        actions = { Text("(${vm.importingList.size})") },
+                        scrollBehavior = scrollBehavior
+                    )
+                },
+                bottomBar = {
+                    BottomAppBar(
+                        windowInsets = WindowInsets(0.dp)
                     ) {
-                        itemsIndexed(vm.importingList) { index, it ->
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    vm.importList()
+                                    navController.popBackStack()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(stringResource(R.string.import_import_list)) }
+                    }
+                },
+                contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                modifier = Modifier
+                    .padding(LocalNavHostPadding.current)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+            ) { padding ->
+                LazyColumn(
+                    contentPadding = padding,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(vertical = 4.dp),
+                ) {
+                    itemsIndexed(vm.importingList) { index, it ->
 
-                            var showRemoveSheet by remember { mutableStateOf(false) }
+                        var showRemoveSheet by remember { mutableStateOf(false) }
 
-                            if (showRemoveSheet) {
-                                RemoveFromList(
-                                    customList = it,
-                                    onDismiss = { showRemoveSheet = false },
-                                    sheetState = rememberModalBottomSheetState(),
-                                    onRemove = { list ->
-                                        vm.importingList[index] =
-                                            it.copy(list = it.list.filter { item -> item !in list })
-                                    },
-                                    logoDrawable = logoDrawable
-                                )
-                            }
+                        if (showRemoveSheet) {
+                            RemoveFromList(
+                                customList = it,
+                                onDismiss = { showRemoveSheet = false },
+                                sheetState = rememberModalBottomSheetState(),
+                                onRemove = { list ->
+                                    vm.importingList[index] =
+                                        it.copy(list = it.list.filter { item -> item !in list })
+                                },
+                                logoDrawable = logoDrawable
+                            )
+                        }
 
-                            var showInfoSheet by remember { mutableStateOf(false) }
+                        var showInfoSheet by remember { mutableStateOf(false) }
 
-                            if (showInfoSheet) {
-                                InfoSheet(
-                                    customItem = it,
-                                    sheetState = rememberModalBottomSheetState(),
-                                    rename = { newName ->
-                                        vm.importingList[index] = it.copy(item = it.item.copy(name = newName))
-                                    },
-                                    onDismiss = { showInfoSheet = false },
-                                    logo = logoDrawable,
-                                    onDeleteListAction = { vm.importingList.remove(it) },
-                                    onRemoveItemsAction = { showRemoveSheet = true },
-                                    onUseBiometricAction = { change ->
-                                        vm.importingList[index] = it.copy(item = it.item.copy(useBiometric = change))
-                                    },
-                                )
-                            }
+                        if (showInfoSheet) {
+                            InfoSheet(
+                                customItem = it,
+                                sheetState = rememberModalBottomSheetState(),
+                                rename = { newName ->
+                                    vm.importingList[index] = it.copy(item = it.item.copy(name = newName))
+                                },
+                                onDismiss = { showInfoSheet = false },
+                                logo = logoDrawable,
+                                onDeleteListAction = { vm.importingList.remove(it) },
+                                onRemoveItemsAction = { showRemoveSheet = true },
+                                onUseBiometricAction = { change ->
+                                    vm.importingList[index] = it.copy(item = it.item.copy(useBiometric = change))
+                                },
+                            )
+                        }
 
-                            OutlinedCard(
-                                onClick = { showInfoSheet = true },
-                                modifier = Modifier.animateItem()
-                            ) {
-                                ListItem(
-                                    headlineContent = { Text(it.item.name) },
-                                    trailingContent = { Text(it.list.size.toString()) },
-                                    supportingContent = {
-                                        Column {
-                                            it
-                                                .list
-                                                .take(3)
-                                                .forEach { item -> Text(item.title) }
-                                        }
+                        OutlinedCard(
+                            onClick = { showInfoSheet = true },
+                            modifier = Modifier.animateItem()
+                        ) {
+                            ListItem(
+                                headlineContent = { Text(it.item.name) },
+                                trailingContent = { Text(it.list.size.toString()) },
+                                supportingContent = {
+                                    Column {
+                                        it
+                                            .list
+                                            .take(3)
+                                            .forEach { item -> Text(item.title) }
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
                     }
                 }
+            }
         }
     }
 }
@@ -515,7 +516,7 @@ private fun RemoveFromList(
                 title = { Text("Delete") },
                 text = {
                     Text(
-                        context.resources.getQuantityString(
+                        pluralStringResource(
                             R.plurals.areYouSureRemove,
                             itemsToDelete.size,
                             itemsToDelete.size
@@ -600,8 +601,12 @@ private fun RemoveFromList(
                                     .animateItem()
                                     .border(
                                         border = BorderStroke(
-                                            transition.animateDp(label = "border_width") { target -> if (target) 4.dp else 1.dp }.value,
-                                            transition.animateColor(label = "border_color") { target -> if (target) Color(0xfff44336) else outlineColor }.value
+                                            transition.animateDp(label = "border_width") { target ->
+                                                if (target) 4.dp else 1.dp
+                                            }.value,
+                                            transition.animateColor(label = "border_color") { target ->
+                                                if (target) Color(0xfff44336) else outlineColor
+                                            }.value
                                         ),
                                         shape = MaterialTheme.shapes.medium
                                     )

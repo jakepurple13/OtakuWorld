@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.lists
+package com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist
 
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
@@ -34,8 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomListInfo
@@ -45,17 +43,22 @@ import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
-import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.R
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.areYouSureRemove
+import otakuworld.kmpuiviews.generated.resources.cancel
+import otakuworld.kmpuiviews.generated.resources.delete_multiple
+import otakuworld.kmpuiviews.generated.resources.no
+import otakuworld.kmpuiviews.generated.resources.remove
+import otakuworld.kmpuiviews.generated.resources.yes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteFromListScreen(
     deleteFromList: Screen.CustomListScreen.DeleteFromList,
 ) {
-    val logoDrawable = koinInject<AppLogo>()
     val navController = LocalNavController.current
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
@@ -89,7 +92,7 @@ fun DeleteFromListScreen(
                 text = {
                     Text(
                         pluralStringResource(
-                            R.plurals.areYouSureRemove,
+                            Res.plurals.areYouSureRemove,
                             itemsToDelete.size,
                             itemsToDelete.size
                         )
@@ -112,16 +115,16 @@ fun DeleteFromListScreen(
                             }
                         },
                         enabled = !removing
-                    ) { Text(stringResource(R.string.yes)) }
+                    ) { Text(stringResource(Res.string.yes)) }
                 },
-                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } },
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } },
             )
         }
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.delete_multiple)) },
+                    title = { Text(stringResource(Res.string.delete_multiple)) },
                     windowInsets = WindowInsets(0.dp),
                 )
             },
@@ -135,7 +138,7 @@ fun DeleteFromListScreen(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 4.dp)
-                    ) { Text(stringResource(id = R.string.cancel)) }
+                    ) { Text(stringResource(Res.string.cancel)) }
 
                     Button(
                         onClick = { showPopup = true },
@@ -143,7 +146,7 @@ fun DeleteFromListScreen(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 4.dp)
-                    ) { Text(stringResource(id = R.string.remove)) }
+                    ) { Text(stringResource(Res.string.remove)) }
                 }
             }
         ) { padding ->

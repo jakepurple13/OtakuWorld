@@ -163,6 +163,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray())
                 .toString()
                 .also { forLaterUuid = it }
+                .also { AppConfig.forLaterUuid = it }
 
             runCatching {
                 get<ListDatabase>()

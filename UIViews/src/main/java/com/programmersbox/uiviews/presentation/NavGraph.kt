@@ -19,6 +19,7 @@ import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
@@ -34,7 +35,6 @@ import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
 import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.presentation.history.HistoryUi
-import com.programmersbox.uiviews.presentation.lists.DeleteFromListScreen
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen

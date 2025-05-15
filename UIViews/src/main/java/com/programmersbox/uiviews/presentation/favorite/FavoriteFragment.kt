@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -255,7 +256,7 @@ fun FavoriteUi(
                         onSearch = { closeSearchBar() },
                         placeholder = {
                             Text(
-                                context.resources.getQuantityString(
+                                pluralStringResource(
                                     R.plurals.numFavorites,
                                     viewModel.listSources.size,
                                     viewModel.listSources.size
@@ -491,14 +492,12 @@ private fun FavoritesGrid(
                         list = info.value,
                         onClick = { item ->
                             showBottomSheet = false
-                            item
-                                .let {
-                                    sourceRepository
-                                        .toSourceByApiServiceName(it.source)
-                                        ?.apiService
-                                        ?.let { it1 -> it.toItemModel(it1) }
-                                }
-                                ?.let(navController::navigateToDetails) ?: moreInfoClick(item)
+                            item.let {
+                                sourceRepository
+                                    .toSourceByApiServiceName(it.source)
+                                    ?.apiService
+                                    ?.let { it1 -> it.toItemModel(it1) }
+                            }?.let(navController::navigateToDetails) ?: moreInfoClick(item)
                         }
                     ) {
                         ListBottomSheetItemModel(

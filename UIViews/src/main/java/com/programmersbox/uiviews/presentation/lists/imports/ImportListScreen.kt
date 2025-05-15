@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.presentation.lists.imports
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -80,6 +81,7 @@ import java.util.UUID
 
 //TODO: Might be removing this
 // Need to keep this for legacy
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ImportListScreen(

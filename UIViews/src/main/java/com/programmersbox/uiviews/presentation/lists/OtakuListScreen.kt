@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.toSize
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListViewModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
