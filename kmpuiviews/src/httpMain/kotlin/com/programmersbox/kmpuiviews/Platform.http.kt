@@ -2,7 +2,7 @@ package com.programmersbox.kmpuiviews
 
 import dev.jordond.connectivity.Connectivity
 
-actual fun createConnectivityState(): Connectivity {
+actual fun createConnectivity(): Connectivity {
     return Connectivity {
         autoStart = true
         urls("cloudflare.com", "my-own-domain.com")

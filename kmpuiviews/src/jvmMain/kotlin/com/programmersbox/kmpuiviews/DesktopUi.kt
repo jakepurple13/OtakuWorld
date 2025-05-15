@@ -36,6 +36,7 @@ import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
 import com.programmersbox.kmpuiviews.presentation.UrlOpenerScreen
+import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import org.koin.compose.KoinApplication
 import org.koin.core.KoinApplication
 import org.koin.core.module.dsl.singleOf
@@ -108,6 +109,7 @@ fun ApplicationScope.BaseDesktopUi(
                         HorizontalDivider()
                         //TODO: UI Goes here!
                         UrlOpenerScreen()
+                        ScanQrCode()
                     }
                 }
             }

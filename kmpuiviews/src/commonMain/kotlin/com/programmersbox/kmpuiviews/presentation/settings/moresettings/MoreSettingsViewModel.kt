@@ -7,10 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
@@ -18,16 +17,16 @@ import io.github.vinceglb.filekit.readString
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 class MoreSettingsViewModel(
-    private val dao: ItemDao,
     private val favoritesRepository: FavoritesRepository,
     private val listDao: ListDao,
-    private val kmpFirebaseConnection: KmpFirebaseConnection,
+    private val backgroundWorkHandler: BackgroundWorkHandler,
 ) : ViewModel() {
 
     val lists = listDao.getAllLists()
@@ -122,34 +121,40 @@ class MoreSettingsViewModel(
     var cloudToLocalSync: CloudLocalSync by mutableStateOf(CloudLocalSync.Idle)
     var localToCloudSync: CloudLocalSync by mutableStateOf(CloudLocalSync.Idle)
 
-    fun pullCloudToLocal() {
-        viewModelScope.launch(Dispatchers.IO) {
-            cloudToLocalSync = CloudLocalSync.Loading
-            runCatching {
-                val allShows = dao.getAllFavoritesSync()
-                val cloudShows = kmpFirebaseConnection.getAllShows()
-                val newShows = cloudShows.filter { allShows.any { s -> s.url != it.url } }
-                newShows.forEach { dao.insertFavorite(it) }
-                newShows.size
+    init {
+        backgroundWorkHandler
+            .cloudToLocalListener()
+            .onEach { list ->
+                list.firstOrNull()?.let {
+                    cloudToLocalSync = if (it.state == "SUCCEEDED") {
+                        CloudLocalSync.Success(it.max ?: 0)
+                    } else {
+                        CloudLocalSync.Loading
+                    }
+                }
             }
-                .onSuccess { cloudToLocalSync = CloudLocalSync.Success(it) }
-                .onFailure { cloudToLocalSync = CloudLocalSync.Error(it) }
-        }
+            .launchIn(viewModelScope)
+
+        backgroundWorkHandler
+            .localToCloudListener()
+            .onEach { list ->
+                list.firstOrNull()?.let {
+                    localToCloudSync = if (it.state == "SUCCEEDED") {
+                        CloudLocalSync.Success(it.max ?: 0)
+                    } else {
+                        CloudLocalSync.Loading
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun pullCloudToLocal() {
+        backgroundWorkHandler.syncCloudToLocal()
     }
 
     fun pullLocalToCloud() {
-        viewModelScope.launch(Dispatchers.IO) {
-            localToCloudSync = CloudLocalSync.Loading
-            runCatching {
-                val allShows = dao.getAllFavoritesSync()
-                val cloudShows = kmpFirebaseConnection.getAllShows()
-                val newShows = allShows.filter { cloudShows.any { s -> s.url != it.url } }
-                newShows.forEach { kmpFirebaseConnection.insertShowFlow(it).collect() }
-                newShows.size
-            }
-                .onSuccess { localToCloudSync = CloudLocalSync.Success(it) }
-                .onFailure { localToCloudSync = CloudLocalSync.Error(it) }
-        }
+        backgroundWorkHandler.syncLocalToCloud()
     }
 }
 

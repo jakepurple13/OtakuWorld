@@ -9,6 +9,7 @@ import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenInterface
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
@@ -19,6 +20,7 @@ import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.di.kmpinterop.BackgroundWorkHandlerImpl
 import com.programmersbox.uiviews.di.kmpinterop.NotificationScreenImpl
 import com.programmersbox.uiviews.di.kmpinterop.WorkRepositoryImpl
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +49,8 @@ val kmpInterop = module {
 
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
+
+    single<BackgroundWorkHandler> { BackgroundWorkHandlerImpl(get()) }
 }
 
 class TranslationModelHandlerImpl : TranslationModelHandler {

@@ -17,3 +17,10 @@ data class WorkInfoKmp(
     val max: Int?,
     val nextScheduleTimeMillis: LocalDateTime,
 )
+
+interface BackgroundWorkHandler {
+    fun localToCloudListener(): Flow<List<WorkInfoKmp>>
+    fun cloudToLocalListener(): Flow<List<WorkInfoKmp>>
+    fun syncLocalToCloud()
+    fun syncCloudToLocal()
+}
