@@ -148,6 +148,7 @@ fun ShareViaQrCode(
                     val graphicsLayer = rememberGraphicsLayer()
                     SelectionContainer {
                         Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.drawWithContent {
                                 // call record to capture the content in the graphics layer
