@@ -44,6 +44,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -155,6 +157,7 @@ fun NotificationScreen(
     val items = vm.items
 
     val state = rememberBottomSheetScaffoldState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     BackHandler(state.bottomSheetState.currentValue == SheetValue.Expanded) {
@@ -168,7 +171,8 @@ fun NotificationScreen(
     SourceNotInstalledModal(
         showItem = showNotificationItem?.notiTitle,
         onShowItemDismiss = { showNotificationItem = null },
-        source = showNotificationItem?.source
+        source = showNotificationItem?.source,
+        url = showNotificationItem?.url
     )
 
     var showDeleteModal by remember { mutableStateOf(false) }
@@ -240,6 +244,12 @@ fun NotificationScreen(
                 navigationIcon = { BackButton() }
             )
         },
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(LocalNavHostPadding.current)
+            )
+        }
     ) { p ->
         Crossfade(
             targetState = vm.sortedBy,
@@ -260,8 +270,8 @@ fun NotificationScreen(
                         itemDao = itemDao,
                         onError = {
                             scope.launch {
-                                state.snackbarHostState.currentSnackbarData?.dismiss()
-                                val result = state.snackbarHostState.showSnackbar(
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                val result = snackbarHostState.showSnackbar(
                                     "Something went wrong. Source might not be installed",
                                     duration = SnackbarDuration.Long,
                                     actionLabel = "More Options",
@@ -284,6 +294,21 @@ fun NotificationScreen(
                         onLoadingChange = { showLoadingDialog = it },
                         showBlur = showBlur,
                         itemDao = itemDao,
+                        onError = {
+                            scope.launch {
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                val result = snackbarHostState.showSnackbar(
+                                    "Something went wrong. Source might not be installed",
+                                    duration = SnackbarDuration.Long,
+                                    actionLabel = "More Options",
+                                    withDismissAction = true
+                                )
+                                showNotificationItem = when (result) {
+                                    SnackbarResult.Dismissed -> null
+                                    SnackbarResult.ActionPerformed -> it
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -636,6 +661,7 @@ private fun GroupedSort(
     onLoadingChange: (Boolean) -> Unit,
     showBlur: Boolean,
     itemDao: ItemDao,
+    onError: (NotificationItem) -> Unit,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
     val scope = rememberCoroutineScope()
@@ -698,22 +724,7 @@ private fun GroupedSort(
                                 toSource = { s -> sourceRepository.toSourceByApiServiceName(s)?.apiService },
                                 onLoadingChange = onLoadingChange,
                                 itemDao = itemDao,
-                                onError = {
-                                    scope.launch {
-                                        //TODO: Fix this!
-                                        /*state.snackbarHostState.currentSnackbarData?.dismiss()
-                                        val result = state.snackbarHostState.showSnackbar(
-                                            "Something went wrong. Source might not be installed",
-                                            duration = SnackbarDuration.Long,
-                                            actionLabel = "More Options",
-                                            withDismissAction = true
-                                        )
-                                        showNotificationItem = when (result) {
-                                            SnackbarResult.Dismissed -> null
-                                            SnackbarResult.ActionPerformed -> it
-                                        }*/
-                                    }
-                                },
+                                onError = onError,
                             )
                         }
                     }

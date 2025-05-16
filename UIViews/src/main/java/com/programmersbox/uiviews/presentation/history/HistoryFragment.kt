@@ -122,7 +122,8 @@ fun HistoryUi(
     SourceNotInstalledModal(
         showItem = showRecentModel?.title,
         onShowItemDismiss = { showRecentModel = null },
-        source = showRecentModel?.source
+        source = showRecentModel?.source,
+        url = showRecentModel?.url
     )
 
     OtakuHazeScaffold(

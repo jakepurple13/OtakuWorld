@@ -142,6 +142,7 @@ fun FavoriteUi(
         showItem = showDbModel?.title,
         onShowItemDismiss = { showDbModel = null },
         source = showDbModel?.source,
+        url = showDbModel?.url
     ) {
         ListItem(
             headlineContent = { Text(stringResource(id = R.string.removeFromFavorites)) },
