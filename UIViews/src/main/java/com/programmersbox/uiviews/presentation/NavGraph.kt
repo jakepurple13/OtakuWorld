@@ -24,6 +24,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSett
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
@@ -168,6 +169,8 @@ private fun NavGraphBuilder.settings(
                 scanQrCode = { navController.navigate(Screen.ScanQrCodeScreen) },
             )
         }
+
+        composable<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
 
         composable<Screen.OrderScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },

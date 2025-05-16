@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.CatchingPokemon
+import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -117,6 +118,15 @@ fun MoreInfoScreen(
                     }
                 }
             }
+        )
+
+        PreferenceSetting(
+            settingTitle = { Text("View Background Worker Info") },
+            settingIcon = { Icon(Icons.Default.Engineering, null) },
+            modifier = Modifier.clickable(
+                indication = ripple(),
+                interactionSource = null
+            ) { navController.navigate(Screen.WorkerInfoScreen) }
         )
 
         PreferenceSetting(

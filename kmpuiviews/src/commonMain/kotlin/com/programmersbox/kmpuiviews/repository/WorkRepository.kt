@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.repository
 
+import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDateTime
 
@@ -23,4 +24,6 @@ interface BackgroundWorkHandler {
     fun cloudToLocalListener(): Flow<List<WorkInfoKmp>>
     fun syncLocalToCloud()
     fun syncCloudToLocal()
+    fun setupPeriodicCheckers()
+    fun workerInfoFlow(): Flow<List<WorkerInfoModel>>
 }

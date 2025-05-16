@@ -124,6 +124,9 @@ sealed class Screen(val route: String) {
 
     @Serializable
     data object ScanQrCodeScreen : Screen("scan_qr_code")
+
+    @Serializable
+    data object WorkerInfoScreen : Screen("worker_info")
 }
 
 fun NavController.navigateToDetails(model: KmpItemModel) = navigate(

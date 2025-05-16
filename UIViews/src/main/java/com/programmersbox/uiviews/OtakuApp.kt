@@ -10,13 +10,6 @@ import androidx.annotation.CallSuper
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Configuration
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequest
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.google.android.material.color.DynamicColors
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.ktx.analytics
@@ -37,13 +30,10 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.loggingutils.Loged
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.uiviews.checkers.AppCheckWorker
-import com.programmersbox.uiviews.checkers.AppCleanupWorker
-import com.programmersbox.uiviews.checkers.SourceUpdateChecker
-import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
@@ -60,10 +50,6 @@ import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
@@ -75,7 +61,6 @@ import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application(), Configuration.Provider {
     @OptIn(ExperimentalComposeUiApi::class)
@@ -87,17 +72,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         DataStoreSettings { filesDir.resolve(it).absolutePath }
 
-        runCatching {
-            FirebaseApp.initializeApp(this)
-
-            Firebase.crashlytics.setCustomKeys {
-                key("buildType", BuildConfig.BUILD_TYPE)
-                key("buildFlavor", BuildConfig.FLAVOR)
-            }
-            Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
-            Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
-        }
-
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
 
@@ -106,35 +80,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
         Loged.TAG = this::class.java.simpleName
 
-        createFirebaseIds().let {
-            FirebaseDb.DOCUMENT_ID = it.documentId
-            FirebaseDb.CHAPTERS_ID = it.chaptersId
-            FirebaseDb.COLLECTION_ID = it.collectionId
-            FirebaseDb.ITEM_ID = it.itemId
-            FirebaseDb.READ_OR_WATCHED_ID = it.readOrWatchedId
-        }
+        firebaseSetup()
 
         NotificationChannels.setupNotificationChannels(this)
         NotificationGroups.setupNotificationGroups(this)
 
-        startKoin {
-            androidLogger(if (BuildConfig.DEBUG) Level.DEBUG else Level.INFO)
-            androidContext(this@OtakuApp)
-            loadKoinModules(
-                module {
-                    includes(
-                        buildModules,
-                        appModules,
-                        androidViewModels,
-                        repository,
-                        databases,
-                        kmpInterop
-                    )
-                    workers()
-                }
-            )
-            workManagerFactory()
-        }
+        koinSetup()
 
         onCreated()
 
@@ -153,6 +104,70 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             newSettingsHandling = newSettingsHandling
         )
 
+        forLaterSetup()
+
+        runCatching {
+            val backgroundWorkHandler = get<BackgroundWorkHandler>()
+            backgroundWorkHandler.setupPeriodicCheckers()
+        }
+
+        shortcutSetup()
+
+        runCatching {
+            val appConfig = get<AppConfig>()
+            if (appConfig.buildType != BuildType.NoFirebase) {
+                remoteConfigSetup(
+                    dataStoreHandling = dataStoreHandling,
+                    otakuDataStoreHandling = otakuDataStoreHandling,
+                    settingsHandling = settingsHandling,
+                    newSettingsHandling = newSettingsHandling
+                )
+            }
+        }
+    }
+
+    private fun koinSetup() {
+        startKoin {
+            androidLogger(if (BuildConfig.DEBUG) Level.DEBUG else Level.INFO)
+            androidContext(this@OtakuApp)
+            workManagerFactory()
+            loadKoinModules(
+                module {
+                    includes(
+                        buildModules,
+                        appModules,
+                        androidViewModels,
+                        repository,
+                        databases,
+                        kmpInterop
+                    )
+                    workers()
+                }
+            )
+        }
+    }
+
+    private fun firebaseSetup() {
+        runCatching {
+            FirebaseApp.initializeApp(this)
+            Firebase.crashlytics.setCustomKeys {
+                key("buildType", BuildConfig.BUILD_TYPE)
+                key("buildFlavor", BuildConfig.FLAVOR)
+            }
+            Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
+            Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
+        }
+
+        createFirebaseIds().let {
+            FirebaseDb.DOCUMENT_ID = it.documentId
+            FirebaseDb.CHAPTERS_ID = it.chaptersId
+            FirebaseDb.COLLECTION_ID = it.collectionId
+            FirebaseDb.ITEM_ID = it.itemId
+            FirebaseDb.READ_OR_WATCHED_ID = it.readOrWatchedId
+        }
+    }
+
+    private fun forLaterSetup() {
         GlobalScope.launch(Dispatchers.IO) {
             val forLaterName = getString(R.string.for_later)
             val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray())
@@ -173,72 +188,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     recordFirebaseException(it)
                     it.printStackTrace()
                 }
-        }
-
-        runCatching {
-            val work = WorkManager.getInstance(this)
-
-            AppCleanupWorker.setupWorker(work)
-
-            work.enqueueUniquePeriodicWork(
-                "appChecks",
-                ExistingPeriodicWorkPolicy.UPDATE,
-                PeriodicWorkRequest.Builder(
-                    workerClass = AppCheckWorker::class.java,
-                    repeatInterval = 7,
-                    repeatIntervalTimeUnit = TimeUnit.DAYS
-                )
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .setRequiresDeviceIdle(false)
-                            .setRequiresStorageNotLow(false)
-                            .build()
-                    )
-                    .setInitialDelay(10, TimeUnit.SECONDS)
-                    .build()
-            ).state.observeForever { println(it) }
-
-            work.enqueueUniquePeriodicWork(
-                "sourceChecks",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequest.Builder(
-                    workerClass = SourceUpdateChecker::class.java,
-                    repeatInterval = 1,
-                    repeatIntervalTimeUnit = TimeUnit.DAYS
-                )
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .setRequiresDeviceIdle(false)
-                            .setRequiresStorageNotLow(false)
-                            .build()
-                    )
-                    .setInitialDelay(10, TimeUnit.SECONDS)
-                    .build()
-            ).state.observeForever { println(it) }
-
-            //runBlocking { updateSetup(this@OtakuApp, dataStoreHandling.shouldCheck.get()) }
-            setupCheckWorker(dataStoreHandling)
-        }
-
-        shortcutSetup()
-
-        val appConfig = get<AppConfig>()
-
-        runCatching {
-            if (appConfig.buildType != BuildType.NoFirebase) {
-                remoteConfigSetup(
-                    dataStoreHandling = dataStoreHandling,
-                    otakuDataStoreHandling = otakuDataStoreHandling,
-                    settingsHandling = settingsHandling,
-                    newSettingsHandling = newSettingsHandling
-                )
-            }
         }
     }
 
@@ -347,73 +296,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         val itemId: String,
         val readOrWatchedId: String,
     )
-
-    private fun setupCheckWorker(dataStoreHandling: DataStoreHandling) {
-        val work = WorkManager.getInstance(this)
-        //TODO: Try this out
-        combine(
-            dataStoreHandling
-                .shouldCheck
-                .asFlow()
-                .distinctUntilChanged(),
-            dataStoreHandling
-                .updateHourCheck
-                .asFlow()
-                .distinctUntilChanged()
-        ) { should, interval -> should to interval }
-            .distinctUntilChanged()
-            .onEach { check ->
-                if (check.first) {
-                    work.enqueueUniquePeriodicWork(
-                        "updateFlowChecks",
-                        ExistingPeriodicWorkPolicy.UPDATE,
-                        PeriodicWorkRequestBuilder<UpdateFlowWorker>(
-                            check.second, TimeUnit.HOURS,
-                            5, TimeUnit.MINUTES
-                        )
-                            .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
-                            .setConstraints(
-                                Constraints.Builder()
-                                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                                    .build()
-                            )
-                            .setInitialDelay(10, TimeUnit.SECONDS)
-                            .build()
-                    )
-                } else {
-                    work.cancelUniqueWork("updateFlowChecks")
-                }
-            }
-            .launchIn(GlobalScope)
-
-        /*dataStoreHandling
-            .shouldCheck
-            .asFlow()
-            .distinctUntilChanged()
-            .onEach { check ->
-                if (check) {
-                    work.enqueueUniquePeriodicWork(
-                        "updateFlowChecks",
-                        ExistingPeriodicWorkPolicy.KEEP,
-                        PeriodicWorkRequestBuilder<UpdateFlowWorker>(
-                            1, TimeUnit.HOURS,
-                            5, TimeUnit.MINUTES
-                        )
-                            .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
-                            .setConstraints(
-                                Constraints.Builder()
-                                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                                    .build()
-                            )
-                            .setInitialDelay(10, TimeUnit.SECONDS)
-                            .build()
-                    )
-                } else {
-                    work.cancelUniqueWork("updateFlowChecks")
-                }
-            }
-            .launchIn(GlobalScope)*/
-    }
 
     companion object {
         var forLaterUuid: String? = null
