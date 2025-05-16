@@ -33,7 +33,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomListItem
-import com.programmersbox.favoritesdatabase.ListDatabase
+import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.databases
@@ -160,14 +160,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                 .also { AppConfig.forLaterUuid = it }
 
             runCatching {
-                get<ListDatabase>()
-                    .listDao()
-                    .createList(
-                        CustomListItem(
-                            uuid = forLaterUUID,
-                            name = forLaterName,
-                        )
+                get<ListDao>().createList(
+                    CustomListItem(
+                        uuid = forLaterUUID,
+                        name = forLaterName,
                     )
+                )
             }
                 .onSuccess { println("For later list id: $it") }
                 .onFailure {

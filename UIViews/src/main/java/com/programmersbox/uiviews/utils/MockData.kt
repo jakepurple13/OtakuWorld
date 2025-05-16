@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils
 
-import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.res.Configuration
@@ -43,19 +42,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
@@ -81,7 +76,6 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinApplication
 import org.koin.dsl.binds
 import org.koin.dsl.module
-import java.util.Locale
 
 class MockInfo(private val context: Context) : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
@@ -208,21 +202,7 @@ fun PreviewTheme(
                         KmpGenericInfo::class,
                         GenericInfo::class
                     )
-                    single { DateTimeFormatHandler(get()) }
-                    single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
-                    single {
-                        OtakuWorldCatalog(
-                            get<GenericInfo>().sourceType
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-                        )
-                    }
-                    single { DataStoreHandling() }
                     single { OtakuDataStoreHandling() }
-                    single {
-                        NewSettingsHandling(
-                            createProtobuf(get(), SettingsSerializer()),
-                        )
-                    }
                 }
             )
         }
