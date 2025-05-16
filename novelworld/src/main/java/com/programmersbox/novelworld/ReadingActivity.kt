@@ -89,8 +89,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.DatabaseBuilder
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.battery
@@ -118,6 +117,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 class ReadViewModel(
@@ -128,7 +129,7 @@ class ReadViewModel(
         ?.fromJson<KmpChapterModel>(KmpChapterModel::class.java to ChapterModelDeserializer())
         ?.getChapterInfo()
         ?.map { it.mapNotNull(KmpStorage::link) },
-) : ViewModel() {
+) : ViewModel(), KoinComponent {
 
     companion object {
         const val NovelReaderRoute =
@@ -151,7 +152,7 @@ class ReadViewModel(
         }
     }
 
-    private val dao by lazy { ItemDatabase.getInstance(DatabaseBuilder(activity!!)).itemDao() }
+    private val dao by inject<ItemDao>()
 
     val list by lazy { ChapterList(activity!!, genericInfo).get().orEmpty() }
 

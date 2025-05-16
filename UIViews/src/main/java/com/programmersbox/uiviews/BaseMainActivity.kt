@@ -117,7 +117,7 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberFloatingNavigation
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.appVersion
@@ -163,7 +163,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private val appLogo: AppLogo by inject()
     private val notificationLogo: NotificationLogo by inject()
     private val changingSettingsRepository: ChangingSettingsRepository by inject()
-    private val itemDatabase: ItemDatabase by inject()
+    private val itemDao: ItemDao by inject()
     private val dataStoreHandling: DataStoreHandling by inject()
     private val appUpdateCheck: AppUpdateCheck by inject()
 
@@ -749,7 +749,6 @@ abstract class BaseMainActivity : AppCompatActivity() {
     private fun setup() {
         sourceRepository.sources
             .onEach {
-                val itemDao = itemDatabase.itemDao()
                 it.forEachIndexed { index, sourceInformation ->
                     itemDao.insertSourceOrder(
                         SourceOrder(
@@ -784,8 +783,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
             .onEach(appUpdateCheck.updateAppCheck::emit)
             .launchIn(lifecycleScope)
 
-        itemDatabase
-            .itemDao()
+        itemDao
             .getAllNotificationCount()
             .onEach { notificationCount = it }
             .launchIn(lifecycleScope)

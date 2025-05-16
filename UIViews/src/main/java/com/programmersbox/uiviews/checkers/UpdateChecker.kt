@@ -12,7 +12,6 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.google.firebase.perf.trace
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -38,12 +37,9 @@ class UpdateFlowWorker(
     private val sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
     private val update: UpdateNotification,
-    database: ItemDatabase,
     private val dataStoreHandling: DataStoreHandling,
     private val mediaUpdateChecker: MediaUpdateChecker,
 ) : CoroutineWorker(context, workerParams) {
-
-    private val dao = database.itemDao()
 
     companion object {
         const val CHECK_ALL = "check_all"

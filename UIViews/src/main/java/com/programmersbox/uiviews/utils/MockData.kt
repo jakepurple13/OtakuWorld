@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -192,6 +193,11 @@ fun PreviewTheme(
             androidLogger()
             androidContext(context)
             modules(
+                appModules,
+                androidViewModels,
+                repository,
+                databases,
+                kmpInterop,
                 module {
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
                     single { SettingsHandling(context, PerformanceClass.create()) }
@@ -201,13 +207,6 @@ fun PreviewTheme(
                     single<GenericInfo> { MockInfo(get()) } binds arrayOf(
                         KmpGenericInfo::class,
                         GenericInfo::class
-                    )
-                    includes(
-                        appModules,
-                        androidViewModels,
-                        repository,
-                        databases,
-                        kmpInterop
                     )
                     single { DateTimeFormatHandler(get()) }
                     single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
@@ -276,3 +275,11 @@ fun PreviewTheme(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, group = "themes")
 @Preview(showBackground = true, group = "themes")
 annotation class LightAndDarkPreviews
+
+@PreviewThemeColorsSizes
+@Composable
+private fun RecentPreview() {
+    PreviewTheme {
+        Text("Hello")
+    }
+}

@@ -13,8 +13,7 @@ import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.DatabaseBuilder
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.layoutInflater
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.mangaworld.R
@@ -25,6 +24,8 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.Collections
 
 class PageAdapter(
@@ -38,11 +39,11 @@ class PageAdapter(
     var currentChapter: Int,
     private val mangaUrl: String,
     private val loadNewPages: (KmpChapterModel) -> Unit = {},
-) : DragSwipeGlideAdapter<String, PageHolder, String>(dataList) {
+) : DragSwipeGlideAdapter<String, PageHolder, String>(dataList), KoinComponent {
 
     private val context: Context = activity
 
-    private val dao by lazy { ItemDatabase.getInstance(DatabaseBuilder(context)).itemDao() }
+    private val dao by inject<ItemDao>()
 
     override val itemToModel: (String) -> String = { it }
 
