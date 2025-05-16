@@ -16,7 +16,8 @@ multiplatform this project grows stronger and stronger.
         https://github.com/GitLiveApp/firebase-kotlin-sdk?
 - Notifications
 - Workers
-    - Maybe only for ios and desktop?
+  - desktop
+    - https://github.com/InsanusMokrassar/krontab?
 - Icon getting
 - Need to figure our initial setup like what is done in the application class
 - Better handling of large screen devices
