@@ -22,7 +22,6 @@ import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.format.DateTimeFormat
-import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
 
 val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
@@ -42,33 +41,31 @@ fun KmpLocalCompositionSetup(
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
-    KoinContext {
-        val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
-        CompositionLocalProvider(
-            LocalNavController provides navController,
-            LocalItemDao provides koinInject(),
-            LocalBlurDao provides koinInject(),
-            LocalHistoryDao provides koinInject(),
-            LocalCustomListDao provides koinInject(),
-            LocalSettingsHandling provides koinInject(),
-            LocalCurrentSource provides koinInject(),
-            LocalSourcesRepository provides koinInject(),
-            LocalKamelConfig provides customKamelConfig(),
-            LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = dateTimeFormatHandler.is24Time()),
-            LocalUriHandler provides remember {
-                object : UriHandler {
-                    private val customHandler = customUriHandler(navController)
+    val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
+    CompositionLocalProvider(
+        LocalNavController provides navController,
+        LocalItemDao provides koinInject(),
+        LocalBlurDao provides koinInject(),
+        LocalHistoryDao provides koinInject(),
+        LocalCustomListDao provides koinInject(),
+        LocalSettingsHandling provides koinInject(),
+        LocalCurrentSource provides koinInject(),
+        LocalSourcesRepository provides koinInject(),
+        LocalKamelConfig provides customKamelConfig(),
+        LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = dateTimeFormatHandler.is24Time()),
+        LocalUriHandler provides remember {
+            object : UriHandler {
+                private val customHandler = customUriHandler(navController)
 
-                    override fun openUri(uri: String) {
-                        runCatching { customHandler.openUri(uri) }
-                            .onFailure { it.printStackTrace() }
-                            .recoverCatching { defaultUriHandler.openUri(uri) }
-                            .onFailure { it.printStackTrace() }
-                            .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
-                    }
+                override fun openUri(uri: String) {
+                    runCatching { customHandler.openUri(uri) }
+                        .onFailure { it.printStackTrace() }
+                        .recoverCatching { defaultUriHandler.openUri(uri) }
+                        .onFailure { it.printStackTrace() }
+                        .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
                 }
-            },
-            content = content
-        )
-    }
+            }
+        },
+        content = content
+    )
 }

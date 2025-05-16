@@ -52,6 +52,7 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.di.databases
@@ -71,12 +72,13 @@ import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.androidViewModels
+import com.programmersbox.uiviews.di.appModules
+import com.programmersbox.uiviews.di.kmpInterop
 import com.programmersbox.uiviews.di.repository
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.compose.KoinIsolatedContext
+import org.koin.compose.KoinApplication
 import org.koin.dsl.binds
-import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.util.Locale
 
@@ -185,36 +187,45 @@ fun PreviewTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    KoinIsolatedContext(
-        koinApplication {
+    KoinApplication(
+        application = {
             androidLogger()
             androidContext(context)
-            module {
-                single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                single { SettingsHandling(context, PerformanceClass.create()) }
-                single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
-            }
-            module {
-                single<GenericInfo> { MockInfo(get()) } binds arrayOf(
-                    KmpGenericInfo::class,
-                    GenericInfo::class
-                )
-                includes(androidViewModels, databases, repository)
-                single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
-                single {
-                    OtakuWorldCatalog(
-                        get<GenericInfo>().sourceType
-                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            modules(
+                module {
+                    single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
+                    single { SettingsHandling(context, PerformanceClass.create()) }
+                    single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
+                },
+                module {
+                    single<GenericInfo> { MockInfo(get()) } binds arrayOf(
+                        KmpGenericInfo::class,
+                        GenericInfo::class
                     )
-                }
-                single { DataStoreHandling() }
-                single { OtakuDataStoreHandling() }
-                single {
-                    NewSettingsHandling(
-                        createProtobuf(get(), SettingsSerializer()),
+                    includes(
+                        appModules,
+                        androidViewModels,
+                        repository,
+                        databases,
+                        kmpInterop
                     )
+                    single { DateTimeFormatHandler(get()) }
+                    single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
+                    single {
+                        OtakuWorldCatalog(
+                            get<GenericInfo>().sourceType
+                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                        )
+                    }
+                    single { DataStoreHandling() }
+                    single { OtakuDataStoreHandling() }
+                    single {
+                        NewSettingsHandling(
+                            createProtobuf(get(), SettingsSerializer()),
+                        )
+                    }
                 }
-            }
+            )
         }
     ) {
         val darkTheme = isSystemInDarkTheme()
@@ -243,18 +254,20 @@ fun PreviewTheme(
                 }
             }
         ) {
-            KmpLocalCompositionSetup(navController) {
-                CompositionLocalProvider(
-                    LocalGenericInfo provides genericInfo,
-                    //LocalSettingsHandling provides remember { SettingsHandling(context, PerformanceClass.create()) },
-                    LocalSettingsHandling provides remember {
-                        NewSettingsHandling(
-                            createProtobuf(context, SettingsSerializer()),
-                        )
-                    },
-                    LocalNavHostPadding provides PaddingValues(0.dp),
-                    LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
-                ) { Surface { content() } }
+            CompositionLocalProvider(
+                LocalGenericInfo provides genericInfo,
+                LocalSettingsHandling provides remember {
+                    NewSettingsHandling(
+                        createProtobuf(context, SettingsSerializer()),
+                    )
+                },
+                LocalNavHostPadding provides PaddingValues(0.dp),
+                LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp)),
+                //LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = DateTimeFormatHandler(LocalContext.current).is24Time())
+            ) {
+                KmpLocalCompositionSetup(navController) {
+                    Surface { content() }
+                }
             }
         }
     }

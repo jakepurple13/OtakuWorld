@@ -78,24 +78,24 @@ import org.koin.compose.koinInject
 )
 @Composable
 fun RecentView(
-    recentVm: RecentViewModel = koinViewModel(),
+    viewModel: RecentViewModel = koinViewModel(),
 ) {
     val info = LocalGenericInfo.current
     val navController = LocalNavController.current
     val settingsHandling: NewSettingsHandling = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()
-    val state = recentVm.gridState
+    val state = viewModel.gridState
     val scope = rememberCoroutineScope()
-    val source = recentVm.currentSource
+    val source = viewModel.currentSource
     val pull = rememberPullToRefreshState()
 
     val showBlur by settingsHandling.rememberShowBlur()
 
-    val isConnected by recentVm.observeNetwork.collectAsStateWithLifecycle(true)
+    val isConnected by viewModel.observeNetwork.collectAsStateWithLifecycle(true)
 
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
-    val sourceList = recentVm.sources
+    val sourceList = viewModel.sources
     val initSource = remember(source) { sourceList.indexOfFirst { it.apiService == source } }
     val pagerState = rememberPagerState(
         initialPage = initSource.coerceAtLeast(0),
@@ -120,17 +120,17 @@ fun RecentView(
     var optionsSheet by optionsKmpSheet(
         moreContent = {
             Crossfade(
-                recentVm.favoriteList.any { f -> f.url == it.url }
+                viewModel.favoriteList.any { f -> f.url == it.url }
             ) { target ->
                 if (target) {
                     OptionsItem(
                         title = stringResource(R.string.removeFromFavorites),
-                        onClick = { recentVm.favoriteAction(RecentViewModel.FavoriteAction.Remove(it.itemModel)) }
+                        onClick = { viewModel.favoriteAction(RecentViewModel.FavoriteAction.Remove(it.itemModel)) }
                     )
                 } else {
                     OptionsItem(
                         title = stringResource(R.string.addToFavorites),
-                        onClick = { recentVm.favoriteAction(RecentViewModel.FavoriteAction.Add(it.itemModel)) }
+                        onClick = { viewModel.favoriteAction(RecentViewModel.FavoriteAction.Add(it.itemModel)) }
                     )
                 }
             }
@@ -144,7 +144,7 @@ fun RecentView(
             TopAppBar(
                 navigationIcon = {
                     AnimatedVisibility(
-                        recentVm.isIncognitoSource,
+                        viewModel.isIncognitoSource,
                         enter = slideInHorizontally() + fadeIn(),
                         exit = fadeOut() + slideOutHorizontally()
                     ) {
@@ -203,7 +203,7 @@ fun RecentView(
         },
         snackbarHost = {
             SnackbarHost(
-                recentVm.snackbarHostState,
+                viewModel.snackbarHostState,
                 modifier = Modifier.padding(LocalNavHostPadding.current)
             )
         }
@@ -228,15 +228,15 @@ fun RecentView(
                 }
             } else {
                 OtakuPullToRefreshBox(
-                    isRefreshing = recentVm.isRefreshing,
-                    onRefresh = { recentVm.reset() },
+                    isRefreshing = viewModel.isRefreshing,
+                    onRefresh = { viewModel.reset() },
                     state = pull,
                     paddingValues = p
                 ) {
                     when {
                         sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
 
-                        recentVm.filteredSourceList.isEmpty() -> {
+                        viewModel.filteredSourceList.isEmpty() -> {
                             Box(
                                 Modifier
                                     .fillMaxSize()
@@ -246,9 +246,9 @@ fun RecentView(
 
                         else -> {
                             info.ItemListView(
-                                list = recentVm.filteredSourceList,
+                                list = viewModel.filteredSourceList,
                                 listState = state,
-                                favorites = recentVm.favoriteList,
+                                favorites = viewModel.favoriteList,
                                 paddingValues = p,
                                 onLongPress = { item, c ->
                                     optionsSheet = item
@@ -262,9 +262,9 @@ fun RecentView(
                     }
                 }
 
-                if (source?.canScroll == true && recentVm.filteredSourceList.isNotEmpty()) {
+                if (source?.canScroll == true && viewModel.filteredSourceList.isNotEmpty()) {
                     InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                        recentVm.loadMore()
+                        viewModel.loadMore()
                     }
                 }
             }

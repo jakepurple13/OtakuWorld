@@ -127,7 +127,9 @@ internal fun AddToList(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { showListsChange(false) }) { Icon(Icons.Default.Close, null) }
+                    IconButton(
+                        onClick = { showListsChange(false) }
+                    ) { Icon(Icons.Default.Close, null) }
                 },
             )
         }
@@ -345,7 +347,9 @@ fun DetailBottomBar(
                 ) { Icon(Icons.Default.Search, null) }
             }
 
-            ToolTipWrapper(info = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) }) {
+            ToolTipWrapper(
+                info = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) }
+            ) {
                 IconButton(onClick = { onFavoriteClick(isFavorite) }) {
                     Icon(
                         if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
