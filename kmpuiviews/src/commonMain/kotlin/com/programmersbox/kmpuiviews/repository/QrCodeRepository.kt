@@ -9,4 +9,5 @@ expect class QrCodeRepository {
 
     suspend fun shareImage(bitmap: ImageBitmap, title: String)
     suspend fun saveImage(bitmap: ImageBitmap, title: String)
+    suspend fun shareUrl(url: String, title: String)
 }

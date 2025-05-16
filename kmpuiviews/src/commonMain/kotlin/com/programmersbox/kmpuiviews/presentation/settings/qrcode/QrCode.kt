@@ -21,6 +21,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -201,7 +202,7 @@ fun ShareViaQrCode(
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Share") }
 
-                    FilledTonalButton(
+                    ElevatedButton(
                         onClick = {
                             scope.launch {
                                 qrCodeRepository.saveImage(
@@ -212,6 +213,15 @@ fun ShareViaQrCode(
                         },
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Save") }
+
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                qrCodeRepository.shareUrl(qrCodeInfo.url, qrCodeInfo.title)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(.75f)
+                    ) { Text("Share Url") }
                 }
             }
         }

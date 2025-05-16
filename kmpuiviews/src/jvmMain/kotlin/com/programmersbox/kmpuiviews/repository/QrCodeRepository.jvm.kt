@@ -37,4 +37,8 @@ actual class QrCodeRepository {
     actual suspend fun saveImage(bitmap: ImageBitmap, title: String) {
 
     }
+
+    actual suspend fun shareUrl(url: String, title: String) {
+
+    }
 }

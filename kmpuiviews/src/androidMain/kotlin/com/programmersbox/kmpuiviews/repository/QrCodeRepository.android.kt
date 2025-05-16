@@ -14,6 +14,9 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.share_item
 import java.io.File
 import kotlin.coroutines.resume
 
@@ -26,6 +29,19 @@ actual class QrCodeRepository(
     ): Result<List<String>> = runCatching { InputImage.fromBitmap(bitmap.asAndroidBitmap(), 0) }
         .mapCatching { scanner.process(it).await() }
         .mapCatching { barcodes -> barcodes.mapNotNull { it.displayValue } }
+
+    actual suspend fun shareUrl(url: String, title: String) {
+        context.startActivity(
+            createChooser(
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, url)
+                    putExtra(Intent.EXTRA_TITLE, title)
+                },
+                getString(Res.string.share_item, title)
+            ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+        )
+    }
 
     actual suspend fun shareImage(
         bitmap: ImageBitmap,

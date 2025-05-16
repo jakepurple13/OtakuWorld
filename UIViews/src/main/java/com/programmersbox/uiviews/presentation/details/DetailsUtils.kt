@@ -1,10 +1,7 @@
 package com.programmersbox.uiviews.presentation.details
 
 import android.content.Context
-import android.content.Intent
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,7 +22,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -59,7 +55,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -81,8 +76,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListC
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.showErrorToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -299,24 +292,19 @@ internal fun DetailActions(
 internal fun ShareButton(
     info: KmpInfoModel,
 ) {
-    val context = LocalContext.current
-    val shareItem = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {}
+    var showQr by remember { mutableStateOf(false) }
+    if (showQr) {
+        ShareViaQrCode(
+            url = info.url,
+            title = info.title,
+            imageUrl = info.imageUrl,
+            apiService = info.source.serviceName,
+            onClose = { showQr = false }
+        )
+    }
 
     IconButton(
-        onClick = {
-            shareItem.launchCatching(
-                Intent.createChooser(
-                    Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, info.url)
-                        putExtra(Intent.EXTRA_TITLE, info.title)
-                    },
-                    context.getString(R.string.share_item, info.title)
-                )
-            ).onFailure { context.showErrorToast() }
-        }
+        onClick = { showQr = true }
     ) { Icon(Icons.Default.Share, null) }
 }
 
@@ -459,25 +447,6 @@ fun DetailFloatingActionButtonMenu(
         },
         modifier = modifier
     ) {
-        var showQr by remember { mutableStateOf(false) }
-        if (showQr) {
-            ShareViaQrCode(
-                url = info.url,
-                title = info.title,
-                imageUrl = info.imageUrl,
-                apiService = info.source.serviceName,
-                onClose = { showQr = false }
-            )
-        }
-        FloatingActionButtonMenuItem(
-            onClick = {
-                onFabMenuExpandedChange(false)
-                showQr = true
-            },
-            icon = { Icon(Icons.Default.QrCodeScanner, contentDescription = null) },
-            text = { Text(text = "Share Via QrCode") },
-        )
-
         if (isSaved) {
             FloatingActionButtonMenuItem(
                 onClick = {
