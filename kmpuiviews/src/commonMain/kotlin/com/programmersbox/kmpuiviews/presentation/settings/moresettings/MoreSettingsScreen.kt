@@ -4,8 +4,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -45,6 +47,7 @@ import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
@@ -119,153 +122,158 @@ fun MoreSettingsScreen(
         type = FileKitType.File("json")
     ) { document -> document?.let { viewModel.importFavorites(it) } }
 
-    SettingsScaffold(stringResource(Res.string.more_settings)) {
-        CategorySetting(
-            settingIcon = {
-                Icon(Icons.Default.Star, null)
-            }
-        ) { Text(stringResource(Res.string.viewFavoritesMenu)) }
+    SettingsScaffold(
+        stringResource(Res.string.more_settings),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        CategoryGroup {
+            CategorySetting(
+                settingIcon = {
+                    Icon(Icons.Default.Star, null)
+                }
+            ) { Text(stringResource(Res.string.viewFavoritesMenu)) }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.export_favorites)) },
-            modifier = Modifier.clickable(
-                enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
-                indication = ripple(),
-                interactionSource = null
-            ) { exportLauncher.launch("${appName}_favorites", "json") }
-        )
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.export_favorites)) },
+                modifier = Modifier.clickable(
+                    enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
+                    indication = ripple(),
+                    interactionSource = null
+                ) { exportLauncher.launch("${appName}_favorites", "json") }
+            )
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.import_favorites)) },
-            modifier = Modifier.clickable(
-                enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
-                indication = ripple(),
-                interactionSource = null
-            ) { importLauncher.launch() }
-        )
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.import_favorites)) },
+                modifier = Modifier.clickable(
+                    enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
+                    indication = ripple(),
+                    interactionSource = null
+                ) { importLauncher.launch() }
+            )
 
-        PreferenceSetting(
-            settingTitle = { Text("Sync Cloud To Local Favorites") },
-            summaryValue = {
-                Column {
-                    Text("Syncs favorites from the cloud to the local database")
-                    Crossfade(
-                        viewModel.cloudToLocalSync,
-                        label = "Cloud Local Sync"
-                    ) { target ->
-                        when (target) {
-                            is CloudLocalSync.Error -> Text(target.throwable.message ?: "Unknown Error")
-                            CloudLocalSync.Idle -> {}
-                            CloudLocalSync.Loading -> LinearProgressIndicator()
-                            is CloudLocalSync.Success -> Text("Added ${target.size} favorites")
+            PreferenceSetting(
+                settingTitle = { Text("Sync Cloud To Local Favorites") },
+                summaryValue = {
+                    Column {
+                        Text("Syncs favorites from the cloud to the local database")
+                        Crossfade(
+                            viewModel.cloudToLocalSync,
+                            label = "Cloud Local Sync"
+                        ) { target ->
+                            when (target) {
+                                is CloudLocalSync.Error -> Text(target.throwable.message ?: "Unknown Error")
+                                CloudLocalSync.Idle -> {}
+                                CloudLocalSync.Loading -> LinearProgressIndicator()
+                                is CloudLocalSync.Success -> Text("Added ${target.size} favorites")
+                            }
                         }
                     }
-                }
-            },
-            modifier = Modifier.clickable(
-                enabled = true,
-                indication = ripple(),
-                interactionSource = null,
-                onClick = viewModel::pullCloudToLocal
-            )
-        )
-
-        HorizontalDivider(
-            modifier = Modifier
-                .fillMaxWidth(.75f)
-                .padding(vertical = 4.dp)
-                .align(Alignment.CenterHorizontally)
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text("Sync Local To Cloud Favorites") },
-            summaryValue = {
-                Column {
-                    Text("Syncs favorites from the local database to the cloud")
-                    Crossfade(
-                        viewModel.localToCloudSync,
-                        label = "Cloud Local Sync"
-                    ) { target ->
-                        when (target) {
-                            is CloudLocalSync.Error -> Text(target.throwable.message ?: "Unknown Error")
-                            CloudLocalSync.Idle -> {}
-                            CloudLocalSync.Loading -> LinearProgressIndicator()
-                            is CloudLocalSync.Success -> Text("Added ${target.size} favorites")
-                        }
-                    }
-                }
-            },
-            modifier = Modifier.clickable(
-                enabled = true,
-                indication = ripple(),
-                interactionSource = null,
-                onClick = viewModel::pullLocalToCloud
-            )
-        )
-
-        HorizontalDivider()
-
-        CategorySetting(
-            settingIcon = {
-                Icon(Icons.AutoMirrored.Filled.List, null)
-            }
-        ) { Text(stringResource(Res.string.custom_lists_title)) }
-
-        val exportListLauncher = rememberFileSaverLauncher { document ->
-            document?.let { viewModel.writeListsToFile(it) }
-        }
-
-        val importListLauncher = rememberFilePickerLauncher(
-            type = FileKitType.File("json")
-        ) { document ->
-            document?.let {
-                navController.navigate(Screen.ImportFullListScreen(it.toString()))
-            }
-        }
-
-        PreferenceSetting(
-            settingTitle = { Text("Export All Lists") },
-            modifier = Modifier.clickable(
-                enabled = true,
-                indication = ripple(),
-                interactionSource = null
-            ) { exportListLauncher.launch("${appName}_lists", "json") }
-        )
-
-        var showListSelection by remember { mutableStateOf(false) }
-
-        if (showListSelection) {
-            ExportListSelection(
-                onExport = { uri, list ->
-                    viewModel.writeListsToFile(uri, list)
                 },
-                onDismiss = { showListSelection = false },
-                list = viewModel
-                    .lists
-                    .collectAsStateWithLifecycle(emptyList())
-                    .value
+                modifier = Modifier.clickable(
+                    enabled = true,
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = viewModel::pullCloudToLocal
+                )
             )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth(.75f)
+                    .padding(vertical = 4.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            PreferenceSetting(
+                settingTitle = { Text("Sync Local To Cloud Favorites") },
+                summaryValue = {
+                    Column {
+                        Text("Syncs favorites from the local database to the cloud")
+                        Crossfade(
+                            viewModel.localToCloudSync,
+                            label = "Cloud Local Sync"
+                        ) { target ->
+                            when (target) {
+                                is CloudLocalSync.Error -> Text(target.throwable.message ?: "Unknown Error")
+                                CloudLocalSync.Idle -> {}
+                                CloudLocalSync.Loading -> LinearProgressIndicator()
+                                is CloudLocalSync.Success -> Text("Added ${target.size} favorites")
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.clickable(
+                    enabled = true,
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = viewModel::pullLocalToCloud
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        PreferenceSetting(
-            settingTitle = { Text("Export Lists") },
-            modifier = Modifier.clickable(
-                enabled = true,
-                indication = ripple(),
-                interactionSource = null
-            ) { showListSelection = true }
-        )
+        CategoryGroup {
+            CategorySetting(
+                settingIcon = {
+                    Icon(Icons.AutoMirrored.Filled.List, null)
+                }
+            ) { Text(stringResource(Res.string.custom_lists_title)) }
 
-        PreferenceSetting(
-            settingTitle = { Text("Import List") },
-            modifier = Modifier.clickable(
-                enabled = true,
-                indication = ripple(),
-                interactionSource = null
-            ) { importListLauncher.launch() }
-        )
+            val exportListLauncher = rememberFileSaverLauncher { document ->
+                document?.let { viewModel.writeListsToFile(it) }
+            }
 
-        HorizontalDivider()
+            val importListLauncher = rememberFilePickerLauncher(
+                type = FileKitType.File("json")
+            ) { document ->
+                document?.let {
+                    navController.navigate(Screen.ImportFullListScreen(it.toString()))
+                }
+            }
+
+            PreferenceSetting(
+                settingTitle = { Text("Export All Lists") },
+                modifier = Modifier.clickable(
+                    enabled = true,
+                    indication = ripple(),
+                    interactionSource = null
+                ) { exportListLauncher.launch("${appName}_lists", "json") }
+            )
+
+            var showListSelection by remember { mutableStateOf(false) }
+
+            if (showListSelection) {
+                ExportListSelection(
+                    onExport = { uri, list ->
+                        viewModel.writeListsToFile(uri, list)
+                    },
+                    onDismiss = { showListSelection = false },
+                    list = viewModel
+                        .lists
+                        .collectAsStateWithLifecycle(emptyList())
+                        .value
+                )
+            }
+
+            PreferenceSetting(
+                settingTitle = { Text("Export Lists") },
+                modifier = Modifier.clickable(
+                    enabled = true,
+                    indication = ripple(),
+                    interactionSource = null
+                ) { showListSelection = true }
+            )
+
+            PreferenceSetting(
+                settingTitle = { Text("Import List") },
+                modifier = Modifier.clickable(
+                    enabled = true,
+                    indication = ripple(),
+                    interactionSource = null
+                ) { importListLauncher.launch() }
+            )
+        }
     }
 
     //TODO: Remove toaster and switch back to snackbar

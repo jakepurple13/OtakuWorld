@@ -1,6 +1,7 @@
 package com.programmersbox.uiviews.presentation.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +20,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -105,12 +105,12 @@ fun NavigationBarSettings(handling: NewSettingsHandling) {
             }
         )
 
+        Spacer(Modifier.height(16.dp))
+
         MultipleActionsSetting(
             handling = handling,
             middleNavigationAction = middleNavigationAction
         )
-
-        HorizontalDivider()
     }
 }
 
@@ -127,105 +127,108 @@ private fun MultipleActionsSetting(
         .filter { it != MiddleNavigationAction.Multiple }
 
     ShowWhen(middleNavigationAction == MiddleNavigationAction.Multiple) {
-        PreferenceSetting(
-            settingTitle = { },
-            summaryValue = {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    HorizontalFloatingToolbar(
-                        expanded = true,
-                        leadingContent = {
-                            var showMenu by remember { mutableStateOf(false) }
-                            DropdownMenu(
-                                showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                multipleActionOptions.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.name) },
-                                        leadingIcon = {
-                                            Icon(
-                                                it.item?.icon?.invoke(true) ?: Icons.Default.Add,
-                                                null,
-                                            )
-                                        },
-                                        onClick = {
-                                            multipleActions = multipleActions?.copy(
-                                                startAction = it,
-                                            )
-                                            showMenu = false
-                                        }
-                                    )
-                                }
-                            }
-
-                            IconButton(
-                                onClick = { showMenu = true }
-                            ) {
-                                Icon(
-                                    multipleActions
-                                        ?.startAction
-                                        ?.item
-                                        ?.icon
-                                        ?.invoke(true)
-                                        ?: Icons.Default.Add,
-                                    null
-                                )
-                            }
-                        },
-                        trailingContent = {
-                            var showMenu by remember { mutableStateOf(false) }
-                            DropdownMenu(
-                                showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                multipleActionOptions.forEach {
-                                    DropdownMenuItem(
-                                        text = { Text(it.visibleName) },
-                                        leadingIcon = {
-                                            Icon(
-                                                it.item?.icon?.invoke(true) ?: Icons.Default.Add,
-                                                null,
-                                            )
-                                        },
-                                        onClick = {
-                                            multipleActions = multipleActions?.copy(endAction = it)
-                                            showMenu = false
-                                        }
-                                    )
-                                }
-                            }
-                            IconButton(
-                                onClick = { showMenu = true }
-                            ) {
-                                Icon(
-                                    multipleActions
-                                        ?.endAction
-                                        ?.item
-                                        ?.icon
-                                        ?.invoke(true)
-                                        ?: Icons.Default.Add,
-                                    null
-                                )
-                            }
-                        },
+        Column {
+            Spacer(Modifier.height(8.dp))
+            PreferenceSetting(
+                settingTitle = { },
+                summaryValue = {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        FilledIconButton(
-                            modifier = Modifier.width(64.dp),
-                            onClick = {}
+                        HorizontalFloatingToolbar(
+                            expanded = true,
+                            leadingContent = {
+                                var showMenu by remember { mutableStateOf(false) }
+                                DropdownMenu(
+                                    showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    multipleActionOptions.forEach {
+                                        DropdownMenuItem(
+                                            text = { Text(it.name) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                                    null,
+                                                )
+                                            },
+                                            onClick = {
+                                                multipleActions = multipleActions?.copy(
+                                                    startAction = it,
+                                                )
+                                                showMenu = false
+                                            }
+                                        )
+                                    }
+                                }
+
+                                IconButton(
+                                    onClick = { showMenu = true }
+                                ) {
+                                    Icon(
+                                        multipleActions
+                                            ?.startAction
+                                            ?.item
+                                            ?.icon
+                                            ?.invoke(true)
+                                            ?: Icons.Default.Add,
+                                        null
+                                    )
+                                }
+                            },
+                            trailingContent = {
+                                var showMenu by remember { mutableStateOf(false) }
+                                DropdownMenu(
+                                    showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    multipleActionOptions.forEach {
+                                        DropdownMenuItem(
+                                            text = { Text(it.visibleName) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                                    null,
+                                                )
+                                            },
+                                            onClick = {
+                                                multipleActions = multipleActions?.copy(endAction = it)
+                                                showMenu = false
+                                            }
+                                        )
+                                    }
+                                }
+                                IconButton(
+                                    onClick = { showMenu = true }
+                                ) {
+                                    Icon(
+                                        multipleActions
+                                            ?.endAction
+                                            ?.item
+                                            ?.icon
+                                            ?.invoke(true)
+                                            ?: Icons.Default.Add,
+                                        null
+                                    )
+                                }
+                            },
                         ) {
-                            Icon(
-                                Icons.Filled.UnfoldLess,
-                                contentDescription = "Localized description"
-                            )
+                            FilledIconButton(
+                                modifier = Modifier.width(64.dp),
+                                onClick = {}
+                            ) {
+                                Icon(
+                                    Icons.Filled.UnfoldLess,
+                                    contentDescription = "Localized description"
+                                )
+                            }
                         }
                     }
-                }
-            }
-        )
-        Spacer(Modifier.height(8.dp))
+                },
+            )
+            Spacer(Modifier.height(8.dp))
+        }
     }
 }
 

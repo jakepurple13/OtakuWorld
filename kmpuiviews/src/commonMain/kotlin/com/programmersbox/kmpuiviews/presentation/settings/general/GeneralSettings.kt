@@ -4,8 +4,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -20,7 +22,6 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,6 +45,7 @@ import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.rememberHistorySave
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
+import com.programmersbox.kmpuiviews.presentation.components.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
@@ -76,43 +78,51 @@ fun GeneralSettings(
 ) {
     SettingsScaffold(
         title = stringResource(Res.string.general_menu_title),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         val handling: NewSettingsHandling = koinInject()
 
         var isAmoledMode by handling.rememberIsAmoledMode()
+        CategoryGroup {
+            ThemeSetting(
+                handling = handling,
+                isAmoledMode = isAmoledMode
+            )
 
-        ThemeSetting(
-            handling = handling,
-            isAmoledMode = isAmoledMode
-        )
+            AmoledModeSetting(
+                isAmoledMode = isAmoledMode,
+                onAmoledModeChange = { isAmoledMode = it }
+            )
 
-        AmoledModeSetting(
-            isAmoledMode = isAmoledMode,
-            onAmoledModeChange = { isAmoledMode = it }
-        )
+            ExpressivenessSetting(handling = handling)
 
-        ExpressivenessSetting(handling = handling)
+            BlurSetting(handling = handling)
 
-        BlurSetting(handling = handling)
+            Spacer(Modifier.height(16.dp))
+        }
 
-        HorizontalDivider()
+        CategoryGroup {
+            Spacer(Modifier.height(16.dp))
+            PaletteSetting(handling = handling)
+        }
 
-        PaletteSetting(handling = handling)
+        CategoryGroup {
+            navigationBarSettings()
+        }
 
-        HorizontalDivider()
+        CategoryGroup {
+            Spacer(Modifier.height(16.dp))
 
-        navigationBarSettings()
+            GridTypeSettings(handling = handling)
 
-        GridTypeSettings(handling = handling)
+            ShareChapterSettings(handling = handling)
 
-        ShareChapterSettings(handling = handling)
+            DetailPaneSettings(handling = handling)
 
-        DetailPaneSettings(handling = handling)
+            ShowDownloadSettings(handling = handling)
 
-        ShowDownloadSettings(handling = handling)
-
-        HistorySettings(handling = handling)
+            HistorySettings(handling = handling)
+        }
 
         customSettings()
     }

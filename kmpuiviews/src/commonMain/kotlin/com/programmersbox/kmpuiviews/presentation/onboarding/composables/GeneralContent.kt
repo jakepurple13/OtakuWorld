@@ -68,9 +68,10 @@ internal fun GeneralContent(
 
         HorizontalDivider()
 
-        //This has a divider with it
         //NavigationBarSettings(handling = handling)
         navigationBarSettings()
+
+        HorizontalDivider()
 
         var notifyOnBoot by handling.notifyOnReboot.rememberPreference()
 
