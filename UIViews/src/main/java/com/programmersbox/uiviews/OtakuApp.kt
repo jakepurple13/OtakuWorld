@@ -34,9 +34,6 @@ import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDatabase
-import com.programmersbox.helpfulutils.NotificationChannelImportance
-import com.programmersbox.helpfulutils.createNotificationChannel
-import com.programmersbox.helpfulutils.createNotificationGroup
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.databases
@@ -56,6 +53,8 @@ import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
 import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.workers
+import com.programmersbox.uiviews.utils.NotificationChannels
+import com.programmersbox.uiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -114,13 +113,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             FirebaseDb.READ_OR_WATCHED_ID = it.readOrWatchedId
         }
 
-        createNotificationChannel("otakuChannel", importance = NotificationChannelImportance.HIGH)
-        createNotificationGroup("otakuGroup")
-        createNotificationChannel("updateCheckChannel", importance = NotificationChannelImportance.MIN)
-        createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
-        createNotificationChannel("sourceUpdate", importance = NotificationChannelImportance.DEFAULT)
-        createNotificationGroup("sources")
-        createNotificationChannel("download_channel", importance = NotificationChannelImportance.DEFAULT)
+        NotificationChannels.setupNotificationChannels(this)
+        NotificationGroups.setupNotificationGroups(this)
 
         startKoin {
             androidLogger()

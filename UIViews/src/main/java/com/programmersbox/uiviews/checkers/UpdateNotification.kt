@@ -20,6 +20,8 @@ import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.NotificationChannels
+import com.programmersbox.uiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -54,7 +56,7 @@ class UpdateNotification(
                 val pair = updateModel.infoModel to updateModel.dbModel
                 notificationId to NotificationDslBuilder.builder(
                     context,
-                    "otakuChannel",
+                    NotificationChannels.Otaku.id,
                     icon.notificationId
                 ) {
                     title = pair.second.title
@@ -80,7 +82,7 @@ class UpdateNotification(
                         )
                     }
                     showWhen = true
-                    groupId = "otakuGroup"
+                    groupId = NotificationGroups.Otaku.id
                     addAction {
                         actionTitle = context.getString(R.string.mark_read)
                         actionIcon = icon.notificationId
@@ -115,14 +117,18 @@ class UpdateNotification(
         list.fastForEach { pair -> n.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) n.notify(
             notificationId,
-            NotificationDslBuilder.builder(context, "otakuChannel", icon.notificationId) {
+            NotificationDslBuilder.builder(
+                context,
+                NotificationChannels.Otaku.id,
+                icon.notificationId
+            ) {
                 title = context.getText(R.string.app_name)
                 val size = list.size + currentNotificationSize
                 subText = context.resources.getQuantityString(R.plurals.updateAmount, size, size)
                 showWhen = true
                 groupSummary = true
                 groupAlertBehavior = GroupBehavior.ALL
-                groupId = "otakuGroup"
+                groupId = NotificationGroups.Otaku.id
                 pendingIntent { context -> info.deepLinkSettings(context) }
             }
         )
@@ -139,21 +145,29 @@ class UpdateNotification(
         list.fastForEach { pair -> n.notify(pair.first, pair.second) }
         if (list.isNotEmpty()) onNotify(
             notificationId,
-            NotificationDslBuilder.builder(context, "otakuChannel", icon.notificationId) {
+            NotificationDslBuilder.builder(
+                context,
+                NotificationChannels.Otaku.id,
+                icon.notificationId
+            ) {
                 title = context.getText(R.string.app_name)
                 val size = list.size + currentNotificationSize
                 subText = context.resources.getQuantityString(R.plurals.updateAmount, size, size)
                 showWhen = true
                 groupSummary = true
                 groupAlertBehavior = GroupBehavior.ALL
-                groupId = "otakuGroup"
+                groupId = NotificationGroups.Otaku.id
                 pendingIntent { context -> info.deepLinkSettings(context) }
             }
         )
     }
 
     fun sendRunningNotification(max: Int, progress: Int, contextText: CharSequence = "") {
-        val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon.notificationId) {
+        val notification = NotificationDslBuilder.builder(
+            context,
+            NotificationChannels.UpdateCheck.id,
+            icon.notificationId
+        ) {
             onlyAlertOnce = true
             ongoing = true
             progress {
@@ -170,7 +184,11 @@ class UpdateNotification(
     }
 
     fun sendFinishedNotification() {
-        val notification = NotificationDslBuilder.builder(context, "updateCheckChannel", icon.notificationId) {
+        val notification = NotificationDslBuilder.builder(
+            context,
+            NotificationChannels.UpdateCheck.id,
+            icon.notificationId
+        ) {
             onlyAlertOnce = true
             subText = context.getString(R.string.finishedChecking)
             timeoutAfter = 750L

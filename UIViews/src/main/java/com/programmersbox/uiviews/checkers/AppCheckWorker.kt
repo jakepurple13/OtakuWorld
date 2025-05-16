@@ -8,6 +8,7 @@ import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.NotificationChannels
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -27,7 +28,7 @@ class AppCheckWorker(
             if (f != null && AppUpdate.checkForUpdate(appVersion, f)) {
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
-                    "appUpdate",
+                    NotificationChannels.AppUpdate.id,
                     logo.notificationId
                 ) {
                     title = applicationContext.getString(R.string.theresAnUpdate)

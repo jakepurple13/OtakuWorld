@@ -13,6 +13,8 @@ import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.uiviews.utils.NotificationChannels
+import com.programmersbox.uiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import org.koin.core.component.KoinComponent
@@ -58,12 +60,12 @@ class SourceUpdateChecker(
                 val r = remoteSources.find { r -> r.packageName == it.packageName }!!
                 val n = NotificationDslBuilder.builder(
                     applicationContext,
-                    "sourceUpdate",
+                    NotificationChannels.SourceUpdate.id,
                     logo.notificationId
                 ) {
                     title = "${it.name} has an update!"
                     subText = "${r.version} is available."
-                    groupId = "sources"
+                    groupId = NotificationGroups.Sources.id
                 }
                 notificationManager.notify(it.hashCode(), n)
             }
@@ -73,7 +75,7 @@ class SourceUpdateChecker(
                     15,
                     NotificationDslBuilder.builder(
                         applicationContext,
-                        "sourceUpdate",
+                        NotificationChannels.SourceUpdate.id,
                         logo.notificationId
                     ) {
                         title = "Sources have updates!"
@@ -81,7 +83,7 @@ class SourceUpdateChecker(
                         showWhen = true
                         groupSummary = true
                         groupAlertBehavior = GroupBehavior.ALL
-                        groupId = "sources"
+                        groupId = NotificationGroups.Sources.id
                     }
                 )
             }

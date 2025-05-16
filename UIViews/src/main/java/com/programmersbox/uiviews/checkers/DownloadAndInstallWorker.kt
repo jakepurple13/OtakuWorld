@@ -19,6 +19,7 @@ import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
+import com.programmersbox.uiviews.utils.NotificationChannels
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.github.vinceglb.filekit.PlatformFile
@@ -120,7 +121,10 @@ class DownloadAndInstallWorker(
         ) return
 
         // Create a notification builder
-        val builder = NotificationCompat.Builder(applicationContext, "download_channel")
+        val builder = NotificationCompat.Builder(
+            applicationContext,
+            NotificationChannels.Download.id
+        )
             .setSmallIcon(logo.notificationId) // Set a small icon (replace with your actual icon)
             .setContentTitle("Downloading and installing...")
             .setPriority(NotificationCompat.PRIORITY_HIGH) // Set the priority
@@ -297,7 +301,10 @@ class DownloadWorker(
         ) return
 
         // Create a notification builder
-        val builder = NotificationCompat.Builder(applicationContext, "download_channel")
+        val builder = NotificationCompat.Builder(
+            applicationContext,
+            NotificationChannels.Download.id
+        )
             .setSmallIcon(logo.notificationId) // Set a small icon (replace with your actual icon)
             .setContentTitle("Downloading and installing...")
             .setPriority(NotificationCompat.PRIORITY_HIGH) // Set the priority
@@ -473,7 +480,10 @@ class InstallWorker(
         ) return
 
         // Create a notification builder
-        val builder = NotificationCompat.Builder(applicationContext, "download_channel")
+        val builder = NotificationCompat.Builder(
+            applicationContext,
+            NotificationChannels.Download.id
+        )
             .setSmallIcon(logo.notificationId) // Set a small icon (replace with your actual icon)
             .setContentTitle("Downloading and installing...")
             .setPriority(NotificationCompat.PRIORITY_HIGH) // Set the priority

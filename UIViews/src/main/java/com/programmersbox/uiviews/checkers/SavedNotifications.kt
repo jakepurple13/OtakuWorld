@@ -15,6 +15,8 @@ import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.NotificationChannels
+import com.programmersbox.uiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
@@ -44,7 +46,7 @@ object SavedNotifications {
         )
         (n.id to NotificationDslBuilder.builder(
             context,
-            "otakuChannel",
+            NotificationChannels.Otaku.id,
             icon
         ) {
             title = n.notiTitle
@@ -62,7 +64,7 @@ object SavedNotifications {
                 bigText = n.summaryText
             }
             showWhen = true
-            groupId = "otakuGroup"
+            groupId = NotificationGroups.Otaku.id
             addAction {
                 actionTitle = context.getString(R.string.mark_read)
                 actionIcon = notificationLogo.notificationId
@@ -136,7 +138,7 @@ object SavedNotifications {
                     )
                     n.id to NotificationDslBuilder.builder(
                         context,
-                        "otakuChannel",
+                        NotificationChannels.Otaku.id,
                         icon
                     ) {
                         title = n.notiTitle
@@ -154,7 +156,7 @@ object SavedNotifications {
                             bigText = n.summaryText
                         }
                         showWhen = true
-                        groupId = "otakuGroup"
+                        groupId = NotificationGroups.Otaku.id
                         addAction {
                             actionTitle = context.getString(R.string.mark_read)
                             actionIcon = logo.notificationId
