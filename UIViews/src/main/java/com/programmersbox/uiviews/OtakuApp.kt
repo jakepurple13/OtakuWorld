@@ -71,6 +71,7 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.util.UUID
@@ -117,7 +118,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         NotificationGroups.setupNotificationGroups(this)
 
         startKoin {
-            androidLogger()
+            androidLogger(if (BuildConfig.DEBUG) Level.DEBUG else Level.INFO)
             androidContext(this@OtakuApp)
             loadKoinModules(
                 module {

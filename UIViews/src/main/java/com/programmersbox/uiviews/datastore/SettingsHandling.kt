@@ -372,8 +372,7 @@ fun migrateSettings(
                                 NotificationSortBy.UNRECOGNIZED -> com.programmersbox.datastore.NotificationSortBy.Date
                             },
                             hasMigrated = true,
-                        )
-                            .also { println(it) }
+                        ).also { println(it) }
                     }
                 }
         }
