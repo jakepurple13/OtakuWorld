@@ -107,7 +107,7 @@ material3WindowSizeClassVersion = "1.8.0"
 connectivity = "2.0.2"
 
 cmpLifecycle = "2.9.0-beta01"
-navigationCmp = "2.9.0-beta01"
+navigationCmp = "2.9.0-SNAPSHOT+igor-demin-fix-pinning-for-poms"
 
 buildKonfig = "0.17.1"
 
