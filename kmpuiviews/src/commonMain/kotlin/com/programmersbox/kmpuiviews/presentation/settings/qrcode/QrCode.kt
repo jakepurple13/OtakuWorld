@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -64,6 +66,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
 import qrgenerator.qrkitpainter.QrKitLogo
@@ -284,9 +287,33 @@ fun ScanQrCode(
                         false
                     },
                     types = listOf(CodeType.QR),
+                    cameraPosition = CameraPosition.BACK,
+                    permissionDeniedContent = { permissionState ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .border(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.onSurface,
+                                    MaterialTheme.shapes.medium
+                                )
+                        ) {
+                            Text(
+                                text = "Camera is required for QR Code scanning",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(6.dp)
+                            )
+                            ElevatedButton(
+                                onClick = { permissionState.goToSettings() }
+                            ) { Text("Open Settings") }
+                        }
+                    },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .size(250.dp)
+                        .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
                         .clip(MaterialTheme.shapes.medium)
                 )
 

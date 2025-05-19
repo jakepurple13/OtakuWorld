@@ -409,7 +409,10 @@ fun ReadView(
                                     pages = pages,
                                     readVm = viewModel,
                                     itemSpacing = spacing,
-                                    paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
+                                    paddingValues = PaddingValues(
+                                        top = if (pages.isNotEmpty()) 0.dp else p.calculateTopPadding(),
+                                        bottom = p.calculateBottomPadding()
+                                    ).animate(),
                                     imageLoaderType = imageLoaderType,
                                 )
                             }
