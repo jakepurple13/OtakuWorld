@@ -9,11 +9,11 @@ actual class NotificationRepository(
     private val itemDao: ItemDao,
 ) {
 
-    actual fun cancelById(id: Int) {
+    actual suspend fun cancelById(id: Int) {
 
     }
 
-    actual fun cancelNotification(item: NotificationItem) {
+    actual suspend fun cancelNotification(item: NotificationItem) {
 
     }
 

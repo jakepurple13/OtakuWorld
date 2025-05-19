@@ -16,25 +16,30 @@ actual class NotificationRepository(
         context.getSystemService<NotificationManager>()
     }
 
-    actual fun cancelById(id: Int) {
-        notificationManager?.cancel(id)
-
-        val g = notificationManager
+    init {
+        //TODO: Need to do something about when going the app updates with notifications
+        /*val g = notificationManager
             ?.activeNotifications
             ?.map { it.notification }
             ?.filter { it.group == "otakuGroup" }
             .orEmpty()
-        if (g.size == 1) notificationManager?.cancel(GROUP_ID)
+        if (g.size == 1) notificationManager?.cancel(GROUP_ID)*/
     }
 
-    actual fun cancelNotification(item: NotificationItem) {
+    actual suspend fun cancelById(id: Int) {
+        notificationManager?.cancel(id)
+        itemDao.updateNotification(id, false)
+        cancelGroupIfNeeded()
+    }
+
+    actual suspend fun cancelNotification(item: NotificationItem) {
         notificationManager?.cancel(item.id)
-        val g = notificationManager
-            ?.activeNotifications
-            ?.map { it.notification }
-            ?.filter { it.group == "otakuGroup" }
-            .orEmpty()
-        if (g.size == 1) notificationManager?.cancel(GROUP_ID)
+        cancelGroupIfNeeded()
+    }
+
+    private suspend fun cancelGroupIfNeeded() {
+        val showingCount = itemDao.getAllShowingNotificationsCount()
+        if (showingCount == 0) notificationManager?.cancel(GROUP_ID)
     }
 
     actual fun cancelGroup() {

@@ -79,8 +79,13 @@ class NotificationScreenViewModel(
         }
     }
 
-    fun cancelNotification(notificationItem: NotificationItem) = notificationRepository.cancelNotification(notificationItem)
-    fun cancelNotificationById(id: Int) = notificationRepository.cancelById(id)
+    fun cancelNotification(notificationItem: NotificationItem) {
+        viewModelScope.launch {
+            notificationRepository.cancelNotification(notificationItem)
+        }
+    }
+
+    suspend fun cancelNotificationById(id: Int) = notificationRepository.cancelById(id)
 
     suspend fun deleteAllNotifications(): Int {
         db.getAllNotifications().forEach { notificationRepository.cancelNotification(it) }

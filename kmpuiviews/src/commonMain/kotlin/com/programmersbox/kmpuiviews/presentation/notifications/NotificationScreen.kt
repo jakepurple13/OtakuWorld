@@ -193,7 +193,6 @@ fun NotificationScreen(
             onRemove = { item ->
                 if (item is NotificationInfo.Noti) {
                     vm.deleteNotification(item.item)
-                    notificationRepository.cancelNotification(item.item)
                 }
             },
             onMultipleRemove = { d ->
