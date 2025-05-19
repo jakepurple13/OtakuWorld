@@ -392,6 +392,15 @@ fun FloatingBottomBar(
             },
             label = { Text("Pages") }
         )
+
+        //TODO: Maybe? Gotta think about this more.
+        // Might switch to the actual FloatingHorizontalToolBar
+        // maybe with the floating action bar menu for more options like translations
+        /*NavigationBarItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Default.MoreVert, null) },
+        )*/
     }
 }
 
