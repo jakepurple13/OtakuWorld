@@ -133,7 +133,6 @@ fun ReadView(
                 ReaderType.List, ReaderType.FlipPager -> listState.firstVisibleItemIndex
                 ReaderType.Pager -> pagerState.currentPage
                 ReaderType.CurlPager -> curlState.current
-                else -> 0
             }
         }
     }
@@ -243,7 +242,6 @@ fun ReadView(
                         ReaderType.List, ReaderType.FlipPager -> listState.animateScrollToItem(it)
                         ReaderType.Pager -> pagerState.animateScrollToPage(it)
                         ReaderType.CurlPager -> curlState.snapTo(it)
-                        else -> {}
                     }
                 },
             )
@@ -345,7 +343,6 @@ fun ReadView(
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)
                                 .hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                    //TODO: Trying out
                                     //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
                                     blurEnabled = showBlur
                                     //alpha = scrollAlpha
@@ -414,7 +411,7 @@ fun ReadView(
                                     itemSpacing = spacing,
                                     paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
                                     imageLoaderType = imageLoaderType,
-                                ) { viewModel.showInfo = !viewModel.showInfo }
+                                )
                             }
 
                             ReaderType.Pager -> {
@@ -424,7 +421,7 @@ fun ReadView(
                                     vm = viewModel,
                                     itemSpacing = spacing,
                                     imageLoaderType = imageLoaderType,
-                                ) { viewModel.showInfo = !viewModel.showInfo }
+                                )
                             }
 
                             ReaderType.FlipPager -> {
@@ -433,7 +430,7 @@ fun ReadView(
                                     pages = pages,
                                     vm = viewModel,
                                     imageLoaderType = imageLoaderType,
-                                ) { viewModel.showInfo = !viewModel.showInfo }
+                                )
                             }
 
                             ReaderType.CurlPager -> {
@@ -442,10 +439,8 @@ fun ReadView(
                                     pages = pages,
                                     vm = viewModel,
                                     imageLoaderType = imageLoaderType,
-                                ) { viewModel.showInfo = !viewModel.showInfo }
+                                )
                             }
-
-                            else -> {}
                         }
                     }
                 }
@@ -463,14 +458,13 @@ fun ListView(
     paddingValues: PaddingValues,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pages, readVm, onClick, imageLoaderType) }
+    ) { reader(pages, readVm, imageLoaderType) }
 }
 
 @Composable
@@ -481,7 +475,6 @@ fun PagerView(
     itemSpacing: Dp,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     VerticalPager(
         state = pagerState,
@@ -494,7 +487,6 @@ fun PagerView(
             ChapterPage(
                 chapterLink = { it },
                 isDownloaded = vm.isDownloaded,
-                openCloseOverlay = onClick,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -520,7 +512,6 @@ fun FlipPagerView(
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     FlipPager(
         state = pagerState,
@@ -532,7 +523,6 @@ fun FlipPagerView(
             ChapterPage(
                 chapterLink = { it },
                 isDownloaded = vm.isDownloaded,
-                openCloseOverlay = onClick,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -559,7 +549,6 @@ fun CurlPagerView(
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     //TODO: Make go reverse
     PageCurl(
@@ -580,7 +569,6 @@ fun CurlPagerView(
             ChapterPage(
                 chapterLink = { it },
                 isDownloaded = vm.isDownloaded,
-                openCloseOverlay = onClick,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -602,7 +590,6 @@ fun CurlPagerView(
 private fun LazyListScope.reader(
     pages: List<String>,
     vm: ReadViewModel,
-    onClick: () -> Unit,
     imageLoaderType: ImageLoaderType,
 ) {
     itemsIndexed(
@@ -613,7 +600,6 @@ private fun LazyListScope.reader(
         ChapterPage(
             chapterLink = { it },
             isDownloaded = vm.isDownloaded,
-            openCloseOverlay = onClick,
             headers = vm.headers,
             contentScale = ContentScale.FillWidth,
             imageLoaderType = imageLoaderType

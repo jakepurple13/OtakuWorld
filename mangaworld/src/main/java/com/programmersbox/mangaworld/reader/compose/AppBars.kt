@@ -69,8 +69,8 @@ fun ReaderTopBar(
     currentChapter: String,
     onSettingsClick: () -> Unit,
     showBlur: Boolean,
-    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
     TopAppBar(
         windowInsets = windowInsets,

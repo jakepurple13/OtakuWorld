@@ -182,7 +182,6 @@ internal fun Panpf(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -200,7 +199,6 @@ internal fun Panpf(
             contentDescription = null,
             contentScale = contentScale,
             scrollBar = null,
-            onTap = { onClick() },
             modifier = Modifier.fillMaxWidth()
         )
     }
