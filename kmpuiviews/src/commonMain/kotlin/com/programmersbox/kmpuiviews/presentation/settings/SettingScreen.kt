@@ -170,144 +170,168 @@ private fun SettingsScreen(
     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
 
     CategoryGroup {
-        onDebugBuild()
+        item { onDebugBuild() }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.view_notifications_title)) },
-            settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-            summaryValue = { Text(stringResource(Res.string.pending_saved_notifications, vm.savedNotifications)) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = notificationClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.viewFavoritesMenu)) },
-            settingIcon = { Icon(Icons.Default.Star, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = favoritesClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.custom_lists_title)) },
-            settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = listClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.global_search)) },
-            settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = globalSearchClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text("Scan QR Code") },
-            settingIcon = { Icon(Icons.Default.QrCodeScanner, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = scanQrCode
-            )
-        )
-
-        val historyCount by LocalHistoryDao.current
-            .getAllRecentHistoryCount()
-            .collectAsStateWithLifecycle(0)
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.history)) },
-            summaryValue = { Text(historyCount.toString()) },
-            settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = historyClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text("App Downloads") },
-            settingIcon = { Icon(Icons.Default.GetApp, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = appDownloadsClick
-            )
-        )
-
-        composeSettingsDsl.viewSettings()
-    }
-
-    CategoryGroup {
-        CategorySetting { Text(stringResource(Res.string.general_menu_title)) }
-
-        var showSourceChooser by showSourceChooser()
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.currentSource, source?.serviceName.orEmpty())) },
-            settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null
-            ) { showSourceChooser = true }
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text("Sources Order") },
-            settingIcon = { Icon(Icons.Default.Reorder, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = sourcesOrderClick
-            )
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.view_extensions)) },
-            settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = extensionClick
-            )
-        )
-
-        ShowWhen(visibility = source != null) {
+        item {
             PreferenceSetting(
-                settingTitle = { Text(stringResource(Res.string.view_source_in_browser)) },
-                settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
+                settingTitle = { Text(stringResource(Res.string.view_notifications_title)) },
+                settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
+                summaryValue = { Text(stringResource(Res.string.pending_saved_notifications, vm.savedNotifications)) },
                 modifier = Modifier.clickable(
-                    enabled = source != null,
                     indication = ripple(),
-                    interactionSource = null
-                ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
+                    interactionSource = null,
+                    onClick = notificationClick
+                )
             )
         }
 
-        var showTranslationScreen by showTranslationScreen()
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.viewTranslationModels)) },
-            settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = { showTranslationScreen = true }
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.viewFavoritesMenu)) },
+                settingIcon = { Icon(Icons.Default.Star, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = favoritesClick
+                )
             )
-        )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.custom_lists_title)) },
+                settingIcon = { Icon(Icons.AutoMirrored.Default.List, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = listClick
+                )
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.global_search)) },
+                settingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = globalSearchClick
+                )
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text("Scan QR Code") },
+                settingIcon = { Icon(Icons.Default.QrCodeScanner, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = scanQrCode
+                )
+            )
+        }
+
+        item {
+            val historyCount by LocalHistoryDao.current
+                .getAllRecentHistoryCount()
+                .collectAsStateWithLifecycle(0)
+
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.history)) },
+                summaryValue = { Text(historyCount.toString()) },
+                settingIcon = { Icon(Icons.Default.History, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = historyClick
+                )
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text("App Downloads") },
+                settingIcon = { Icon(Icons.Default.GetApp, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = appDownloadsClick
+                )
+            )
+        }
+
+        apply(composeSettingsDsl.viewSettings)
+    }
+
+    CategoryGroup {
+        category { CategorySetting { Text(stringResource(Res.string.general_menu_title)) } }
+
+        item {
+            var showSourceChooser by showSourceChooser()
+
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.currentSource, source?.serviceName.orEmpty())) },
+                settingIcon = { Icon(Icons.Default.Source, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null
+                ) { showSourceChooser = true }
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text("Sources Order") },
+                settingIcon = { Icon(Icons.Default.Reorder, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = sourcesOrderClick
+                )
+            )
+        }
+
+        item(includeDivider = false) {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.view_extensions)) },
+                settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = extensionClick
+                )
+            )
+        }
+
+        item {
+            ShowWhen(visibility = source != null) {
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(Res.string.view_source_in_browser)) },
+                    settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        enabled = source != null,
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { source?.baseUrl?.let { uriHandler.openUri(it) } }
+                )
+            }
+        }
+
+        item {
+            var showTranslationScreen by showTranslationScreen()
+
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.viewTranslationModels)) },
+                settingIcon = { Icon(Icons.Default.Language, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = { showTranslationScreen = true }
+                )
+            )
+        }
     }
 
     //TODO: This will be for the future when this works again
@@ -326,58 +350,70 @@ private fun SettingsScreen(
         )
     }*/
     CategoryGroup {
-        CategorySetting { Text(stringResource(Res.string.additional_settings)) }
+        category { CategorySetting { Text(stringResource(Res.string.additional_settings)) } }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.notifications_category_title)) },
-            settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.click(notificationSettingsClick)
-        )
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.notifications_category_title)) },
+                settingIcon = { Icon(Icons.Default.Notifications, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.click(notificationSettingsClick)
+            )
+        }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.general_menu_title)) },
-            settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.click(generalClick)
-        )
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.general_menu_title)) },
+                settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.click(generalClick)
+            )
+        }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.playSettings)) },
-            settingIcon = { Icon(Icons.Default.PlayCircleOutline, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.click(otherClick)
-        )
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.playSettings)) },
+                settingIcon = { Icon(Icons.Default.PlayCircleOutline, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.click(otherClick)
+            )
+        }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.more_settings)) },
-            settingIcon = { Icon(Icons.Default.Settings, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.click(moreSettingsClick)
-        )
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.more_settings)) },
+                settingIcon = { Icon(Icons.Default.Settings, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.click(moreSettingsClick)
+            )
+        }
 
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.more_info_category)) },
-            settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.click(moreInfoClick)
-        )
+        item {
+            PreferenceSetting(
+                settingTitle = { Text(stringResource(Res.string.more_info_category)) },
+                settingIcon = { Icon(Icons.Default.Info, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.click(moreInfoClick)
+            )
+        }
 
-        PreferenceSetting(
-            settingIcon = {
-                Image(
-                    painterLogo(),
-                    null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            },
-            settingTitle = {
-                Column {
-                    Text(
-                        "Version code: ${versionCode()}",
-                        style = MaterialTheme.typography.bodySmall
+        item {
+            PreferenceSetting(
+                settingIcon = {
+                    Image(
+                        painterLogo(),
+                        null,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Text(stringResource(Res.string.currentVersion, appVersion()))
-                }
-            },
-        )
+                },
+                settingTitle = {
+                    Column {
+                        Text(
+                            "Version code: ${versionCode()}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(stringResource(Res.string.currentVersion, appVersion()))
+                    }
+                },
+            )
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 

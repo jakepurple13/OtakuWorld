@@ -7,13 +7,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.layout.MutableIntervalList
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -23,6 +23,7 @@ import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -540,12 +542,77 @@ fun SliderSetting(
     }
 }
 
+@DslMarker
+annotation class CategoryGroupMarker
+
 @Composable
 fun CategoryGroup(
-    content: @Composable ColumnScope.() -> Unit,
+    content: CategoryGroupScope.() -> Unit,
 ) {
+    val categoryGroup = remember { CategoryGroupImpl(content) }
+    val stateHolder = rememberSaveableStateHolder()
+
     ElevatedCard(
         modifier = Modifier.padding(horizontal = 16.dp),
-        content = content
+    ) {
+        Column {
+            for (i in 0 until categoryGroup.size) {
+                stateHolder.SaveableStateProvider(i) {
+                    when (val item = categoryGroup.get(i)) {
+                        is CategoryGroupItem.Category -> item.content()
+                        is CategoryGroupItem.Item -> {
+                            item.content()
+                            if (i != categoryGroup.size - 1 && item.includeDivider) {
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.surface,
+                                    thickness = 2.dp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@CategoryGroupMarker
+interface CategoryGroupScope {
+    fun category(content: @Composable () -> Unit)
+
+    @CategoryGroupMarker
+    fun item(
+        includeDivider: Boolean = true,
+        content: @Composable () -> Unit,
     )
+}
+
+internal class CategoryGroupImpl(
+    content: CategoryGroupScope.() -> Unit = {},
+) : CategoryGroupScope {
+    val intervals: MutableIntervalList<CategoryGroupItem> = MutableIntervalList()
+
+    val size: Int get() = intervals.size
+
+    fun get(index: Int): CategoryGroupItem = intervals[index].value
+
+    init {
+        apply(content)
+    }
+
+    override fun category(content: @Composable (() -> Unit)) {
+        intervals.addInterval(1, CategoryGroupItem.Category(content))
+    }
+
+    override fun item(
+        includeDivider: Boolean,
+        content: @Composable () -> Unit,
+    ) {
+        intervals.addInterval(1, CategoryGroupItem.Item(includeDivider, content))
+    }
+}
+
+sealed class CategoryGroupItem {
+    data class Category(val content: @Composable () -> Unit) : CategoryGroupItem()
+    data class Item(val includeDivider: Boolean, val content: @Composable () -> Unit) : CategoryGroupItem()
 }

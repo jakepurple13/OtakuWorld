@@ -453,48 +453,52 @@ class GenericAnime(
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
-            val context = LocalContext.current
-            val navController = LocalNavController.current
 
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.video_menu_title)) },
-                settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
-            )
-
-            val castingViewModel: CastingViewModel = viewModel()
-            val activity = LocalActivity.current
-
-            ShowWhen(castingViewModel.connection) {
+            item {
+                val navController = LocalNavController.current
                 PreferenceSetting(
-                    settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
-                    settingIcon = {
-                        Icon(
-                            if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
-                            null,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    },
+                    settingTitle = { Text(stringResource(R.string.video_menu_title)) },
+                    settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) {
-                        if (MainActivity.cast.isCastActive()) {
-                            context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
-                        } else {
-                            (activity as? FragmentActivity)?.supportFragmentManager?.let {
-                                MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                    .also { m ->
-                                        CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
-                                    }
-                                    .show(it, "media_chooser")
+                    ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
+                )
+            }
+
+
+            item {
+                val context = LocalContext.current
+                val castingViewModel: CastingViewModel = viewModel()
+                val activity = LocalActivity.current
+                ShowWhen(castingViewModel.connection) {
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
+                        settingIcon = {
+                            Icon(
+                                if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
+                                null,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) {
+                            if (MainActivity.cast.isCastActive()) {
+                                context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
+                            } else {
+                                (activity as? FragmentActivity)?.supportFragmentManager?.let {
+                                    MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                                        .also { m ->
+                                            CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
+                                        }
+                                        .show(it, "media_chooser")
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
 

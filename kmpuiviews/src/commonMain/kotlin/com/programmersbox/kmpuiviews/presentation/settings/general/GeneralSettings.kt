@@ -84,44 +84,53 @@ fun GeneralSettings(
 
         var isAmoledMode by handling.rememberIsAmoledMode()
         CategoryGroup {
-            ThemeSetting(
-                handling = handling,
-                isAmoledMode = isAmoledMode
-            )
+            item {
+                ThemeSetting(
+                    handling = handling,
+                    isAmoledMode = isAmoledMode
+                )
+            }
 
-            AmoledModeSetting(
-                isAmoledMode = isAmoledMode,
-                onAmoledModeChange = { isAmoledMode = it }
-            )
+            item {
+                AmoledModeSetting(
+                    isAmoledMode = isAmoledMode,
+                    onAmoledModeChange = { isAmoledMode = it }
+                )
+            }
 
-            ExpressivenessSetting(handling = handling)
+            item {
+                ExpressivenessSetting(handling = handling)
+            }
 
-            BlurSetting(handling = handling)
-
-            Spacer(Modifier.height(16.dp))
+            item {
+                BlurSetting(handling = handling)
+                Spacer(Modifier.height(16.dp))
+            }
         }
 
         CategoryGroup {
-            Spacer(Modifier.height(16.dp))
-            PaletteSetting(handling = handling)
+            item {
+                Spacer(Modifier.height(16.dp))
+                PaletteSetting(handling = handling)
+            }
         }
 
         CategoryGroup {
-            navigationBarSettings()
+            item {
+                navigationBarSettings()
+            }
         }
 
         CategoryGroup {
-            Spacer(Modifier.height(16.dp))
+            item {
+                Spacer(Modifier.height(16.dp))
+                GridTypeSettings(handling = handling)
+            }
 
-            GridTypeSettings(handling = handling)
-
-            ShareChapterSettings(handling = handling)
-
-            DetailPaneSettings(handling = handling)
-
-            ShowDownloadSettings(handling = handling)
-
-            HistorySettings(handling = handling)
+            item { ShareChapterSettings(handling = handling) }
+            item { DetailPaneSettings(handling = handling) }
+            item { ShowDownloadSettings(handling = handling) }
+            item { HistorySettings(handling = handling) }
         }
 
         customSettings()

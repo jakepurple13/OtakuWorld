@@ -290,24 +290,29 @@ class GenericManga(
     @OptIn(ExperimentalAnimationApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
-            val navController = LocalNavController.current
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
-                settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
-            )
+            item {
+                val navController = LocalNavController.current
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
+                    settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
+                )
+            }
 
-            PreferenceSetting(
-                settingTitle = { Text("Manga Reader Settings") },
-                settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) { navController.navigate(ReaderSettingsScreen) { launchSingleTop = true } }
-            )
+            item {
+                val navController = LocalNavController.current
+                PreferenceSetting(
+                    settingTitle = { Text("Manga Reader Settings") },
+                    settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { navController.navigate(ReaderSettingsScreen) { launchSingleTop = true } }
+                )
+            }
         }
 
         generalSettings {
