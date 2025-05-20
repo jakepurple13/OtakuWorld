@@ -79,7 +79,7 @@ benchmark-macro-junit4 = "1.3.3"
 androidx-baselineprofile = "1.3.3"
 profileinstaller = "1.4.1"
 telephoto = "0.15.1"
-zoomimageComposeGlide = "1.2.0"
+zoomimageComposeGlide = "1.3.0"
 
 workinspector = "1.2"
 
