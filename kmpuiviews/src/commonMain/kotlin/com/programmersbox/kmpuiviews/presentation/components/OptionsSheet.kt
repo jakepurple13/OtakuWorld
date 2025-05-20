@@ -41,6 +41,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -55,6 +56,7 @@ import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -362,6 +364,11 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     val serviceName = optionsSheetValues.serviceName
     val url = optionsSheetValues.url
 
+    val biometric = rememberBiometricPrompting()
+    val isIncognito by dao
+        .getIncognitoSource(url)
+        .collectAsStateWithLifecycle(null)
+
     val isSaved by dao
         .doesNotificationExistFlow(url)
         .collectAsStateWithLifecycle(false)
@@ -413,7 +420,16 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                     sheet.hide()
                 }.invokeOnCompletion {
                     onDismiss()
-                    onOpen()
+                    if (isIncognito != null) {
+                        biometric.authenticate(
+                            onAuthenticationSucceeded = { onOpen() },
+                            title = "Authentication required",
+                            subtitle = "In order to open ${title}, please authenticate",
+                            negativeButtonText = "Never Mind"
+                        )
+                    } else {
+                        onOpen()
+                    }
                 }
             }
         )
@@ -516,5 +532,46 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         )
 
         moreContent(optionsSheetValues)
+
+        Crossfade(isIncognito) { target ->
+            if (target == null) {
+                OptionsItem(
+                    title = "Add to Incognito",
+                    onClick = {
+                        biometric.authenticate(
+                            onAuthenticationSucceeded = {
+                                scope.launch {
+                                    dao.insertIncognitoSource(
+                                        IncognitoSource(
+                                            source = url,
+                                            name = title,
+                                            isIncognito = true
+                                        )
+                                    )
+                                }.invokeOnCompletion { dismiss() }
+                            },
+                            title = "Authentication required",
+                            subtitle = "In order to add ${title}, please authenticate",
+                            negativeButtonText = "Never Mind"
+                        )
+                    }
+                )
+            } else {
+                OptionsItem(
+                    title = "Remove from Incognito",
+                    onClick = {
+                        biometric.authenticate(
+                            onAuthenticationSucceeded = {
+                                scope.launch { dao.deleteIncognitoSource(url) }
+                                    .invokeOnCompletion { dismiss() }
+                            },
+                            title = "Authentication required",
+                            subtitle = "In order to remove ${title}, please authenticate",
+                            negativeButtonText = "Never Mind"
+                        )
+                    }
+                )
+            }
+        }
     }
 }
