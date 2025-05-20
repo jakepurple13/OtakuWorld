@@ -19,6 +19,25 @@ kotlin {
         experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true
     }
 
+    applyDefaultHierarchyTemplate {
+        common {
+            group("macos") {
+                withJvm()
+                withMacos()
+            }
+
+            group("windows") {
+                withJvm()
+                withMingw()
+            }
+
+            group("linux") {
+                withJvm()
+                withLinux()
+            }
+        }
+    }
+
     sourceSets {
         commonMain {
             dependencies {
@@ -122,6 +141,7 @@ kotlin {
                 implementation(libs.landscapistPlaceholder)
                 implementation(libs.zoomable.peek.overlay)
                 implementation(libs.barcode.scanning)
+                implementation(libs.biometric)
             }
         }
 
@@ -133,8 +153,8 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation("com.google.zxing:core:3.5.3")
-                implementation("com.google.zxing:javase:3.5.3")
+                implementation(libs.core)
+                implementation(libs.javase)
             }
         }
 

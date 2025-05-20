@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews.presentation.lists
 
 import androidx.activity.compose.BackHandler
-import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -63,9 +62,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListViewModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.biometricPrompting
-import com.programmersbox.uiviews.utils.findActivity
-import com.programmersbox.uiviews.utils.rememberBiometricPrompt
+import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -149,17 +146,7 @@ fun OtakuListScreen(
 
     var temp by remember { mutableStateOf<CustomList?>(null) }
 
-    val biometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = {
-            customListViewModel.setList(temp)
-            temp = null
-            navigate()
-        },
-        onAuthenticationFailed = {
-            customListViewModel.setList(null)
-            temp = null
-        }
-    )
+    val biometric = rememberBiometricPrompting()
 
     ListDetailPaneScaffold(
         directive = state.scaffoldDirective,
@@ -185,15 +172,19 @@ fun OtakuListScreen(
                     navigateDetail = {
                         if (it.item.useBiometric) {
                             temp = it
-                            biometricPrompting(
-                                context.findActivity(),
-                                biometricPrompt
-                            ).authenticate(
-                                BiometricPrompt.PromptInfo.Builder()
-                                    .setTitle("Authentication required")
-                                    .setSubtitle("In order to view ${it.item.name}, please authenticate")
-                                    .setNegativeButtonText("Never Mind")
-                                    .build()
+                            biometric.authenticate(
+                                title = "Authentication required",
+                                subtitle = "In order to view ${it.item.name}, please authenticate",
+                                negativeButtonText = "Never Mind",
+                                onAuthenticationSucceeded = {
+                                    customListViewModel.setList(it)
+                                    temp = null
+                                    navigate()
+                                },
+                                onAuthenticationFailed = {
+                                    customListViewModel.setList(null)
+                                    temp = null
+                                }
                             )
                         } else {
                             customListViewModel.setList(it)

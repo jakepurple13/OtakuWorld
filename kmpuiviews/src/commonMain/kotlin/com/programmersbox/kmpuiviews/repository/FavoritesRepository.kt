@@ -15,6 +15,8 @@ class FavoritesRepository(
 ) {
 
     suspend fun isIncognito(source: String): Boolean {
+        //TODO: Maybe also allow specific items?
+        // Not many changes would be needed. Just some up changes
         val incognito = dao.getIncognitoSourceByNameSync(source)
         return incognito != null && incognito.isIncognito
     }

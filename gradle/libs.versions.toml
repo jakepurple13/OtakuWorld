@@ -4,10 +4,12 @@ biometricVersion = "1.4.0-alpha03"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "1.9.40"
 corePerformance = "1.0.0"
+coreVersion = "3.5.3"
 filekitCore = "0.10.0-beta04"
 generativeai = "0.9.0"
 gradle = "8.10.0"
 
+javase = "3.5.3"
 kotlin = "2.1.21"
 kotlinxDatetime = "0.6.2"
 kspVersion = "2.1.21-2.0.1"
@@ -132,6 +134,8 @@ buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig"
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.5.1-shaded-core" }
 constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.5.1-shaded" }
+javase = { module = "com.google.zxing:javase", version.ref = "javase" }
+core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCmp" }
 

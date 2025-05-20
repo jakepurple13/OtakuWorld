@@ -6,7 +6,6 @@ import android.view.WindowManager
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
@@ -130,6 +129,7 @@ import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.loadItem
+import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
@@ -137,10 +137,8 @@ import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.LoadingDialog
 import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.biometricPrompting
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.launchCatching
-import com.programmersbox.uiviews.utils.rememberBiometricPrompt
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -895,14 +893,7 @@ private fun InfoSheet(
     onShowBySource: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val biometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = { addSecurityItem(customItem.item.uuid) },
-    )
-
-    val removeBiometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = { removeSecurityItem(customItem.item.uuid) },
-    )
+    val biometric = rememberBiometricPrompting()
 
     var showSecurityDialog by remember { mutableStateOf(false) }
 
@@ -915,15 +906,12 @@ private fun InfoSheet(
                 TextButton(
                     onClick = {
                         showSecurityDialog = false
-                        biometricPrompting(
-                            context,
-                            biometricPrompt
-                        ).authenticate(
-                            BiometricPrompt.PromptInfo.Builder()
-                                .setTitle("Add Authentication for ${customItem.item.name}")
-                                .setSubtitle("Enter Authentication to add")
-                                .setNegativeButtonText("Never Mind")
-                                .build()
+                        biometric.authenticate(
+                            title = "Add Authentication for ${customItem.item.name}",
+                            subtitle = "Enter Authentication to add",
+                            negativeButtonText = "Never Mind",
+                            onAuthenticationSucceeded = { addSecurityItem(customItem.item.uuid) },
+                            onAuthenticationFailed = { showSecurityDialog = false }
                         )
                     }
                 ) { Text(stringResource(id = R.string.confirm)) }
@@ -947,15 +935,12 @@ private fun InfoSheet(
                 TextButton(
                     onClick = {
                         showRemoveSecurityDialog = false
-                        biometricPrompting(
-                            context,
-                            removeBiometricPrompt
-                        ).authenticate(
-                            BiometricPrompt.PromptInfo.Builder()
-                                .setTitle("Remove Authentication for ${customItem.item.name}")
-                                .setSubtitle("Enter Authentication to remove")
-                                .setNegativeButtonText("Never Mind")
-                                .build()
+                        biometric.authenticate(
+                            title = "Remove Authentication for ${customItem.item.name}",
+                            subtitle = "Enter Authentication to remove",
+                            negativeButtonText = "Never Mind",
+                            onAuthenticationSucceeded = { removeSecurityItem(customItem.item.uuid) },
+                            onAuthenticationFailed = { showRemoveSecurityDialog = false }
                         )
                     }
                 ) { Text(stringResource(id = R.string.confirm)) }
