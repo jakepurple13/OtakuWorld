@@ -53,15 +53,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -84,6 +85,7 @@ fun RecentView(
     val navController = LocalNavController.current
     val settingsHandling: NewSettingsHandling = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()
+    val itemDao = koinInject<ItemDao>()
     val state = viewModel.gridState
     val scope = rememberCoroutineScope()
     val source = viewModel.currentSource
@@ -227,6 +229,8 @@ fun RecentView(
                     Text(stringResource(R.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
                 }
             } else {
+                val biometric = rememberBiometricOpening()
+
                 OtakuPullToRefreshBox(
                     isRefreshing = viewModel.isRefreshing,
                     onRefresh = { viewModel.reset() },
@@ -257,7 +261,7 @@ fun RecentView(
                                     //showBanner = c == ComponentState.Pressed
                                 },
                                 modifier = Modifier.fillMaxSize()
-                            ) { navController.navigateToDetails(it) }
+                            ) { scope.launch { biometric.openIfNotIncognito(it) } }
                         }
                     }
                 }

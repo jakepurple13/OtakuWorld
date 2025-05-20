@@ -129,6 +129,7 @@ import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.loadItem
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.OtakuApp
@@ -600,6 +601,7 @@ private fun CustomItemVertical(
     onShowBanner: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val biometrics = rememberBiometricOpening()
     val scope = rememberCoroutineScope()
     val sourceRepository = LocalSourcesRepository.current
     val navController = LocalNavController.current
@@ -679,24 +681,28 @@ private fun CustomItemVertical(
             }
         },
         onClick = {
-            if (items.size == 1) {
-                runCatching {
-                    val listItem = items.first()
-                    sourceRepository
-                        .loadItem(listItem.source, listItem.url)
-                        ?.onStart { showLoadingDialog(true) }
-                        ?.onEach {
-                            showLoadingDialog(false)
-                            navController.navigateToDetails(it)
+            scope.launch {
+                biometrics.openIfNotIncognito(*items.toTypedArray()) {
+                    if (items.size == 1) {
+                        runCatching {
+                            val listItem = items.first()
+                            sourceRepository
+                                .loadItem(listItem.source, listItem.url)
+                                ?.onStart { showLoadingDialog(true) }
+                                ?.onEach {
+                                    showLoadingDialog(false)
+                                    navController.navigateToDetails(it)
+                                }
+                                ?.onCompletion { showLoadingDialog(false) }
+                                ?.launchIn(scope) ?: error("Nothing")
+                        }.onFailure {
+                            it.printStackTrace()
+                            onError()
                         }
-                        ?.onCompletion { showLoadingDialog(false) }
-                        ?.launchIn(scope) ?: error("Nothing")
-                }.onFailure {
-                    it.printStackTrace()
-                    onError()
+                    } else {
+                        showBottomSheet = true
+                    }
                 }
-            } else {
-                showBottomSheet = true
             }
         },
         modifier = modifier

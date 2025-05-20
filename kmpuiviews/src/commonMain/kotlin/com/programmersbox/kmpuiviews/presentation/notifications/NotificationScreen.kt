@@ -105,6 +105,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.dispatchIo
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -543,6 +544,7 @@ private fun NotiItem(
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
 ) {
+    val biometricOpen = rememberBiometricOpening()
     var optionsSheet by notificationOptionsSheet(
         i = i,
         scope = scope,
@@ -626,24 +628,28 @@ private fun NotiItem(
                     .clip(MaterialTheme.shapes.medium)
                     .combinedClickable(
                         onClick = {
-                            toSource(i.source)?.let { source ->
-                                Cached.cache[i.url]?.let {
-                                    flow {
-                                        emit(
-                                            it
-                                                .toDbModel()
-                                                .toItemModel(source)
-                                        )
+                            scope.launch {
+                                biometricOpen.openIfNotIncognito(i.url, i.notiTitle) {
+                                    toSource(i.source)?.let { source ->
+                                        Cached.cache[i.url]?.let {
+                                            flow {
+                                                emit(
+                                                    it
+                                                        .toDbModel()
+                                                        .toItemModel(source)
+                                                )
+                                            }
+                                        } ?: source.getSourceByUrlFlow(i.url)
                                     }
-                                } ?: source.getSourceByUrlFlow(i.url)
-                            }
-                                ?.dispatchIo()
-                                ?.onStart { onLoadingChange(true) }
-                                ?.onEach {
-                                    onLoadingChange(false)
-                                    navController.navigateToDetails(it)
+                                        ?.dispatchIo()
+                                        ?.onStart { onLoadingChange(true) }
+                                        ?.onEach {
+                                            onLoadingChange(false)
+                                            navController.navigateToDetails(it)
+                                        }
+                                        ?.launchIn(scope) ?: onError(i)
                                 }
-                                ?.launchIn(scope) ?: onError(i)
+                            }
                         },
                         onLongClick = { optionsSheet = NotificationItemOptionsSheet(i) }
                     )
@@ -747,7 +753,7 @@ private fun NotificationItem(
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
-
+    val biometricOpen = rememberBiometricOpening()
     var optionsSheet by notificationOptionsSheet(
         i = item,
         scope = scope,
@@ -827,25 +833,29 @@ private fun NotificationItem(
         content = {
             ElevatedCard(
                 onClick = {
-                    toSource(item.source)
-                        ?.let { source ->
-                            Cached.cache[item.url]?.let {
-                                flow {
-                                    emit(
-                                        it
-                                            .toDbModel()
-                                            .toItemModel(source)
-                                    )
+                    scope.launch {
+                        biometricOpen.openIfNotIncognito(item.url, item.notiTitle) {
+                            toSource(item.source)
+                                ?.let { source ->
+                                    Cached.cache[item.url]?.let {
+                                        flow {
+                                            emit(
+                                                it
+                                                    .toDbModel()
+                                                    .toItemModel(source)
+                                            )
+                                        }
+                                    } ?: source.getSourceByUrlFlow(item.url)
                                 }
-                            } ?: source.getSourceByUrlFlow(item.url)
+                                ?.dispatchIo()
+                                ?.onStart { onLoadingChange(true) }
+                                ?.onEach {
+                                    onLoadingChange(false)
+                                    navController.navigateToDetails(it)
+                                }
+                                ?.launchIn(scope) ?: onError(item)
                         }
-                        ?.dispatchIo()
-                        ?.onStart { onLoadingChange(true) }
-                        ?.onEach {
-                            onLoadingChange(false)
-                            navController.navigateToDetails(it)
-                        }
-                        ?.launchIn(scope) ?: onError(item)
+                    }
                 },
                 modifier = Modifier.padding(horizontal = 4.dp)
             ) {

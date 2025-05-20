@@ -97,7 +97,6 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchModel
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -106,6 +105,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
@@ -162,6 +162,8 @@ fun GlobalSearchView(
             }.onFailure { navController.popBackStack() }
         }
     }
+
+    val biometric = rememberBiometricOpening()
 
     LimitedBottomSheetScaffold(
         scaffoldState = bottomScaffold,
@@ -292,7 +294,7 @@ fun GlobalSearchView(
                                 model = m,
                                 placeHolder = mainLogoDrawable.logo,
                                 onLongPress = { c -> optionsSheet = m }
-                            ) { navController.navigateToDetails(m) }
+                            ) { scope.launch { biometric.openIfNotIncognito(m) } }
                         }
                     }
                 }
@@ -346,6 +348,7 @@ private fun Content(
     onLongPress: (KmpItemModel) -> Unit,
     bottomScaffold: BottomSheetScaffoldState,
 ) {
+    val biometrics = rememberBiometricOpening()
     OtakuPullToRefreshBox(
         isRefreshing = viewModel.isRefreshing,
         state = pullRefreshState,
@@ -447,7 +450,7 @@ private fun Content(
                                         model = m,
                                         placeHolder = mainLogoDrawable.logo,
                                         onLongPress = { c -> onLongPress(m) }
-                                    ) { navController.navigateToDetails(m) }
+                                    ) { scope.launch { biometrics.openIfNotIncognito(m) } }
                                 }
                             }
                         }

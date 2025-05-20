@@ -100,6 +100,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
@@ -465,6 +466,8 @@ private fun FavoritesGrid(
     logo: Drawable,
     modifier: Modifier = Modifier,
 ) {
+    val biometric = rememberBiometricOpening()
+    val scope = rememberCoroutineScope()
     LazyVerticalGrid(
         columns = adaptiveGridCell(),
         state = rememberLazyGridState(),
@@ -546,18 +549,22 @@ private fun FavoritesGrid(
                 },
                 modifier = Modifier.animateItem()
             ) {
-                if (info.value.size == 1) {
-                    info.value
-                        .firstOrNull()
-                        ?.let {
-                            sourceRepository
-                                .toSourceByApiServiceName(it.source)
-                                ?.apiService
-                                ?.let { it1 -> it.toItemModel(it1) }
-                                ?.let(navController::navigateToDetails) ?: moreInfoClick(it)
+                scope.launch {
+                    biometric.openIfNotIncognito(*info.value.toTypedArray()) {
+                        if (info.value.size == 1) {
+                            info.value
+                                .firstOrNull()
+                                ?.let {
+                                    sourceRepository
+                                        .toSourceByApiServiceName(it.source)
+                                        ?.apiService
+                                        ?.let { it1 -> it.toItemModel(it1) }
+                                        ?.let(navController::navigateToDetails) ?: moreInfoClick(it)
+                                }
+                        } else {
+                            showBottomSheet = true
                         }
-                } else {
-                    showBottomSheet = true
+                    }
                 }
             }
         }

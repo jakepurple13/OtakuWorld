@@ -58,13 +58,13 @@ import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
@@ -108,6 +108,8 @@ fun AllView(
     val focusManager = LocalFocusManager.current
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val hazeState = remember { HazeState() }
+
+    val biometric = rememberBiometricOpening()
 
     var optionsSheet by optionsKmpSheet()
 
@@ -214,7 +216,7 @@ fun AllView(
                         onLongPress = { item, c -> optionsSheet = item },
                         paddingValues = LocalNavHostPadding.current,
                         modifier = Modifier
-                    ) { navController.navigateToDetails(it) }
+                    ) { scope.launch { biometric.openIfNotIncognito(it) } }
                 }
             }
         }
@@ -273,6 +275,8 @@ fun AllScreen(
     val info = LocalGenericInfo.current
     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
     val navController = LocalNavController.current
+    val scope = rememberCoroutineScope()
+    val biometric = rememberBiometricOpening()
     val pullRefreshState = rememberPullToRefreshState()
     NormalOtakuScaffold { p ->
         Box(
@@ -296,7 +300,7 @@ fun AllScreen(
                     onLongPress = { item, c -> itemInfoChange(item) },
                     paddingValues = paddingValues,
                     modifier = Modifier
-                ) { navController.navigateToDetails(it) }
+                ) { scope.launch { biometric.openIfNotIncognito(it) } }
             }
             OtakuPullToRefreshDefaults.ScalingIndicator(
                 isRefreshing = isRefreshing,

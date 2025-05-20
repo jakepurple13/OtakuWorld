@@ -4,6 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.navigation.NavController
+import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.presentation.navigateToDetails
+import org.koin.compose.koinInject
 
 expect class BiometricPrompting {
 
@@ -125,3 +132,71 @@ expect fun rememberBiometricPrompt(
         }
     }
 }*/
+
+@Composable
+fun rememberBiometricOpening(): BiometricOpen {
+    val biometricPrompting = rememberBiometricPrompting()
+    val navController = LocalNavController.current
+    val itemDao = koinInject<ItemDao>()
+    return remember(biometricPrompting, navController, itemDao) {
+        BiometricOpen(biometricPrompting, navController, itemDao)
+    }
+}
+
+class BiometricOpen(
+    private val biometricPrompting: BiometricPrompting,
+    private val navController: NavController,
+    private val itemDao: ItemDao,
+) {
+    suspend fun openIfNotIncognito(kmpItemModel: KmpItemModel) {
+        if (itemDao.doesIncognitoSourceExistSync(kmpItemModel.url)) {
+            biometricPrompting.authenticate(
+                onAuthenticationSucceeded = { navController.navigateToDetails(kmpItemModel) },
+                title = "Authenticate to view ${kmpItemModel.title}",
+                subtitle = "Authenticate to view media",
+                negativeButtonText = "Cancel"
+            )
+        } else {
+            navController.navigateToDetails(kmpItemModel)
+        }
+    }
+
+    suspend fun openIfNotIncognito(url: String, title: String, openAction: () -> Unit) {
+        if (itemDao.doesIncognitoSourceExistSync(url)) {
+            biometricPrompting.authenticate(
+                onAuthenticationSucceeded = openAction,
+                title = "Authenticate to view $title",
+                subtitle = "Authenticate to view media",
+                negativeButtonText = "Cancel"
+            )
+        } else {
+            openAction()
+        }
+    }
+
+    suspend fun openIfNotIncognito(vararg dbModel: DbModel, openAction: () -> Unit) {
+        if (dbModel.any { itemDao.doesIncognitoSourceExistSync(it.url) }) {
+            biometricPrompting.authenticate(
+                onAuthenticationSucceeded = openAction,
+                title = "Authenticate to view ${dbModel.firstOrNull()?.title}",
+                subtitle = "Authenticate to view media",
+                negativeButtonText = "Cancel"
+            )
+        } else {
+            openAction()
+        }
+    }
+
+    suspend fun openIfNotIncognito(vararg customListInfo: CustomListInfo, openAction: () -> Unit) {
+        if (customListInfo.any { itemDao.doesIncognitoSourceExistSync(it.url) }) {
+            biometricPrompting.authenticate(
+                onAuthenticationSucceeded = openAction,
+                title = "Authenticate to view ${customListInfo.firstOrNull()?.title}",
+                subtitle = "Authenticate to view media",
+                negativeButtonText = "Cancel"
+            )
+        } else {
+            openAction()
+        }
+    }
+}

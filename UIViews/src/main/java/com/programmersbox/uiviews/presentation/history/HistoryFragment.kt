@@ -63,11 +63,13 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3place
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
+import com.programmersbox.kmpuiviews.utils.BiometricOpen
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
@@ -94,7 +96,7 @@ fun HistoryUi(
     val recentSize by hm.historyCount.collectAsStateWithLifecycle(0)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val biometrics = rememberBiometricOpening()
     var clearAllDialog by remember { mutableStateOf(false) }
 
     if (clearAllDialog) {
@@ -167,6 +169,7 @@ fun HistoryUi(
                         item = item,
                         dao = dao,
                         scope = scope,
+                        biometrics = biometrics,
                         onError = {
                             scope.launch {
                                 snackbarHostState.currentSnackbarData?.dismiss()
@@ -196,6 +199,7 @@ private fun HistoryItem(
     item: RecentModel,
     dao: HistoryDao,
     scope: CoroutineScope,
+    biometrics: BiometricOpen,
     modifier: Modifier = Modifier,
     onError: () -> Unit,
 ) {
@@ -285,20 +289,24 @@ private fun HistoryItem(
                 shape = MaterialTheme.shapes.medium,
                 onClick = {
                     scope.launch {
-                        info.toSourceByApiServiceName(item.source)
-                            ?.apiService
-                            ?.getSourceByUrlFlow(item.url)
-                            ?.dispatchIo()
-                            ?.onStart { showLoadingDialog = true }
-                            ?.catch {
-                                showLoadingDialog = false
-                                onError()
+                        biometrics.openIfNotIncognito(item.url, item.title) {
+                            scope.launch {
+                                info.toSourceByApiServiceName(item.source)
+                                    ?.apiService
+                                    ?.getSourceByUrlFlow(item.url)
+                                    ?.dispatchIo()
+                                    ?.onStart { showLoadingDialog = true }
+                                    ?.catch {
+                                        showLoadingDialog = false
+                                        onError()
+                                    }
+                                    ?.onEach { m ->
+                                        showLoadingDialog = false
+                                        navController.navigateToDetails(m)
+                                    }
+                                    ?.collect() ?: onError()
                             }
-                            ?.onEach { m ->
-                                showLoadingDialog = false
-                                navController.navigateToDetails(m)
-                            }
-                            ?.collect() ?: onError()
+                        }
                     }
                 }
             ) {
@@ -337,20 +345,24 @@ private fun HistoryItem(
                             IconButton(
                                 onClick = {
                                     scope.launch {
-                                        info.toSourceByApiServiceName(item.source)
-                                            ?.apiService
-                                            ?.getSourceByUrlFlow(item.url)
-                                            ?.dispatchIo()
-                                            ?.onStart { showLoadingDialog = true }
-                                            ?.catch {
-                                                showLoadingDialog = false
-                                                onError()
+                                        biometrics.openIfNotIncognito(item.url, item.title) {
+                                            scope.launch {
+                                                info.toSourceByApiServiceName(item.source)
+                                                    ?.apiService
+                                                    ?.getSourceByUrlFlow(item.url)
+                                                    ?.dispatchIo()
+                                                    ?.onStart { showLoadingDialog = true }
+                                                    ?.catch {
+                                                        showLoadingDialog = false
+                                                        onError()
+                                                    }
+                                                    ?.onEach { m ->
+                                                        showLoadingDialog = false
+                                                        navController.navigateToDetails(m)
+                                                    }
+                                                    ?.collect() ?: onError()
                                             }
-                                            ?.onEach { m ->
-                                                showLoadingDialog = false
-                                                navController.navigateToDetails(m)
-                                            }
-                                            ?.collect() ?: onError()
+                                        }
                                     }
                                 }
                             ) { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
@@ -422,6 +434,7 @@ private fun HistoryItemPreview() {
             ),
             dao = LocalHistoryDao.current,
             scope = rememberCoroutineScope(),
+            biometrics = rememberBiometricOpening(),
             onError = {}
         )
     }
