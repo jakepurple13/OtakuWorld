@@ -112,15 +112,17 @@ fun SettingScreen(
         scanQrCode = scanQrCode,
         onDebugBuild = {
             if (BuildConfig.DEBUG) {
-                PreferenceSetting(
-                    settingTitle = { Text("Debug Menu") },
-                    settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null,
-                        onClick = debugMenuClick
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text("Debug Menu") },
+                        settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null,
+                            onClick = debugMenuClick
+                        )
                     )
-                )
+                }
             }
         }
     )
