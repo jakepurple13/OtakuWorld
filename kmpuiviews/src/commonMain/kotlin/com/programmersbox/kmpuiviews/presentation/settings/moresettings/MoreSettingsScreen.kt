@@ -112,8 +112,7 @@ fun MoreSettingsScreen(
     }
 
     val appConfig = koinInject<AppConfig>()
-
-    val appName = appConfig
+    val appName = appConfig.appName
     val exportLauncher = rememberFileSaverLauncher { document ->
         document?.let { viewModel.writeToFile(it) }
     }
