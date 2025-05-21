@@ -1,4 +1,4 @@
-package com.programmersbox.kmpuiviews.presentation.components
+package com.programmersbox.kmpuiviews.presentation.components.settings
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.layout.MutableIntervalList
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -21,9 +20,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -45,7 +42,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -540,86 +536,4 @@ fun SliderSetting(
                 .padding(horizontal = 16.dp)
         )
     }
-}
-
-@DslMarker
-annotation class CategoryGroupMarker
-
-@Composable
-fun CategoryGroup(
-    content: CategoryGroupScope.() -> Unit,
-) {
-    val categoryGroup = remember { CategoryGroupImpl(content) }
-    val stateHolder = rememberSaveableStateHolder()
-
-    ElevatedCard(
-        shape = MaterialTheme.shapes.extraLarge,
-        modifier = Modifier.padding(horizontal = 16.dp),
-    ) {
-        Column {
-            for (i in 0 until categoryGroup.size) {
-                stateHolder.SaveableStateProvider(i) {
-                    when (val item = categoryGroup.get(i)) {
-                        is CategoryGroupItem.Category -> {
-                            item.content()
-                        }
-                        is CategoryGroupItem.Item -> {
-                            item.content()
-                            if (i != categoryGroup.size - 1 && item.includeDivider) {
-                                CategoryGroupDefaults.Divider()
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-object CategoryGroupDefaults {
-    @Composable
-    fun Divider() = HorizontalDivider(
-        color = MaterialTheme.colorScheme.surface,
-        thickness = 2.dp
-    )
-}
-
-@CategoryGroupMarker
-interface CategoryGroupScope {
-    fun category(content: @Composable () -> Unit)
-
-    fun item(
-        includeDivider: Boolean = true,
-        content: @Composable () -> Unit,
-    )
-}
-
-internal class CategoryGroupImpl(
-    content: CategoryGroupScope.() -> Unit = {},
-) : CategoryGroupScope {
-    val intervals: MutableIntervalList<CategoryGroupItem> = MutableIntervalList()
-
-    val size: Int get() = intervals.size
-
-    fun get(index: Int): CategoryGroupItem = intervals[index].value
-
-    init {
-        apply(content)
-    }
-
-    override fun category(content: @Composable (() -> Unit)) {
-        intervals.addInterval(1, CategoryGroupItem.Category(content))
-    }
-
-    override fun item(
-        includeDivider: Boolean,
-        content: @Composable () -> Unit,
-    ) {
-        intervals.addInterval(1, CategoryGroupItem.Item(includeDivider, content))
-    }
-}
-
-sealed class CategoryGroupItem {
-    data class Category(val content: @Composable () -> Unit) : CategoryGroupItem()
-    data class Item(val includeDivider: Boolean, val content: @Composable () -> Unit) : CategoryGroupItem()
 }

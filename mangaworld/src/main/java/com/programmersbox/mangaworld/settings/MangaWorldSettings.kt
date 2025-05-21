@@ -11,7 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 

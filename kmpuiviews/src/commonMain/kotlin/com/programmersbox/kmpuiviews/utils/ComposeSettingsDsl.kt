@@ -1,7 +1,7 @@
 package com.programmersbox.kmpuiviews.utils
 
 import androidx.compose.runtime.Composable
-import com.programmersbox.kmpuiviews.presentation.components.CategoryGroupScope
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupScope
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
 
 class ComposeSettingsDsl {

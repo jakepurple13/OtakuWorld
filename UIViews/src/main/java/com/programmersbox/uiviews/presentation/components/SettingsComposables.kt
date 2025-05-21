@@ -7,10 +7,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
-import com.programmersbox.kmpuiviews.presentation.components.CheckBoxSetting
-import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategorySetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.CheckBoxSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 

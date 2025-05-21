@@ -47,10 +47,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
-import com.programmersbox.kmpuiviews.presentation.components.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -265,7 +265,7 @@ private fun SettingsScreen(
     }
 
     CategoryGroup {
-        category { CategorySetting { Text(stringResource(Res.string.general_menu_title)) } }
+        categorySetting { Text(stringResource(Res.string.general_menu_title)) }
 
         item {
             var showSourceChooser by showSourceChooser()
@@ -349,7 +349,7 @@ private fun SettingsScreen(
         )
     }*/
     CategoryGroup {
-        category { CategorySetting { Text(stringResource(Res.string.additional_settings)) } }
+        categorySetting { Text(stringResource(Res.string.additional_settings)) }
 
         item {
             PreferenceSetting(

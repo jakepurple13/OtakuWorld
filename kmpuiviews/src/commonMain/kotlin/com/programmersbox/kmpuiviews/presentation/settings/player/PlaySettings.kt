@@ -12,7 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource

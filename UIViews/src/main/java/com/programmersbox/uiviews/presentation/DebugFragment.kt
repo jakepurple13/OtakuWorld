@@ -50,11 +50,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.material.datepicker.DateValidatorPointForward
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.kmpuiviews.presentation.components.CheckBoxSetting
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowMoreSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.CheckBoxSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository

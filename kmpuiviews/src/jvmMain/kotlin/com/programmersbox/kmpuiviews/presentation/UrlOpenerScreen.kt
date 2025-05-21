@@ -22,8 +22,8 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.kmpuiviews.presentation.components.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

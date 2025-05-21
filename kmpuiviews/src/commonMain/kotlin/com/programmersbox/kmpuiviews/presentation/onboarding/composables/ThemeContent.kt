@@ -32,10 +32,10 @@ import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
-import com.programmersbox.kmpuiviews.presentation.components.ListSetting
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.seedColor
+import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res

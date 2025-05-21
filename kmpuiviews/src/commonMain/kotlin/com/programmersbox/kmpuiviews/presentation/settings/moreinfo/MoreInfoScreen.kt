@@ -38,8 +38,8 @@ import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.composables.icons.Discord

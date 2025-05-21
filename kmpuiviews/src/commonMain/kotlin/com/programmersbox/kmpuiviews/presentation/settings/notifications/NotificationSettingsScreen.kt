@@ -26,10 +26,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
 import com.programmersbox.kmpuiviews.utils.LocalItemDao

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import io.github.vinceglb.filekit.dialogs.FileKitType

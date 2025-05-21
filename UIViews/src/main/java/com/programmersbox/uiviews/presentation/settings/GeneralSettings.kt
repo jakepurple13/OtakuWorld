@@ -38,11 +38,11 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberFloatingNavigation
-import com.programmersbox.kmpuiviews.presentation.components.ListSetting
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.item
+import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass

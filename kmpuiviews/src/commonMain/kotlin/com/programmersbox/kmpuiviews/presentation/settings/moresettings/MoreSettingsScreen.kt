@@ -47,9 +47,9 @@ import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
-import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavController
@@ -127,13 +127,11 @@ fun MoreSettingsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         CategoryGroup {
-            category {
-                CategorySetting(
-                    settingIcon = {
-                        Icon(Icons.Default.Star, null)
-                    }
-                ) { Text(stringResource(Res.string.viewFavoritesMenu)) }
-            }
+            categorySetting(
+                settingIcon = {
+                    Icon(Icons.Default.Star, null)
+                }
+            ) { Text(stringResource(Res.string.viewFavoritesMenu)) }
 
             item {
                 PreferenceSetting(
@@ -232,14 +230,13 @@ fun MoreSettingsScreen(
                 navController.navigate(Screen.ImportFullListScreen(it.toString()))
             }
         }
+
         CategoryGroup {
-            category {
-                CategorySetting(
-                    settingIcon = {
-                        Icon(Icons.AutoMirrored.Filled.List, null)
-                    }
-                ) { Text(stringResource(Res.string.custom_lists_title)) }
-            }
+            categorySetting(
+                settingIcon = {
+                    Icon(Icons.AutoMirrored.Filled.List, null)
+                }
+            ) { Text(stringResource(Res.string.custom_lists_title)) }
 
             item {
                 PreferenceSetting(

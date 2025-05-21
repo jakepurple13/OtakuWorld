@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.asState
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.components.SliderSetting
-import com.programmersbox.kmpuiviews.presentation.components.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShowDownloadSettings
