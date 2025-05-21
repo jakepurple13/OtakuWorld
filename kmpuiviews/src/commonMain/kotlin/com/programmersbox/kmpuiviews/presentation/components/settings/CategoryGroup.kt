@@ -121,11 +121,20 @@ internal class CategoryGroupImpl(
         includeDivider: Boolean,
         content: @Composable () -> Unit,
     ) {
-        intervals.addInterval(1, CategoryGroupItem.Item(includeDivider, content))
+        intervals.addInterval(
+            1,
+            CategoryGroupItem.Item(
+                includeDivider = includeDivider,
+                content = content
+            )
+        )
     }
 }
 
 internal sealed class CategoryGroupItem {
     data class Category(val content: @Composable () -> Unit) : CategoryGroupItem()
-    data class Item(val includeDivider: Boolean, val content: @Composable () -> Unit) : CategoryGroupItem()
+    data class Item(
+        val includeDivider: Boolean,
+        val content: @Composable () -> Unit,
+    ) : CategoryGroupItem()
 }

@@ -12,12 +12,12 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.CheckBoxSe
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.uiviews.utils.StandalonePreviewTheme
 
 @LightAndDarkPreviews
 @Composable
 private fun SwitchSettingPreview() {
-    PreviewTheme {
+    StandalonePreviewTheme {
         Column {
             SwitchSetting(
                 value = true,
@@ -34,7 +34,7 @@ private fun SwitchSettingPreview() {
 @LightAndDarkPreviews
 @Composable
 private fun CheckboxSettingPreview() {
-    PreviewTheme {
+    StandalonePreviewTheme {
         Column {
             CheckBoxSetting(
                 value = true,
@@ -50,7 +50,7 @@ private fun CheckboxSettingPreview() {
 @LightAndDarkPreviews
 @Composable
 private fun SliderSettingPreview() {
-    PreviewTheme {
+    StandalonePreviewTheme {
         Column {
             SliderSetting(
                 sliderValue = 5f,
@@ -67,7 +67,7 @@ private fun SliderSettingPreview() {
 @LightAndDarkPreviews
 @Composable
 private fun CategoryPreview() {
-    PreviewTheme {
+    StandalonePreviewTheme {
         Column {
             CategorySetting(
                 settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },

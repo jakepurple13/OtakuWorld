@@ -263,3 +263,40 @@ private fun RecentPreview() {
         Text("Hello")
     }
 }
+
+@Composable
+fun StandalonePreviewTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    isAmoledMode: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    MaterialTheme(
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+            darkTheme -> darkColorScheme(
+                primary = Color(0xff90CAF9),
+                secondary = Color(0xff90CAF9)
+            )
+
+            else -> lightColorScheme(
+                primary = Color(0xff2196F3),
+                secondary = Color(0xff90CAF9)
+            )
+        }.let {
+            if (isAmoledMode && darkTheme) {
+                it.copy(
+                    surface = Color.Black,
+                    inverseSurface = Color.White,
+                    background = Color.Black
+                )
+            } else {
+                it
+            }
+        },
+    ) {
+        Surface {
+            content()
+        }
+    }
+}
