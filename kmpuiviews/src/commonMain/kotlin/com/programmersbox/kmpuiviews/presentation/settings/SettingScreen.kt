@@ -51,7 +51,6 @@ import com.programmersbox.kmpuiviews.presentation.components.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -293,7 +292,7 @@ private fun SettingsScreen(
             )
         }
 
-        item(includeDivider = false) {
+        item {
             PreferenceSetting(
                 settingTitle = { Text(stringResource(Res.string.view_extensions)) },
                 settingIcon = { Icon(Icons.Default.Extension, null, modifier = Modifier.fillMaxSize()) },
@@ -305,8 +304,8 @@ private fun SettingsScreen(
             )
         }
 
-        item {
-            ShowWhen(visibility = source != null) {
+        if (source != null) {
+            item {
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(Res.string.view_source_in_browser)) },
                     settingIcon = { Icon(Icons.Default.OpenInBrowser, null, modifier = Modifier.fillMaxSize()) },

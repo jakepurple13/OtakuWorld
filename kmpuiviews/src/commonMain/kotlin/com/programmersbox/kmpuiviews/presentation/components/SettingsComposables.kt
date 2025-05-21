@@ -566,10 +566,7 @@ fun CategoryGroup(
                         is CategoryGroupItem.Item -> {
                             item.content()
                             if (i != categoryGroup.size - 1 && item.includeDivider) {
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.surface,
-                                    thickness = 2.dp
-                                )
+                                CategoryGroupDefaults.Divider()
                             }
                         }
                     }
@@ -579,11 +576,18 @@ fun CategoryGroup(
     }
 }
 
+object CategoryGroupDefaults {
+    @Composable
+    fun Divider() = HorizontalDivider(
+        color = MaterialTheme.colorScheme.surface,
+        thickness = 2.dp
+    )
+}
+
 @CategoryGroupMarker
 interface CategoryGroupScope {
     fun category(content: @Composable () -> Unit)
 
-    @CategoryGroupMarker
     fun item(
         includeDivider: Boolean = true,
         content: @Composable () -> Unit,
