@@ -76,13 +76,19 @@ fun NavGraphBuilder.navGraph(
         )
     }
 
-    composable<Screen.WebViewScreen> {
+    composable<Screen.WebViewScreen>(
+        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+    ) {
         WebViewScreen(
             url = it.toRoute<Screen.WebViewScreen>().url
         )
     }
 
-    composable<Screen.IncognitoScreen> {
+    composable<Screen.IncognitoScreen>(
+        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+    ) {
         IncognitoScreen()
     }
 
@@ -170,7 +176,10 @@ private fun NavGraphBuilder.settings(
             )
         }
 
-        composable<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
+        composable<Screen.WorkerInfoScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        ) { WorkerInfoScreen() }
 
         composable<Screen.OrderScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
@@ -211,9 +220,7 @@ private fun NavGraphBuilder.settings(
         composable<Screen.PrereleaseScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
-        ) {
-            PrereleaseScreen()
-        }
+        ) { PrereleaseScreen() }
 
         composable<Screen.OtherSettings>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
@@ -346,7 +353,10 @@ private fun NavGraphBuilder.settings(
             }
         }
 
-        composable<Screen.DownloadInstallScreen> {
+        composable<Screen.DownloadInstallScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        ) {
             DownloadStateScreen()
         }
     }
