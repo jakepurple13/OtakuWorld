@@ -96,6 +96,7 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
@@ -507,62 +508,68 @@ class GenericAnime(
             var folderLocation by remember { mutableStateOf(context.folderLocation) }
             val activity = LocalActivity.current
 
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.folder_location)) },
-                summaryValue = { Text(folderLocation) },
-                settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) {
-                    (activity as? FragmentActivity)?.requestPermissions(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    ) {
-                        if (it.isGranted) {
-                            ChooserDialog(context)
-                                .withIcon(R.mipmap.ic_launcher)
-                                .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
-                                .withFilter(true, false)
-                                .withStartFile(context.folderLocation)
-                                .enableOptions(true)
-                                .withChosenListener { dir, _ ->
-                                    context.folderLocation = "$dir/"
-                                    println(dir)
-                                    folderLocation = context.folderLocation
+            CategoryGroup {
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.folder_location)) },
+                        summaryValue = { Text(folderLocation) },
+                        settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) {
+                            (activity as? FragmentActivity)?.requestPermissions(
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            ) {
+                                if (it.isGranted) {
+                                    ChooserDialog(context)
+                                        .withIcon(R.mipmap.ic_launcher)
+                                        .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
+                                        .withFilter(true, false)
+                                        .withStartFile(context.folderLocation)
+                                        .enableOptions(true)
+                                        .withChosenListener { dir, _ ->
+                                            context.folderLocation = "$dir/"
+                                            println(dir)
+                                            folderLocation = context.folderLocation
+                                        }
+                                        .build()
+                                        .show()
                                 }
-                                .build()
-                                .show()
+                            }
                         }
-                    }
+                    )
                 }
-            )
+            }
         }
 
         playerSettings {
             val scope = rememberCoroutineScope()
-
             val useNewPlayer = animeDataStoreHandling.useNewPlayer
-
             val player by useNewPlayer.asState()
-
-            SwitchSetting(
-                settingTitle = { Text(stringResource(R.string.use_new_player)) },
-                summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
-                settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
-                value = player,
-                updateValue = { scope.launch { useNewPlayer.set(it) } }
-            )
-
             val ignoreSsl = animeDataStoreHandling.ignoreSsl
-
             val ignoreSslState by ignoreSsl.asState()
 
-            SwitchSetting(
-                settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
-                settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
-                value = ignoreSslState
-            ) { scope.launch { ignoreSsl.set(it) } }
+            CategoryGroup {
+                item {
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(R.string.use_new_player)) },
+                        summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
+                        settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
+                        value = player,
+                        updateValue = { scope.launch { useNewPlayer.set(it) } }
+                    )
+                }
+
+                item {
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
+                        settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
+                        value = ignoreSslState
+                    ) { scope.launch { ignoreSsl.set(it) } }
+                }
+            }
         }
     }
 
