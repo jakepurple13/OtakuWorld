@@ -3,8 +3,8 @@ package com.programmersbox.kmpuiviews.presentation.settings.notifications
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
@@ -55,7 +56,6 @@ import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.notification_settings
 import otakuworld.kmpuiviews.generated.resources.yes
 
-//TODO: This can be moved to kmpuiviews
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettings(
@@ -63,8 +63,14 @@ fun NotificationSettings(
     viewModel: NotificationSettingsViewModel = koinViewModel(),
 ) {
     val snackbarHost = remember { SnackbarHostState() }
+
+    val workInfo by viewModel
+        .allWorkCheck
+        .collectAsStateWithLifecycle(emptyList())
+
     SettingsScaffold(
         title = stringResource(Res.string.notification_settings),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHost,
@@ -74,134 +80,148 @@ fun NotificationSettings(
     ) {
         val scope = rememberCoroutineScope()
         ShowWhen(viewModel.savedNotifications > 0) {
-            var showDialog by remember { mutableStateOf(false) }
+            CategoryGroup {
+                item {
+                    var showDialog by remember { mutableStateOf(false) }
 
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    title = { Text(stringResource(Res.string.are_you_sure_delete_notifications)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                scope.launch {
-                                    val number = dao.deleteAllNotifications()
-                                    snackbarHost.showSnackbar(
-                                        getString(Res.string.deleted_notifications, number)
-                                    )
-                                    viewModel.cancelGroup()
-                                }
-                                showDialog = false
-                            }
-                        ) { Text(stringResource(Res.string.yes)) }
-                    },
-                    dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(Res.string.no)) } }
-                )
-            }
+                    if (showDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text(stringResource(Res.string.are_you_sure_delete_notifications)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            val number = dao.deleteAllNotifications()
+                                            snackbarHost.showSnackbar(
+                                                getString(Res.string.deleted_notifications, number)
+                                            )
+                                            viewModel.cancelGroup()
+                                        }
+                                        showDialog = false
+                                    }
+                                ) { Text(stringResource(Res.string.yes)) }
+                            },
+                            dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(Res.string.no)) } }
+                        )
+                    }
 
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(Res.string.delete_saved_notifications_title)) },
-                summaryValue = { Text(stringResource(Res.string.delete_notifications_summary)) },
-                modifier = Modifier
-                    .clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { showDialog = true }
-                    .padding(bottom = 16.dp, top = 8.dp)
-            )
-        }
-
-        SwitchSetting(
-            settingTitle = { Text("Notify on Boot") },
-            value = viewModel.notifyOnBoot.rememberPreference().value,
-            updateValue = { scope.launch { viewModel.notifyOnBoot.set(it) } }
-        )
-
-        PreferenceSetting(
-            settingTitle = { Text(stringResource(Res.string.last_update_check_time)) },
-            summaryValue = { Text(viewModel.time) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = viewModel::checkManually
-            )
-        )
-
-        var showDialog by remember { mutableStateOf(false) }
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text(stringResource(Res.string.are_you_sure_stop_checking)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            viewModel.updateShouldCheck(false)
-                            showDialog = false
-                        }
-                    ) { Text(stringResource(Res.string.yes)) }
-                },
-                dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(Res.string.no)) } }
-            )
-        }
-
-        SwitchSetting(
-            settingTitle = { Text(stringResource(Res.string.check_for_periodic_updates)) },
-            value = viewModel.canCheck,
-            updateValue = {
-                if (!it) {
-                    showDialog = true
-                } else {
-                    viewModel.updateShouldCheck(it)
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(Res.string.delete_saved_notifications_title)) },
+                        summaryValue = { Text(stringResource(Res.string.delete_notifications_summary)) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) { showDialog = true }
+                    )
                 }
             }
-        )
+        }
 
-        ShowWhen(viewModel.canCheck) {
-            var sliderValue by remember(viewModel.updateHourCheck) {
-                mutableFloatStateOf(viewModel.updateHourCheck.toFloat())
+        CategoryGroup {
+            item {
+                SwitchSetting(
+                    settingTitle = { Text("Notify on Boot") },
+                    value = viewModel.notifyOnBoot.rememberPreference().value,
+                    updateValue = { scope.launch { viewModel.notifyOnBoot.set(it) } }
+                )
             }
 
-            SliderSetting(
-                settingTitle = { Text("Check Every ${viewModel.updateHourCheck} hours") },
-                settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
-                sliderValue = sliderValue,
-                updateValue = { sliderValue = it },
-                range = 1f..24f,
-                steps = 23,
-                onValueChangedFinished = { viewModel.updateHourCheck(sliderValue.toLong()) }
-            )
-
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(Res.string.clear_update_queue)) },
-                summaryValue = { Text(stringResource(Res.string.clear_update_queue_summary)) },
-                modifier = Modifier
-                    .alpha(if (viewModel.canCheck) 1f else .38f)
-                    .clickable(
-                        enabled = viewModel.canCheck,
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(Res.string.last_update_check_time)) },
+                    summaryValue = { Text(viewModel.time) },
+                    modifier = Modifier.clickable(
                         indication = ripple(),
-                        interactionSource = null
-                    ) {
-                        scope.launch {
-                            viewModel.pruneWork()
-                            viewModel.updateShouldCheck(!viewModel.canCheck)
-                            viewModel.updateShouldCheck(!viewModel.canCheck)
-                            snackbarHost.showSnackbar(getString(Res.string.cleared))
+                        interactionSource = null,
+                        onClick = viewModel::checkManually
+                    )
+                )
+            }
+
+            item {
+                var showDialog by remember { mutableStateOf(false) }
+
+                if (showDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDialog = false },
+                        title = { Text(stringResource(Res.string.are_you_sure_stop_checking)) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.updateShouldCheck(false)
+                                    showDialog = false
+                                }
+                            ) { Text(stringResource(Res.string.yes)) }
+                        },
+                        dismissButton = { TextButton(onClick = { showDialog = false }) { Text(stringResource(Res.string.no)) } }
+                    )
+                }
+
+                SwitchSetting(
+                    settingTitle = { Text(stringResource(Res.string.check_for_periodic_updates)) },
+                    value = viewModel.canCheck,
+                    updateValue = {
+                        if (!it) {
+                            showDialog = true
+                        } else {
+                            viewModel.updateShouldCheck(it)
                         }
                     }
-            )
-
-            Spacer(Modifier.padding(16.dp))
-
-            val workInfo by viewModel
-                .allWorkCheck
-                .collectAsStateWithLifecycle(emptyList())
-
-            workInfo.forEach {
-                WorkInfoItem(
-                    workInfo = it,
-                    title = "Scheduled Check:",
-                    dateFormat = viewModel.dateTimeFormatter
                 )
+            }
+        }
+
+        ShowWhen(viewModel.canCheck) {
+            CategoryGroup {
+                item {
+                    var sliderValue by remember(viewModel.updateHourCheck) {
+                        mutableFloatStateOf(viewModel.updateHourCheck.toFloat())
+                    }
+
+                    SliderSetting(
+                        settingTitle = { Text("Check Every ${viewModel.updateHourCheck} hours") },
+                        settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
+                        sliderValue = sliderValue,
+                        updateValue = { sliderValue = it },
+                        range = 1f..24f,
+                        steps = 23,
+                        onValueChangedFinished = { viewModel.updateHourCheck(sliderValue.toLong()) }
+                    )
+                }
+
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(Res.string.clear_update_queue)) },
+                        summaryValue = { Text(stringResource(Res.string.clear_update_queue_summary)) },
+                        modifier = Modifier
+                            .alpha(if (viewModel.canCheck) 1f else .38f)
+                            .clickable(
+                                enabled = viewModel.canCheck,
+                                indication = ripple(),
+                                interactionSource = null
+                            ) {
+                                scope.launch {
+                                    viewModel.pruneWork()
+                                    viewModel.updateShouldCheck(!viewModel.canCheck)
+                                    viewModel.updateShouldCheck(!viewModel.canCheck)
+                                    snackbarHost.showSnackbar(getString(Res.string.cleared))
+                                }
+                            }
+                    )
+                }
+
+                if (workInfo.isNotEmpty()) {
+                    item {
+                        workInfo.forEach {
+                            WorkInfoItem(
+                                workInfo = it,
+                                title = "Scheduled Check:",
+                                dateFormat = viewModel.dateTimeFormatter
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -209,12 +229,16 @@ fun NotificationSettings(
             .manualCheck
             .collectAsStateWithLifecycle(emptyList())
 
-        manualWorkInfo.forEach { workInfo ->
-            WorkInfoItem(
-                workInfo = workInfo,
-                title = "Manual Check:",
-                dateFormat = viewModel.dateTimeFormatter
-            )
+        CategoryGroup {
+            manualWorkInfo.forEach { workInfo ->
+                item {
+                    WorkInfoItem(
+                        workInfo = workInfo,
+                        title = "Manual Check:",
+                        dateFormat = viewModel.dateTimeFormatter
+                    )
+                }
+            }
         }
     }
 }
