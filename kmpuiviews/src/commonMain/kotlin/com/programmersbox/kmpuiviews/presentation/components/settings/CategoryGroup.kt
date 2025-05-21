@@ -20,6 +20,7 @@ annotation class CategoryGroupMarker
 
 @Composable
 fun CategoryGroup(
+    modifier: Modifier = Modifier,
     largeShape: CornerBasedShape = CategoryGroupDefaults.largeShape,
     smallShape: CornerBasedShape = CategoryGroupDefaults.smallShape,
     content: CategoryGroupScope.() -> Unit,
@@ -28,7 +29,7 @@ fun CategoryGroup(
     val stateHolder = rememberSaveableStateHolder()
 
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
     ) {
         for (i in 0 until categoryGroup.size) {
             ElevatedCard(
