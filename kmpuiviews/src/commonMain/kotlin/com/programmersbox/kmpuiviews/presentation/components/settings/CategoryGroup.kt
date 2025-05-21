@@ -33,13 +33,15 @@ fun CategoryGroup(
     ) {
         for (i in 0 until categoryGroup.size) {
             ElevatedCard(
-                shape = when (i) {
-                    0 -> largeShape.copy(
+                shape = when {
+                    categoryGroup.size == 1 -> largeShape
+
+                    i == 0 -> largeShape.copy(
                         bottomEnd = smallShape.bottomEnd,
                         bottomStart = smallShape.bottomStart
                     )
 
-                    categoryGroup.size - 1 -> largeShape.copy(
+                    i == categoryGroup.size - 1 -> largeShape.copy(
                         topEnd = smallShape.topEnd,
                         topStart = smallShape.topStart
                     )

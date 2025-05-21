@@ -49,7 +49,6 @@ import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupScope
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
@@ -100,7 +99,7 @@ fun SettingScreen(
     sourcesOrderClick: () -> Unit = {},
     appDownloadsClick: () -> Unit = {},
     scanQrCode: () -> Unit,
-    onDebugBuild: CategoryGroupScope.() -> Unit,
+    onDebugBuild: @Composable () -> Unit,
     accountSettings: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -164,14 +163,14 @@ private fun SettingsScreen(
     sourcesOrderClick: () -> Unit,
     appDownloadsClick: () -> Unit,
     scanQrCode: () -> Unit,
-    onDebugBuild: CategoryGroupScope.() -> Unit,
+    onDebugBuild: @Composable () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
 
-    CategoryGroup {
-        onDebugBuild()
+    onDebugBuild()
 
+    CategoryGroup {
         item {
             PreferenceSetting(
                 settingTitle = { Text(stringResource(Res.string.view_notifications_title)) },

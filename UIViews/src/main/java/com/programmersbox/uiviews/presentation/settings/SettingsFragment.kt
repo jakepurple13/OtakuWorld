@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -112,16 +113,18 @@ fun SettingScreen(
         scanQrCode = scanQrCode,
         onDebugBuild = {
             if (BuildConfig.DEBUG) {
-                item {
-                    PreferenceSetting(
-                        settingTitle = { Text("Debug Menu") },
-                        settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-                        modifier = Modifier.clickable(
-                            indication = ripple(),
-                            interactionSource = null,
-                            onClick = debugMenuClick
+                CategoryGroup {
+                    item {
+                        PreferenceSetting(
+                            settingTitle = { Text("Debug Menu") },
+                            settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+                            modifier = Modifier.clickable(
+                                indication = ripple(),
+                                interactionSource = null,
+                                onClick = debugMenuClick
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
