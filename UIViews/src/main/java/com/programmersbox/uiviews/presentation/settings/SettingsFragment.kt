@@ -3,7 +3,6 @@ package com.programmersbox.uiviews.presentation.settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -13,9 +12,9 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -309,26 +309,32 @@ private fun AccountSettings(
                 }
             },
             text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(if (accountInfo != null) R.string.logOut else R.string.logIn)) },
-                        modifier = Modifier.clickable {
-                            showDialog = false
-                            (activity as? ComponentActivity)?.let { viewModel.signInOrOut(context, it) }
-                        }
-                    )
+                CategoryGroup {
+                    item {
+                        ListItem(
+                            headlineContent = { Text(stringResource(if (accountInfo != null) R.string.logOut else R.string.logIn)) },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.clickable {
+                                showDialog = false
+                                (activity as? ComponentActivity)?.let { viewModel.signInOrOut(context, it) }
+                            }
+                        )
+                    }
 
-                    HorizontalDivider()
-
-                    ListItem(
-                        headlineContent = { Text("View Account Info") },
-                        modifier = Modifier.clickable {
-                            showDialog = false
-                            navController.navigate(Screen.AccountInfo) { launchSingleTop = true }
-                        }
-                    )
+                    item {
+                        ListItem(
+                            headlineContent = { Text("View Account Info") },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            ),
+                            modifier = Modifier.clickable {
+                                showDialog = false
+                                navController.navigate(Screen.AccountInfo) { launchSingleTop = true }
+                            }
+                        )
+                    }
                 }
             }
         )

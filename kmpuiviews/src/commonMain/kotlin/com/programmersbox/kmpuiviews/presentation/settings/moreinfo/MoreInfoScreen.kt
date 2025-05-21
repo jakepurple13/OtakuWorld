@@ -211,18 +211,19 @@ fun MoreInfoScreen(
                     settingTitle = {
                         Column {
                             Text(
-                                "Version code: ${versionCode()}",
-                                style = MaterialTheme.typography.bodySmall
+                                platform(),
+                                style = MaterialTheme.typography.labelSmall
                             )
                             Text(stringResource(Res.string.currentVersion, appVersion()))
                             Text(
-                                platform(),
-                                style = MaterialTheme.typography.labelSmall
+                                "Version code: ${versionCode()}",
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     },
                     modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker() } }
                 )
+
                 ShowWhen(
                     visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.updateRealVersion.orEmpty())
                 ) {

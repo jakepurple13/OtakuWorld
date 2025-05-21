@@ -67,7 +67,6 @@ fun NavGraphBuilder.navGraph(
     navController: NavHostController,
     notificationLogo: NotificationLogo,
 ) {
-
     dialog<Screen.ScanQrCodeScreen> { ScanQrCode() }
     composable<Screen.OnboardingScreen> {
         OnboardingScreen(

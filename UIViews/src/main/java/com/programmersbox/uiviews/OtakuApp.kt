@@ -7,6 +7,8 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.util.Log
 import androidx.annotation.CallSuper
+import androidx.compose.runtime.Composer
+import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Configuration
@@ -63,12 +65,13 @@ import org.koin.dsl.module
 import java.util.UUID
 
 abstract class OtakuApp : Application(), Configuration.Provider {
-    @OptIn(ExperimentalComposeUiApi::class)
+    @OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeRuntimeApi::class)
     @CallSuper
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
         ComposeUiFlags.isSemanticAutofillEnabled = true
+        Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
 
         DataStoreSettings { filesDir.resolve(it).absolutePath }
 

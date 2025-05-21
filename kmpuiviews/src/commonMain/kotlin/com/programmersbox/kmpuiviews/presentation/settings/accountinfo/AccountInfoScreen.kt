@@ -15,10 +15,12 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -36,6 +38,7 @@ fun AccountInfoScreen(
     viewModel: AccountInfoViewModel = koinViewModel(),
 ) {
     val state = viewModel.accountInfo
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     OtakuScaffold(
         topBar = {
@@ -51,10 +54,12 @@ fun AccountInfoScreen(
                             .clip(CircleShape)
                             .size(40.dp)
                     )
-                }
+                },
+                scrollBehavior = scrollBehavior
             )
         },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { p ->
         LazyColumn(
             contentPadding = p,
