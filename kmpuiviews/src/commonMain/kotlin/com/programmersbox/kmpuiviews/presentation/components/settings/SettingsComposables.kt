@@ -85,37 +85,32 @@ internal fun DefaultPreferenceLayout(
     summaryValue: (@Composable () -> Unit)? = null,
     content: (@Composable () -> Unit)? = null,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .padding(16.dp)
-                .size(32.dp)
-        ) { settingIcon?.invoke(this) }
-
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .weight(3f, true)
-        ) {
+    ListItem(
+        overlineContent = {
             ProvideTextStyle(
-                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
+                MaterialTheme.typography.bodyLarge
+                    .copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start)
             ) { settingTitle() }
+        },
+        headlineContent = {
             summaryValue?.let {
                 ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Start)) { it() }
             }
-        }
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .padding(8.dp)
-                .weight(1f)
-        ) { content?.invoke() }
-    }
+        },
+        trailingContent = content,
+        leadingContent = {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(32.dp)
+            ) { settingIcon?.invoke(this) }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent,
+            overlineColor = MaterialTheme.colorScheme.onSurface,
+            headlineColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
+        modifier = modifier
+    )
 }
 
 @Composable

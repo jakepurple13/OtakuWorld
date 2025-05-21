@@ -47,6 +47,7 @@ import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -170,6 +171,8 @@ fun ThemeSetting(
         }
     )
 
+    CategoryGroupDefaults.Divider()
+
     var themeColor by handling.rememberThemeColor()
 
     ShowMoreSetting(
@@ -267,6 +270,8 @@ private fun PaletteSetting(handling: NewSettingsHandling) {
         updateValue = { usePalette = it }
     )
 
+    CategoryGroupDefaults.Divider()
+
     ShowWhen(usePalette) {
         var paletteSwatchType by rememberSwatchType()
         ListSetting(
@@ -283,6 +288,8 @@ private fun PaletteSetting(handling: NewSettingsHandling) {
                 paletteSwatchType = it
             }
         )
+
+        CategoryGroupDefaults.Divider()
 
         var paletteStyle by rememberSwatchStyle()
         ListSetting(

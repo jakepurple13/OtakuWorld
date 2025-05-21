@@ -1,13 +1,11 @@
 package com.programmersbox.uiviews.presentation.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -39,8 +37,8 @@ import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.kmpuiviews.presentation.components.item
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
@@ -78,6 +76,8 @@ fun NavigationBarSettings(handling: NewSettingsHandling) {
         updateValue = { floatingNavigation = it }
     )
 
+    CategoryGroupDefaults.Divider()
+
     if (LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Expanded) {
         var showAllScreen by handling.rememberShowAll()
 
@@ -105,8 +105,6 @@ fun NavigationBarSettings(handling: NewSettingsHandling) {
             }
         )
 
-        Spacer(Modifier.height(16.dp))
-
         MultipleActionsSetting(
             handling = handling,
             middleNavigationAction = middleNavigationAction
@@ -127,107 +125,101 @@ private fun MultipleActionsSetting(
         .filter { it != MiddleNavigationAction.Multiple }
 
     ShowWhen(middleNavigationAction == MiddleNavigationAction.Multiple) {
-        Column {
-            Spacer(Modifier.height(8.dp))
-            PreferenceSetting(
-                settingTitle = { },
-                summaryValue = {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
+        CategoryGroupDefaults.Divider()
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+        ) {
+            HorizontalFloatingToolbar(
+                expanded = true,
+                leadingContent = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    DropdownMenu(
+                        showMenu,
+                        onDismissRequest = { showMenu = false }
                     ) {
-                        HorizontalFloatingToolbar(
-                            expanded = true,
-                            leadingContent = {
-                                var showMenu by remember { mutableStateOf(false) }
-                                DropdownMenu(
-                                    showMenu,
-                                    onDismissRequest = { showMenu = false }
-                                ) {
-                                    multipleActionOptions.forEach {
-                                        DropdownMenuItem(
-                                            text = { Text(it.name) },
-                                            leadingIcon = {
-                                                Icon(
-                                                    it.item?.icon?.invoke(true) ?: Icons.Default.Add,
-                                                    null,
-                                                )
-                                            },
-                                            onClick = {
-                                                multipleActions = multipleActions?.copy(
-                                                    startAction = it,
-                                                )
-                                                showMenu = false
-                                            }
-                                        )
-                                    }
-                                }
-
-                                IconButton(
-                                    onClick = { showMenu = true }
-                                ) {
+                        multipleActionOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.name) },
+                                leadingIcon = {
                                     Icon(
-                                        multipleActions
-                                            ?.startAction
-                                            ?.item
-                                            ?.icon
-                                            ?.invoke(true)
-                                            ?: Icons.Default.Add,
-                                        null
+                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                        null,
                                     )
-                                }
-                            },
-                            trailingContent = {
-                                var showMenu by remember { mutableStateOf(false) }
-                                DropdownMenu(
-                                    showMenu,
-                                    onDismissRequest = { showMenu = false }
-                                ) {
-                                    multipleActionOptions.forEach {
-                                        DropdownMenuItem(
-                                            text = { Text(it.visibleName) },
-                                            leadingIcon = {
-                                                Icon(
-                                                    it.item?.icon?.invoke(true) ?: Icons.Default.Add,
-                                                    null,
-                                                )
-                                            },
-                                            onClick = {
-                                                multipleActions = multipleActions?.copy(endAction = it)
-                                                showMenu = false
-                                            }
-                                        )
-                                    }
-                                }
-                                IconButton(
-                                    onClick = { showMenu = true }
-                                ) {
-                                    Icon(
-                                        multipleActions
-                                            ?.endAction
-                                            ?.item
-                                            ?.icon
-                                            ?.invoke(true)
-                                            ?: Icons.Default.Add,
-                                        null
+                                },
+                                onClick = {
+                                    multipleActions = multipleActions?.copy(
+                                        startAction = it,
                                     )
+                                    showMenu = false
                                 }
-                            },
-                        ) {
-                            FilledIconButton(
-                                modifier = Modifier.width(64.dp),
-                                onClick = {}
-                            ) {
-                                Icon(
-                                    Icons.Filled.UnfoldLess,
-                                    contentDescription = "Localized description"
-                                )
-                            }
+                            )
                         }
                     }
+
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            multipleActions
+                                ?.startAction
+                                ?.item
+                                ?.icon
+                                ?.invoke(true)
+                                ?: Icons.Default.Add,
+                            null
+                        )
+                    }
                 },
-            )
-            Spacer(Modifier.height(8.dp))
+                trailingContent = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    DropdownMenu(
+                        showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        multipleActionOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.visibleName) },
+                                leadingIcon = {
+                                    Icon(
+                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                        null,
+                                    )
+                                },
+                                onClick = {
+                                    multipleActions = multipleActions?.copy(endAction = it)
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            multipleActions
+                                ?.endAction
+                                ?.item
+                                ?.icon
+                                ?.invoke(true)
+                                ?: Icons.Default.Add,
+                            null
+                        )
+                    }
+                },
+            ) {
+                FilledIconButton(
+                    modifier = Modifier.width(64.dp),
+                    onClick = {}
+                ) {
+                    Icon(
+                        Icons.Filled.UnfoldLess,
+                        contentDescription = "Localized description"
+                    )
+                }
+            }
         }
     }
 }
