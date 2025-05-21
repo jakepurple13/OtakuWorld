@@ -1,6 +1,6 @@
 [versions]
 barcodeScanning = "17.3.0"
-biometricVersion = "1.4.0-alpha03"
+biometricVersion = "1.4.0-alpha04"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "1.9.40"
 corePerformance = "1.0.0"
@@ -17,7 +17,7 @@ kspVersion = "2.1.21-2.0.1"
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
 dragselect = "3.0.1"
-easylauncher = "6.4.1"
+easylauncher = "6.4.1"ibs
 firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
 haze = "1.6.1"
@@ -85,7 +85,7 @@ workinspector = "1.2"
 
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
-datastore = "1.1.6"
+datastore = "1.1.7"
 ackpineVersion = "0.12.2"
 
 arcore = "1.0.0-alpha04"
@@ -105,7 +105,7 @@ compose-multiplatform = "1.8.1"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.8.0"
+material3WindowSizeClassVersion = "1.8.1"
 connectivity = "2.0.2"
 
 cmpLifecycle = "2.9.0"
