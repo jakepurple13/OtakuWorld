@@ -197,6 +197,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setMinimumLoggingLevel(Log.DEBUG)
+            .setWorkerExecutionExceptionHandler { it.throwable.printStackTrace() }
             .build()
 
     open fun onCreated() {}
