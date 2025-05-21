@@ -553,13 +553,16 @@ fun CategoryGroup(
     val stateHolder = rememberSaveableStateHolder()
 
     ElevatedCard(
+        shape = MaterialTheme.shapes.extraLarge,
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         Column {
             for (i in 0 until categoryGroup.size) {
                 stateHolder.SaveableStateProvider(i) {
                     when (val item = categoryGroup.get(i)) {
-                        is CategoryGroupItem.Category -> item.content()
+                        is CategoryGroupItem.Category -> {
+                            item.content()
+                        }
                         is CategoryGroupItem.Item -> {
                             item.content()
                             if (i != categoryGroup.size - 1 && item.includeDivider) {
