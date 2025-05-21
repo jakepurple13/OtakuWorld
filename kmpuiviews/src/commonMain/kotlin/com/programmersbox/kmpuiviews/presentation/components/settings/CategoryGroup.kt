@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.layout.MutableIntervalList
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -19,21 +20,39 @@ annotation class CategoryGroupMarker
 
 @Composable
 fun CategoryGroup(
+    largeShape: CornerBasedShape = CategoryGroupDefaults.largeShape,
+    smallShape: CornerBasedShape = CategoryGroupDefaults.smallShape,
     content: CategoryGroupScope.() -> Unit,
 ) {
     val categoryGroup = remember { CategoryGroupImpl(content) }
     val stateHolder = rememberSaveableStateHolder()
 
-    ElevatedCard(
-        shape = MaterialTheme.shapes.extraLarge,
+    Column(
         modifier = Modifier.padding(horizontal = 16.dp),
     ) {
-        Column {
-            for (i in 0 until categoryGroup.size) {
+        for (i in 0 until categoryGroup.size) {
+            ElevatedCard(
+                shape = when (i) {
+                    0 -> largeShape.copy(
+                        bottomEnd = smallShape.bottomEnd,
+                        bottomStart = smallShape.bottomStart
+                    )
+
+                    categoryGroup.size - 1 -> largeShape.copy(
+                        topEnd = smallShape.topEnd,
+                        topStart = smallShape.topStart
+                    )
+
+                    else -> smallShape
+                },
+            ) {
                 stateHolder.SaveableStateProvider(i) {
                     when (val item = categoryGroup.get(i)) {
                         is CategoryGroupItem.Category -> {
                             item.content()
+                            if (i != categoryGroup.size - 1) {
+                                CategoryGroupDefaults.Divider()
+                            }
                         }
 
                         is CategoryGroupItem.Item -> {
@@ -55,6 +74,14 @@ object CategoryGroupDefaults {
         color = MaterialTheme.colorScheme.surface,
         thickness = 2.dp
     )
+
+    val largeShape: CornerBasedShape
+        @Composable
+        get() = MaterialTheme.shapes.extraLarge
+
+    val smallShape: CornerBasedShape
+        @Composable
+        get() = MaterialTheme.shapes.extraSmall
 }
 
 
@@ -98,7 +125,7 @@ internal class CategoryGroupImpl(
     }
 }
 
-sealed class CategoryGroupItem {
+internal sealed class CategoryGroupItem {
     data class Category(val content: @Composable () -> Unit) : CategoryGroupItem()
     data class Item(val includeDivider: Boolean, val content: @Composable () -> Unit) : CategoryGroupItem()
 }
