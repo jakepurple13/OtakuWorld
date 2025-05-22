@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.notifications
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
@@ -172,7 +173,7 @@ fun NotificationSettings(
             }
         }
 
-        ShowWhen(viewModel.canCheck) {
+        AnimatedVisibility(viewModel.canCheck) {
             CategoryGroup {
                 item {
                     var sliderValue by remember(viewModel.updateHourCheck) {
@@ -211,15 +212,13 @@ fun NotificationSettings(
                     )
                 }
 
-                if (workInfo.isNotEmpty()) {
+                workInfo.forEach {
                     item {
-                        workInfo.forEach {
-                            WorkInfoItem(
-                                workInfo = it,
-                                title = "Scheduled Check:",
-                                dateFormat = viewModel.dateTimeFormatter
-                            )
-                        }
+                        WorkInfoItem(
+                            workInfo = it,
+                            title = "Scheduled Check:",
+                            dateFormat = viewModel.dateTimeFormatter
+                        )
                     }
                 }
             }
@@ -229,14 +228,16 @@ fun NotificationSettings(
             .manualCheck
             .collectAsStateWithLifecycle(emptyList())
 
-        CategoryGroup {
-            manualWorkInfo.forEach { workInfo ->
-                item {
-                    WorkInfoItem(
-                        workInfo = workInfo,
-                        title = "Manual Check:",
-                        dateFormat = viewModel.dateTimeFormatter
-                    )
+        if (manualWorkInfo.isNotEmpty()) {
+            CategoryGroup {
+                manualWorkInfo.forEach { workInfo ->
+                    item {
+                        WorkInfoItem(
+                            workInfo = workInfo,
+                            title = "Manual Check:",
+                            dateFormat = viewModel.dateTimeFormatter
+                        )
+                    }
                 }
             }
         }

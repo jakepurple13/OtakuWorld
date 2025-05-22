@@ -311,6 +311,14 @@ class MediaUpdateChecker(
         // 1. Consolidate and Deduplicate Favorites
         val favoriteItems = getConsolidatedFavoriteItems(checkAll)
 
+        // 2. Ensure Sources are Loaded
+        ensureSourcesLoaded()
+
+        logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
+        val sourceSize = sourceRepository.apiServiceList.size
+        putMetric("sourceSize", sourceSize.toLong())
+
+        // 3. Fetch Recent Updates from only sources in our favorite's Sources Concurrently
         val sourcesToCheckRecentsFrom = favoriteItems
             .groupBy { it.source }
             .keys
@@ -320,14 +328,6 @@ class MediaUpdateChecker(
                     .find { s -> s.serviceName == it }
             }
 
-        // 2. Ensure Sources are Loaded
-        ensureSourcesLoaded()
-
-        logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
-        val sourceSize = sourceRepository.apiServiceList.size
-        putMetric("sourceSize", sourceSize.toLong())
-
-        // 3. Fetch Recent Updates from All Sources Concurrently
         val allRecentItemsFromSources = fetchRecentItemsFromAllSources(
             sourcesToCheckRecentsFrom,
             setProgress
@@ -352,7 +352,9 @@ class MediaUpdateChecker(
 
     private suspend fun getConsolidatedFavoriteItems(checkAll: Boolean): List<DbModel> {
         val localFavorites = if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync()
-        val firebaseFavorites = firebaseDb.getAllShows().requireNoNulls()
+        val firebaseFavorites = firebaseDb
+            .getAllShows()
+            .requireNoNulls()
             .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
 
         return (localFavorites + firebaseFavorites)
@@ -393,7 +395,7 @@ class MediaUpdateChecker(
                                     recordFirebaseException(e)
                                     emit(emptyList()) // Emit empty list on error to not break the chain
                                 }
-                                .firstOrNull() // Takes the first emission (should be a List<DbModel>)
+                                .firstOrNull() // Takes the first emission (should be a List<KmpItemModel>)
                         } ?: emptyList() // Return empty list if timeout occurs
                     } catch (e: Exception) {
                         logFirebaseMessage("Exception during recent fetch for ${sourceApiService.serviceName}: ${e.message}")

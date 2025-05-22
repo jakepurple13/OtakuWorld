@@ -7,6 +7,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.WorkQuery
 import androidx.work.hasKeyWithValueOfType
 import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
@@ -14,6 +15,7 @@ import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class WorkRepositoryImpl(
@@ -25,9 +27,14 @@ class WorkRepositoryImpl(
     }
 
     override val manualCheck: Flow<List<WorkInfoKmp>>
-        get() = workManager
-            .getWorkInfosByTagFlow("ManualCheck")
+        get() = combine(
+            workManager.getWorkInfosByTagFlow("ManualCheck"),
+            workManager.getWorkInfosForUniqueWorkFlow("oneTimeUpdate"),
+            workManager.getWorkInfosFlow(WorkQuery.fromUniqueWorkNames("oneTimeUpdate")),
+            workManager.getWorkInfosFlow(WorkQuery.fromTags("ManualCheck"))
+        ) { workers -> workers.flatMap { it }.distinctBy { it.id } }
             .map { list -> list.map { it.toWorkInfoKmp() } }
+
     override val allWorkCheck: Flow<List<WorkInfoKmp>>
         get() = workManager
             .getWorkInfosForUniqueWorkFlow("updateFlowChecks")

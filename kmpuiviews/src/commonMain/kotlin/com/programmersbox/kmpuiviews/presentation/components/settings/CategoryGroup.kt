@@ -9,7 +9,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,7 +25,7 @@ fun CategoryGroup(
     smallShape: CornerBasedShape = CategoryGroupDefaults.smallShape,
     content: CategoryGroupScope.() -> Unit,
 ) {
-    val categoryGroup = remember { CategoryGroupImpl(content) }
+    val categoryGroup = CategoryGroupImpl(rememberUpdatedState(content).value)
     val stateHolder = rememberSaveableStateHolder()
 
     Column(
