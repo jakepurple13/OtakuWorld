@@ -31,4 +31,5 @@ data class WorkerInfoModel(
     val nextScheduleTimeMillis: LocalDateTime,
     val tags: Set<String>,
     val isPeriodic: Boolean,
+    val workerName: String,
 )

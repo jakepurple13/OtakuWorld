@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.WorkQuery
 import androidx.work.workDataOf
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
@@ -44,8 +45,10 @@ class BackgroundWorkHandlerImpl(
         workManager.getWorkInfosForUniqueWorkFlow("local_to_cloud"),
         workManager.getWorkInfosForUniqueWorkFlow("cloud_to_local"),
         workManager.getWorkInfosForUniqueWorkFlow("appCleanup"),
+        workManager.getWorkInfosFlow(WorkQuery.fromTags("ManualCheck", "oneTimeUpdate", "downloadAndInstall"))
     ) { array ->
         array
+            .map { workers -> workers.distinctBy { it.id } }
             .map { list ->
                 list.map { item ->
                     WorkerInfoModel(
@@ -53,11 +56,15 @@ class BackgroundWorkHandlerImpl(
                         progress = item.progress.keyValueMap,
                         status = item.state.toString(),
                         nextScheduleTimeMillis = item.nextScheduleTimeMillis.toLocalDateTime(),
+                        isPeriodic = item.periodicityInfo != null,
                         tags = item
                             .tags
                             .map { it.removePrefix("com.programmersbox.") }
                             .toSet(),
-                        isPeriodic = item.periodicityInfo != null
+                        workerName = item
+                            .tags
+                            .find { it.contains("com.programmersbox.") }
+                            ?: "Worker"
                     )
                 }
             }.flatten()
