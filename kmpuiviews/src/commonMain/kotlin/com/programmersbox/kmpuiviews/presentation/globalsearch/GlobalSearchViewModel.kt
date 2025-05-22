@@ -16,15 +16,19 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.dispatchIoAndCatchList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class GlobalSearchViewModel(
     savedStateHandle: SavedStateHandle,
@@ -47,6 +51,8 @@ class GlobalSearchViewModel(
     var isRefreshing by mutableStateOf(false)
     var isSearching by mutableStateOf(false)
 
+    private var searchJob: Job? = null
+
     init {
         if (initialSearch.isNotEmpty()) {
             searchForItems()
@@ -54,54 +60,57 @@ class GlobalSearchViewModel(
     }
 
     fun searchForItems() {
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             // this populates dynamically
             isRefreshing = true
             isSearching = true
             searchListPublisher = emptyList()
             //TODO: Add option to have live population or all at once
-            async {
-                sourceRepository
-                    .list
-                    .distinctBy { it.packageName }
-                    .apmap { a ->
+            searchFlow().collect()
+            //searchAllFlow()
+            isSearching = false
+        }
+    }
+
+    private fun searchFlow() = channelFlow {
+        sourceRepository
+            .list
+            .distinctBy { it.packageName }
+            .map { a ->
+                a
+                    .apiService
+                    .searchSourceList(searchText.text.toString(), list = emptyList())
+                    .dispatchIoAndCatchList()
+                    .map { SearchModel(a.apiService.serviceName, it) }
+                    .filter { it.data.isNotEmpty() }
+                    .onEach { searchListPublisher += it }
+                    .onCompletion { isRefreshing = false }
+            }
+            .forEach { launch { send(it.firstOrNull()) } }
+    }
+
+    private suspend fun searchAllFlow() {
+        // this populates after it all finishes
+        val d = coroutineScope {
+            sourceRepository
+                .list
+                .map { a ->
+                    async {
                         a
                             .apiService
                             .searchSourceList(searchText.text.toString(), list = emptyList())
                             .dispatchIoAndCatchList()
                             .map { SearchModel(a.apiService.serviceName, it) }
                             .filter { it.data.isNotEmpty() }
-                            .onEach { searchListPublisher += it }
-                            .onCompletion { isRefreshing = false }
+                            .firstOrNull()
                     }
-                    .forEach { launch { it.collect() } }
-
-                // this populates after it all finishes
-                /*val d = awaitAll(
-                    *sourceRepository
-                        .list
-                        .mapNotNull { a ->
-                            async {
-                                a
-                                    .apiService
-                                    .searchSourceList(searchText, list = emptyList())
-                                    .dispatchIoAndCatchList()
-                                    .map { SearchModel(a.apiService.serviceName, it) }
-                                    .filter { it.data.isNotEmpty() }
-                                    .firstOrNull()
-                            }
-                        }
-                        .toTypedArray()
-                ).filterNotNull()
-                searchListPublisher = d
-                isRefreshing = false*/
-            }.await()
-            isSearching = false
+                }
+                .awaitAll()
+                .filterNotNull()
         }
-    }
-
-    private fun <A, B> List<A>.apmap(f: suspend (A) -> B): List<B> = runBlocking {
-        map { async { f(it) } }.map { it.await() }
+        searchListPublisher = d
+        isRefreshing = false
     }
 
 }
