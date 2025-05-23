@@ -16,7 +16,7 @@ kspVersion = "2.1.21-2.0.1"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
-dragselect = "3.0.1"
+dragselect = "3.0.2"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
