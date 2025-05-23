@@ -38,225 +38,83 @@ class MediaUpdateChecker(
     private val firebaseDb: KmpFirebaseConnection,
 ) {
 
-    suspend fun getFavoritesThatNeedUpdates2(
+    // Configurable network dispatcher based on the provided parallelism value
+    private val networkDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(DEFAULT_NETWORK_PARALLELISM)
+
+    companion object {
+        private const val DEFAULT_NETWORK_PARALLELISM = 5
+        private const val DEFAULT_TIMEOUT_MS = 15000L // 15 seconds
+    }
+
+    /**
+     * Main implementation for checking favorites that need updates.
+     * This is the most optimized and well-structured version.
+     *
+     * @param checkAll Whether to check all favorites or only those with notifications enabled
+     * @param putMetric Function to record metrics
+     * @param notificationUpdate Function to update notification progress
+     * @param setProgress Function to update overall progress
+     * @return List of pairs containing the updated info model and the database model
+     */
+    suspend fun getFavoritesThatNeedUpdates(
         checkAll: Boolean,
         putMetric: suspend (name: String, value: Long) -> Unit,
         notificationUpdate: suspend (max: Int, progress: Int, source: String) -> Unit,
         setProgress: suspend (max: Int, progress: Int, source: String) -> Unit,
-    ): List<Pair<KmpInfoModel?, DbModel>> {
-        val list = listOf(
-            if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync(),
-            firebaseDb.getAllShows().requireNoNulls()
-                .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
-        )
-            .flatten()
-            .groupBy(DbModel::url)
-            .map { it.value.fastMaxBy(DbModel::numChapters)!! }
+    ): List<Pair<KmpInfoModel?, DbModel>> = coroutineScope { // Use coroutineScope for structured concurrency
+        // 1. Consolidate and Deduplicate Favorites
+        val favoriteItems = getConsolidatedFavoriteItems(checkAll)
 
-        //Making sure we have our sources
-        if (sourceRepository.list.isEmpty()) {
-            sourceLoader.blockingLoad()
-        }
+        // 2. Ensure Sources are Loaded
+        ensureSourcesLoaded()
 
         logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
-
         val sourceSize = sourceRepository.apiServiceList.size
-
         putMetric("sourceSize", sourceSize.toLong())
 
-        val dispatcher = Dispatchers.IO.limitedParallelism(3)
-
-        // Getting all recent updates
-        val newList = coroutineScope {
-            list.intersect(
-                list
-                    .groupBy { it.source }
-                    .keys
-                    .mapNotNull {
-                        sourceRepository
-                            .apiServiceList
-                            .find { s -> s.serviceName == it }
-                    }
-                    .mapIndexed { index, m ->
-                        //TODO: Test this out
-                        // The setProgress *might* cause some problems but meh
-                        setProgress(sourceSize, index, m.serviceName)
-                        async(dispatcher, start = CoroutineStart.LAZY) {
-                            logFirebaseMessage("Checking ${m.serviceName}")
-                            //TODO: Make this easier to handle
-                            runCatching {
-                                withTimeoutOrNull(15000) {
-                                    m.getRecentFlow()
-                                        .catch { emit(emptyList()) }
-                                        .firstOrNull()
-                                }
-                            }
-                                .onFailure {
-                                    logFirebaseMessage(it.stackTraceToString())
-                                    it.printStackTrace()
-                                }
-                                .getOrNull()
-                                .also { logFirebaseMessage("Finished checking ${m.serviceName} with ${it?.size}") }
-                        }
-                    }
-                    .awaitAll()
-                    .filterNotNull()
-                    .flatten()
-            ) { o, n -> o.url == n.url }
-                .distinctBy { it.url }
-        }
-
-        putMetric("updateCheckSize", newList.size.toLong())
-
-        // Checking if any have updates
-        println("Checking for updates")
-        val items = coroutineScope {
-            newList.mapIndexed { index, model ->
-                //TODO: Test this out
-                // The setProgress *might* cause some problems but meh
-                notificationUpdate(newList.size, index, model.title)
-                setProgress(newList.size, index, model.title)
-                async(dispatcher, start = CoroutineStart.LAZY) {
-                    runCatching {
-                        val newData = sourceRepository.toSourceByApiServiceName(model.source)
-                            ?.apiService
-                            ?.let {
-                                withTimeout(15000) {
-                                    model.toItemModel(it)
-                                        .toInfoModel()
-                                        .firstOrNull()
-                                        ?.getOrNull()
-                                }
-                            }
-                        logFirebaseMessage("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
-                        // To test notifications, comment the takeUnless out
-                        Pair(newData, model)
-                            .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
-                    }
-                        .onFailure {
-                            logFirebaseMessage(it.stackTraceToString())
-                            it.printStackTrace()
-                        }
-                        .getOrNull()
-                }
+        // 3. Fetch Recent Updates from only sources in our favorite's Sources Concurrently
+        val sourcesToCheckRecentsFrom = favoriteItems
+            .groupBy { it.source }
+            .keys
+            .mapNotNull {
+                sourceRepository
+                    .apiServiceList
+                    .find { s -> s.serviceName == it }
             }
-                .awaitAll()
-                .filterNotNull()
-        }
 
-        // Saving updates
-        items.forEach { (first, second) ->
-            second.numChapters = first?.chapters?.size ?: second.numChapters
-            dao.insertFavorite(second)
-            firebaseDb.updateShowFlow(second)
-                .catch {
-                    recordFirebaseException(it)
-                    println("Something went wrong: ${it.message}")
-                }
-                .collect()
-        }
-
-        return items
-    }
-
-    suspend fun getFavoritesThatNeedUpdates1(
-        checkAll: Boolean,
-        putMetric: suspend (name: String, value: Long) -> Unit,
-        notificationUpdate: suspend (max: Int, progress: Int, source: String) -> Unit,
-        setProgress: suspend (max: Int, progress: Int, source: String) -> Unit,
-    ): List<Pair<KmpInfoModel?, DbModel>> {
-        val list = listOf(
-            if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync(),
-            firebaseDb.getAllShows().requireNoNulls()
-                .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
+        val allRecentItemsFromSources = fetchRecentItemsFromAllSources(
+            sourcesToCheckRecentsFrom = sourcesToCheckRecentsFrom,
+            setProgress = setProgress
         )
-            .flatten()
-            .groupBy(DbModel::url)
-            .map { it.value.fastMaxBy(DbModel::numChapters)!! }
 
-        //Making sure we have our sources
-        if (sourceRepository.list.isEmpty()) {
-            sourceLoader.blockingLoad()
-        }
+        // 4. Intersect Favorites with Recent Items
+        val itemsToCheckForUpdates = favoriteItems
+            .intersect(allRecentItemsFromSources.toSet()) { fav, recent -> fav.url == recent.url } // Use Set for efficient lookup
+            .distinctBy { it.url } // Should be redundant if intersect is correct, but good safety
 
-        logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
+        putMetric("updateCheckSize", itemsToCheckForUpdates.size.toLong())
+        logFirebaseMessage("Found ${itemsToCheckForUpdates.size} items to check for updates.")
 
-        val sourceSize = sourceRepository.apiServiceList.size
+        // 5. Check Individual Items for Updates Concurrently
+        val updatedItemsPairs = checkItemsForActualUpdates(
+            items = itemsToCheckForUpdates,
+            notificationUpdate = notificationUpdate,
+            setProgress = setProgress
+        )
 
-        putMetric("sourceSize", sourceSize.toLong())
+        // 6. Save Updates to Database
+        saveUpdatedItems(updatedItemsPairs)
 
-        // Getting all recent updates
-        val newList = list.intersect(
-            sourceRepository
-                .apiServiceList
-                .filter { s -> list.any { m -> m.source == s.serviceName } }
-                .mapIndexedNotNull { index, m ->
-                    logFirebaseMessage("Checking ${m.serviceName}")
-                    //TODO: Make this easier to handle
-                    setProgress(sourceSize, index, m.serviceName)
-                    runCatching {
-                        withTimeoutOrNull(10000) {
-                            m.getRecentFlow()
-                                .catch { emit(emptyList()) }
-                                .firstOrNull()
-                        }
-                        //getRecents(m)
-                    }
-                        .onFailure {
-                            logFirebaseMessage(it.stackTraceToString())
-                            it.printStackTrace()
-                        }
-                        .getOrNull()
-                        .also { logFirebaseMessage("Finished checking ${m.serviceName} with ${it?.size}") }
-                }.flatten()
-        ) { o, n -> o.url == n.url }
-            .distinctBy { it.url }
-
-        putMetric("updateCheckSize", newList.size.toLong())
-
-        // Checking if any have updates
-        println("Checking for updates")
-        val items = newList.mapIndexedNotNull { index, model ->
-            notificationUpdate(newList.size, index, model.title)
-            setProgress(newList.size, index, model.title)
-            runCatching {
-                val newData = sourceRepository.toSourceByApiServiceName(model.source)
-                    ?.apiService
-                    ?.let {
-                        withTimeout(10000) {
-                            model.toItemModel(it)
-                                .toInfoModel()
-                                .firstOrNull()
-                                ?.getOrNull()
-                        }
-                    }
-                logFirebaseMessage("Old: ${model.numChapters} New: ${newData?.chapters?.size}")
-                // To test notifications, comment the takeUnless out
-                Pair(newData, model)
-                    .takeUnless { it.second.numChapters >= (it.first?.chapters?.size ?: -1) }
-            }
-                .onFailure {
-                    logFirebaseMessage(it.stackTraceToString())
-                    it.printStackTrace()
-                }
-                .getOrNull()
-        }
-
-        // Saving updates
-        items.forEach { (first, second) ->
-            second.numChapters = first?.chapters?.size ?: second.numChapters
-            dao.insertFavorite(second)
-            firebaseDb.updateShowFlow(second)
-                .catch {
-                    recordFirebaseException(it)
-                    println("Something went wrong: ${it.message}")
-                }
-                .collect()
-        }
-
-        return items
+        updatedItemsPairs
     }
 
+    /**
+     * Maps database models to notification models for display.
+     *
+     * @param list List of pairs containing info models and database models
+     * @param notificationUpdate Function to update notification progress
+     * @return List of update models for notifications
+     */
     suspend fun mapDbModel(
         list: List<Pair<KmpInfoModel?, DbModel>>,
         notificationUpdate: suspend (max: Int, progress: Int, source: String) -> Unit,
@@ -294,62 +152,6 @@ class MediaUpdateChecker(
         )
     }
 
-
-    private fun <T, R> Iterable<T>.intersect(uList: Iterable<R>, filterPredicate: (T, R) -> Boolean) =
-        filter { m -> uList.any { filterPredicate(m, it) } }
-
-    // Consider making this configurable or dynamic based on available cores
-    private val networkDispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(5)
-
-    //TODO: Test
-    suspend fun getFavoritesThatNeedUpdates(
-        checkAll: Boolean,
-        putMetric: suspend (name: String, value: Long) -> Unit,
-        notificationUpdate: suspend (max: Int, progress: Int, source: String) -> Unit,
-        setProgress: suspend (max: Int, progress: Int, source: String) -> Unit,
-    ): List<Pair<KmpInfoModel?, DbModel>> = coroutineScope { // Use coroutineScope for structured concurrency
-        // 1. Consolidate and Deduplicate Favorites
-        val favoriteItems = getConsolidatedFavoriteItems(checkAll)
-
-        // 2. Ensure Sources are Loaded
-        ensureSourcesLoaded()
-
-        logFirebaseMessage("Sources: ${sourceRepository.apiServiceList.joinToString { it.serviceName }}")
-        val sourceSize = sourceRepository.apiServiceList.size
-        putMetric("sourceSize", sourceSize.toLong())
-
-        // 3. Fetch Recent Updates from only sources in our favorite's Sources Concurrently
-        val sourcesToCheckRecentsFrom = favoriteItems
-            .groupBy { it.source }
-            .keys
-            .mapNotNull {
-                sourceRepository
-                    .apiServiceList
-                    .find { s -> s.serviceName == it }
-            }
-
-        val allRecentItemsFromSources = fetchRecentItemsFromAllSources(
-            sourcesToCheckRecentsFrom,
-            setProgress
-        )
-
-        // 4. Intersect Favorites with Recent Items
-        val itemsToCheckForUpdates = favoriteItems
-            .intersect(allRecentItemsFromSources.toSet()) { fav, recent -> fav.url == recent.url } // Use Set for efficient lookup
-            .distinctBy { it.url } // Should be redundant if intersect is correct, but good safety
-
-        putMetric("updateCheckSize", itemsToCheckForUpdates.size.toLong())
-        logFirebaseMessage("Found ${itemsToCheckForUpdates.size} items to check for updates.")
-
-        // 5. Check Individual Items for Updates Concurrently
-        val updatedItemsPairs = checkItemsForActualUpdates(itemsToCheckForUpdates, notificationUpdate, setProgress)
-
-        // 6. Save Updates to Database
-        saveUpdatedItems(updatedItemsPairs)
-
-        updatedItemsPairs
-    }
-
     private suspend fun getConsolidatedFavoriteItems(checkAll: Boolean): List<DbModel> {
         val localFavorites = if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync()
         val firebaseFavorites = firebaseDb
@@ -382,7 +184,7 @@ class MediaUpdateChecker(
                 async(networkDispatcher, start = CoroutineStart.LAZY) { // Use LAZY to control start
                     logFirebaseMessage("Fetching recent items from ${sourceApiService.serviceName}")
                     try {
-                        withTimeoutOrNull(15000) { // 15-second timeout per source
+                        withTimeoutOrNull(DEFAULT_TIMEOUT_MS) { // Timeout per source
                             sourceApiService
                                 .getRecentFlow()
                                 // Explicitly ensure flow collection happens on networkDispatcher
@@ -428,7 +230,7 @@ class MediaUpdateChecker(
                         return@async null
                     }
 
-                    val infoModel = withTimeout(15000) { // 15-second timeout for fetching full info
+                    val infoModel = withTimeout(DEFAULT_TIMEOUT_MS) { // Timeout for fetching full info
                         // Explicitly switch context if toInfoModel might block or do heavy CPU work
                         // However, network operations are usually fine on networkDispatcher
                         model
@@ -486,26 +288,20 @@ class MediaUpdateChecker(
         }
     }
 
-    // Keep this utility if used elsewhere, or inline if only used once.
-    // Making it more generic:
+    /**
+     * Optimized intersection method that filters items from this collection that match any item in the other collection
+     * based on the provided predicate.
+     *
+     * @param other The collection to intersect with
+     * @param filterPredicate The predicate to determine if two items match
+     * @return A list of items from this collection that match at least one item in the other collection
+     */
     private fun <T, R> Iterable<T>.intersect(
-        other: Set<R>, // Changed to Set for O(1) average time complexity for lookups
+        other: Collection<R>,
         filterPredicate: (T, R) -> Boolean,
     ): List<T> {
-        val result = mutableListOf<T>()
-        // Optimized: Iterate over the smaller collection if possible, though here 'this' is iterated.
-        for (itemFromThis in this) {
-            // This part can be slow if 'other' is a large List (O(N*M)).
-            // With 'other' as a Set and if filterPredicate involves hashing or direct comparison on `R`'s key,
-            // it becomes much faster.
-            // However, the predicate `fav.url == recent.url` implies we need to check each element.
-            // The best way for this specific predicate is to convert `other` to a `Map<String, R>` or `Set<String>` of URLs.
-            // Let's assume for now that the caller might convert `allRecentItemsFromSources` to a Set of URLs if performance is critical.
-            if (other.any { itemFromOther -> filterPredicate(itemFromThis, itemFromOther) }) {
-                result.add(itemFromThis)
-            }
-        }
-        return result
+        // For better performance when using URL comparison, convert to a map or set if possible
+        return filter { item -> other.any { otherItem -> filterPredicate(item, otherItem) } }
     }
 }
 
