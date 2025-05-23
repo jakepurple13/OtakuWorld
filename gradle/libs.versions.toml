@@ -16,11 +16,11 @@ kspVersion = "2.1.21-2.0.1"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
-dragselect = "3.0.1"
+dragselect = "3.0.2"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.3"
 googleServices = "4.4.2"
-haze = "1.6.1"
+haze = "1.6.2"
 kamelImage = "1.0.5"
 latestAboutLibsRelease = "12.1.2"
 coroutinesVersion = "1.10.2"
@@ -61,7 +61,7 @@ firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "1.4.2"
 
-firebaseBom = "33.13.0"
+firebaseBom = "33.14.0"
 
 kmpalette = "3.1.0"
 
@@ -106,7 +106,7 @@ compose-multiplatform = "1.8.1"
 kotlinx-coroutines = "1.10.2"
 
 material3WindowSizeClassVersion = "1.8.1"
-connectivity = "2.0.2"
+connectivity = "2.1.0"
 
 cmpLifecycle = "2.9.0"
 navigationCmp = "2.9.0-beta02"
@@ -289,7 +289,7 @@ navUiKtx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "na
 navTesting = { module = "androidx.navigation:navigation-testing", version.ref = "navVersion" }
 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
-fragmentKtx = "androidx.fragment:fragment-ktx:1.8.6"
+fragmentKtx = "androidx.fragment:fragment-ktx:1.8.7"
 
 iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
 
@@ -299,8 +299,8 @@ pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagi
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
-androidxWindow = "androidx.window:window:1.3.0"
-androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.6.0"
+androidxWindow = "androidx.window:window:1.4.0"
+androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.6.1"
 androidxBrowser = "androidx.browser:browser:1.8.0"
 
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
