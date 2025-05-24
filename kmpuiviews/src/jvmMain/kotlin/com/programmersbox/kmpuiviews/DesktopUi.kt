@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material.icons.Icons
@@ -18,6 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -36,14 +39,17 @@ import com.programmersbox.kmpuiviews.di.appModule
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
-import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import org.koin.compose.KoinApplication
 import org.koin.core.KoinApplication
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import java.awt.Cursor
 
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ApplicationScope.BaseDesktopUi(
     title: String,
@@ -102,15 +108,25 @@ fun ApplicationScope.BaseDesktopUi(
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         KmpLocalCompositionSetup(rememberNavController()) {
-                            CustomTitleBar(
-                                title = title,
-                                onMinimizeClick = { windowState.isMinimized = true },
-                                onCloseClick = ::exitApplication
-                            )
-                            HorizontalDivider()
-                            //TODO: UI Goes here!
-                            //UrlOpenerScreen()
-                            ScanQrCode()
+                            CompositionLocalProvider(
+                                LocalNavHostPadding provides PaddingValues()
+                            ) {
+                                CustomTitleBar(
+                                    title = title,
+                                    onMinimizeClick = { windowState.isMinimized = true },
+                                    onCloseClick = ::exitApplication
+                                )
+                                HorizontalDivider()
+                                //TODO: UI Goes here!
+                                //UrlOpenerScreen()
+                                //ScanQrCode()
+                                SettingScreen(
+                                    composeSettingsDsl = ComposeSettingsDsl(),
+                                    accountSettings = {},
+                                    onDebugBuild = {},
+                                    scanQrCode = {}
+                                )
+                            }
                         }
                     }
                 }
