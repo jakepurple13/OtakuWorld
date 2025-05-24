@@ -27,6 +27,7 @@ import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
+import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
@@ -35,8 +36,8 @@ import com.programmersbox.kmpuiviews.di.appModule
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
-import com.programmersbox.kmpuiviews.presentation.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import org.koin.compose.KoinApplication
 import org.koin.core.KoinApplication
 import org.koin.core.module.dsl.singleOf
@@ -49,7 +50,6 @@ fun ApplicationScope.BaseDesktopUi(
     moduleBlock: KoinApplication.() -> Unit,
 ) {
     //TODO: add a screen where you paste a url and select a source that then opens the details screen
-
 
     //TODO: Also need to create a generic module in kmpuiviews
     KoinApplication(
@@ -101,15 +101,17 @@ fun ApplicationScope.BaseDesktopUi(
                     )
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        CustomTitleBar(
-                            title = title,
-                            onMinimizeClick = { windowState.isMinimized = true },
-                            onCloseClick = ::exitApplication
-                        )
-                        HorizontalDivider()
-                        //TODO: UI Goes here!
-                        UrlOpenerScreen()
-                        ScanQrCode()
+                        KmpLocalCompositionSetup(rememberNavController()) {
+                            CustomTitleBar(
+                                title = title,
+                                onMinimizeClick = { windowState.isMinimized = true },
+                                onCloseClick = ::exitApplication
+                            )
+                            HorizontalDivider()
+                            //TODO: UI Goes here!
+                            //UrlOpenerScreen()
+                            ScanQrCode()
+                        }
                     }
                 }
             }

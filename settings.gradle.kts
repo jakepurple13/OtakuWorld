@@ -17,6 +17,7 @@ dependencyResolutionManagement {
         maven("https://www.jitpack.io")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven("https://jogamp.org/deployment/maven")
     }
 
     versionCatalogs {
@@ -68,7 +69,7 @@ rootProject.name = "OtakuWorld"
 //include(":manga_sources:defaultmangasources")
 //include(":anime_sources:defaultanimesources")
 //include(":MangaWorldbaselineprofile")
-include(":gemini")
+//include(":gemini")
 include(":datastore")
 include(":datastore:mangasettings")
 include(":kmpuiviews")

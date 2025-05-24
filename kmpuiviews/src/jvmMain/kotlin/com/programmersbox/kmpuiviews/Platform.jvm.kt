@@ -1,13 +1,21 @@
 package com.programmersbox.kmpuiviews
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.RememberMe
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
@@ -90,3 +98,19 @@ actual fun logFirebaseMessage(message: String) {
 }
 
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)
+
+@Composable
+actual fun appVersion(): String = "1.0.0"
+
+@Composable
+actual fun versionCode(): String = "1"
+
+@Composable
+actual fun Modifier.zoomOverlay(): Modifier = this
+
+@Composable
+actual fun painterLogo(): Painter = rememberVectorPainter(Icons.Default.RememberMe)
+actual class AboutLibraryBuilder {
+    @Composable
+    actual fun buildLibs(): State<Libs?> = mutableStateOf(null)
+}

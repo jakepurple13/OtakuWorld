@@ -166,7 +166,10 @@ private fun SettingsScreen(
     onDebugBuild: @Composable () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
+    val source by LocalCurrentSource
+        .current
+        .asFlow()
+        .collectAsStateWithLifecycle(null)
 
     onDebugBuild()
 

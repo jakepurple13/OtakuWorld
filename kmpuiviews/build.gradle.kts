@@ -71,6 +71,8 @@ kotlin {
                 implementation(project.dependencies.platform(libs.koin.bom))
                 implementation(libs.bundles.koinKmp)
 
+                implementation(libs.kmpalette.core)
+
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 api(projects.kmpmodels)
@@ -111,6 +113,9 @@ kotlin {
 
                 implementation(libs.qr.kit)
                 implementation(libs.scanner)
+
+                implementation(libs.multiplatform.lifecycle.runtime.compose)
+                implementation("androidx.navigationevent:navigationevent:1.0.0-alpha01")
             }
         }
 
