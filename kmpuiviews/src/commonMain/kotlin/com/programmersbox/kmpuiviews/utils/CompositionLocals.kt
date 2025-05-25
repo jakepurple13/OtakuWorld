@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
@@ -17,6 +19,7 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.customUriHandler
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
@@ -26,6 +29,10 @@ import org.koin.compose.koinInject
 
 val LocalNavHostPadding = staticCompositionLocalOf<PaddingValues> { error("") }
 val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No NavController Found!") }
+
+//TODO: Change to NavigationActions
+// Maybe also include one for the actual backstack?
+val LocalNavBackStack = staticCompositionLocalOf<NavigationActions> { error("No NavController Found!") }
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
@@ -38,12 +45,14 @@ val LocalSystemDateTimeFormat = staticCompositionLocalOf<DateTimeFormat<LocalDat
 @Composable
 fun KmpLocalCompositionSetup(
     navController: NavHostController,
+    navBackStack: SnapshotStateList<NavKey>,
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
     val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
     CompositionLocalProvider(
         LocalNavController provides navController,
+        LocalNavBackStack provides NavigationActions(navBackStack),
         LocalItemDao provides koinInject(),
         LocalBlurDao provides koinInject(),
         LocalHistoryDao provides koinInject(),

@@ -20,6 +20,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +32,7 @@ import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
@@ -39,15 +42,19 @@ import com.programmersbox.kmpuiviews.di.appModule
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
-import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.navGraph
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
+import org.koin.core.logger.Level
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import java.awt.Cursor
+import java.io.File
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -58,8 +65,12 @@ fun ApplicationScope.BaseDesktopUi(
     //TODO: add a screen where you paste a url and select a source that then opens the details screen
 
     //TODO: Also need to create a generic module in kmpuiviews
+    /*LaunchedEffect(Unit) {
+        DataStoreSettings { File(System.getProperty("user.home"), it).absolutePath }
+    }*/
     KoinApplication(
         application = {
+            printLogger(Level.DEBUG)
             modules(
                 module {
                     includes(
@@ -73,7 +84,11 @@ fun ApplicationScope.BaseDesktopUi(
                     single {
                         NewSettingsHandling(
                             createProtobuf(
-                                serializer = SettingsSerializer()
+                                serializer = SettingsSerializer(),
+                                fileName = File(
+                                    System.getProperty("user.home"),
+                                    "Settings.preferences_pb"
+                                ).absolutePath,
                             ),
                         )
                     }
@@ -92,6 +107,7 @@ fun ApplicationScope.BaseDesktopUi(
             undecorated = true,
             transparent = true,
         ) {
+            val navController = rememberNavController()
             MaterialTheme(
                 createColorScheme(
                     isSystemInDarkTheme(),
@@ -107,7 +123,10 @@ fun ApplicationScope.BaseDesktopUi(
                     )
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        KmpLocalCompositionSetup(rememberNavController()) {
+                        KmpLocalCompositionSetup(
+                            navController,
+                            remember { mutableStateListOf() }
+                        ) {
                             CompositionLocalProvider(
                                 LocalNavHostPadding provides PaddingValues()
                             ) {
@@ -120,12 +139,38 @@ fun ApplicationScope.BaseDesktopUi(
                                 //TODO: UI Goes here!
                                 //UrlOpenerScreen()
                                 //ScanQrCode()
-                                SettingScreen(
-                                    composeSettingsDsl = ComposeSettingsDsl(),
-                                    accountSettings = {},
-                                    onDebugBuild = {},
-                                    scanQrCode = {}
-                                )
+                                /*
+                                val backStack = rememberNavBackStack(Screen.SettingsScreen)
+
+                                NavDisplay(
+                                    backStack = backStack,
+                                    onBack = { backStack.removeLastOrNull() },
+                                    entryDecorators = listOf(
+                                        rememberSceneSetupNavEntryDecorator(),
+                                        rememberSavedStateNavEntryDecorator(),
+                                    ),
+                                    entryProvider = entryProvider {
+                                        entry<Screen.SettingsScreen> {
+                                            SettingScreen(
+                                                composeSettingsDsl = ComposeSettingsDsl(),
+                                                accountSettings = {},
+                                                onDebugBuild = {},
+                                                scanQrCode = {}
+                                            )
+                                        }
+                                    }
+                                )*/
+                                val genericInfo = koinInject<KmpGenericInfo>()
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = Screen.Settings
+                                ) {
+                                    navGraph(
+                                        customPreferences = ComposeSettingsDsl(),
+                                        genericInfo = genericInfo,
+                                        navController = navController
+                                    )
+                                }
                             }
                         }
                     }
@@ -134,6 +179,13 @@ fun ApplicationScope.BaseDesktopUi(
         }
     }
 }
+
+/*@Composable
+fun <T : NavKey> rememberNavBackStack(vararg elements: T): SnapshotStateList<NavKey> {
+    return rememberSaveable {
+        elements.toList().toMutableStateList()
+    }
+}*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

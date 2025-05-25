@@ -9,7 +9,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -28,6 +27,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
@@ -77,6 +77,8 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -104,15 +106,22 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
@@ -136,7 +145,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalShare
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
-import com.programmersbox.uiviews.presentation.navGraph
+import com.programmersbox.uiviews.presentation.entryGraph
 import com.programmersbox.uiviews.theme.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.currentDetailsUrl
@@ -155,7 +164,7 @@ import org.koin.android.ext.android.inject
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-abstract class BaseMainActivity : AppCompatActivity() {
+abstract class BaseMainActivity : FragmentActivity() {
 
     protected val genericInfo: GenericInfo by inject()
     private val customPreferences = ComposeSettingsDsl()
@@ -185,7 +194,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
     @OptIn(
         ExperimentalMaterial3Api::class,
-        ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class
+        ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -224,13 +233,16 @@ abstract class BaseMainActivity : AppCompatActivity() {
 
             val showBlur by settingsHandling.rememberShowBlur()
 
+            val backStack = rememberNavBackStack(startDestination)
+
             CompositionLocalProvider(
                 LocalWindowSizeClass provides windowSize
             ) {
                 OtakuMaterialTheme(
                     navController = navController,
+                    navBackStack = backStack,
                     genericInfo = genericInfo,
-                    settingsHandling = settingsHandling
+                    settingsHandling = settingsHandling,
                 ) {
                     AskForNotificationPermissions()
 
@@ -258,6 +270,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         Row(Modifier.fillMaxSize()) {
                             Rail(
                                 navController = navController,
+                                navBackStack = backStack,
                                 showNavBar = showNavBar,
                                 navType = navType,
                                 showAllItem = showAllItem,
@@ -289,6 +302,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                             middleNavItem = middleNavItem,
                                             //scrollBehavior = null,
                                             multipleActions = multipleActions,
+                                            backStack = backStack,
                                             modifier = Modifier
                                                 .padding(horizontal = 24.dp)
                                                 .windowInsetsPadding(WindowInsets.navigationBars)
@@ -312,12 +326,51 @@ abstract class BaseMainActivity : AppCompatActivity() {
                                     //For later maybe
                                     //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                                 ) {
-                                    NavHost(
+                                    NavDisplay(
+                                        backStack = backStack,
+                                        //onBack = { backStack.removeLastOrNull() },
+                                        sceneStrategy = rememberListDetailSceneStrategy(),
+                                        onBack = { count ->
+                                            repeat(count) {
+                                                if (backStack.isNotEmpty()) {
+                                                    backStack.removeLastOrNull()
+                                                }
+                                            }
+                                        },
+                                        entryDecorators = listOf(
+                                            rememberSceneSetupNavEntryDecorator(),
+                                            rememberSavedStateNavEntryDecorator(),
+                                            rememberViewModelStoreNavEntryDecorator()
+                                        ),
+                                        entryProvider = entryGraph(
+                                            customPreferences = customPreferences,
+                                            navBackStack = backStack,
+                                            notificationLogo = notificationLogo,
+                                            windowSize = windowSize,
+                                        ),
+                                        transitionSpec = {
+                                            // Slide in from right when navigating forward
+                                            slideInHorizontally(initialOffsetX = { it }) togetherWith
+                                                    slideOutHorizontally(targetOffsetX = { -it })
+                                        },
+                                        popTransitionSpec = {
+                                            // Slide in from left when navigating back
+                                            slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                                                    slideOutHorizontally(targetOffsetX = { it })
+                                        },
+                                        predictivePopTransitionSpec = {
+                                            // Slide in from left when navigating back
+                                            slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                                                    slideOutHorizontally(targetOffsetX = { it })
+                                        },
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    /*NavHost(
                                         navController = navController,
                                         //startDestination = Screen.RecentScreen,
                                         startDestination = startDestination,
                                         modifier = Modifier.fillMaxSize()
-                                    ) { navGraph(customPreferences, windowSize, genericInfo, navController, notificationLogo) }
+                                    ) { navGraph(customPreferences, windowSize, genericInfo, navController, notificationLogo) }*/
                                 }
                             }
                         }
@@ -368,6 +421,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @Composable
     private fun HomeNavigationBar(
         showNavBar: Boolean,
+        backStack: NavBackStack,
         navType: NavigationBarType,
         currentDestination: NavDestination?,
         showBlur: Boolean,
@@ -443,11 +497,13 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
                             colors = colors,
                             onClick = {
-                                navController.navigate(screen) {
+                                backStack.add(screen)
+                                /*navController.navigate(screen) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
-                                }
+                                }*/
+
                             }
                         )
                     }
@@ -472,11 +528,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                             }
                         },
                         onClick = {
-                            navController.navigate(it.screen) {
+                            backStack.add(it.screen)
+                            /*navController.navigate(it.screen) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
-                            }
+                            }*/
                         }
                     )
 
@@ -494,7 +551,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         middleNavItem = middleNavItem,
                         multipleActions = it,
                         currentDestination = currentDestination,
-                        navController = navController
+                        navController = navController,
+                        navBackStack = backStack
                     )
                 }
             }
@@ -595,7 +653,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     middleNavItem = middleNavItem,
                     multipleActions = it,
                     currentDestination = currentDestination,
-                    navController = navController
+                    navController = navController,
+                    navBackStack = rememberNavBackStack<NavKey>()
                 )
             }
         }
@@ -605,6 +664,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
     @Composable
     private fun Rail(
         navController: NavHostController,
+        navBackStack: NavBackStack,
         showNavBar: Boolean,
         navType: NavigationBarType,
         showAllItem: Boolean,
@@ -631,7 +691,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     label = stringResource(R.string.recent),
                     screen = Screen.RecentScreen,
                     currentDestination = currentDestination,
-                    navController = navController
+                    navController = navController,
+                    navBackStack = navBackStack
                 )
 
                 AnimatedVisibility(visible = showAllItem) {
@@ -640,7 +701,8 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         label = stringResource(R.string.all),
                         screen = Screen.AllScreen,
                         currentDestination = currentDestination,
-                        navController = navController
+                        navController = navController,
+                        navBackStack = navBackStack
                     )
                 }
 
@@ -651,6 +713,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                         screen = Screen.NotificationScreen.Home,
                         currentDestination = currentDestination,
                         navController = navController,
+                        navBackStack = navBackStack
                     )
                 }
 
@@ -660,6 +723,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     screen = Screen.CustomListScreen.Home,
                     currentDestination = currentDestination,
                     navController = navController,
+                    navBackStack = navBackStack
                 )
 
                 NavigationRailItem(
@@ -668,6 +732,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     screen = Screen.GlobalSearchScreen.Home(),
                     currentDestination = currentDestination,
                     navController = navController,
+                    navBackStack = navBackStack
                 )
 
                 NavigationRailItem(
@@ -676,6 +741,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     screen = Screen.FavoriteScreen.Home,
                     currentDestination = currentDestination,
                     navController = navController,
+                    navBackStack = navBackStack
                 )
 
                 NavigationRailItem(
@@ -684,6 +750,7 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     screen = Screen.ExtensionListScreen.Home,
                     currentDestination = currentDestination,
                     navController = navController,
+                    navBackStack = navBackStack
                 )
 
                 NavigationRailItem(
@@ -695,11 +762,12 @@ abstract class BaseMainActivity : AppCompatActivity() {
                     label = { Text(stringResource(R.string.settings)) },
                     selected = currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings),
                     onClick = {
-                        navController.navigate(Screen.Settings) {
+                        navBackStack.add(Screen.Settings)
+                        /*navController.navigate(Screen.Settings) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
-                        }
+                        }*/
                     }
                 )
             }
@@ -713,12 +781,14 @@ abstract class BaseMainActivity : AppCompatActivity() {
         screen: Screen,
         currentDestination: NavDestination?,
         navController: NavHostController,
+        navBackStack: NavBackStack,
         onClick: () -> Unit = {
-            navController.navigate(screen) {
+            navBackStack.add(screen)
+            /*navController.navigate(screen) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
                 restoreState = true
-            }
+            }*/
         },
     ) {
         NavigationRailItem(

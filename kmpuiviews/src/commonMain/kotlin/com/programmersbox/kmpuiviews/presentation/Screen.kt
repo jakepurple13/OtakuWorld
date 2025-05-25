@@ -1,13 +1,14 @@
 package com.programmersbox.kmpuiviews.presentation
 
 import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.serialization.Serializable
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 @Serializable
-sealed class Screen(val route: String) {
+sealed class Screen(val route: String) : NavKey {
 
     @Serializable
     data object RecentScreen : Screen("recent")
@@ -51,7 +52,7 @@ sealed class Screen(val route: String) {
             val url: String,
             val imageUrl: String,
             val source: String,
-        )
+        ) : NavKey
     }
 
     @Serializable
@@ -81,7 +82,7 @@ sealed class Screen(val route: String) {
         data object Home : Screen("home")
 
         @Serializable
-        data class DeleteFromList(val uuid: String)
+        data class DeleteFromList(val uuid: String) : NavKey
     }
 
     @Serializable

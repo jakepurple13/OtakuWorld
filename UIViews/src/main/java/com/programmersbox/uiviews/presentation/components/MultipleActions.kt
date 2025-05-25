@@ -31,8 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation3.runtime.NavBackStack
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.components.item
 import kotlinx.coroutines.delay
@@ -74,6 +74,7 @@ fun BoxScope.MultipleActions(
     multipleActions: com.programmersbox.datastore.MiddleMultipleActions,
     currentDestination: NavDestination?,
     navController: NavHostController,
+    navBackStack: NavBackStack,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -85,11 +86,12 @@ fun BoxScope.MultipleActions(
                     currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
-                        navController.navigate(it.screen) {
+                        /*navController.navigate(it.screen) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
-                        }
+                        }*/
+                        navBackStack.add(it.screen)
                     }
                 )
             },
@@ -98,11 +100,12 @@ fun BoxScope.MultipleActions(
                     currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
-                        navController.navigate(it.screen) {
+                        /*navController.navigate(it.screen) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
-                        }
+                        }*/
+                        navBackStack.add(it.screen)
                     }
                 )
             },

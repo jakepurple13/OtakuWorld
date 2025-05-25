@@ -4,8 +4,12 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -14,6 +18,10 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
@@ -27,6 +35,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.BuildConfig
@@ -52,6 +61,7 @@ import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewMo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 //TODO: MAYBE give each screen an enum of where they are and the transitions are based off of that?
 
@@ -409,3 +419,211 @@ private fun NavGraphBuilder.settings(
         ExtensionList()
     }
 }
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+fun entryGraph(
+    customPreferences: ComposeSettingsDsl,
+    navBackStack: NavBackStack,
+    notificationLogo: NotificationLogo,
+    windowSize: WindowSizeClass,
+) = entryProvider<Any> {
+    entry<Screen.RecentScreen> { RecentView() }
+    entry<Screen.DetailsScreen.Details> {
+        DetailsScreen(
+            logo = notificationLogo,
+            windowSize = windowSize,
+            details = koinViewModel { parametersOf(it) }
+        )
+    }
+
+    entry<Screen.ScanQrCodeScreen> { ScanQrCode() }
+
+    entry<Screen.OnboardingScreen> {
+        OnboardingScreen(
+            navController = LocalNavController.current,
+            customPreferences = customPreferences
+        )
+    }
+
+    entry<Screen.WebViewScreen> {
+        WebViewScreen(
+            url = it.url
+        )
+    }
+
+    entry<Screen.IncognitoScreen> {
+        IncognitoScreen()
+    }
+
+    entry<Screen.AllScreen> {
+        trackScreen(Screen.AllScreen)
+        AllView(
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+        )
+    }
+
+    settingsEntryGraph(customPreferences, navBackStack, notificationLogo, windowSize)
+
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
+private fun EntryProviderBuilder<Any>.settingsEntryGraph(
+    customPreferences: ComposeSettingsDsl,
+    navBackStack: NavBackStack,
+    notificationLogo: NotificationLogo,
+    windowSize: WindowSizeClass,
+) {
+    entry<Screen.Settings>(
+        metadata = ListDetailSceneStrategy.listPane {
+            Text("Please Wait")
+        }
+    ) {
+        SettingScreen(
+            composeSettingsDsl = customPreferences,
+            notificationClick = { navBackStack.add(Screen.NotificationScreen) },
+            favoritesClick = { navBackStack.add(Screen.FavoriteScreen) },
+            historyClick = { navBackStack.add(Screen.HistoryScreen) },
+            globalSearchClick = { navBackStack.add(Screen.GlobalSearchScreen()) },
+            listClick = { navBackStack.add(Screen.CustomListScreen) },
+            debugMenuClick = { navBackStack.add(Screen.DebugScreen) },
+            extensionClick = { navBackStack.add(Screen.ExtensionListScreen) },
+            notificationSettingsClick = { navBackStack.add(Screen.NotificationsSettings) },
+            generalClick = { navBackStack.add(Screen.GeneralSettings) },
+            otherClick = { navBackStack.add(Screen.OtherSettings) },
+            moreInfoClick = { navBackStack.add(Screen.MoreInfoSettings) },
+            moreSettingsClick = { navBackStack.add(Screen.MoreSettings) },
+            geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+            sourcesOrderClick = { navBackStack.add(Screen.OrderScreen) },
+            appDownloadsClick = { navBackStack.add(Screen.DownloadInstallScreen) },
+            scanQrCode = { navBackStack.add(Screen.ScanQrCodeScreen) },
+        )
+    }
+
+    detailEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
+
+    detailEntry<Screen.OrderScreen> {
+        trackScreen(Screen.OrderScreen)
+        SourceOrderScreen()
+    }
+
+    detailEntry<Screen.NotificationsSettings> {
+        trackScreen(Screen.NotificationsSettings)
+        NotificationSettings()
+    }
+
+    detailEntry<Screen.GeneralSettings> {
+        trackScreen(Screen.GeneralSettings)
+        GeneralSettings(customPreferences.generalSettings)
+    }
+
+    detailEntry<Screen.MoreInfoSettings> {
+        trackScreen(Screen.MoreInfoSettings)
+        InfoSettings(
+            usedLibraryClick = { navBackStack.add(Screen.AboutScreen) },
+            onPrereleaseClick = { navBackStack.add(Screen.PrereleaseScreen) },
+            onViewAccountInfoClick = { navBackStack.add(Screen.AccountInfo) }
+        )
+    }
+
+    entry<Screen.PrereleaseScreen> { PrereleaseScreen() }
+
+    detailEntry<Screen.OtherSettings> {
+        trackScreen(Screen.OtherSettings)
+        PlaySettings(customPreferences.playerSettings)
+    }
+
+    detailEntry<Screen.MoreSettings> {
+        trackScreen(Screen.MoreSettings)
+        MoreSettingsScreen()
+    }
+
+    detailEntry<Screen.HistoryScreen> {
+        trackScreen(Screen.HistoryScreen)
+        HistoryUi()
+    }
+
+    entry<Screen.FavoriteScreen> {
+        trackScreen(Screen.FavoriteScreen)
+        FavoriteUi(
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+        )
+    }
+
+    detailEntry<Screen.AboutScreen> {
+        trackScreen(Screen.AboutScreen)
+        AboutLibrariesScreen()
+    }
+
+    entry<Screen.GlobalSearchScreen> {
+        trackScreen("global_search")
+        GlobalSearchView(
+            notificationLogo = notificationLogo,
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+        )
+    }
+
+    entry<Screen.CustomListScreen> {
+        trackScreen(Screen.CustomListScreen)
+        OtakuListScreen(
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+        )
+    }
+
+    entry<Screen.CustomListScreen.DeleteFromList> {
+        trackScreen("delete_from_list")
+        DeleteFromListScreen(
+            deleteFromList = it
+        )
+    }
+
+    entry<Screen.ImportListScreen> {
+        trackScreen("import_list")
+        ImportListScreen()
+    }
+
+    entry<Screen.ImportFullListScreen> {
+        trackScreen("import_full_list")
+        ImportFullListScreen()
+    }
+
+    detailEntry<Screen.NotificationScreen> {
+        trackScreen(Screen.NotificationScreen)
+        NotificationScreen()
+    }
+
+    entry<Screen.ExtensionListScreen> {
+        trackScreen(Screen.ExtensionListScreen)
+        ExtensionList()
+    }
+
+    detailEntry<Screen.AccountInfo> {
+        AccountInfoScreen(
+            profileUrl = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString(),
+        )
+    }
+
+    //additionalSettings()
+
+    entry<Screen.DownloadInstallScreen> {
+        DownloadStateScreen()
+    }
+
+    if (BuildConfig.DEBUG) {
+        entry<Screen.DebugScreen> {
+            DebugView()
+        }
+    }
+}
+
+private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(
+    noinline content: @Composable (T) -> Unit,
+) = entry<T>(
+    metadata = TwoPaneScene.twoPane()
+) { content(it) }
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+private inline fun <reified T : Any> EntryProviderBuilder<*>.detailEntry(
+    noinline content: @Composable (T) -> Unit,
+) = entry<T>(
+    metadata = ListDetailSceneStrategy.detailPane()
+) { content(it) }

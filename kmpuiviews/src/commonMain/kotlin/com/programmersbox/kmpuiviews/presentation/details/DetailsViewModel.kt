@@ -9,10 +9,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.kmpalette.generatePalette
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.BlurHashDao
@@ -50,7 +48,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class DetailsViewModel(
-    handle: SavedStateHandle,
+    //handle: SavedStateHandle,
+    details: Screen.DetailsScreen.Details?,
     private val blurHashDao: BlurHashDao,
     sourceRepository: SourceRepository,
     private val favoritesRepository: FavoritesRepository,
@@ -60,7 +59,7 @@ class DetailsViewModel(
     private val translationHandler: TranslationHandler,
 ) : ViewModel() {
 
-    private val details: Screen.DetailsScreen.Details? = handle.toRoute()
+    //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
 
     val itemModel: KmpItemModel? = details?.toItemModel(sourceRepository)
     //TODO: Fix this
