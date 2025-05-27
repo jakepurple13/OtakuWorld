@@ -163,20 +163,30 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
         navBackStack.removeRange(index, navBackStack.size)
     }
 
-    override fun navigate(nav: Any) {
+    override fun <T : Any> navigate(nav: T) {
         when (nav) {
             is NavKey -> navBackStack.add(nav)
         }
     }
 
+    override fun onboardingToRecent() {
+
+    }
+
+    override fun toOnboarding() {
+
+    }
+
     override fun clearBackStack(nav: Any?) {
-        if (nav is NavKey) navBackStack.add(nav)
-        navBackStack.removeAll { it != nav }
-        /*val size = navBackStack.size - 1
-        repeat(size) {
-            if(navBackStack.size > 1) {
-                navBackStack.removeLastOrNull()
+        if (nav is NavKey) {
+            navBackStack.add(nav)
+            val size = navBackStack.size - 1
+            repeat(size) {
+                if (navBackStack.size > 1) {
+                    navBackStack.removeLastOrNull()
+                }
             }
-        }*/
+            navBackStack.add(nav)
+        }
     }
 }

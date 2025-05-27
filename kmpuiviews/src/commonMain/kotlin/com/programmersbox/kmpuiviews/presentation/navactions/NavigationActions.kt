@@ -46,6 +46,9 @@ interface NavigationActions {
     fun importFullList(uri: String)
     fun popBackStack()
     fun popBackStack(route: Any, inclusive: Boolean)
-    fun navigate(nav: Any)
+    fun <T : Any> navigate(nav: T)
     fun clearBackStack(nav: Any?)
+
+    fun onboardingToRecent()
+    fun toOnboarding()
 }

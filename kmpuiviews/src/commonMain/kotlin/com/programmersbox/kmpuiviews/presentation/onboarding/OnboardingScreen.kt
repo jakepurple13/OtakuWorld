@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.AccountContent
@@ -80,7 +79,7 @@ fun OnboardingScreen(
 
     LaunchedEffect(hasSeenOnboarding) {
         if (hasSeenOnboarding) {
-            navController.clearBackStack(Screen.RecentScreen)
+            navController.onboardingToRecent()
         }
     }
 

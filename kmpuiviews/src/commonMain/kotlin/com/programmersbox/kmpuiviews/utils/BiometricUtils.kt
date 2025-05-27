@@ -154,14 +154,12 @@ class BiometricOpen(
     suspend fun openIfNotIncognito(kmpItemModel: KmpItemModel) {
         if (itemDao.doesIncognitoSourceExistSync(kmpItemModel.url)) {
             biometricPrompting.authenticate(
-                //onAuthenticationSucceeded = { navController.navigateToDetails(kmpItemModel) },
                 onAuthenticationSucceeded = { navigationActions.details(kmpItemModel) },
                 title = "Authenticate to view ${kmpItemModel.title}",
                 subtitle = "Authenticate to view media",
                 negativeButtonText = "Cancel"
             )
         } else {
-            //navController.navigateToDetails(kmpItemModel)
             navigationActions.details(kmpItemModel)
         }
     }

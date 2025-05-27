@@ -1,14 +1,17 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
-import androidx.navigation.NavController
+import androidx.compose.ui.platform.UriHandler
+import androidx.navigation.NavHostController
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.customUriHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 class Navigation2Actions(
-    private val navController: NavController,
+    private val navController: NavHostController,
+    private val customUriHandler: UriHandler = customUriHandler(navController),
 ) : NavigationActions {
     override fun about() {
         navController.navigate(Screen.AboutScreen)
@@ -43,7 +46,7 @@ class Navigation2Actions(
     }
 
     override fun customList(customList: CustomList) {
-        TODO("Not yet implemented")
+        navController.navigate(Screen.CustomListScreen.CustomListItem(customList.item.uuid))
     }
 
     override fun debug() {
@@ -99,7 +102,10 @@ class Navigation2Actions(
     }
 
     override fun notifications() {
-        navController.navigate(Screen.NotificationScreen)
+        navController.navigate(Screen.NotificationScreen) {
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     override fun notificationsSettings() {
@@ -119,7 +125,10 @@ class Navigation2Actions(
     }
 
     override fun recent() {
-        navController.navigate(Screen.RecentScreen)
+        navController.navigate(Screen.RecentScreen) {
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     override fun otherSettings() {
@@ -131,11 +140,14 @@ class Navigation2Actions(
     }
 
     override fun settings() {
-        navController.navigate(Screen.Settings)
+        navController.navigate(Screen.Settings) {
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     override fun webView(url: String) {
-        navController.navigate(Screen.WebViewScreen(url))
+        customUriHandler.openUri(url)
     }
 
     override fun workerInfo() {
@@ -150,8 +162,25 @@ class Navigation2Actions(
         navController.popBackStack()
     }
 
-    override fun navigate(nav: Any) {
-        navController.navigate(nav.toString())
+    override fun <T : Any> navigate(nav: T) {
+        navController.navigate(nav)
+    }
+
+    override fun onboardingToRecent() {
+        navController.navigate(Screen.RecentScreen) {
+            popUpTo(Screen.OnboardingScreen) {
+                inclusive = true
+            }
+        }
+    }
+
+    override fun toOnboarding() {
+        navController.clearBackStack<Screen.RecentScreen>()
+        navController.navigate(Screen.OnboardingScreen) {
+            popUpTo(Screen.RecentScreen) {
+                inclusive = true
+            }
+        }
     }
 
     override fun clearBackStack(nav: Any?) {

@@ -27,7 +27,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
@@ -78,7 +77,6 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -109,19 +107,13 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
@@ -135,6 +127,7 @@ import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
@@ -146,7 +139,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalShare
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
-import com.programmersbox.uiviews.presentation.entryGraph
+import com.programmersbox.uiviews.presentation.navGraph
 import com.programmersbox.uiviews.theme.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.currentDetailsUrl
@@ -272,8 +265,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     SharedTransitionLayout {
                         Row(Modifier.fillMaxSize()) {
                             Rail(
-                                navController = navController,
-                                navBackStack = backStack,
+                                navActions = navigationActions,
                                 showNavBar = showNavBar,
                                 navType = navType,
                                 showAllItem = showAllItem,
@@ -285,7 +277,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                                 bottomBar = {
                                     if (!floatingNavigation) {
                                         BottomNav(
-                                            navController = navController,
+                                            navActions = navigationActions,
                                             showNavBar = showNavBar,
                                             navType = navType,
                                             currentDestination = currentDestination,
@@ -305,7 +297,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                                             middleNavItem = middleNavItem,
                                             //scrollBehavior = null,
                                             multipleActions = multipleActions,
-                                            backStack = backStack,
+                                            navActions = navigationActions,
                                             modifier = Modifier
                                                 .padding(horizontal = 24.dp)
                                                 .windowInsetsPadding(WindowInsets.navigationBars)
@@ -329,7 +321,8 @@ abstract class BaseMainActivity : FragmentActivity() {
                                     //For later maybe
                                     //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                                 ) {
-                                    NavDisplay(
+                                    //TODO: Maybe put in a little thing to switch between these two?
+                                    /*NavDisplay(
                                         backStack = backStack,
                                         //onBack = { backStack.removeLastOrNull() },
                                         sceneStrategy = rememberListDetailSceneStrategy(),
@@ -368,13 +361,13 @@ abstract class BaseMainActivity : FragmentActivity() {
                                                     slideOutHorizontally(targetOffsetX = { it })
                                         },
                                         modifier = Modifier.fillMaxSize()
-                                    )
-                                    /*NavHost(
+                                    )*/
+                                    NavHost(
                                         navController = navController,
                                         //startDestination = Screen.RecentScreen,
                                         startDestination = startDestination,
                                         modifier = Modifier.fillMaxSize()
-                                    ) { navGraph(customPreferences, windowSize, genericInfo, navController, notificationLogo) }*/
+                                    ) { navGraph(customPreferences, windowSize, genericInfo, navigationActions, notificationLogo) }
                                 }
                             }
                         }
@@ -425,7 +418,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     @Composable
     private fun HomeNavigationBar(
         showNavBar: Boolean,
-        backStack: NavBackStack,
+        navActions: NavigationActions,
         navType: NavigationBarType,
         currentDestination: NavDestination?,
         showBlur: Boolean,
@@ -500,15 +493,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                             label = { Text(stringResource(label)) },
                             selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
                             colors = colors,
-                            onClick = {
-                                backStack.add(screen)
-                                /*navController.navigate(screen) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }*/
-
-                            }
+                            onClick = { navActions.navigate(screen) }
                         )
                     }
 
@@ -532,7 +517,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                             }
                         },
                         onClick = {
-                            backStack.add(it.screen)
+                            navActions.navigate(it.screen)
                             /*navController.navigate(it.screen) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
@@ -555,8 +540,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                         middleNavItem = middleNavItem,
                         multipleActions = it,
                         currentDestination = currentDestination,
-                        navController = navController,
-                        navBackStack = backStack
+                        navigationActions = navActions
                     )
                 }
             }
@@ -565,7 +549,7 @@ abstract class BaseMainActivity : FragmentActivity() {
 
     @Composable
     private fun BottomNav(
-        navController: NavHostController,
+        navActions: NavigationActions,
         showNavBar: Boolean,
         navType: NavigationBarType,
         currentDestination: NavDestination?,
@@ -605,11 +589,12 @@ abstract class BaseMainActivity : FragmentActivity() {
                                 label = { Text(stringResource(label)) },
                                 selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
                                 onClick = {
-                                    navController.navigate(screen) {
+                                    /*navController.navigate(screen) {
                                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true
-                                    }
+                                    }*/
+                                    navActions.navigate(screen)
                                 }
                             )
                         }
@@ -633,11 +618,12 @@ abstract class BaseMainActivity : FragmentActivity() {
                                 }
                             },
                             onClick = {
-                                navController.navigate(it.screen) {
+                                /*navController.navigate(it.screen) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
-                                }
+                                }*/
+                                navActions.navigate(it.screen)
                             }
                         )
 
@@ -657,8 +643,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     middleNavItem = middleNavItem,
                     multipleActions = it,
                     currentDestination = currentDestination,
-                    navController = navController,
-                    navBackStack = rememberNavBackStack<NavKey>()
+                    navigationActions = navActions
                 )
             }
         }
@@ -667,8 +652,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun Rail(
-        navController: NavHostController,
-        navBackStack: NavBackStack,
+        navActions: NavigationActions,
         showNavBar: Boolean,
         navType: NavigationBarType,
         showAllItem: Boolean,
@@ -695,8 +679,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     label = stringResource(R.string.recent),
                     screen = Screen.RecentScreen,
                     currentDestination = currentDestination,
-                    navController = navController,
-                    navBackStack = navBackStack
+                    navigationActions = navActions
                 )
 
                 AnimatedVisibility(visible = showAllItem) {
@@ -705,8 +688,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                         label = stringResource(R.string.all),
                         screen = Screen.AllScreen,
                         currentDestination = currentDestination,
-                        navController = navController,
-                        navBackStack = navBackStack
+                        navigationActions = navActions
                     )
                 }
 
@@ -716,8 +698,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                         label = stringResource(R.string.notifications),
                         screen = Screen.NotificationScreen,
                         currentDestination = currentDestination,
-                        navController = navController,
-                        navBackStack = navBackStack
+                        navigationActions = navActions
                     )
                 }
 
@@ -726,8 +707,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     label = stringResource(R.string.custom_lists_title),
                     screen = Screen.CustomListScreen,
                     currentDestination = currentDestination,
-                    navController = navController,
-                    navBackStack = navBackStack
+                    navigationActions = navActions
                 )
 
                 NavigationRailItem(
@@ -735,8 +715,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     label = stringResource(R.string.global_search),
                     screen = Screen.GlobalSearchScreen(),
                     currentDestination = currentDestination,
-                    navController = navController,
-                    navBackStack = navBackStack
+                    navigationActions = navActions
                 )
 
                 NavigationRailItem(
@@ -744,8 +723,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     label = stringResource(R.string.viewFavoritesMenu),
                     screen = Screen.FavoriteScreen,
                     currentDestination = currentDestination,
-                    navController = navController,
-                    navBackStack = navBackStack
+                    navigationActions = navActions
                 )
 
                 NavigationRailItem(
@@ -753,8 +731,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     label = stringResource(R.string.extensions),
                     screen = Screen.ExtensionListScreen,
                     currentDestination = currentDestination,
-                    navController = navController,
-                    navBackStack = navBackStack
+                    navigationActions = navActions
                 )
 
                 NavigationRailItem(
@@ -766,7 +743,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     label = { Text(stringResource(R.string.settings)) },
                     selected = currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings),
                     onClick = {
-                        navBackStack.add(Screen.Settings)
+                        navActions.navigate(Screen.Settings)
                         /*navController.navigate(Screen.Settings) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
@@ -784,10 +761,9 @@ abstract class BaseMainActivity : FragmentActivity() {
         label: String,
         screen: Screen,
         currentDestination: NavDestination?,
-        navController: NavHostController,
-        navBackStack: NavBackStack,
+        navigationActions: NavigationActions,
         onClick: () -> Unit = {
-            navBackStack.add(screen)
+            navigationActions.navigate(screen)
             /*navController.navigate(screen) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true

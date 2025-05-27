@@ -11,7 +11,6 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navDeepLink
@@ -76,7 +75,7 @@ fun NavGraphBuilder.navGraph(
     customPreferences: ComposeSettingsDsl,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
-    navController: NavHostController,
+    navController: NavigationActions,
     notificationLogo: NotificationLogo,
 ) {
     dialog<Screen.ScanQrCodeScreen> { ScanQrCode() }
@@ -135,7 +134,8 @@ fun NavGraphBuilder.navGraph(
         trackScreen(Screen.DetailsScreen)
         DetailsScreen(
             logo = notificationLogo,
-            windowSize = windowSize
+            windowSize = windowSize,
+            details = koinViewModel { parametersOf(it.toRoute<Screen.DetailsScreen.Details>()) }
         )
     }
 
@@ -153,7 +153,7 @@ private fun NavGraphBuilder.settings(
     customPreferences: ComposeSettingsDsl,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
-    navController: NavHostController,
+    navigationActions: NavigationActions,
     notificationLogo: NotificationLogo,
     additionalSettings: NavGraphBuilder.() -> Unit,
 ) {
@@ -165,7 +165,6 @@ private fun NavGraphBuilder.settings(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         ) {
-            val navigationActions = LocalNavActions.current
             trackScreen(Screen.SettingsScreen)
             SettingScreen(
                 composeSettingsDsl = customPreferences,
@@ -223,9 +222,9 @@ private fun NavGraphBuilder.settings(
         ) {
             trackScreen(Screen.MoreInfoSettings)
             InfoSettings(
-                usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } },
-                onPrereleaseClick = { navController.navigate(Screen.PrereleaseScreen) { launchSingleTop = true } },
-                onViewAccountInfoClick = { navController.navigate(Screen.AccountInfo) { launchSingleTop = true } }
+                usedLibraryClick = navigationActions::about,
+                onPrereleaseClick = navigationActions::prerelease,
+                onViewAccountInfoClick = navigationActions::accountInfo
             )
         }
 
@@ -293,9 +292,14 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
         ) {
             trackScreen(Screen.CustomListScreen)
-            OtakuListScreen(
-                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
-            )
+            OtakuListView()
+        }
+
+        animatedScopeComposable<Screen.CustomListScreen.CustomListItem>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
+        ) {
+            OtakuCustomListScreenStandAlone(it.toRoute())
         }
 
         dialog<Screen.CustomListScreen.DeleteFromList> {

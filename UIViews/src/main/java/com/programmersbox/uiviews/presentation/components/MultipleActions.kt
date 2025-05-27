@@ -31,10 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
-import androidx.navigation.NavHostController
-import androidx.navigation3.runtime.NavBackStack
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.components.item
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -73,8 +72,7 @@ fun BoxScope.MultipleActions(
     middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
     multipleActions: com.programmersbox.datastore.MiddleMultipleActions,
     currentDestination: NavDestination?,
-    navController: NavHostController,
-    navBackStack: NavBackStack,
+    navigationActions: NavigationActions,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -91,7 +89,7 @@ fun BoxScope.MultipleActions(
                             launchSingleTop = true
                             restoreState = true
                         }*/
-                        navBackStack.add(it.screen)
+                        navigationActions.navigate(it.screen)
                     }
                 )
             },
@@ -105,7 +103,7 @@ fun BoxScope.MultipleActions(
                             launchSingleTop = true
                             restoreState = true
                         }*/
-                        navBackStack.add(it.screen)
+                        navigationActions.navigate(it.screen)
                     }
                 )
             },
