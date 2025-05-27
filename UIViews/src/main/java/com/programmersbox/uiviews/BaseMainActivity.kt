@@ -143,6 +143,7 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
+import com.programmersbox.kmpuiviews.utils.USE_NAV3
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.presentation.components.MultipleActions
@@ -331,18 +332,21 @@ abstract class BaseMainActivity : FragmentActivity() {
                                     //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                                 ) {
                                     //TODO: Maybe put in a little thing to switch between these two?
-                                    /*Nav3(
-                                        backStack = backStack,
-                                        navigationActions = navigationActions,
-                                        genericInfo = genericInfo,
-                                        windowSize = windowSize,
-                                    )*/
-                                    Nav2(
-                                        startDestination = startDestination,
-                                        windowSize = windowSize,
-                                        genericInfo = genericInfo,
-                                        navigationActions = navigationActions,
-                                    )
+                                    if (USE_NAV3) {
+                                        Nav3(
+                                            backStack = backStack,
+                                            navigationActions = navigationActions,
+                                            genericInfo = genericInfo,
+                                            windowSize = windowSize,
+                                        )
+                                    } else {
+                                        Nav2(
+                                            startDestination = startDestination,
+                                            windowSize = windowSize,
+                                            genericInfo = genericInfo,
+                                            navigationActions = navigationActions,
+                                        )
+                                    }
                                 }
                             }
                         }
