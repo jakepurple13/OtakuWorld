@@ -16,9 +16,9 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.CustomUriHandler
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
-import com.programmersbox.kmpuiviews.customUriHandler
 import com.programmersbox.kmpuiviews.presentation.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
@@ -49,6 +49,7 @@ fun KmpLocalCompositionSetup(
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
+    val customUriHandler = koinInject<CustomUriHandler>()
     val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
     val actions = Navigation3Actions(navBackStack)
     CompositionLocalProvider(
@@ -65,10 +66,8 @@ fun KmpLocalCompositionSetup(
         LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = dateTimeFormatHandler.is24Time()),
         LocalUriHandler provides remember {
             object : UriHandler {
-                private val customHandler = customUriHandler(navController)
-
                 override fun openUri(uri: String) {
-                    runCatching { customHandler.openUri(uri) }
+                    runCatching { customUriHandler.openUri(uri) }
                         .onFailure { it.printStackTrace() }
                         .recoverCatching { defaultUriHandler.openUri(uri) }
                         .onFailure { it.printStackTrace() }

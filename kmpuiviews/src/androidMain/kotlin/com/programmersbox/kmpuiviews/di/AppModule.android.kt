@@ -5,6 +5,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpuiviews.CustomUriHandler
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
@@ -18,6 +19,7 @@ actual fun platformModule(): Module = module {
 
     singleOf(::IconLoader)
     singleOf(::DateTimeFormatHandler)
+    singleOf(::CustomUriHandler)
 
     single {
         NewSettingsHandling(

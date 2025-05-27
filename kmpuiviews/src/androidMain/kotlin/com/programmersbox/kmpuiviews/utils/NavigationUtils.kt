@@ -135,3 +135,19 @@ fun NavController.navigateChromeCustomTabs(
 }
 
 internal fun createRoute(route: String) = "android-app://androidx.navigation.chrome/$route"
+
+fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.() -> Unit = {}) = CustomTabsIntent.Builder()
+    .setExitAnimations(
+        this,
+        android.R.anim.slide_in_left,
+        android.R.anim.slide_out_right
+    )
+    .setStartAnimations(
+        this,
+        android.R.anim.slide_in_left,
+        android.R.anim.slide_out_right
+    )
+    .apply(build)
+    .build()
+    .apply { intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+    .launchUrl(this, url)

@@ -46,6 +46,12 @@ actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorSc
     }
 }
 
+actual class CustomUriHandler : UriHandler {
+    actual override fun openUri(uri: String) {
+        TODO("Not yet implemented")
+    }
+}
+
 actual fun customUriHandler(navController: NavHostController): UriHandler = object : UriHandler {
     override fun openUri(uri: String) {
         error("No Jvm implementation")

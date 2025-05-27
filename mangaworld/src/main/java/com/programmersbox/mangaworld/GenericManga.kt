@@ -65,8 +65,8 @@ import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
+import com.programmersbox.mangaworld.downloads.DownloadRoute
 import com.programmersbox.mangaworld.downloads.DownloadScreen
-import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.onboarding.ReaderOnboarding
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.compose.ReadView
@@ -302,7 +302,7 @@ class GenericManga(
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) { navController.navigate(DownloadViewModel.DownloadRoute) }
+                    ) { navController.navigate(DownloadRoute) }
                 )
             }
 
@@ -458,17 +458,13 @@ class GenericManga(
     }
 
     override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
-        entry(
-            DownloadViewModel.DownloadRoute,
-        ) {
-            trackScreen(DownloadViewModel.DownloadRoute)
+        entry<DownloadRoute> {
+            trackScreen(DownloadRoute.toString())
             DownloadScreen()
         }
 
-        entry(
-            ImageLoaderSettingsRoute,
-        ) {
-            trackScreen(ImageLoaderSettingsRoute)
+        entry<ImageLoaderSettingsRoute> {
+            trackScreen(ImageLoaderSettingsRoute.toString())
             ImageLoaderSettings(mangaSettingsHandling)
         }
 
@@ -482,21 +478,19 @@ class GenericManga(
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
-        composable(
-            DownloadViewModel.DownloadRoute,
+        composable<DownloadRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(DownloadViewModel.DownloadRoute)
+            trackScreen(DownloadRoute.toString())
             DownloadScreen()
         }
 
-        composable(
-            ImageLoaderSettingsRoute,
+        composable<ImageLoaderSettingsRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(ImageLoaderSettingsRoute)
+            trackScreen(ImageLoaderSettingsRoute.toString())
             ImageLoaderSettings(mangaSettingsHandling)
         }
 

@@ -12,12 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 
 @Composable
 fun NoSourcesInstalled(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -31,12 +30,7 @@ fun NoSourcesInstalled(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(120.dp)
             )
             Button(
-                onClick = {
-                    navController.navigate(Screen.ExtensionListScreen) {
-                        popUpTo(Screen.SettingsScreen)
-                        launchSingleTop = true
-                    }
-                }
+                onClick = { navController.extensionList() }
             ) {
                 Text("Cannot find any extensions. Please install some!")
             }

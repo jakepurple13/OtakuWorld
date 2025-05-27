@@ -18,8 +18,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalUriHandler
-import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.global_search
@@ -33,7 +32,7 @@ fun SourceNotInstalledModal(
     url: String?,
     additionOptions: @Composable ColumnScope.() -> Unit = {},
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val uriHandler = LocalUriHandler.current
 
     if (showItem != null) {
@@ -54,7 +53,7 @@ fun SourceNotInstalledModal(
                 leadingContent = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier.clickable {
                     onShowItemDismiss(null)
-                    navController.navigate(Screen.GlobalSearchScreen(showItem))
+                    navController.globalSearch(showItem)
                 }
             )
             ListItem(

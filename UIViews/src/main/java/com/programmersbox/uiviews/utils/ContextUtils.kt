@@ -66,7 +66,8 @@ value class NotificationLogo(val notificationId: Int)
 fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.() -> Unit = {}) = CustomTabsIntent.Builder()
     .setExitAnimations(this, android.R.anim.slide_in_left, android.R.anim.slide_out_right)
     .apply(build)
-    .build().launchUrl(this, url)
+    .build()
+    .launchUrl(this, url)
 
 fun Context.openInCustomChromeBrowser(url: String, build: CustomTabsIntent.Builder.() -> Unit = {}) = openInCustomChromeBrowser(Uri.parse(url), build)
 
