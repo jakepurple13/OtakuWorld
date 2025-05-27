@@ -56,7 +56,7 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSe
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
@@ -75,7 +75,7 @@ fun DebugView() {
     val scope = rememberCoroutineScope()
     val currentSourceRepository = LocalCurrentSource.current
     val genericInfo = LocalGenericInfo.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val sourceRepo = LocalSourcesRepository.current
 

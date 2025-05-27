@@ -79,7 +79,9 @@ import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
+import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
+import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.datastore.asState
@@ -105,7 +107,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -455,14 +457,14 @@ class GenericAnime(
         viewSettings {
 
             item {
-                val navController = LocalNavController.current
+                val navController = LocalNavActions.current
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(R.string.video_menu_title)) },
                     settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
+                    ) { navController.navigate(VideoViewerRoute) }
                 )
             }
 
@@ -573,19 +575,15 @@ class GenericAnime(
     }
 
     override fun EntryProviderBuilder<Any>.globalNav3Setup() {
-        entry(
-            VideoViewModel.VideoPlayerRoute,
-        ) {
+        entry<VideoScreen> {
             trackScreen("video_player")
-            VideoPlayerUi()
+            VideoPlayerUi(it)
         }
     }
 
     override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
-        entry(
-            ViewVideoViewModel.VideoViewerRoute,
-        ) {
-            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+        entry<VideoViewerRoute> {
+            trackScreen(VideoViewerRoute.toString())
             ViewVideoScreen()
         }
     }
@@ -597,18 +595,25 @@ class GenericAnime(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
             trackScreen("video_player")
-            VideoPlayerUi()
+            VideoPlayerUi(
+                VideoScreen(
+                    showPath = it.arguments?.getString("showPath") ?: "",
+                    showName = it.arguments?.getString("showName") ?: "",
+                    downloadOrStream = it.arguments?.getBoolean("downloadOrStream") ?: false,
+                    referer = it.arguments?.getString("referer") ?: ""
+                )
+            )
         }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
         composable(
-            ViewVideoViewModel.VideoViewerRoute,
+            VideoViewerRoute.toString(),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://$VideoViewerRoute" })
         ) {
-            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+            trackScreen(VideoViewerRoute)
             ViewVideoScreen()
         }
     }

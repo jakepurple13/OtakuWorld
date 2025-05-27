@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
@@ -30,25 +29,31 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
 import com.programmersbox.animeworld.StorageHolder
-import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
-import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.uiviews.utils.BatteryInformation
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import java.security.cert.X509Certificate
 import java.util.Formatter
 import java.util.Locale
 import javax.net.ssl.X509TrustManager
 
+@Serializable
+data class VideoScreen(
+    val showPath: String,
+    val showName: String,
+    val downloadOrStream: Boolean,
+    val referer: String,
+)
+
 class VideoViewModel(
-    handle: SavedStateHandle,
+    videoScreen: VideoScreen,
     context: Context,
     private val storageHolder: StorageHolder,
 ) : ViewModel() {
@@ -65,17 +70,20 @@ class VideoViewModel(
             referer: String,
         ) {
             navController.navigate(
-                "video_player?showPath=$showPath&showName=$showName&downloadOrStream=$downloadOrStream&referer=$referer"
-            ) { launchSingleTop = true }
+                VideoScreen(
+                    showPath = showPath,
+                    showName = showName,
+                    downloadOrStream = downloadOrStream,
+                    referer = referer
+                )
+            )
         }
     }
 
-    val chapterModel: KmpChapterModel? = handle.get<String>("chapterModel")
-        ?.fromJson(KmpChapterModel::class.java to ChapterModelDeserializer())
-    val showPath = storageHolder.storageModel?.link ?: handle.get<String>("showPath").orEmpty()
-    val showName = handle.get<String>("showName")
-    val downloadOrStream = handle.get<String>("downloadOrStream")?.toBoolean() ?: true
-    val headers = handle.get<String>("referer") ?: chapterModel?.url ?: ""
+    val showPath = storageHolder.storageModel?.link ?: videoScreen.showPath
+    val showName = videoScreen.showName
+    val downloadOrStream = videoScreen.downloadOrStream
+    val headers = videoScreen.referer ?: ""
 
     var exoPlayer: ExoPlayer? by mutableStateOf(null)
 

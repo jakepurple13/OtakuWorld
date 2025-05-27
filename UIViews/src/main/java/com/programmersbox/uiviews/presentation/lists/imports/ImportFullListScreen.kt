@@ -103,7 +103,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportF
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.sharedutils.AppLogo
@@ -122,7 +122,7 @@ fun ImportFullListScreen(
     HideNavBarWhileOnScreen()
 
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val logoDrawable = koinInject<AppLogo>()

@@ -6,9 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.animeworld.VideoContent
 import com.programmersbox.animeworld.VideoGet
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
+@Serializable
+data object VideoViewerRoute : NavKey
 
 class ViewVideoViewModel(context: Context) : ViewModel() {
 
@@ -23,9 +28,4 @@ class ViewVideoViewModel(context: Context) : ViewModel() {
         super.onCleared()
         v?.unregister()
     }
-
-    companion object {
-        const val VideoViewerRoute = "view_videos"
-    }
-
 }

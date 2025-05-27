@@ -19,15 +19,9 @@ import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.BatteryStd
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavBackStackEntry
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -44,7 +38,6 @@ import com.programmersbox.helpfulutils.runOnUIThread
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -290,23 +283,6 @@ tailrec fun Context.findActivity(): FragmentActivity = when (this) {
     is FragmentActivity -> this
     is ContextWrapper -> this.baseContext.findActivity()
     else -> error("Could not find activity in Context chain.")
-}
-
-@Composable
-inline fun <reified VM : ViewModel> viewModelInRoute(
-    route: String,
-    noinline initializer: CreationExtras.() -> VM,
-): VM {
-    val entry = rememberBackStackEntry(route)
-    return viewModel(viewModelStoreOwner = entry, initializer = initializer)
-}
-
-@Composable
-fun rememberBackStackEntry(
-    route: String,
-): NavBackStackEntry {
-    val controller = LocalNavController.current
-    return remember(controller.currentBackStackEntry) { controller.getBackStackEntry(route) }
 }
 
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }

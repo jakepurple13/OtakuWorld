@@ -97,10 +97,11 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchModel
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
@@ -140,7 +141,7 @@ fun GlobalSearchView(
 ) {
     val hazeState = remember { HazeState() }
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -343,7 +344,7 @@ private fun Content(
     hazeState: HazeState,
     showBlur: Boolean,
     scope: CoroutineScope,
-    navController: NavController,
+    navController: NavigationActions,
     notificationLogo: NotificationLogo,
     mainLogoDrawable: AppLogo,
     onSearchModel: (SearchModel) -> Unit,
