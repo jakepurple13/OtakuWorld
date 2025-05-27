@@ -19,9 +19,9 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
@@ -35,7 +35,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.BuildConfig
@@ -80,7 +80,7 @@ fun NavGraphBuilder.navGraph(
     dialog<Screen.ScanQrCodeScreen> { ScanQrCode() }
     composable<Screen.OnboardingScreen> {
         OnboardingScreen(
-            navController = navController,
+            navController = LocalNavActions.current,
             customPreferences = customPreferences
         )
     }
@@ -280,7 +280,8 @@ private fun NavGraphBuilder.settings(
             trackScreen("global_search")
             GlobalSearchView(
                 notificationLogo = notificationLogo,
-                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
+                screen = it.toRoute()
             )
         }
 
@@ -378,7 +379,8 @@ private fun NavGraphBuilder.settings(
         trackScreen("global_search")
         GlobalSearchView(
             notificationLogo = notificationLogo,
-            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
+            screen = it.toRoute()
         )
     }
 
@@ -423,9 +425,10 @@ private fun NavGraphBuilder.settings(
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
 fun entryGraph(
     customPreferences: ComposeSettingsDsl,
-    navBackStack: NavBackStack,
     notificationLogo: NotificationLogo,
     windowSize: WindowSizeClass,
+    genericInfo: GenericInfo,
+    navigationActions: NavigationActions,
 ) = entryProvider<Any> {
     entry<Screen.RecentScreen> { RecentView() }
     entry<Screen.DetailsScreen.Details> {
@@ -440,7 +443,7 @@ fun entryGraph(
 
     entry<Screen.OnboardingScreen> {
         OnboardingScreen(
-            navController = LocalNavController.current,
+            navController = LocalNavActions.current,
             customPreferences = customPreferences
         )
     }
@@ -462,40 +465,50 @@ fun entryGraph(
         )
     }
 
-    settingsEntryGraph(customPreferences, navBackStack, notificationLogo, windowSize)
+    settingsEntryGraph(
+        customPreferences = customPreferences,
+        notificationLogo = notificationLogo,
+        windowSize = windowSize,
+        genericInfo = genericInfo,
+        navigationActions = navigationActions
+    )
+
+    with(genericInfo) { globalNav3Setup() }
 
 }
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
 private fun EntryProviderBuilder<Any>.settingsEntryGraph(
     customPreferences: ComposeSettingsDsl,
-    navBackStack: NavBackStack,
     notificationLogo: NotificationLogo,
     windowSize: WindowSizeClass,
+    genericInfo: GenericInfo,
+    navigationActions: NavigationActions,
 ) {
     entry<Screen.Settings>(
         metadata = ListDetailSceneStrategy.listPane {
+            //TODO: Need to add info here
             Text("Please Wait")
         }
     ) {
         SettingScreen(
             composeSettingsDsl = customPreferences,
-            notificationClick = { navBackStack.add(Screen.NotificationScreen) },
-            favoritesClick = { navBackStack.add(Screen.FavoriteScreen) },
-            historyClick = { navBackStack.add(Screen.HistoryScreen) },
-            globalSearchClick = { navBackStack.add(Screen.GlobalSearchScreen()) },
-            listClick = { navBackStack.add(Screen.CustomListScreen) },
-            debugMenuClick = { navBackStack.add(Screen.DebugScreen) },
-            extensionClick = { navBackStack.add(Screen.ExtensionListScreen) },
-            notificationSettingsClick = { navBackStack.add(Screen.NotificationsSettings) },
-            generalClick = { navBackStack.add(Screen.GeneralSettings) },
-            otherClick = { navBackStack.add(Screen.OtherSettings) },
-            moreInfoClick = { navBackStack.add(Screen.MoreInfoSettings) },
-            moreSettingsClick = { navBackStack.add(Screen.MoreSettings) },
+            notificationClick = navigationActions::notifications,
+            favoritesClick = navigationActions::favorites,
+            historyClick = navigationActions::history,
+            globalSearchClick = navigationActions::globalSearch,
+            listClick = navigationActions::customList,
+            debugMenuClick = navigationActions::debug,
+            extensionClick = navigationActions::extensionList,
+            notificationSettingsClick = navigationActions::notificationsSettings,
+            generalClick = navigationActions::general,
+            otherClick = navigationActions::otherSettings,
+            moreInfoClick = navigationActions::moreInfo,
+            moreSettingsClick = navigationActions::moreSettings,
             geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
-            sourcesOrderClick = { navBackStack.add(Screen.OrderScreen) },
-            appDownloadsClick = { navBackStack.add(Screen.DownloadInstallScreen) },
-            scanQrCode = { navBackStack.add(Screen.ScanQrCodeScreen) },
+            sourcesOrderClick = navigationActions::order,
+            appDownloadsClick = navigationActions::downloadInstall,
+            scanQrCode = navigationActions::scanQrCode,
         )
     }
 
@@ -519,9 +532,9 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
     detailEntry<Screen.MoreInfoSettings> {
         trackScreen(Screen.MoreInfoSettings)
         InfoSettings(
-            usedLibraryClick = { navBackStack.add(Screen.AboutScreen) },
-            onPrereleaseClick = { navBackStack.add(Screen.PrereleaseScreen) },
-            onViewAccountInfoClick = { navBackStack.add(Screen.AccountInfo) }
+            usedLibraryClick = navigationActions::about,
+            onPrereleaseClick = navigationActions::prerelease,
+            onViewAccountInfoClick = navigationActions::accountInfo
         )
     }
 
@@ -558,10 +571,12 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
         trackScreen("global_search")
         GlobalSearchView(
             notificationLogo = notificationLogo,
-            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
+            screen = it
         )
     }
 
+    //TODO: Need to listPane this
     entry<Screen.CustomListScreen> {
         trackScreen(Screen.CustomListScreen)
         OtakuListScreen(
@@ -613,6 +628,8 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
             DebugView()
         }
     }
+
+    with(genericInfo) { settingsNav3Setup() }
 }
 
 private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(

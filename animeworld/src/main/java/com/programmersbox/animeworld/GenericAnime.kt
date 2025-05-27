@@ -67,10 +67,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
@@ -93,6 +94,7 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
@@ -163,7 +165,7 @@ class GenericAnime(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         /*if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
@@ -174,7 +176,6 @@ class GenericAnime(
             model = model,
             infoModel = infoModel,
             context = context,
-            navController = navController,
             isStreaming = true,
         ) {
             if (MainActivity.cast.isCastActive()) {
@@ -202,7 +203,7 @@ class GenericAnime(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         /* if ((model.source as? ShowApi)?.canDownload == false) {
              Toast.makeText(
@@ -243,7 +244,6 @@ class GenericAnime(
             infoModel = infoModel,
             context = context,
             filter = { !it.link.orEmpty().endsWith(".m3u8") },
-            navController = navController,
             isStreaming = false
         ) {
             //fetchIt(it, model, activity)
@@ -257,7 +257,6 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         context: Context,
         filter: (KmpStorage) -> Boolean = { true },
-        navController: NavController,
         isStreaming: Boolean,
         onAction: (KmpStorage) -> Unit,
     ) {
@@ -570,6 +569,24 @@ class GenericAnime(
                     ) { scope.launch { ignoreSsl.set(it) } }
                 }
             }
+        }
+    }
+
+    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+        entry(
+            VideoViewModel.VideoPlayerRoute,
+        ) {
+            trackScreen("video_player")
+            VideoPlayerUi()
+        }
+    }
+
+    override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
+        entry(
+            ViewVideoViewModel.VideoViewerRoute,
+        ) {
+            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+            ViewVideoScreen()
         }
     }
 

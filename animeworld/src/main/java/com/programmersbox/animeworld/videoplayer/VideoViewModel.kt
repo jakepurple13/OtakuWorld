@@ -29,11 +29,11 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
-import androidx.navigation.NavController
 import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +58,7 @@ class VideoViewModel(
             "video_player?showPath={showPath}&showName={showName}&downloadOrStream={downloadOrStream}&referer={referer}"
 
         fun navigateToVideoPlayer(
-            navController: NavController,
+            navController: NavigationActions,
             showPath: String,
             showName: String,
             downloadOrStream: Boolean,

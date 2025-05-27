@@ -19,8 +19,8 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.customUriHandler
+import com.programmersbox.kmpuiviews.presentation.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
 import kotlinx.datetime.LocalDateTime
@@ -32,7 +32,7 @@ val LocalNavController = staticCompositionLocalOf<NavHostController> { error("No
 
 //TODO: Change to NavigationActions
 // Maybe also include one for the actual backstack?
-val LocalNavBackStack = staticCompositionLocalOf<NavigationActions> { error("No NavController Found!") }
+val LocalNavActions = staticCompositionLocalOf<NavigationActions> { error("No NavController Found!") }
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
@@ -50,9 +50,10 @@ fun KmpLocalCompositionSetup(
 ) {
     val defaultUriHandler = LocalUriHandler.current
     val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
+    val actions = Navigation3Actions(navBackStack)
     CompositionLocalProvider(
         LocalNavController provides navController,
-        LocalNavBackStack provides NavigationActions(navBackStack),
+        LocalNavActions provides actions,
         LocalItemDao provides koinInject(),
         LocalBlurDao provides koinInject(),
         LocalHistoryDao provides koinInject(),
@@ -71,7 +72,7 @@ fun KmpLocalCompositionSetup(
                         .onFailure { it.printStackTrace() }
                         .recoverCatching { defaultUriHandler.openUri(uri) }
                         .onFailure { it.printStackTrace() }
-                        .onFailure { navController.navigate(Screen.WebViewScreen(uri)) }
+                        .onFailure { actions.webView(uri) }
                 }
             }
         },

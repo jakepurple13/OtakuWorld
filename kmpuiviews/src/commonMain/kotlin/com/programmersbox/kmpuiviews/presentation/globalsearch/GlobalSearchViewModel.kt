@@ -4,10 +4,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
@@ -31,15 +29,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class GlobalSearchViewModel(
-    savedStateHandle: SavedStateHandle,
+    handle: Screen.GlobalSearchScreen,
     val sourceRepository: SourceRepository,
     val dao: HistoryDao,
 ) : ViewModel() {
 
-    private val initialSearch: String = savedStateHandle
-        .toRoute<Screen.GlobalSearchScreen>()
-        .title
-        ?: ""
+    private val initialSearch: String = handle.title ?: ""
 
     val observeNetwork = createConnectivity()
         .statusUpdates

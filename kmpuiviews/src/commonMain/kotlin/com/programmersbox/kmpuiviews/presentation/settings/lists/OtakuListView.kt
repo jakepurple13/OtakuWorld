@@ -39,13 +39,12 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.thenIf
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -67,7 +66,7 @@ fun OtakuListView(
     customItem: CustomList? = null,
     navigateDetail: (CustomList) -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val dateTimeFormatter = LocalSystemDateTimeFormat.current
@@ -76,7 +75,7 @@ fun OtakuListView(
 
     val pickDocumentLauncher = rememberFilePickerLauncher(
         type = FileKitType.File("json")
-    ) { document -> document?.let { navController.navigate(Screen.ImportFullListScreen(it.toString())) } }
+    ) { document -> document?.let { navController.importFullList(it.toString()) } }
 
     var showAdd by remember { mutableStateOf(false) }
 

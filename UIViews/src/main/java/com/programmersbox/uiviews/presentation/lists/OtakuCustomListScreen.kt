@@ -109,21 +109,19 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.painterLogo
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListState
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -175,7 +173,7 @@ fun OtakuCustomListScreen(
     dao: ListDao = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -287,7 +285,7 @@ fun OtakuCustomListScreen(
                 ?.onStart { showLoadingDialog = true }
                 ?.onEach { item ->
                     showLoadingDialog = false
-                    navController.navigateToDetails(item)
+                    navController.details(item)
                 }
                 ?.onCompletion { showLoadingDialog = false }
                 ?.launchIn(scope)
@@ -337,7 +335,7 @@ fun OtakuCustomListScreen(
                 customItem
                     .item
                     .uuid
-                    .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
+                    .let { navController.deleteFromList(it) }
             },
             onExportAction = { pickDocumentLauncher.launch(customItem.item.name, "json") },
             filtered = viewModel.filtered,
@@ -604,7 +602,7 @@ private fun CustomItemVertical(
     val biometrics = rememberBiometricOpening()
     val scope = rememberCoroutineScope()
     val sourceRepository = LocalSourcesRepository.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
 
     var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -640,7 +638,7 @@ private fun CustomItemVertical(
                         ?.onStart { showLoadingDialog(true) }
                         ?.onEach {
                             showLoadingDialog(false)
-                            navController.navigateToDetails(it)
+                            navController.details(it)
                         }
                         ?.onCompletion { showLoadingDialog(false) }
                         ?.launchIn(scope) ?: onError()
@@ -691,7 +689,7 @@ private fun CustomItemVertical(
                                 ?.onStart { showLoadingDialog(true) }
                                 ?.onEach {
                                     showLoadingDialog(false)
-                                    navController.navigateToDetails(it)
+                                    navController.details(it)
                                 }
                                 ?.onCompletion { showLoadingDialog(false) }
                                 ?.launchIn(scope) ?: error("Nothing")

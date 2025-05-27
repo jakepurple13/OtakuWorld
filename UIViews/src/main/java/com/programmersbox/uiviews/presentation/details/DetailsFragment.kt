@@ -94,7 +94,7 @@ import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.LocalGenericInfo
@@ -464,7 +464,7 @@ fun ChapterItem(
 ) {
     val historyDao = LocalHistoryDao.current
     val favoritesRepository: FavoritesRepository = koinInject()
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val genericInfo = LocalGenericInfo.current
     val context = LocalContext.current
     val dataStoreHandling = koinInject<DataStoreHandling>()

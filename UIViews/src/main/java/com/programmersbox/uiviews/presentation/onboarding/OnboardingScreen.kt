@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
@@ -31,7 +31,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(
-    navController: NavController,
+    navController: NavigationActions,
     customPreferences: ComposeSettingsDsl,
     dataStoreHandling: DataStoreHandling = koinInject(),
 ) {

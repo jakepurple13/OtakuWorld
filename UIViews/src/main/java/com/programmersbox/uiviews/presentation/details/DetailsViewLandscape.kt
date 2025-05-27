@@ -83,7 +83,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.OtakuApp
 import com.programmersbox.uiviews.R
@@ -121,7 +121,7 @@ fun DetailsViewLandscape(
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
     val genericInfo = LocalGenericInfo.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
 
     var reverseChapters by remember { mutableStateOf(false) }
@@ -328,7 +328,7 @@ private fun DetailsLandscapeContent(
             NormalOtakuScaffold(
                 bottomBar = {
                     DetailBottomBar(
-                        navController = LocalNavController.current,
+                        navController = LocalNavActions.current,
                         onShowLists = { showLists = true },
                         info = info,
                         customActions = {},

@@ -139,6 +139,7 @@ import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
@@ -262,6 +263,8 @@ abstract class BaseMainActivity : FragmentActivity() {
                     val floatingNavigation by rememberFloatingNavigation()
                     val hazeState = remember { HazeState() }
 
+                    val navigationActions = LocalNavActions.current
+
                     //val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
                     genericInfo.DialogSetups()
@@ -344,9 +347,10 @@ abstract class BaseMainActivity : FragmentActivity() {
                                         ),
                                         entryProvider = entryGraph(
                                             customPreferences = customPreferences,
-                                            navBackStack = backStack,
                                             notificationLogo = notificationLogo,
                                             windowSize = windowSize,
+                                            navigationActions = navigationActions,
+                                            genericInfo = genericInfo
                                         ),
                                         transitionSpec = {
                                             // Slide in from right when navigating forward

@@ -1,6 +1,5 @@
 package com.programmersbox.mangaworld.reader.compose
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.exponentialDecay
@@ -51,6 +50,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -79,6 +79,8 @@ internal fun LastPageReached(
     previousChapter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val alpha by animateFloatAsState(targetValue = if (isLoading) 0f else 1f, label = "")
+
     ChangeChapterSwipe(
         nextChapter = nextChapter,
         previousChapter = previousChapter,
@@ -87,64 +89,54 @@ internal fun LastPageReached(
         lastChapter = lastChapter,
         modifier = modifier
     ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .heightIn(min = 300.dp)
-                .fillMaxSize()
-        ) {
-            Text(
-                chapterName,
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Crossfade(
-                isLoading
-            ) { target ->
-                Column(
-                    verticalArrangement = Arrangement.SpaceBetween,
+        Box(Modifier.fillMaxSize()) {
+            if (isLoading) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    chapterName,
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.graphicsLayer { this.alpha = alpha }
                 ) {
-                    if (target) {
-                        CircularWavyProgressIndicator(
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                    Text(
+                        stringResource(id = R.string.lastPage),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    if (currentChapter <= 0) {
+                        Text(
+                            stringResource(id = R.string.reachedLastChapter),
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally)
                         )
-                    } else {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                        ) {
-                            Text(
-                                stringResource(id = R.string.lastPage),
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.CenterHorizontally)
-                            )
-                            if (currentChapter <= 0) {
-                                Text(
-                                    stringResource(id = R.string.reachedLastChapter),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.CenterHorizontally)
-                                )
-                            }
-                        }
                     }
                 }
-            }
 
-            Text(
-                stringResource(id = R.string.swipeChapter),
-                style = MaterialTheme.typography.labelLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Text(
+                    stringResource(id = R.string.swipeChapter),
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

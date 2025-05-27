@@ -73,7 +73,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.isScrollingUp
@@ -122,7 +122,7 @@ fun DetailsView(
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
     val genericInfo = LocalGenericInfo.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     var reverseChapters by remember { mutableStateOf(false) }
 
     val settings = LocalSettingsHandling.current

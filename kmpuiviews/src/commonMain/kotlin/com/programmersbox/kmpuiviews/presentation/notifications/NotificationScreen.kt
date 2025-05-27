@@ -75,7 +75,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -85,6 +84,7 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
@@ -96,11 +96,10 @@ import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.plus
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
@@ -139,7 +138,7 @@ import otakuworld.kmpuiviews.generated.resources.yes
 )
 @Composable
 fun NotificationScreen(
-    navController: NavController = LocalNavController.current,
+    navController: NavigationActions = LocalNavActions.current,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
     vm: NotificationScreenViewModel = koinViewModel(),
     notificationRepository: NotificationRepository = koinInject(),
@@ -351,7 +350,7 @@ sealed class NotificationInfo {
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun DateSort(
-    navController: NavController,
+    navController: NavigationActions,
     vm: NotificationScreenViewModel,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
@@ -447,7 +446,7 @@ data class NotificationItemOptionsSheet(
 private fun notificationOptionsSheet(
     i: NotificationItem,
     scope: CoroutineScope,
-    navController: NavController,
+    navController: NavigationActions,
     toSource: (String) -> KmpApiService?,
     onLoadingChange: (Boolean) -> Unit,
     notificationRepository: NotificationRepository = koinInject(),
@@ -470,7 +469,7 @@ private fun notificationOptionsSheet(
             ?.onStart { onLoadingChange(true) }
             ?.onEach {
                 onLoadingChange(false)
-                navController.navigateToDetails(it)
+                navController.details(it)
             }
             ?.launchIn(scope) ?: onError(i)
     }
@@ -538,7 +537,7 @@ private fun NotiItem(
     toSource: (String) -> KmpApiService?,
     onError: (NotificationItem) -> Unit,
     onLoadingChange: (Boolean) -> Unit,
-    navController: NavController,
+    navController: NavigationActions,
     itemDao: ItemDao,
     modifier: Modifier = Modifier,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
@@ -645,7 +644,7 @@ private fun NotiItem(
                                         ?.onStart { onLoadingChange(true) }
                                         ?.onEach {
                                             onLoadingChange(false)
-                                            navController.navigateToDetails(it)
+                                            navController.details(it)
                                         }
                                         ?.launchIn(scope) ?: onError(i)
                                 }
@@ -660,7 +659,7 @@ private fun NotiItem(
 
 @Composable
 private fun GroupedSort(
-    navController: NavController,
+    navController: NavigationActions,
     vm: NotificationScreenViewModel,
     p: PaddingValues,
     onLoadingChange: (Boolean) -> Unit,
@@ -743,7 +742,7 @@ private fun GroupedSort(
 @Composable
 private fun NotificationItem(
     item: NotificationItem,
-    navController: NavController,
+    navController: NavigationActions,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
     toSource: (String) -> KmpApiService?,
@@ -851,7 +850,7 @@ private fun NotificationItem(
                                 ?.onStart { onLoadingChange(true) }
                                 ?.onEach {
                                     onLoadingChange(false)
-                                    navController.navigateToDetails(it)
+                                    navController.details(it)
                                 }
                                 ?.launchIn(scope) ?: onError(item)
                         }

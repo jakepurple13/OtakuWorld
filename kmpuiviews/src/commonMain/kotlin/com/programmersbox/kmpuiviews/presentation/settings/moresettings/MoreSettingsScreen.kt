@@ -46,13 +46,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
 import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.ToasterSetup
 import com.programmersbox.kmpuiviews.utils.ToasterUtils
 import io.github.vinceglb.filekit.PlatformFile
@@ -78,7 +77,7 @@ import kotlin.time.Duration
 fun MoreSettingsScreen(
     viewModel: MoreSettingsViewModel = koinViewModel(),
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val toaster = rememberToasterState(
         onToastDismissed = { viewModel.importExportListStatus = ImportExportListStatus.Idle }
     )
@@ -226,7 +225,7 @@ fun MoreSettingsScreen(
             type = FileKitType.File("json")
         ) { document ->
             document?.let {
-                navController.navigate(Screen.ImportFullListScreen(it.toString()))
+                navController.importFullList(it.toString())
             }
         }
 

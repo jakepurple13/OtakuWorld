@@ -39,7 +39,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -54,6 +53,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
@@ -88,7 +88,7 @@ class MockInfo(private val context: Context) : GenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
 
     }
@@ -97,7 +97,7 @@ class MockInfo(private val context: Context) : GenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
 
     }

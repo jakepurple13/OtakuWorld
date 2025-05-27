@@ -18,9 +18,8 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -34,7 +33,7 @@ import otakuworld.kmpuiviews.generated.resources.import_favorites
 
 @Composable
 internal fun AccountContent(
-    navController: NavController,
+    navController: NavigationActions,
     cloudContent: @Composable () -> Unit,
     importViewModel: MoreSettingsViewModel = koinViewModel(),
     appConfig: AppConfig = koinInject(),
@@ -119,7 +118,7 @@ internal fun AccountContent(
 
         val importListLauncher = rememberFilePickerLauncher(
             type = FileKitType.File("json")
-        ) { document -> document?.let { navController.navigate(Screen.ImportFullListScreen(it.toString())) } }
+        ) { document -> document?.let { navController.importFullList(it.toString()) } }
 
         PreferenceSetting(
             settingTitle = { Text("Import Lists") },

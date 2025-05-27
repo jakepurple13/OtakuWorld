@@ -9,15 +9,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.fireListener
@@ -42,13 +41,11 @@ import java.io.File
 private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
-    savedStateHandle: SavedStateHandle,
+    mangaReader: MangaReader,
     private val chapterHolder: ChapterHolder,
     private val favoritesRepository: FavoritesRepository,
     itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
-
-    private val mangaReader: MangaReader = savedStateHandle.toRoute()
 
     val isDownloaded: Boolean = mangaReader.downloaded
     val headers: MutableMap<String, String> = mutableMapOf()
@@ -78,7 +75,7 @@ class ReadViewModel(
 
     companion object {
         fun navigateToMangaReader(
-            navController: NavController,
+            navController: NavigationActions,
             mangaTitle: String? = null,
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
@@ -93,7 +90,7 @@ class ReadViewModel(
                     downloaded = downloaded,
                     filePath = filePath
                 )
-            ) { launchSingleTop = true }
+            )// { launchSingleTop = true }
         }
     }
 
@@ -104,7 +101,7 @@ class ReadViewModel(
         val mangaInfoUrl: String? = null,
         val downloaded: Boolean,
         val filePath: String? = null,
-    )
+    ) : NavKey
 
     val title by lazy { mangaReader.mangaTitle ?: "" }
 

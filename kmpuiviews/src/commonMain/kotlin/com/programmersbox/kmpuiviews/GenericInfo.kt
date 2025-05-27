@@ -7,13 +7,13 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 
@@ -27,7 +27,7 @@ interface KmpGenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     )
 
     fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {}
@@ -36,7 +36,7 @@ interface KmpGenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     )
 
     @Composable

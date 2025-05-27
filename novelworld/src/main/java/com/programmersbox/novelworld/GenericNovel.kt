@@ -29,10 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.core.app.TaskStackBuilder
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
@@ -43,6 +44,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
@@ -96,7 +98,7 @@ class GenericNovel(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         ChapterList(context, this@GenericNovel).set(allChapters)
         ReadViewModel.navigateToNovelReader(
@@ -112,7 +114,7 @@ class GenericNovel(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
     }
 
@@ -200,6 +202,22 @@ class GenericNovel(
                     )
                 }
             }
+        }
+    }
+
+    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+        //TODO: Need to make sure this works
+        entry(
+            ReadViewModel.NovelReaderRoute,
+            /*metadata = mapOf(
+                "currentChapter",
+               "novelTitle",
+               "novelUrl",
+               "novelInfoUrl",
+            )*/
+        ) {
+            trackScreen("novelReader")
+            NovelReader()
         }
     }
 

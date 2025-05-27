@@ -62,11 +62,10 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.utils.BiometricOpen
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
@@ -282,7 +281,7 @@ private fun HistoryItem(
             )
 
             val info = LocalSourcesRepository.current
-            val navController = LocalNavController.current
+            val navController = LocalNavActions.current
 
             Surface(
                 tonalElevation = 4.dp,
@@ -302,7 +301,7 @@ private fun HistoryItem(
                                     }
                                     ?.onEach { m ->
                                         showLoadingDialog = false
-                                        navController.navigateToDetails(m)
+                                        navController.details(m)
                                     }
                                     ?.collect() ?: onError()
                             }
@@ -358,7 +357,7 @@ private fun HistoryItem(
                                                     }
                                                     ?.onEach { m ->
                                                         showLoadingDialog = false
-                                                        navController.navigateToDetails(m)
+                                                        navController.details(m)
                                                     }
                                                     ?.collect() ?: onError()
                                             }

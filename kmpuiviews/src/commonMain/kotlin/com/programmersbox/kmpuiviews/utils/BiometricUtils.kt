@@ -137,7 +137,7 @@ expect fun rememberBiometricPrompt(
 fun rememberBiometricOpening(): BiometricOpen {
     val biometricPrompting = rememberBiometricPrompting()
     val navController = LocalNavController.current
-    val navBackStack = LocalNavBackStack.current
+    val navBackStack = LocalNavActions.current
     val itemDao = koinInject<ItemDao>()
     return remember(biometricPrompting, navController, itemDao) {
         BiometricOpen(

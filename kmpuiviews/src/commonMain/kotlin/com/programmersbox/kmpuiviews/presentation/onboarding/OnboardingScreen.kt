@@ -22,9 +22,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
+import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.AccountContent
@@ -41,7 +41,7 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
-    navController: NavController,
+    navController: NavigationActions,
     customPreferences: ComposeSettingsDsl,
     navigationBarSettings: @Composable () -> Unit,
     accountContent: @Composable () -> Unit,
@@ -80,11 +80,7 @@ fun OnboardingScreen(
 
     LaunchedEffect(hasSeenOnboarding) {
         if (hasSeenOnboarding) {
-            navController.navigate(Screen.RecentScreen) {
-                popUpTo(Screen.OnboardingScreen) {
-                    inclusive = true
-                }
-            }
+            navController.clearBackStack(Screen.RecentScreen)
         }
     }
 
