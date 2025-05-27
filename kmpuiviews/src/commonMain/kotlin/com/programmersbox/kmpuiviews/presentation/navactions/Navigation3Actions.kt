@@ -170,11 +170,11 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
     }
 
     override fun onboardingToRecent() {
-
+        clearBackStack(Screen.RecentScreen)
     }
 
     override fun toOnboarding() {
-
+        clearBackStack(Screen.OnboardingScreen)
     }
 
     override fun <T : Any> homeScreenNavigate(nav: T) {
@@ -187,10 +187,10 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
             val size = navBackStack.size - 1
             repeat(size) {
                 if (navBackStack.size > 1) {
-                    navBackStack.removeLastOrNull()
+                    navBackStack.removeFirstOrNull()
                 }
             }
-            navBackStack.add(nav)
+            //navBackStack.add(nav)
         }
     }
 }
