@@ -57,7 +57,7 @@ import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.kmpuiviews.presentation.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first

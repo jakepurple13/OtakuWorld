@@ -24,9 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
-import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.AccountContent
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.FinishContent
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.GeneralContent

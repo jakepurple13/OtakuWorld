@@ -272,7 +272,7 @@ fun calculateStandardPaneScaffoldDirective(
 }
 
 @Composable
-private fun NoDetailSelected() {
+fun NoDetailSelected() {
     Surface {
         Box(
             contentAlignment = Alignment.Center,

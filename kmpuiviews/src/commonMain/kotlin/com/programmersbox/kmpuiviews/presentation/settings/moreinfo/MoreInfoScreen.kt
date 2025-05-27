@@ -39,6 +39,7 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -124,9 +125,8 @@ fun MoreInfoScreen(
                         interactionSource = null
                     ) {
                         //navController.clearBackStack(Screen.RecentScreen)
-                        navController.clearBackStack()
                         onboarding = false
-                        navController.onboarding()
+                        navController.clearBackStack(Screen.OnboardingScreen)
                     }
                 )
             }

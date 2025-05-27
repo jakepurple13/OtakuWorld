@@ -46,11 +46,13 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.confirm
@@ -58,6 +60,30 @@ import otakuworld.kmpuiviews.generated.resources.create_new_list
 import otakuworld.kmpuiviews.generated.resources.custom_list_updated_at
 import otakuworld.kmpuiviews.generated.resources.custom_lists_title
 import otakuworld.kmpuiviews.generated.resources.list_name
+
+@Composable
+fun OtakuListView(
+    viewModel: OtakuListViewModel = koinViewModel(),
+) {
+    val navActions = LocalNavActions.current
+    val biometric = rememberBiometricPrompting()
+    OtakuListView(
+        customLists = viewModel.customLists,
+        navigateDetail = {
+            if (it.item.useBiometric) {
+                biometric.authenticate(
+                    title = "Authentication required",
+                    subtitle = "In order to view ${it.item.name}, please authenticate",
+                    negativeButtonText = "Never Mind",
+                    onAuthenticationSucceeded = { navActions.customList(it) },
+                    onAuthenticationFailed = {}
+                )
+            } else {
+                navActions.customList(it)
+            }
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -132,9 +158,7 @@ fun OtakuListView(
         ) {
             items(customLists) {
                 ElevatedCard(
-                    onClick = {
-                        navigateDetail(it)
-                    },
+                    onClick = { navigateDetail(it) },
                     modifier = Modifier
                         .animateItem()
                         .padding(horizontal = 4.dp)

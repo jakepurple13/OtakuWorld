@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -21,12 +20,13 @@ import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
-import com.programmersbox.kmpuiviews.presentation.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
@@ -45,6 +45,8 @@ import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
 import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.presentation.history.HistoryUi
+import com.programmersbox.uiviews.presentation.lists.NoDetailSelected
+import com.programmersbox.uiviews.presentation.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
@@ -163,25 +165,26 @@ private fun NavGraphBuilder.settings(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         ) {
+            val navigationActions = LocalNavActions.current
             trackScreen(Screen.SettingsScreen)
             SettingScreen(
                 composeSettingsDsl = customPreferences,
-                notificationClick = { navController.navigate(Screen.NotificationScreen) { launchSingleTop = true } },
-                favoritesClick = { navController.navigate(Screen.FavoriteScreen) { launchSingleTop = true } },
-                historyClick = { navController.navigate(Screen.HistoryScreen) { launchSingleTop = true } },
-                globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen()) { launchSingleTop = true } },
-                listClick = { navController.navigate(Screen.CustomListScreen) { launchSingleTop = true } },
-                debugMenuClick = { navController.navigate(Screen.DebugScreen) { launchSingleTop = true } },
-                extensionClick = { navController.navigate(Screen.ExtensionListScreen) { launchSingleTop = true } },
-                notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings) },
-                generalClick = { navController.navigate(Screen.GeneralSettings) },
-                otherClick = { navController.navigate(Screen.OtherSettings) },
-                moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
-                moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
-                geminiClick = { /*navController.navigate(Screen.GeminiScreen)*/ },
-                sourcesOrderClick = { navController.navigate(Screen.OrderScreen) },
-                appDownloadsClick = { navController.navigate(Screen.DownloadInstallScreen) },
-                scanQrCode = { navController.navigate(Screen.ScanQrCodeScreen) },
+                notificationClick = navigationActions::notifications,
+                favoritesClick = navigationActions::favorites,
+                historyClick = navigationActions::history,
+                globalSearchClick = navigationActions::globalSearch,
+                listClick = navigationActions::customList,
+                debugMenuClick = navigationActions::debug,
+                extensionClick = navigationActions::extensionList,
+                notificationSettingsClick = navigationActions::notificationsSettings,
+                generalClick = navigationActions::general,
+                otherClick = navigationActions::otherSettings,
+                moreInfoClick = navigationActions::moreInfo,
+                moreSettingsClick = navigationActions::moreSettings,
+                geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+                sourcesOrderClick = navigationActions::order,
+                appDownloadsClick = navigationActions::downloadInstall,
+                scanQrCode = navigationActions::scanQrCode,
             )
         }
 
@@ -488,7 +491,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
     entry<Screen.Settings>(
         metadata = ListDetailSceneStrategy.listPane {
             //TODO: Need to add info here
-            Text("Please Wait")
+            NoDetailSelected()
         }
     ) {
         SettingScreen(
@@ -576,12 +579,18 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
         )
     }
 
-    //TODO: Need to listPane this
-    entry<Screen.CustomListScreen> {
+    entry<Screen.CustomListScreen>(
+        metadata = ListDetailSceneStrategy.listPane { NoDetailSelected() }
+    ) {
         trackScreen(Screen.CustomListScreen)
-        OtakuListScreen(
-            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
-        )
+        OtakuListView()
+    }
+
+    entry<Screen.CustomListScreen.CustomListItem>(
+        metadata = ListDetailSceneStrategy.detailPane()
+    ) {
+        trackScreen(Screen.CustomListScreen)
+        OtakuCustomListScreenStandAlone(it)
     }
 
     entry<Screen.CustomListScreen.DeleteFromList> {

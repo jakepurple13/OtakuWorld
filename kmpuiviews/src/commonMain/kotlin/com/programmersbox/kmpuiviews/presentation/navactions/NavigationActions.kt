@@ -1,6 +1,8 @@
-package com.programmersbox.kmpuiviews.presentation
+package com.programmersbox.kmpuiviews.presentation.navactions
 
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
+
 
 interface NavigationActions {
     fun recent()
@@ -23,6 +25,7 @@ interface NavigationActions {
     fun settings()
     fun globalSearch(searchText: String? = null)
     fun customList()
+    fun customList(customList: CustomList)
     fun history()
     fun favorites()
     fun notifications()
@@ -44,5 +47,5 @@ interface NavigationActions {
     fun popBackStack()
     fun popBackStack(route: Any, inclusive: Boolean)
     fun navigate(nav: Any)
-    fun clearBackStack(nav: Any? = null)
+    fun clearBackStack(nav: Any?)
 }

@@ -714,7 +714,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     NavigationRailItem(
                         imageVector = Icons.Default.Notifications,
                         label = stringResource(R.string.notifications),
-                        screen = Screen.NotificationScreen.Home,
+                        screen = Screen.NotificationScreen,
                         currentDestination = currentDestination,
                         navController = navController,
                         navBackStack = navBackStack
@@ -724,7 +724,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                 NavigationRailItem(
                     imageVector = Icons.AutoMirrored.Default.List,
                     label = stringResource(R.string.custom_lists_title),
-                    screen = Screen.CustomListScreen.Home,
+                    screen = Screen.CustomListScreen,
                     currentDestination = currentDestination,
                     navController = navController,
                     navBackStack = navBackStack
@@ -733,7 +733,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                 NavigationRailItem(
                     imageVector = Icons.Default.Search,
                     label = stringResource(R.string.global_search),
-                    screen = Screen.GlobalSearchScreen.Home(),
+                    screen = Screen.GlobalSearchScreen(),
                     currentDestination = currentDestination,
                     navController = navController,
                     navBackStack = navBackStack
@@ -742,7 +742,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                 NavigationRailItem(
                     imageVector = Icons.Default.Star,
                     label = stringResource(R.string.viewFavoritesMenu),
-                    screen = Screen.FavoriteScreen.Home,
+                    screen = Screen.FavoriteScreen,
                     currentDestination = currentDestination,
                     navController = navController,
                     navBackStack = navBackStack
@@ -751,7 +751,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                 NavigationRailItem(
                     imageVector = Icons.Default.Extension,
                     label = stringResource(R.string.extensions),
-                    screen = Screen.ExtensionListScreen.Home,
+                    screen = Screen.ExtensionListScreen,
                     currentDestination = currentDestination,
                     navController = navController,
                     navBackStack = navBackStack

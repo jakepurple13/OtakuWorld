@@ -9,7 +9,7 @@ import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.presentation.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import org.koin.compose.koinInject
 
 expect class BiometricPrompting {

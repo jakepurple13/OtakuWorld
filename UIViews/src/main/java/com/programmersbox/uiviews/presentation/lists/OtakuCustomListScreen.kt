@@ -7,6 +7,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloatAsState
@@ -109,6 +110,7 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
@@ -153,8 +155,45 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 import java.util.UUID
+
+@Composable
+fun OtakuCustomListScreenStandAlone(
+    screen: Screen.CustomListScreen.CustomListItem,
+    viewModel: OtakuCustomListViewModel = koinViewModel { parametersOf(screen) },
+    isHorizontal: Boolean = false,
+    dao: ListDao = koinInject(),
+) {
+    val scope = rememberCoroutineScope()
+    val navController = LocalNavActions.current
+    Crossfade(
+        targetState = viewModel.customList,
+        label = "",
+    ) { target ->
+        if (target != null) {
+            OtakuCustomListScreen(
+                viewModel = viewModel,
+                customItem = target,
+                writeToFile = viewModel::writeToFile,
+                isHorizontal = isHorizontal,
+                deleteAll = viewModel::deleteAll,
+                rename = viewModel::rename,
+                searchQuery = viewModel.searchQuery,
+                setQuery = viewModel::setQuery,
+                navigateBack = { navController.popBackStack() },
+                addSecurityItem = {
+                    scope.launch { dao.updateBiometric(it, true) }
+                },
+                removeSecurityItem = {
+                    scope.launch { dao.updateBiometric(it, false) }
+                },
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -848,6 +887,7 @@ private fun CustomListScreenPreview() {
         val context = LocalContext.current
         val viewModel: OtakuCustomListViewModel = viewModel {
             OtakuCustomListViewModel(
+                screen = Screen.CustomListScreen.CustomListItem(""),
                 listDao,
                 DataStoreHandler(
                     defaultValue = false,

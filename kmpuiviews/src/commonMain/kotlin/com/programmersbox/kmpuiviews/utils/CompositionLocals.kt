@@ -19,8 +19,8 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.CustomUriHandler
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
-import com.programmersbox.kmpuiviews.presentation.Navigation3Actions
-import com.programmersbox.kmpuiviews.presentation.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
 import kotlinx.datetime.LocalDateTime

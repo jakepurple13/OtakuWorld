@@ -33,7 +33,7 @@ import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.kmpmodels.KmpChapterModel
-import com.programmersbox.kmpuiviews.presentation.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
