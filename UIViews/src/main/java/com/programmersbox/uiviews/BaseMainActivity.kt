@@ -27,6 +27,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.Orientation
@@ -77,8 +78,10 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
@@ -107,13 +110,18 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
@@ -139,6 +147,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalShare
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
+import com.programmersbox.uiviews.presentation.entryGraph
 import com.programmersbox.uiviews.presentation.navGraph
 import com.programmersbox.uiviews.theme.OtakuMaterialTheme
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -322,51 +331,18 @@ abstract class BaseMainActivity : FragmentActivity() {
                                     //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                                 ) {
                                     //TODO: Maybe put in a little thing to switch between these two?
-                                    /*NavDisplay(
+                                    /*Nav3(
                                         backStack = backStack,
-                                        //onBack = { backStack.removeLastOrNull() },
-                                        sceneStrategy = rememberListDetailSceneStrategy(),
-                                        onBack = { count ->
-                                            repeat(count) {
-                                                if (backStack.isNotEmpty()) {
-                                                    backStack.removeLastOrNull()
-                                                }
-                                            }
-                                        },
-                                        entryDecorators = listOf(
-                                            rememberSceneSetupNavEntryDecorator(),
-                                            rememberSavedStateNavEntryDecorator(),
-                                            rememberViewModelStoreNavEntryDecorator()
-                                        ),
-                                        entryProvider = entryGraph(
-                                            customPreferences = customPreferences,
-                                            notificationLogo = notificationLogo,
-                                            windowSize = windowSize,
-                                            navigationActions = navigationActions,
-                                            genericInfo = genericInfo
-                                        ),
-                                        transitionSpec = {
-                                            // Slide in from right when navigating forward
-                                            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                                                    slideOutHorizontally(targetOffsetX = { -it })
-                                        },
-                                        popTransitionSpec = {
-                                            // Slide in from left when navigating back
-                                            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                                                    slideOutHorizontally(targetOffsetX = { it })
-                                        },
-                                        predictivePopTransitionSpec = {
-                                            // Slide in from left when navigating back
-                                            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                                                    slideOutHorizontally(targetOffsetX = { it })
-                                        },
-                                        modifier = Modifier.fillMaxSize()
+                                        navigationActions = navigationActions,
+                                        genericInfo = genericInfo,
+                                        windowSize = windowSize,
                                     )*/
-                                    NavHost(
-                                        navController = navController,
+                                    Nav2(
                                         startDestination = startDestination,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) { navGraph(customPreferences, windowSize, genericInfo, navigationActions, notificationLogo) }
+                                        windowSize = windowSize,
+                                        genericInfo = genericInfo,
+                                        navigationActions = navigationActions,
+                                    )
                                 }
                             }
                         }
@@ -374,6 +350,70 @@ abstract class BaseMainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
+    @Composable
+    private fun Nav3(
+        backStack: NavBackStack,
+        navigationActions: NavigationActions,
+        genericInfo: GenericInfo,
+        windowSize: WindowSizeClass,
+    ) {
+        NavDisplay(
+            backStack = backStack,
+            //onBack = { backStack.removeLastOrNull() },
+            sceneStrategy = rememberListDetailSceneStrategy(),
+            onBack = { count ->
+                repeat(count) {
+                    if (backStack.isNotEmpty()) {
+                        backStack.removeLastOrNull()
+                    }
+                }
+            },
+            entryDecorators = listOf(
+                rememberSceneSetupNavEntryDecorator(),
+                rememberSavedStateNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = entryGraph(
+                customPreferences = customPreferences,
+                notificationLogo = notificationLogo,
+                windowSize = windowSize,
+                navigationActions = navigationActions,
+                genericInfo = genericInfo
+            ),
+            transitionSpec = {
+                // Slide in from right when navigating forward
+                slideInHorizontally(initialOffsetX = { it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { -it })
+            },
+            popTransitionSpec = {
+                // Slide in from left when navigating back
+                slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { it })
+            },
+            predictivePopTransitionSpec = {
+                // Slide in from left when navigating back
+                slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                        slideOutHorizontally(targetOffsetX = { it })
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+
+    @Composable
+    private fun Nav2(
+        startDestination: Screen,
+        windowSize: WindowSizeClass,
+        genericInfo: GenericInfo,
+        navigationActions: NavigationActions,
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.fillMaxSize()
+        ) { navGraph(customPreferences, windowSize, genericInfo, navigationActions, notificationLogo) }
     }
 
     @Composable

@@ -181,7 +181,7 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
         navigate(nav)
     }
 
-    override fun clearBackStack(nav: Any?) {
+    override fun <T : Any> clearBackStack(nav: T) {
         if (nav is NavKey) {
             navBackStack.add(nav)
             val size = navBackStack.size - 1

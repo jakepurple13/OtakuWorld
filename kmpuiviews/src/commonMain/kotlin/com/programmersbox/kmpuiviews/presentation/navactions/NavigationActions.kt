@@ -47,7 +47,7 @@ interface NavigationActions {
     fun popBackStack()
     fun popBackStack(route: Any, inclusive: Boolean)
     fun <T : Any> navigate(nav: T)
-    fun clearBackStack(nav: Any?)
+    fun <T : Any> clearBackStack(nav: T)
 
     fun <T : Any> homeScreenNavigate(nav: T)
     fun onboardingToRecent()

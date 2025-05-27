@@ -184,8 +184,8 @@ class Navigation2Actions(
         }
     }
 
-    override fun clearBackStack(nav: Any?) {
-        navController.clearBackStack(nav.toString())
+    override fun <T : Any> clearBackStack(nav: T) {
+        navController.clearBackStack(nav)
     }
 
     override fun <T : Any> homeScreenNavigate(nav: T) {
