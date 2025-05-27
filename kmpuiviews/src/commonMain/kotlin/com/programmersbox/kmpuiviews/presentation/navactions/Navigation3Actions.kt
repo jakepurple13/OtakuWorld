@@ -177,6 +177,10 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
 
     }
 
+    override fun <T : Any> homeScreenNavigate(nav: T) {
+        navigate(nav)
+    }
+
     override fun clearBackStack(nav: Any?) {
         if (nav is NavKey) {
             navBackStack.add(nav)

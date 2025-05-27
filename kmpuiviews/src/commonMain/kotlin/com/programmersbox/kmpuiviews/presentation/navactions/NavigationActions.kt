@@ -49,6 +49,7 @@ interface NavigationActions {
     fun <T : Any> navigate(nav: T)
     fun clearBackStack(nav: Any?)
 
+    fun <T : Any> homeScreenNavigate(nav: T)
     fun onboardingToRecent()
     fun toOnboarding()
 }

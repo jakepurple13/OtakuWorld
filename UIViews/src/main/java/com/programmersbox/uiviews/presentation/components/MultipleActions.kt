@@ -84,12 +84,7 @@ fun BoxScope.MultipleActions(
                     currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
-                        /*navController.navigate(it.screen) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }*/
-                        navigationActions.navigate(it.screen)
+                        navigationActions.homeScreenNavigate(it.screen)
                     }
                 )
             },
@@ -98,12 +93,7 @@ fun BoxScope.MultipleActions(
                     currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
-                        /*navController.navigate(it.screen) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }*/
-                        navigationActions.navigate(it.screen)
+                        navigationActions.homeScreenNavigate(it.screen)
                     }
                 )
             },

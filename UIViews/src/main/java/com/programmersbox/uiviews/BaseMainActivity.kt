@@ -364,7 +364,6 @@ abstract class BaseMainActivity : FragmentActivity() {
                                     )*/
                                     NavHost(
                                         navController = navController,
-                                        //startDestination = Screen.RecentScreen,
                                         startDestination = startDestination,
                                         modifier = Modifier.fillMaxSize()
                                     ) { navGraph(customPreferences, windowSize, genericInfo, navigationActions, notificationLogo) }
@@ -493,7 +492,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                             label = { Text(stringResource(label)) },
                             selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
                             colors = colors,
-                            onClick = { navActions.navigate(screen) }
+                            onClick = { navActions.homeScreenNavigate(screen) }
                         )
                     }
 
@@ -516,14 +515,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                                 }
                             }
                         },
-                        onClick = {
-                            navActions.navigate(it.screen)
-                            /*navController.navigate(it.screen) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }*/
-                        }
+                        onClick = { navActions.homeScreenNavigate(it.screen) }
                     )
 
                     ScreenBottomItem(
@@ -588,14 +580,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                                 icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
                                 label = { Text(stringResource(label)) },
                                 selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
-                                onClick = {
-                                    /*navController.navigate(screen) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }*/
-                                    navActions.navigate(screen)
-                                }
+                                onClick = { navActions.homeScreenNavigate(screen) }
                             )
                         }
 
@@ -617,14 +602,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                                     }
                                 }
                             },
-                            onClick = {
-                                /*navController.navigate(it.screen) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }*/
-                                navActions.navigate(it.screen)
-                            }
+                            onClick = { navActions.homeScreenNavigate(it.screen) }
                         )
 
                         ScreenBottomItem(
@@ -742,14 +720,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                     },
                     label = { Text(stringResource(R.string.settings)) },
                     selected = currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings),
-                    onClick = {
-                        navActions.navigate(Screen.Settings)
-                        /*navController.navigate(Screen.Settings) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }*/
-                    }
+                    onClick = { navActions.homeScreenNavigate(Screen.Settings) }
                 )
             }
         }
@@ -762,14 +733,7 @@ abstract class BaseMainActivity : FragmentActivity() {
         screen: Screen,
         currentDestination: NavDestination?,
         navigationActions: NavigationActions,
-        onClick: () -> Unit = {
-            navigationActions.navigate(screen)
-            /*navController.navigate(screen) {
-                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }*/
-        },
+        onClick: () -> Unit = { navigationActions.homeScreenNavigate(screen) },
     ) {
         NavigationRailItem(
             icon = { Icon(imageVector, null) },

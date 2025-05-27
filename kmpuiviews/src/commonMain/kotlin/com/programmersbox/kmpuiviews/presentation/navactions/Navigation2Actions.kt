@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
 import androidx.compose.ui.platform.UriHandler
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -185,5 +186,13 @@ class Navigation2Actions(
 
     override fun clearBackStack(nav: Any?) {
         navController.clearBackStack(nav.toString())
+    }
+
+    override fun <T : Any> homeScreenNavigate(nav: T) {
+        navController.navigate(nav) {
+            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 }
