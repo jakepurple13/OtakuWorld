@@ -38,7 +38,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -185,7 +185,7 @@ fun <T> GroupBottomScreen(
     onClick: (T) -> Unit,
     includeInsetPadding: Boolean = true,
     navigationIcon: @Composable () -> Unit = {
-        val navController = LocalNavController.current
+        val navController = LocalNavActions.current
         IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
     },
     lazyListContent: LazyListScope.() -> Unit = {},

@@ -98,7 +98,7 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
@@ -634,7 +634,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
 
 @Composable
 private fun GoBackButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,

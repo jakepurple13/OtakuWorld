@@ -82,7 +82,7 @@ import com.programmersbox.kmpuiviews.presentation.components.BottomSheetDeleteSc
 import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.kmpuiviews.theme.Emerald
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
@@ -327,7 +327,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
-                val navController = LocalNavController.current
+                val navController = LocalNavActions.current
 
                 Button(
                     onClick = { navController.popBackStack(Screen.RecentScreen, false) },
@@ -353,7 +353,7 @@ private fun VideoContentView(
 
     SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = item)
 
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
 
     val dismissState = rememberSwipeToDismissBoxState(

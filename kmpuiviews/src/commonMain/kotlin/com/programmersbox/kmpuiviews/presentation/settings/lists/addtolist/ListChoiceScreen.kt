@@ -26,7 +26,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -41,7 +41,7 @@ import otakuworld.kmpuiviews.generated.resources.list_name
 fun ListChoiceScreen(
     url: String? = null,
     navigationIcon: @Composable () -> Unit = {
-        val navController = LocalNavController.current
+        val navController = LocalNavActions.current
         IconButton(
             onClick = { navController.popBackStack() }
         ) { Icon(Icons.Default.Close, null) }

@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -136,13 +135,11 @@ expect fun rememberBiometricPrompt(
 @Composable
 fun rememberBiometricOpening(): BiometricOpen {
     val biometricPrompting = rememberBiometricPrompting()
-    val navController = LocalNavController.current
     val navBackStack = LocalNavActions.current
     val itemDao = koinInject<ItemDao>()
-    return remember(biometricPrompting, navController, itemDao) {
+    return remember(biometricPrompting, itemDao) {
         BiometricOpen(
             biometricPrompting = biometricPrompting,
-            navController = navController,
             navigationActions = navBackStack,
             itemDao = itemDao
         )
@@ -151,7 +148,6 @@ fun rememberBiometricOpening(): BiometricOpen {
 
 class BiometricOpen(
     private val biometricPrompting: BiometricPrompting,
-    private val navController: NavController,
     private val navigationActions: NavigationActions,
     private val itemDao: ItemDao,
 ) {

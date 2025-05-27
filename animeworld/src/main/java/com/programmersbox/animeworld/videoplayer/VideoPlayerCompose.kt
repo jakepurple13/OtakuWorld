@@ -101,7 +101,7 @@ import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.AirBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
@@ -230,7 +230,7 @@ fun VideoPlayer(
     source: MediaSource,
     modifier: Modifier = Modifier,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
 
     val exoPlayer = remember {
