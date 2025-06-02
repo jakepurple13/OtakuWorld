@@ -107,8 +107,8 @@ fun AboutLibrariesScreen() {
             OutlinedLibrary(
                 library = library,
                 padding = LibraryDefaults.libraryPadding(
-                    badgeContentPadding = PaddingValues(8.dp),
-                    badgePadding = PaddingValues(8.dp)
+                    contentPadding = PaddingValues(8.dp),
+                    namePadding = PaddingValues(8.dp)
                 )
             ) { openDialog.value = true }
 
@@ -274,7 +274,7 @@ internal fun Library(
             if (version != null && showVersion) {
                 Text(
                     version,
-                    modifier = Modifier.padding(padding.versionPadding),
+                    modifier = Modifier.padding(padding.versionPadding.contentPadding),
                     style = typography.bodyMedium,
                     //color = colors.contentColor,
                     textAlign = TextAlign.Center
@@ -293,12 +293,12 @@ internal fun Library(
             Row {
                 library.licenses.forEach {
                     Badge(
-                        modifier = Modifier.padding(padding.badgePadding),
+                        modifier = Modifier.padding(padding.contentPadding),
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         containerColor = MaterialTheme.colorScheme.primary
                     ) {
                         Text(
-                            modifier = Modifier.padding(padding.badgeContentPadding),
+                            modifier = Modifier.padding(padding.contentPadding),
                             text = it.name
                         )
                     }
