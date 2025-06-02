@@ -47,10 +47,9 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.dispatchIo
@@ -236,7 +235,7 @@ fun ShareViaQrCode(
 fun ScanQrCode(
     viewModel: QrCodeScannerViewModel = koinViewModel(),
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     val onDismiss: () -> Unit = {
@@ -395,7 +394,7 @@ fun ScanQrCode(
                                     }
                                     ?.onEach { m ->
                                         showLoadingDialog = false
-                                        navController.navigateToDetails(m)
+                                        navController.details(m)
                                     }
                                     ?.collect()
                             }

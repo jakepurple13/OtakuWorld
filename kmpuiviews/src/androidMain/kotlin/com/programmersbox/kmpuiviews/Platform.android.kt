@@ -30,6 +30,7 @@ import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpuiviews.utils.AppLogo
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
+import com.programmersbox.kmpuiviews.utils.openInCustomChromeBrowser
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
@@ -65,6 +66,14 @@ actual fun createColorScheme(
         isExpressive -> lightColorScheme()//expressiveLightColorScheme()
 
         else -> lightColorScheme()
+    }
+}
+
+actual class CustomUriHandler(
+    private val context: Context,
+) : UriHandler {
+    actual override fun openUri(uri: String) {
+        context.openInCustomChromeBrowser(uri.toUri())
     }
 }
 

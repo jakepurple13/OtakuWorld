@@ -7,6 +7,9 @@ pluginManagement {
         //maven { url "https://dl.bintray.com/piasy/maven" }
         maven("https://oss.sonatype.org/content/repositories/snapshots")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        //TODO: Remove these once material adaptive nav3 is not a snapshot
+        logger.error("REMOVE SNAPSHOT WHEN READY", Exception())
+        maven("https://androidx.dev/snapshots/builds/13508953/artifacts/repository")
     }
 }
 dependencyResolutionManagement {
@@ -18,6 +21,9 @@ dependencyResolutionManagement {
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         maven("https://jogamp.org/deployment/maven")
+        //TODO: Remove these once material adaptive nav3 is not a snapshot
+        logger.error("REMOVE SNAPSHOT WHEN READY", Exception())
+        maven("https://androidx.dev/snapshots/builds/13508953/artifacts/repository")
     }
 
     versionCatalogs {

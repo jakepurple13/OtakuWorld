@@ -67,10 +67,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
@@ -78,7 +79,9 @@ import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
+import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
+import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.datastore.asState
@@ -100,10 +103,11 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGr
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
@@ -163,7 +167,7 @@ class GenericAnime(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         /*if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
@@ -174,7 +178,6 @@ class GenericAnime(
             model = model,
             infoModel = infoModel,
             context = context,
-            navController = navController,
             isStreaming = true,
         ) {
             if (MainActivity.cast.isCastActive()) {
@@ -202,7 +205,7 @@ class GenericAnime(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         /* if ((model.source as? ShowApi)?.canDownload == false) {
              Toast.makeText(
@@ -243,7 +246,6 @@ class GenericAnime(
             infoModel = infoModel,
             context = context,
             filter = { !it.link.orEmpty().endsWith(".m3u8") },
-            navController = navController,
             isStreaming = false
         ) {
             //fetchIt(it, model, activity)
@@ -257,7 +259,6 @@ class GenericAnime(
         infoModel: KmpInfoModel,
         context: Context,
         filter: (KmpStorage) -> Boolean = { true },
-        navController: NavController,
         isStreaming: Boolean,
         onAction: (KmpStorage) -> Unit,
     ) {
@@ -456,14 +457,14 @@ class GenericAnime(
         viewSettings {
 
             item {
-                val navController = LocalNavController.current
+                val navController = LocalNavActions.current
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(R.string.video_menu_title)) },
                     settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
+                    ) { navController.navigate(VideoViewerRoute) }
                 )
             }
 
@@ -573,6 +574,20 @@ class GenericAnime(
         }
     }
 
+    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+        entry<VideoScreen> {
+            trackScreen("video_player")
+            VideoPlayerUi(it)
+        }
+    }
+
+    override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
+        entry<VideoViewerRoute> {
+            trackScreen(VideoViewerRoute.toString())
+            ViewVideoScreen()
+        }
+    }
+
     override fun NavGraphBuilder.globalNavSetup() {
         composable(
             VideoViewModel.VideoPlayerRoute,
@@ -580,18 +595,25 @@ class GenericAnime(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
             trackScreen("video_player")
-            VideoPlayerUi()
+            VideoPlayerUi(
+                VideoScreen(
+                    showPath = it.arguments?.getString("showPath") ?: "",
+                    showName = it.arguments?.getString("showName") ?: "",
+                    downloadOrStream = it.arguments?.getBoolean("downloadOrStream") ?: false,
+                    referer = it.arguments?.getString("referer") ?: ""
+                )
+            )
         }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
         composable(
-            ViewVideoViewModel.VideoViewerRoute,
+            VideoViewerRoute.toString(),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://$VideoViewerRoute" })
         ) {
-            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+            trackScreen(VideoViewerRoute)
             ViewVideoScreen()
         }
     }

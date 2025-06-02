@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -46,9 +47,11 @@ import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.serialization.Serializable
 import me.saket.telephoto.zoomable.glide.ZoomableGlideImage
 
-const val ImageLoaderSettingsRoute = "imageLoaderSettings"
+@Serializable
+data object ImageLoaderSettingsRoute : NavKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

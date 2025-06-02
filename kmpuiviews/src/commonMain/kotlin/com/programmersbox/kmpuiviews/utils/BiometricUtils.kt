@@ -4,12 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import org.koin.compose.koinInject
 
 expect class BiometricPrompting {
@@ -136,28 +135,32 @@ expect fun rememberBiometricPrompt(
 @Composable
 fun rememberBiometricOpening(): BiometricOpen {
     val biometricPrompting = rememberBiometricPrompting()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavActions.current
     val itemDao = koinInject<ItemDao>()
-    return remember(biometricPrompting, navController, itemDao) {
-        BiometricOpen(biometricPrompting, navController, itemDao)
+    return remember(biometricPrompting, itemDao) {
+        BiometricOpen(
+            biometricPrompting = biometricPrompting,
+            navigationActions = navBackStack,
+            itemDao = itemDao
+        )
     }
 }
 
 class BiometricOpen(
     private val biometricPrompting: BiometricPrompting,
-    private val navController: NavController,
+    private val navigationActions: NavigationActions,
     private val itemDao: ItemDao,
 ) {
     suspend fun openIfNotIncognito(kmpItemModel: KmpItemModel) {
         if (itemDao.doesIncognitoSourceExistSync(kmpItemModel.url)) {
             biometricPrompting.authenticate(
-                onAuthenticationSucceeded = { navController.navigateToDetails(kmpItemModel) },
+                onAuthenticationSucceeded = { navigationActions.details(kmpItemModel) },
                 title = "Authenticate to view ${kmpItemModel.title}",
                 subtitle = "Authenticate to view media",
                 negativeButtonText = "Cancel"
             )
         } else {
-            navController.navigateToDetails(kmpItemModel)
+            navigationActions.details(kmpItemModel)
         }
     }
 

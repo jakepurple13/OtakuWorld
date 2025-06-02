@@ -37,9 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
@@ -55,16 +56,17 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
+import com.programmersbox.mangaworld.downloads.DownloadRoute
 import com.programmersbox.mangaworld.downloads.DownloadScreen
-import com.programmersbox.mangaworld.downloads.DownloadViewModel
 import com.programmersbox.mangaworld.onboarding.ReaderOnboarding
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.compose.ReadView
@@ -87,9 +89,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 import java.io.File
 
@@ -148,7 +152,7 @@ class GenericManga(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         chapterHolder.chapters = allChapters
         if (runBlocking { mangaSettingsHandling.useNewReader.flow.first() }) {
@@ -213,7 +217,7 @@ class GenericManga(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
         /*activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
@@ -291,26 +295,26 @@ class GenericManga(
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
             item {
-                val navController = LocalNavController.current
+                val navController = LocalNavActions.current
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
                     settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
+                    ) { navController.navigate(DownloadRoute) }
                 )
             }
 
             item {
-                val navController = LocalNavController.current
+                val navController = LocalNavActions.current
                 PreferenceSetting(
                     settingTitle = { Text("Manga Reader Settings") },
                     settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) { navController.navigate(ReaderSettingsScreen) { launchSingleTop = true } }
+                    ) { navController.navigate(ReaderSettingsScreen) }
                 )
             }
         }
@@ -438,22 +442,55 @@ class GenericManga(
         }
     }
 
-    override fun NavGraphBuilder.settingsNavSetup() {
-        composable(
-            DownloadViewModel.DownloadRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) {
-            trackScreen(DownloadViewModel.DownloadRoute)
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
+    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+        entry<ReadViewModel.MangaReader> {
+            trackScreen("mangaReader")
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it) }
+            )
+        }
+    }
+
+    override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
+        entry<DownloadRoute> {
+            trackScreen(DownloadRoute.toString())
             DownloadScreen()
         }
 
-        composable(
-            ImageLoaderSettingsRoute,
+        entry<ImageLoaderSettingsRoute> {
+            trackScreen(ImageLoaderSettingsRoute.toString())
+            ImageLoaderSettings(mangaSettingsHandling)
+        }
+
+        entry<ReaderSettingsScreen> {
+            trackScreen("readerSettings")
+            ReaderSettings(
+                mangaSettingsHandling = mangaSettingsHandling,
+                settingsHandling = settingsHandling
+            )
+        }
+    }
+
+    override fun NavGraphBuilder.settingsNavSetup() {
+        composable<DownloadRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(ImageLoaderSettingsRoute)
+            trackScreen(DownloadRoute.toString())
+            DownloadScreen()
+        }
+
+        composable<ImageLoaderSettingsRoute>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
+        ) {
+            trackScreen(ImageLoaderSettingsRoute.toString())
             ImageLoaderSettings(mangaSettingsHandling)
         }
 

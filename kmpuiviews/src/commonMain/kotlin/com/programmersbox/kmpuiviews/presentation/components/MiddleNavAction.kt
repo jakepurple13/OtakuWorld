@@ -55,25 +55,25 @@ val MiddleNavigationAction.item: MiddleNavigationItem?
         MiddleNavigationAction.Notifications -> MiddleNavigationItem(
             icon = { if (it) Icons.Default.Notifications else Icons.Outlined.Notifications },
             label = Res.string.notifications_kmp,
-            screen = Screen.NotificationScreen.Home,
+            screen = Screen.NotificationScreen,
         )
 
         MiddleNavigationAction.Lists -> MiddleNavigationItem(
             icon = { if (it) Icons.AutoMirrored.Default.List else Icons.AutoMirrored.Outlined.List },
             label = Res.string.custom_lists_title_kmp,
-            screen = Screen.CustomListScreen.Home,
+            screen = Screen.CustomListScreen,
         )
 
         MiddleNavigationAction.Favorites -> MiddleNavigationItem(
             icon = { if (it) Icons.Default.Star else Icons.Outlined.StarOutline },
             label = Res.string.viewFavoritesMenu_kmp,
-            screen = Screen.FavoriteScreen.Home,
+            screen = Screen.FavoriteScreen,
         )
 
         MiddleNavigationAction.Search -> MiddleNavigationItem(
             icon = { if (it) Icons.Default.Search else Icons.Outlined.Search },
             label = Res.string.global_search_kmp,
-            screen = Screen.GlobalSearchScreen.Home(),
+            screen = Screen.GlobalSearchScreen(),
         )
 
         MiddleNavigationAction.Multiple -> MiddleNavigationItem(

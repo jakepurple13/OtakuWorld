@@ -181,4 +181,12 @@ dependencies {
 
     implementation(libs.filekit.core)
     implementation(libs.filekit.dialogs.compose)
+
+    api(libs.androidx.navigation3.runtime)
+    api(libs.androidx.navigation3.ui)
+    api(libs.androidx.material3.navigation3)
+    api(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.composeActivity)
+    implementation(libs.androidx.activity)
 }

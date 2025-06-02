@@ -60,7 +60,6 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
-import com.programmersbox.kmpuiviews.utils.LocalNavController
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
@@ -102,8 +101,6 @@ fun AllView(
     val scope = rememberCoroutineScope()
     val state = rememberLazyGridState()
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
-
-    val navController = LocalNavController.current
 
     val focusManager = LocalFocusManager.current
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
@@ -274,7 +271,6 @@ fun AllScreen(
 ) {
     val info = LocalGenericInfo.current
     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(null)
-    val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     val biometric = rememberBiometricOpening()
     val pullRefreshState = rememberPullToRefreshState()

@@ -75,7 +75,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toItemModel
@@ -92,10 +91,10 @@ import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledM
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheetList
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.SortFavoritesBy
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -123,7 +122,7 @@ fun FavoriteUi(
     favoritesRepository: FavoritesRepository = koinInject(),
     viewModel: FavoriteViewModel = koinViewModel(),
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
@@ -460,7 +459,7 @@ private fun FavoritesGrid(
     paddingValues: PaddingValues,
     groupedSources: List<Map.Entry<String, List<DbModel>>>,
     sourceRepository: SourceRepository,
-    navController: NavController,
+    navController: NavigationActions,
     moreInfoClick: (DbModel) -> Unit,
     onLongPress: (List<KmpItemModel>) -> Unit,
     logo: Drawable,
@@ -501,7 +500,7 @@ private fun FavoritesGrid(
                                     .toSourceByApiServiceName(it.source)
                                     ?.apiService
                                     ?.let { it1 -> it.toItemModel(it1) }
-                            }?.let(navController::navigateToDetails) ?: moreInfoClick(item)
+                            }?.let(navController::details) ?: moreInfoClick(item)
                         }
                     ) {
                         ListBottomSheetItemModel(
@@ -559,7 +558,7 @@ private fun FavoritesGrid(
                                         .toSourceByApiServiceName(it.source)
                                         ?.apiService
                                         ?.let { it1 -> it.toItemModel(it1) }
-                                        ?.let(navController::navigateToDetails) ?: moreInfoClick(it)
+                                        ?.let(navController::details) ?: moreInfoClick(it)
                                 }
                         } else {
                             showBottomSheet = true

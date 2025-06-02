@@ -40,21 +40,19 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.painterLogo
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import kotlinx.coroutines.CoroutineScope
@@ -120,7 +118,7 @@ class KmpItemModelOptionsSheet(
 @Composable
 fun optionsKmpSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
+    navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
     moreContent: @Composable OptionsSheetScope.(KmpItemModelOptionsSheet) -> Unit = {},
 ): MutableState<KmpItemModel?> {
@@ -134,8 +132,8 @@ fun optionsKmpSheet(
                 sheet = sheetState,
                 scope = scope,
                 optionsSheetValues = item,
-                onOpen = { navController.navigateToDetails(item.itemModel) },
-                onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
+                onOpen = { navController.details(item.itemModel) },
+                onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
                 moreContent = moreContent
             )
@@ -148,7 +146,7 @@ fun optionsKmpSheet(
 @Composable
 fun optionsKmpSheetList(
     scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
+    navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
     moreContent: @Composable OptionsSheetScope.(KmpItemModelOptionsSheet) -> Unit = {},
 ): MutableState<List<KmpItemModel>?> {
@@ -162,8 +160,8 @@ fun optionsKmpSheetList(
                 sheet = sheetState,
                 scope = scope,
                 optionsSheetValuesList = item,
-                onOpen = { navController.navigateToDetails(it.itemModel) },
-                onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
+                onOpen = { navController.details(it.itemModel) },
+                onGlobalSearch = { navController.globalSearch(it) },
                 onDismiss = { itemInfo.value = null },
                 moreContent = moreContent
             )
@@ -177,7 +175,7 @@ fun optionsKmpSheetList(
 fun <T : OptionsSheetValues> optionsSheetList(
     onOpen: (T) -> Unit,
     scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
+    navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
 ): MutableState<List<T>?> {
@@ -189,7 +187,7 @@ fun <T : OptionsSheetValues> optionsSheetList(
             scope = scope,
             optionsSheetValuesList = items,
             onOpen = { onOpen(it) },
-            onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
+            onGlobalSearch = { navController.globalSearch(it) },
             onDismiss = { itemInfo.value = null },
             moreContent = moreContent
         )
@@ -202,7 +200,7 @@ fun <T : OptionsSheetValues> optionsSheetList(
 @Composable
 fun <T : OptionsSheetValues> optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavController = LocalNavController.current,
+    navController: NavigationActions = LocalNavActions.current,
     sheetState: SheetState = rememberModalBottomSheetState(true),
     onOpen: (T) -> Unit,
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
@@ -215,7 +213,7 @@ fun <T : OptionsSheetValues> optionsSheet(
             scope = scope,
             optionsSheetValues = item,
             onOpen = { onOpen(item) },
-            onGlobalSearch = { navController.navigate(Screen.GlobalSearchScreen(it)) },
+            onGlobalSearch = { navController.globalSearch(it) },
             onDismiss = { itemInfo.value = null },
             moreContent = moreContent
         )

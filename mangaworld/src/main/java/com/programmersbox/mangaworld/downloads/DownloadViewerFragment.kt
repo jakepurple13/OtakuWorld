@@ -63,7 +63,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
@@ -152,7 +152,7 @@ private fun DownloadViewer(
 
 @Composable
 private fun EmptyState(p1: PaddingValues) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     Box(
         modifier = Modifier
             .padding(p1)
@@ -315,7 +315,7 @@ private fun ChapterItem(
                         }
                     },
                     content = {
-                        val navController = LocalNavController.current
+                        val navController = LocalNavActions.current
                         Surface(
                             shape = M3MaterialTheme.shapes.medium,
                             tonalElevation = 4.dp,

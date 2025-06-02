@@ -39,9 +39,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.rememberNavBackStack
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
@@ -53,8 +53,10 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -86,7 +88,7 @@ class MockInfo(private val context: Context) : GenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
 
     }
@@ -95,7 +97,7 @@ class MockInfo(private val context: Context) : GenericInfo {
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
-        navController: NavController,
+        navController: NavigationActions,
     ) {
 
     }
@@ -244,7 +246,10 @@ fun PreviewTheme(
                 LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp)),
                 //LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = DateTimeFormatHandler(LocalContext.current).is24Time())
             ) {
-                KmpLocalCompositionSetup(navController) {
+                KmpLocalCompositionSetup(
+                    navController,
+                    rememberNavBackStack(Screen.RecentScreen)
+                ) {
                     Surface { content() }
                 }
             }

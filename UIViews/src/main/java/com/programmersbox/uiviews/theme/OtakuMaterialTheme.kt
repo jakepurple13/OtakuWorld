@@ -6,6 +6,7 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.NavHostController
+import androidx.navigation3.runtime.NavBackStack
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.theme.generateColorScheme
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -19,12 +20,13 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 fun OtakuMaterialTheme(
     navController: NavHostController,
+    navBackStack: NavBackStack,
     genericInfo: GenericInfo,
     settingsHandling: NewSettingsHandling,
     content: @Composable () -> Unit,
 ) {
     KoinAndroidContext {
-        KmpLocalCompositionSetup(navController) {
+        KmpLocalCompositionSetup(navController, navBackStack) {
             CompositionLocalProvider(
                 LocalGenericInfo provides genericInfo,
             ) {

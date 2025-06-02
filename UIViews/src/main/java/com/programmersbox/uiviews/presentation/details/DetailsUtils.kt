@@ -62,16 +62,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpInfoModel
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.uiviews.GenericInfo
@@ -140,7 +138,7 @@ internal fun AddToList(
 internal fun DetailActions(
     genericInfo: GenericInfo,
     scaffoldState: DrawerState,
-    navController: NavHostController,
+    navController: NavigationActions,
     scope: CoroutineScope,
     context: Context,
     info: KmpInfoModel,
@@ -263,7 +261,7 @@ internal fun DetailActions(
         DropdownMenuItem(
             onClick = {
                 dropDownDismiss()
-                navController.navigate(Screen.GlobalSearchScreen(info.title))
+                navController.globalSearch(info.title)
             },
             text = { Text(stringResource(id = R.string.global_search_by_name)) },
             leadingIcon = { Icon(Icons.Default.Search, null) }
@@ -313,7 +311,7 @@ internal fun ShareButton(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailBottomBar(
-    navController: NavController,
+    navController: NavigationActions,
     onShowLists: () -> Unit,
     info: KmpInfoModel,
     customActions: @Composable () -> Unit,
@@ -343,7 +341,7 @@ fun DetailBottomBar(
                 info = { Text("Global Search by Name") }
             ) {
                 IconButton(
-                    onClick = { navController.navigate(Screen.GlobalSearchScreen(info.title)) },
+                    onClick = { navController.globalSearch(info.title) },
                 ) { Icon(Icons.Default.Search, null) }
             }
 
@@ -400,7 +398,7 @@ fun DetailBottomBar(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DetailFloatingActionButtonMenu(
-    navController: NavController,
+    navController: NavigationActions,
     fabMenuExpanded: Boolean,
     onFabMenuExpandedChange: (Boolean) -> Unit,
     isVisible: Boolean,
@@ -483,7 +481,7 @@ fun DetailFloatingActionButtonMenu(
         FloatingActionButtonMenuItem(
             onClick = {
                 onFabMenuExpandedChange(false)
-                navController.navigate(Screen.GlobalSearchScreen(info.title))
+                navController.globalSearch(info.title)
             },
             icon = { Icon(Icons.Default.Search, contentDescription = null) },
             text = { Text(text = "Global Search by Name") },

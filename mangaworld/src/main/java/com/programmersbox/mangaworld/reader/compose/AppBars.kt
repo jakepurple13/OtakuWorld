@@ -59,7 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.mangaworld.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -259,7 +259,7 @@ internal fun BottomBar(
 
 @Composable
 private fun GoBackButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,
@@ -305,7 +305,7 @@ private fun PreviousIconButton(
 
 @Composable
 private fun GoBackIconButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedIconButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,

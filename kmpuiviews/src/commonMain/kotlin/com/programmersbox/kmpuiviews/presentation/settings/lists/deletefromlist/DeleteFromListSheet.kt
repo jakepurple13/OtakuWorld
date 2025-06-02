@@ -41,7 +41,7 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
@@ -59,7 +59,7 @@ import otakuworld.kmpuiviews.generated.resources.yes
 fun DeleteFromListScreen(
     deleteFromList: Screen.CustomListScreen.DeleteFromList,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()

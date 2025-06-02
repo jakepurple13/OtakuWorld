@@ -5,17 +5,18 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.mangaworld.ChaptersGet
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.Serializable
 import java.io.File
 
-class DownloadViewModel(context: Context, defaultPathname: File) : ViewModel() {
+@Serializable
+data object DownloadRoute : NavKey
 
-    companion object {
-        const val DownloadRoute = "downloads"
-    }
+class DownloadViewModel(context: Context, defaultPathname: File) : ViewModel() {
 
     val fileList = mutableStateMapOf<String, Map<String, List<ChaptersGet.Chapters>>>()
 

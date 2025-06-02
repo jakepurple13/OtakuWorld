@@ -3,6 +3,7 @@ package com.programmersbox.uiviews.utils
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation3.runtime.NavKey
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
@@ -46,4 +47,9 @@ fun trackScreen(screenName: String) {
             }
         }
     }
+}
+
+@Composable
+fun trackScreen(screenName: NavKey) {
+    trackScreen(screenName.toString())
 }

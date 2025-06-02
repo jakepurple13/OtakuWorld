@@ -39,12 +39,11 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.icons.Discord
 import com.programmersbox.kmpuiviews.utils.composables.icons.Github
 import com.programmersbox.kmpuiviews.versionCode
@@ -78,7 +77,7 @@ fun MoreInfoScreen(
     onViewAccountInfoClick: () -> Unit,
     shouldShowPrerelease: Boolean,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     val dataStoreHandling = koinInject<DataStoreHandling>()
@@ -124,13 +123,9 @@ fun MoreInfoScreen(
                         indication = ripple(),
                         interactionSource = null
                     ) {
-                        navController.clearBackStack<Screen.RecentScreen>()
+                        //navController.clearBackStack(Screen.RecentScreen)
                         onboarding = false
-                        navController.navigate(Screen.OnboardingScreen) {
-                            popUpTo(Screen.RecentScreen) {
-                                inclusive = true
-                            }
-                        }
+                        navController.toOnboarding()
                     }
                 )
             }
@@ -142,7 +137,7 @@ fun MoreInfoScreen(
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) { navController.navigate(Screen.WorkerInfoScreen) }
+                    ) { navController.workerInfo() }
                 )
             }
 

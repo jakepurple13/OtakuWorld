@@ -4,21 +4,28 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
@@ -27,6 +34,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.BuildConfig
@@ -36,6 +44,8 @@ import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
 import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.presentation.history.HistoryUi
+import com.programmersbox.uiviews.presentation.lists.NoDetailSelected
+import com.programmersbox.uiviews.presentation.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
@@ -52,6 +62,7 @@ import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewMo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 //TODO: MAYBE give each screen an enum of where they are and the transitions are based off of that?
 
@@ -64,13 +75,13 @@ fun NavGraphBuilder.navGraph(
     customPreferences: ComposeSettingsDsl,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
-    navController: NavHostController,
+    navController: NavigationActions,
     notificationLogo: NotificationLogo,
 ) {
     dialog<Screen.ScanQrCodeScreen> { ScanQrCode() }
     composable<Screen.OnboardingScreen> {
         OnboardingScreen(
-            navController = navController,
+            navController = LocalNavActions.current,
             customPreferences = customPreferences
         )
     }
@@ -123,7 +134,8 @@ fun NavGraphBuilder.navGraph(
         trackScreen(Screen.DetailsScreen)
         DetailsScreen(
             logo = notificationLogo,
-            windowSize = windowSize
+            windowSize = windowSize,
+            details = koinViewModel { parametersOf(it.toRoute<Screen.DetailsScreen.Details>()) }
         )
     }
 
@@ -141,7 +153,7 @@ private fun NavGraphBuilder.settings(
     customPreferences: ComposeSettingsDsl,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
-    navController: NavHostController,
+    navigationActions: NavigationActions,
     notificationLogo: NotificationLogo,
     additionalSettings: NavGraphBuilder.() -> Unit,
 ) {
@@ -156,22 +168,22 @@ private fun NavGraphBuilder.settings(
             trackScreen(Screen.SettingsScreen)
             SettingScreen(
                 composeSettingsDsl = customPreferences,
-                notificationClick = { navController.navigate(Screen.NotificationScreen) { launchSingleTop = true } },
-                favoritesClick = { navController.navigate(Screen.FavoriteScreen) { launchSingleTop = true } },
-                historyClick = { navController.navigate(Screen.HistoryScreen) { launchSingleTop = true } },
-                globalSearchClick = { navController.navigate(Screen.GlobalSearchScreen()) { launchSingleTop = true } },
-                listClick = { navController.navigate(Screen.CustomListScreen) { launchSingleTop = true } },
-                debugMenuClick = { navController.navigate(Screen.DebugScreen) { launchSingleTop = true } },
-                extensionClick = { navController.navigate(Screen.ExtensionListScreen) { launchSingleTop = true } },
-                notificationSettingsClick = { navController.navigate(Screen.NotificationsSettings) },
-                generalClick = { navController.navigate(Screen.GeneralSettings) },
-                otherClick = { navController.navigate(Screen.OtherSettings) },
-                moreInfoClick = { navController.navigate(Screen.MoreInfoSettings) },
-                moreSettingsClick = { navController.navigate(Screen.MoreSettings) },
-                geminiClick = { /*navController.navigate(Screen.GeminiScreen)*/ },
-                sourcesOrderClick = { navController.navigate(Screen.OrderScreen) },
-                appDownloadsClick = { navController.navigate(Screen.DownloadInstallScreen) },
-                scanQrCode = { navController.navigate(Screen.ScanQrCodeScreen) },
+                notificationClick = navigationActions::notifications,
+                favoritesClick = navigationActions::favorites,
+                historyClick = navigationActions::history,
+                globalSearchClick = navigationActions::globalSearch,
+                listClick = navigationActions::customList,
+                debugMenuClick = navigationActions::debug,
+                extensionClick = navigationActions::extensionList,
+                notificationSettingsClick = navigationActions::notificationsSettings,
+                generalClick = navigationActions::general,
+                otherClick = navigationActions::otherSettings,
+                moreInfoClick = navigationActions::moreInfo,
+                moreSettingsClick = navigationActions::moreSettings,
+                geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+                sourcesOrderClick = navigationActions::order,
+                appDownloadsClick = navigationActions::downloadInstall,
+                scanQrCode = navigationActions::scanQrCode,
             )
         }
 
@@ -210,9 +222,9 @@ private fun NavGraphBuilder.settings(
         ) {
             trackScreen(Screen.MoreInfoSettings)
             InfoSettings(
-                usedLibraryClick = { navController.navigate(Screen.AboutScreen) { launchSingleTop = true } },
-                onPrereleaseClick = { navController.navigate(Screen.PrereleaseScreen) { launchSingleTop = true } },
-                onViewAccountInfoClick = { navController.navigate(Screen.AccountInfo) { launchSingleTop = true } }
+                usedLibraryClick = navigationActions::about,
+                onPrereleaseClick = navigationActions::prerelease,
+                onViewAccountInfoClick = navigationActions::accountInfo
             )
         }
 
@@ -270,7 +282,8 @@ private fun NavGraphBuilder.settings(
             trackScreen("global_search")
             GlobalSearchView(
                 notificationLogo = notificationLogo,
-                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
+                screen = it.toRoute()
             )
         }
 
@@ -279,9 +292,14 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
         ) {
             trackScreen(Screen.CustomListScreen)
-            OtakuListScreen(
-                isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
-            )
+            OtakuListView()
+        }
+
+        animatedScopeComposable<Screen.CustomListScreen.CustomListItem>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
+        ) {
+            OtakuCustomListScreenStandAlone(it.toRoute())
         }
 
         dialog<Screen.CustomListScreen.DeleteFromList> {
@@ -368,7 +386,8 @@ private fun NavGraphBuilder.settings(
         trackScreen("global_search")
         GlobalSearchView(
             notificationLogo = notificationLogo,
-            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
+            screen = it.toRoute()
         )
     }
 
@@ -409,3 +428,232 @@ private fun NavGraphBuilder.settings(
         ExtensionList()
     }
 }
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+fun entryGraph(
+    customPreferences: ComposeSettingsDsl,
+    notificationLogo: NotificationLogo,
+    windowSize: WindowSizeClass,
+    genericInfo: GenericInfo,
+    navigationActions: NavigationActions,
+) = entryProvider<Any> {
+    entry<Screen.RecentScreen> { RecentView() }
+    entry<Screen.DetailsScreen.Details> {
+        DetailsScreen(
+            logo = notificationLogo,
+            windowSize = windowSize,
+            details = koinViewModel { parametersOf(it) }
+        )
+    }
+
+    entry<Screen.ScanQrCodeScreen> { ScanQrCode() }
+
+    entry<Screen.OnboardingScreen> {
+        OnboardingScreen(
+            navController = LocalNavActions.current,
+            customPreferences = customPreferences
+        )
+    }
+
+    entry<Screen.WebViewScreen> {
+        WebViewScreen(
+            url = it.url
+        )
+    }
+
+    entry<Screen.IncognitoScreen> {
+        IncognitoScreen()
+    }
+
+    entry<Screen.AllScreen> {
+        trackScreen(Screen.AllScreen)
+        AllView(
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+        )
+    }
+
+    settingsEntryGraph(
+        customPreferences = customPreferences,
+        notificationLogo = notificationLogo,
+        windowSize = windowSize,
+        genericInfo = genericInfo,
+        navigationActions = navigationActions
+    )
+
+    with(genericInfo) { globalNav3Setup() }
+
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
+private fun EntryProviderBuilder<Any>.settingsEntryGraph(
+    customPreferences: ComposeSettingsDsl,
+    notificationLogo: NotificationLogo,
+    windowSize: WindowSizeClass,
+    genericInfo: GenericInfo,
+    navigationActions: NavigationActions,
+) {
+    entry<Screen.Settings>(
+        metadata = ListDetailSceneStrategy.listPane {
+            //TODO: Need to add info here
+            NoDetailSelected()
+        }
+    ) {
+        SettingScreen(
+            composeSettingsDsl = customPreferences,
+            notificationClick = navigationActions::notifications,
+            favoritesClick = navigationActions::favorites,
+            historyClick = navigationActions::history,
+            globalSearchClick = navigationActions::globalSearch,
+            listClick = navigationActions::customList,
+            debugMenuClick = navigationActions::debug,
+            extensionClick = navigationActions::extensionList,
+            notificationSettingsClick = navigationActions::notificationsSettings,
+            generalClick = navigationActions::general,
+            otherClick = navigationActions::otherSettings,
+            moreInfoClick = navigationActions::moreInfo,
+            moreSettingsClick = navigationActions::moreSettings,
+            geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+            sourcesOrderClick = navigationActions::order,
+            appDownloadsClick = navigationActions::downloadInstall,
+            scanQrCode = navigationActions::scanQrCode,
+        )
+    }
+
+    detailEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
+
+    detailEntry<Screen.OrderScreen> {
+        trackScreen(Screen.OrderScreen)
+        SourceOrderScreen()
+    }
+
+    detailEntry<Screen.NotificationsSettings> {
+        trackScreen(Screen.NotificationsSettings)
+        NotificationSettings()
+    }
+
+    detailEntry<Screen.GeneralSettings> {
+        trackScreen(Screen.GeneralSettings)
+        GeneralSettings(customPreferences.generalSettings)
+    }
+
+    detailEntry<Screen.MoreInfoSettings> {
+        trackScreen(Screen.MoreInfoSettings)
+        InfoSettings(
+            usedLibraryClick = navigationActions::about,
+            onPrereleaseClick = navigationActions::prerelease,
+            onViewAccountInfoClick = navigationActions::accountInfo
+        )
+    }
+
+    entry<Screen.PrereleaseScreen> { PrereleaseScreen() }
+
+    detailEntry<Screen.OtherSettings> {
+        trackScreen(Screen.OtherSettings)
+        PlaySettings(customPreferences.playerSettings)
+    }
+
+    detailEntry<Screen.MoreSettings> {
+        trackScreen(Screen.MoreSettings)
+        MoreSettingsScreen()
+    }
+
+    detailEntry<Screen.HistoryScreen> {
+        trackScreen(Screen.HistoryScreen)
+        HistoryUi()
+    }
+
+    entry<Screen.FavoriteScreen> {
+        trackScreen(Screen.FavoriteScreen)
+        FavoriteUi(
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
+        )
+    }
+
+    detailEntry<Screen.AboutScreen> {
+        trackScreen(Screen.AboutScreen)
+        AboutLibrariesScreen()
+    }
+
+    entry<Screen.GlobalSearchScreen> {
+        trackScreen("global_search")
+        GlobalSearchView(
+            notificationLogo = notificationLogo,
+            isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
+            screen = it
+        )
+    }
+
+    entry<Screen.CustomListScreen>(
+        metadata = ListDetailSceneStrategy.listPane { NoDetailSelected() }
+    ) {
+        trackScreen(Screen.CustomListScreen)
+        OtakuListView()
+    }
+
+    entry<Screen.CustomListScreen.CustomListItem>(
+        metadata = ListDetailSceneStrategy.detailPane()
+    ) {
+        trackScreen(Screen.CustomListScreen)
+        OtakuCustomListScreenStandAlone(it)
+    }
+
+    entry<Screen.CustomListScreen.DeleteFromList> {
+        trackScreen("delete_from_list")
+        DeleteFromListScreen(
+            deleteFromList = it
+        )
+    }
+
+    entry<Screen.ImportListScreen> {
+        trackScreen("import_list")
+        ImportListScreen()
+    }
+
+    entry<Screen.ImportFullListScreen> {
+        trackScreen("import_full_list")
+        ImportFullListScreen()
+    }
+
+    detailEntry<Screen.NotificationScreen> {
+        trackScreen(Screen.NotificationScreen)
+        NotificationScreen()
+    }
+
+    entry<Screen.ExtensionListScreen> {
+        trackScreen(Screen.ExtensionListScreen)
+        ExtensionList()
+    }
+
+    detailEntry<Screen.AccountInfo> {
+        AccountInfoScreen(
+            profileUrl = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString(),
+        )
+    }
+
+    //additionalSettings()
+
+    entry<Screen.DownloadInstallScreen> {
+        DownloadStateScreen()
+    }
+
+    if (BuildConfig.DEBUG) {
+        entry<Screen.DebugScreen> {
+            DebugView()
+        }
+    }
+
+    with(genericInfo) { settingsNav3Setup() }
+}
+
+private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(
+    noinline content: @Composable (T) -> Unit,
+) = entry<T>(
+    metadata = TwoPaneScene.twoPane()
+) { content(it) }
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+private inline fun <reified T : Any> EntryProviderBuilder<*>.detailEntry(
+    noinline content: @Composable (T) -> Unit,
+) = entry<T>(
+    metadata = ListDetailSceneStrategy.detailPane()
+) { content(it) }

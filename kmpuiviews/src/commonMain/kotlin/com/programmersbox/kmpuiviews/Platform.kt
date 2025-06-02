@@ -23,6 +23,10 @@ expect fun createColorScheme(
 
 expect fun customUriHandler(navController: NavHostController): UriHandler
 
+expect class CustomUriHandler : UriHandler {
+    override fun openUri(uri: String)
+}
+
 expect val databaseBuilder: Module
 
 @Composable

@@ -71,6 +71,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.ReaderType
@@ -94,7 +95,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object ReaderSettingsScreen
+data object ReaderSettingsScreen : NavKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -35,7 +35,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -102,7 +102,7 @@ fun AboutLibrariesScreen() {
                 }
             },
         ) { library ->
-            val openDialog = rememberSaveable { mutableStateOf(false) }
+            val openDialog = remember { mutableStateOf(false) }
 
             OutlinedLibrary(
                 library = library,

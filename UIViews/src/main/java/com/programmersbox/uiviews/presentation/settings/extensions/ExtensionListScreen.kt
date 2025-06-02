@@ -114,7 +114,6 @@ import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
@@ -124,7 +123,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.extensions.RemoteErro
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.RemoteState
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.RemoteViewState
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
@@ -148,7 +147,7 @@ fun ExtensionList(
 
     val context = LocalContext.current
 
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
 
     fun updateCheck() {
         WorkManager.getInstance(context)
@@ -264,7 +263,7 @@ fun ExtensionList(
                             text = { Text("Enable Incognito") },
                             onClick = {
                                 showDropDown = false
-                                navController.navigate(Screen.IncognitoScreen)
+                                navController.incognito()
                             },
                             leadingIcon = { Icon(Icons.Default.HideSource, null) }
                         )

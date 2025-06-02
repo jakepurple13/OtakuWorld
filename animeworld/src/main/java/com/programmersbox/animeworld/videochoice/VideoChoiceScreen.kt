@@ -27,7 +27,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.LocalGenericInfo
 
@@ -41,7 +41,7 @@ fun VideoChoiceScreen(
     model: KmpChapterModel,
     genericInfo: GenericInfo = LocalGenericInfo.current,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val activity = LocalActivity.current
 
     val onAction: (KmpStorage) -> Unit = {

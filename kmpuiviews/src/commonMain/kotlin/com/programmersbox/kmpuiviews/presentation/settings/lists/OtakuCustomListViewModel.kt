@@ -14,6 +14,7 @@ import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpuiviews.presentation.Screen
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 class OtakuCustomListViewModel(
+    screen: Screen.CustomListScreen.CustomListItem,
     private val listDao: ListDao,
     private val showBySourceFlow: DataStoreHandler<Boolean>,
 ) : ViewModel() {
@@ -68,6 +70,11 @@ class OtakuCustomListViewModel(
             .asFlow()
             .onEach { showBySource = it }
             .launchIn(viewModelScope)
+
+        listDao
+            .getCustomListItemFlow(screen.uuid)
+            .onEach { setList(it) }
+            .launchIn(viewModelScope)
     }
 
     fun toggleShowSource(value: Boolean) {
@@ -78,7 +85,7 @@ class OtakuCustomListViewModel(
     }
 
     fun setList(customList: CustomList?) {
-        this.customItem = customList
+        this.customList = customList
         val sources = customList
             ?.list
             ?.map { it.source }

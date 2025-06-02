@@ -74,7 +74,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.CrossFade
@@ -85,6 +84,7 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffold
 import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffoldDefaults
@@ -97,10 +97,11 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchModel
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
@@ -124,6 +125,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 
 @OptIn(
@@ -131,14 +133,15 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 )
 @Composable
 fun GlobalSearchView(
+    screen: Screen.GlobalSearchScreen,
     notificationLogo: NotificationLogo,
     isHorizontal: Boolean,
     dao: HistoryDao = LocalHistoryDao.current,
-    viewModel: GlobalSearchViewModel = koinViewModel(),
+    viewModel: GlobalSearchViewModel = koinViewModel { parametersOf(screen) },
 ) {
     val hazeState = remember { HazeState() }
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -341,7 +344,7 @@ private fun Content(
     hazeState: HazeState,
     showBlur: Boolean,
     scope: CoroutineScope,
-    navController: NavController,
+    navController: NavigationActions,
     notificationLogo: NotificationLogo,
     mainLogoDrawable: AppLogo,
     onSearchModel: (SearchModel) -> Unit,
@@ -573,10 +576,11 @@ private fun GlobalScreenPreview() {
             notificationLogo = NotificationLogo(R.drawable.ic_site_settings),
             dao = dao,
             isHorizontal = false,
+            screen = Screen.GlobalSearchScreen(),
             viewModel = viewModel {
                 GlobalSearchViewModel(
                     sourceRepository = SourceRepository(),
-                    savedStateHandle = createSavedStateHandle(),
+                    handle = Screen.GlobalSearchScreen(),
                     dao = dao,
                 )
             }

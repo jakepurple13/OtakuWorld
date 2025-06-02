@@ -52,12 +52,12 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.navigation.NavController
 import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -90,7 +90,7 @@ class AnimeDataStoreHandling {
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun Context.navigateToVideoPlayer(
-    navController: NavController,
+    navController: NavigationActions,
     assetFileStringUri: String?,
     videoName: String?,
     downloadOrStream: Boolean,

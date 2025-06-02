@@ -53,7 +53,7 @@ val viewModels: Module = module {
     viewModelOf(::QrCodeScannerViewModel)
     viewModelOf(::WorkerInfoViewModel)
 
-    viewModel { OtakuCustomListViewModel(get(), get<DataStoreHandling>().showBySource) }
+    viewModel { OtakuCustomListViewModel(get(), get(), get<DataStoreHandling>().showBySource) }
 
     includes(platformViewModels())
 }

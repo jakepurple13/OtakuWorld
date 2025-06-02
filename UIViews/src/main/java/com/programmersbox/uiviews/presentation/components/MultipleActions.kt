@@ -31,10 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.components.item
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -73,7 +72,7 @@ fun BoxScope.MultipleActions(
     middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
     multipleActions: com.programmersbox.datastore.MiddleMultipleActions,
     currentDestination: NavDestination?,
-    navController: NavHostController,
+    navigationActions: NavigationActions,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -85,11 +84,7 @@ fun BoxScope.MultipleActions(
                     currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
-                        navController.navigate(it.screen) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navigationActions.homeScreenNavigate(it.screen)
                     }
                 )
             },
@@ -98,11 +93,7 @@ fun BoxScope.MultipleActions(
                     currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
-                        navController.navigate(it.screen) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        navigationActions.homeScreenNavigate(it.screen)
                     }
                 )
             },

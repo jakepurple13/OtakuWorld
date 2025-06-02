@@ -32,13 +32,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
@@ -279,7 +278,7 @@ private fun AccountSettings(
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
 
     val accountInfo = viewModel.accountInfo
 
@@ -331,7 +330,7 @@ private fun AccountSettings(
                             ),
                             modifier = Modifier.clickable {
                                 showDialog = false
-                                navController.navigate(Screen.AccountInfo) { launchSingleTop = true }
+                                navController.accountInfo()
                             }
                         )
                     }

@@ -39,19 +39,20 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.thenIf
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.confirm
@@ -60,6 +61,30 @@ import otakuworld.kmpuiviews.generated.resources.custom_list_updated_at
 import otakuworld.kmpuiviews.generated.resources.custom_lists_title
 import otakuworld.kmpuiviews.generated.resources.list_name
 
+@Composable
+fun OtakuListView(
+    viewModel: OtakuListViewModel = koinViewModel(),
+) {
+    val navActions = LocalNavActions.current
+    val biometric = rememberBiometricPrompting()
+    OtakuListView(
+        customLists = viewModel.customLists,
+        navigateDetail = {
+            if (it.item.useBiometric) {
+                biometric.authenticate(
+                    title = "Authentication required",
+                    subtitle = "In order to view ${it.item.name}, please authenticate",
+                    negativeButtonText = "Never Mind",
+                    onAuthenticationSucceeded = { navActions.customList(it) },
+                    onAuthenticationFailed = {}
+                )
+            } else {
+                navActions.customList(it)
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtakuListView(
@@ -67,7 +92,7 @@ fun OtakuListView(
     customItem: CustomList? = null,
     navigateDetail: (CustomList) -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     val dateTimeFormatter = LocalSystemDateTimeFormat.current
@@ -76,7 +101,7 @@ fun OtakuListView(
 
     val pickDocumentLauncher = rememberFilePickerLauncher(
         type = FileKitType.File("json")
-    ) { document -> document?.let { navController.navigate(Screen.ImportFullListScreen(it.toString())) } }
+    ) { document -> document?.let { navController.importFullList(it.toString()) } }
 
     var showAdd by remember { mutableStateOf(false) }
 
@@ -133,9 +158,7 @@ fun OtakuListView(
         ) {
             items(customLists) {
                 ElevatedCard(
-                    onClick = {
-                        navigateDetail(it)
-                    },
+                    onClick = { navigateDetail(it) },
                     modifier = Modifier
                         .animateItem()
                         .padding(horizontal = 4.dp)

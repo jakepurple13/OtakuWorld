@@ -87,7 +87,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.gsonutils.fromJson
@@ -96,9 +95,10 @@ import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
@@ -136,7 +136,7 @@ class ReadViewModel(
             "novelreader?currentChapter={currentChapter}&novelTitle={novelTitle}&novelUrl={novelUrl}&novelInfoUrl={novelInfoUrl}"
 
         fun navigateToNovelReader(
-            navController: NavController,
+            navController: NavigationActions,
             currentChapter: KmpChapterModel,
             novelTitle: String,
             novelUrl: String,
@@ -148,7 +148,7 @@ class ReadViewModel(
 
             navController.navigate(
                 "novelreader?currentChapter=$current&novelTitle=${novelTitle}&novelUrl=${novelUrl}&novelInfoUrl=${novelInfoUrl}"
-            ) { launchSingleTop = true }
+            )// { launchSingleTop = true }
         }
     }
 
@@ -634,7 +634,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
 
 @Composable
 private fun GoBackButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,

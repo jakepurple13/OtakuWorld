@@ -59,7 +59,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
@@ -82,7 +82,7 @@ fun RecentView(
     viewModel: RecentViewModel = koinViewModel(),
 ) {
     val info = LocalGenericInfo.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val settingsHandling: NewSettingsHandling = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()
     val itemDao = koinInject<ItemDao>()

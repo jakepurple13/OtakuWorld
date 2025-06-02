@@ -83,7 +83,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -102,7 +101,7 @@ import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.AirBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
@@ -128,10 +127,11 @@ import kotlin.math.abs
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun VideoPlayerUi(
+    screen: VideoScreen,
     context: Context = LocalContext.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
     storageHolder: StorageHolder = koinInject(),
-    viewModel: VideoViewModel = viewModel { VideoViewModel(createSavedStateHandle(), context, storageHolder) },
+    viewModel: VideoViewModel = viewModel { VideoViewModel(screen, context, storageHolder) },
 ) {
     val activity = LocalActivity.current
 
@@ -230,7 +230,7 @@ fun VideoPlayer(
     source: MediaSource,
     modifier: Modifier = Modifier,
 ) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
 
     val exoPlayer = remember {
@@ -415,7 +415,14 @@ fun VideoBottomBar(
 @Preview
 fun VideoPlayerPreview() {
     MaterialTheme(darkColorScheme()) {
-        VideoPlayerUi()
+        VideoPlayerUi(
+            screen = VideoScreen(
+                showPath = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                showName = "Test",
+                downloadOrStream = true,
+                referer = ""
+            )
+        )
     }
 }
 

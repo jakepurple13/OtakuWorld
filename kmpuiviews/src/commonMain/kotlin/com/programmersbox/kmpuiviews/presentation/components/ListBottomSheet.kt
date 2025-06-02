@@ -22,7 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 
 class ListBottomSheetItemModel(
     val primaryText: String,
@@ -40,7 +40,7 @@ fun <T> ListBottomScreen(
     onClick: (T) -> Unit,
     includeInsetPadding: Boolean = true,
     navigationIcon: @Composable () -> Unit = {
-        val navController = LocalNavController.current
+        val navController = LocalNavActions.current
         IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.Close, null) }
     },
     lazyListContent: LazyListScope.() -> Unit = {},

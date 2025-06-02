@@ -7,6 +7,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloatAsState
@@ -116,14 +117,13 @@ import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
-import com.programmersbox.kmpuiviews.presentation.navigateToDetails
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListState
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
-import com.programmersbox.kmpuiviews.utils.LocalNavController
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
@@ -155,8 +155,45 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 import java.util.UUID
+
+@Composable
+fun OtakuCustomListScreenStandAlone(
+    screen: Screen.CustomListScreen.CustomListItem,
+    viewModel: OtakuCustomListViewModel = koinViewModel { parametersOf(screen) },
+    isHorizontal: Boolean = false,
+    dao: ListDao = koinInject(),
+) {
+    val scope = rememberCoroutineScope()
+    val navController = LocalNavActions.current
+    Crossfade(
+        targetState = viewModel.customList,
+        label = "",
+    ) { target ->
+        if (target != null) {
+            OtakuCustomListScreen(
+                viewModel = viewModel,
+                customItem = target,
+                writeToFile = viewModel::writeToFile,
+                isHorizontal = isHorizontal,
+                deleteAll = viewModel::deleteAll,
+                rename = viewModel::rename,
+                searchQuery = viewModel.searchQuery,
+                setQuery = viewModel::setQuery,
+                navigateBack = { navController.popBackStack() },
+                addSecurityItem = {
+                    scope.launch { dao.updateBiometric(it, true) }
+                },
+                removeSecurityItem = {
+                    scope.launch { dao.updateBiometric(it, false) }
+                },
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -175,7 +212,7 @@ fun OtakuCustomListScreen(
     dao: ListDao = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -287,7 +324,7 @@ fun OtakuCustomListScreen(
                 ?.onStart { showLoadingDialog = true }
                 ?.onEach { item ->
                     showLoadingDialog = false
-                    navController.navigateToDetails(item)
+                    navController.details(item)
                 }
                 ?.onCompletion { showLoadingDialog = false }
                 ?.launchIn(scope)
@@ -337,7 +374,7 @@ fun OtakuCustomListScreen(
                 customItem
                     .item
                     .uuid
-                    .let { navController.navigate(Screen.CustomListScreen.DeleteFromList(it)) }
+                    .let { navController.deleteFromList(it) }
             },
             onExportAction = { pickDocumentLauncher.launch(customItem.item.name, "json") },
             filtered = viewModel.filtered,
@@ -604,7 +641,7 @@ private fun CustomItemVertical(
     val biometrics = rememberBiometricOpening()
     val scope = rememberCoroutineScope()
     val sourceRepository = LocalSourcesRepository.current
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
 
     var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -640,7 +677,7 @@ private fun CustomItemVertical(
                         ?.onStart { showLoadingDialog(true) }
                         ?.onEach {
                             showLoadingDialog(false)
-                            navController.navigateToDetails(it)
+                            navController.details(it)
                         }
                         ?.onCompletion { showLoadingDialog(false) }
                         ?.launchIn(scope) ?: onError()
@@ -691,7 +728,7 @@ private fun CustomItemVertical(
                                 ?.onStart { showLoadingDialog(true) }
                                 ?.onEach {
                                     showLoadingDialog(false)
-                                    navController.navigateToDetails(it)
+                                    navController.details(it)
                                 }
                                 ?.onCompletion { showLoadingDialog(false) }
                                 ?.launchIn(scope) ?: error("Nothing")
@@ -850,6 +887,7 @@ private fun CustomListScreenPreview() {
         val context = LocalContext.current
         val viewModel: OtakuCustomListViewModel = viewModel {
             OtakuCustomListViewModel(
+                screen = Screen.CustomListScreen.CustomListItem(""),
                 listDao,
                 DataStoreHandler(
                     defaultValue = false,
