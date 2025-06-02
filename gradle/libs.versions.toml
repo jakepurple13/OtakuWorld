@@ -1,6 +1,6 @@
 [versions]
 barcodeScanning = "17.3.0"
-biometricVersion = "1.4.0-alpha04"
+biometricVersion = "1.4.0-SNAPSHOT"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "1.9.40"
 corePerformance = "1.0.0"
