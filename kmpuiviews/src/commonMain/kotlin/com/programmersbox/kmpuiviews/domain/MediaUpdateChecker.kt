@@ -256,7 +256,7 @@ class MediaUpdateChecker(
                     recordFirebaseException(e)
                     null
                 }
-            }.also { it.start() } // Start the async task immediately after creation if not LAZY or control start if needed. Or awaitAll will start them.
+            }//.also { it.start() } // Start the async task immediately after creation if not LAZY or control start if needed. Or awaitAll will start them.
         }
             .awaitAll()
             .filterNotNull() // Filter out nulls (items with no updates or errors)
