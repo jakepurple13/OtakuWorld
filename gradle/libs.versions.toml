@@ -89,7 +89,7 @@ googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 datastore = "1.1.7"
 ackpineVersion = "0.13.0"
 
-arcore = "1.0.0-alpha04"
+arcore = "1.0.0-SNAPSHOT"
 composeXr = "1.0.0-alpha04"
 scenecore = "1.0.0-alpha04"
 
