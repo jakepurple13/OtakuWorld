@@ -121,14 +121,6 @@ fun NotificationSettings(
 
         CategoryGroup {
             item {
-                SwitchSetting(
-                    settingTitle = { Text("Notify on Boot") },
-                    value = viewModel.notifyOnBoot.rememberPreference().value,
-                    updateValue = { scope.launch { viewModel.notifyOnBoot.set(it) } }
-                )
-            }
-
-            item {
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(Res.string.last_update_check_time)) },
                     summaryValue = { Text(viewModel.time) },
@@ -170,6 +162,22 @@ fun NotificationSettings(
                         }
                     }
                 )
+
+                val manualWorkInfo by viewModel
+                    .manualCheck
+                    .collectAsStateWithLifecycle(emptyList())
+
+                if (manualWorkInfo.isNotEmpty()) {
+                    manualWorkInfo.forEach { workInfo ->
+                        item {
+                            WorkInfoItem(
+                                workInfo = workInfo,
+                                title = "Manual Check:",
+                                dateFormat = viewModel.dateTimeFormatter
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -224,21 +232,13 @@ fun NotificationSettings(
             }
         }
 
-        val manualWorkInfo by viewModel
-            .manualCheck
-            .collectAsStateWithLifecycle(emptyList())
-
-        if (manualWorkInfo.isNotEmpty()) {
-            CategoryGroup {
-                manualWorkInfo.forEach { workInfo ->
-                    item {
-                        WorkInfoItem(
-                            workInfo = workInfo,
-                            title = "Manual Check:",
-                            dateFormat = viewModel.dateTimeFormatter
-                        )
-                    }
-                }
+        CategoryGroup {
+            item {
+                SwitchSetting(
+                    settingTitle = { Text("Notify on Boot") },
+                    value = viewModel.notifyOnBoot.rememberPreference().value,
+                    updateValue = { scope.launch { viewModel.notifyOnBoot.set(it) } }
+                )
             }
         }
     }
