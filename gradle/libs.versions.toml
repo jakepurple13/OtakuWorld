@@ -116,7 +116,7 @@ buildKonfig = "0.17.1"
 
 compottie = "2.0.0-rc04"
 
-navigation3 = "1.0.0-alpha02"
+navigation3 = "1.0.0-SNAPSHOT"
 nav3Material = "1.0.0-SNAPSHOT"
 
 [plugins]
