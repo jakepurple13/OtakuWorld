@@ -39,6 +39,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.entry
 import com.programmersbox.datastore.NewSettingsHandling
@@ -438,7 +439,9 @@ class GenericManga(
             exitTransition = { fadeOut() },
         ) {
             trackScreen("mangaReader")
-            ReadView()
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.MangaReader>()) }
+            )
         }
     }
 
