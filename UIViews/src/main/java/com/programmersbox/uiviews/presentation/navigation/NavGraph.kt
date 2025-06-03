@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation
+package com.programmersbox.uiviews.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -39,6 +39,8 @@ import com.programmersbox.kmpuiviews.utils.chromeCustomTabs
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedScopeComposable
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.DebugView
+import com.programmersbox.uiviews.presentation.TwoPaneScene
 import com.programmersbox.uiviews.presentation.all.AllView
 import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
@@ -648,7 +650,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
 private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    metadata = TwoPaneScene.twoPane()
+    metadata = TwoPaneScene.Companion.twoPane()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)

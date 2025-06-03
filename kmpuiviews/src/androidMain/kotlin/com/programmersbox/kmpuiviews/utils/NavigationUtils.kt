@@ -67,7 +67,7 @@ class ChromeCustomTabsNavigator(
         // https://medium.com/google-developers/best-practices-for-custom-tabs-5700e55143ee
         customTabsIntent.intent.putExtra(
             Intent.EXTRA_REFERRER,
-            Uri.parse("android-app://" + context.packageName)
+            ("android-app://" + context.packageName).toUri()
         )
 
         return customTabsIntent
