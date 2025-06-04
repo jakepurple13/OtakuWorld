@@ -20,6 +20,7 @@ class TwoPaneScene<T : Any>(
     override val previousEntries: List<NavEntry<T>>,
     val firstEntry: NavEntry<T>,
     val secondEntry: NavEntry<T>,
+    val onBack: (Int) -> Unit,
 ) : Scene<T> {
     override val entries: List<NavEntry<T>> = listOf(firstEntry, secondEntry)
     override val content: @Composable (() -> Unit) = {
@@ -56,7 +57,6 @@ class TwoPaneSceneStrategy<T : Any> : SceneStrategy<T> {
         entries: List<NavEntry<T>>,
         onBack: (Int) -> Unit,
     ): Scene<T>? {
-
         val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
         // Condition 1: Only return a Scene if the window is sufficiently wide to render two panes.
@@ -88,7 +88,8 @@ class TwoPaneSceneStrategy<T : Any> : SceneStrategy<T> {
                 // when navigating forward, but remove two when navigating back.
                 previousEntries = entries.dropLast(1),
                 firstEntry = firstEntry,
-                secondEntry = secondEntry
+                secondEntry = secondEntry,
+                onBack = onBack
             )
         } else {
             null

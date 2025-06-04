@@ -1,8 +1,8 @@
-repositories {
+/*repositories {
     google()
     mavenCentral()
     gradlePluginPortal()
-}
+}*/
 
 plugins {
     `java-gradle-plugin`
