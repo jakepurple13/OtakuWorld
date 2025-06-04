@@ -33,11 +33,6 @@ class DialogScene<T : Any>(
     }
 }
 
-// --- TwoPaneSceneStrategy ---
-/**
- * A [SceneStrategy] that activates a [TwoPaneScene] if the window is wide enough
- * and the top two back stack entries declare support for two-pane display.
- */
 class DialogStrategy<T : Any> : SceneStrategy<T> {
     @Composable
     override fun calculateScene(
