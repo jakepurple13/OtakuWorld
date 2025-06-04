@@ -381,31 +381,31 @@ fun ScanQrCode(
                         },
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Save for later") }
-                } else {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                qrCodeInfo?.let {
-                                    info.toSourceByApiServiceName(it.apiService)
-                                        ?.apiService
-                                        ?.getSourceByUrlFlow(it.url)
-                                        ?.dispatchIo()
-                                        ?.onStart { showLoadingDialog = true }
-                                        ?.catch {
-                                            showLoadingDialog = false
-                                        }
-                                        ?.onEach { m ->
-                                            showLoadingDialog = false
-                                            navController.details(m)
-                                        }
-                                        ?.collect()
-                                }
-                            }
-                        },
-                        enabled = qrCodeInfo != null && source != null,
-                        modifier = Modifier.fillMaxWidth(.75f)
-                    ) { Text("Open") }
                 }
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            qrCodeInfo?.let {
+                                info.toSourceByApiServiceName(it.apiService)
+                                    ?.apiService
+                                    ?.getSourceByUrlFlow(it.url)
+                                    ?.dispatchIo()
+                                    ?.onStart { showLoadingDialog = true }
+                                    ?.catch {
+                                        showLoadingDialog = false
+                                    }
+                                    ?.onEach { m ->
+                                        showLoadingDialog = false
+                                        navController.details(m)
+                                    }
+                                    ?.collect()
+                            }
+                        }
+                    },
+                    enabled = qrCodeInfo != null && source != null,
+                    modifier = Modifier.fillMaxWidth(.75f)
+                ) { Text("Open") }
             }
         }
     }
