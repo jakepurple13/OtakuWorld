@@ -97,9 +97,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.NavKey
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.datastore.MiddleMultipleActions
 import com.programmersbox.datastore.MiddleNavigationAction
@@ -112,6 +111,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -160,7 +160,9 @@ fun HomeNav(
 
     val showBlur by settingsHandling.rememberShowBlur()
 
-    val backStack = rememberNavBackStack(startDestination)
+    //val backStack = rememberNavBackStack(startDestination)
+
+    val backStack = remember { TopLevelBackStack<NavKey>(startDestination) }
 
     CompositionLocalProvider(
         LocalWindowSizeClass provides windowSize
@@ -182,9 +184,6 @@ fun HomeNav(
                 else -> NavigationBarType.Bottom
             }
 
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentDestination = navBackStackEntry?.destination
-
             val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
             val floatingNavigation by rememberFloatingNavigation()
             val hazeState = remember { HazeState() }
@@ -202,7 +201,6 @@ fun HomeNav(
                         showNavBar = showNavBar,
                         navType = navType,
                         showAllItem = showAllItem,
-                        currentDestination = currentDestination,
                         appLogo = appLogo
                     )
 
@@ -214,7 +212,6 @@ fun HomeNav(
                                     navActions = navigationActions,
                                     showNavBar = showNavBar,
                                     navType = navType,
-                                    currentDestination = currentDestination,
                                     showBlur = showBlur,
                                     isAmoledMode = isAmoledMode,
                                     middleNavItem = middleNavItem,
@@ -226,7 +223,6 @@ fun HomeNav(
                                 HomeNavigationBar(
                                     showNavBar = showNavBar,
                                     navType = navType,
-                                    currentDestination = currentDestination,
                                     showBlur = showBlur,
                                     isAmoledMode = isAmoledMode,
                                     middleNavItem = middleNavItem,
@@ -257,7 +253,7 @@ fun HomeNav(
                             //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                         ) {
                             NavigationGraph(
-                                backStack = backStack,
+                                backStack = backStack.backStack,
                                 navigationActions = navigationActions,
                                 genericInfo = genericInfo,
                                 windowSize = windowSize,
@@ -317,7 +313,6 @@ private fun HomeNavigationBar(
     showNavBar: Boolean,
     navActions: NavigationActions,
     navType: NavigationBarType,
-    currentDestination: NavDestination?,
     showBlur: Boolean,
     isAmoledMode: Boolean,
     middleNavItem: MiddleNavigationAction,
@@ -388,7 +383,7 @@ private fun HomeNavigationBar(
                     NavigationBarItem(
                         icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
                         label = { Text(stringResource(label)) },
-                        selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                        selected = navActions.currentDestination(screen),
                         colors = colors,
                         onClick = { navActions.homeScreenNavigate(screen) }
                     )
@@ -396,13 +391,12 @@ private fun HomeNavigationBar(
 
                 ScreenBottomItem(
                     screen = Screen.RecentScreen,
-                    icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
+                    icon = if (navActions.currentDestination(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                     label = R.string.recent
                 )
 
                 middleNavItem.ScreenBottomItem(
                     rowScope = this,
-                    currentDestination = currentDestination,
                     colors = colors,
                     multipleClick = {
                         scope.launch {
@@ -418,7 +412,7 @@ private fun HomeNavigationBar(
 
                 ScreenBottomItem(
                     screen = Screen.Settings,
-                    icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
+                    icon = if (navActions.currentDestination(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
                     label = R.string.settings,
                     badge = { if (updateCheck()) Badge { Text("") } }
                 )
@@ -429,7 +423,6 @@ private fun HomeNavigationBar(
                     state = multipleBarState,
                     middleNavItem = middleNavItem,
                     multipleActions = it,
-                    currentDestination = currentDestination,
                     navigationActions = navActions
                 )
             }
@@ -442,7 +435,6 @@ private fun BottomNav(
     navActions: NavigationActions,
     showNavBar: Boolean,
     navType: NavigationBarType,
-    currentDestination: NavDestination?,
     showBlur: Boolean,
     isAmoledMode: Boolean,
     middleNavItem: MiddleNavigationAction,
@@ -478,20 +470,19 @@ private fun BottomNav(
                         NavigationBarItem(
                             icon = { BadgedBox(badge = badge) { Icon(icon, null) } },
                             label = { Text(stringResource(label)) },
-                            selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+                            selected = navActions.currentDestination(screen),
                             onClick = { navActions.homeScreenNavigate(screen) }
                         )
                     }
 
                     ScreenBottomItem(
                         screen = Screen.RecentScreen,
-                        icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
+                        icon = if (navActions.currentDestination(Screen.RecentScreen)) Icons.Default.History else Icons.Outlined.History,
                         label = R.string.recent
                     )
 
                     middleNavItem.ScreenBottomItem(
                         rowScope = this,
-                        currentDestination = currentDestination,
                         multipleClick = {
                             scope.launch {
                                 if (multipleBarState.showHorizontalBar) {
@@ -506,7 +497,7 @@ private fun BottomNav(
 
                     ScreenBottomItem(
                         screen = Screen.Settings,
-                        icon = if (currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
+                        icon = if (navActions.currentDestination(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
                         label = R.string.settings,
                         badge = { if (updateCheck()) Badge { Text("") } }
                     )
@@ -519,7 +510,6 @@ private fun BottomNav(
                 state = multipleBarState,
                 middleNavItem = middleNavItem,
                 multipleActions = it,
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
         }
@@ -533,7 +523,6 @@ private fun Rail(
     showNavBar: Boolean,
     navType: NavigationBarType,
     showAllItem: Boolean,
-    currentDestination: NavDestination?,
     appLogo: AppLogo,
 ) {
     AnimatedVisibility(
@@ -556,7 +545,6 @@ private fun Rail(
                 imageVector = Icons.Default.History,
                 label = stringResource(R.string.recent),
                 screen = Screen.RecentScreen,
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
 
@@ -565,7 +553,6 @@ private fun Rail(
                     imageVector = Icons.Default.BrowseGallery,
                     label = stringResource(R.string.all),
                     screen = Screen.AllScreen,
-                    currentDestination = currentDestination,
                     navigationActions = navActions
                 )
             }
@@ -574,7 +561,6 @@ private fun Rail(
                 imageVector = Icons.Default.Notifications,
                 label = stringResource(R.string.notifications),
                 screen = Screen.NotificationScreen,
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
 
@@ -582,7 +568,6 @@ private fun Rail(
                 imageVector = Icons.AutoMirrored.Default.List,
                 label = stringResource(R.string.custom_lists_title),
                 screen = Screen.CustomListScreen,
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
 
@@ -590,7 +575,6 @@ private fun Rail(
                 imageVector = Icons.Default.Search,
                 label = stringResource(R.string.global_search),
                 screen = Screen.GlobalSearchScreen(),
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
 
@@ -598,7 +582,6 @@ private fun Rail(
                 imageVector = Icons.Default.Star,
                 label = stringResource(R.string.viewFavoritesMenu),
                 screen = Screen.FavoriteScreen,
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
 
@@ -606,7 +589,6 @@ private fun Rail(
                 imageVector = Icons.Default.Extension,
                 label = stringResource(R.string.extensions),
                 screen = Screen.ExtensionListScreen,
-                currentDestination = currentDestination,
                 navigationActions = navActions
             )
 
@@ -617,7 +599,7 @@ private fun Rail(
                     ) { Icon(Icons.Default.Settings, null) }
                 },
                 label = { Text(stringResource(R.string.settings)) },
-                selected = currentDestination.isTopLevelDestinationInHierarchy(Screen.Settings),
+                selected = navActions.currentDestination(Screen.Settings),
                 onClick = { navActions.homeScreenNavigate(Screen.Settings) }
             )
         }
@@ -629,14 +611,13 @@ private fun NavigationRailItem(
     imageVector: ImageVector,
     label: String,
     screen: Screen,
-    currentDestination: NavDestination?,
     navigationActions: NavigationActions,
     onClick: () -> Unit = { navigationActions.homeScreenNavigate(screen) },
 ) {
     NavigationRailItem(
         icon = { Icon(imageVector, null) },
         label = { Text(label) },
-        selected = currentDestination.isTopLevelDestinationInHierarchy(screen.route),
+        selected = navigationActions.currentDestination(screen),
         onClick = onClick
     )
 }

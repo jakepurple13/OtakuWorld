@@ -27,7 +27,6 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.USE_NAV3
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.utils.NotificationLogo
 
 @Composable
@@ -91,7 +90,9 @@ private fun Nav3(
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
-        sceneStrategy = rememberListDetailSceneStrategy<NavKey>() then TwoPaneSceneStrategy<NavKey>(),
+        sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
+                then TwoPaneSceneStrategy()
+                then DialogStrategy(),
         onBack = { count ->
             repeat(count) {
                 if (backStack.isNotEmpty()) {

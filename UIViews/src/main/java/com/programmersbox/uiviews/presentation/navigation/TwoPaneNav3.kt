@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation
+package com.programmersbox.uiviews.presentation.navigation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

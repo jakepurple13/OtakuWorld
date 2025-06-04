@@ -1,7 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
+import androidx.compose.runtime.Composable
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.presentation.Screen
 
 
 interface NavigationActions {
@@ -52,4 +54,7 @@ interface NavigationActions {
     fun <T : Any> homeScreenNavigate(nav: T)
     fun onboardingToRecent()
     fun toOnboarding()
+
+    @Composable
+    fun currentDestination(screen: Screen): Boolean
 }

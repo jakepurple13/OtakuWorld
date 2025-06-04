@@ -1,5 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.CustomList
@@ -7,7 +12,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
-internal class Navigation3Actions(private val navBackStack: SnapshotStateList<NavKey>) : NavigationActions {
+internal class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : NavigationActions {
     override fun recent() {
         navBackStack.add(Screen.RecentScreen)
     }
@@ -155,12 +160,12 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
     }
 
     override fun popBackStack() {
-        navBackStack.removeLastOrNull()
+        navBackStack.removeLast()//removeLastOrNull()
     }
 
     override fun popBackStack(route: Any, inclusive: Boolean) {
-        val index = navBackStack.indexOfLast { it == route }
-        navBackStack.removeRange(index, navBackStack.size)
+        val index = navBackStack.backStack.indexOfLast { it == route }
+        navBackStack.backStack.removeRange(index, navBackStack.backStack.size)
     }
 
     override fun <T : Any> navigate(nav: T) {
@@ -178,19 +183,77 @@ internal class Navigation3Actions(private val navBackStack: SnapshotStateList<Na
     }
 
     override fun <T : Any> homeScreenNavigate(nav: T) {
-        navigate(nav)
+        //navigate(nav)
+        if (nav is NavKey) navBackStack.addTopLevel(nav)
     }
 
     override fun <T : Any> clearBackStack(nav: T) {
         if (nav is NavKey) {
             navBackStack.add(nav)
-            val size = navBackStack.size - 1
+            val size = navBackStack.backStack.size - 1
             repeat(size) {
-                if (navBackStack.size > 1) {
-                    navBackStack.removeFirstOrNull()
+                if (navBackStack.backStack.size > 1) {
+                    navBackStack.backStack.removeFirstOrNull()
                 }
             }
             //navBackStack.add(nav)
         }
+    }
+
+    @Composable
+    override fun currentDestination(screen: Screen): Boolean {
+        //return navBackStack.lastOrNull() == screen
+        return screen == navBackStack.topLevelKey
+    }
+}
+
+class TopLevelBackStack<T : Any>(startKey: T) {
+
+    // Maintain a stack for each top level route
+    private var topLevelStacks: LinkedHashMap<T, SnapshotStateList<T>> = linkedMapOf(
+        startKey to mutableStateListOf(startKey)
+    )
+
+    // Expose the current top level route for consumers
+    var topLevelKey by mutableStateOf(startKey)
+        private set
+
+    // Expose the back stack so it can be rendered by the NavDisplay
+    val backStack = mutableStateListOf(startKey)
+
+    private fun updateBackStack() =
+        backStack.apply {
+            clear()
+            addAll(topLevelStacks.flatMap { it.value })
+        }
+
+    fun addTopLevel(key: T) {
+
+        // If the top level doesn't exist, add it
+        if (topLevelStacks[key] == null) {
+            topLevelStacks.put(key, mutableStateListOf(key))
+        } else {
+            // Otherwise just move it to the end of the stacks
+            topLevelStacks.apply {
+                remove(key)?.let {
+                    put(key, it)
+                }
+            }
+        }
+        topLevelKey = key
+        updateBackStack()
+    }
+
+    fun add(key: T) {
+        topLevelStacks[topLevelKey]?.add(key)
+        updateBackStack()
+    }
+
+    fun removeLast() {
+        val removedKey = topLevelStacks[topLevelKey]?.removeLastOrNull()
+        // If the removed key was a top level key, remove the associated top level stack
+        topLevelStacks.remove(removedKey)
+        topLevelKey = topLevelStacks.keys.last()
+        updateBackStack()
     }
 }

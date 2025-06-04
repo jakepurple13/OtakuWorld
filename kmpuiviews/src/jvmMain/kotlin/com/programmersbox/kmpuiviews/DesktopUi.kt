@@ -20,7 +20,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -44,6 +43,7 @@ import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navGraph
+import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -125,7 +125,7 @@ fun ApplicationScope.BaseDesktopUi(
                     Column(modifier = Modifier.fillMaxSize()) {
                         KmpLocalCompositionSetup(
                             navController,
-                            remember { mutableStateListOf() }
+                            remember { TopLevelBackStack(Screen.RecentScreen) }
                         ) {
                             CompositionLocalProvider(
                                 LocalNavHostPadding provides PaddingValues()

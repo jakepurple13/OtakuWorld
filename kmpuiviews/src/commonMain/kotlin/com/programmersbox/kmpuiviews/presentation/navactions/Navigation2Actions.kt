@@ -1,8 +1,15 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.UriHandler
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.customUriHandler
@@ -195,4 +202,21 @@ class Navigation2Actions(
             restoreState = true
         }
     }
+
+    @Composable
+    override fun currentDestination(screen: Screen): Boolean {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val d = navBackStackEntry?.destination
+        return remember {
+            derivedStateOf {
+                d?.isTopLevelDestinationInHierarchy(screen) == true
+            }
+        }.value
+    }
+
+    private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: Screen) = isTopLevelDestinationInHierarchy(destination.route)
+
+    private fun NavDestination?.isTopLevelDestinationInHierarchy(destination: String) = this?.hierarchy?.any {
+        it.route?.contains(destination, true) == true
+    } == true
 }

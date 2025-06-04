@@ -30,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -71,7 +70,6 @@ fun BoxScope.MultipleActions(
     state: MultipleBarState,
     middleNavItem: com.programmersbox.datastore.MiddleNavigationAction,
     multipleActions: com.programmersbox.datastore.MiddleMultipleActions,
-    currentDestination: NavDestination?,
     navigationActions: NavigationActions,
     modifier: Modifier = Modifier,
 ) {
@@ -81,7 +79,6 @@ fun BoxScope.MultipleActions(
             state = state,
             leadingContent = {
                 multipleActions.startAction.item?.ScreenBottomItem(
-                    currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
                         navigationActions.homeScreenNavigate(it.screen)
@@ -90,7 +87,6 @@ fun BoxScope.MultipleActions(
             },
             trailingContent = {
                 multipleActions.endAction.item?.ScreenBottomItem(
-                    currentDestination = currentDestination,
                     onClick = {
                         scope.launch { if (state.hideOnClick) state.hide() }
                         navigationActions.homeScreenNavigate(it.screen)

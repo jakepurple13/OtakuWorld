@@ -26,6 +26,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -88,16 +89,16 @@ val MiddleNavigationAction.item: MiddleNavigationItem?
 @Composable
 fun MiddleNavigationItem.ScreenBottomItem(
     rowScope: RowScope,
-    currentDestination: NavDestination?,
     onClick: (MiddleNavigationItem) -> Unit,
     modifier: Modifier = Modifier,
     colors: NavigationBarItemColors = NavigationBarItemDefaults.colors(),
 ) {
+    val navActions = LocalNavActions.current
     with(rowScope) {
         NavigationBarItem(
-            icon = { Icon(icon(currentDestination.isTopLevelDestinationInHierarchy(screen)), null) },
+            icon = { Icon(icon(navActions.currentDestination(screen)), null) },
             label = { Text(stringResource(label)) },
-            selected = currentDestination.isTopLevelDestinationInHierarchy(screen),
+            selected = navActions.currentDestination(screen),
             colors = colors,
             onClick = { onClick(this@ScreenBottomItem) },
             modifier = modifier
@@ -107,20 +108,19 @@ fun MiddleNavigationItem.ScreenBottomItem(
 
 @Composable
 fun MiddleNavigationItem.ScreenBottomItem(
-    currentDestination: NavDestination?,
     onClick: (MiddleNavigationItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val navActions = LocalNavActions.current
     IconButton(
         onClick = { onClick(this) },
         modifier = modifier
-    ) { Icon(icon(currentDestination.isTopLevelDestinationInHierarchy(screen)), null) }
+    ) { Icon(icon(navActions.currentDestination(screen)), null) }
 }
 
 @Composable
 fun MiddleNavigationAction.ScreenBottomItem(
     rowScope: RowScope,
-    currentDestination: NavDestination?,
     modifier: Modifier = Modifier,
     onClick: (MiddleNavigationItem) -> Unit,
     colors: NavigationBarItemColors = NavigationBarItemDefaults.colors(),
@@ -139,7 +139,6 @@ fun MiddleNavigationAction.ScreenBottomItem(
     } else {
         item?.ScreenBottomItem(
             rowScope = rowScope,
-            currentDestination = currentDestination,
             onClick = onClick,
             modifier = modifier,
             colors = colors
