@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -266,6 +268,7 @@ fun ScanQrCode(
                     windowInsets = WindowInsets(0.dp),
                 )
             },
+            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars)
         ) { padding ->
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -378,31 +381,31 @@ fun ScanQrCode(
                         },
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Save for later") }
-                }
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            qrCodeInfo?.let {
-                                info.toSourceByApiServiceName(it.apiService)
-                                    ?.apiService
-                                    ?.getSourceByUrlFlow(it.url)
-                                    ?.dispatchIo()
-                                    ?.onStart { showLoadingDialog = true }
-                                    ?.catch {
-                                        showLoadingDialog = false
-                                    }
-                                    ?.onEach { m ->
-                                        showLoadingDialog = false
-                                        navController.details(m)
-                                    }
-                                    ?.collect()
+                } else {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                qrCodeInfo?.let {
+                                    info.toSourceByApiServiceName(it.apiService)
+                                        ?.apiService
+                                        ?.getSourceByUrlFlow(it.url)
+                                        ?.dispatchIo()
+                                        ?.onStart { showLoadingDialog = true }
+                                        ?.catch {
+                                            showLoadingDialog = false
+                                        }
+                                        ?.onEach { m ->
+                                            showLoadingDialog = false
+                                            navController.details(m)
+                                        }
+                                        ?.collect()
+                                }
                             }
-                        }
-                    },
-                    enabled = qrCodeInfo != null && source != null,
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Open") }
+                        },
+                        enabled = qrCodeInfo != null && source != null,
+                        modifier = Modifier.fillMaxWidth(.75f)
+                    ) { Text("Open") }
+                }
             }
         }
     }
