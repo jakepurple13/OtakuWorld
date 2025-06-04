@@ -63,7 +63,7 @@ actual class BiometricPrompting(
 actual fun rememberBiometricPrompting(): BiometricPrompting {
     val context = LocalContext.current
     val biometricPrompt = remember(context) {
-        BiometricPrompting(context.findActivity())
+        BiometricPrompting(context)
     }
     return biometricPrompt
 }
