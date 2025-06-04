@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.navigation
+package com.programmersbox.uiviews.presentation.navigation.strategy
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Publish
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -134,6 +138,7 @@ fun MoreSettingsScreen(
             item {
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(Res.string.export_favorites)) },
+                    settingIcon = { Icon(Icons.Default.Publish, null) },
                     modifier = Modifier.clickable(
                         enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                         indication = ripple(),
@@ -145,6 +150,7 @@ fun MoreSettingsScreen(
             item {
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(Res.string.import_favorites)) },
+                    settingIcon = { Icon(Icons.Default.Download, null) },
                     modifier = Modifier.clickable(
                         enabled = viewModel.importExportListStatus !is ImportExportListStatus.Loading,
                         indication = ripple(),
@@ -156,6 +162,7 @@ fun MoreSettingsScreen(
             item {
                 PreferenceSetting(
                     settingTitle = { Text("Sync Cloud To Local Favorites") },
+                    settingIcon = { Icon(Icons.Default.Sync, null) },
                     summaryValue = {
                         Column {
                             Text("Syncs favorites from the cloud to the local database")
@@ -189,6 +196,7 @@ fun MoreSettingsScreen(
 
                 PreferenceSetting(
                     settingTitle = { Text("Sync Local To Cloud Favorites") },
+                    settingIcon = { Icon(Icons.Default.CloudSync, null) },
                     summaryValue = {
                         Column {
                             Text("Syncs favorites from the local database to the cloud")
@@ -239,6 +247,7 @@ fun MoreSettingsScreen(
             item {
                 PreferenceSetting(
                     settingTitle = { Text("Export All Lists") },
+                    settingIcon = { Icon(Icons.Default.Publish, null) },
                     modifier = Modifier.clickable(
                         enabled = true,
                         indication = ripple(),
@@ -265,6 +274,7 @@ fun MoreSettingsScreen(
 
                 PreferenceSetting(
                     settingTitle = { Text("Export Lists") },
+                    settingIcon = { Icon(Icons.Default.Publish, null) },
                     modifier = Modifier.clickable(
                         enabled = true,
                         indication = ripple(),
@@ -276,6 +286,7 @@ fun MoreSettingsScreen(
             item {
                 PreferenceSetting(
                     settingTitle = { Text("Import List") },
+                    settingIcon = { Icon(Icons.Default.Download, null) },
                     modifier = Modifier.clickable(
                         enabled = true,
                         indication = ripple(),

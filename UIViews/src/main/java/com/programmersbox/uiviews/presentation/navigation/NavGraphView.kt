@@ -27,6 +27,8 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.USE_NAV3
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.navigation.strategy.DialogStrategy
+import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.utils.NotificationLogo
 
 @Composable

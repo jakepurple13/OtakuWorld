@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.navigation
+package com.programmersbox.uiviews.presentation.navigation.strategy
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -89,7 +89,7 @@ class TwoPaneSceneStrategy<T : Any> : SceneStrategy<T> {
                 previousEntries = entries.dropLast(1),
                 firstEntry = firstEntry,
                 secondEntry = secondEntry,
-                onBack = onBack
+                onBack = onBack,
             )
         } else {
             null

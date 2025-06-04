@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -183,7 +184,9 @@ fun ThemeSetting(
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxWidth(),
         ) {
             ThemeColor.entries
                 //TODO: For later

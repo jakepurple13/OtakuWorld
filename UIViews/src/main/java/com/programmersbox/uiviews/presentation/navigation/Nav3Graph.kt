@@ -40,6 +40,8 @@ import com.programmersbox.uiviews.presentation.history.HistoryUi
 import com.programmersbox.uiviews.presentation.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
+import com.programmersbox.uiviews.presentation.navigation.strategy.DialogScene
+import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.recent.RecentView
 import com.programmersbox.uiviews.presentation.settings.GeneralSettings
@@ -284,3 +286,12 @@ private inline fun <reified T : Any> EntryProviderBuilder<*>.detailEntry(
 ) = entry<T>(
     metadata = ListDetailSceneStrategy.detailPane()
 ) { content(it) }
+
+/*
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+private inline fun <reified T : Any> EntryProviderBuilder<*>.animatedEntry(
+    metadata: Map<String, Any> = emptyMap(),
+    noinline content: @Composable (T) -> Unit,
+) = entry<T>(
+    metadata = ListDetailSceneStrategy.detailPane()
+) { CompositionLocalProvider(LocalNavigationAnimatedScope provides this) { content(it) } }*/

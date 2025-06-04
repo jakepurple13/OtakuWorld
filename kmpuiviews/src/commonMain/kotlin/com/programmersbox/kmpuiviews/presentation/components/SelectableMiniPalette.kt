@@ -82,7 +82,7 @@ fun ThemeItem(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.inverseOnSurface,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
