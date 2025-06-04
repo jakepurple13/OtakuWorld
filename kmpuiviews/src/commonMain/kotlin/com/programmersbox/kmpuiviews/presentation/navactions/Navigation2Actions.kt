@@ -207,7 +207,7 @@ class Navigation2Actions(
     override fun currentDestination(screen: Screen): Boolean {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val d = navBackStackEntry?.destination
-        return remember {
+        return remember(navBackStackEntry) {
             derivedStateOf {
                 d?.isTopLevelDestinationInHierarchy(screen) == true
             }
