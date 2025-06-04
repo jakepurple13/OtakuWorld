@@ -28,7 +28,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2025.05.01")
+            from("androidx.gradle:gradle-version-catalog:2025.06.00")
         }
     }
 }

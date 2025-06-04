@@ -115,7 +115,7 @@ kotlin {
                 implementation(libs.scanner)
 
                 implementation(libs.multiplatform.lifecycle.runtime.compose)
-                implementation("androidx.navigationevent:navigationevent:1.0.0-alpha01")
+                implementation("androidx.navigationevent:navigationevent:1.0.0-alpha02")
                 implementation(libs.androidx.navigation3.runtime)
 
                 /*implementation(libs.androidx.navigation3.runtime)
