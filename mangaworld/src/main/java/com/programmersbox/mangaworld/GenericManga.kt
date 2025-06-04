@@ -41,6 +41,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
@@ -451,7 +452,7 @@ class GenericManga(
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
         entry<ReadViewModel.MangaReader> {
             trackScreen("mangaReader")
             ReadView(
@@ -460,7 +461,7 @@ class GenericManga(
         }
     }
 
-    override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
+    override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
         entry<DownloadRoute> {
             trackScreen(DownloadRoute.toString())
             DownloadScreen()

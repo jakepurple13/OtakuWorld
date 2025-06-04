@@ -33,6 +33,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
@@ -205,10 +206,10 @@ class GenericNovel(
         }
     }
 
-    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
         //TODO: Need to make sure this works
-        entry(
-            ReadViewModel.NovelReaderRoute,
+        entry<NovelReader>(
+            //ReadViewModel.NovelReaderRoute,
             /*metadata = mapOf(
                 "currentChapter",
                "novelTitle",

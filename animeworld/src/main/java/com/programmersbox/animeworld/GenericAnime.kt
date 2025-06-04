@@ -71,6 +71,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -83,7 +84,6 @@ import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
-import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
@@ -574,14 +574,14 @@ class GenericAnime(
         }
     }
 
-    override fun EntryProviderBuilder<Any>.globalNav3Setup() {
+    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
         entry<VideoScreen> {
             trackScreen("video_player")
             VideoPlayerUi(it)
         }
     }
 
-    override fun EntryProviderBuilder<Any>.settingsNav3Setup() {
+    override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
         entry<VideoViewerRoute> {
             trackScreen(VideoViewerRoute.toString())
             ViewVideoScreen()

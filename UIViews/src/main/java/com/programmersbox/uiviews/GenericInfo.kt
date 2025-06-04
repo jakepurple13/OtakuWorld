@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import androidx.navigation.NavType
 import androidx.navigation.serialization.generateRouteWithArgs
 import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -45,6 +46,6 @@ interface GenericInfo : KmpGenericInfo {
 
     fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
 
-    fun EntryProviderBuilder<Any>.globalNav3Setup() {}
-    fun EntryProviderBuilder<Any>.settingsNav3Setup() {}
+    fun EntryProviderBuilder<NavKey>.globalNav3Setup() {}
+    fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {}
 }

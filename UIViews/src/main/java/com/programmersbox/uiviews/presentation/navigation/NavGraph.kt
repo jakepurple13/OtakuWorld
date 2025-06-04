@@ -17,6 +17,7 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -46,7 +47,6 @@ import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
 import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.presentation.history.HistoryUi
-import com.programmersbox.uiviews.presentation.lists.NoDetailSelected
 import com.programmersbox.uiviews.presentation.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
@@ -438,7 +438,7 @@ fun entryGraph(
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
     navigationActions: NavigationActions,
-) = entryProvider<Any> {
+) = entryProvider<NavKey> {
     entry<Screen.RecentScreen> { RecentView() }
     entry<Screen.DetailsScreen.Details> {
         DetailsScreen(
@@ -487,7 +487,7 @@ fun entryGraph(
 }
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
-private fun EntryProviderBuilder<Any>.settingsEntryGraph(
+private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     customPreferences: ComposeSettingsDsl,
     notificationLogo: NotificationLogo,
     windowSize: WindowSizeClass,
@@ -495,10 +495,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
     navigationActions: NavigationActions,
 ) {
     entry<Screen.Settings>(
-        metadata = ListDetailSceneStrategy.listPane {
-            //TODO: Need to add info here
-            NoDetailSelected()
-        }
+        metadata = TwoPaneScene.twoPane()
     ) {
         SettingScreen(
             composeSettingsDsl = customPreferences,
@@ -521,24 +518,24 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
         )
     }
 
-    detailEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
+    twoPaneEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
 
-    detailEntry<Screen.OrderScreen> {
+    twoPaneEntry<Screen.OrderScreen> {
         trackScreen(Screen.OrderScreen)
         SourceOrderScreen()
     }
 
-    detailEntry<Screen.NotificationsSettings> {
+    twoPaneEntry<Screen.NotificationsSettings> {
         trackScreen(Screen.NotificationsSettings)
         NotificationSettings()
     }
 
-    detailEntry<Screen.GeneralSettings> {
+    twoPaneEntry<Screen.GeneralSettings> {
         trackScreen(Screen.GeneralSettings)
         GeneralSettings(customPreferences.generalSettings)
     }
 
-    detailEntry<Screen.MoreInfoSettings> {
+    twoPaneEntry<Screen.MoreInfoSettings> {
         trackScreen(Screen.MoreInfoSettings)
         InfoSettings(
             usedLibraryClick = navigationActions::about,
@@ -549,17 +546,17 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
 
     entry<Screen.PrereleaseScreen> { PrereleaseScreen() }
 
-    detailEntry<Screen.OtherSettings> {
+    twoPaneEntry<Screen.OtherSettings> {
         trackScreen(Screen.OtherSettings)
         PlaySettings(customPreferences.playerSettings)
     }
 
-    detailEntry<Screen.MoreSettings> {
+    twoPaneEntry<Screen.MoreSettings> {
         trackScreen(Screen.MoreSettings)
         MoreSettingsScreen()
     }
 
-    detailEntry<Screen.HistoryScreen> {
+    twoPaneEntry<Screen.HistoryScreen> {
         trackScreen(Screen.HistoryScreen)
         HistoryUi()
     }
@@ -571,7 +568,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
         )
     }
 
-    detailEntry<Screen.AboutScreen> {
+    twoPaneEntry<Screen.AboutScreen> {
         trackScreen(Screen.AboutScreen)
         AboutLibrariesScreen()
     }
@@ -586,15 +583,13 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
     }
 
     entry<Screen.CustomListScreen>(
-        metadata = ListDetailSceneStrategy.listPane { NoDetailSelected() }
+        metadata = TwoPaneScene.twoPane()
     ) {
         trackScreen(Screen.CustomListScreen)
         OtakuListView()
     }
 
-    entry<Screen.CustomListScreen.CustomListItem>(
-        metadata = ListDetailSceneStrategy.detailPane()
-    ) {
+    twoPaneEntry<Screen.CustomListScreen.CustomListItem> {
         trackScreen(Screen.CustomListScreen)
         OtakuCustomListScreenStandAlone(it)
     }
@@ -616,7 +611,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
         ImportFullListScreen()
     }
 
-    detailEntry<Screen.NotificationScreen> {
+    twoPaneEntry<Screen.NotificationScreen> {
         trackScreen(Screen.NotificationScreen)
         NotificationScreen()
     }
@@ -626,7 +621,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
         ExtensionList()
     }
 
-    detailEntry<Screen.AccountInfo> {
+    twoPaneEntry<Screen.AccountInfo> {
         AccountInfoScreen(
             profileUrl = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString(),
         )
@@ -650,7 +645,7 @@ private fun EntryProviderBuilder<Any>.settingsEntryGraph(
 private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    metadata = TwoPaneScene.Companion.twoPane()
+    metadata = TwoPaneScene.twoPaneDetails()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)

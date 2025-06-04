@@ -1,8 +1,10 @@
 package com.programmersbox.uiviews.presentation.navigation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
@@ -13,14 +15,19 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.navEntryDecorator
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.USE_NAV3
+import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.presentation.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.utils.NotificationLogo
 
 @Composable
@@ -58,7 +65,7 @@ fun NavigationGraph(
 }
 
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun Nav3(
     backStack: NavBackStack,
@@ -68,10 +75,23 @@ private fun Nav3(
     customPreferences: ComposeSettingsDsl,
     notificationLogo: NotificationLogo,
 ) {
+    val sharedEntryInSceneNavEntryDecorator = navEntryDecorator { entry ->
+        with(LocalSharedElementScope.current!!) {
+            Box(
+                Modifier.sharedElement(
+                    rememberSharedContentState(entry.key),
+                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                ),
+            ) {
+                entry.content(entry.key)
+            }
+        }
+    }
+
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
-        sceneStrategy = rememberListDetailSceneStrategy(),
+        sceneStrategy = rememberListDetailSceneStrategy<NavKey>() then TwoPaneSceneStrategy<NavKey>(),
         onBack = { count ->
             repeat(count) {
                 if (backStack.isNotEmpty()) {
@@ -80,6 +100,7 @@ private fun Nav3(
             }
         },
         entryDecorators = listOf(
+            sharedEntryInSceneNavEntryDecorator,
             rememberSceneSetupNavEntryDecorator(),
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()

@@ -87,6 +87,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.gsonutils.fromJson
@@ -117,9 +118,20 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+
+//TODO: Need to change this to be more similar to the Manga Reader
+
+@Serializable
+data class NovelReader(
+    val title: String,
+    val url: String,
+    val infoUrl: String,
+    val currentChapter: KmpChapterModel,
+) : NavKey
 
 class ReadViewModel(
     activity: Activity?,
@@ -227,7 +239,13 @@ class ReadViewModel(
 fun NovelReader(
     activity: Activity? = LocalActivity.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) },
+    readVm: ReadViewModel = viewModel {
+        ReadViewModel(
+            activity = activity,
+            handle = createSavedStateHandle(),
+            genericInfo = genericInfo
+        )
+    },
 ) {
     HideSystemBarsWhileOnScreen()
     HideNavBarWhileOnScreen()

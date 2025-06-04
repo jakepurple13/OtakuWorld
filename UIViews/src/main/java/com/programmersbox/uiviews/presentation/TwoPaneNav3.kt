@@ -41,6 +41,7 @@ class TwoPaneScene<T : Any>(
          * in a two-pane layout.
          */
         fun twoPane() = mapOf(TWO_PANE_KEY to true)
+        fun twoPaneDetails() = mapOf(TWO_PANE_KEY to false)
     }
 }
 
@@ -68,11 +69,12 @@ class TwoPaneSceneStrategy<T : Any> : SceneStrategy<T> {
 
         // Condition 2: Only return a Scene if there are two entries, and both have declared
         // they can be displayed in a two pane scene.
-        return if (lastTwoEntries.size == 2 &&
+        return if (
+            lastTwoEntries.size >= 2 &&
             lastTwoEntries.all { it.metadata.containsKey(TwoPaneScene.TWO_PANE_KEY) }
         ) {
-            val firstEntry = lastTwoEntries.first()
-            val secondEntry = lastTwoEntries.last()
+            val firstEntry = entries.last { it.metadata[TwoPaneScene.TWO_PANE_KEY] == true }
+            val secondEntry = lastTwoEntries.last { it.metadata[TwoPaneScene.TWO_PANE_KEY] == false }
 
             // The scene key must uniquely represent the state of the scene.
             val sceneKey = Pair(firstEntry.key, secondEntry.key)

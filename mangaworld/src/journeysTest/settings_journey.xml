@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><!-- @formatter:off -->
+<journey name="Settings Journey">
+    <description>A Journey that tests additional settings</description>
+    <actions>
+        <action>Press on settings and scroll all the way down</action><action>Press on notifications, then go back</action><action>tap on General</action><action>tap on Theme and change the theme and verify that the theme changed. Do this for all three settings. Then make sure that System is set</action><action>tap on Theme Color and change the theme color, verifying that the theme color has changed for each setting. Then make sure Dynamic is set</action>
+    </actions>
+</journey>
