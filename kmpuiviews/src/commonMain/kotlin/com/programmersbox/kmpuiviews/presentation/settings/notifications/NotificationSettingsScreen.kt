@@ -1,14 +1,24 @@
 package com.programmersbox.kmpuiviews.presentation.settings.notifications
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.PublishedWithChanges
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -110,6 +120,7 @@ fun NotificationSettings(
                     PreferenceSetting(
                         settingTitle = { Text(stringResource(Res.string.delete_saved_notifications_title)) },
                         summaryValue = { Text(stringResource(Res.string.delete_notifications_summary)) },
+                        settingIcon = { Icon(Icons.Default.Delete, null) },
                         modifier = Modifier.clickable(
                             indication = ripple(),
                             interactionSource = null
@@ -124,6 +135,7 @@ fun NotificationSettings(
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(Res.string.last_update_check_time)) },
                     summaryValue = { Text(viewModel.time) },
+                    settingIcon = { Icon(Icons.Default.PublishedWithChanges, null) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null,
@@ -153,6 +165,15 @@ fun NotificationSettings(
 
                 SwitchSetting(
                     settingTitle = { Text(stringResource(Res.string.check_for_periodic_updates)) },
+                    settingIcon = {
+                        Crossfade(viewModel.canCheck) { target ->
+                            if (target) {
+                                Icon(Icons.Default.NotificationsActive, null)
+                            } else {
+                                Icon(Icons.Default.NotificationsOff, null)
+                            }
+                        }
+                    },
                     value = viewModel.canCheck,
                     updateValue = {
                         if (!it) {
@@ -195,14 +216,26 @@ fun NotificationSettings(
                         updateValue = { sliderValue = it },
                         range = 1f..24f,
                         steps = 23,
+                        settingIcon = { Icon(Icons.Default.Schedule, null) },
                         onValueChangedFinished = { viewModel.updateHourCheck(sliderValue.toLong()) }
                     )
+                }
+
+                workInfo.forEach {
+                    item {
+                        WorkInfoItem(
+                            workInfo = it,
+                            title = "Scheduled Check:",
+                            dateFormat = viewModel.dateTimeFormatter
+                        )
+                    }
                 }
 
                 item {
                     PreferenceSetting(
                         settingTitle = { Text(stringResource(Res.string.clear_update_queue)) },
                         summaryValue = { Text(stringResource(Res.string.clear_update_queue_summary)) },
+                        settingIcon = { Icon(Icons.Default.DeleteSweep, null) },
                         modifier = Modifier
                             .alpha(if (viewModel.canCheck) 1f else .38f)
                             .clickable(
@@ -219,16 +252,6 @@ fun NotificationSettings(
                             }
                     )
                 }
-
-                workInfo.forEach {
-                    item {
-                        WorkInfoItem(
-                            workInfo = it,
-                            title = "Scheduled Check:",
-                            dateFormat = viewModel.dateTimeFormatter
-                        )
-                    }
-                }
             }
         }
 
@@ -236,6 +259,7 @@ fun NotificationSettings(
             item {
                 SwitchSetting(
                     settingTitle = { Text("Notify on Boot") },
+                    settingIcon = { Icon(Icons.Default.PowerSettingsNew, null) },
                     value = viewModel.notifyOnBoot.rememberPreference().value,
                     updateValue = { scope.launch { viewModel.notifyOnBoot.set(it) } }
                 )
