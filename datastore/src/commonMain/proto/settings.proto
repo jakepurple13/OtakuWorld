@@ -23,6 +23,7 @@ message Settings {
   bool showExpressiveness = 19;
   bool notifyOnReboot = 20;
   bool hasMigrated = 21;
+  MediaCheckerSettings mediaCheckerSettings = 22;
 }
 
 enum SystemThemeMode {
@@ -65,4 +66,18 @@ enum MiddleNavigationAction {
 message MiddleMultipleActions {
   MiddleNavigationAction startAction = 1;
   MiddleNavigationAction endAction = 2;
+}
+
+message MediaCheckerSettings {
+  bool shouldRun = 1;
+  MediaCheckerNetworkType networkType = 2;
+  bool requiresCharging = 3;
+  bool requiresBatteryNotLow = 4;
+  int64 interval = 5;
+}
+
+enum MediaCheckerNetworkType {
+  Connected = 0;
+  Metered = 1;
+  Unmetered = 2;
 }

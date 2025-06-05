@@ -64,6 +64,13 @@ class SettingsSerializer : GenericSerializer<Settings> {
                 startAction = MiddleNavigationAction.All,
                 endAction = MiddleNavigationAction.Notifications,
             ),
+            mediaCheckerSettings = MediaCheckerSettings(
+                shouldRun = true,
+                networkType = MediaCheckerNetworkType.Connected,
+                requiresCharging = false,
+                requiresBatteryNotLow = false,
+                interval = 1,
+            )
         )
 
     override val parseFrom: (input: BufferedSource) -> Settings get() = Settings.ADAPTER::decode
@@ -208,6 +215,19 @@ class NewSettingsHandling(
         key = { it.hasMigrated },
         update = { copy(hasMigrated = it) },
         defaultValue = false
+    )
+
+    val mediaCheckerSettings = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.mediaCheckerSettings },
+        update = { copy(mediaCheckerSettings = it) },
+        defaultValue = MediaCheckerSettings(
+            shouldRun = true,
+            networkType = MediaCheckerNetworkType.Connected,
+            requiresCharging = false,
+            requiresBatteryNotLow = false,
+            interval = 1,
+        )
     )
 }
 

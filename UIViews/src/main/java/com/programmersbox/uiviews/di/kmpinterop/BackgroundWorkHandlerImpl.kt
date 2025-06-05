@@ -11,7 +11,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkQuery
 import androidx.work.workDataOf
-import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.MediaCheckerNetworkType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
@@ -22,10 +23,11 @@ import com.programmersbox.uiviews.checkers.CloudToLocalSyncWorker
 import com.programmersbox.uiviews.checkers.LocalToCloudSyncWorker
 import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import com.programmersbox.uiviews.checkers.UpdateFlowWorker
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -33,7 +35,7 @@ import java.util.concurrent.TimeUnit
 
 class BackgroundWorkHandlerImpl(
     context: Context,
-    private val dataStoreHandling: DataStoreHandling,
+    private val settingsHandling: NewSettingsHandling,
 ) : BackgroundWorkHandler {
 
     private val workManager by lazy { WorkManager.getInstance(context) }
@@ -116,6 +118,7 @@ class BackgroundWorkHandlerImpl(
         )
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun setupPeriodicCheckers() {
         AppCleanupWorker.setupWorker(workManager)
 
@@ -161,7 +164,43 @@ class BackgroundWorkHandlerImpl(
                 .build()
         )
 
-        combine(
+        settingsHandling
+            .mediaCheckerSettings
+            .asFlow()
+            .filterNotNull()
+            .onEach {
+                if (it.shouldRun) {
+                    workManager.enqueueUniquePeriodicWork(
+                        "updateFlowChecks",
+                        ExistingPeriodicWorkPolicy.UPDATE,
+                        PeriodicWorkRequestBuilder<UpdateFlowWorker>(
+                            it.interval, TimeUnit.HOURS,
+                            5, TimeUnit.MINUTES
+                        )
+                            .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
+                            .setConstraints(
+                                Constraints.Builder()
+                                    .setRequiredNetworkType(
+                                        when (it.networkType) {
+                                            MediaCheckerNetworkType.Connected -> NetworkType.CONNECTED
+                                            MediaCheckerNetworkType.Metered -> NetworkType.METERED
+                                            MediaCheckerNetworkType.Unmetered -> NetworkType.UNMETERED
+                                        }
+                                    )
+                                    .setRequiresCharging(it.requiresCharging)
+                                    .setRequiresBatteryNotLow(it.requiresBatteryNotLow)
+                                    .build()
+                            )
+                            .setInitialDelay(10, TimeUnit.SECONDS)
+                            .build()
+                    )
+                } else {
+                    workManager.cancelUniqueWork("updateFlowChecks")
+                }
+            }
+            .launchIn(GlobalScope)
+
+        /*combine(
             dataStoreHandling
                 .shouldCheck
                 .asFlow()
@@ -184,7 +223,11 @@ class BackgroundWorkHandlerImpl(
                             .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
                             .setConstraints(
                                 Constraints.Builder()
+                                    // metered is mobile data
+                                    // unmetered is wifi only
                                     .setRequiredNetworkType(NetworkType.CONNECTED)
+                                    .setRequiresCharging(false) //default is false
+                                    .setRequiresBatteryNotLow(false) //default is false
                                     .build()
                             )
                             .setInitialDelay(10, TimeUnit.SECONDS)
@@ -194,7 +237,7 @@ class BackgroundWorkHandlerImpl(
                     workManager.cancelUniqueWork("updateFlowChecks")
                 }
             }
-            .launchIn(GlobalScope)
+            .launchIn(GlobalScope)*/
 
         /*dataStoreHandling
             .shouldCheck

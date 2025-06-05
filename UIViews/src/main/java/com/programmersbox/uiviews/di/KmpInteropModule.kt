@@ -50,7 +50,7 @@ val kmpInterop = module {
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
 
-    single<BackgroundWorkHandler> { BackgroundWorkHandlerImpl(get(), get()) }
+    singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
 }
 
 class TranslationModelHandlerImpl : TranslationModelHandler {

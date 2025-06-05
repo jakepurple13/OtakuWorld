@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.MediaCheckerNetworkType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
@@ -17,6 +18,7 @@ import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -24,7 +26,7 @@ import kotlinx.coroutines.launch
 
 class NotificationSettingsViewModel(
     dao: ItemDao,
-    private val dataStoreHandling: DataStoreHandling,
+    dataStoreHandling: DataStoreHandling,
     settingsHandling: NewSettingsHandling,
     dateTimeFormatHandler: DateTimeFormatHandler,
     workRepository: WorkRepository,
@@ -41,6 +43,8 @@ class NotificationSettingsViewModel(
 
     val notifyOnBoot = settingsHandling.notifyOnReboot
 
+    val mediaCheckerSettings = settingsHandling.mediaCheckerSettings
+
     val dateTimeFormatter by lazy {
         DateTimeFormatItem(dateTimeFormatHandler.is24HourTime())
     }
@@ -51,16 +55,13 @@ class NotificationSettingsViewModel(
             .onEach { savedNotifications = it }
             .launchIn(viewModelScope)
 
-        dataStoreHandling
-            .shouldCheck
+        mediaCheckerSettings
             .asFlow()
-            .onEach { canCheck = it }
-            .launchIn(viewModelScope)
-
-        dataStoreHandling
-            .updateHourCheck
-            .asFlow()
-            .onEach { updateHourCheck = it }
+            .filterNotNull()
+            .onEach {
+                canCheck = it.shouldRun
+                updateHourCheck = it.interval
+            }
             .launchIn(viewModelScope)
 
         combine(
@@ -79,11 +80,48 @@ class NotificationSettingsViewModel(
     }
 
     fun updateShouldCheck(value: Boolean) {
-        viewModelScope.launch { dataStoreHandling.shouldCheck.set(value) }
+        viewModelScope.launch {
+            mediaCheckerSettings
+                .get()
+                ?.copy(shouldRun = value)
+                ?.let { mediaCheckerSettings.set(it) }
+        }
     }
 
     fun updateHourCheck(value: Long) {
-        viewModelScope.launch { dataStoreHandling.updateHourCheck.set(value) }
+        viewModelScope.launch {
+            mediaCheckerSettings
+                .get()
+                ?.copy(interval = value)
+                ?.let { mediaCheckerSettings.set(it) }
+        }
+    }
+
+    fun updateNetworkType(value: MediaCheckerNetworkType) {
+        viewModelScope.launch {
+            mediaCheckerSettings
+                .get()
+                ?.copy(networkType = value)
+                ?.let { mediaCheckerSettings.set(it) }
+        }
+    }
+
+    fun updateRequiresCharging(value: Boolean) {
+        viewModelScope.launch {
+            mediaCheckerSettings
+                .get()
+                ?.copy(requiresCharging = value)
+                ?.let { mediaCheckerSettings.set(it) }
+        }
+    }
+
+    fun updateRequiresBatteryNotLow(value: Boolean) {
+        viewModelScope.launch {
+            mediaCheckerSettings
+                .get()
+                ?.copy(requiresBatteryNotLow = value)
+                ?.let { mediaCheckerSettings.set(it) }
+        }
     }
 
     fun cancelGroup() = notificationRepository.cancelGroup()

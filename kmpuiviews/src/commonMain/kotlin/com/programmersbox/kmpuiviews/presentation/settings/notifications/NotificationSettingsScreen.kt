@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Battery1Bar
+import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PublishedWithChanges
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,12 +35,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.datastore.MediaCheckerNetworkType
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
@@ -65,9 +71,10 @@ import otakuworld.kmpuiviews.generated.resources.deleted_notifications
 import otakuworld.kmpuiviews.generated.resources.last_update_check_time
 import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.notification_settings
+import otakuworld.kmpuiviews.generated.resources.ok
 import otakuworld.kmpuiviews.generated.resources.yes
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun NotificationSettings(
     dao: ItemDao = LocalItemDao.current,
@@ -78,6 +85,10 @@ fun NotificationSettings(
     val workInfo by viewModel
         .allWorkCheck
         .collectAsStateWithLifecycle(emptyList())
+
+    val mediaCheckerSettings by viewModel
+        .mediaCheckerSettings
+        .rememberPreference()
 
     SettingsScaffold(
         title = stringResource(Res.string.notification_settings),
@@ -203,54 +214,108 @@ fun NotificationSettings(
         }
 
         AnimatedVisibility(viewModel.canCheck) {
-            CategoryGroup {
-                item {
-                    var sliderValue by remember(viewModel.updateHourCheck) {
-                        mutableFloatStateOf(viewModel.updateHourCheck.toFloat())
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                CategoryGroup {
+                    item {
+                        ListSetting(
+                            value = mediaCheckerSettings?.networkType ?: MediaCheckerNetworkType.Connected,
+                            updateValue = { it, dialog ->
+                                viewModel.updateNetworkType(it)
+                                dialog.value = false
+                            },
+                            settingTitle = { Text("Network Type") },
+                            settingIcon = { Icon(Icons.Default.Wifi, null) },
+                            options = MediaCheckerNetworkType.entries.toList(),
+                            dialogTitle = { Text("Choose Network Type") },
+                            summaryValue = {
+                                Column {
+                                    Text((mediaCheckerSettings?.networkType ?: MediaCheckerNetworkType.Connected).toString())
+                                    Text("Default is Connected")
+                                }
+                            },
+                            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.ok)) } },
+                            viewText = {
+                                when (it) {
+                                    MediaCheckerNetworkType.Connected -> "Connected - It will run as long as you are connected to the internet"
+                                    MediaCheckerNetworkType.Metered -> "Metered - It will run only on mobile data"
+                                    MediaCheckerNetworkType.Unmetered -> "Unmetered - It will run only on wifi"
+                                }
+                            }
+                        )
                     }
 
-                    SliderSetting(
-                        settingTitle = { Text("Check Every ${viewModel.updateHourCheck} hours") },
-                        settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
-                        sliderValue = sliderValue,
-                        updateValue = { sliderValue = it },
-                        range = 1f..24f,
-                        steps = 23,
-                        settingIcon = { Icon(Icons.Default.Schedule, null) },
-                        onValueChangedFinished = { viewModel.updateHourCheck(sliderValue.toLong()) }
-                    )
-                }
-
-                workInfo.forEach {
                     item {
-                        WorkInfoItem(
-                            workInfo = it,
-                            title = "Scheduled Check:",
-                            dateFormat = viewModel.dateTimeFormatter
+                        var sliderValue by remember(viewModel.updateHourCheck) {
+                            mutableFloatStateOf(viewModel.updateHourCheck.toFloat())
+                        }
+
+                        SliderSetting(
+                            settingTitle = { Text("Check Every ${viewModel.updateHourCheck} hours") },
+                            settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
+                            sliderValue = sliderValue,
+                            updateValue = { sliderValue = it },
+                            range = 1f..24f,
+                            steps = 23,
+                            settingIcon = { Icon(Icons.Default.Schedule, null) },
+                            onValueChangedFinished = { viewModel.updateHourCheck(sliderValue.toLong()) }
+                        )
+                    }
+
+                    item {
+                        SwitchSetting(
+                            settingTitle = { Text("Only run when charging") },
+                            settingIcon = { Icon(Icons.Default.BatteryChargingFull, null) },
+                            summaryValue = { Text("Default is false") },
+                            value = mediaCheckerSettings?.requiresCharging == true,
+                            updateValue = { viewModel.updateRequiresCharging(it) }
+                        )
+                    }
+
+                    item {
+                        SwitchSetting(
+                            settingTitle = { Text("Don't run on low battery") },
+                            settingIcon = { Icon(Icons.Default.Battery1Bar, null) },
+                            summaryValue = { Text("Default is false") },
+                            value = mediaCheckerSettings?.requiresBatteryNotLow == true,
+                            updateValue = { viewModel.updateRequiresBatteryNotLow(it) }
                         )
                     }
                 }
 
-                item {
-                    PreferenceSetting(
-                        settingTitle = { Text(stringResource(Res.string.clear_update_queue)) },
-                        summaryValue = { Text(stringResource(Res.string.clear_update_queue_summary)) },
-                        settingIcon = { Icon(Icons.Default.DeleteSweep, null) },
-                        modifier = Modifier
-                            .alpha(if (viewModel.canCheck) 1f else .38f)
-                            .clickable(
-                                enabled = viewModel.canCheck,
-                                indication = ripple(),
-                                interactionSource = null
-                            ) {
-                                scope.launch {
-                                    viewModel.pruneWork()
-                                    viewModel.updateShouldCheck(!viewModel.canCheck)
-                                    viewModel.updateShouldCheck(!viewModel.canCheck)
-                                    snackbarHost.showSnackbar(getString(Res.string.cleared))
+                CategoryGroup {
+                    workInfo.forEach {
+                        item {
+                            WorkInfoItem(
+                                workInfo = it,
+                                title = "Scheduled Check:",
+                                dateFormat = viewModel.dateTimeFormatter
+                            )
+                        }
+                    }
+
+                    item {
+                        PreferenceSetting(
+                            settingTitle = { Text(stringResource(Res.string.clear_update_queue)) },
+                            summaryValue = { Text(stringResource(Res.string.clear_update_queue_summary)) },
+                            settingIcon = { Icon(Icons.Default.DeleteSweep, null) },
+                            modifier = Modifier
+                                .alpha(if (viewModel.canCheck) 1f else .38f)
+                                .clickable(
+                                    enabled = viewModel.canCheck,
+                                    indication = ripple(),
+                                    interactionSource = null
+                                ) {
+                                    scope.launch {
+                                        viewModel.pruneWork()
+                                        viewModel.updateShouldCheck(!viewModel.canCheck)
+                                        viewModel.updateShouldCheck(!viewModel.canCheck)
+                                        snackbarHost.showSnackbar(getString(Res.string.cleared))
+                                    }
                                 }
-                            }
-                    )
+                        )
+                    }
                 }
             }
         }
