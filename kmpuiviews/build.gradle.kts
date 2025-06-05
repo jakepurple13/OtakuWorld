@@ -111,7 +111,7 @@ kotlin {
                 implementation(libs.constraintlayout.compose.multiplatform)
                 implementation(libs.compose.constraintlayout.compose.multiplatform)
 
-                implementation(libs.qr.kit)
+                implementation("io.github.alexzhirkevich:qrose:1.0.1")
                 implementation(libs.scanner)
 
                 implementation(libs.multiplatform.lifecycle.runtime.compose)

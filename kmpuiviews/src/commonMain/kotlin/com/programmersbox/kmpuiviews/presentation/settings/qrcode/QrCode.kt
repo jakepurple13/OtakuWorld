@@ -55,6 +55,10 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.dispatchIo
+import io.github.alexzhirkevich.qrose.options.QrLogoPadding
+import io.github.alexzhirkevich.qrose.options.QrLogoShape
+import io.github.alexzhirkevich.qrose.options.circle
+import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.util.toImageBitmap
@@ -70,11 +74,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.publicvalue.multiplatform.qrcode.CameraPosition
 import org.publicvalue.multiplatform.qrcode.CodeType
 import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
-import qrgenerator.qrkitpainter.QrKitLogo
-import qrgenerator.qrkitpainter.QrKitLogoKitShape
-import qrgenerator.qrkitpainter.QrKitLogoPadding
-import qrgenerator.qrkitpainter.createCircle
-import qrgenerator.qrkitpainter.rememberQrKitPainter
 
 @Serializable
 data class QrCodeInfo(
@@ -120,15 +119,15 @@ fun ShareViaQrCode(
     var includeLogo by rememberUseLogoInQrCode()
     val qrCodeRepository = koinInject<QrCodeRepository>()
     val logoPainter = painterLogo()
-    val painter = rememberQrKitPainter(
+    val painter = rememberQrCodePainter(
         remember { Json.encodeToString(qrCodeInfo) }
     ) {
         if (includeLogo) {
-            logo = QrKitLogo(
-                painter = logoPainter,
-                padding = QrKitLogoPadding.Natural(.1f),
-                shape = QrKitLogoKitShape.createCircle()
-            )
+            logo {
+                painter = logoPainter
+                padding = QrLogoPadding.Natural(.1f)
+                shape = QrLogoShape.circle()
+            }
         }
     }
 
