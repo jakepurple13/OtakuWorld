@@ -140,17 +140,6 @@ fun MoreInfoScreen(
                     ) { navController.workerInfo() }
                 )
             }
-
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(Res.string.view_on_github)) },
-                    settingIcon = { Icon(Icons.Github, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
-                )
-            }
         }
 
         if (BuildKonfig.IS_PRERELEASE || shouldShowPrerelease) {
@@ -170,6 +159,17 @@ fun MoreInfoScreen(
         }
 
         CategoryGroup {
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(Res.string.view_on_github)) },
+                    settingIcon = { Icon(Icons.Github, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
+                )
+            }
+
             item {
                 PreferenceSetting(
                     settingTitle = { Text(stringResource(Res.string.join_discord)) },

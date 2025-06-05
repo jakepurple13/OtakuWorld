@@ -64,7 +64,7 @@ fun AccountInfoScreen(
     ) { p ->
         LazyColumn(
             contentPadding = p,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             item {

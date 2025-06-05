@@ -149,7 +149,7 @@ fun Screen.DetailsScreen.Details.toItemModel(
     ?.let {
         KmpItemModel(
             title = UrlEncoderUtil.decode(title),
-            description = UrlEncoderUtil.decode(description),
+            description = runCatching { UrlEncoderUtil.decode(description) }.getOrDefault(description),
             url = UrlEncoderUtil.decode(url),
             imageUrl = UrlEncoderUtil.decode(imageUrl),
             source = it
