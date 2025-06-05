@@ -219,7 +219,15 @@ class NewSettingsHandling(
 
     val mediaCheckerSettings = ProtoStoreHandler(
         preferences = preferences,
-        key = { it.mediaCheckerSettings },
+        key = {
+            it.mediaCheckerSettings ?: MediaCheckerSettings(
+                shouldRun = true,
+                networkType = MediaCheckerNetworkType.Connected,
+                requiresCharging = false,
+                requiresBatteryNotLow = false,
+                interval = 1,
+            )
+        },
         update = { copy(mediaCheckerSettings = it) },
         defaultValue = MediaCheckerSettings(
             shouldRun = true,

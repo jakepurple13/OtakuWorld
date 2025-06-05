@@ -114,7 +114,7 @@ internal fun GeneralContent(
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    mediaCheckerSettings = mediaCheckerSettings?.copy(shouldRun = false)
+                                    mediaCheckerSettings = mediaCheckerSettings.copy(shouldRun = false)
                                     showDialog = false
                                 }
                             ) { Text(stringResource(Res.string.yes)) }
@@ -125,24 +125,24 @@ internal fun GeneralContent(
 
                 SwitchSetting(
                     settingTitle = { Text(stringResource(Res.string.check_for_periodic_updates)) },
-                    value = mediaCheckerSettings?.shouldRun == true,
+                    value = mediaCheckerSettings.shouldRun,
                     settingIcon = { Icon(Icons.Default.Timelapse, null, modifier = Modifier.fillMaxSize()) },
                     updateValue = {
                         if (!it) {
                             showDialog = true
                         } else {
-                            mediaCheckerSettings = mediaCheckerSettings?.copy(shouldRun = it)
+                            mediaCheckerSettings = mediaCheckerSettings.copy(shouldRun = it)
                         }
                     }
                 )
             }
 
             item {
-                ShowWhen(mediaCheckerSettings?.shouldRun == true) {
+                ShowWhen(mediaCheckerSettings.shouldRun) {
                     ListSetting(
-                        value = mediaCheckerSettings?.networkType ?: MediaCheckerNetworkType.Connected,
+                        value = mediaCheckerSettings.networkType,
                         updateValue = { it, dialog ->
-                            mediaCheckerSettings = mediaCheckerSettings?.copy(networkType = it)
+                            mediaCheckerSettings = mediaCheckerSettings.copy(networkType = it)
                             dialog.value = false
                         },
                         settingTitle = { Text("Network Type") },
@@ -151,7 +151,7 @@ internal fun GeneralContent(
                         dialogTitle = { Text("Choose Network Type") },
                         summaryValue = {
                             Column {
-                                Text((mediaCheckerSettings?.networkType ?: MediaCheckerNetworkType.Connected).toString())
+                                Text(mediaCheckerSettings.networkType.toString())
                                 Text("Default is Connected")
                             }
                         },
@@ -168,20 +168,20 @@ internal fun GeneralContent(
             }
 
             item {
-                ShowWhen(mediaCheckerSettings?.shouldRun == true) {
-                    var sliderValue by remember(mediaCheckerSettings?.interval ?: 1) {
-                        mutableFloatStateOf((mediaCheckerSettings?.interval ?: 1).toFloat())
+                ShowWhen(mediaCheckerSettings.shouldRun) {
+                    var sliderValue by remember(mediaCheckerSettings.interval) {
+                        mutableFloatStateOf(mediaCheckerSettings.interval.toFloat())
                     }
 
                     SliderSetting(
-                        settingTitle = { Text("Check Every ${mediaCheckerSettings?.interval ?: 1} hours") },
+                        settingTitle = { Text("Check Every ${mediaCheckerSettings.interval} hours") },
                         settingSummary = { Text("How often do you want to check for updates? Default is 1 hour.") },
                         sliderValue = sliderValue,
                         updateValue = { sliderValue = it },
                         range = 1f..24f,
                         steps = 23,
                         onValueChangedFinished = {
-                            mediaCheckerSettings = mediaCheckerSettings?.copy(interval = sliderValue.toLong())
+                            mediaCheckerSettings = mediaCheckerSettings.copy(interval = sliderValue.toLong())
                         },
                         settingIcon = {
                             Icon(
@@ -194,25 +194,25 @@ internal fun GeneralContent(
             }
 
             item {
-                ShowWhen(mediaCheckerSettings?.shouldRun == true) {
+                ShowWhen(mediaCheckerSettings.shouldRun) {
                     SwitchSetting(
                         settingTitle = { Text("Only run when charging") },
                         settingIcon = { Icon(Icons.Default.BatteryChargingFull, null) },
                         summaryValue = { Text("Default is false") },
-                        value = mediaCheckerSettings?.requiresCharging == true,
-                        updateValue = { mediaCheckerSettings = mediaCheckerSettings?.copy(requiresCharging = it) }
+                        value = mediaCheckerSettings.requiresCharging,
+                        updateValue = { mediaCheckerSettings = mediaCheckerSettings.copy(requiresCharging = it) }
                     )
                 }
             }
 
             item {
-                ShowWhen(mediaCheckerSettings?.shouldRun == true) {
+                ShowWhen(mediaCheckerSettings.shouldRun) {
                     SwitchSetting(
                         settingTitle = { Text("Don't run on low battery") },
                         settingIcon = { Icon(Icons.Default.Battery1Bar, null) },
                         summaryValue = { Text("Default is false") },
-                        value = mediaCheckerSettings?.requiresBatteryNotLow == true,
-                        updateValue = { mediaCheckerSettings = mediaCheckerSettings?.copy(requiresBatteryNotLow = it) }
+                        value = mediaCheckerSettings.requiresBatteryNotLow,
+                        updateValue = { mediaCheckerSettings = mediaCheckerSettings.copy(requiresBatteryNotLow = it) }
                     )
                 }
             }

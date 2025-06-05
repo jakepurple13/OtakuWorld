@@ -220,7 +220,7 @@ fun NotificationSettings(
                 CategoryGroup {
                     item {
                         ListSetting(
-                            value = mediaCheckerSettings?.networkType ?: MediaCheckerNetworkType.Connected,
+                            value = mediaCheckerSettings.networkType,
                             updateValue = { it, dialog ->
                                 viewModel.updateNetworkType(it)
                                 dialog.value = false
@@ -231,7 +231,7 @@ fun NotificationSettings(
                             dialogTitle = { Text("Choose Network Type") },
                             summaryValue = {
                                 Column {
-                                    Text((mediaCheckerSettings?.networkType ?: MediaCheckerNetworkType.Connected).toString())
+                                    Text(mediaCheckerSettings.networkType.toString())
                                     Text("Default is Connected")
                                 }
                             },
@@ -268,7 +268,7 @@ fun NotificationSettings(
                             settingTitle = { Text("Only run when charging") },
                             settingIcon = { Icon(Icons.Default.BatteryChargingFull, null) },
                             summaryValue = { Text("Default is false") },
-                            value = mediaCheckerSettings?.requiresCharging == true,
+                            value = mediaCheckerSettings.requiresCharging,
                             updateValue = { viewModel.updateRequiresCharging(it) }
                         )
                     }
@@ -278,7 +278,7 @@ fun NotificationSettings(
                             settingTitle = { Text("Don't run on low battery") },
                             settingIcon = { Icon(Icons.Default.Battery1Bar, null) },
                             summaryValue = { Text("Default is false") },
-                            value = mediaCheckerSettings?.requiresBatteryNotLow == true,
+                            value = mediaCheckerSettings.requiresBatteryNotLow,
                             updateValue = { viewModel.updateRequiresBatteryNotLow(it) }
                         )
                     }

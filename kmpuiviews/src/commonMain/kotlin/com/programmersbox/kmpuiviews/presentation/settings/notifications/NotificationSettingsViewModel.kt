@@ -18,7 +18,6 @@ import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -57,7 +56,6 @@ class NotificationSettingsViewModel(
 
         mediaCheckerSettings
             .asFlow()
-            .filterNotNull()
             .onEach {
                 canCheck = it.shouldRun
                 updateHourCheck = it.interval
@@ -83,8 +81,8 @@ class NotificationSettingsViewModel(
         viewModelScope.launch {
             mediaCheckerSettings
                 .get()
-                ?.copy(shouldRun = value)
-                ?.let { mediaCheckerSettings.set(it) }
+                .copy(shouldRun = value)
+                .let { mediaCheckerSettings.set(it) }
         }
     }
 
@@ -92,8 +90,8 @@ class NotificationSettingsViewModel(
         viewModelScope.launch {
             mediaCheckerSettings
                 .get()
-                ?.copy(interval = value)
-                ?.let { mediaCheckerSettings.set(it) }
+                .copy(interval = value)
+                .let { mediaCheckerSettings.set(it) }
         }
     }
 
@@ -101,8 +99,8 @@ class NotificationSettingsViewModel(
         viewModelScope.launch {
             mediaCheckerSettings
                 .get()
-                ?.copy(networkType = value)
-                ?.let { mediaCheckerSettings.set(it) }
+                .copy(networkType = value)
+                .let { mediaCheckerSettings.set(it) }
         }
     }
 
@@ -110,8 +108,8 @@ class NotificationSettingsViewModel(
         viewModelScope.launch {
             mediaCheckerSettings
                 .get()
-                ?.copy(requiresCharging = value)
-                ?.let { mediaCheckerSettings.set(it) }
+                .copy(requiresCharging = value)
+                .let { mediaCheckerSettings.set(it) }
         }
     }
 
@@ -119,8 +117,8 @@ class NotificationSettingsViewModel(
         viewModelScope.launch {
             mediaCheckerSettings
                 .get()
-                ?.copy(requiresBatteryNotLow = value)
-                ?.let { mediaCheckerSettings.set(it) }
+                .copy(requiresBatteryNotLow = value)
+                .let { mediaCheckerSettings.set(it) }
         }
     }
 
