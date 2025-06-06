@@ -26,4 +26,5 @@ interface BackgroundWorkHandler {
     fun syncCloudToLocal()
     fun setupPeriodicCheckers()
     fun workerInfoFlow(): Flow<List<WorkerInfoModel>>
+    fun sourceUpdate()
 }

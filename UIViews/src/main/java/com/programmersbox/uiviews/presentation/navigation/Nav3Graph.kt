@@ -23,6 +23,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
@@ -50,7 +51,6 @@ import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateScreen
-import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen

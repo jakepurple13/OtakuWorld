@@ -23,6 +23,7 @@ import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScree
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchCoverCard
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
+import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
@@ -159,5 +160,13 @@ private fun RecentPreview() {
 private fun GeneralSettingsPreview() {
     PreviewTheme {
         GeneralSettings()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ExtensionListPreview() {
+    PreviewTheme {
+        ExtensionList()
     }
 }

@@ -1,14 +1,7 @@
-package com.programmersbox.uiviews.presentation.settings.extensions
+package com.programmersbox.kmpuiviews.presentation.settings.extensions
 
-import android.content.ClipData
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
-import android.net.Uri
-import android.os.Build
-import androidx.activity.compose.BackHandler
+
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -63,8 +56,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.currentWindowSize
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
@@ -73,7 +64,6 @@ import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -84,89 +74,61 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import coil3.compose.AsyncImage
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import coil3.pathSegments
+import coil3.toUri
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpRemoteSources
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.IconLoader
+import com.programmersbox.kmpuiviews.SourceIcon
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
-import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionListViewModel
-import com.programmersbox.kmpuiviews.presentation.settings.extensions.InstalledViewState
-import com.programmersbox.kmpuiviews.presentation.settings.extensions.RemoteErrorState
-import com.programmersbox.kmpuiviews.presentation.settings.extensions.RemoteState
-import com.programmersbox.kmpuiviews.presentation.settings.extensions.RemoteViewState
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.checkers.SourceUpdateChecker
-import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.currentSource
 import kotlin.time.Duration.Companion.minutes
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3WindowSizeClassApi::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun ExtensionList(
     settingsHandling: NewSettingsHandling = koinInject(),
+    backgroundWorkHandler: BackgroundWorkHandler = koinInject(),
     viewModel: ExtensionListViewModel = koinViewModel(),
 ) {
+    val sourceInfoRepository = koinInject<SourceInfoRepository>()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
     val iconLoader = koinInject<IconLoader>()
 
-    val context = LocalContext.current
-
     val navController = LocalNavActions.current
-
-    fun updateCheck() {
-        WorkManager.getInstance(context)
-            .enqueueUniqueWork(
-                "sourceCheck",
-                ExistingWorkPolicy.KEEP,
-                OneTimeWorkRequestBuilder<SourceUpdateChecker>()
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .setRequiresDeviceIdle(false)
-                            .setRequiresStorageNotLow(false)
-                            .build()
-                    )
-                    .build()
-            )
-    }
 
     var showUrlDialog by remember { mutableStateOf(false) }
     if (showUrlDialog) {
@@ -178,17 +140,7 @@ fun ExtensionList(
         )
     }
 
-    val windowSize = with(LocalDensity.current) {
-        currentWindowSize().toSize().toDpSize()
-    }
-    val windowSizeClass = remember(windowSize) { WindowSizeClass.calculateFromSize(windowSize) }
-
-    val navigator = rememberListDetailPaneScaffoldNavigator<Int>(
-        scaffoldDirective = calculateStandardPaneScaffoldDirective(
-            currentWindowAdaptiveInfo(),
-            windowSizeClass = windowSizeClass
-        )
-    )
+    val navigator = rememberListDetailPaneScaffoldNavigator<Int>()
 
     BackHandler(navigator.canNavigateBack()) {
         scope.launch { navigator.navigateBack() }
@@ -239,7 +191,7 @@ fun ExtensionList(
                             text = { Text("Check for Source Updates") },
                             onClick = {
                                 showDropDown = false
-                                if (!checked) updateCheck()
+                                if (!checked) backgroundWorkHandler.sourceUpdate()
                                 scope.launch {
                                     checked = true
                                     delay(10.minutes)
@@ -310,13 +262,7 @@ fun ExtensionList(
                             //TODO: Need to show some ui for download progress and installing progress
                             viewModel.downloadAndInstall(downloadLink, destinationPath)
                         },
-                        onUninstall = {
-                            val uri = Uri.fromParts("package", it, null)
-                            val uninstall = Intent(Intent.ACTION_DELETE, uri)
-                            context.startActivity(uninstall)
-                            //TODO: Try out later with a dialog
-                            //viewModel.uninstall(it)
-                        }
+                        onUninstall = { sourceInfoRepository.uninstall(it) }
                     )
                 }
             },
@@ -342,11 +288,11 @@ private fun InstalledExtensionItems(
     sourcesList: List<KmpRemoteSources>,
     iconLoader: IconLoader,
     onDownloadAndInstall: (String, String) -> Unit,
-    onUninstall: (String) -> Unit,
+    onUninstall: (KmpSourceInformation) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sourceInfoRepository = koinInject<SourceInfoRepository>()
     val currentSourceRepository = LocalCurrentSource.current
-    val context = LocalContext.current
     Surface {
         Column(
             modifier = modifier
@@ -354,7 +300,7 @@ private fun InstalledExtensionItems(
             ListItem(
                 headlineContent = {
                     val source by LocalCurrentSource.current.asFlow().collectAsStateWithLifecycle(initialValue = null)
-                    Text(stringResource(R.string.currentSource, source?.serviceName.orEmpty()))
+                    Text(stringResource(Res.string.currentSource, source?.serviceName.orEmpty()))
                 }
             )
 
@@ -391,7 +337,7 @@ private fun InstalledExtensionItems(
                                 trailingContent = t?.let {
                                     {
                                         IconButton(
-                                            onClick = { onUninstall(u.sourceInformation.random().packageName) }
+                                            onClick = { onUninstall(u.sourceInformation.random()) }
                                         ) { Icon(Icons.Default.Delete, null) }
                                     }
                                 },
@@ -409,21 +355,7 @@ private fun InstalledExtensionItems(
                             key = { i, it -> it.apiService.serviceName + i },
                             contentType = { _, it -> it }
                         ) { index, source ->
-                            val version = remember(context) {
-                                runCatching {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        context.packageManager.getPackageInfo(
-                                            source.packageName,
-                                            PackageManager.PackageInfoFlags.of(0L)
-                                        )
-                                    } else {
-                                        context.packageManager.getPackageInfo(source.packageName, 0)
-                                    }
-                                }
-                                    .getOrNull()
-                                    ?.versionName
-                                    .orEmpty()
-                            }
+                            val version = remember { sourceInfoRepository.versionName(source) }
                             ExtensionItem(
                                 sourceInformation = source,
                                 version = version,
@@ -441,7 +373,11 @@ private fun InstalledExtensionItems(
                                                     onClick = {
                                                         onDownloadAndInstall(
                                                             r.downloadLink,
-                                                            r.downloadLink.toUri().lastPathSegment ?: "${r.name}.apk"
+                                                            r.downloadLink
+                                                                .toUri()
+                                                                .pathSegments
+                                                                .lastOrNull()
+                                                                ?: "${r.name}.apk"
                                                         )
                                                     }
                                                 ) { Icon(Icons.Default.Update, null) }
@@ -449,7 +385,7 @@ private fun InstalledExtensionItems(
                                         }
 
                                         IconButton(
-                                            onClick = { onUninstall(source.packageName) }
+                                            onClick = { onUninstall(source) }
                                         ) { Icon(Icons.Default.Delete, null) }
                                     }
                                 }
@@ -526,7 +462,14 @@ private fun RemoteExtensionItems(
                                     RemoteItem(
                                         remoteSource = it,
                                         onDownloadAndInstall = {
-                                            onDownloadAndInstall(it.downloadLink, it.downloadLink.toUri().lastPathSegment ?: "${it.name}.apk")
+                                            onDownloadAndInstall(
+                                                it.downloadLink,
+                                                it.downloadLink
+                                                    .toUri()
+                                                    .pathSegments
+                                                    .lastOrNull()
+                                                    ?: "${it.name}.apk"
+                                            )
                                         },
                                         modifier = Modifier.animateItem()
                                     )
@@ -577,15 +520,7 @@ private fun ExtensionItem(
             supportingContent = { Text("Version: $version") },
             leadingContent = {
                 //TODO: Need to deal with this
-                (iconLoader.load(sourceInformation.packageName) as? Drawable)?.let {
-                    Image(
-                        rememberDrawablePainter(drawable = it),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .size(64.dp)
-                    )
-                }
+                SourceIcon(iconLoader, sourceInformation)
             },
             trailingContent = trailingIcon
         )
@@ -667,6 +602,7 @@ private fun CustomUrlDialog(
     onRemoveUrl: (String) -> Unit,
     urls: List<String>,
 ) {
+    val sourceInfoRepository = koinInject<SourceInfoRepository>()
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(true),
@@ -767,9 +703,7 @@ private fun CustomUrlDialog(
                     val clipboard = LocalClipboard.current
                     OutlinedCard(
                         onClick = {
-                            scope.launch {
-                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Url", it)))
-                            }
+                            scope.launch { sourceInfoRepository.copyUrl(clipboard, it) }
                         }
                     ) {
                         ListItem(
@@ -790,13 +724,5 @@ private fun CustomUrlDialog(
                 }
             }
         }
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun ExtensionListPreview() {
-    PreviewTheme {
-        ExtensionList()
     }
 }
