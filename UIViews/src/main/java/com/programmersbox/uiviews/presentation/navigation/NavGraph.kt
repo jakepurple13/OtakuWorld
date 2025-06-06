@@ -16,6 +16,7 @@ import androidx.navigation.toRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
+import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -40,7 +41,6 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedSc
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.details.DetailsScreen
 import com.programmersbox.uiviews.presentation.history.HistoryUi
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
@@ -127,7 +127,6 @@ fun NavGraphBuilder.navGraph(
     ) {
         trackScreen(Screen.DetailsScreen)
         DetailsScreen(
-            logo = notificationLogo,
             windowSize = windowSize,
             details = koinViewModel { parametersOf(it.toRoute<Screen.DetailsScreen.Details>()) }
         )

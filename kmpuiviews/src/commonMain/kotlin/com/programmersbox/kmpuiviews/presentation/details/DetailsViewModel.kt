@@ -120,24 +120,16 @@ class DetailsViewModel(
             }
             ?.launchIn(viewModelScope)
 
-        blurHashDao
-            .getHash(itemModel?.imageUrl)
-            .onEach { blurHashItem = it }
+        combine(
+            blurHashDao
+                .getHash(itemModel?.imageUrl)
+                .onEach { blurHashItem = it }
+                .mapNotNull { it?.blurHash?.decodeBase64Bytes()?.decodeToImageBitmap() }
+                .onEach { blurHash = runCatching { BitmapPainter(it) }.getOrNull() },
+            snapshotFlow { imageBitmap }
+        ) { hash, image -> hash to image }
             .filterNotNull()
-            .mapNotNull { it.blurHash.decodeBase64Bytes().decodeToImageBitmap() }
-            /*
-            /*BlurHash.decode(
-                    it.blurHash,
-                    width = ComposableUtils.IMAGE_WIDTH_PX,
-                    height = ComposableUtils.IMAGE_HEIGHT_PX
-                )?.asImageBitmap()*/
-             */
-            .onEach { blurHash = runCatching { BitmapPainter(it) }.getOrNull() }
-            .onEach {
-                runCatching {
-                    if (palette == null) palette = it.generatePalette()
-                }
-            }
+            .onEach { runCatching { palette = (it.second ?: it.first).generatePalette() } }
             .dispatchIo()
             .launchIn(viewModelScope)
 

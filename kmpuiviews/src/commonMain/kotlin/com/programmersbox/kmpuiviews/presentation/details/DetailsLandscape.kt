@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.presentation.details
+package com.programmersbox.kmpuiviews.presentation.details
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -40,17 +39,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.currentWindowSize
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
-import androidx.compose.material3.adaptive.layout.defaultDragHandleSemantics
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -61,41 +56,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.presentation.lists.calculateStandardPaneScaffoldDirective
-import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.NotificationLogo
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import my.nanihadesuka.compose.LazyColumnScrollbar
-import my.nanihadesuka.compose.ScrollbarSettings
+import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.added_to_list
+import otakuworld.kmpuiviews.generated.resources.already_in_list
+import otakuworld.kmpuiviews.generated.resources.for_later
 
 @ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
@@ -110,7 +104,6 @@ fun DetailsViewLandscape(
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
     markAs: (KmpChapterModel, Boolean) -> Unit,
-    logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: () -> Boolean,
@@ -120,9 +113,8 @@ fun DetailsViewLandscape(
 ) {
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
-    val genericInfo = LocalGenericInfo.current
+    val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
-    val context = LocalContext.current
 
     var reverseChapters by remember { mutableStateOf(false) }
 
@@ -153,7 +145,6 @@ fun DetailsViewLandscape(
         listDao = listDao,
         hostState = hostState,
         scope = scope,
-        context = context
     )
 
     ModalNavigationDrawer(
@@ -186,7 +177,6 @@ fun DetailsViewLandscape(
                             scaffoldState = scaffoldState,
                             navController = navController,
                             scope = scope,
-                            context = context,
                             info = info,
                             isSaved = isSaved,
                             dao = dao,
@@ -197,7 +187,7 @@ fun DetailsViewLandscape(
                             onShowLists = { showLists = true },
                             addToForLater = {
                                 scope.launch {
-                                    val result = OtakuApp.forLaterUuid?.let {
+                                    val result = AppConfig.forLaterUuid?.let {
                                         listDao.addToList(
                                             it,
                                             info.title,
@@ -209,13 +199,13 @@ fun DetailsViewLandscape(
                                     } ?: false
 
                                     hostState.showSnackbar(
-                                        context.getString(
+                                        getString(
                                             if (result) {
-                                                R.string.added_to_list
+                                                Res.string.added_to_list
                                             } else {
-                                                R.string.already_in_list
+                                                Res.string.already_in_list
                                             },
-                                            context.getString(R.string.for_later)
+                                            getString(Res.string.for_later)
                                         ),
                                         withDismissAction = true
                                     )
@@ -235,7 +225,6 @@ fun DetailsViewLandscape(
             DetailsLandscapeContent(
                 info = info,
                 shareChapter = shareChapter,
-                logo = logo,
                 reverseChapters = reverseChapters,
                 description = description,
                 onTranslateDescription = onTranslateDescription,
@@ -270,7 +259,6 @@ private fun DetailsLandscapeContent(
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     chapters: List<ChapterWatched>,
-    logo: NotificationLogo,
     reverseChapters: Boolean,
     listState: LazyListState,
     showDownloadButton: () -> Boolean,
@@ -291,20 +279,9 @@ private fun DetailsLandscapeContent(
         listDao = LocalCustomListDao.current,
         hostState = null,
         scope = scope,
-        context = LocalContext.current
     )
 
-    val windowSize = with(LocalDensity.current) {
-        currentWindowSize().toSize().toDpSize()
-    }
-    val windowSizeClass = remember(windowSize) { WindowSizeClass.calculateFromSize(windowSize) }
-
-    val state = rememberListDetailPaneScaffoldNavigator<Int>(
-        scaffoldDirective = calculateStandardPaneScaffoldDirective(
-            currentWindowAdaptiveInfo(),
-            windowSizeClass = windowSizeClass
-        )
-    )
+    val state = rememberListDetailPaneScaffoldNavigator<Int>()
 
     ListDetailPaneScaffold(
         directive = state.scaffoldDirective,
@@ -318,7 +295,6 @@ private fun DetailsLandscapeContent(
                     state = state,
                     minTouchTargetSize = LocalMinimumInteractiveComponentSize.current,
                     interactionSource = interactionSource,
-                    semanticsProperties = state.defaultDragHandleSemantics()
                 )
             )
         },
@@ -373,7 +349,7 @@ private fun DetailsLandscapeContent(
                 ) {
                     DetailsHeader(
                         model = info,
-                        logo = painterResource(id = logo.notificationId),
+                        logo = painterLogo(),
                         isFavorite = isFavorite,
                         favoriteClick = onFavoriteClick,
                         onPaletteSet = onPaletteSet,
@@ -416,7 +392,24 @@ private fun DetailsLandscapeContent(
             val listOfChapters = remember(reverseChapters) {
                 info.chapters.let { if (reverseChapters) it.reversed() else it }
             }
-            LazyColumnScrollbar(
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxHeight(),
+                state = listState
+            ) {
+                items(listOfChapters) { c ->
+                    ChapterItem(
+                        infoModel = info,
+                        c = c,
+                        read = chapters,
+                        chapters = info.chapters,
+                        shareChapter = shareChapter,
+                        markAs = markAs,
+                        showDownload = showDownloadButton
+                    )
+                }
+            }
+            /*LazyColumnScrollbar(
                 state = listState,
                 settings = ScrollbarSettings.Default.copy(
                     thumbThickness = 8.dp,
@@ -442,7 +435,7 @@ private fun DetailsLandscapeContent(
                         )
                     }
                 }
-            }
+            }*/
         },
         modifier = modifier,
     )

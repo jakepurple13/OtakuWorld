@@ -31,16 +31,18 @@ actual class QrCodeRepository(
         .mapCatching { barcodes -> barcodes.mapNotNull { it.displayValue } }
 
     actual suspend fun shareUrl(url: String, title: String) {
-        context.startActivity(
-            createChooser(
-                Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, url)
-                    putExtra(Intent.EXTRA_TITLE, title)
-                },
-                getString(Res.string.share_item, title)
-            ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-        )
+        runCatching {
+            context.startActivity(
+                createChooser(
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, url)
+                        putExtra(Intent.EXTRA_TITLE, title)
+                    },
+                    getString(Res.string.share_item, title)
+                ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            )
+        }
     }
 
     actual suspend fun shareImage(

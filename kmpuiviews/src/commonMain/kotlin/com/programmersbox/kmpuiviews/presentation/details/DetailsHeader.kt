@@ -1,6 +1,6 @@
-package com.programmersbox.uiviews.presentation.details
+package com.programmersbox.kmpuiviews.presentation.details
 
-import android.graphics.Canvas
+
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -14,12 +14,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -48,44 +46,37 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.graphics.createBitmap
-import com.bumptech.glide.load.model.GlideUrl
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
-import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
-import com.programmersbox.uiviews.R
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.components.rememberImageComponent
-import com.skydoves.landscapist.glide.GlideImage
-import com.skydoves.landscapist.glide.GlideImageState
-import com.skydoves.landscapist.palette.PalettePlugin
-import com.skydoves.landscapist.placeholder.placeholder.PlaceholderPlugin
+import com.programmersbox.kmpuiviews.zoomOverlay
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
-import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
-import me.saket.telephoto.zoomable.zoomablePeekOverlay
+import org.jetbrains.compose.resources.stringResource
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.addToFavorites
+import otakuworld.kmpuiviews.generated.resources.chapter_count
+import otakuworld.kmpuiviews.generated.resources.done
+import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
@@ -106,7 +97,7 @@ internal fun DetailsHeader(
 
     val blurEnabled by settings.rememberShowBlur()
     val surface = MaterialTheme.colorScheme.surface
-    val imageUrl = remember {
+    val imageUrl = model.imageUrl/*remember {
         try {
             GlideUrl(model.imageUrl) { model.extras.mapValues { it.value.toString() } }
         } catch (e: IllegalArgumentException) {
@@ -115,7 +106,7 @@ internal fun DetailsHeader(
             Canvas(b).drawColor(surface.toArgb())
             b
         }
-    }
+    }*/
 
     var imagePopup by remember { mutableStateOf(false) }
 
@@ -125,16 +116,16 @@ internal fun DetailsHeader(
             onDismissRequest = { imagePopup = false },
             title = { Text(model.title, modifier = Modifier.padding(4.dp)) },
             text = {
-                GlideImage(
+                /*GlideImage(
                     imageModel = { imageUrl },
                     imageOptions = ImageOptions(contentScale = ContentScale.Fit),
                     previewPlaceholder = painterResource(id = R.drawable.ic_baseline_battery_alert_24),
                     modifier = Modifier
                         .scaleRotateOffsetReset()
                         .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                )
+                )*/
             },
-            confirmButton = { TextButton(onClick = { imagePopup = false }) { Text(stringResource(R.string.done)) } }
+            confirmButton = { TextButton(onClick = { imagePopup = false }) { Text(stringResource(Res.string.done)) } }
         )
     }
 
@@ -146,13 +137,11 @@ internal fun DetailsHeader(
 
         val haze = rememberHazeState()
 
-        GlideImage(
-            imageModel = { imageUrl },
-            imageOptions = ImageOptions(contentScale = ContentScale.Crop),
-            previewPlaceholder = painterResource(id = R.drawable.ic_baseline_battery_alert_24),
-            component = rememberImageComponent {
-                +PlaceholderPlugin.Loading(blurHash ?: logo)
-            },
+        ImageLoaderChoice(
+            imageUrl = imageUrl,
+            name = "",
+            placeHolder = { painterLogo() },
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .matchParentSize()
                 .let {
@@ -181,36 +170,29 @@ internal fun DetailsHeader(
                                 source = model.title,
                             )
                         )
-                        .zoomablePeekOverlay(state = rememberZoomablePeekOverlayState())
+                        .zoomOverlay()
                 ) {
                     var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
 
-                    GlideImage(
-                        imageModel = { imageUrl },
-                        imageOptions = ImageOptions(contentScale = ContentScale.FillBounds),
-                        component = rememberImageComponent {
-                            +PalettePlugin { p -> onPaletteSet(p) }
-                            +PlaceholderPlugin.Loading(blurHash ?: logo)
-                            +PlaceholderPlugin.Failure(logo)
-                        },
-                        onImageStateChanged = {
-                            if (it is GlideImageState.Success) {
-                                it.imageBitmap?.let(onBitmapSet)
-                            }
-                        },
+                    ImageLoaderChoice(
+                        imageUrl = imageUrl,
+                        name = "",
+                        contentScale = ContentScale.FillBounds,
+                        placeHolder = { painterLogo() },
+                        onImageSet = onBitmapSet,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
                             /*.combinedClickable(
                                 onClick = {},
                                 onDoubleClick = { imagePopup = true }
                             )*/
-                            .magnifier(
+                            /*.magnifier(
                                 sourceCenter = { magnifierCenter },
                                 magnifierCenter = { magnifierCenter.copy(y = magnifierCenter.y - 100) },
                                 zoom = 3f,
                                 size = DpSize(100.dp, 100.dp),
                                 cornerRadius = 8.dp
-                            )
+                            )*/
                             .pointerInput(Unit) {
                                 detectDragGestures(
                                     // Show the magnifier at the original pointer position.
@@ -277,7 +259,7 @@ internal fun DetailsHeader(
                             )
 
                             Text(
-                                stringResource(if (target) R.string.removeFromFavorites else R.string.addToFavorites),
+                                stringResource(if (target) Res.string.removeFromFavorites else Res.string.addToFavorites),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontSize = 16.sp,
                             )
@@ -285,7 +267,7 @@ internal fun DetailsHeader(
                     }
 
                     Text(
-                        stringResource(R.string.chapter_count, model.chapters.size),
+                        stringResource(Res.string.chapter_count, model.chapters.size),
                         style = MaterialTheme.typography.bodyMedium,
                     )
 
@@ -411,7 +393,7 @@ internal fun PlaceHolderHeader(
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Text(
-                            stringResource(R.string.addToFavorites),
+                            stringResource(Res.string.addToFavorites),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )

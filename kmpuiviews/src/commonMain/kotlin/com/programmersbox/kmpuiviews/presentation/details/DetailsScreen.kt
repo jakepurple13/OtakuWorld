@@ -1,9 +1,6 @@
-package com.programmersbox.uiviews.presentation.details
+package com.programmersbox.kmpuiviews.presentation.details
 
-import android.content.Context
-import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -66,10 +63,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.zIndex
@@ -86,36 +81,37 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.details.DetailFavoriteAction
-import com.programmersbox.kmpuiviews.presentation.details.DetailState
-import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.launchCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.download_chapter
+import otakuworld.kmpuiviews.generated.resources.markAs
+import otakuworld.kmpuiviews.generated.resources.read
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @Composable
 fun DetailsScreen(
-    logo: NotificationLogo,
     windowSize: WindowSizeClass,
     dao: ItemDao = LocalItemDao.current,
     details: DetailsViewModel = koinViewModel(),
 ) {
     DetailsScreenInternal(
-        logo = logo,
         windowSize = windowSize,
         dao = dao,
         details = details
@@ -131,7 +127,6 @@ fun DetailsScreen(
 @Composable
 private fun DetailsScreenInternal(
     //detailInfo: Screen.DetailsScreen.Details,
-    logo: NotificationLogo,
     windowSize: WindowSizeClass,
     dao: ItemDao = LocalItemDao.current,
     details: DetailsViewModel = koinViewModel(),
@@ -209,7 +204,6 @@ private fun DetailsScreenInternal(
                         state = state,
                         windowSize = windowSize,
                         shareChapter = shareChapter,
-                        logo = logo,
                         showDownload = showDownload
                     )
                 }
@@ -227,7 +221,6 @@ private fun DetailContent(
     state: DetailState.Success,
     windowSize: WindowSizeClass,
     shareChapter: Boolean,
-    logo: NotificationLogo,
     showDownload: Boolean,
 ) {
     val isSaved by dao
@@ -239,7 +232,6 @@ private fun DetailContent(
             info = state.info,
             isSaved = isSaved,
             shareChapter = shareChapter,
-            logo = logo,
             isFavorite = state.action is DetailFavoriteAction.Remove,
             onFavoriteClick = { details.favoriteAction(state.action) },
             chapters = details.chapters,
@@ -256,7 +248,6 @@ private fun DetailContent(
             info = state.info,
             isSaved = isSaved,
             shareChapter = shareChapter,
-            logo = logo,
             isFavorite = state.action is DetailFavoriteAction.Remove,
             onFavoriteClick = { details.favoriteAction(state.action) },
             chapters = details.chapters,
@@ -287,7 +278,7 @@ fun MarkAsScreen(
     OtakuScaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.markAs)) },
+                title = { Text(stringResource(Res.string.markAs)) },
 
                 navigationIcon = {
                     IconButton(onClick = { scope.launch { drawerState.close() } }) {
@@ -335,9 +326,10 @@ fun MarkAsScreen(
 @Composable
 private fun DetailLoading(
     details: DetailsViewModel,
-    localContext: Context = LocalContext.current,
     uriHandler: UriHandler = LocalUriHandler.current,
 ) {
+    val qrCodeRepository = koinInject<QrCodeRepository>()
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -350,21 +342,14 @@ private fun DetailLoading(
                 },
                 navigationIcon = { BackButton() },
                 actions = {
-                    val shareItem = rememberLauncherForActivityResult(
-                        ActivityResultContracts.StartActivityForResult()
-                    ) {}
                     IconButton(
                         onClick = {
-                            shareItem.launchCatching(
-                                Intent.createChooser(
-                                    Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
-                                        putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
-                                    },
-                                    localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+                            scope.launch {
+                                qrCodeRepository.shareUrl(
+                                    details.itemModel?.url.orEmpty(),
+                                    details.itemModel?.title.orEmpty()
                                 )
-                            )
+                            }
                         }
                     ) { Icon(Icons.Default.Share, null) }
 
@@ -385,10 +370,11 @@ private fun DetailLoading(
 @Composable
 private fun DetailError(
     details: DetailsViewModel,
-    localContext: Context = LocalContext.current,
     uriHandler: UriHandler = LocalUriHandler.current,
     state: DetailState.Error,
 ) {
+    val qrCodeRepository = koinInject<QrCodeRepository>()
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -401,21 +387,14 @@ private fun DetailError(
                 },
                 navigationIcon = { BackButton() },
                 actions = {
-                    val shareItem = rememberLauncherForActivityResult(
-                        ActivityResultContracts.StartActivityForResult()
-                    ) {}
                     IconButton(
                         onClick = {
-                            shareItem.launchCatching(
-                                Intent.createChooser(
-                                    Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, details.itemModel?.url.orEmpty())
-                                        putExtra(Intent.EXTRA_TITLE, details.itemModel?.title.orEmpty())
-                                    },
-                                    localContext.getString(R.string.share_item, details.itemModel?.title.orEmpty())
+                            scope.launch {
+                                qrCodeRepository.shareUrl(
+                                    details.itemModel?.url.orEmpty(),
+                                    details.itemModel?.title.orEmpty()
                                 )
-                            )
+                            }
                         }
                     ) { Icon(Icons.Default.Share, null) }
 
@@ -451,6 +430,7 @@ private fun DetailError(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @ExperimentalMaterial3Api
 @Composable
 fun ChapterItem(
@@ -462,11 +442,11 @@ fun ChapterItem(
     showDownload: () -> Boolean,
     markAs: (KmpChapterModel, Boolean) -> Unit,
 ) {
+    val genericInfo = koinInject<KmpGenericInfo>()
+    val qrCodeRepository = koinInject<QrCodeRepository>()
     val historyDao = LocalHistoryDao.current
     val favoritesRepository: FavoritesRepository = koinInject()
     val navController = LocalNavActions.current
-    val genericInfo = LocalGenericInfo.current
-    val context = LocalContext.current
     val dataStoreHandling = koinInject<DataStoreHandling>()
     val scope = rememberCoroutineScope()
 
@@ -480,7 +460,7 @@ fun ChapterItem(
                     imageUrl = infoModel.imageUrl,
                     description = infoModel.description,
                     source = infoModel.source.serviceName,
-                    timestamp = System.currentTimeMillis()
+                    timestamp = Clock.System.now().toEpochMilliseconds()
                 )
             )
             val save = runBlocking { dataStoreHandling.historySave.get() }
@@ -513,21 +493,14 @@ fun ChapterItem(
                         )
                     },
                     trailingContent = {
-                        val shareItem = rememberLauncherForActivityResult(
-                            ActivityResultContracts.StartActivityForResult()
-                        ) {}
                         IconButton(
                             onClick = {
-                                shareItem.launchCatching(
-                                    Intent.createChooser(
-                                        Intent(Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_TEXT, c.url)
-                                            putExtra(Intent.EXTRA_TITLE, c.name)
-                                        },
-                                        context.getString(R.string.share_item, c.name)
+                                scope.launch {
+                                    qrCodeRepository.shareUrl(
+                                        url = c.url,
+                                        title = c.name
                                     )
-                                )
+                                }
                             }
                         ) {
                             Icon(
@@ -591,7 +564,7 @@ fun ChapterItem(
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                             )
                             Text(
-                                stringResource(R.string.read),
+                                stringResource(Res.string.read),
                                 style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )
@@ -618,7 +591,7 @@ fun ChapterItem(
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                             )
                             Text(
-                                stringResource(R.string.download_chapter),
+                                stringResource(Res.string.download_chapter),
                                 style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             )

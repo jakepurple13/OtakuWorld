@@ -1,6 +1,6 @@
-package com.programmersbox.uiviews.presentation.details
+package com.programmersbox.kmpuiviews.presentation.details
 
-import androidx.activity.compose.BackHandler
+
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -45,54 +45,54 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.core.graphics.ColorUtils
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
+import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
+import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.rememberCollapsableTopBehavior
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.isScrollingUp
-import com.programmersbox.uiviews.OtakuApp
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.NotificationLogo
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import me.tatarka.compose.collapsable.CollapsableColumn
-import me.tatarka.compose.collapsable.rememberCollapsableTopBehavior
-import my.nanihadesuka.compose.InternalLazyColumnScrollbar
-import my.nanihadesuka.compose.ScrollbarSettings
+import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.added_to_list
+import otakuworld.kmpuiviews.generated.resources.already_in_list
+import otakuworld.kmpuiviews.generated.resources.for_later
+import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalComposeUiApi
@@ -110,7 +110,6 @@ fun DetailsView(
     canNotify: Boolean,
     notifyAction: () -> Unit,
     markAs: (KmpChapterModel, Boolean) -> Unit,
-    logo: NotificationLogo,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: () -> Boolean,
@@ -121,7 +120,7 @@ fun DetailsView(
 ) {
     val hazeState = remember { HazeState() }
     val dao = LocalItemDao.current
-    val genericInfo = LocalGenericInfo.current
+    val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
     var reverseChapters by remember { mutableStateOf(false) }
 
@@ -139,9 +138,7 @@ fun DetailsView(
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
 
-    val context = LocalContext.current
-
-    var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
+    var fabMenuExpanded by remember { mutableStateOf(false) }
 
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
@@ -166,7 +163,6 @@ fun DetailsView(
         listDao = listDao,
         hostState = hostState,
         scope = scope,
-        context = context
     )
 
     ModalNavigationDrawer(
@@ -235,7 +231,6 @@ fun DetailsView(
                                 scaffoldState = scaffoldState,
                                 navController = navController,
                                 scope = scope,
-                                context = context,
                                 info = info,
                                 isSaved = isSaved,
                                 dao = dao,
@@ -246,7 +241,7 @@ fun DetailsView(
                                 onShowLists = { showLists = true },
                                 addToForLater = {
                                     scope.launch {
-                                        val result = OtakuApp.forLaterUuid?.let {
+                                        val result = AppConfig.forLaterUuid?.let {
                                             listDao.addToList(
                                                 it,
                                                 info.title,
@@ -258,13 +253,13 @@ fun DetailsView(
                                         } == true
 
                                         hostState.showSnackbar(
-                                            context.getString(
+                                            getString(
                                                 if (result) {
-                                                    R.string.added_to_list
+                                                    Res.string.added_to_list
                                                 } else {
-                                                    R.string.already_in_list
+                                                    Res.string.already_in_list
                                                 },
-                                                context.getString(R.string.for_later)
+                                                getString(Res.string.for_later)
                                             ),
                                             withDismissAction = true
                                         )
@@ -297,7 +292,7 @@ fun DetailsView(
 
                     DetailsHeader(
                         model = info,
-                        logo = painterResource(id = logo.notificationId),
+                        logo = painterLogo(),
                         isFavorite = isFavorite,
                         favoriteClick = onFavoriteClick,
                         onPaletteSet = onPaletteSet,
@@ -330,12 +325,11 @@ fun DetailsView(
                                 NotificationItem(
                                     id = info.hashCode(),
                                     url = info.url,
-                                    summaryText = context
-                                        .getString(
-                                            R.string.hadAnUpdate,
-                                            info.title,
-                                            info.chapters.firstOrNull()?.name.orEmpty()
-                                        ),
+                                    summaryText = getString(
+                                        Res.string.hadAnUpdate,
+                                        info.title,
+                                        info.chapters.firstOrNull()?.name.orEmpty()
+                                    ),
                                     notiTitle = info.title,
                                     imageUrl = info.imageUrl,
                                     source = info.source.serviceName,
@@ -355,16 +349,9 @@ fun DetailsView(
             },
             snackbarHost = {
                 SnackbarHost(hostState) { data ->
-                    val background = SnackbarDefaults.color
                     val font = SnackbarDefaults.contentColor
                     Snackbar(
-                        containerColor = Color(
-                            ColorUtils.blendARGB(
-                                background.toArgb(),
-                                MaterialTheme.colorScheme.onSurface.toArgb(),
-                                .25f
-                            )
-                        ),
+                        containerColor = MaterialTheme.colorScheme.onSurface,
                         contentColor = font,
                         snackbarData = data
                     )
@@ -439,7 +426,7 @@ fun DetailsView(
                     )
                 }
             }
-            Box(Modifier.padding(modifiedPaddingValues)) {
+            /*Box(Modifier.padding(modifiedPaddingValues)) {
                 InternalLazyColumnScrollbar(
                     state = listState,
                     settings = ScrollbarSettings.Default.copy(
@@ -449,7 +436,7 @@ fun DetailsView(
                         thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
                     ),
                 )
-            }
+            }*/
         }
     }
 }

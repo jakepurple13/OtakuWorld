@@ -1,7 +1,5 @@
-package com.programmersbox.uiviews.presentation.details
+package com.programmersbox.kmpuiviews.presentation.details
 
-import android.content.Context
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -53,10 +51,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -68,19 +67,34 @@ import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.addToFavorites
+import otakuworld.kmpuiviews.generated.resources.add_to_for_later_list
+import otakuworld.kmpuiviews.generated.resources.add_to_list
+import otakuworld.kmpuiviews.generated.resources.added_to_list
+import otakuworld.kmpuiviews.generated.resources.already_in_list
+import otakuworld.kmpuiviews.generated.resources.global_search_by_name
+import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
+import otakuworld.kmpuiviews.generated.resources.markAs
+import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
+import otakuworld.kmpuiviews.generated.resources.removeNotification
+import otakuworld.kmpuiviews.generated.resources.reverseOrder
+import otakuworld.kmpuiviews.generated.resources.save_for_later
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 internal fun AddToList(
     showLists: Boolean,
@@ -89,7 +103,6 @@ internal fun AddToList(
     listDao: ListDao,
     hostState: SnackbarHostState?,
     scope: CoroutineScope,
-    context: Context,
 ) {
     if (showLists) {
         BackHandler { showListsChange(false) }
@@ -112,11 +125,11 @@ internal fun AddToList(
                             info.source.serviceName
                         )
                         hostState?.showSnackbar(
-                            context.getString(
+                            getString(
                                 if (result) {
-                                    R.string.added_to_list
+                                    Res.string.added_to_list
                                 } else {
-                                    R.string.already_in_list
+                                    Res.string.already_in_list
                                 },
                                 item.item.name
                             ),
@@ -136,11 +149,10 @@ internal fun AddToList(
 
 @Composable
 internal fun DetailActions(
-    genericInfo: GenericInfo,
+    genericInfo: KmpGenericInfo,
     scaffoldState: DrawerState,
     navController: NavigationActions,
     scope: CoroutineScope,
-    context: Context,
     info: KmpInfoModel,
     isSaved: Boolean,
     dao: ItemDao,
@@ -170,7 +182,7 @@ internal fun DetailActions(
                 dropDownDismiss()
                 scope.launch { scaffoldState.open() }
             },
-            text = { Text(stringResource(id = R.string.markAs)) },
+            text = { Text(stringResource(Res.string.markAs)) },
             leadingIcon = { Icon(Icons.Default.Check, null) }
         )
 
@@ -179,7 +191,7 @@ internal fun DetailActions(
                 dropDownDismiss()
                 uriHandler.openUri(info.url)
             },
-            text = { Text(stringResource(id = R.string.fallback_menu_item_open_in_browser)) },
+            text = { Text("Open in Browser") },
             leadingIcon = { Icon(Icons.Default.OpenInBrowser, null) }
         )
 
@@ -188,7 +200,7 @@ internal fun DetailActions(
                 dropDownDismiss()
                 addToForLater()
             },
-            text = { Text(stringResource(R.string.add_to_for_later_list)) },
+            text = { Text(stringResource(Res.string.add_to_for_later_list)) },
             leadingIcon = { Icon(Icons.Default.WatchLater, null) }
         )
 
@@ -197,7 +209,7 @@ internal fun DetailActions(
                 dropDownDismiss()
                 onShowLists()
             },
-            text = { Text(stringResource(R.string.add_to_list)) },
+            text = { Text(stringResource(Res.string.add_to_list)) },
             leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) }
         )
 
@@ -210,12 +222,11 @@ internal fun DetailActions(
                             NotificationItem(
                                 id = info.hashCode(),
                                 url = info.url,
-                                summaryText = context
-                                    .getString(
-                                        R.string.hadAnUpdate,
-                                        info.title,
-                                        info.chapters.firstOrNull()?.name.orEmpty()
-                                    ),
+                                summaryText = getString(
+                                    Res.string.hadAnUpdate,
+                                    info.title,
+                                    info.chapters.firstOrNull()?.name.orEmpty()
+                                ),
                                 notiTitle = info.title,
                                 imageUrl = info.imageUrl,
                                 source = info.source.serviceName,
@@ -224,7 +235,7 @@ internal fun DetailActions(
                         )
                     }
                 },
-                text = { Text(stringResource(id = R.string.save_for_later)) },
+                text = { Text(stringResource(Res.string.save_for_later)) },
                 leadingIcon = { Icon(Icons.Default.Save, null) }
             )
         } else {
@@ -237,7 +248,7 @@ internal fun DetailActions(
                             ?.let { dao.deleteNotification(it) }
                     }
                 },
-                text = { Text(stringResource(R.string.removeNotification)) },
+                text = { Text(stringResource(Res.string.removeNotification)) },
                 leadingIcon = { Icon(Icons.Default.Delete, null) }
             )
         }
@@ -263,7 +274,7 @@ internal fun DetailActions(
                 dropDownDismiss()
                 navController.globalSearch(info.title)
             },
-            text = { Text(stringResource(id = R.string.global_search_by_name)) },
+            text = { Text(stringResource(Res.string.global_search_by_name)) },
             leadingIcon = { Icon(Icons.Default.Search, null) }
         )
 
@@ -272,7 +283,7 @@ internal fun DetailActions(
                 dropDownDismiss()
                 onReverseChaptersClick()
             },
-            text = { Text(stringResource(id = R.string.reverseOrder)) },
+            text = { Text(stringResource(Res.string.reverseOrder)) },
             leadingIcon = { Icon(Icons.AutoMirrored.Filled.Sort, null) }
         )
     }
@@ -346,7 +357,7 @@ fun DetailBottomBar(
             }
 
             ToolTipWrapper(
-                info = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) }
+                info = { Text(stringResource(if (isFavorite) Res.string.removeFromFavorites else Res.string.addToFavorites)) }
             ) {
                 IconButton(onClick = { onFavoriteClick(isFavorite) }) {
                     Icon(
@@ -395,7 +406,7 @@ fun DetailBottomBar(
     )
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun DetailFloatingActionButtonMenu(
     navController: NavigationActions,
@@ -413,7 +424,6 @@ fun DetailFloatingActionButtonMenu(
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
 ) {
-
     BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
 
     FloatingActionButtonMenu(
@@ -465,7 +475,7 @@ fun DetailFloatingActionButtonMenu(
                     addToSaved()
                 },
                 icon = { Icon(Icons.Default.Save, null) },
-                text = { Text(stringResource(id = R.string.save_for_later)) },
+                text = { Text(stringResource(Res.string.save_for_later)) },
             )
         }
 
@@ -495,7 +505,7 @@ fun DetailFloatingActionButtonMenu(
                     contentDescription = null,
                 )
             },
-            text = { Text(stringResource(if (isFavorite) R.string.removeFromFavorites else R.string.addToFavorites)) },
+            text = { Text(stringResource(if (isFavorite) Res.string.removeFromFavorites else Res.string.addToFavorites)) },
         )
 
         val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()

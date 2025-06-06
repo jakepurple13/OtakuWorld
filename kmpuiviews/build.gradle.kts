@@ -118,6 +118,10 @@ kotlin {
                 implementation(libs.multiplatform.lifecycle.runtime.compose)
                 implementation(libs.androidx.navigation3.runtime)
 
+                implementation(libs.materialAdaptiveCmp)
+                implementation(libs.materialAdaptiveLayoutCmp)
+                implementation(libs.materialAdaptiveLayoutNavCmp)
+
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
             }
