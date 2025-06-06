@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.updateprerelease
+package com.programmersbox.kmpuiviews.presentation.settings.prerelease
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
@@ -27,16 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.presentation.components.plus
-import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseUiState
-import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseViewModel
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
-import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

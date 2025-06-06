@@ -32,6 +32,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoScre
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
+import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
@@ -51,7 +52,6 @@ import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.uiviews.presentation.settings.extensions.ExtensionList
-import com.programmersbox.uiviews.presentation.settings.updateprerelease.PrereleaseScreen
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen
