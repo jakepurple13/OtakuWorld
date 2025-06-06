@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.downloadstate
+package com.programmersbox.uiviews.di.kmpinterop
 
 import android.content.Context
 import androidx.core.net.toUri
@@ -15,8 +15,8 @@ class DownloadStateRepository(
     private val context: Context,
     private val downloadAndInstaller: DownloadAndInstaller,
 ) : DownloadStateInterface {
-    private val workManager = WorkManager.getInstance(context)
-    override val downloadList = DownloadAndInstallWorker.listToDownloads(context)
+    private val workManager = WorkManager.Companion.getInstance(context)
+    override val downloadList = DownloadAndInstallWorker.Companion.listToDownloads(context)
 
     override fun cancelDownload(id: String) {
         workManager.cancelWorkById(UUID.fromString(id))
@@ -27,10 +27,10 @@ class DownloadStateRepository(
     )
 
     override fun downloadAndInstall(url: String) {
-        DownloadAndInstallWorker.downloadAndInstall(context, url)
+        DownloadAndInstallWorker.Companion.downloadAndInstall(context, url)
     }
 
     override fun downloadThenInstall(url: String) {
-        DownloadWorker.downloadThenInstall(context, url)
+        DownloadWorker.Companion.downloadThenInstall(context, url)
     }
 }

@@ -1,6 +1,5 @@
-package com.programmersbox.uiviews.presentation.lists.imports
+package com.programmersbox.kmpuiviews.presentation.settings.lists.imports
 
-import android.content.Context
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
@@ -82,37 +81,37 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.bumptech.glide.integration.compose.placeholder
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListStatus
-import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListViewModel
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
-import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
+import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.areYouSureRemove
+import otakuworld.kmpuiviews.generated.resources.cancel
+import otakuworld.kmpuiviews.generated.resources.confirm
+import otakuworld.kmpuiviews.generated.resources.delete
+import otakuworld.kmpuiviews.generated.resources.delete_multiple
+import otakuworld.kmpuiviews.generated.resources.import_import_list
+import otakuworld.kmpuiviews.generated.resources.importing_import_list
+import otakuworld.kmpuiviews.generated.resources.no
+import otakuworld.kmpuiviews.generated.resources.remove
+import otakuworld.kmpuiviews.generated.resources.remove_items
+import otakuworld.kmpuiviews.generated.resources.something_went_wrong
+import otakuworld.kmpuiviews.generated.resources.update_list_name_title
+import otakuworld.kmpuiviews.generated.resources.yes
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -124,8 +123,6 @@ fun ImportFullListScreen(
     val scope = rememberCoroutineScope()
     val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    val logoDrawable = koinInject<AppLogo>()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -148,7 +145,7 @@ fun ImportFullListScreen(
             NormalOtakuScaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text(stringResource(R.string.importing_import_list)) },
+                        title = { Text(stringResource(Res.string.importing_import_list)) },
                         navigationIcon = { BackButton() },
                         scrollBehavior = scrollBehavior
                     )
@@ -169,8 +166,8 @@ fun ImportFullListScreen(
                         modifier = Modifier.size(50.dp),
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
                     )
-                    Text(stringResource(id = R.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
-                    Text(status.throwable.localizedMessage.orEmpty())
+                    Text(stringResource(Res.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
+                    Text(status.throwable.message.orEmpty())
                 }
             }
         }
@@ -183,7 +180,7 @@ fun ImportFullListScreen(
             NormalOtakuScaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text(stringResource(R.string.importing_import_list)) },
+                        title = { Text(stringResource(Res.string.importing_import_list)) },
                         navigationIcon = { BackButton() },
                         actions = { Text("(${vm.importingList.size})") },
                         scrollBehavior = scrollBehavior
@@ -201,7 +198,7 @@ fun ImportFullListScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text(stringResource(R.string.import_import_list)) }
+                        ) { Text(stringResource(Res.string.import_import_list)) }
                     }
                 },
                 contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
@@ -228,7 +225,6 @@ fun ImportFullListScreen(
                                     vm.importingList[index] =
                                         it.copy(list = it.list.filter { item -> item !in list })
                                 },
-                                logoDrawable = logoDrawable
                             )
                         }
 
@@ -242,7 +238,6 @@ fun ImportFullListScreen(
                                     vm.importingList[index] = it.copy(item = it.item.copy(name = newName))
                                 },
                                 onDismiss = { showInfoSheet = false },
-                                logo = logoDrawable,
                                 onDeleteListAction = { vm.importingList.remove(it) },
                                 onRemoveItemsAction = { showRemoveSheet = true },
                                 onUseBiometricAction = { change ->
@@ -275,27 +270,13 @@ fun ImportFullListScreen(
     }
 }
 
-@LightAndDarkPreviews
-@Composable
-private fun ImportScreenPreview() {
-    PreviewTheme {
-        val listDao: ListDao = LocalCustomListDao.current
-        val context: Context = LocalContext.current
-        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(listDao, createSavedStateHandle()) }
-        ImportFullListScreen(
-            vm = vm
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun InfoSheet(
     customItem: CustomList,
     sheetState: SheetState,
     rename: (String) -> Unit,
     onDismiss: () -> Unit,
-    logo: AppLogo,
     onDeleteListAction: () -> Unit,
     onRemoveItemsAction: () -> Unit,
     onUseBiometricAction: (Boolean) -> Unit,
@@ -309,7 +290,7 @@ private fun InfoSheet(
     if (showAdd) {
         AlertDialog(
             onDismissRequest = { showAdd = false },
-            title = { Text(stringResource(R.string.update_list_name_title)) },
+            title = { Text(stringResource(Res.string.update_list_name_title)) },
             text = { Text("Are you sure you want to change the name?") },
             confirmButton = {
                 TextButton(
@@ -317,10 +298,10 @@ private fun InfoSheet(
                         rename(currentName)
                         showAdd = false
                     }
-                ) { Text(stringResource(id = R.string.confirm)) }
+                ) { Text(stringResource(Res.string.confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showAdd = false }) { Text(stringResource(id = R.string.cancel)) }
+                TextButton(onClick = { showAdd = false }) { Text(stringResource(Res.string.cancel)) }
             }
         )
     }
@@ -351,10 +332,10 @@ private fun InfoSheet(
             ListItem(
                 headlineContent = {},
                 leadingContent = {
-                    GlideImage(
-                        model = customItem.list.firstOrNull()?.imageUrl,
-                        failure = placeholder(logo.logo),
-                        contentDescription = null,
+                    ImageLoaderChoice(
+                        imageUrl = customItem.list.firstOrNull()?.imageUrl.orEmpty(),
+                        name = customItem.item.name,
+                        placeHolder = { painterLogo() },
                         modifier = Modifier
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             .clip(MaterialTheme.shapes.small)
@@ -398,7 +379,7 @@ private fun InfoSheet(
                     )
                 ) {
                     Icon(Icons.Default.RemoveCircle, null)
-                    Text(stringResource(R.string.remove_items))
+                    Text(stringResource(Res.string.remove_items))
                 }
 
                 ActionItem(
@@ -415,7 +396,7 @@ private fun InfoSheet(
                     ),
                 ) {
                     Icon(Icons.Default.Delete, null)
-                    Text(stringResource(R.string.delete))
+                    Text(stringResource(Res.string.delete))
                 }
             }
 
@@ -493,10 +474,7 @@ private fun RemoveFromList(
     onDismiss: () -> Unit,
     sheetState: SheetState,
     onRemove: (List<CustomListInfo>) -> Unit,
-    logoDrawable: AppLogo,
 ) {
-    val context = LocalContext.current
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -517,7 +495,7 @@ private fun RemoveFromList(
                 text = {
                     Text(
                         pluralStringResource(
-                            R.plurals.areYouSureRemove,
+                            Res.plurals.areYouSureRemove,
                             itemsToDelete.size,
                             itemsToDelete.size
                         )
@@ -530,16 +508,16 @@ private fun RemoveFromList(
                             onPopupDismiss()
                             onDismiss()
                         },
-                    ) { Text(stringResource(R.string.yes)) }
+                    ) { Text(stringResource(Res.string.yes)) }
                 },
-                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } },
+                dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } },
             )
         }
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(R.string.delete_multiple)) },
+                    title = { Text(stringResource(Res.string.delete_multiple)) },
                     windowInsets = WindowInsets(0.dp),
                 )
             },
@@ -553,7 +531,7 @@ private fun RemoveFromList(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 4.dp)
-                    ) { Text(stringResource(id = R.string.cancel)) }
+                    ) { Text(stringResource(Res.string.cancel)) }
 
                     Button(
                         onClick = { showPopup = true },
@@ -561,7 +539,7 @@ private fun RemoveFromList(
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 4.dp)
-                    ) { Text(stringResource(id = R.string.remove)) }
+                    ) { Text(stringResource(Res.string.remove)) }
                 }
             }
         ) { padding ->

@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings.downloadstate
+package com.programmersbox.kmpuiviews.presentation.settings.downloadstate
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -30,10 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
-import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
 import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

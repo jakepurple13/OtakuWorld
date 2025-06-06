@@ -1,8 +1,5 @@
-package com.programmersbox.uiviews.presentation.lists.imports
+package com.programmersbox.kmpuiviews.presentation.settings.lists.imports
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -49,39 +46,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListStatus
-import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
-import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
-import java.util.UUID
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.import_import_list
+import otakuworld.kmpuiviews.generated.resources.importing_import_list
+import otakuworld.kmpuiviews.generated.resources.list_name
+import otakuworld.kmpuiviews.generated.resources.something_went_wrong
 
 //TODO: Might be removing this
 // Need to keep this for legacy
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ImportListScreen(
@@ -93,8 +82,6 @@ fun ImportListScreen(
     val scope = rememberCoroutineScope()
     val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    val logoDrawable = koinInject<AppLogo>().logo
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -125,7 +112,7 @@ fun ImportListScreen(
                 NormalOtakuScaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text(stringResource(R.string.importing_import_list)) },
+                            title = { Text(stringResource(Res.string.importing_import_list)) },
                             navigationIcon = { BackButton() },
                             scrollBehavior = scrollBehavior
                         )
@@ -144,8 +131,8 @@ fun ImportListScreen(
                             modifier = Modifier.size(50.dp),
                             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
                         )
-                        Text(stringResource(id = R.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
-                        Text(status.throwable.localizedMessage.orEmpty())
+                        Text(stringResource(Res.string.something_went_wrong), style = MaterialTheme.typography.titleLarge)
+                        Text(status.throwable.message.orEmpty())
                     }
                 }
             }
@@ -161,7 +148,7 @@ fun ImportListScreen(
                     topBar = {
                         Column {
                             TopAppBar(
-                                title = { Text(stringResource(R.string.importing_import_list)) },
+                                title = { Text(stringResource(Res.string.importing_import_list)) },
                                 navigationIcon = { BackButton() },
                                 actions = { Text("(${status.customList?.list.orEmpty().size})") },
                                 scrollBehavior = scrollBehavior
@@ -171,7 +158,7 @@ fun ImportListScreen(
                                 OutlinedTextField(
                                     value = name,
                                     onValueChange = { name = it },
-                                    label = { Text(stringResource(R.string.list_name)) },
+                                    label = { Text(stringResource(Res.string.list_name)) },
                                     placeholder = { Text(status.customList?.item?.name.orEmpty()) },
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -194,7 +181,7 @@ fun ImportListScreen(
                                 },
                                 enabled = lists.none { it.item.name == name },
                                 modifier = Modifier.fillMaxWidth()
-                            ) { Text(stringResource(R.string.import_import_list)) }
+                            ) { Text(stringResource(Res.string.import_import_list)) }
                         }
                     },
                     contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
@@ -210,7 +197,6 @@ fun ImportListScreen(
                         items(status.customList?.list.orEmpty()) { item ->
                             CustomItem(
                                 item = item,
-                                logoDrawable = logoDrawable,
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -221,11 +207,9 @@ fun ImportListScreen(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun CustomItem(
     item: CustomListInfo,
-    logoDrawable: Drawable?,
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
@@ -255,37 +239,5 @@ private fun CustomItem(
                 Text(item.description, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
             }
         }
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun ImportScreenPreview() {
-    PreviewTheme {
-        val listDao: ListDao = LocalCustomListDao.current
-        val context: Context = LocalContext.current
-        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle()) }
-        ImportListScreen(
-            listDao = listDao,
-            vm = vm
-        )
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun ImportItemPreview() {
-    PreviewTheme {
-        CustomItem(
-            item = CustomListInfo(
-                uuid = UUID.randomUUID().toString(),
-                title = "Title",
-                description = "description",
-                url = "",
-                imageUrl = "",
-                source = "MANGA_READ"
-            ),
-            logoDrawable = null
-        )
     }
 }

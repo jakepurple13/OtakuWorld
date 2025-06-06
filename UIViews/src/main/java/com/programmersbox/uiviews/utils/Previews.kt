@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.utils
 
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -9,6 +10,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.CustomList
@@ -28,6 +30,10 @@ import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettin
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import java.util.UUID
@@ -168,5 +174,32 @@ private fun GeneralSettingsPreview() {
 private fun ExtensionListPreview() {
     PreviewTheme {
         ExtensionList()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ImportScreenPreview() {
+    PreviewTheme {
+        val listDao: ListDao = LocalCustomListDao.current
+        val context: Context = LocalContext.current
+        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(listDao, createSavedStateHandle()) }
+        ImportFullListScreen(
+            vm = vm
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun ImportListScreenPreview() {
+    PreviewTheme {
+        val listDao: ListDao = LocalCustomListDao.current
+        val context: Context = LocalContext.current
+        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle()) }
+        ImportListScreen(
+            listDao = listDao,
+            vm = vm
+        )
     }
 }
