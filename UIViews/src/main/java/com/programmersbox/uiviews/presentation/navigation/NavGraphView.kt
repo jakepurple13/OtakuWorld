@@ -4,11 +4,17 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
+import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -24,10 +30,15 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.navGraph
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.USE_NAV3
@@ -39,10 +50,10 @@ import com.programmersbox.uiviews.presentation.history.HistoryUi
 import com.programmersbox.uiviews.presentation.navigation.strategy.DialogStrategy
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
-import com.programmersbox.uiviews.presentation.settings.SettingScreen
-import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
+import com.programmersbox.uiviews.presentation.settings.AccountSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.NotificationLogo
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -180,7 +191,6 @@ private fun Nav2(
                 koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString().orEmpty()
             },
             history = { HistoryUi() },
-            sourceOrderScreen = { SourceOrderScreen() },
             settingsScreen = {
                 SettingScreen(
                     composeSettingsDsl = customPreferences,
@@ -189,7 +199,6 @@ private fun Nav2(
                     historyClick = navigationActions::history,
                     globalSearchClick = navigationActions::globalSearch,
                     listClick = navigationActions::customList,
-                    debugMenuClick = navigationActions::debug,
                     extensionClick = navigationActions::extensionList,
                     notificationSettingsClick = navigationActions::notificationsSettings,
                     generalClick = navigationActions::general,
@@ -200,6 +209,29 @@ private fun Nav2(
                     sourcesOrderClick = navigationActions::order,
                     appDownloadsClick = navigationActions::downloadInstall,
                     scanQrCode = navigationActions::scanQrCode,
+                    accountSettings = {
+                        val appConfig: AppConfig = koinInject()
+                        if (appConfig.buildType == BuildType.Full) {
+                            AccountSettings()
+                        }
+                    },
+                    onDebugBuild = {
+                        if (BuildConfig.DEBUG) {
+                            CategoryGroup {
+                                item {
+                                    PreferenceSetting(
+                                        settingTitle = { Text("Debug Menu") },
+                                        settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+                                        modifier = Modifier.clickable(
+                                            indication = ripple(),
+                                            interactionSource = null,
+                                            onClick = navigationActions::debug
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
                 )
             },
             deepLink = genericInfo.deepLinkUri,

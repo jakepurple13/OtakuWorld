@@ -122,6 +122,8 @@ kotlin {
                 implementation(libs.materialAdaptiveLayoutCmp)
                 implementation(libs.materialAdaptiveLayoutNavCmp)
 
+                implementation(libs.reorderable)
+
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
             }

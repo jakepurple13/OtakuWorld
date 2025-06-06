@@ -38,6 +38,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.notifications.Notific
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -50,7 +51,6 @@ import com.programmersbox.uiviews.presentation.navigation.strategy.DialogScene
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
-import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.trackScreen

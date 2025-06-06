@@ -159,7 +159,7 @@ private fun SettingsPreview() {
 }
 
 @Composable
-private fun AccountSettings(
+fun AccountSettings(
     viewModel: AccountViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current

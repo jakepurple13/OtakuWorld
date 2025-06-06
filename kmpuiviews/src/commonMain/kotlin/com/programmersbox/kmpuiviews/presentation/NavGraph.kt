@@ -39,6 +39,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.notifications.Notific
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -60,7 +61,6 @@ fun NavGraphBuilder.navGraph(
     deepLink: String,
     onboarding: @Composable (ComposeSettingsDsl) -> Unit,
     settingsScreen: @Composable (ComposeSettingsDsl) -> Unit,
-    sourceOrderScreen: @Composable () -> Unit,
     history: @Composable () -> Unit,
     profileIcon: @Composable () -> String,
     settingsNavSetup: NavGraphBuilder.() -> Unit,
@@ -106,7 +106,6 @@ fun NavGraphBuilder.navGraph(
         debug = isDebug,
         navigationActions = navController,
         settingsScreen = settingsScreen,
-        sourceOrderScreen = sourceOrderScreen,
         history = history,
         profileIcon = profileIcon,
         deepLink = deepLink,
@@ -144,7 +143,6 @@ private fun NavGraphBuilder.settings(
     deepLink: String = "",
     navigationActions: NavigationActions,
     settingsScreen: @Composable (ComposeSettingsDsl) -> Unit,
-    sourceOrderScreen: @Composable () -> Unit,
     history: @Composable () -> Unit,
     profileIcon: @Composable () -> String,
     additionalSettings: NavGraphBuilder.() -> Unit,
@@ -188,8 +186,7 @@ private fun NavGraphBuilder.settings(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         ) {
-            //SourceOrderScreen()
-            sourceOrderScreen()
+            SourceOrderScreen()
         }
 
         composable<Screen.NotificationsSettings>(

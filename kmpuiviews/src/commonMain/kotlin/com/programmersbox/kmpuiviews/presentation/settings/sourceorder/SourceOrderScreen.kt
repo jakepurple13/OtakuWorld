@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.settings
+package com.programmersbox.kmpuiviews.presentation.settings.sourceorder
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -146,11 +146,11 @@ fun SourceOrderScreen(
                                 Icon(
                                     Icons.Filled.KeyboardArrowDown,
                                     modifier =
-                                    Modifier
-                                        .size(SplitButtonDefaults.TrailingIconSize)
-                                        .graphicsLayer {
-                                            this.rotationZ = rotation
-                                        },
+                                        Modifier
+                                            .size(SplitButtonDefaults.TrailingIconSize)
+                                            .graphicsLayer {
+                                                this.rotationZ = rotation
+                                            },
                                     contentDescription = "Localized description"
                                 )
                             }
