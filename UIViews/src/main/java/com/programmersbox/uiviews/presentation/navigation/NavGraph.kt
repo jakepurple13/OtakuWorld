@@ -28,6 +28,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoSc
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
+import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
@@ -46,7 +47,6 @@ import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
-import com.programmersbox.uiviews.presentation.settings.InfoSettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
 import com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadStateScreen
@@ -214,10 +214,11 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         ) {
             trackScreen(Screen.MoreInfoSettings)
-            InfoSettings(
+            MoreInfoScreen(
                 usedLibraryClick = navigationActions::about,
                 onPrereleaseClick = navigationActions::prerelease,
-                onViewAccountInfoClick = navigationActions::accountInfo
+                onViewAccountInfoClick = navigationActions::accountInfo,
+                shouldShowPrerelease = BuildConfig.DEBUG
             )
         }
 
