@@ -4,12 +4,17 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.text.format.DateFormat
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -49,6 +54,7 @@ import org.koin.dsl.module
 
 actual fun platform() = "Android"
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 actual fun createColorScheme(
     darkTheme: Boolean,
@@ -62,8 +68,7 @@ actual fun createColorScheme(
             secondary = Color(0xff90CAF9)
         )
 
-        //TODO: On next cmp update, add expressive color scheme
-        isExpressive -> lightColorScheme()//expressiveLightColorScheme()
+        isExpressive -> expressiveLightColorScheme()
 
         else -> lightColorScheme()
     }
@@ -205,3 +210,15 @@ actual class AboutLibraryBuilder {
 
 @Composable
 actual fun Modifier.zoomOverlay(): Modifier = zoomablePeekOverlay(state = rememberZoomablePeekOverlayState())
+
+@Composable
+actual fun HideScreen(shouldHide: Boolean) {
+    val window = LocalActivity.current
+
+    DisposableEffect(shouldHide) {
+        if (shouldHide) {
+            window?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+        onDispose { window?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
+}

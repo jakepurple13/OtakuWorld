@@ -15,10 +15,16 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
+import com.programmersbox.kmpuiviews.presentation.all.AllScreen
+import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
+import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
+import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsScreen
@@ -34,18 +40,12 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.animatedSc
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.all.AllView
 import com.programmersbox.uiviews.presentation.details.DetailsScreen
-import com.programmersbox.uiviews.presentation.favorite.FavoriteUi
-import com.programmersbox.uiviews.presentation.globalsearch.GlobalSearchView
 import com.programmersbox.uiviews.presentation.history.HistoryUi
-import com.programmersbox.uiviews.presentation.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.uiviews.presentation.lists.OtakuListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportFullListScreen
 import com.programmersbox.uiviews.presentation.lists.imports.ImportListScreen
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
-import com.programmersbox.uiviews.presentation.recent.RecentView
-import com.programmersbox.uiviews.presentation.settings.GeneralSettings
 import com.programmersbox.uiviews.presentation.settings.InfoSettings
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.SourceOrderScreen
@@ -109,7 +109,7 @@ fun NavGraphBuilder.navGraph(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) }
     ) {
         trackScreen(Screen.AllScreen)
-        AllView(
+        AllScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
     }
@@ -256,7 +256,7 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             trackScreen(Screen.FavoriteScreen)
-            FavoriteUi(
+            FavoriteScreen(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
             )
         }
@@ -274,8 +274,7 @@ private fun NavGraphBuilder.settings(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
             trackScreen("global_search")
-            GlobalSearchView(
-                notificationLogo = notificationLogo,
+            GlobalSearchScreen(
                 isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
                 screen = it.toRoute()
             )
@@ -378,8 +377,7 @@ private fun NavGraphBuilder.settings(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
         trackScreen("global_search")
-        GlobalSearchView(
-            notificationLogo = notificationLogo,
+        GlobalSearchScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
             screen = it.toRoute()
         )
@@ -409,7 +407,7 @@ private fun NavGraphBuilder.settings(
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
     ) {
         trackScreen(Screen.FavoriteScreen.Home)
-        FavoriteUi(
+        FavoriteScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
     }

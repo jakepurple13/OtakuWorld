@@ -1,7 +1,9 @@
 package com.programmersbox.kmpuiviews
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -20,6 +22,7 @@ import platform.UIKit.UIDevice
 
 actual fun platform() = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorScheme {
     return when {
@@ -28,7 +31,7 @@ actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorSc
             secondary = Color(0xff90CAF9)
         )
 
-        isExpressive -> lightColorScheme()//expressiveLightColorScheme()
+        isExpressive -> expressiveLightColorScheme()
 
         else -> lightColorScheme()
     }

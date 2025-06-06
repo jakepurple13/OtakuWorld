@@ -2,23 +2,39 @@ package com.programmersbox.kmpuiviews.presentation.onboarding.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Battery1Bar
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -29,29 +45,35 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.MediaCheckerNetworkType
+import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.rememberFloatingNavigation
+import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShowDownloadSettings
+import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.are_you_sure_stop_checking
+import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.check_for_periodic_updates
 import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.ok
+import otakuworld.kmpuiviews.generated.resources.show_all_screen
 import otakuworld.kmpuiviews.generated.resources.yes
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
-internal fun GeneralContent(
-    navigationBarSettings: @Composable () -> Unit,
-) {
+internal fun GeneralContent() {
     val handling = koinInject<NewSettingsHandling>()
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -82,10 +104,9 @@ internal fun GeneralContent(
             }
         }
 
-        //NavigationBarSettings(handling = handling)
         CategoryGroup {
             item {
-                navigationBarSettings()
+                NavigationBarSettings(handling = handling)
             }
         }
 
@@ -217,6 +238,167 @@ internal fun GeneralContent(
                 }
             }
 
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+fun NavigationBarSettings(handling: NewSettingsHandling) {
+    var floatingNavigation by rememberFloatingNavigation()
+
+    SwitchSetting(
+        settingTitle = { Text("Floating Navigation") },
+        settingIcon = { Icon(Icons.Default.Navigation, null, modifier = Modifier.fillMaxSize()) },
+        value = floatingNavigation,
+        updateValue = { floatingNavigation = it }
+    )
+
+    CategoryGroupDefaults.Divider()
+
+    if (LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Expanded) {
+        var showAllScreen by handling.rememberShowAll()
+
+        SwitchSetting(
+            settingTitle = { Text(stringResource(Res.string.show_all_screen)) },
+            settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
+            value = showAllScreen,
+            updateValue = { showAllScreen = it }
+        )
+    } else {
+
+        var middleNavigationAction by handling.rememberMiddleNavigationAction()
+        ListSetting(
+            settingTitle = { Text("Middle Navigation Destination") },
+            dialogIcon = { Icon(Icons.Default.LocationOn, null) },
+            settingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.fillMaxSize()) },
+            dialogTitle = { Text("Choose a middle navigation destination") },
+            summaryValue = { Text(middleNavigationAction.visibleName) },
+            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+            value = middleNavigationAction,
+            options = MiddleNavigationAction.entries,
+            updateValue = { it, d ->
+                d.value = false
+                middleNavigationAction = it
+            }
+        )
+
+        MultipleActionsSetting(
+            handling = handling,
+            middleNavigationAction = middleNavigationAction
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun MultipleActionsSetting(
+    handling: NewSettingsHandling,
+    middleNavigationAction: MiddleNavigationAction,
+) {
+    var multipleActions by handling.rememberMiddleMultipleActions()
+
+    val multipleActionOptions = MiddleNavigationAction
+        .entries
+        .filter { it != MiddleNavigationAction.Multiple }
+
+    ShowWhen(middleNavigationAction == MiddleNavigationAction.Multiple) {
+        CategoryGroupDefaults.Divider()
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+        ) {
+            HorizontalFloatingToolbar(
+                expanded = true,
+                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+                leadingContent = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    DropdownMenu(
+                        showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        multipleActionOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.name) },
+                                leadingIcon = {
+                                    Icon(
+                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                        null,
+                                    )
+                                },
+                                onClick = {
+                                    multipleActions = multipleActions?.copy(
+                                        startAction = it,
+                                    )
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            multipleActions
+                                ?.startAction
+                                ?.item
+                                ?.icon
+                                ?.invoke(true)
+                                ?: Icons.Default.Add,
+                            null
+                        )
+                    }
+                },
+                trailingContent = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    DropdownMenu(
+                        showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        multipleActionOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.visibleName) },
+                                leadingIcon = {
+                                    Icon(
+                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                        null,
+                                    )
+                                },
+                                onClick = {
+                                    multipleActions = multipleActions?.copy(endAction = it)
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            multipleActions
+                                ?.endAction
+                                ?.item
+                                ?.icon
+                                ?.invoke(true)
+                                ?: Icons.Default.Add,
+                            null
+                        )
+                    }
+                },
+            ) {
+                FilledIconButton(
+                    modifier = Modifier.width(64.dp),
+                    onClick = {}
+                ) {
+                    Icon(
+                        Icons.Filled.UnfoldLess,
+                        contentDescription = "Localized description"
+                    )
+                }
+            }
         }
     }
 }

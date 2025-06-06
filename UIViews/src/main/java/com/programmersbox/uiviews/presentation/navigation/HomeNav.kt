@@ -113,6 +113,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
+import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -124,7 +125,7 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.components.MultipleActions
 import com.programmersbox.uiviews.presentation.components.rememberMultipleBarState
-import com.programmersbox.uiviews.theme.OtakuMaterialTheme
+import com.programmersbox.uiviews.utils.LocalGenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -165,12 +166,12 @@ fun HomeNav(
     val backStack = remember { TopLevelBackStack<NavKey>(startDestination) }
 
     CompositionLocalProvider(
-        LocalWindowSizeClass provides windowSize
+        LocalWindowSizeClass provides windowSize,
+        LocalGenericInfo provides genericInfo
     ) {
         OtakuMaterialTheme(
             navController = navController,
             navBackStack = backStack,
-            genericInfo = genericInfo,
             settingsHandling = settingsHandling,
         ) {
             AskForNotificationPermissions()

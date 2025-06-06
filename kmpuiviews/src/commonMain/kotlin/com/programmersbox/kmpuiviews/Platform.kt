@@ -67,3 +67,6 @@ expect class AboutLibraryBuilder {
 
 @Composable
 expect fun Modifier.zoomOverlay(): Modifier
+
+@Composable
+expect fun HideScreen(shouldHide: Boolean)

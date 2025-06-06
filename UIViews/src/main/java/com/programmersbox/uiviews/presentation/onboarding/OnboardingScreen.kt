@@ -22,7 +22,6 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.uiviews.presentation.settings.NavigationBarSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.skydoves.landscapist.glide.GlideImage
 import org.koin.compose.koinInject
@@ -38,7 +37,6 @@ fun OnboardingScreen(
     OnboardingScreen(
         navController = navController,
         customPreferences = customPreferences,
-        navigationBarSettings = { NavigationBarSettings(koinInject()) },
         accountContent = {
             val viewModel: AccountViewModel = koinViewModel()
             Crossfade(

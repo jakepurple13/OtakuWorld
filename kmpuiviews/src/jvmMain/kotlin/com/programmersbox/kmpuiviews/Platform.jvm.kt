@@ -3,7 +3,9 @@ package com.programmersbox.kmpuiviews
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RememberMe
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -32,6 +34,7 @@ import java.util.Locale
 
 actual fun platform(): String = "Desktop"
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorScheme {
     return when {
@@ -40,7 +43,7 @@ actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorSc
             secondary = Color(0xff90CAF9)
         )
 
-        isExpressive -> lightColorScheme()//expressiveLightColorScheme()
+        isExpressive -> expressiveLightColorScheme()
 
         else -> lightColorScheme()
     }

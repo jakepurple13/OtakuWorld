@@ -151,6 +151,7 @@ kotlin {
                 implementation(libs.zoomable.peek.overlay)
                 implementation(libs.barcode.scanning)
                 implementation(libs.biometric)
+                implementation(androidx.activity.activityKtx)
             }
         }
 
@@ -184,6 +185,9 @@ kotlin {
                 implementation(libs.connectivity.http)
                 implementation(libs.connectivity.compose.http)
             }
+        }
+        all {
+            languageSettings.enableLanguageFeature("WhenGuards")
         }
     }
 }

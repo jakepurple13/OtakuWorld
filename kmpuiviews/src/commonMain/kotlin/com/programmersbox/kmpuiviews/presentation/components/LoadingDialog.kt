@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.loading
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LoadingDialog(
     showLoadingDialog: Boolean,
@@ -35,7 +37,7 @@ fun LoadingDialog(
                     .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
             ) {
                 Column {
-                    CircularProgressIndicator(
+                    CircularWavyProgressIndicator(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Text(text = stringResource(Res.string.loading), Modifier.align(Alignment.CenterHorizontally))
