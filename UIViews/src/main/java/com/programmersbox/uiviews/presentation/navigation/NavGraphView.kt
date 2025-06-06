@@ -22,6 +22,7 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.USE_NAV3
@@ -33,7 +34,6 @@ import com.programmersbox.uiviews.utils.NotificationLogo
 
 @Composable
 fun NavigationGraph(
-    backStack: NavBackStack,
     navigationActions: NavigationActions,
     genericInfo: GenericInfo,
     windowSize: WindowSizeClass,
@@ -45,7 +45,7 @@ fun NavigationGraph(
     //TODO: Maybe put in a little thing to switch between these two? Prolly not though
     if (USE_NAV3) {
         Nav3(
-            backStack = backStack,
+            backStack = (navigationActions as Navigation3Actions).backstack(),
             navigationActions = navigationActions,
             genericInfo = genericInfo,
             windowSize = windowSize,

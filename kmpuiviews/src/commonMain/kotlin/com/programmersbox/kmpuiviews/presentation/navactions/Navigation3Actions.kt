@@ -12,7 +12,10 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
-internal class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : NavigationActions {
+class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : NavigationActions {
+
+    fun backstack() = navBackStack.backStack
+
     override fun recent() {
         navBackStack.add(Screen.RecentScreen)
     }

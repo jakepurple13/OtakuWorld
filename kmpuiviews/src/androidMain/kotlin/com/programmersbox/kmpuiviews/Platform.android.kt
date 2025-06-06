@@ -6,6 +6,8 @@ import android.os.Build
 import android.text.format.DateFormat
 import android.view.WindowManager
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.darkColorScheme
@@ -15,6 +17,7 @@ import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -220,5 +223,18 @@ actual fun HideScreen(shouldHide: Boolean) {
             window?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
         onDispose { window?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
+}
+
+@Composable
+actual fun InitialSetup() {
+    AskForNotificationPermissions()
+}
+
+@Composable
+fun AskForNotificationPermissions() {
+    if (Build.VERSION.SDK_INT >= 33) {
+        val permissionRequest = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+        LaunchedEffect(Unit) { permissionRequest.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
     }
 }

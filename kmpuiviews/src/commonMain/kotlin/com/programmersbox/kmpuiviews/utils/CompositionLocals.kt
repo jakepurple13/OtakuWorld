@@ -43,15 +43,15 @@ val LocalSystemDateTimeFormat = staticCompositionLocalOf<DateTimeFormat<LocalDat
 fun KmpLocalCompositionSetup(
     navController: NavHostController,
     navBackStack: TopLevelBackStack<NavKey>,
+    actions: NavigationActions = if (USE_NAV3)
+        Navigation3Actions(navBackStack)
+    else
+        Navigation2Actions(navController),
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
     val customUriHandler = koinInject<CustomUriHandler>()
     val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
-    val actions = if (USE_NAV3)
-        Navigation3Actions(navBackStack)
-    else
-        Navigation2Actions(navController)
 
     CompositionLocalProvider(
         LocalNavActions provides actions,
