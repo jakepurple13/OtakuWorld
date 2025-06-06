@@ -111,11 +111,11 @@ kotlin {
                 implementation(libs.constraintlayout.compose.multiplatform)
                 implementation(libs.compose.constraintlayout.compose.multiplatform)
 
-                implementation("io.github.alexzhirkevich:qrose:1.0.1")
+                implementation(libs.qrose)
+                implementation(libs.androidx.navigationevent)
                 implementation(libs.scanner)
 
                 implementation(libs.multiplatform.lifecycle.runtime.compose)
-                implementation("androidx.navigationevent:navigationevent:1.0.0-alpha02")
                 implementation(libs.androidx.navigation3.runtime)
 
                 /*implementation(libs.androidx.navigation3.runtime)

@@ -45,7 +45,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -60,7 +59,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
 import com.bumptech.glide.load.model.GlideUrl
 import com.kmpalette.palette.graphics.Palette
@@ -69,13 +67,12 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.animate
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
-import com.programmersbox.kmpuiviews.utils.toComposeColor
 import com.programmersbox.uiviews.R
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
@@ -83,6 +80,10 @@ import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.glide.GlideImageState
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.placeholder.placeholder.PlaceholderPlugin
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
 import me.saket.telephoto.zoomable.zoomablePeekOverlay
 
@@ -101,6 +102,9 @@ internal fun DetailsHeader(
     blurHash: BitmapPainter? = null,
     onBitmapSet: (ImageBitmap) -> Unit = {},
 ) {
+    val settings = LocalSettingsHandling.current
+
+    val blurEnabled by settings.rememberShowBlur()
     val surface = MaterialTheme.colorScheme.surface
     val imageUrl = remember {
         try {
@@ -139,17 +143,8 @@ internal fun DetailsHeader(
             .fillMaxWidth()
             .animateContentSize()
     ) {
-        val color by ColorUtils
-            .setAlphaComponent(
-                ColorUtils.blendARGB(
-                    MaterialTheme.colorScheme.surface.toArgb(),
-                    MaterialTheme.colorScheme.primary.toArgb(),
-                    0.25f
-                ),
-                200
-            )
-            .toComposeColor()
-            .animate()
+
+        val haze = rememberHazeState()
 
         GlideImage(
             imageModel = { imageUrl },
@@ -160,15 +155,18 @@ internal fun DetailsHeader(
             },
             modifier = Modifier
                 .matchParentSize()
-                .blur(4.dp)
-                .drawWithContent {
-                    drawContent()
-                    drawRect(color)
-                },
+                .let {
+                    if (blurEnabled) {
+                        it.hazeSource(haze)
+                    } else {
+                        it.blur(4.dp)
+                    }
+                }
         )
 
         Column(
             modifier = Modifier
+                .hazeEffect(haze, style = HazeMaterials.ultraThin())
                 .padding(4.dp)
                 .animateContentSize()
         ) {

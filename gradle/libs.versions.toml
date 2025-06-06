@@ -18,17 +18,19 @@ androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
 dragselect = "3.0.2"
 easylauncher = "6.4.1"
-firebaseCrashlyticsGradle = "3.0.3"
+firebaseCrashlyticsGradle = "3.0.4"
 googleServices = "4.4.2"
-haze = "1.6.3"
+haze = "1.6.4"
 kamelImage = "1.0.5"
 latestAboutLibsRelease = "12.2.0"
 coroutinesVersion = "1.10.2"
 glideVersion = "4.16.0"
 lifecycleViewmodelNavigation3 = "1.0.0-alpha01"
+navigationevent = "1.0.0-alpha02"
 pagecurl = "1.5.1"
 pagingVersion = "3.3.6"
 protobufGradlePlugin = "0.9.5"
+qrose = "1.0.1"
 reorderable = "2.4.3"
 roomVersion = "2.7.1"
 navVersion = "2.9.0"
@@ -61,7 +63,7 @@ firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "1.4.2"
 
-firebaseBom = "33.14.0"
+firebaseBom = "33.15.0"
 
 kmpalette = "3.1.0"
 
@@ -140,6 +142,7 @@ androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runt
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "nav3Material" }
 
+androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded-core" }
 constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded" }
@@ -204,6 +207,7 @@ composeMaterialIconsCore = { group = "androidx.compose.material", name = "materi
 composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 protobuf-gradle-plugin = { module = "com.google.protobuf:protobuf-gradle-plugin", version.ref = "protobufGradlePlugin" }
+qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "scanner" }
 textflow-material3 = { module = "io.github.oleksandrbalan:textflow-material3", version.ref = "textflowMaterial3" }
