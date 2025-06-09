@@ -18,10 +18,8 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.crashlytics.setCustomKeys
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.remoteconfig.ConfigUpdate
-import com.google.firebase.remoteconfig.ConfigUpdateListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import com.google.firebase.remoteconfig.configUpdates
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.programmersbox.datastore.DataStoreHandling
@@ -52,6 +50,8 @@ import com.programmersbox.uiviews.utils.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
@@ -175,7 +175,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             val forLaterName = getString(R.string.for_later)
             val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray())
                 .toString()
-                .also { forLaterUuid = it }
                 .also { AppConfig.forLaterUuid = it }
 
             runCatching {
@@ -257,40 +256,36 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         }
 
         //Updates
-        remoteConfig.addOnConfigUpdateListener(
-            object : ConfigUpdateListener {
-                override fun onUpdate(configUpdate: ConfigUpdate) {
-                    remoteConfig.activate().addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            GlobalScope.launch {
-                                val dataStoreKeys = RemoteConfigKeys.entries
-                                configUpdate.updatedKeys.forEach { t ->
-                                    logFirebaseMessage("Updated key: $t")
-                                    runCatching {
-                                        dataStoreKeys.first { keys -> keys.key == t }
-                                    }
-                                        .onSuccess {
-                                            it.setDataStoreValue(
-                                                dataStoreHandling = dataStoreHandling,
-                                                otakuDataStoreHandling = otakuDataStoreHandling,
-                                                settingsHandling = settingsHandling,
-                                                newSettingsHandling = newSettingsHandling,
-                                                remoteConfig = remoteConfig
-                                            )
-                                        }
-                                        .onFailure { it.printStackTrace() }
+        remoteConfig
+            .configUpdates
+            .onEach { configUpdate ->
+                remoteConfig.activate().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        GlobalScope.launch {
+                            val dataStoreKeys = RemoteConfigKeys.entries
+                            configUpdate.updatedKeys.forEach { t ->
+                                logFirebaseMessage("Updated key: $t")
+                                runCatching {
+                                    dataStoreKeys.first { keys -> keys.key == t }
                                 }
+                                    .onSuccess {
+                                        it.setDataStoreValue(
+                                            dataStoreHandling = dataStoreHandling,
+                                            otakuDataStoreHandling = otakuDataStoreHandling,
+                                            settingsHandling = settingsHandling,
+                                            newSettingsHandling = newSettingsHandling,
+                                            remoteConfig = remoteConfig
+                                        )
+                                    }
+                                    .onFailure { it.printStackTrace() }
                             }
                         }
+                    } else {
+                        task.exception?.let(::recordFirebaseException)
                     }
                 }
-
-                override fun onError(error: FirebaseRemoteConfigException) {
-                    error.printStackTrace()
-                    Firebase.crashlytics.recordException(error)
-                }
             }
-        )
+            .launchIn(GlobalScope)
     }
 
     data class FirebaseIds(
@@ -300,8 +295,4 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         val itemId: String,
         val readOrWatchedId: String,
     )
-
-    companion object {
-        var forLaterUuid: String? = null
-    }
 }
