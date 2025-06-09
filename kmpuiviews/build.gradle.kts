@@ -124,6 +124,8 @@ kotlin {
 
                 implementation(libs.reorderable)
 
+                implementation(libs.paging.compose.common)
+
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
             }

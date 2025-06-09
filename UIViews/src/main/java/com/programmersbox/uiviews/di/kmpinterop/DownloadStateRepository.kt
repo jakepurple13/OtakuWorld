@@ -15,8 +15,8 @@ class DownloadStateRepository(
     private val context: Context,
     private val downloadAndInstaller: DownloadAndInstaller,
 ) : DownloadStateInterface {
-    private val workManager = WorkManager.Companion.getInstance(context)
-    override val downloadList = DownloadAndInstallWorker.Companion.listToDownloads(context)
+    private val workManager = WorkManager.getInstance(context)
+    override val downloadList = DownloadAndInstallWorker.listToDownloads(context)
 
     override fun cancelDownload(id: String) {
         workManager.cancelWorkById(UUID.fromString(id))
@@ -27,10 +27,10 @@ class DownloadStateRepository(
     )
 
     override fun downloadAndInstall(url: String) {
-        DownloadAndInstallWorker.Companion.downloadAndInstall(context, url)
+        DownloadAndInstallWorker.downloadAndInstall(context, url)
     }
 
     override fun downloadThenInstall(url: String) {
-        DownloadWorker.Companion.downloadThenInstall(context, url)
+        DownloadWorker.downloadThenInstall(context, url)
     }
 }

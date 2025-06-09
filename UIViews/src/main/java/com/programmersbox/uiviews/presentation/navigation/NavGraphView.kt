@@ -46,7 +46,6 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalShare
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.history.HistoryUi
 import com.programmersbox.uiviews.presentation.navigation.strategy.DialogStrategy
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
@@ -190,7 +189,6 @@ private fun Nav2(
             profileIcon = {
                 koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString().orEmpty()
             },
-            history = { HistoryUi() },
             settingsScreen = {
                 SettingScreen(
                     composeSettingsDsl = customPreferences,

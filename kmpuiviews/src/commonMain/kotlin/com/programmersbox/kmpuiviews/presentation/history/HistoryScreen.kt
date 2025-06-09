@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.history
+package com.programmersbox.kmpuiviews.presentation.history
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -45,45 +45,48 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemContentType
-import androidx.paging.compose.itemKey
+import app.cash.paging.compose.collectAsLazyPagingItems
+import app.cash.paging.compose.itemContentType
+import app.cash.paging.compose.itemKey
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
+import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
-import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.utils.BiometricOpen
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
-import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.LoadingDialog
-import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.dispatchIo
 import dev.chrisbanes.haze.HazeProgressive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.clear_all_history
+import otakuworld.kmpuiviews.generated.resources.history
+import otakuworld.kmpuiviews.generated.resources.no
+import otakuworld.kmpuiviews.generated.resources.removeNoti
+import otakuworld.kmpuiviews.generated.resources.yes
 
 @ExperimentalMaterial3Api
 @Composable
@@ -103,16 +106,16 @@ fun HistoryUi(
 
         AlertDialog(
             onDismissRequest = onDismissRequest,
-            title = { Text(stringResource(R.string.clear_all_history)) },
+            title = { Text(stringResource(Res.string.clear_all_history)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         scope.launch(Dispatchers.IO) { println("Deleted " + dao.deleteAllRecentHistory() + " rows") }
                         onDismissRequest()
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = { onDismissRequest() }) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = { onDismissRequest() }) { Text(stringResource(Res.string.no)) } }
         )
     }
 
@@ -134,7 +137,7 @@ fun HistoryUi(
             MediumTopAppBar(
                 scrollBehavior = scrollBehavior,
                 navigationIcon = { BackButton() },
-                title = { Text(stringResource(R.string.history)) },
+                title = { Text(stringResource(Res.string.history)) },
                 actions = {
                     Text("$recentSize")
                     IconButton(
@@ -194,7 +197,7 @@ fun HistoryUi(
 }
 
 @Composable
-private fun HistoryItem(
+fun HistoryItem(
     item: RecentModel,
     dao: HistoryDao,
     scope: CoroutineScope,
@@ -209,16 +212,16 @@ private fun HistoryItem(
 
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(stringResource(R.string.removeNoti, item.title)) },
+            title = { Text(stringResource(Res.string.removeNoti, item.title)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         scope.launch { dao.deleteRecent(item) }
                         onDismiss()
                     }
-                ) { Text(stringResource(R.string.yes)) }
+                ) { Text(stringResource(Res.string.yes)) }
             },
-            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+            dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.no)) } }
         )
     }
 
@@ -374,7 +377,7 @@ private fun HistoryItem(
 }
 
 @Composable
-private fun HistoryItemPlaceholder() {
+fun HistoryItemPlaceholder() {
     Surface(
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
@@ -407,42 +410,5 @@ private fun HistoryItemPlaceholder() {
                 highlight = PlaceholderHighlight.shimmer()
             ),
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@LightAndDarkPreviews
-@Composable
-private fun HistoryScreenPreview() {
-    PreviewTheme {
-        HistoryUi()
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun HistoryItemPreview() {
-    PreviewTheme {
-        HistoryItem(
-            item = RecentModel(
-                title = "Title",
-                description = "Description",
-                url = "url",
-                imageUrl = "imageUrl",
-                source = "MANGA_READ"
-            ),
-            dao = LocalHistoryDao.current,
-            scope = rememberCoroutineScope(),
-            biometrics = rememberBiometricOpening(),
-            onError = {}
-        )
-    }
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun HistoryPlaceholderItemPreview() {
-    PreviewTheme {
-        HistoryItemPlaceholder()
     }
 }

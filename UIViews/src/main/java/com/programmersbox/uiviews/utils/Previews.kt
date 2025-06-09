@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -16,6 +17,7 @@ import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -24,6 +26,9 @@ import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.SearchCoverCard
+import com.programmersbox.kmpuiviews.presentation.history.HistoryItem
+import com.programmersbox.kmpuiviews.presentation.history.HistoryItemPlaceholder
+import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
@@ -36,6 +41,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportL
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
+import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import java.util.UUID
 
 @LightAndDarkPreviews
@@ -201,5 +207,42 @@ private fun ImportListScreenPreview() {
             listDao = listDao,
             vm = vm
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@LightAndDarkPreviews
+@Composable
+private fun HistoryScreenPreview() {
+    PreviewTheme {
+        HistoryUi()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun HistoryItemPreview() {
+    PreviewTheme {
+        HistoryItem(
+            item = RecentModel(
+                title = "Title",
+                description = "Description",
+                url = "url",
+                imageUrl = "imageUrl",
+                source = "MANGA_READ"
+            ),
+            dao = LocalHistoryDao.current,
+            scope = rememberCoroutineScope(),
+            biometrics = rememberBiometricOpening(),
+            onError = {}
+        )
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun HistoryPlaceholderItemPreview() {
+    PreviewTheme {
+        HistoryItemPlaceholder()
     }
 }

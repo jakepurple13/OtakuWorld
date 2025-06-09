@@ -86,6 +86,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     }
 
     private fun setup() {
+        //TODO: Need to put these in a setup repository
         sourceRepository
             .sources
             .onEach {

@@ -210,9 +210,7 @@ fun ApplicationScope.BaseDesktopUi(
                                                 accountContent = {},
                                             )
                                         },
-                                        sourceOrderScreen = {},
                                         settingsNavSetup = {},
-                                        history = {},
                                         profileIcon = { "" },
                                         windowSize = windowSize
                                     )

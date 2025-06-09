@@ -28,6 +28,7 @@ glideVersion = "4.16.0"
 lifecycleViewmodelNavigation3 = "1.0.0-alpha01"
 navigationevent = "1.0.0-alpha02"
 pagecurl = "1.5.1"
+pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 pagingVersion = "3.3.6"
 protobufGradlePlugin = "0.9.5"
 qrose = "1.0.1"
@@ -187,6 +188,7 @@ kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "ko
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
 pagecurl = { module = "io.github.oleksandrbalan:pagecurl", version.ref = "pagecurl" }
+paging-compose-common = { module = "app.cash.paging:paging-compose-common", version.ref = "pagingComposeCommon" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.13.1"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }

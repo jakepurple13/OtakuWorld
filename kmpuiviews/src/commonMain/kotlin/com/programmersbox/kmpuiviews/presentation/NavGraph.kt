@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
+import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
@@ -61,7 +62,6 @@ fun NavGraphBuilder.navGraph(
     deepLink: String,
     onboarding: @Composable (ComposeSettingsDsl) -> Unit,
     settingsScreen: @Composable (ComposeSettingsDsl) -> Unit,
-    history: @Composable () -> Unit,
     profileIcon: @Composable () -> String,
     settingsNavSetup: NavGraphBuilder.() -> Unit,
 ) {
@@ -106,7 +106,6 @@ fun NavGraphBuilder.navGraph(
         debug = isDebug,
         navigationActions = navController,
         settingsScreen = settingsScreen,
-        history = history,
         profileIcon = profileIcon,
         deepLink = deepLink,
     ) { with(genericInfo) { settingsNavSetup() } }
@@ -143,7 +142,6 @@ private fun NavGraphBuilder.settings(
     deepLink: String = "",
     navigationActions: NavigationActions,
     settingsScreen: @Composable (ComposeSettingsDsl) -> Unit,
-    history: @Composable () -> Unit,
     profileIcon: @Composable () -> String,
     additionalSettings: NavGraphBuilder.() -> Unit,
 ) {
@@ -238,8 +236,7 @@ private fun NavGraphBuilder.settings(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) }
         ) {
-            //HistoryUi()
-            history()
+            HistoryUi()
         }
 
         animatedScopeComposable<Screen.FavoriteScreen>(

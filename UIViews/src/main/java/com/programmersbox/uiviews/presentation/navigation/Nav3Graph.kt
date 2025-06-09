@@ -19,6 +19,7 @@ import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
+import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
@@ -46,7 +47,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.history.HistoryUi
 import com.programmersbox.uiviews.presentation.navigation.strategy.DialogScene
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
