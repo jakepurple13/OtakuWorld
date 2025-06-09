@@ -216,12 +216,7 @@ fun OtakuCustomListScreen(
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
 
-
     HideScreen(customItem.item.useBiometric)
-
-    /*val pickDocumentLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { document -> document?.let { writeToFile(it, context) } }*/
 
     val pickDocumentLauncher = rememberFileSaverLauncher { document -> document?.let { writeToFile(it) } }
 
@@ -391,9 +386,10 @@ fun OtakuCustomListScreen(
                         IconButton(
                             onClick = { scope.launch { searchBarState.animateToCollapsed() } }
                         ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
                     } else {
-                        IconButton(onClick = navigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                        IconButton(
+                            onClick = navigateBack
+                        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                     }
                 },
                 trailingIcon = {
