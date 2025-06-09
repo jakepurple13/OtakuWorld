@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,10 +43,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +61,7 @@ import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImageElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
@@ -84,7 +83,6 @@ import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 @Composable
 internal fun DetailsHeader(
     model: KmpInfoModel,
-    logo: Any?,
     isFavorite: Boolean,
     favoriteClick: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -116,14 +114,16 @@ internal fun DetailsHeader(
             onDismissRequest = { imagePopup = false },
             title = { Text(model.title, modifier = Modifier.padding(4.dp)) },
             text = {
-                /*GlideImage(
-                    imageModel = { imageUrl },
-                    imageOptions = ImageOptions(contentScale = ContentScale.Fit),
-                    previewPlaceholder = painterResource(id = R.drawable.ic_baseline_battery_alert_24),
+                ImageLoaderChoice(
+                    imageUrl = imageUrl,
+                    name = "",
+                    headers = model.extras.mapValues { it.value.toString() },
+                    placeHolder = { painterLogo() },
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .scaleRotateOffsetReset()
                         .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                )*/
+                )
             },
             confirmButton = { TextButton(onClick = { imagePopup = false }) { Text(stringResource(Res.string.done)) } }
         )
@@ -140,6 +140,7 @@ internal fun DetailsHeader(
         ImageLoaderChoice(
             imageUrl = imageUrl,
             name = "",
+            headers = model.extras.mapValues { it.value.toString() },
             placeHolder = { painterLogo() },
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -172,11 +173,12 @@ internal fun DetailsHeader(
                         )
                         .zoomOverlay()
                 ) {
-                    var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
+                    //var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
 
                     ImageLoaderChoice(
                         imageUrl = imageUrl,
                         name = "",
+                        headers = model.extras.mapValues { it.value.toString() },
                         contentScale = ContentScale.FillBounds,
                         placeHolder = { painterLogo() },
                         onImageSet = onBitmapSet,
@@ -192,7 +194,7 @@ internal fun DetailsHeader(
                                 zoom = 3f,
                                 size = DpSize(100.dp, 100.dp),
                                 cornerRadius = 8.dp
-                            )*/
+                            )
                             .pointerInput(Unit) {
                                 detectDragGestures(
                                     // Show the magnifier at the original pointer position.
@@ -203,7 +205,7 @@ internal fun DetailsHeader(
                                     onDragEnd = { magnifierCenter = Offset.Unspecified },
                                     onDragCancel = { magnifierCenter = Offset.Unspecified }
                                 )
-                            }
+                            }*/
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     )
                 }

@@ -142,7 +142,8 @@ private fun DetailsScreenInternal(
     val paletteStyle by rememberSwatchStyle()
 
     val dynamicColor = rememberDynamicMaterialThemeState(
-        seedColor = details.palette
+        seedColor = details
+            .palette
             ?.let(paletteSwatchType.swatch)
             ?.color
             ?.takeIf { usePalette }

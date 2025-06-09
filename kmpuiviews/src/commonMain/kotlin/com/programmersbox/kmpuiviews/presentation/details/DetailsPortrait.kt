@@ -65,7 +65,6 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
@@ -292,7 +291,6 @@ fun DetailsView(
 
                     DetailsHeader(
                         model = info,
-                        logo = painterLogo(),
                         isFavorite = isFavorite,
                         favoriteClick = onFavoriteClick,
                         onPaletteSet = onPaletteSet,
