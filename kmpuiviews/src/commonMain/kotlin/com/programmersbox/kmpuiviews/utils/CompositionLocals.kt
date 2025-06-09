@@ -15,13 +15,13 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.kmpuiviews.CustomUriHandler
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
+import com.programmersbox.kmpuiviews.rememberCustomUriHandler
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
 import kotlinx.datetime.LocalDateTime
@@ -50,7 +50,7 @@ fun KmpLocalCompositionSetup(
     content: @Composable () -> Unit,
 ) {
     val defaultUriHandler = LocalUriHandler.current
-    val customUriHandler = koinInject<CustomUriHandler>()
+    val customUriHandler = rememberCustomUriHandler()
     val dateTimeFormatHandler: DateTimeFormatHandler = koinInject()
 
     CompositionLocalProvider(

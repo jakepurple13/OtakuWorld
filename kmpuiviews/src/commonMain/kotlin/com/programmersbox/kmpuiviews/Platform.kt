@@ -24,6 +24,9 @@ expect fun createColorScheme(
 
 expect fun customUriHandler(navController: NavHostController): UriHandler
 
+@Composable
+expect fun rememberCustomUriHandler(): CustomUriHandler
+
 expect class CustomUriHandler : UriHandler {
     override fun openUri(uri: String)
 }

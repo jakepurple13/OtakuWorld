@@ -142,12 +142,6 @@ fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.
         android.R.anim.slide_in_left,
         android.R.anim.slide_out_right
     )
-    .setStartAnimations(
-        this,
-        android.R.anim.slide_in_left,
-        android.R.anim.slide_out_right
-    )
     .apply(build)
     .build()
-    .apply { intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
     .launchUrl(this, url)

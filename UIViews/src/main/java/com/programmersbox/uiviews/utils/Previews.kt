@@ -2,9 +2,14 @@ package com.programmersbox.uiviews.utils
 
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -22,6 +27,10 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategorySetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.CheckBoxSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
@@ -244,5 +253,71 @@ private fun HistoryItemPreview() {
 private fun HistoryPlaceholderItemPreview() {
     PreviewTheme {
         HistoryItemPlaceholder()
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun SwitchSettingPreview() {
+    StandalonePreviewTheme {
+        Column {
+            SwitchSetting(
+                value = true,
+                updateValue = {},
+                settingTitle = { Text("Title") },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
+                summaryValue = { Text("Value") }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@LightAndDarkPreviews
+@Composable
+private fun CheckboxSettingPreview() {
+    StandalonePreviewTheme {
+        Column {
+            CheckBoxSetting(
+                value = true,
+                updateValue = {},
+                settingTitle = { Text("Title") },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
+                summaryValue = { Text("Value") }
+            )
+        }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun SliderSettingPreview() {
+    StandalonePreviewTheme {
+        Column {
+            SliderSetting(
+                sliderValue = 5f,
+                updateValue = {},
+                range = 0f..10f,
+                settingTitle = { Text("Slider") },
+                settingSummary = { Text("Summary") },
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
+            )
+        }
+    }
+}
+
+@LightAndDarkPreviews
+@Composable
+private fun CategoryPreview() {
+    StandalonePreviewTheme {
+        Column {
+            CategorySetting(
+                settingIcon = { Icon(Icons.AutoMirrored.Filled.List, null) },
+                settingTitle = { Text("Title") }
+            )
+            CategorySetting(
+                settingTitle = { Text("Title") }
+            )
+        }
     }
 }

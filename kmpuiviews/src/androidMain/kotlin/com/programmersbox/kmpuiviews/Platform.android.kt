@@ -92,6 +92,12 @@ actual class CustomUriHandler(
     }
 }
 
+@Composable
+actual fun rememberCustomUriHandler(): CustomUriHandler {
+    val context = LocalContext.current
+    return remember(context) { CustomUriHandler(context) }
+}
+
 actual fun customUriHandler(navController: NavHostController): UriHandler = object : UriHandler {
     override fun openUri(uri: String) {
         navController.navigateChromeCustomTabs(
