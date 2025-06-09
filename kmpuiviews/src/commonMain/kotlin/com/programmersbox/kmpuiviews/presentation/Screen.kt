@@ -148,7 +148,7 @@ fun Screen.DetailsScreen.Details.toItemModel(
 ): KmpItemModel? = sourceRepository.toSourceByApiServiceName(source)?.apiService
     ?.let {
         KmpItemModel(
-            title = UrlEncoderUtil.decode(title),
+            title = runCatching { UrlEncoderUtil.decode(title) }.getOrDefault(title),
             description = runCatching { UrlEncoderUtil.decode(description) }.getOrDefault(description),
             url = UrlEncoderUtil.decode(url),
             imageUrl = UrlEncoderUtil.decode(imageUrl),

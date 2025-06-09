@@ -18,6 +18,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -43,7 +45,10 @@ import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navGraph
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
+import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -56,7 +61,7 @@ import org.koin.dsl.module
 import java.awt.Cursor
 import java.io.File
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ApplicationScope.BaseDesktopUi(
     title: String,
@@ -108,6 +113,7 @@ fun ApplicationScope.BaseDesktopUi(
             transparent = true,
         ) {
             val navController = rememberNavController()
+            val navigationActions = Navigation2Actions(navController)
             MaterialTheme(
                 createColorScheme(
                     isSystemInDarkTheme(),
@@ -161,14 +167,52 @@ fun ApplicationScope.BaseDesktopUi(
                                     }
                                 )*/
                                 val genericInfo = koinInject<KmpGenericInfo>()
+                                val customSettings = remember {
+                                    ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                                }
+                                val windowSize = calculateWindowSizeClass()
                                 NavHost(
                                     navController = navController,
                                     startDestination = Screen.Settings
                                 ) {
                                     navGraph(
-                                        customPreferences = ComposeSettingsDsl(),
+                                        customPreferences = customSettings,
                                         genericInfo = genericInfo,
-                                        navController = navController
+                                        navController = Navigation2Actions(navController),
+                                        isDebug = false,
+                                        deepLink = "",
+                                        settingsScreen = {
+                                            SettingScreen(
+                                                composeSettingsDsl = customSettings,
+                                                notificationClick = navigationActions::notifications,
+                                                favoritesClick = navigationActions::favorites,
+                                                historyClick = navigationActions::history,
+                                                globalSearchClick = navigationActions::globalSearch,
+                                                listClick = navigationActions::customList,
+                                                extensionClick = navigationActions::extensionList,
+                                                notificationSettingsClick = navigationActions::notificationsSettings,
+                                                generalClick = navigationActions::general,
+                                                otherClick = navigationActions::otherSettings,
+                                                moreInfoClick = navigationActions::moreInfo,
+                                                moreSettingsClick = navigationActions::moreSettings,
+                                                geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+                                                sourcesOrderClick = navigationActions::order,
+                                                appDownloadsClick = navigationActions::downloadInstall,
+                                                scanQrCode = navigationActions::scanQrCode,
+                                                onDebugBuild = {},
+                                                accountSettings = {}
+                                            )
+                                        },
+                                        onboarding = {
+                                            OnboardingScreen(
+                                                navController = navigationActions,
+                                                customPreferences = customSettings,
+                                                accountContent = {},
+                                            )
+                                        },
+                                        settingsNavSetup = {},
+                                        profileIcon = { "" },
+                                        windowSize = windowSize
                                     )
                                 }
                             }

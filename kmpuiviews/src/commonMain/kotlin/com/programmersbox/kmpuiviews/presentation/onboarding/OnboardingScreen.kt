@@ -8,6 +8,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -37,12 +38,11 @@ import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OnboardingScreen(
     navController: NavigationActions,
     customPreferences: ComposeSettingsDsl,
-    navigationBarSettings: @Composable () -> Unit,
     accountContent: @Composable () -> Unit,
     dataStoreHandling: DataStoreHandling = koinInject(),
     appConfig: AppConfig = koinInject(),
@@ -62,9 +62,7 @@ fun OnboardingScreen(
         }
 
         item {
-            GeneralContent(
-                navigationBarSettings = navigationBarSettings,
-            )
+            GeneralContent()
         }
 
         apply(customPreferences.onboardingSettings)
@@ -91,8 +89,7 @@ fun OnboardingScreen(
             Column {
                 TopAppBar(
                     title = { Text("Welcome!") },
-                    //TODO: Put back when supported
-                    //subtitle = { Text(appConfig.appName) },
+                    subtitle = { Text(appConfig.appName) },
                     actions = {
                         var skipOnboarding by remember { mutableStateOf(false) }
 

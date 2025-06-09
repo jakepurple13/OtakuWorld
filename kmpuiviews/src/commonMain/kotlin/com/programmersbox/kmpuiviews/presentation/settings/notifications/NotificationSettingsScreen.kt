@@ -21,8 +21,9 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -333,6 +334,7 @@ fun NotificationSettings(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun WorkInfoItem(
     workInfo: WorkInfoKmp,
@@ -348,12 +350,10 @@ private fun WorkInfoItem(
                 Text(workInfo.source)
                 if (workInfo.progress != null && workInfo.max != null) {
                     if (workInfo.progress == 0) {
-                        //TODO: Put back when supported
-                        //LinearWavyProgressIndicator()
-                        LinearProgressIndicator()
+                        LinearWavyProgressIndicator()
                     } else {
                         val animatedProgress by animateFloatAsState(workInfo.progress.toFloat() / workInfo.max.toFloat())
-                        LinearProgressIndicator(progress = { animatedProgress })
+                        LinearWavyProgressIndicator(progress = { animatedProgress })
                     }
                 }
             }

@@ -36,6 +36,7 @@ val kmpInterop = module {
     single {
         AppConfig(
             appName = get<Context>().getString(R.string.app_name),
+            isDebug = BuildConfig.DEBUG,
             buildType = when (BuildConfig.FLAVOR) {
                 "noFirebase" -> BuildType.NoFirebase
                 "noCloudFirebase" -> BuildType.NoCloudFirebase

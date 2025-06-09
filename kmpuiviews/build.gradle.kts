@@ -118,6 +118,14 @@ kotlin {
                 implementation(libs.multiplatform.lifecycle.runtime.compose)
                 implementation(libs.androidx.navigation3.runtime)
 
+                implementation(libs.materialAdaptiveCmp)
+                implementation(libs.materialAdaptiveLayoutCmp)
+                implementation(libs.materialAdaptiveLayoutNavCmp)
+
+                implementation(libs.reorderable)
+
+                implementation(libs.paging.compose.common)
+
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
             }
@@ -151,6 +159,7 @@ kotlin {
                 implementation(libs.zoomable.peek.overlay)
                 implementation(libs.barcode.scanning)
                 implementation(libs.biometric)
+                implementation(androidx.activity.activityKtx)
             }
         }
 
@@ -184,6 +193,9 @@ kotlin {
                 implementation(libs.connectivity.http)
                 implementation(libs.connectivity.compose.http)
             }
+        }
+        all {
+            languageSettings.enableLanguageFeature("WhenGuards")
         }
     }
 }

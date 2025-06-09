@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.utils.composables.imageloaders
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 
@@ -14,6 +15,7 @@ fun ImageLoaderChoice(
     placeHolder: @Composable () -> Painter,
     error: @Composable () -> Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
+    onImageSet: (ImageBitmap) -> Unit = {},
 ) {
     /*CustomKamelImage(
         imageUrl = imageUrl,
@@ -33,6 +35,7 @@ fun ImageLoaderChoice(
         placeHolder = placeHolder,
         onError = error,
         contentScale = contentScale,
+        onImageSet = onImageSet
     )
 }
 
@@ -45,4 +48,5 @@ expect fun CustomImageChoice(
     placeHolder: @Composable () -> Painter,
     onError: @Composable () -> Painter = placeHolder,
     contentScale: ContentScale = ContentScale.FillBounds,
+    onImageSet: (ImageBitmap) -> Unit = {},
 )

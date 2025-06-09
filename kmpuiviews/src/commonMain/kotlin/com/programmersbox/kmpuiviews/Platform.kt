@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import com.mikepenz.aboutlibraries.Libs
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import dev.jordond.connectivity.Connectivity
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.config.KamelConfig
@@ -67,3 +68,12 @@ expect class AboutLibraryBuilder {
 
 @Composable
 expect fun Modifier.zoomOverlay(): Modifier
+
+@Composable
+expect fun HideScreen(shouldHide: Boolean)
+
+@Composable
+expect fun InitialSetup()
+
+@Composable
+expect fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation)

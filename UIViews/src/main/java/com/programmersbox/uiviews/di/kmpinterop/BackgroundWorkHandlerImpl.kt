@@ -265,4 +265,23 @@ class BackgroundWorkHandlerImpl(
             }
             .launchIn(GlobalScope)*/
     }
+
+    override fun sourceUpdate() {
+        workManager
+            .enqueueUniqueWork(
+                "sourceCheck",
+                ExistingWorkPolicy.KEEP,
+                OneTimeWorkRequestBuilder<SourceUpdateChecker>()
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .setRequiresBatteryNotLow(false)
+                            .setRequiresCharging(false)
+                            .setRequiresDeviceIdle(false)
+                            .setRequiresStorageNotLow(false)
+                            .build()
+                    )
+                    .build()
+            )
+    }
 }

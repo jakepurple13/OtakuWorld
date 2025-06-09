@@ -4,32 +4,47 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.BlurOff
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.UnfoldLess
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,14 +54,17 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.GridChoice
+import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.PaletteSwatchType
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.datastore.rememberHistorySave
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
+import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
@@ -54,7 +72,9 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSe
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.seedColor
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -66,6 +86,7 @@ import otakuworld.kmpuiviews.generated.resources.general_menu_title
 import otakuworld.kmpuiviews.generated.resources.history_save_summary
 import otakuworld.kmpuiviews.generated.resources.history_save_title
 import otakuworld.kmpuiviews.generated.resources.share_chapters
+import otakuworld.kmpuiviews.generated.resources.show_all_screen
 import otakuworld.kmpuiviews.generated.resources.show_download_button
 import otakuworld.kmpuiviews.generated.resources.show_list_detail_pane_for_lists
 import otakuworld.kmpuiviews.generated.resources.theme_choice_title
@@ -76,7 +97,6 @@ import otakuworld.kmpuiviews.generated.resources.theme_choice_title
 @Composable
 fun GeneralSettings(
     customSettings: @Composable () -> Unit = {},
-    navigationBarSettings: @Composable () -> Unit = {},
 ) {
     SettingsScaffold(
         title = stringResource(Res.string.general_menu_title),
@@ -119,7 +139,7 @@ fun GeneralSettings(
 
         CategoryGroup {
             item {
-                navigationBarSettings()
+                NavigationBarSettings(handling = handling)
             }
         }
 
@@ -399,4 +419,165 @@ private fun HistorySettings(handling: NewSettingsHandling) {
         range = -1f..100f,
         updateValue = { sliderValue = it.toInt() }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+fun NavigationBarSettings(handling: NewSettingsHandling) {
+    var floatingNavigation by rememberFloatingNavigation()
+
+    SwitchSetting(
+        settingTitle = { Text("Floating Navigation") },
+        settingIcon = { Icon(Icons.Default.Navigation, null, modifier = Modifier.fillMaxSize()) },
+        value = floatingNavigation,
+        updateValue = { floatingNavigation = it }
+    )
+
+    CategoryGroupDefaults.Divider()
+
+    if (LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Expanded) {
+        var showAllScreen by handling.rememberShowAll()
+
+        SwitchSetting(
+            settingTitle = { Text(stringResource(Res.string.show_all_screen)) },
+            settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
+            value = showAllScreen,
+            updateValue = { showAllScreen = it }
+        )
+    } else {
+
+        var middleNavigationAction by handling.rememberMiddleNavigationAction()
+        ListSetting(
+            settingTitle = { Text("Middle Navigation Destination") },
+            dialogIcon = { Icon(Icons.Default.LocationOn, null) },
+            settingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.fillMaxSize()) },
+            dialogTitle = { Text("Choose a middle navigation destination") },
+            summaryValue = { Text(middleNavigationAction.visibleName) },
+            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+            value = middleNavigationAction,
+            options = MiddleNavigationAction.entries,
+            updateValue = { it, d ->
+                d.value = false
+                middleNavigationAction = it
+            }
+        )
+
+        MultipleActionsSetting(
+            handling = handling,
+            middleNavigationAction = middleNavigationAction
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun MultipleActionsSetting(
+    handling: NewSettingsHandling,
+    middleNavigationAction: MiddleNavigationAction,
+) {
+    var multipleActions by handling.rememberMiddleMultipleActions()
+
+    val multipleActionOptions = MiddleNavigationAction
+        .entries
+        .filter { it != MiddleNavigationAction.Multiple }
+
+    ShowWhen(middleNavigationAction == MiddleNavigationAction.Multiple) {
+        CategoryGroupDefaults.Divider()
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+        ) {
+            HorizontalFloatingToolbar(
+                expanded = true,
+                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+                leadingContent = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    DropdownMenu(
+                        showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        multipleActionOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.name) },
+                                leadingIcon = {
+                                    Icon(
+                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                        null,
+                                    )
+                                },
+                                onClick = {
+                                    multipleActions = multipleActions?.copy(
+                                        startAction = it,
+                                    )
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            multipleActions
+                                ?.startAction
+                                ?.item
+                                ?.icon
+                                ?.invoke(true)
+                                ?: Icons.Default.Add,
+                            null
+                        )
+                    }
+                },
+                trailingContent = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    DropdownMenu(
+                        showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        multipleActionOptions.forEach {
+                            DropdownMenuItem(
+                                text = { Text(it.visibleName) },
+                                leadingIcon = {
+                                    Icon(
+                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                        null,
+                                    )
+                                },
+                                onClick = {
+                                    multipleActions = multipleActions?.copy(endAction = it)
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            multipleActions
+                                ?.endAction
+                                ?.item
+                                ?.icon
+                                ?.invoke(true)
+                                ?: Icons.Default.Add,
+                            null
+                        )
+                    }
+                },
+            ) {
+                FilledIconButton(
+                    modifier = Modifier.width(64.dp),
+                    onClick = {}
+                ) {
+                    Icon(
+                        Icons.Filled.UnfoldLess,
+                        contentDescription = "Localized description"
+                    )
+                }
+            }
+        }
+    }
 }

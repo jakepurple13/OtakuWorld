@@ -22,12 +22,13 @@ firebaseCrashlyticsGradle = "3.0.4"
 googleServices = "4.4.2"
 haze = "1.6.4"
 kamelImage = "1.0.5"
-latestAboutLibsRelease = "12.2.0"
+latestAboutLibsRelease = "12.2.1"
 coroutinesVersion = "1.10.2"
 glideVersion = "4.16.0"
 lifecycleViewmodelNavigation3 = "1.0.0-alpha01"
 navigationevent = "1.0.0-alpha02"
 pagecurl = "1.5.1"
+pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 pagingVersion = "3.3.6"
 protobufGradlePlugin = "0.9.5"
 qrose = "1.0.1"
@@ -103,7 +104,7 @@ core = "1.6.1"
 
 androidx-lifecycle = "2.9.0"
 
-compose-multiplatform = "1.8.1"
+compose-multiplatform = "1.9.0-alpha02"
 
 kotlinx-coroutines = "1.10.2"
 
@@ -187,6 +188,7 @@ kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "ko
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-safe-args-gradle-plugin", version.ref = "navVersion" }
 pagecurl = { module = "io.github.oleksandrbalan:pagecurl", version.ref = "pagecurl" }
+paging-compose-common = { module = "app.cash.paging:paging-compose-common", version.ref = "pagingComposeCommon" }
 palette = "androidx.palette:palette-ktx:1.0.0"
 gson = "com.google.code.gson:gson:2.13.1"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
@@ -200,6 +202,9 @@ materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha02" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha02" }
+materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha02" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
 adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
 material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }

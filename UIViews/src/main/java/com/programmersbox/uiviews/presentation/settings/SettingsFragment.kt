@@ -130,120 +130,6 @@ fun SettingScreen(
     )
 }
 
-/*
-//TODO: This will be for the future when this works again
-internal enum class SettingChoice {
-    Notification,
-    General,
-    Other,
-    MoreInfo,
-    None
-}
-
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
-@ExperimentalComposeUiApi
-@ExperimentalMaterial3Api
-@Composable
-internal fun SettingScreen(
-    composeSettingsDsl: ComposeSettingsDsl,
-    debugMenuClick: () -> Unit = {},
-    notificationClick: () -> Unit = {},
-    favoritesClick: () -> Unit = {},
-    historyClick: () -> Unit = {},
-    globalSearchClick: () -> Unit = {},
-    listClick: () -> Unit = {},
-    extensionClick: () -> Unit = {},
-    notificationSettingsClick: () -> Unit = {},
-    generalClick: () -> Unit = {},
-    otherClick: () -> Unit = {},
-    moreInfoClick: () -> Unit = {},
-) {
-    val navController = LocalNavController.current
-    val navigator = rememberListDetailPaneScaffoldNavigator(
-        //scaffoldDirective = calculateStandardPaneScaffoldDirective(currentWindowAdaptiveInfo())
-    )
-    var settingChoice by remember { mutableStateOf(SettingChoice.General) }
-
-    BackHandler(settingChoice != SettingChoice.None) {
-        navigator.navigateBack()
-        settingChoice = SettingChoice.None
-    }
-
-    fun ChangeSetting(choice: SettingChoice) {
-        settingChoice = choice
-        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-    }
-
-    ListDetailPaneScaffold(
-        directive = navigator.scaffoldDirective,
-        value = navigator.scaffoldValue,
-        listPane = {
-            AnimatedPane {
-                val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-                OtakuScaffold(
-                    topBar = {
-                        InsetLargeTopAppBar(
-                            title = { Text(stringResource(R.string.settings)) },
-                            scrollBehavior = scrollBehavior,
-                            actions = {
-                                if (BuildConfig.FLAVOR != "noFirebase") {
-                                    AccountSettings()
-                                }
-                            }
-                        )
-                    },
-                    contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                ) { p ->
-                    Column(
-                        modifier = Modifier
-                            .verticalScroll(rememberScrollState())
-                            .padding(p)
-                    ) {
-                        SettingsScreen(
-                            notificationClick = notificationClick,
-                            composeSettingsDsl = composeSettingsDsl,
-                            debugMenuClick = debugMenuClick,
-                            favoritesClick = favoritesClick,
-                            historyClick = historyClick,
-                            globalSearchClick = globalSearchClick,
-                            listClick = listClick,
-                            extensionClick = extensionClick,
-                            notificationSettingsClick = { ChangeSetting(SettingChoice.Notification) },
-                            generalClick = { ChangeSetting(SettingChoice.General) },
-                            otherClick = { ChangeSetting(SettingChoice.Other) },
-                            moreInfoClick = { ChangeSetting(SettingChoice.MoreInfo) }
-                        )
-                    }
-                }
-            }
-        },
-        detailPane = {
-            AnimatedPane(modifier = Modifier.fillMaxSize()) {
-                AnimatedContent(
-                    targetState = navigator.currentDestination?.content ?: SettingChoice.None,
-                    label = "",
-                    transitionSpec = {
-                        (slideInHorizontally { -it } + fadeIn()) togetherWith
-                                (fadeOut() + slideOutHorizontally { -it })
-                    },
-                ) { targetState ->
-                    when (targetState) {
-                        SettingChoice.Notification -> NotificationSettings()
-                        SettingChoice.General -> GeneralSettings(composeSettingsDsl.generalSettings)
-                        SettingChoice.Other -> PlaySettings(composeSettingsDsl.playerSettings)
-                        SettingChoice.MoreInfo -> InfoSettings {
-                            navController.navigate(Screen.AboutScreen.route) { launchSingleTop = true }
-                        }
-
-                        SettingChoice.None -> {}
-                    }
-                }
-            }
-        }
-    )
-}*/
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @PreviewThemeColorsSizes
 @Composable
@@ -273,7 +159,7 @@ private fun SettingsPreview() {
 }
 
 @Composable
-private fun AccountSettings(
+fun AccountSettings(
     viewModel: AccountViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current

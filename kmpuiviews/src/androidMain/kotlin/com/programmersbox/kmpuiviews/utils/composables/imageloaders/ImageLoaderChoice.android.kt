@@ -4,11 +4,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import com.bumptech.glide.load.model.GlideUrl
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import com.skydoves.landscapist.glide.GlideImageState
 
 @Composable
 actual fun CustomImageChoice(
@@ -19,6 +21,7 @@ actual fun CustomImageChoice(
     placeHolder: @Composable (() -> Painter),
     onError: @Composable (() -> Painter),
     contentScale: ContentScale,
+    onImageSet: (ImageBitmap) -> Unit,
 ) {
     val url = remember(imageUrl) {
         try {
@@ -34,6 +37,11 @@ actual fun CustomImageChoice(
             contentScale = contentScale,
             contentDescription = name,
         ),
+        onImageStateChanged = {
+            if (it is GlideImageState.Success) {
+                it.imageBitmap?.let(onImageSet)
+            }
+        },
         loading = { Image(painter = placeHolder(), contentDescription = name) },
         failure = { Image(painter = onError(), contentDescription = name) },
         modifier = modifier

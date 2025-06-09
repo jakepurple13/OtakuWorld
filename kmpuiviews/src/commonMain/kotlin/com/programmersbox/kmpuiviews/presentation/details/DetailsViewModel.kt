@@ -39,11 +39,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -120,23 +118,19 @@ class DetailsViewModel(
             }
             ?.launchIn(viewModelScope)
 
-        blurHashDao
-            .getHash(itemModel?.imageUrl)
-            .onEach { blurHashItem = it }
-            .filterNotNull()
-            .mapNotNull { it.blurHash.decodeBase64Bytes().decodeToImageBitmap() }
-            /*
-            /*BlurHash.decode(
-                    it.blurHash,
-                    width = ComposableUtils.IMAGE_WIDTH_PX,
-                    height = ComposableUtils.IMAGE_HEIGHT_PX
-                )?.asImageBitmap()*/
-             */
-            .onEach { blurHash = runCatching { BitmapPainter(it) }.getOrNull() }
+        combine(
+            blurHashDao
+                .getHash(itemModel?.imageUrl)
+                .onEach { blurHashItem = it }
+                .map { it?.blurHash?.decodeBase64Bytes()?.decodeToImageBitmap() }
+                .onEach { blurHash = runCatching { BitmapPainter(it!!) }.getOrNull() },
+            snapshotFlow { imageBitmap }
+        ) { hash, image -> hash to image }
             .onEach {
-                runCatching {
-                    if (palette == null) palette = it.generatePalette()
-                }
+                runCatching { (it.second ?: it.first)?.generatePalette()!! }
+                    .onSuccess { p -> palette = p }
+                    .onSuccess { println(it) }
+                    .onFailure { e -> e.printStackTrace() }
             }
             .dispatchIo()
             .launchIn(viewModelScope)
