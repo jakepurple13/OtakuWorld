@@ -160,6 +160,7 @@ kotlin {
                 implementation(libs.barcode.scanning)
                 implementation(libs.biometric)
                 implementation(androidx.activity.activityKtx)
+                implementation(libs.lazyColumnScrollbar)
             }
         }
 

@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews
 
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RememberMe
 import androidx.compose.material3.ColorScheme
@@ -122,4 +125,11 @@ actual fun painterLogo(): Painter = rememberVectorPainter(Icons.Default.Remember
 actual class AboutLibraryBuilder {
     @Composable
     actual fun buildLibs(): State<Libs?> = mutableStateOf(null)
+}
+
+@Composable
+actual fun ScrollBar(lazyListState: LazyListState) {
+    VerticalScrollbar(
+        adapter = rememberScrollbarAdapter(lazyListState),
+    )
 }

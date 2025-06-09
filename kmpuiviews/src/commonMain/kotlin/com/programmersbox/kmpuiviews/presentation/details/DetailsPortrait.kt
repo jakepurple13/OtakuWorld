@@ -65,6 +65,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
@@ -424,17 +425,9 @@ fun DetailsView(
                     )
                 }
             }
-            /*Box(Modifier.padding(modifiedPaddingValues)) {
-                InternalLazyColumnScrollbar(
-                    state = listState,
-                    settings = ScrollbarSettings.Default.copy(
-                        thumbThickness = 8.dp,
-                        scrollbarPadding = 2.dp,
-                        thumbUnselectedColor = MaterialTheme.colorScheme.primary,
-                        thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
-                    ),
-                )
-            }*/
+            Box(Modifier.padding(modifiedPaddingValues)) {
+                ScrollBar(listState)
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -80,3 +81,6 @@ expect fun InitialSetup()
 
 @Composable
 expect fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation)
+
+@Composable
+expect fun ScrollBar(lazyListState: LazyListState)

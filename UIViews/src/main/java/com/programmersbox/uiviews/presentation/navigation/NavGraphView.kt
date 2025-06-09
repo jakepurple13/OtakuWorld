@@ -88,7 +88,6 @@ fun NavigationGraph(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun Nav3(

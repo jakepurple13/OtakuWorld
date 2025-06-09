@@ -11,9 +11,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -58,6 +60,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.saket.telephoto.zoomable.rememberZoomablePeekOverlayState
 import me.saket.telephoto.zoomable.zoomablePeekOverlay
+import my.nanihadesuka.compose.InternalLazyColumnScrollbar
+import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.compose.koinInject
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -263,4 +267,17 @@ actual fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation) 
                 .size(64.dp)
         )
     }
+}
+
+@Composable
+actual fun ScrollBar(lazyListState: LazyListState) {
+    InternalLazyColumnScrollbar(
+        state = lazyListState,
+        settings = ScrollbarSettings.Default.copy(
+            thumbThickness = 8.dp,
+            scrollbarPadding = 2.dp,
+            thumbUnselectedColor = MaterialTheme.colorScheme.primary,
+            thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
+        ),
+    )
 }
