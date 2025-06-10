@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -17,8 +18,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.datastore.asState
+import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 
 object ComposableUtils {
     const val IMAGE_WIDTH_PX = 360
@@ -124,4 +129,16 @@ fun LazyListState.isScrollingUp(): Boolean {
             }
         }
     }.value
+}
+
+@Composable
+fun RecordTimeSpentDoing() {
+    var timeSpent by koinInject<DataStoreHandling>().timeSpentDoing.asState()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            timeSpent++
+            delay(1000)
+        }
+    }
 }

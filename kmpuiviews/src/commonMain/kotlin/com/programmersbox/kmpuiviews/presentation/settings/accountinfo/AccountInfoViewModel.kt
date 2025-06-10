@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -18,6 +19,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class AccountInfoViewModel(
     itemDao: ItemDao,
@@ -27,6 +30,7 @@ class AccountInfoViewModel(
     translationModelHandler: TranslationModelHandler,
     sourceRepository: SourceRepository,
     firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
+    dataStoreHandling: DataStoreHandling,
 ) : ViewModel() {
 
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
@@ -58,6 +62,7 @@ class AccountInfoViewModel(
                 },
             historyDao.getAllHistoryCount(),
         ) { AccountInfoCount(it) }
+            .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b -> a.copy(timeSpentDoing = b.seconds) }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
@@ -76,6 +81,7 @@ data class AccountInfoCount(
     val translationModels: Int,
     val sourceCount: Int,
     val globalSearchHistory: Int,
+    val timeSpentDoing: Duration,
 ) {
     constructor(array: Array<Int>) : this(
         cloudFavorites = array[0],
@@ -90,6 +96,7 @@ data class AccountInfoCount(
         translationModels = array[9],
         sourceCount = array[10],
         globalSearchHistory = array[11],
+        timeSpentDoing = 0.seconds
     )
 
     val totalFavorites: Int
@@ -109,6 +116,7 @@ data class AccountInfoCount(
             translationModels = 0,
             sourceCount = 0,
             globalSearchHistory = 0,
+            timeSpentDoing = 0.seconds
         )
     }
 }

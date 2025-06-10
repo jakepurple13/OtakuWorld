@@ -68,6 +68,7 @@ import com.programmersbox.datastore.mangasettings.ReaderType
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
 import dev.chrisbanes.haze.HazeProgressive
@@ -101,6 +102,7 @@ fun ReadView(
     viewModel: ReadViewModel = koinViewModel(),
 ) {
     HideNavBarWhileOnScreen()
+    RecordTimeSpentDoing()
 
     val includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
     var insetsController by insetController(includeInsets)

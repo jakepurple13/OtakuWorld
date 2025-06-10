@@ -59,4 +59,9 @@ class DataStoreHandling {
         key = booleanPreferencesKey("hasMigrated"),
         defaultValue = false
     )
+
+    val timeSpentDoing = DataStoreHandler(
+        key = longPreferencesKey("timeSpentDoing"),
+        defaultValue = 0
+    )
 }
