@@ -30,6 +30,7 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
@@ -49,11 +50,13 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -70,6 +73,7 @@ class ReadActivity : AppCompatActivity() {
     private val genericInfo by inject<GenericInfo>()
     private val settingsHandling: NewSettingsHandling by inject()
     private val mangaSettingsHandling: MangaNewSettingsHandling by inject()
+    private val dataStoreHandling by inject<DataStoreHandling>()
 
     private fun View.slideUp() {
         val layoutParams = this.layoutParams
@@ -151,6 +155,18 @@ class ReadActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         enableImmersiveMode()
+
+        val timeSpent = dataStoreHandling.timeSpentDoing
+
+        flow {
+            var count = 0L
+            while (true) {
+                emit(count++)
+                delay(1000)
+            }
+        }
+            .onEach { timeSpent.set(timeSpent.get() + 1) }
+            .launchIn(lifecycleScope)
 
         infoSetup()
         readerSetup()

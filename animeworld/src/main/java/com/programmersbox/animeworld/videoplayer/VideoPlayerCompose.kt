@@ -102,6 +102,7 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.AirBar
 import com.programmersbox.uiviews.utils.LifecycleHandle
@@ -141,6 +142,7 @@ fun VideoPlayerUi(
 
     HideSystemBarsWhileOnScreen()
     HideNavBarWhileOnScreen()
+    RecordTimeSpentDoing()
 
     LifecycleHandle(
         onStop = {

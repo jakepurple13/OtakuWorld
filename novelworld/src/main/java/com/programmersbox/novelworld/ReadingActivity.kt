@@ -102,6 +102,7 @@ import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
@@ -249,6 +250,7 @@ fun NovelReader(
 ) {
     HideSystemBarsWhileOnScreen()
     HideNavBarWhileOnScreen()
+    RecordTimeSpentDoing()
 
     val context = LocalContext.current
 

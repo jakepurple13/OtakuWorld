@@ -48,6 +48,7 @@ import com.programmersbox.animeworld.databinding.MxMobileBrightnessDialogBinding
 import com.programmersbox.animeworld.databinding.MxMobileVolumeDialogBinding
 import com.programmersbox.animeworld.databinding.MxProgressDialogBinding
 import com.programmersbox.animeworld.ignoreSsl
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.helpfulutils.battery
@@ -58,7 +59,11 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.toolTipText
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
@@ -165,6 +170,8 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val genericInfo: GenericInfo by inject()
 
+    private val dataStoreHandling by inject<DataStoreHandling>()
+
     private val chapterModel: KmpChapterModel? by lazy {
         intent.getStringExtra("chapterModel")
             ?.fromJson(KmpChapterModel::class.java to ChapterModelDeserializer())
@@ -188,6 +195,18 @@ class VideoPlayerActivity : AppCompatActivity() {
             exoBinding.exoRew.toolTipText(R.string.videoPlayerRewind)
             exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
         }
+
+        val timeSpent = dataStoreHandling.timeSpentDoing
+
+        flow {
+            var count = 0L
+            while (true) {
+                emit(count++)
+                delay(1000)
+            }
+        }
+            .onEach { timeSpent.set(timeSpent.get() + 1) }
+            .launchIn(lifecycleScope)
 
         //exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
         //exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
@@ -406,6 +425,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     mChangeLight = false
                     mChangeVolume = false
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     //Loged.i("onTouch: surfaceContainer actionMove [" + this.hashCode() + "] ")
                     val deltaX = x - mDownX
@@ -460,6 +480,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         showBrightnessDialog(-deltaY, brightnessPercent)
                     }
                 }
+
                 MotionEvent.ACTION_UP -> {
                     //Loged.i("onTouch: surfaceContainer actionUp [" + this.hashCode() + "] ")
                     dismissProgressDialog()
@@ -480,6 +501,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
                     //startProgressTimer()
                 }
+
                 else -> {
                 }
             }
@@ -491,7 +513,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun showProgressDialog(
         deltaX: Float, seekTime: String,
-        seekTimePosition: Int, totalTime: String, totalTimeDuration: Int
+        seekTimePosition: Int, totalTime: String, totalTimeDuration: Int,
     ) {
         if (!mProgressDialog.isShowing) mProgressDialog.show()
         val seekedTime = abs(playerView.player!!.currentPosition - seekTimePosition)
