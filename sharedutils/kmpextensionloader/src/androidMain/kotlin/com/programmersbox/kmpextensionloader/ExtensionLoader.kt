@@ -7,6 +7,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import dalvik.system.PathClassLoader
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 
@@ -37,6 +38,8 @@ class ExtensionLoader<T, R>(
     private val metadataClass: String,
     private val mapping: (T, ApplicationInfo, PackageInfo) -> R,
 ) {
+    private val limitedDispatcher = Dispatchers.Default.limitedParallelism(4)
+
     @SuppressLint("QueryPermissionsNeeded")
     fun loadExtensions(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {
         val packageManager = context.packageManager
@@ -49,7 +52,7 @@ class ExtensionLoader<T, R>(
 
         return runBlocking {
             packages
-                .map { async { loadExtension(it, mapped) } }
+                .map { async(limitedDispatcher) { loadExtension(it, mapped) } }
                 .flatMap { it.await() }
         }
     }
@@ -66,7 +69,7 @@ class ExtensionLoader<T, R>(
 
         return runBlocking {
             packages
-                .map { async { loadExtension(it, mapped) } }
+                .map { async(limitedDispatcher) { loadExtension(it, mapped) } }
                 .flatMap { it.await() }
         }
     }
