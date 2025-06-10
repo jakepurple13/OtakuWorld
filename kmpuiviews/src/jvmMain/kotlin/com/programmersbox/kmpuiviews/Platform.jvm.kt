@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
 import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
@@ -132,4 +133,21 @@ actual fun ScrollBar(lazyListState: LazyListState) {
     VerticalScrollbar(
         adapter = rememberScrollbarAdapter(lazyListState),
     )
+}
+
+@Composable
+actual fun rememberCustomUriHandler(): CustomUriHandler {
+    return remember { CustomUriHandler() }
+}
+
+@Composable
+actual fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation) {
+}
+
+@Composable
+actual fun InitialSetup() {
+}
+
+@Composable
+actual fun HideScreen(shouldHide: Boolean) {
 }

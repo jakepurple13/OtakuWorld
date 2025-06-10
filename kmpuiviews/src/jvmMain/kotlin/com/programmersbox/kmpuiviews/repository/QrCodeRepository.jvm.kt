@@ -1,11 +1,11 @@
 package com.programmersbox.kmpuiviews.repository
 
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toAwtImage
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
-import qrscanner.toBufferedImage
 import java.awt.image.BufferedImage
 
 
@@ -17,7 +17,7 @@ actual class QrCodeRepository {
     ): Result<List<String>> = runCatching {
 
         // 1. Load the image
-        val image: BufferedImage? = bitmap.toBufferedImage()
+        val image: BufferedImage? = bitmap.toAwtImage()
 
         // 3. Read the barcode
         val result = reader.decode(
