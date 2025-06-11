@@ -1,4 +1,4 @@
-package com.programmersbox.kmpuiviews.presentation
+package com.programmersbox.kmpuiviews.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -15,6 +15,7 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen

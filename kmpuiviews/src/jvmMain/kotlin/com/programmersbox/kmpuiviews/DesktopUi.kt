@@ -43,10 +43,11 @@ import com.programmersbox.kmpuiviews.di.appModule
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.di.repositories
 import com.programmersbox.kmpuiviews.di.viewModels
+import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navGraph
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
+import com.programmersbox.kmpuiviews.presentation.navigation.navGraph
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -171,49 +172,58 @@ fun ApplicationScope.BaseDesktopUi(
                                     ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
                                 }
                                 val windowSize = calculateWindowSizeClass()
-                                NavHost(
+                                HomeNav(
                                     navController = navController,
-                                    startDestination = Screen.Settings
+                                    genericInfo = genericInfo,
+                                    windowSize = windowSize,
+                                    customPreferences = customSettings,
+                                    startDestination = Screen.Settings,
+                                    bottomBarAdditions = {}
                                 ) {
-                                    navGraph(
-                                        customPreferences = customSettings,
-                                        genericInfo = genericInfo,
-                                        navController = Navigation2Actions(navController),
-                                        isDebug = false,
-                                        deepLink = "",
-                                        settingsScreen = {
-                                            SettingScreen(
-                                                composeSettingsDsl = customSettings,
-                                                notificationClick = navigationActions::notifications,
-                                                favoritesClick = navigationActions::favorites,
-                                                historyClick = navigationActions::history,
-                                                globalSearchClick = navigationActions::globalSearch,
-                                                listClick = navigationActions::customList,
-                                                extensionClick = navigationActions::extensionList,
-                                                notificationSettingsClick = navigationActions::notificationsSettings,
-                                                generalClick = navigationActions::general,
-                                                otherClick = navigationActions::otherSettings,
-                                                moreInfoClick = navigationActions::moreInfo,
-                                                moreSettingsClick = navigationActions::moreSettings,
-                                                geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
-                                                sourcesOrderClick = navigationActions::order,
-                                                appDownloadsClick = navigationActions::downloadInstall,
-                                                scanQrCode = navigationActions::scanQrCode,
-                                                onDebugBuild = {},
-                                                accountSettings = {}
-                                            )
-                                        },
-                                        onboarding = {
-                                            OnboardingScreen(
-                                                navController = navigationActions,
-                                                customPreferences = customSettings,
-                                                accountContent = {},
-                                            )
-                                        },
-                                        settingsNavSetup = {},
-                                        profileIcon = { "" },
-                                        windowSize = windowSize
-                                    )
+                                    NavHost(
+                                        navController = navController,
+                                        startDestination = Screen.Settings
+                                    ) {
+                                        navGraph(
+                                            customPreferences = customSettings,
+                                            genericInfo = genericInfo,
+                                            navController = Navigation2Actions(navController),
+                                            isDebug = false,
+                                            deepLink = "",
+                                            settingsScreen = {
+                                                SettingScreen(
+                                                    composeSettingsDsl = customSettings,
+                                                    notificationClick = navigationActions::notifications,
+                                                    favoritesClick = navigationActions::favorites,
+                                                    historyClick = navigationActions::history,
+                                                    globalSearchClick = navigationActions::globalSearch,
+                                                    listClick = navigationActions::customList,
+                                                    extensionClick = navigationActions::extensionList,
+                                                    notificationSettingsClick = navigationActions::notificationsSettings,
+                                                    generalClick = navigationActions::general,
+                                                    otherClick = navigationActions::otherSettings,
+                                                    moreInfoClick = navigationActions::moreInfo,
+                                                    moreSettingsClick = navigationActions::moreSettings,
+                                                    geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+                                                    sourcesOrderClick = navigationActions::order,
+                                                    appDownloadsClick = navigationActions::downloadInstall,
+                                                    scanQrCode = navigationActions::scanQrCode,
+                                                    onDebugBuild = {},
+                                                    accountSettings = {}
+                                                )
+                                            },
+                                            onboarding = {
+                                                OnboardingScreen(
+                                                    navController = navigationActions,
+                                                    customPreferences = customSettings,
+                                                    accountContent = {},
+                                                )
+                                            },
+                                            settingsNavSetup = {},
+                                            profileIcon = { "" },
+                                            windowSize = windowSize
+                                        )
+                                    }
                                 }
                             }
                         }

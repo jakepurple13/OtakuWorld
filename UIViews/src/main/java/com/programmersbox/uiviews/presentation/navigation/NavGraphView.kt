@@ -34,9 +34,10 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.navGraph
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navigation.AddBreadcrumbLogging
+import com.programmersbox.kmpuiviews.presentation.navigation.navGraph
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -167,6 +168,7 @@ private fun Nav2(
     notificationLogo: NotificationLogo,
     navController: NavHostController,
 ) {
+    AddBreadcrumbLogging(navController)
     NavHost(
         navController = navController,
         startDestination = startDestination,
