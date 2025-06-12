@@ -49,6 +49,5 @@ abstract class ItemDatabase : RoomDatabase() {
             .addMigrations(MIGRATION_1_2)
             .addMigrations(MIGRATION_5_6)
             .build()
-
     }
 }

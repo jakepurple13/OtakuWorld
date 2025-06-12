@@ -70,7 +70,13 @@ class SettingsSerializer : GenericSerializer<Settings> {
                 requiresCharging = false,
                 requiresBatteryNotLow = false,
                 interval = 1,
-            )
+            ),
+            aiService = AiService.Gemini,
+            geminiSettings = GeminiSettings(
+                apiKey = "",
+                prompt = AI_PROMPT,
+                modelName = "gemini-2.0-flash",
+            ),
         )
 
     override val parseFrom: (input: BufferedSource) -> Settings get() = Settings.ADAPTER::decode
@@ -235,6 +241,30 @@ class NewSettingsHandling(
             requiresCharging = false,
             requiresBatteryNotLow = false,
             interval = 1,
+        )
+    )
+
+    val aiService = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.aiService },
+        update = { copy(aiService = it) },
+        defaultValue = AiService.Gemini
+    )
+
+    val geminiSettings = ProtoStoreHandler(
+        preferences = preferences,
+        key = {
+            it.geminiSettings ?: GeminiSettings(
+                apiKey = "",
+                prompt = AI_PROMPT,
+                modelName = "gemini-2.0-flash",
+            )
+        },
+        update = { copy(geminiSettings = it) },
+        defaultValue = GeminiSettings(
+            apiKey = "",
+            prompt = AI_PROMPT,
+            modelName = "gemini-2.0-flash",
         )
     )
 }

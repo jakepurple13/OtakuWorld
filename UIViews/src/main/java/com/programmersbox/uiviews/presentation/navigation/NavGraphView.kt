@@ -204,7 +204,7 @@ private fun Nav2(
                     otherClick = navigationActions::otherSettings,
                     moreInfoClick = navigationActions::moreInfo,
                     moreSettingsClick = navigationActions::moreSettings,
-                    geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+                    geminiClick = { navigationActions.navigate(Screen.GeminiScreen) },
                     sourcesOrderClick = navigationActions::order,
                     appDownloadsClick = navigationActions::downloadInstall,
                     scanQrCode = navigationActions::scanQrCode,

@@ -204,7 +204,7 @@ fun ApplicationScope.BaseDesktopUi(
                                                     otherClick = navigationActions::otherSettings,
                                                     moreInfoClick = navigationActions::moreInfo,
                                                     moreSettingsClick = navigationActions::moreSettings,
-                                                    geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+                                                    geminiClick = { navController.navigate(Screen.GeminiScreen) },
                                                     sourcesOrderClick = navigationActions::order,
                                                     appDownloadsClick = navigationActions::downloadInstall,
                                                     scanQrCode = navigationActions::scanQrCode,

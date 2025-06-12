@@ -130,6 +130,8 @@ kotlin {
 
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
+
+                implementation("dev.shreyaspatil.generativeai:generativeai-google:0.9.0-1.1.0")
             }
         }
 
@@ -197,6 +199,7 @@ kotlin {
                 implementation(libs.connectivity.compose.http)
             }
         }
+
         all {
             languageSettings.enableLanguageFeature("WhenGuards")
         }
