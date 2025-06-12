@@ -64,24 +64,36 @@ class SettingsSerializer : GenericSerializer<Settings> {
                 startAction = MiddleNavigationAction.All,
                 endAction = MiddleNavigationAction.Notifications,
             ),
-            mediaCheckerSettings = MediaCheckerSettings(
-                shouldRun = true,
-                networkType = MediaCheckerNetworkType.Connected,
-                requiresCharging = false,
-                requiresBatteryNotLow = false,
-                interval = 1,
-            ),
-            aiService = AiService.Gemini,
-            geminiSettings = GeminiSettings(
-                apiKey = "",
-                prompt = AI_PROMPT,
-                modelName = "gemini-2.0-flash",
-            ),
+            mediaCheckerSettings = defaultMediaCheckerSettings,
+            aiSettings = defaultAiSettings,
         )
 
     override val parseFrom: (input: BufferedSource) -> Settings get() = Settings.ADAPTER::decode
 
     override fun encode(t: Settings): ByteArray = t.encode()
+
+    companion object {
+        val defaultAiSettings = AiSettings(
+            aiService = AiService.Gemini,
+            geminiSettings = GeminiSettings(
+                apiKey = "",
+                modelName = "gemini-2.0-flash",
+            ),
+            openAiSettings = OpenAiSettings(
+                apiKey = "",
+                modelName = "gpt-3.5-turbo",
+            ),
+            prompt = AI_PROMPT,
+        )
+
+        val defaultMediaCheckerSettings = MediaCheckerSettings(
+            shouldRun = true,
+            networkType = MediaCheckerNetworkType.Connected,
+            requiresCharging = false,
+            requiresBatteryNotLow = false,
+            interval = 1,
+        )
+    }
 }
 
 class NewSettingsHandling(
@@ -225,47 +237,16 @@ class NewSettingsHandling(
 
     val mediaCheckerSettings = ProtoStoreHandler(
         preferences = preferences,
-        key = {
-            it.mediaCheckerSettings ?: MediaCheckerSettings(
-                shouldRun = true,
-                networkType = MediaCheckerNetworkType.Connected,
-                requiresCharging = false,
-                requiresBatteryNotLow = false,
-                interval = 1,
-            )
-        },
+        key = { it.mediaCheckerSettings ?: SettingsSerializer.defaultMediaCheckerSettings },
         update = { copy(mediaCheckerSettings = it) },
-        defaultValue = MediaCheckerSettings(
-            shouldRun = true,
-            networkType = MediaCheckerNetworkType.Connected,
-            requiresCharging = false,
-            requiresBatteryNotLow = false,
-            interval = 1,
-        )
+        defaultValue = SettingsSerializer.defaultMediaCheckerSettings
     )
 
-    val aiService = ProtoStoreHandler(
+    val aiSettings = ProtoStoreHandler(
         preferences = preferences,
-        key = { it.aiService },
-        update = { copy(aiService = it) },
-        defaultValue = AiService.Gemini
-    )
-
-    val geminiSettings = ProtoStoreHandler(
-        preferences = preferences,
-        key = {
-            it.geminiSettings ?: GeminiSettings(
-                apiKey = "",
-                prompt = AI_PROMPT,
-                modelName = "gemini-2.0-flash",
-            )
-        },
-        update = { copy(geminiSettings = it) },
-        defaultValue = GeminiSettings(
-            apiKey = "",
-            prompt = AI_PROMPT,
-            modelName = "gemini-2.0-flash",
-        )
+        key = { it.aiSettings ?: SettingsSerializer.defaultAiSettings },
+        update = { copy(aiSettings = it) },
+        defaultValue = SettingsSerializer.defaultAiSettings
     )
 }
 

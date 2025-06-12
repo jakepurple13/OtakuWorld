@@ -46,9 +46,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -89,7 +93,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.AiService
+import com.programmersbox.datastore.AiSettings
 import com.programmersbox.datastore.GeminiSettings
+import com.programmersbox.datastore.OpenAiSettings
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.favoritesdatabase.RecommendationResponse
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -130,7 +136,7 @@ private fun RecommendationScreen(
 
     val navActions = LocalNavActions.current
 
-    val aiService by viewModel.aiService.rememberPreference()
+    val aiSettings by viewModel.aiSettings.rememberPreference()
 
     val topBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
@@ -146,10 +152,9 @@ private fun RecommendationScreen(
     if (showSettings) {
         AiSettings(
             onDismissRequest = { showSettings = false },
-            aiService = aiService,
-            geminiSettings = viewModel.geminiSettings.rememberPreference().value,
+            aiSettings = aiSettings,
             onSave = {
-                viewModel.updateGeminiSettings(it)
+                viewModel.updateSettings(it)
                 showSettings = false
             }
         )
@@ -217,7 +222,7 @@ private fun RecommendationScreen(
             topBar = {
                 TopAppBar(
                     title = { Text("OtakuBot") },
-                    subtitle = { Text("Powered by ${aiService.name}") },
+                    subtitle = { Text("Powered by ${aiSettings.aiService.name}") },
                     navigationIcon = navigationIcon,
                     actions = {
                         IconButton(
@@ -670,10 +675,10 @@ fun MessageInput(
 @Composable
 private fun AiSettings(
     onDismissRequest: () -> Unit,
-    aiService: AiService,
-    geminiSettings: GeminiSettings,
-    onSave: (GeminiSettings) -> Unit,
+    aiSettings: AiSettings,
+    onSave: (AiSettings) -> Unit,
 ) {
+    var currentSettings by remember(aiSettings) { mutableStateOf(aiSettings) }
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(
@@ -681,13 +686,66 @@ private fun AiSettings(
         ),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Scaffold {
-            Box(modifier = Modifier.padding(it)) {
-                when (aiService) {
-                    AiService.Gemini -> GeminiSettings(
-                        geminiSettings = geminiSettings,
-                        onSave = onSave
+        Scaffold { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    var expanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            currentSettings.aiService.name,
+                            onValueChange = { currentSettings = currentSettings.copy(aiService = AiService.valueOf(it)) },
+                            label = { Text("AI Service") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            readOnly = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryEditable)
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            AiService.entries.forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.name) },
+                                    onClick = {
+                                        currentSettings = currentSettings.copy(aiService = it)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    when (currentSettings.aiService) {
+                        AiService.Gemini -> GeminiSettings(
+                            geminiSettings = currentSettings.geminiSettings ?: GeminiSettings(),
+                            onModify = { currentSettings = currentSettings.copy(geminiSettings = it) }
+                        )
+
+                        AiService.OpenAi -> OpenAiSettings(
+                            openAiSettings = currentSettings.openAiSettings ?: OpenAiSettings(),
+                            onModify = { currentSettings = currentSettings.copy(openAiSettings = it) }
+                        )
+                    }
+
+                    OutlinedTextField(
+                        currentSettings.prompt,
+                        onValueChange = { currentSettings = currentSettings.copy(prompt = it) },
+                        label = { Text("Prompt (BE VERY CAREFUL ABOUT MODIFYING THIS! THINGS COULD BREAK!)") },
+                        modifier = Modifier.fillMaxWidth()
                     )
+
+                    Button(
+                        onClick = { onSave(currentSettings) },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) { Text("Save") }
                 }
             }
         }
@@ -697,37 +755,41 @@ private fun AiSettings(
 @Composable
 private fun GeminiSettings(
     geminiSettings: GeminiSettings,
-    onSave: (GeminiSettings) -> Unit,
+    onModify: (GeminiSettings) -> Unit,
 ) {
-    var currentSettings by remember(geminiSettings) { mutableStateOf(geminiSettings) }
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        OutlinedTextField(
-            currentSettings.apiKey,
-            onValueChange = { currentSettings = currentSettings.copy(apiKey = it) },
-            label = { Text("API Key") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
+    OutlinedTextField(
+        geminiSettings.apiKey,
+        onValueChange = { onModify(geminiSettings.copy(apiKey = it)) },
+        label = { Text("API Key") },
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth()
+    )
 
-        OutlinedTextField(
-            currentSettings.modelName,
-            onValueChange = { currentSettings = currentSettings.copy(modelName = it) },
-            label = { Text("Model") },
-            modifier = Modifier.fillMaxWidth()
-        )
+    OutlinedTextField(
+        geminiSettings.modelName,
+        onValueChange = { onModify(geminiSettings.copy(modelName = it)) },
+        label = { Text("Model") },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
 
-        OutlinedTextField(
-            currentSettings.prompt,
-            onValueChange = { currentSettings = currentSettings.copy(prompt = it) },
-            label = { Text("Prompt (BE VERY CAREFUL ABOUT MODIFYING THIS! THINGS COULD BREAK!)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+@Composable
+private fun OpenAiSettings(
+    openAiSettings: OpenAiSettings,
+    onModify: (OpenAiSettings) -> Unit,
+) {
+    OutlinedTextField(
+        openAiSettings.apiKey,
+        onValueChange = { onModify(openAiSettings.copy(apiKey = it)) },
+        label = { Text("API Key") },
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier.fillMaxWidth()
+    )
 
-        Button(
-            onClick = { onSave(currentSettings) },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) { Text("Save") }
-    }
+    OutlinedTextField(
+        openAiSettings.modelName,
+        onValueChange = { onModify(openAiSettings.copy(modelName = it)) },
+        label = { Text("Model") },
+        modifier = Modifier.fillMaxWidth()
+    )
 }

@@ -1,7 +1,6 @@
 package com.programmersbox.uiviews.di
 
 import android.app.Application
-import com.programmersbox.kmpuiviews.di.appModule
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.R
@@ -38,6 +37,4 @@ val appModules = module {
     singleOf(::UpdateNotification)
     singleOf(::OtakuDataStoreHandling)
     singleOf(::SettingsHandling)
-
-    includes(appModule)
 }

@@ -39,10 +39,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.kmpuiviews.di.appModule
-import com.programmersbox.kmpuiviews.di.databases
-import com.programmersbox.kmpuiviews.di.repositories
-import com.programmersbox.kmpuiviews.di.viewModels
+import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
@@ -79,12 +76,7 @@ fun ApplicationScope.BaseDesktopUi(
             printLogger(Level.DEBUG)
             modules(
                 module {
-                    includes(
-                        appModule,
-                        viewModels,
-                        repositories,
-                        databases,
-                    )
+                    includes(kmpModule)
 
                     singleOf(::DataStoreHandling)
                     single {

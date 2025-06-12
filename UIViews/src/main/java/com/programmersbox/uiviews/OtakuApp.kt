@@ -29,7 +29,7 @@ import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.loggingutils.Loged
@@ -41,7 +41,6 @@ import com.programmersbox.uiviews.datastore.migrateSettings
 import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
-import com.programmersbox.uiviews.di.repository
 import com.programmersbox.uiviews.di.workers
 import com.programmersbox.uiviews.utils.NotificationChannels
 import com.programmersbox.uiviews.utils.NotificationGroups
@@ -140,9 +139,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                         buildModules,
                         appModules,
                         androidViewModels,
-                        repository,
-                        databases,
-                        kmpInterop
+                        kmpInterop,
+                        kmpModule
                     )
                     workers()
                 }

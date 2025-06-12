@@ -24,8 +24,7 @@ message Settings {
   bool notifyOnReboot = 20;
   bool hasMigrated = 21;
   MediaCheckerSettings mediaCheckerSettings = 22;
-  AiService aiService = 23;
-  GeminiSettings geminiSettings = 24;
+  AiSettings aiSettings = 23;
 }
 
 enum SystemThemeMode {
@@ -84,12 +83,24 @@ enum MediaCheckerNetworkType {
   Unmetered = 2;
 }
 
+message AiSettings {
+  AiService aiService = 1;
+  string prompt = 2;
+  GeminiSettings geminiSettings = 3;
+  OpenAiSettings openAiSettings = 4;
+}
+
 enum AiService {
   Gemini = 0;
+  OpenAi = 1;
 }
 
 message GeminiSettings {
   string apiKey = 1;
-  string prompt = 2;
-  string modelName = 3;
+  string modelName = 2;
+}
+
+message OpenAiSettings {
+  string apiKey = 1;
+  string modelName = 2;
 }

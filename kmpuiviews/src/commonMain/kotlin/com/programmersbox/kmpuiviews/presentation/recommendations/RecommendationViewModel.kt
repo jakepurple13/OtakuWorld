@@ -6,23 +6,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.datastore.GeminiSettings
+import com.programmersbox.datastore.AiSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.favoritesdatabase.RecommendationResponse
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.qualifier.named
 
 class RecommendationViewModel(
-    private val aiRecommendationHandler: AiRecommendationHandler,
     private val dao: RecommendationDao,
     newSettingsHandling: NewSettingsHandling,
-) : ViewModel() {
+) : ViewModel(), KoinComponent {
 
-    val aiService = newSettingsHandling.aiService
-
-    val geminiSettings = newSettingsHandling.geminiSettings
+    private var aiRecommendationHandler: AiRecommendationHandler? = null
+    val aiSettings = newSettingsHandling.aiSettings
     val savedRecommendation = dao.getAllRecommendations()
 
     val messageList = mutableStateListOf<Message>()
@@ -35,9 +39,18 @@ class RecommendationViewModel(
     }
 
     init {
-        viewModelScope.launch {
-            aiRecommendationHandler.init()
-        }
+        aiSettings
+            .asFlow()
+            .map { it.aiService }
+            .map { get<AiRecommendationHandler>(named(it.name)) }
+            .onEach {
+                isLoading = true
+                it.init()
+                aiRecommendationHandler = it
+                messageList.clear()
+                isLoading = false
+            }
+            .launchIn(viewModelScope)
     }
 
     fun send(input: String) {
@@ -45,7 +58,7 @@ class RecommendationViewModel(
             isLoading = true
             runCatching {
                 messageList.add(Message.User(input))
-                val response = aiRecommendationHandler.getResult(input)
+                val response = aiRecommendationHandler?.getResult(input)
                 messageList.add(Message.Gemini(json.decodeFromString(response.orEmpty().trim())))
             }.onFailure {
                 it.printStackTrace()
@@ -67,10 +80,9 @@ class RecommendationViewModel(
         }
     }
 
-    fun updateGeminiSettings(geminiSettings: GeminiSettings) {
+    fun updateSettings(aiSettings: AiSettings) {
         viewModelScope.launch {
-            this@RecommendationViewModel.geminiSettings.set(geminiSettings)
-            aiRecommendationHandler.init()
+            this@RecommendationViewModel.aiSettings.set(aiSettings)
         }
     }
 }
