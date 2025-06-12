@@ -86,3 +86,56 @@ actual fun logFirebaseMessage(message: String) {
 }
 
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)
+
+/*
+fun provideBiometricAuthenticator(): BiometricAuthenticator {
+    val osName = System.getProperty("os.name").toLowerCase()
+    return when {
+        osName.contains("windows") -> WindowsBiometricAuthenticator() // Assuming you'll create this
+        osName.contains("mac os x") || osName.contains("darwin") -> MacOSBiometricAuthenticator()
+        osName.contains("linux") -> LinuxBiometricAuthenticator() // Assuming you'll create this
+        else -> object : BiometricAuthenticator {
+            override val isBiometricAvailable: Boolean = false
+            override suspend fun authenticate(reason: String): Boolean = false
+        }
+    }
+}
+
+ class MacOSBiometricAuthenticator {
+    val isBiometricAvailable: Boolean
+        get() {
+            val context = LAContext()
+            var error: NSError? = null
+            val canEvaluate = context.canEvaluatePolicy(
+                LAPolicyDeviceOwnerAuthenticationWithBiometrics,
+                error = error.ptr
+            )
+            error?.let { println("Error checking biometric availability: $it") }
+            return canEvaluate
+        }
+
+    suspend fun authenticate(reason: String): Boolean = suspendCoroutine { continuation ->
+        val context = LAContext()
+        val nsReason = NSString.create(string = reason)
+
+        context.evaluatePolicy(
+            policy = LAPolicyDeviceOwnerAuthenticationWithBiometrics,
+            localizedReason = nsReason,
+            reply = object : (Boolean, NSError?) -> Unit {
+                override fun invoke(success: Boolean, error: NSError?) {
+                    if (success) {
+                        continuation.resume(true)
+                    } else {
+                        error?.let {
+                            println("Biometric authentication failed: $it")
+                            continuation.resume(false)
+                        } ?: run {
+                            println("Biometric authentication failed for an unknown reason.")
+                            continuation.resume(false)
+                        }
+                    }
+                }
+            }
+        )
+    }
+}*/

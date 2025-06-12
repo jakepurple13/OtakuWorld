@@ -8,6 +8,7 @@ import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewM
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
+import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
@@ -52,7 +53,7 @@ val viewModels: Module = module {
     viewModelOf(::HistoryViewModel)
     viewModelOf(::QrCodeScannerViewModel)
     viewModelOf(::WorkerInfoViewModel)
-
+    viewModelOf(::RecommendationViewModel)
     viewModel { OtakuCustomListViewModel(get(), get(), get<DataStoreHandling>().showBySource) }
 
     includes(platformViewModels())

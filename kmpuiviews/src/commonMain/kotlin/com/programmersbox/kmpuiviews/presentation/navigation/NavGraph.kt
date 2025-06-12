@@ -25,6 +25,7 @@ import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
+import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
@@ -68,6 +69,7 @@ fun NavGraphBuilder.navGraph(
 ) {
     dialog<Screen.ScanQrCodeScreen> { ScanQrCode() }
     composable<Screen.OnboardingScreen> { onboarding(customPreferences) }
+    composable<Screen.GeminiScreen> { RecommendationScreen() }
 
     composable<Screen.WebViewScreen>(
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },

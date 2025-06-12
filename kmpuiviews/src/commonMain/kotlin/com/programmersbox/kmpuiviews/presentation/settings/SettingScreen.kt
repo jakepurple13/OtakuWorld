@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.GetApp
 import androidx.compose.material.icons.filled.History
@@ -303,6 +304,18 @@ private fun SettingsScreen(
                     indication = ripple(),
                     interactionSource = null,
                     onClick = extensionClick
+                )
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text("AI Recommendations") },
+                settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = geminiClick
                 )
             )
         }
