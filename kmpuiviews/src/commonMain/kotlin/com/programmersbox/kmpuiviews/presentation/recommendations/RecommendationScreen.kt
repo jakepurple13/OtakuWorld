@@ -279,6 +279,7 @@ private fun RecommendationScreen(
                             message = it,
                             onSaveClick = insertRecommendation,
                             savedRecommendations = savedRecommendations,
+                            onSearchClick = { rec -> navActions.globalSearch(rec.title) },
                             modifier = Modifier.animateItem()
                         )
 
@@ -298,6 +299,7 @@ private fun RecommendationScreen(
                             )
                         ),
                         onSaveClick = {},
+                        onSearchClick = {},
                         modifier = Modifier.animateItem()
                     )
                 }
@@ -311,11 +313,13 @@ private fun GeminiMessage(
     message: Message.Gemini,
     modifier: Modifier = Modifier,
     onSaveClick: (Recommendation) -> Unit,
+    onSearchClick: (Recommendation) -> Unit,
     savedRecommendations: List<Recommendation> = emptyList(),
 ) {
     ChatBubbleItem(
         chatMessage = message,
         onSaveClick = onSaveClick,
+        onSearchClick = onSearchClick,
         savedRecommendations = savedRecommendations,
         modifier = modifier
     )
@@ -328,6 +332,7 @@ private fun UserMessage(
 ) {
     ChatBubbleItem(
         chatMessage = message,
+        onSearchClick = {},
         modifier = modifier
     )
 }
@@ -361,6 +366,7 @@ fun ChatBubbleItem(
     chatMessage: Message,
     modifier: Modifier = Modifier,
     onSaveClick: (Recommendation) -> Unit = {},
+    onSearchClick: (Recommendation) -> Unit,
     savedRecommendations: List<Recommendation> = emptyList(),
 ) {
     val backgroundColor = when (chatMessage) {
@@ -436,22 +442,28 @@ fun ChatBubbleItem(
                                             Recommendations(
                                                 recommendation = it,
                                                 trailingContent = {
-                                                    Crossfade(
-                                                        savedRecommendations.fastAny { s -> s.title == it.title },
-                                                        label = "",
-                                                        modifier = Modifier.size(40.dp)
-                                                    ) { target ->
-                                                        if (target) {
-                                                            Icon(
-                                                                Icons.Default.CheckCircleOutline,
-                                                                null,
-                                                                tint = Color.Green
-                                                            )
-                                                        } else {
-                                                            IconButton(
-                                                                onClick = { onSaveClick(it) }
-                                                            ) { Icon(Icons.Default.Save, null) }
+                                                    Column {
+                                                        Crossfade(
+                                                            savedRecommendations.fastAny { s -> s.title == it.title },
+                                                            label = "",
+                                                            modifier = Modifier.size(40.dp)
+                                                        ) { target ->
+                                                            if (target) {
+                                                                Icon(
+                                                                    Icons.Default.CheckCircleOutline,
+                                                                    null,
+                                                                    tint = Color.Green
+                                                                )
+                                                            } else {
+                                                                IconButton(
+                                                                    onClick = { onSaveClick(it) }
+                                                                ) { Icon(Icons.Default.Save, null) }
+                                                            }
                                                         }
+
+                                                        IconButton(
+                                                            onClick = { onSearchClick(it) }
+                                                        ) { Icon(Icons.Default.Search, null) }
                                                     }
                                                 }
                                             )
