@@ -137,15 +137,16 @@ fun AiSettings(
 }
 
 @Composable
-private fun GeminiSettings(
-    geminiSettings: GeminiSettings,
-    onModify: (GeminiSettings) -> Unit,
+private fun ApiKeyField(
+    currentKey: String,
+    onModify: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var showApiKey by remember { mutableStateOf(false) }
 
     OutlinedTextField(
-        geminiSettings.apiKey,
-        onValueChange = { onModify(geminiSettings.copy(apiKey = it)) },
+        currentKey,
+        onValueChange = { onModify(currentKey) },
         label = { Text("API Key") },
         trailingIcon = {
             IconButton(
@@ -153,6 +154,19 @@ private fun GeminiSettings(
             ) { Icon(Icons.Default.Visibility, null) }
         },
         visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun GeminiSettings(
+    geminiSettings: GeminiSettings,
+    onModify: (GeminiSettings) -> Unit,
+) {
+
+    ApiKeyField(
+        currentKey = geminiSettings.apiKey,
+        onModify = { onModify(geminiSettings.copy(apiKey = it)) },
         modifier = Modifier.fillMaxWidth()
     )
 
@@ -169,18 +183,9 @@ private fun OpenAiSettings(
     openAiSettings: OpenAiSettings,
     onModify: (OpenAiSettings) -> Unit,
 ) {
-    var showApiKey by remember { mutableStateOf(false) }
-
-    OutlinedTextField(
-        openAiSettings.apiKey,
-        onValueChange = { onModify(openAiSettings.copy(apiKey = it)) },
-        label = { Text("API Key") },
-        trailingIcon = {
-            IconButton(
-                onClick = { showApiKey = !showApiKey }
-            ) { Icon(Icons.Default.Visibility, null) }
-        },
-        visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+    ApiKeyField(
+        currentKey = openAiSettings.apiKey,
+        onModify = { onModify(openAiSettings.copy(apiKey = it)) },
         modifier = Modifier.fillMaxWidth()
     )
 
