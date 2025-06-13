@@ -132,6 +132,7 @@ kotlin {
                 implementation(libs.androidx.navigation3.ui)*/
 
                 implementation("dev.shreyaspatil.generativeai:generativeai-google:0.9.0-1.1.0")
+                implementation("io.github.bay73:generic-ai:0.6.5")
             }
         }
 

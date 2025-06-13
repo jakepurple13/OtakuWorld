@@ -15,11 +15,10 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -40,19 +39,14 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,7 +54,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedCard
@@ -71,7 +64,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,15 +79,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.datastore.AiService
-import com.programmersbox.datastore.AiSettings
-import com.programmersbox.datastore.GeminiSettings
-import com.programmersbox.datastore.OpenAiSettings
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.favoritesdatabase.RecommendationResponse
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -217,6 +204,7 @@ private fun RecommendationScreen(
                 }
             }
         },
+        modifier = Modifier.fillMaxSize()
     ) {
         Scaffold(
             topBar = {
@@ -242,12 +230,13 @@ private fun RecommendationScreen(
                     resetScroll = { scope.launch { lazyState.animateScrollToItem(0) } },
                     modifier = Modifier
                         .background(BottomAppBarDefaults.containerColor)
-                        .navigationBarsPadding()
+                        .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
                 )
             },
             modifier = Modifier
                 .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
-                .imePadding()
+                //.imePadding()
+                .fillMaxSize()
         ) { padding ->
             LazyColumn(
                 state = lazyState,
@@ -681,127 +670,4 @@ fun MessageInput(
                 .padding(horizontal = 8.dp)
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AiSettings(
-    onDismissRequest: () -> Unit,
-    aiSettings: AiSettings,
-    onSave: (AiSettings) -> Unit,
-) {
-    var currentSettings by remember(aiSettings) { mutableStateOf(aiSettings) }
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true
-        ),
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        Scaffold { padding ->
-            Box(modifier = Modifier.padding(padding)) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    var expanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
-                    ) {
-                        OutlinedTextField(
-                            currentSettings.aiService.name,
-                            onValueChange = { currentSettings = currentSettings.copy(aiService = AiService.valueOf(it)) },
-                            label = { Text("AI Service") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            readOnly = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryEditable)
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            AiService.entries.forEach {
-                                DropdownMenuItem(
-                                    text = { Text(it.name) },
-                                    onClick = {
-                                        currentSettings = currentSettings.copy(aiService = it)
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    when (currentSettings.aiService) {
-                        AiService.Gemini -> GeminiSettings(
-                            geminiSettings = currentSettings.geminiSettings ?: GeminiSettings(),
-                            onModify = { currentSettings = currentSettings.copy(geminiSettings = it) }
-                        )
-
-                        AiService.OpenAi -> OpenAiSettings(
-                            openAiSettings = currentSettings.openAiSettings ?: OpenAiSettings(),
-                            onModify = { currentSettings = currentSettings.copy(openAiSettings = it) }
-                        )
-                    }
-
-                    OutlinedTextField(
-                        currentSettings.prompt,
-                        onValueChange = { currentSettings = currentSettings.copy(prompt = it) },
-                        label = { Text("Prompt (BE VERY CAREFUL ABOUT MODIFYING THIS! THINGS COULD BREAK!)") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Button(
-                        onClick = { onSave(currentSettings) },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) { Text("Save") }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun GeminiSettings(
-    geminiSettings: GeminiSettings,
-    onModify: (GeminiSettings) -> Unit,
-) {
-    OutlinedTextField(
-        geminiSettings.apiKey,
-        onValueChange = { onModify(geminiSettings.copy(apiKey = it)) },
-        label = { Text("API Key") },
-        visualTransformation = PasswordVisualTransformation(),
-        modifier = Modifier.fillMaxWidth()
-    )
-
-    OutlinedTextField(
-        geminiSettings.modelName,
-        onValueChange = { onModify(geminiSettings.copy(modelName = it)) },
-        label = { Text("Model") },
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-@Composable
-private fun OpenAiSettings(
-    openAiSettings: OpenAiSettings,
-    onModify: (OpenAiSettings) -> Unit,
-) {
-    OutlinedTextField(
-        openAiSettings.apiKey,
-        onValueChange = { onModify(openAiSettings.copy(apiKey = it)) },
-        label = { Text("API Key") },
-        visualTransformation = PasswordVisualTransformation(),
-        modifier = Modifier.fillMaxWidth()
-    )
-
-    OutlinedTextField(
-        openAiSettings.modelName,
-        onValueChange = { onModify(openAiSettings.copy(modelName = it)) },
-        label = { Text("Model") },
-        modifier = Modifier.fillMaxWidth()
-    )
 }
