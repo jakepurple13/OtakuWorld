@@ -1,4 +1,0 @@
--keep class io.netty.** {*; }
--keep class kotlin.reflect.jvm.internal.** { *; }
--keep class io.ktor.** { *; }
--keep class kotlinx.coroutines.** { *; }

@@ -42,7 +42,7 @@ import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -242,20 +242,24 @@ private fun RecommendationScreen(
                 state = lazyState,
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 contentPadding = padding,
-                reverseLayout = true,
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (viewModel.isLoading) {
-                    item {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { CircularProgressIndicator() }
-                    }
+                item {
+                    GeminiMessage(
+                        message = Message.Gemini(
+                            RecommendationResponse(
+                                response = "Hi! Ask me for anime, manga, or novel recommendations and I will give them!",
+                                recommendations = emptyList()
+                            )
+                        ),
+                        onSaveClick = {},
+                        onSearchClick = {},
+                        modifier = Modifier.animateItem()
+                    )
                 }
 
                 items(
-                    viewModel.messageList.reversed(),
+                    viewModel.messageList,
                     contentType = { it }
                 ) {
                     when (it) {
@@ -279,18 +283,13 @@ private fun RecommendationScreen(
                     }
                 }
 
-                item {
-                    GeminiMessage(
-                        message = Message.Gemini(
-                            RecommendationResponse(
-                                response = "Hi! Ask me for anime, manga, or novel recommendations and I will give them!",
-                                recommendations = emptyList()
-                            )
-                        ),
-                        onSaveClick = {},
-                        onSearchClick = {},
-                        modifier = Modifier.animateItem()
-                    )
+                if (viewModel.isLoading) {
+                    item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { CircularWavyProgressIndicator() }
+                    }
                 }
             }
         }
