@@ -88,11 +88,13 @@ message AiSettings {
   string prompt = 2;
   GeminiSettings geminiSettings = 3;
   OpenAiSettings openAiSettings = 4;
+  AnthropicSettings anthropicSettings = 5;
 }
 
 enum AiService {
   Gemini = 0;
   OpenAi = 1;
+  Anthropic = 2;
 }
 
 message GeminiSettings {
@@ -101,6 +103,11 @@ message GeminiSettings {
 }
 
 message OpenAiSettings {
+  string apiKey = 1;
+  string modelName = 2;
+}
+
+message AnthropicSettings {
   string apiKey = 1;
   string modelName = 2;
 }

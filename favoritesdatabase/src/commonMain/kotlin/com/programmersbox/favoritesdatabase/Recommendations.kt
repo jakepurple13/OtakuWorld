@@ -41,6 +41,9 @@ interface RecommendationDao {
 
     @Query("DELETE FROM Recommendation WHERE title = :id")
     suspend fun deleteRecommendation(id: String)
+
+    @Query("SELECT COUNT(*) FROM Recommendation")
+    fun getRecommendationCount(): Flow<Int>
 }
 
 class Converters {

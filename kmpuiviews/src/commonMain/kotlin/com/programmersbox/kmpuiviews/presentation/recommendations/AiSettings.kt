@@ -37,8 +37,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.AiService
 import com.programmersbox.datastore.AiSettings
+import com.programmersbox.datastore.AnthropicSettings
 import com.programmersbox.datastore.GeminiSettings
 import com.programmersbox.datastore.OpenAiSettings
+import com.xemantic.ai.anthropic.Model
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,6 +122,11 @@ fun AiSettings(
                                     openAiSettings = currentSettings.openAiSettings ?: OpenAiSettings(),
                                     onModify = { currentSettings = currentSettings.copy(openAiSettings = it) }
                                 )
+
+                                AiService.Anthropic -> AnthropicSettings(
+                                    anthropicSettings = currentSettings.anthropicSettings ?: AnthropicSettings(),
+                                    onModify = { currentSettings = currentSettings.copy(anthropicSettings = it) }
+                                )
                             }
                         }
                     }
@@ -146,7 +153,7 @@ private fun ApiKeyField(
 
     OutlinedTextField(
         currentKey,
-        onValueChange = { onModify(currentKey) },
+        onValueChange = { onModify(it) },
         label = { Text("API Key") },
         trailingIcon = {
             IconButton(
@@ -195,4 +202,49 @@ private fun OpenAiSettings(
         label = { Text("Model") },
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AnthropicSettings(
+    anthropicSettings: AnthropicSettings,
+    onModify: (AnthropicSettings) -> Unit,
+) {
+    ApiKeyField(
+        currentKey = anthropicSettings.apiKey,
+        onModify = { onModify(anthropicSettings.copy(apiKey = it)) },
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            anthropicSettings.modelName,
+            onValueChange = { onModify(anthropicSettings.copy(modelName = it)) },
+            label = { Text("Model") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryEditable)
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            Model.entries.forEach {
+                DropdownMenuItem(
+                    text = { Text(it.id) },
+                    onClick = {
+                        onModify(anthropicSettings.copy(modelName = it.id))
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }

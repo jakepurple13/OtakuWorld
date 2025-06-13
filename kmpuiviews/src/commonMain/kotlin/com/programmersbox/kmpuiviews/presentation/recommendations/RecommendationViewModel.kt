@@ -27,7 +27,7 @@ class RecommendationViewModel(
 
     private var aiRecommendationHandler: AiRecommendationHandler? = null
     val aiSettings = newSettingsHandling.aiSettings
-    val savedRecommendation = dao.getAllRecommendations()
+    val savedRecommendations = dao.getAllRecommendations()
 
     val messageList = mutableStateListOf<Message>()
 

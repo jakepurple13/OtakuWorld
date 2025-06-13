@@ -83,6 +83,10 @@ class SettingsSerializer : GenericSerializer<Settings> {
                 apiKey = "",
                 modelName = "gpt-3.5-turbo",
             ),
+            anthropicSettings = AnthropicSettings(
+                apiKey = "",
+                modelName = "claude-2",
+            ),
             prompt = AI_PROMPT,
         )
 

@@ -199,6 +199,18 @@ fun AccountInfoScreen(
                 CategoryGroup {
                     item {
                         AccountInfoItem(
+                            title = "Saved Recommendations",
+                            description = "The amount of saved recommendations",
+                            amount = state.savedRecommendations
+                        )
+                    }
+                }
+            }
+
+            item {
+                CategoryGroup {
+                    item {
+                        AccountInfoItem(
                             title = "Blur Hashes",
                             description = "Used to speed up loading images",
                             amount = state.blurHashes

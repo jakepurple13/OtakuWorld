@@ -10,6 +10,7 @@ import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
@@ -31,6 +32,7 @@ class AccountInfoViewModel(
     sourceRepository: SourceRepository,
     firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
     dataStoreHandling: DataStoreHandling,
+    recommendationDao: RecommendationDao,
 ) : ViewModel() {
 
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
@@ -61,8 +63,11 @@ class AccountInfoViewModel(
                         .size
                 },
             historyDao.getAllHistoryCount(),
+            recommendationDao.getRecommendationCount()
         ) { AccountInfoCount(it) }
-            .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b -> a.copy(timeSpentDoing = b.seconds) }
+            .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
+                a.copy(timeSpentDoing = b.seconds)
+            }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
@@ -81,6 +86,7 @@ data class AccountInfoCount(
     val translationModels: Int,
     val sourceCount: Int,
     val globalSearchHistory: Int,
+    val savedRecommendations: Int,
     val timeSpentDoing: Duration,
 ) {
     constructor(array: Array<Int>) : this(
@@ -96,6 +102,7 @@ data class AccountInfoCount(
         translationModels = array[9],
         sourceCount = array[10],
         globalSearchHistory = array[11],
+        savedRecommendations = array[12],
         timeSpentDoing = 0.seconds
     )
 
@@ -116,6 +123,7 @@ data class AccountInfoCount(
             translationModels = 0,
             sourceCount = 0,
             globalSearchHistory = 0,
+            savedRecommendations = 0,
             timeSpentDoing = 0.seconds
         )
     }

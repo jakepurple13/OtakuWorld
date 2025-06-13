@@ -119,17 +119,19 @@ private fun RecommendationScreen(
 ) {
     HideNavBarWhileOnScreen()
 
-    val savedRecommendations by viewModel.savedRecommendation.collectAsStateWithLifecycle(emptyList())
+    val savedRecommendations by viewModel
+        .savedRecommendations
+        .collectAsStateWithLifecycle(emptyList())
 
     val navActions = LocalNavActions.current
 
     val aiSettings by viewModel.aiSettings.rememberPreference()
 
-    val topBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
     val lazyState = rememberLazyListState()
     LaunchedEffect(viewModel.messageList.lastIndex) {
-        lazyState.animateScrollToItem(0)
+        lazyState.animateScrollToItem((viewModel.messageList.lastIndex - 1).coerceAtLeast(0))
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -595,17 +597,21 @@ fun RecommendationItem(
             }
         }
 
+        HorizontalDivider()
+
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxWidth()
         ) {
-            FilledTonalIconButton(
-                onClick = onSearchClick
-            ) { Icon(Icons.Default.Search, null) }
-
             FilledTonalIconButton(
                 onClick = onDeleteClick
             ) { Icon(Icons.Default.Delete, null) }
+
+            FilledTonalIconButton(
+                onClick = onSearchClick
+            ) { Icon(Icons.Default.Search, null) }
         }
     }
 }

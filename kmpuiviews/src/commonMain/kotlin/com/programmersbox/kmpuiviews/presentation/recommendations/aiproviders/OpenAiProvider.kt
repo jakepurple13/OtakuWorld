@@ -5,7 +5,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.recommendations.AiRecommendationHandler
 
 class OpenAiProvider(
-    private val newSettingsHandling: NewSettingsHandling,
+    newSettingsHandling: NewSettingsHandling,
 ) : AiRecommendationHandler {
 
     private val aiSettings = newSettingsHandling.aiSettings

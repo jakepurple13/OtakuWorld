@@ -133,6 +133,8 @@ kotlin {
 
                 implementation("dev.shreyaspatil.generativeai:generativeai-google:0.9.0-1.1.0")
                 implementation("io.github.bay73:generic-ai:0.6.5")
+                implementation("com.xemantic.ai:anthropic-sdk-kotlin:0.20.2")
+                implementation("com.xemantic.ai:xemantic-ai-tool-schema:1.1.2")
             }
         }
 
