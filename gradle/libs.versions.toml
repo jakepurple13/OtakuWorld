@@ -104,7 +104,7 @@ core = "1.6.1"
 
 androidx-lifecycle = "2.9.0"
 
-compose-multiplatform = "1.9.0-alpha02"
+compose-multiplatform = "1.9.0-SNAPSHOT+ivan-matkov-fix-window-core-redirection"
 
 kotlinx-coroutines = "1.10.2"
 
