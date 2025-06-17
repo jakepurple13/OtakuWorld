@@ -10,7 +10,6 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import io.kamel.core.ExperimentalKamelApi
-import org.koin.compose.KoinContext
 import org.koin.core.annotation.KoinExperimentalAPI
 
 @OptIn(KoinExperimentalAPI::class, ExperimentalKamelApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -21,16 +20,14 @@ fun OtakuMaterialTheme(
     settingsHandling: NewSettingsHandling,
     content: @Composable () -> Unit,
 ) {
-    KoinContext {
-        KmpLocalCompositionSetup(navController, navBackStack) {
-            MaterialExpressiveTheme(
-                colorScheme = generateColorScheme(settingsHandling),
-                motionScheme = if (settingsHandling.rememberShowExpressiveness().value)
-                    MotionScheme.expressive()
-                else
-                    MotionScheme.standard(),
-                content = content
-            )
-        }
+    KmpLocalCompositionSetup(navController, navBackStack) {
+        MaterialExpressiveTheme(
+            colorScheme = generateColorScheme(settingsHandling),
+            motionScheme = if (settingsHandling.rememberShowExpressiveness().value)
+                MotionScheme.expressive()
+            else
+                MotionScheme.standard(),
+            content = content
+        )
     }
 }

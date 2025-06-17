@@ -40,6 +40,7 @@ import com.programmersbox.datastore.AiSettings
 import com.programmersbox.datastore.AnthropicSettings
 import com.programmersbox.datastore.GeminiSettings
 import com.programmersbox.datastore.OpenAiSettings
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.privacySensitive
 import com.xemantic.ai.anthropic.Model
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -161,7 +162,7 @@ private fun ApiKeyField(
             ) { Icon(Icons.Default.Visibility, null) }
         },
         visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
-        modifier = modifier
+        modifier = modifier.privacySensitive()
     )
 }
 
