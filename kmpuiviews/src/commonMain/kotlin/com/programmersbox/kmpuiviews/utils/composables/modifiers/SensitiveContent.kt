@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
  * Usage Example:
  * ```
  * Modifier.privacySensitive() // Defaults to Redact(Black)
+ * Modifier.privacySensitive(PrivacyEffect.Blur(10.dp)) // Applies a blur effect
  * Modifier.privacySensitive(PrivacyEffect.Redact(Color.Gray)) // Redacts with gray overlay
  * ```
  */
