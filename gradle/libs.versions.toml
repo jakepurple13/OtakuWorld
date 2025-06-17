@@ -44,6 +44,7 @@ jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
 okhttpVersion = "4.12.0"
+# TODO: https://youtrack.jetbrains.com/issue/KTOR-8583 They are aware, there will be a fix in the next version
 ktorVersion = "3.1.3"
 scanner = "0.4.0"
 textflowMaterial3 = "1.2.1"

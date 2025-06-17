@@ -12,7 +12,7 @@ multiplatform this project grows stronger and stronger.
 - Firebase
     - Maybe? We'd need to do all the different variants too.
         - https://github.com/Tweener/passage?
-      - https://github.com/mirzemehdi/KMPAuth?
+      - https://github.com/mirzemehdi/KMPAuth? <-- Use this for authentication!
         https://github.com/GitLiveApp/firebase-kotlin-sdk?
 - Notifications
 - Workers
