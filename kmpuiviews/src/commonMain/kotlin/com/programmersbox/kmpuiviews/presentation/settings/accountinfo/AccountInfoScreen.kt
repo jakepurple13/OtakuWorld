@@ -117,7 +117,7 @@ fun AccountInfoScreen(
                         AccountInfoItem(
                             title = "Time Spent Doing",
                             description = "The amount of time spent doing things",
-                            amount = remember { HumanReadable.duration(state.timeSpentDoing) }
+                            amount = remember(state.timeSpentDoing) { HumanReadable.duration(state.timeSpentDoing) }
                         )
                     }
                 }
