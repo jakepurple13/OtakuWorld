@@ -111,7 +111,7 @@ kotlinx-coroutines = "1.10.2"
 material3WindowSizeClassVersion = "1.8.1"
 connectivity = "2.1.0"
 
-cmpLifecycle = "2.9.0"
+cmpLifecycle = "2.9.1"
 navigationCmp = "2.9.0-beta02"
 
 buildKonfig = "0.17.1"
