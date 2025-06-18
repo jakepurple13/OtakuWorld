@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.ThemeColor
-import com.programmersbox.datastore.asState
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
@@ -133,12 +132,11 @@ fun LazyListState.isScrollingUp(): Boolean {
 
 @Composable
 fun RecordTimeSpentDoing() {
-    var timeSpent by koinInject<DataStoreHandling>().timeSpentDoing.asState()
-
+    val timeSpent = koinInject<DataStoreHandling>().timeSpentDoing
     LaunchedEffect(Unit) {
         while (true) {
-            timeSpent++
             delay(1000)
+            timeSpent.set((timeSpent.getOrNull() ?: 0) + 1)
         }
     }
 }
