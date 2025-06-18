@@ -113,6 +113,7 @@ kotlin {
 
                 implementation(libs.qrose)
                 implementation(libs.androidx.navigationevent)
+                implementation(libs.androidx.navigationevent.compose)
                 implementation(libs.scanner)
 
                 implementation(libs.multiplatform.lifecycle.runtime.compose)

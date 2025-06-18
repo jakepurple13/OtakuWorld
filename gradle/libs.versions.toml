@@ -25,15 +25,13 @@ kamelImage = "1.0.5"
 latestAboutLibsRelease = "12.2.3"
 coroutinesVersion = "1.10.2"
 glideVersion = "4.16.0"
-lifecycleViewmodelNavigation3 = "1.0.0-alpha01"
-navigationevent = "1.0.0-alpha02"
 pagecurl = "1.5.1"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 pagingVersion = "3.3.6"
 protobufGradlePlugin = "0.9.5"
 qrose = "1.0.1"
 reorderable = "2.5.1"
-roomVersion = "2.7.1"
+roomVersion = "2.7.2"
 navVersion = "2.9.0"
 koin-bom = "4.1.0"
 coil = "3.2.0"
@@ -50,7 +48,7 @@ scanner = "0.4.0"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
 urlencoderLib = "1.6.0"
-workVersion = "2.10.1"
+workVersion = "2.10.2"
 ziplineVersion = "1.1.0"
 protobufVersion = "4.26.1"
 sketchVersion = "3.3.2"
@@ -119,7 +117,10 @@ buildKonfig = "0.17.1"
 
 compottie = "2.0.0-rc04"
 
-navigation3 = "1.0.0-alpha03"
+lifecycleViewmodelNavigation3 = "1.0.0-alpha02"
+navigationevent = "1.0.0-alpha03"
+
+navigation3 = "1.0.0-alpha04"
 nav3Material = "1.0.0-SNAPSHOT"
 
 [plugins]
@@ -145,6 +146,7 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "nav3Material" }
 
 androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
+androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded-core" }
 constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded" }
