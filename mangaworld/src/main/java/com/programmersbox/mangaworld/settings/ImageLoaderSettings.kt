@@ -1,13 +1,11 @@
 package com.programmersbox.mangaworld.settings
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircleOutline
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -16,6 +14,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,31 +28,35 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import androidx.navigation3.runtime.NavKey
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
-import com.programmersbox.mangasettings.ImageLoaderType
-import com.programmersbox.mangaworld.MangaSettingsHandling
-import com.programmersbox.uiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.uiviews.utils.AmoledProvider
-import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.serialization.Serializable
 import me.saket.telephoto.zoomable.glide.ZoomableGlideImage
 
-const val ImageLoaderSettingsRoute = "imageLoaderSettings"
+@Serializable
+data object ImageLoaderSettingsRoute : NavKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageLoaderSettings(
-    mangaSettingsHandling: MangaSettingsHandling,
+    mangaSettingsHandling: MangaNewSettingsHandling,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     navigationButton: @Composable () -> Unit = { BackButton() },
 ) {
@@ -66,11 +69,11 @@ fun ImageLoaderSettings(
     SettingsScaffold(
         title = "Image Loader Settings",
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 title = { Text("Image Loader Settings") },
                 scrollBehavior = it,
                 navigationIcon = navigationButton,
-                insetPadding = windowInsets
+                windowInsets = windowInsets
             )
         }
     ) {
@@ -121,7 +124,7 @@ fun ImageLoaderSettings(
 }
 
 @Composable
-private fun ImageLoaderType.Composed(
+fun ImageLoaderType.Composed(
     url: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
@@ -132,12 +135,6 @@ private fun ImageLoaderType.Composed(
         ImageLoaderType.Coil -> Coil(url, modifier, contentScale)
         ImageLoaderType.Panpf -> Panpf(url, modifier, contentScale)
         ImageLoaderType.Telephoto -> Telephoto(url, modifier, contentScale)
-        ImageLoaderType.UNRECOGNIZED -> Image(
-            imageVector = Icons.Default.Image,
-            contentDescription = null,
-            modifier = modifier,
-            contentScale = contentScale
-        )
     }
 }
 
@@ -181,7 +178,6 @@ private fun Coil(
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(url)
-            .lifecycle(LocalLifecycleOwner.current)
             .crossfade(true)
             .build(),
         contentDescription = null,
@@ -227,6 +223,13 @@ private fun ImageLoaderSettingsPreview(
     PreviewTheme(
         isAmoledMode = isAmoledMode
     ) {
-        ImageLoaderSettings(MangaSettingsHandling(LocalContext.current))
+        ImageLoaderSettings(
+            MangaNewSettingsHandling(
+                createProtobuf(
+                    context = LocalContext.current,
+                    serializer = MangaNewSettingsSerializer
+                )
+            )
+        )
     }
 }

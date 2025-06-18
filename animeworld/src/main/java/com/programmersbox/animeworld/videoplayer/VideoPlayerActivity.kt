@@ -12,7 +12,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.*
+import android.view.GestureDetector
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -38,24 +42,34 @@ import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
 import com.programmersbox.animeworld.R
-import com.programmersbox.animeworld.databinding.*
+import com.programmersbox.animeworld.databinding.ActivityVideoPlayerBinding
+import com.programmersbox.animeworld.databinding.ExoControlsBinding
+import com.programmersbox.animeworld.databinding.MxMobileBrightnessDialogBinding
+import com.programmersbox.animeworld.databinding.MxMobileVolumeDialogBinding
+import com.programmersbox.animeworld.databinding.MxProgressDialogBinding
 import com.programmersbox.animeworld.ignoreSsl
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.startDrawable
-import com.programmersbox.models.ChapterModel
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.toolTipText
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import java.security.cert.X509Certificate
-import java.util.*
+import java.util.Formatter
+import java.util.Locale
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
@@ -156,9 +170,11 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val genericInfo: GenericInfo by inject()
 
-    private val chapterModel: ChapterModel? by lazy {
+    private val dataStoreHandling by inject<DataStoreHandling>()
+
+    private val chapterModel: KmpChapterModel? by lazy {
         intent.getStringExtra("chapterModel")
-            ?.fromJson(ChapterModel::class.java to ChapterModelDeserializer())
+            ?.fromJson(KmpChapterModel::class.java to ChapterModelDeserializer())
     }
 
     private lateinit var videoBinding: ActivityVideoPlayerBinding
@@ -180,8 +196,20 @@ class VideoPlayerActivity : AppCompatActivity() {
             exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
         }
 
-        exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
-        exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
+        val timeSpent = dataStoreHandling.timeSpentDoing
+
+        flow {
+            var count = 0L
+            while (true) {
+                emit(count++)
+                delay(1000)
+            }
+        }
+            .onEach { timeSpent.set(timeSpent.get() + 1) }
+            .launchIn(lifecycleScope)
+
+        //exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
+        //exoBinding.forwardThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition + 30000) } }
 
         videoBinding.playerView.setControllerVisibilityListener(
             PlayerView.ControllerVisibilityListener { exoBinding.videoInfoLayout.visibility = it }
@@ -397,6 +425,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     mChangeLight = false
                     mChangeVolume = false
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     //Loged.i("onTouch: surfaceContainer actionMove [" + this.hashCode() + "] ")
                     val deltaX = x - mDownX
@@ -451,6 +480,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         showBrightnessDialog(-deltaY, brightnessPercent)
                     }
                 }
+
                 MotionEvent.ACTION_UP -> {
                     //Loged.i("onTouch: surfaceContainer actionUp [" + this.hashCode() + "] ")
                     dismissProgressDialog()
@@ -471,6 +501,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
                     //startProgressTimer()
                 }
+
                 else -> {
                 }
             }
@@ -482,7 +513,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun showProgressDialog(
         deltaX: Float, seekTime: String,
-        seekTimePosition: Int, totalTime: String, totalTimeDuration: Int
+        seekTimePosition: Int, totalTime: String, totalTimeDuration: Int,
     ) {
         if (!mProgressDialog.isShowing) mProgressDialog.show()
         val seekedTime = abs(playerView.player!!.currentPosition - seekTimePosition)

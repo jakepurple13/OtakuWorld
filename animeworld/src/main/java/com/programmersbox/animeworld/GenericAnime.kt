@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
@@ -64,15 +63,16 @@ import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entry
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
@@ -80,64 +80,83 @@ import com.programmersbox.animeworld.cast.ExpandedControlsActivity
 import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
+import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.animeworld.videoplayer.VideoViewModel
+import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
-import com.programmersbox.animeworld.videos.ViewVideoViewModel
+import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
-import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.datastore.asState
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.ShowWhen
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
-import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
-import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.LocalNavController
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.trackScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.core.module.dsl.binds
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericAnime(get(), get(), get()) }
+    singleOf(::GenericAnime) {
+        binds(
+            listOf(
+                KmpGenericInfo::class,
+                GenericInfo::class
+            )
+        )
+    }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
-    single { AnimeDataStoreHandling(get()) }
+    single { AnimeDataStoreHandling() }
 }
 
 class StorageHolder {
-    var storageModel: Storage? = null
+    var storageModel: KmpStorage? = null
 }
 
 class GenericAnime(
     val context: Context,
     val storageHolder: StorageHolder,
     val animeDataStoreHandling: AnimeDataStoreHandling,
+    val appConfig: AppConfig,
 ) : GenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildConfig.FLAVOR) {
-                "noFirebase" -> animeNoFirebaseFile
-                "noCloudFirebase" -> animeNoCloudFile
-                else -> animeFile
+            when (appConfig.buildType) {
+                BuildType.NoFirebase -> animeNoFirebaseFile
+                BuildType.NoCloudFirebase -> animeNoCloudFile
+                BuildType.Full -> animeFile
             }
         }
     override val deepLinkUri: String get() = "animeworld://"
@@ -145,24 +164,20 @@ class GenericAnime(
     override val sourceType: String get() = "anime"
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
         /*if ((model.source as? ShowApi)?.canPlay == false) {
             Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
             return
         }*/
         getEpisodes(
-            R.string.source_no_stream,
-            model,
-            infoModel,
-            context,
-            activity,
-            navController = navController,
+            errorId = R.string.source_no_stream,
+            model = model,
+            infoModel = infoModel,
+            context = context,
             isStreaming = true,
         ) {
             if (MainActivity.cast.isCastActive()) {
@@ -187,12 +202,10 @@ class GenericAnime(
     }
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
         /* if ((model.source as? ShowApi)?.canDownload == false) {
              Toast.makeText(
@@ -202,7 +215,7 @@ class GenericAnime(
              ).show()
              return
          }*/
-        activity.requestPermissions(
+        /*activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33)
                 arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
             else arrayOf(
@@ -213,32 +226,41 @@ class GenericAnime(
             if (p.isGranted) {
                 Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
                 getEpisodes(
-                    R.string.source_no_download,
-                    model,
-                    infoModel,
-                    context,
-                    activity,
-                    { !it.link.orEmpty().endsWith(".m3u8") },
-                    navController,
-                    false
+                    errorId = R.string.source_no_download,
+                    model = model,
+                    infoModel = infoModel,
+                    context = context,
+                    filter = { !it.link.orEmpty().endsWith(".m3u8") },
+                    navController = navController,
+                    isStreaming = false
                 ) {
                     //fetchIt(it, model, activity)
-                    downloadVideo(activity, model, it)
+                    downloadVideo(context, model, it)
                 }
             }
+        }*/
+        Toast.makeText(context, R.string.downloading_dots_no_percent, Toast.LENGTH_SHORT).show()
+        getEpisodes(
+            errorId = R.string.source_no_download,
+            model = model,
+            infoModel = infoModel,
+            context = context,
+            filter = { !it.link.orEmpty().endsWith(".m3u8") },
+            isStreaming = false
+        ) {
+            //fetchIt(it, model, activity)
+            downloadVideo(context, model, it)
         }
     }
 
     private fun getEpisodes(
         errorId: Int,
-        model: ChapterModel,
-        infoModel: InfoModel,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
         context: Context,
-        activity: FragmentActivity,
-        filter: (Storage) -> Boolean = { true },
-        navController: NavController,
+        filter: (KmpStorage) -> Boolean = { true },
         isStreaming: Boolean,
-        onAction: (Storage) -> Unit,
+        onAction: (KmpStorage) -> Unit,
     ) {
         val dialog = MaterialAlertDialogBuilder(context)
             .setTitle(R.string.loading_please_wait)
@@ -246,9 +268,9 @@ class GenericAnime(
             .setIcon(R.mipmap.ic_launcher)
             .setCancelable(false)
             .create()
-        activity.lifecycleScope.launch {
+        CoroutineScope(Job() + Dispatchers.IO).launch {
             model.getChapterInfo()
-                .onStart { runOnUIThread { dialog.show() } }
+                .onStart { withContext(Dispatchers.Main) { dialog.show() } }
                 .catch {
                     runOnUIThread {
                         Toast.makeText(context, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
@@ -283,7 +305,7 @@ class GenericAnime(
         }
     }
 
-    fun downloadVideo(context: Context, model: ChapterModel, storage: Storage) {
+    fun downloadVideo(context: Context, model: KmpChapterModel, storage: KmpStorage) {
         fun getNameFromUrl(url: String): String {
             return Uri.parse(url).lastPathSegment?.let { it.ifEmpty { model.name } } ?: model.name
         }
@@ -315,14 +337,8 @@ class GenericAnime(
             }
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
-
-    override fun searchList(): List<ApiService> = emptyList()
-
-    override fun toSource(s: String): ApiService? = null
-
     @Composable
-    override fun DetailActions(infoModel: InfoModel, tint: Color) {
+    override fun DetailActions(infoModel: KmpInfoModel, tint: Color) {
         val showCast by MainActivity.cast.sessionConnected()
             .collectAsStateWithLifecycle(true)
 
@@ -383,13 +399,13 @@ class GenericAnime(
     )
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
@@ -439,48 +455,52 @@ class GenericAnime(
 
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
-            val context = LocalContext.current
-            val navController = LocalNavController.current
 
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.video_menu_title)) },
-                settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) { navController.navigate(ViewVideoViewModel.VideoViewerRoute) { launchSingleTop = true } }
-            )
-
-            val castingViewModel: CastingViewModel = viewModel()
-            val activity = LocalActivity.current
-
-            ShowWhen(castingViewModel.connection) {
+            item {
+                val navController = LocalNavActions.current
                 PreferenceSetting(
-                    settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
-                    settingIcon = {
-                        Icon(
-                            if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
-                            null,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    },
+                    settingTitle = { Text(stringResource(R.string.video_menu_title)) },
+                    settingIcon = { Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.fillMaxSize()) },
                     modifier = Modifier.clickable(
                         indication = ripple(),
                         interactionSource = null
-                    ) {
-                        if (MainActivity.cast.isCastActive()) {
-                            context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
-                        } else {
-                            (activity as? FragmentActivity)?.supportFragmentManager?.let {
-                                MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
-                                    .also { m ->
-                                        CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
-                                    }
-                                    .show(it, "media_chooser")
+                    ) { navController.navigate(VideoViewerRoute) }
+                )
+            }
+
+
+            item {
+                val context = LocalContext.current
+                val castingViewModel: CastingViewModel = viewModel()
+                val activity = LocalActivity.current
+                ShowWhen(castingViewModel.connection) {
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.cast_menu_title)) },
+                        settingIcon = {
+                            Icon(
+                                if (castingViewModel.session) Icons.Default.CastConnected else Icons.Default.Cast,
+                                null,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) {
+                            if (MainActivity.cast.isCastActive()) {
+                                context.startActivity(Intent(context, ExpandedControlsActivity::class.java))
+                            } else {
+                                (activity as? FragmentActivity)?.supportFragmentManager?.let {
+                                    MediaRouteDialogFactory.getDefault().onCreateChooserDialogFragment()
+                                        .also { m ->
+                                            CastContext.getSharedInstance(context) {}.result.mergedSelector?.let { m.routeSelector = it }
+                                        }
+                                        .show(it, "media_chooser")
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
 
@@ -489,62 +509,82 @@ class GenericAnime(
             var folderLocation by remember { mutableStateOf(context.folderLocation) }
             val activity = LocalActivity.current
 
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.folder_location)) },
-                summaryValue = { Text(folderLocation) },
-                settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) {
-                    (activity as? FragmentActivity)?.requestPermissions(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    ) {
-                        if (it.isGranted) {
-                            ChooserDialog(context)
-                                .withIcon(R.mipmap.ic_launcher)
-                                .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
-                                .withFilter(true, false)
-                                .withStartFile(context.folderLocation)
-                                .enableOptions(true)
-                                .withChosenListener { dir, _ ->
-                                    context.folderLocation = "$dir/"
-                                    println(dir)
-                                    folderLocation = context.folderLocation
+            CategoryGroup {
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text(stringResource(R.string.folder_location)) },
+                        summaryValue = { Text(folderLocation) },
+                        settingIcon = { Icon(Icons.Default.Folder, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null
+                        ) {
+                            (activity as? FragmentActivity)?.requestPermissions(
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            ) {
+                                if (it.isGranted) {
+                                    ChooserDialog(context)
+                                        .withIcon(R.mipmap.ic_launcher)
+                                        .withResources(R.string.choose_a_directory, R.string.chooseText, R.string.cancelText)
+                                        .withFilter(true, false)
+                                        .withStartFile(context.folderLocation)
+                                        .enableOptions(true)
+                                        .withChosenListener { dir, _ ->
+                                            context.folderLocation = "$dir/"
+                                            println(dir)
+                                            folderLocation = context.folderLocation
+                                        }
+                                        .build()
+                                        .show()
                                 }
-                                .build()
-                                .show()
+                            }
                         }
-                    }
+                    )
                 }
-            )
+            }
         }
 
         playerSettings {
             val scope = rememberCoroutineScope()
-
             val useNewPlayer = animeDataStoreHandling.useNewPlayer
-
             val player by useNewPlayer.asState()
-
-            SwitchSetting(
-                settingTitle = { Text(stringResource(R.string.use_new_player)) },
-                summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
-                settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
-                value = player,
-                updateValue = { scope.launch { useNewPlayer.set(it) } }
-            )
-
             val ignoreSsl = animeDataStoreHandling.ignoreSsl
-
             val ignoreSslState by ignoreSsl.asState()
 
-            SwitchSetting(
-                settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
-                settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
-                value = ignoreSslState
-            ) { scope.launch { ignoreSsl.set(it) } }
+            CategoryGroup {
+                item {
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(R.string.use_new_player)) },
+                        summaryValue = { Text(stringResource(R.string.use_new_player_description)) },
+                        settingIcon = { Icon(Icons.Default.PersonalVideo, null, modifier = Modifier.fillMaxSize()) },
+                        value = player,
+                        updateValue = { scope.launch { useNewPlayer.set(it) } }
+                    )
+                }
+
+                item {
+                    SwitchSetting(
+                        settingTitle = { Text(stringResource(id = R.string.ignore_ssl)) },
+                        settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
+                        value = ignoreSslState
+                    ) { scope.launch { ignoreSsl.set(it) } }
+                }
+            }
+        }
+    }
+
+    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
+        entry<VideoScreen> {
+            trackScreen("video_player")
+            VideoPlayerUi(it)
+        }
+    }
+
+    override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
+        entry<VideoViewerRoute> {
+            trackScreen(VideoViewerRoute.toString())
+            ViewVideoScreen()
         }
     }
 
@@ -555,18 +595,25 @@ class GenericAnime(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
             trackScreen("video_player")
-            VideoPlayerUi()
+            VideoPlayerUi(
+                VideoScreen(
+                    showPath = it.arguments?.getString("showPath") ?: "",
+                    showName = it.arguments?.getString("showName") ?: "",
+                    downloadOrStream = it.arguments?.getBoolean("downloadOrStream") ?: false,
+                    referer = it.arguments?.getString("referer") ?: ""
+                )
+            )
         }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
         composable(
-            ViewVideoViewModel.VideoViewerRoute,
+            VideoViewerRoute.toString(),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://${ViewVideoViewModel.VideoViewerRoute}" })
+            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://$VideoViewerRoute" })
         ) {
-            trackScreen(ViewVideoViewModel.VideoViewerRoute)
+            trackScreen(VideoViewerRoute)
             ViewVideoScreen()
         }
     }
@@ -583,7 +630,7 @@ class GenericAnime(
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

@@ -73,8 +73,13 @@ plugins {
     id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
     //id("org.jetbrains.compose") version libs.versions.jetbrainsCompiler apply false
     alias(libs.plugins.compose.compiler) apply false
-    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
+    //alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
     alias(libs.plugins.google.firebase.performance) apply false
+    alias(libs.plugins.room) apply false
+    alias(libs.plugins.composeMultiplatform) apply false
+    id("com.squareup.wire") version "5.3.3" apply false
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-alpha11" apply false
+    alias(libs.plugins.buildKonfig) apply false
 }
 
 projectInfo {

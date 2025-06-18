@@ -5,6 +5,7 @@ import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
+import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoViewModel
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.datastore.updatePref
@@ -17,7 +18,7 @@ class MainActivity : BaseMainActivity() {
     val animeDataStoreHandling by inject<AnimeDataStoreHandling>()
 
     companion object {
-        const val VIEW_VIDEOS = "animeworld://${ViewVideoViewModel.VideoViewerRoute}"
+        val VIEW_VIDEOS = "animeworld://$VideoViewerRoute"
         val cast: CastHelper = CastHelper()
     }
 

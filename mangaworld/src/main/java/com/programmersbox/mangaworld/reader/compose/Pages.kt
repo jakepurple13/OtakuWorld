@@ -58,9 +58,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.load.model.GlideUrl
-import com.programmersbox.mangasettings.ImageLoaderType
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.LightAndDarkPreviews
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.skydoves.landscapist.ImageOptions
@@ -155,7 +155,7 @@ internal fun ChangeChapterSwipe(
     BoxWithConstraints(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .heightIn(min = 100.dp)
+            .heightIn(min = 300.dp)
             .wrapContentHeight()
     ) {
         val density = LocalDensity.current
@@ -258,7 +258,6 @@ enum class SwipeUpGesture {
 internal fun ChapterPage(
     chapterLink: () -> String,
     isDownloaded: Boolean,
-    openCloseOverlay: () -> Unit = {},
     headers: Map<String, String>,
     contentScale: ContentScale,
     imageLoaderType: ImageLoaderType,
@@ -269,7 +268,6 @@ internal fun ChapterPage(
             headers = headers,
             modifier = Modifier.fillMaxWidth(),
             contentScale = contentScale,
-            onClick = openCloseOverlay
         )
     } else {
         Box(

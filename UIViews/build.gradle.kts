@@ -17,6 +17,19 @@ android {
         buildConfig = true
     }
 
+    defaultConfig {
+        buildConfigField(
+            type = "Boolean",
+            name = "IS_PRERELEASE",
+            value = runCatching { System.getenv("IS_PRERELEASE") }
+                .onFailure { it.printStackTrace() }
+                .mapCatching { it.toBoolean() }
+                .getOrDefault(false)
+                .toString()
+                .also { println("IS_PRERELEASE: $it") }
+        )
+    }
+
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase(this)
@@ -38,6 +51,7 @@ dependencies {
     implementation(platform(libs.firebasePlatform))
     implementation(libs.firebaseAuth)
     implementation(libs.playServices)
+    implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(androidx.browser.browser)
     implementation(libs.androidBrowserHelper)
@@ -47,9 +61,15 @@ dependencies {
     api(platform(libs.koin.bom))
     api(libs.bundles.koinLibs)
 
+    implementation(projects.kmpmodels)
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
+    api(projects.datastore)
+    api(projects.kmpuiviews)
+
+    //Extension Loader
+    api(projects.sharedutils.kmpextensionloader)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(libs.coroutinesCore)
@@ -112,9 +132,6 @@ dependencies {
     //implementation(projects.imageloader)
     api(libs.bundles.kamel)
 
-    //Extension Loader
-    api(projects.sharedutils.extensionloader)
-
     api(libs.haze)
     api(libs.hazeMaterials)
 
@@ -127,7 +144,6 @@ dependencies {
 
     implementation(libs.dragselect)
 
-    implementation(libs.bundles.firebaseCrashLibs)
 
     implementation(libs.sonner)
     implementation(libs.glideCompose)
@@ -139,14 +155,38 @@ dependencies {
 
     implementation(libs.biometric)
 
-    implementation(projects.gemini)
+    //implementation(projects.gemini)
 
     implementation(libs.reorderable)
 
     debugImplementation(libs.workinspector)
 
+    implementation(libs.ackpine.core)
+    implementation(libs.ackpine.ktx)
+
     //implementation(libs.bundles.xr)
 
     //TODO: Use this to check recomposition count on every screen
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")
+
+    implementation(libs.zoomable.peek.overlay)
+
+    implementation(libs.kotlinx.datetime)
+
+    implementation(libs.androidx.core.performance)
+
+    implementation(libs.textflow.material3)
+
+    implementation(libs.lottie.compose)
+
+    implementation(libs.filekit.core)
+    implementation(libs.filekit.dialogs.compose)
+
+    api(libs.androidx.navigation3.runtime)
+    api(libs.androidx.navigation3.ui)
+    api(libs.androidx.material3.navigation3)
+    api(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.composeActivity)
+    implementation(libs.androidx.activity)
 }

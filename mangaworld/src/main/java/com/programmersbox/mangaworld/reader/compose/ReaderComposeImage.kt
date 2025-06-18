@@ -23,20 +23,23 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.AsyncImagePainter
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
-import coil.request.ImageRequest
-import coil.size.Size
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImagePainter
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Size
 import com.bumptech.glide.load.model.GlideUrl
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
 import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.github.panpf.zoomimage.rememberGlideZoomState
 import com.github.panpf.zoomimage.zoom.ReadMode
-import com.programmersbox.mangasettings.ImageLoaderType
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.ComposableUtils
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import io.kamel.image.KamelImage
@@ -142,9 +145,12 @@ internal fun Coil(
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(painter)
-            .apply { headers.forEach { addHeader(it.key, it.value) } }
-            .lifecycle(LocalLifecycleOwner.current)
             .crossfade(true)
+            .httpHeaders(
+                NetworkHeaders.Builder()
+                    .apply { headers.forEach { (t, u) -> add(t, u) } }
+                    .build()
+            )
             .size(Size.ORIGINAL)
             .build(),
         contentDescription = null,
@@ -154,7 +160,7 @@ internal fun Coil(
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
             .clipToBounds()
     ) {
-        val state = this.painter.state
+        val state by this.painter.state.collectAsStateWithLifecycle()
         when (state) {
             is AsyncImagePainter.State.Error -> Text(
                 stringResource(R.string.pressToRefresh),
@@ -176,7 +182,6 @@ internal fun Panpf(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -194,7 +199,6 @@ internal fun Panpf(
             contentDescription = null,
             contentScale = contentScale,
             scrollBar = null,
-            onTap = { onClick() },
             modifier = Modifier.fillMaxWidth()
         )
     }

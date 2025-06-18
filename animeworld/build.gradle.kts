@@ -36,7 +36,8 @@ dependencies {
 
     implementation(androidx.mediarouter.mediarouter)
 
-    implementation(libs.torrentStream)
+    //Commenting out since it's no longer being worked on
+    //implementation(libs.torrentStream)
 
     implementation(libs.gson)
 
@@ -45,7 +46,7 @@ dependencies {
     implementation(Deps.fontawesomeTypeface)
 
     implementation(projects.uiViews)
-    implementation(projects.models)
+    implementation(projects.kmpmodels)
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
 
@@ -64,7 +65,7 @@ dependencies {
     // Excludes the support library because it"s already included by Glide.
     implementation(libs.glideRecyclerview) { isTransitive = false }
 
-    implementation(libs.superForwardView)
+    //implementation(libs.superForwardView)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)

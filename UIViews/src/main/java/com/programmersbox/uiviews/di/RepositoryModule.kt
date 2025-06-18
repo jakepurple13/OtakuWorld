@@ -1,12 +1,9 @@
 package com.programmersbox.uiviews.di
 
-import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.uiviews.repository.ChangingSettingsRepository
-import com.programmersbox.uiviews.repository.CurrentSourceRepository
-import org.koin.core.module.Module
+import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
+import com.programmersbox.uiviews.di.kmpinterop.DownloadStateRepository
+import org.koin.dsl.module
 
-fun Module.repository() {
-    single { SourceRepository() }
-    single { CurrentSourceRepository() }
-    single { ChangingSettingsRepository() }
+val repository = module {
+    single<DownloadStateInterface> { DownloadStateRepository(get(), get()) }
 }

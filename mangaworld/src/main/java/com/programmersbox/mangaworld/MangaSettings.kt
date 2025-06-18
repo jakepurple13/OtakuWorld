@@ -5,16 +5,18 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.programmersbox.mangasettings.ImageLoaderType
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaSettings
-import com.programmersbox.mangasettings.PlayingMiddleAction
-import com.programmersbox.mangasettings.PlayingStartAction
 import com.programmersbox.mangasettings.ReaderType
 import com.programmersbox.mangasettings.mangaSettings
 import com.programmersbox.uiviews.datastore.GenericSerializer
 import com.programmersbox.uiviews.datastore.rememberPreference
 import com.programmersbox.uiviews.datastore.update
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.io.InputStream
 
 val Context.mangaSettings: DataStore<MangaSettings> by dataStore(
@@ -25,8 +27,6 @@ val Context.mangaSettings: DataStore<MangaSettings> by dataStore(
 object MangaSettingsSerializer : GenericSerializer<MangaSettings, MangaSettings.Builder> {
     override val defaultValue: MangaSettings
         get() = mangaSettings {
-            playingStartAction = PlayingStartAction.CurrentChapter
-            playingMiddleAction = PlayingMiddleAction.Nothing
             useNewReader = true
             pagePadding = 4
             readerType = ReaderType.List
@@ -36,31 +36,7 @@ object MangaSettingsSerializer : GenericSerializer<MangaSettings, MangaSettings.
 
 class MangaSettingsHandling(context: Context) {
     private val preferences by lazy { context.mangaSettings }
-    private val all: Flow<MangaSettings> get() = preferences.data
-
-    val playingStartAction = SettingInfo(
-        flow = all.map { it.playingStartAction },
-        updateValue = { setPlayingStartAction(it) }
-    )
-
-    @Composable
-    fun rememberPlayingStartAction() = preferences.rememberPreference(
-        key = { it.playingStartAction },
-        update = { setPlayingStartAction(it) },
-        defaultValue = PlayingStartAction.CurrentChapter
-    )
-
-    val playingMiddleAction = SettingInfo(
-        flow = all.map { it.playingMiddleAction },
-        updateValue = { setPlayingMiddleAction(it) }
-    )
-
-    @Composable
-    fun rememberPlayingMiddleAction() = preferences.rememberPreference(
-        key = { it.playingMiddleAction },
-        update = { setPlayingMiddleAction(it) },
-        defaultValue = PlayingMiddleAction.Nothing
-    )
+    internal val all: Flow<MangaSettings> get() = preferences.data
 
     val useNewReader = SettingInfo(
         flow = all.map { it.useNewReader },
@@ -117,5 +93,47 @@ class MangaSettingsHandling(context: Context) {
         private val updateValue: suspend MangaSettings.Builder.(T) -> MangaSettings.Builder,
     ) {
         suspend fun updateSetting(value: T) = preferences.update { updateValue(value) }
+    }
+}
+
+fun migrateMangaSettings(
+    mangaSettingsHandling: MangaSettingsHandling,
+    mangaNewSettingsHandling: MangaNewSettingsHandling,
+) {
+    GlobalScope.launch {
+        if (!mangaNewSettingsHandling.hasMigrated.get()) {
+            mangaSettingsHandling
+                .all
+                .firstOrNull()
+                ?.let { old ->
+                    println("Migrating old manga settings")
+                    mangaNewSettingsHandling.preferences.updateData { new ->
+                        new.copy(
+                            useNewReader = old.useNewReader,
+                            pagePadding = old.pagePadding,
+                            readerType = when (old.readerType) {
+                                ReaderType.List -> com.programmersbox.datastore.mangasettings.ReaderType.List
+                                ReaderType.Pager -> com.programmersbox.datastore.mangasettings.ReaderType.Pager
+                                ReaderType.FlipPager -> com.programmersbox.datastore.mangasettings.ReaderType.FlipPager
+                                ReaderType.CurlPager -> com.programmersbox.datastore.mangasettings.ReaderType.CurlPager
+                                ReaderType.UNRECOGNIZED -> com.programmersbox.datastore.mangasettings.ReaderType.List
+                            },
+                            imageLoaderType = when (old.imageLoaderType) {
+                                ImageLoaderType.Kamel -> com.programmersbox.datastore.mangasettings.ImageLoaderType.Kamel
+                                ImageLoaderType.Glide -> com.programmersbox.datastore.mangasettings.ImageLoaderType.Glide
+                                ImageLoaderType.Coil -> com.programmersbox.datastore.mangasettings.ImageLoaderType.Coil
+                                ImageLoaderType.Panpf -> com.programmersbox.datastore.mangasettings.ImageLoaderType.Panpf
+                                ImageLoaderType.Telephoto -> com.programmersbox.datastore.mangasettings.ImageLoaderType.Telephoto
+                                ImageLoaderType.UNRECOGNIZED -> com.programmersbox.datastore.mangasettings.ImageLoaderType.Kamel
+                            },
+                            useFlipPager = old.useFlipPager,
+                            allowUserDrawerGesture = old.allowUserDrawerGesture,
+                            useFloatingReaderBottomBar = old.useFloatingReaderBottomBar,
+                            hasMigrated = true,
+                            includeInsetsForReader = true
+                        )
+                    }
+                }
+        }
     }
 }

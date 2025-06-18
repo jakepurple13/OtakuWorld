@@ -1,20 +1,25 @@
+import com.android.build.api.dsl.androidLibrary
+
 plugins {
-    id("otaku-library")
+    `otaku-multiplatform`
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
+    alias(libs.plugins.room)
 }
 
-android {
-    defaultConfig {
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
+/*android {
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
+
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
     }
 
     namespace = "com.programmersbox.favoritesdatabase"
-}
+}*/
 
-dependencies {
+/*dependencies {
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
@@ -27,4 +32,44 @@ dependencies {
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)
     implementation(libs.bundles.pagingLibs)
+}*/
+
+otakuDependencies {
+    androidPackageName = "com.programmersbox.favoritesdatabase"
+}
+
+kotlin {
+    androidLibrary {
+        namespace = "com.programmersbox.favoritesdatabase"
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            //implementation(projects.models)
+            implementation(libs.kotlinxSerialization)
+            implementation(libs.roomRuntime)
+            implementation(libs.roomPaging)
+            implementation(projects.kmpmodels)
+        }
+
+        jvmMain.dependencies {
+            implementation(libs.androidx.room.sqlite)
+        }
+
+        androidMain.dependencies {
+            implementation(projects.models)
+        }
+    }
+}
+
+dependencies {
+    add("ksp", libs.roomCompiler)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }

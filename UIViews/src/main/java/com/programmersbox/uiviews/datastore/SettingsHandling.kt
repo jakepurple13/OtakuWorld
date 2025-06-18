@@ -10,9 +10,13 @@ import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.protobuf.GeneratedMessageLite
 import com.google.protobuf.InvalidProtocolBufferException
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.NotificationSortBy
@@ -21,7 +25,9 @@ import com.programmersbox.uiviews.SystemThemeMode
 import com.programmersbox.uiviews.ThemeColor
 import com.programmersbox.uiviews.middleMultipleActions
 import com.programmersbox.uiviews.settings
+import com.programmersbox.uiviews.utils.PerformanceClass
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -74,8 +80,9 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
             showDownload = true
             amoledMode = false
             usePalette = true
-            showBlur = true
+            showBlur = PerformanceClass.canBlur()
             showExpressiveness = true
+            notifyOnReboot = true
             multipleActions = middleMultipleActions {
                 startAction = MiddleNavigationAction.All
                 endAction = MiddleNavigationAction.Notifications
@@ -84,9 +91,12 @@ object SettingsSerializer : GenericSerializer<Settings, Settings.Builder> {
     override val parseFrom: (input: InputStream) -> Settings get() = Settings::parseFrom
 }
 
-class SettingsHandling(context: Context) {
+class SettingsHandling(
+    context: Context,
+    private val performanceClass: PerformanceClass,
+) {
     private val preferences by lazy { context.settings }
-    private val all: Flow<Settings> get() = preferences.data
+    internal val all: Flow<Settings> get() = preferences.data
 
     @Composable
     fun rememberSystemThemeMode() = preferences.rememberPreference(
@@ -100,6 +110,13 @@ class SettingsHandling(context: Context) {
         key = { it.batteryPercent },
         update = { setBatteryPercent(it) },
         defaultValue = 20
+    )
+
+    val notifyOnReboot = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.notifyOnReboot },
+        update = { setNotifyOnReboot(it) },
+        defaultValue = true
     )
 
     @Composable
@@ -151,7 +168,7 @@ class SettingsHandling(context: Context) {
     fun rememberIsAmoledMode() = preferences.rememberPreference(
         key = { it.amoledMode },
         update = { setAmoledMode(it) },
-        defaultValue = false
+        defaultValue = true
     )
 
     @Composable
@@ -165,7 +182,7 @@ class SettingsHandling(context: Context) {
     fun rememberShowBlur() = preferences.rememberPreference(
         key = { it.showBlur },
         update = { setShowBlur(it) },
-        defaultValue = true
+        defaultValue = performanceClass.canBlur
     )
 
     @Composable
@@ -269,6 +286,95 @@ class ProtoStoreHandler<T, DS, MessageType, BuilderType>(
                 override fun component1() = value
                 override fun component2(): (T) -> Unit = { value = it }
             }
+        }
+    }
+}
+
+fun migrateSettings(
+    context: Context,
+    dataStoreHandling: DataStoreHandling,
+    settingsHandling: SettingsHandling,
+    newSettingsHandling: NewSettingsHandling,
+) {
+    GlobalScope.launch {
+        if (!dataStoreHandling.hasMigrated.get()) {
+            context
+                .dataStore
+                .data
+                .firstOrNull()
+                ?.let { old -> otakuDataStore.edit { new -> new += old } }
+            dataStoreHandling.hasMigrated.set(true)
+        }
+
+        fun getAction(action: MiddleNavigationAction) = when (action) {
+            MiddleNavigationAction.All -> com.programmersbox.datastore.MiddleNavigationAction.All
+            MiddleNavigationAction.Notifications -> com.programmersbox.datastore.MiddleNavigationAction.Notifications
+            MiddleNavigationAction.Lists -> com.programmersbox.datastore.MiddleNavigationAction.Lists
+            MiddleNavigationAction.Favorites -> com.programmersbox.datastore.MiddleNavigationAction.Favorites
+            MiddleNavigationAction.Search -> com.programmersbox.datastore.MiddleNavigationAction.Search
+            MiddleNavigationAction.Multiple -> com.programmersbox.datastore.MiddleNavigationAction.Multiple
+            MiddleNavigationAction.UNRECOGNIZED -> com.programmersbox.datastore.MiddleNavigationAction.Multiple
+        }
+
+        if (!newSettingsHandling.hasMigrated.get()) {
+            settingsHandling
+                .all
+                .firstOrNull()
+                ?.let { old ->
+                    println("Migrating old settings")
+                    newSettingsHandling.preferences.updateData {
+                        it.copy(
+                            themeSetting = when (old.themeSetting) {
+                                SystemThemeMode.FollowSystem -> com.programmersbox.datastore.SystemThemeMode.FollowSystem
+                                SystemThemeMode.Day -> com.programmersbox.datastore.SystemThemeMode.Day
+                                SystemThemeMode.Night -> com.programmersbox.datastore.SystemThemeMode.Night
+                                SystemThemeMode.UNRECOGNIZED -> com.programmersbox.datastore.SystemThemeMode.FollowSystem
+                            },
+                            showListDetail = old.showListDetail,
+                            showDownload = old.showDownload,
+                            batteryPercent = old.batteryPercent,
+                            notifyOnReboot = old.notifyOnReboot,
+                            showBlur = old.showBlur,
+                            historySave = old.historySave,
+                            shareChapter = old.shareChapter,
+                            showAll = old.showAll,
+                            shouldCheckUpdate = old.shouldCheckUpdate,
+                            amoledMode = old.amoledMode,
+                            usePalette = old.usePalette,
+                            showExpressiveness = old.showExpressiveness,
+                            gridChoice = when (old.gridChoice) {
+                                GridChoice.FullAdaptive -> com.programmersbox.datastore.GridChoice.FullAdaptive
+                                GridChoice.Adaptive -> com.programmersbox.datastore.GridChoice.Adaptive
+                                GridChoice.Fixed -> com.programmersbox.datastore.GridChoice.Fixed
+                                GridChoice.UNRECOGNIZED -> com.programmersbox.datastore.GridChoice.FullAdaptive
+                            },
+                            themeColor = when (old.themeColor) {
+                                ThemeColor.Dynamic -> com.programmersbox.datastore.ThemeColor.Dynamic
+                                ThemeColor.Blue -> com.programmersbox.datastore.ThemeColor.Blue
+                                ThemeColor.Red -> com.programmersbox.datastore.ThemeColor.Red
+                                ThemeColor.Green -> com.programmersbox.datastore.ThemeColor.Green
+                                ThemeColor.Yellow -> com.programmersbox.datastore.ThemeColor.Yellow
+                                ThemeColor.Cyan -> com.programmersbox.datastore.ThemeColor.Cyan
+                                ThemeColor.Magenta -> com.programmersbox.datastore.ThemeColor.Magenta
+                                ThemeColor.Custom -> com.programmersbox.datastore.ThemeColor.Custom
+                                ThemeColor.UNRECOGNIZED -> com.programmersbox.datastore.ThemeColor.Dynamic
+                            },
+                            middleNavigationAction = getAction(old.middleNavigationAction),
+                            multipleActions = old.multipleActions?.let {
+                                com.programmersbox.datastore.MiddleMultipleActions(
+                                    startAction = getAction(it.startAction),
+                                    endAction = getAction(it.endAction),
+                                )
+                            },
+                            notificationSortBy = when (old.notificationSortBy) {
+                                NotificationSortBy.Date -> com.programmersbox.datastore.NotificationSortBy.Date
+                                NotificationSortBy.Grouped -> com.programmersbox.datastore.NotificationSortBy.Grouped
+                                NotificationSortBy.UNRECOGNIZED -> com.programmersbox.datastore.NotificationSortBy.Date
+                            },
+                            hasMigrated = true,
+                        ).also { println(it) }
+                    }
+                }
         }
     }
 }

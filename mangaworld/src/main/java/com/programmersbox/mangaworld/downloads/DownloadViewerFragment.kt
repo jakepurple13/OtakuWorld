@@ -36,6 +36,7 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
@@ -59,19 +60,18 @@ import androidx.compose.ui.util.fastForEach
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
-import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.reader.ReadActivity
-import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.OtakuScaffold
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import com.programmersbox.uiviews.presentation.components.animatedItems
 import com.programmersbox.uiviews.presentation.components.updateAnimatedItemsState
-import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalNavController
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
@@ -95,7 +95,7 @@ fun DownloadScreen() {
     OtakuScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            InsetSmallTopAppBar(
+            TopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(R.string.downloaded_chapters)) },
                 navigationIcon = { BackButton() }
@@ -124,7 +124,7 @@ fun DownloadScreen() {
 private fun DownloadViewer(
     viewModel: DownloadViewModel,
     p1: PaddingValues,
-    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
+    mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
 ) {
     val useNewReader by mangaSettingsHandling.useNewReader
         .flow
@@ -152,7 +152,7 @@ private fun DownloadViewer(
 
 @Composable
 private fun EmptyState(p1: PaddingValues) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     Box(
         modifier = Modifier
             .padding(p1)
@@ -315,7 +315,7 @@ private fun ChapterItem(
                         }
                     },
                     content = {
-                        val navController = LocalNavController.current
+                        val navController = LocalNavActions.current
                         Surface(
                             shape = M3MaterialTheme.shapes.medium,
                             tonalElevation = 4.dp,

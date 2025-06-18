@@ -10,14 +10,13 @@ import androidx.core.content.FileProvider
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.icon
-import com.programmersbox.animeworld.videos.ViewVideoViewModel
+import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.uiviews.OtakuApp
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
 class AnimeApp : OtakuApp() {
-    override fun Module.buildModules() {
-        includes(appModule)
-    }
+    override val buildModules: Module = module { includes(appModule) }
 
     override fun createFirebaseIds(): FirebaseIds = FirebaseIds(
         documentId = "favoriteShows",
@@ -30,7 +29,7 @@ class AnimeApp : OtakuApp() {
     @RequiresApi(Build.VERSION_CODES.N_MR1)
     override fun shortcuts(): List<ShortcutInfo> = listOf(
         //video viewer
-        ShortcutInfo.Builder(this, ViewVideoViewModel.VideoViewerRoute)
+        ShortcutInfo.Builder(this, VideoViewerRoute.toString())
             .setIcon(Icon.createWithBitmap(IconicsDrawable(this).icon(GoogleMaterial.Icon.gmd_video_library).toBitmap()))
             .setShortLabel(getString(R.string.view_videos))
             .setLongLabel(getString(R.string.view_videos))

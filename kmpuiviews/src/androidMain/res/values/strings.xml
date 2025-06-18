@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all_kmp">All</string>
+    <string name="notifications_kmp">Notifications</string>
+    <string name="custom_lists_title_kmp">Lists</string>
+    <string name="viewFavoritesMenu_kmp">Favorites</string>
+    <string name="more_kmp">More</string>
+    <string name="global_search_kmp">Global Search</string>
+
+    <string name="addedChapterItem">Hello World</string>
+    <string name="removedChapterItem">Hello World</string>
+    <string name="removed">Removed %1$s</string>
+    <string name="undo">Undo</string>
+    <string name="removeFromFavorites">Remove from Favorites</string>
+    <string name="addToFavorites">Add to Favorites</string>
+    <string name="searchHint">Search %1$s</string>
+    <string name="chooseASource">Choose a Source</string>
+    <string name="updateNumber">There are %1$d update(s)</string>
+    <string name="hadAnUpdate">%1$s had an update. %2$s</string>
+    <string name="finishedChecking">Finished</string>
+    <plurals name="updateAmount">
+        <item quantity="one">There is %1$d update</item>
+        <item quantity="other">There are %1$d updates</item>
+    </plurals>
+
+    <plurals name="numFavorites">
+        <item quantity="one">Search %1$d Favorite</item>
+        <item quantity="other">Search %1$d Favorites</item>
+    </plurals>
+
+    <plurals name="areYouSureRemove">
+        <item quantity="one">Are you sure you want to delete %1$d item?</item>
+        <item quantity="other">Are you sure you want to delete %1$d items?</item>
+    </plurals>
+
+    <string name="removeSourceFromFavorites">Remove Source from Favorites</string>
+    <string name="selectSource">Select %1$s Source</string>
+    <string name="downloadPage">Download Page?</string>
+
+    <string name="moreInfo">More Info</string>
+    <string name="read">Read</string>
+    <string name="download">Download</string>
+    <string name="download_chapter">Download</string>
+    <string name="markAs">Mark As...</string>
+    <string name="loadNextChapter">Next</string>
+    <string name="loadPreviousChapter">Previous</string>
+    <string name="reachedLastChapter">Reached Last Chapter</string>
+    <string name="lastPage">Reached Last Page</string>
+    <string name="goBack">Back</string>
+
+    <string name="swipeChapter">Swipe left or right and up to go to the previous or next chapter</string>
+
+    <string name="searchFavorites">Search Favorites</string>
+
+    <string name="notNow">Not Now</string>
+    <string name="gotoBrowser">Go to Browser</string>
+    <string name="update">Update</string>
+    <string name="updateTitle">There\'s an update! %1$s</string>
+
+    <string name="viewFavoritesMenu">Favorites</string>
+    <string name="viewHistoryMenu">View History</string>
+
+    <string name="areYouSureLogOut">Are you sure you want to log out?</string>
+    <string name="logIn">Log in</string>
+    <string name="logOut">Log Out?</string>
+    <string name="yes">Yes</string>
+    <string name="confirm">Confirm</string>
+    <string name="no">No</string>
+    <string name="done">Done</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="ok">OK</string>
+    <string name="something_went_wrong">Something Went Wrong</string>
+
+    <string name="recent">Recent</string>
+    <string name="all">All</string>
+    <string name="settings">Settings</string>
+
+    <string name="you_re_offline">You\'re Offline</string>
+    <string name="searchFor">Search: %1$s</string>
+    <string name="theresAnUpdate">There\'s an Update!</string>
+    <string name="versionAvailable">Version %1$s is now available!</string>
+    <string name="startingCheck">Starting Check</string>
+    <string name="checking">Checking</string>
+    <string name="about">About</string>
+    <string name="more_info_category">More Info</string>
+    <string name="account_category_title">Account</string>
+    <string name="last_update_check_time">Last Time Updates Were Checked</string>
+    <string name="check_for_periodic_updates">Check for Updates Periodically</string>
+    <string name="view_libraries_used">Libraries Used</string>
+    <string name="view_menu_category_title">View</string>
+    <string name="general_menu_title">General</string>
+    <string name="view_source_in_browser">View Source in Browser</string>
+    <string name="choose_a_theme">Choose a Theme</string>
+    <string name="theme_choice_title">Theme</string>
+    <string name="battery_alert_percentage">Battery Alert Percentage</string>
+    <string name="list_or_pager_title">View Type</string>
+    <string name="list_or_pager_description">Choose between a flowing view or a single page view.</string>
+    <string name="press_to_check_for_updates">Press to Check for Updates</string>
+    <string name="update_available">Update Available</string>
+    <string name="currentSource">Current Source: %1$s</string>
+    <string name="currentVersion">Version: %1$s</string>
+    <string name="please_update_for_latest_features">There\'s an update! Please update if you want to have the latest features!</string>
+    <string name="updateTo">Update to %1$s</string>
+    <string name="finishing_dots">Finishing…</string>
+    <string name="downloading_dots">Downloading…%1$d%%</string>
+    <string name="downloading_dots_no_percent">Downloading…</string>
+    <string name="updating_dots">Updating…</string>
+    <string name="finishedDownloading">Finished Downloading</string>
+    <string name="errorTryAgain">Error: Try Again</string>
+    <string name="loading">Loading…</string>
+    <string name="history_save_title">History Limit</string>
+    <string name="history_save_summary">The number of items to save in history. (Default is 50)</string>
+
+    <string-array name="theme_items">
+        <item>System</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
+
+    <string name="deleted_notifications">Deleted %1$d rows</string>
+    <string name="pending_saved_notifications">Pending Saved Notifications: %1$d</string>
+    <string name="delete_saved_notifications_title">Delete Saved Notifications</string>
+    <string name="delete_notifications_summary">You should do this every once in a while to make sure the saved database is cleared and up to date.</string>
+    <string name="view_notifications_title">View Notifications</string>
+    <string name="notifications_category_title">Notifications</string>
+    <string name="showMore">Show More</string>
+    <string name="showLess">Show Less</string>
+    <string name="delete_multiple">Delete Multiple</string>
+
+    <string name="removeNotification">Remove Notification</string>
+    <string name="remove">Remove</string>
+    <string name="remove_same_name">Remove all with same name</string>
+    <string name="areYouSureRemoveNoti">Are you sure you want to remove these Notifications?</string>
+
+    <string name="current_notification_count">Current Notifications: %1$d</string>
+
+    <string name="removeNoti">Remove %1$s?</string>
+    <string name="notify">Notify</string>
+    <string name="view_noti_summary">View notifications that have been sent, just in case you accidentally dismissed one you didn\'t mean to.</string>
+    <string name="save_for_later">Save for Later</string>
+    <string name="view_on_github">View on Github</string>
+    <string name="join_discord">Join the Discord</string>
+    <string name="support">Support the Developer</string>
+    <string name="support_summary">Support the developer by donating! Buy him a coffee!</string>
+    <string name="get_started">Get Started</string>
+    <string name="get_started_info">Favorite something for it to show up here</string>
+    <string name="add_a_favorite">Add a Favorite</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="global_search">Global Search</string>
+    <string name="more">More</string>
+    <string name="search">Search</string>
+    <string name="global_search_by_name">Global Search by Name</string>
+    <string name="are_you_sure_delete_notifications">Are you sure you want to delete all notifications?</string>
+    <string name="are_you_sure_stop_checking">Are you sure you want to not check for updates on this device?</string>
+    <string name="clear_update_queue">Clear Update Queue</string>
+    <string name="clear_update_queue_summary">Clear queue if the update checker seems to not run consistently.</string>
+    <string name="cleared">Cleared</string>
+    <string name="mark_read">Mark Read</string>
+    <string name="please_enable_permissions">Please Enable Permissions</string>
+    <string name="need_permissions_to_work">These permissions are needed in order for this functionality to work</string>
+    <string name="enable">Enable</string>
+    <string name="history">History</string>
+    <string name="search_found">%1$d Found</string>
+    <string name="battery_default">Default is 20</string>
+    <string name="clear_all_history">Clear All History?</string>
+    <string name="reverseOrder">Reverse Chapter Order</string>
+
+    <string name="playSettings">Play Settings</string>
+
+    <string name="chapter_count">Chapters: %1$d</string>
+
+    <string name="alternateNames">Alternative Names: %1$s</string>
+
+    <string name="share_item">Share %1$s</string>
+    <string name="share_chapters">Share Chapter</string>
+
+    <string name="show_all_screen">Show All Screen</string>
+
+    <string name="selectDate">Select Date to be Notified At</string>
+    <string name="selectTime">Select Time to be Notified At</string>
+    <string name="notifyAtTime">Notify At…</string>
+    <string name="willNotifyAt">Will Notify at %1$s</string>
+
+    <string name="viewTranslationModels">View Translation Models</string>
+    <string name="chooseModelToDelete">Choose a Model to Delete</string>
+    <string name="add_to_list">Add to List</string>
+    <string name="added_to_list">Added to %1$s</string>
+    <string name="already_in_list">Already in %1$s</string>
+    <string name="are_you_sure_delete_list">Are you sure? There is no recovering.\nPlease type in the name of the list to delete.</string>
+    <string name="delete_list_title">Delete List</string>
+    <string name="update_list_name_title">Update List Name</string>
+    <string name="list_name">List Name</string>
+    <string name="remove_items">Remove Items</string>
+    <string name="custom_lists_title">Lists</string>
+    <string name="choose_list_title">Choose List</string>
+    <string name="create_new_list_option">Create New</string>
+    <string name="create_new_list">Create New List</string>
+    <string name="custom_list_updated_at">Updated at %1$s</string>
+    <string name="importing_import_list">Importing!</string>
+    <string name="import_import_list">Import</string>
+    <string name="export_list">Export</string>
+    <string name="edit_import_list">Edit</string>
+    <string name="additional_settings">Additional Settings</string>
+    <string name="notification_settings">Notification Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="extensions">Extensions</string>
+    <string name="view_extensions">View Extensions</string>
+    <string name="installed">Installed</string>
+    <string name="amoled_mode">AMOLED Mode</string>
+    <string name="import_favorites">Import Favorites</string>
+    <string name="export_favorites">Export Favorites</string>
+    <string name="more_settings">More Settings</string>
+    <string name="for_later">For Later</string>
+    <string name="add_to_for_later_list">Add to For Later list</string>
+    <string name="show_download_button">Show Download Button</string>
+    <string name="show_list_detail_pane_for_lists">Show List Detail Pane for Lists</string>
+    <string name="delete">Delete</string>
+
+    <string name="welcome_description">Welcome to %1$s! We\'re pouring our hearts and souls into crafting an app that truly understands and celebrates your world. We envision a space where your love for anime, manga, games, and all things nerdy can flourish.
+
+\n\nThis isn\'t just another app; it\'s a labor of love fueled by our own otaku spirit. We\'re building this for you, with you in mind. Your enthusiasm inspires us, and we can\'t wait to share what we\'ve been working on.
+
+\n\nStay tuned for updates, and know that every line of code, every design choice, is driven by our desire to create the ultimate otaku experience. Thank you for being the amazing community that you are!
+\n\nNow, let\'s create your perfect experience! You can change any of these settings at any time in the settings menu</string>
+</resources>

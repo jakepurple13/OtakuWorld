@@ -30,6 +30,8 @@ import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.colorInt
 import com.mikepenz.iconics.utils.sizePx
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.colorFromTheme
@@ -37,23 +39,24 @@ import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.gone
 import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.helpfulutils.visible
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.CustomHideBottomViewOnScrollBehavior
-import com.programmersbox.mangaworld.MangaSettingsHandling
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.ActivityReadBinding
 import com.programmersbox.mangaworld.databinding.ReaderSettingsDialogBinding
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -63,13 +66,14 @@ import java.io.File
 import kotlin.math.roundToInt
 
 class ReadActivity : AppCompatActivity() {
-    private var model: ChapterModel? = null
+    private var model: KmpChapterModel? = null
     private var mangaTitle: String? = null
     private var isDownloaded = false
     private val loader by lazy { Glide.with(this) }
     private val genericInfo by inject<GenericInfo>()
-    private val settingsHandling: SettingsHandling by inject()
-    private val mangaSettingsHandling: MangaSettingsHandling by inject()
+    private val settingsHandling: NewSettingsHandling by inject()
+    private val mangaSettingsHandling: MangaNewSettingsHandling by inject()
+    private val dataStoreHandling by inject<DataStoreHandling>()
 
     private fun View.slideUp() {
         val layoutParams = this.layoutParams
@@ -108,7 +112,7 @@ class ReadActivity : AppCompatActivity() {
     private val adapter2: PageAdapter by lazy {
         loader.let {
             val list = intent.getStringExtra("allChapters")
-                ?.fromJson<List<ChapterModel>>(ChapterModel::class.java to ChapterModelDeserializer())
+                ?.fromJson<List<KmpChapterModel>>(KmpChapterModel::class.java to ChapterModelDeserializer())
                 .orEmpty().also(::println)
             //intent.getObjectExtra<List<ChapterModel>>("allChapters") ?: emptyList()
             val url = intent.getStringExtra("mangaUrl") ?: ""
@@ -152,6 +156,18 @@ class ReadActivity : AppCompatActivity() {
 
         enableImmersiveMode()
 
+        val timeSpent = dataStoreHandling.timeSpentDoing
+
+        flow {
+            var count = 0L
+            while (true) {
+                emit(count++)
+                delay(1000)
+            }
+        }
+            .onEach { timeSpent.set(timeSpent.get() + 1) }
+            .launchIn(lifecycleScope)
+
         infoSetup()
         readerSetup()
     }
@@ -187,7 +203,7 @@ class ReadActivity : AppCompatActivity() {
 
         mangaTitle = intent.getStringExtra("mangaTitle")
         model = intent.getStringExtra("currentChapter")
-            ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
+            ?.fromJson<KmpChapterModel>(KmpChapterModel::class.java to ChapterModelDeserializer())
 
         isDownloaded = intent.getBooleanExtra("downloaded", false)
         val file = intent.getSerializableExtra("filePath") as? File
@@ -295,7 +311,7 @@ class ReadActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadPages(model: ChapterModel?) {
+    private fun loadPages(model: KmpChapterModel?) {
         Glide.get(this).clearMemory()
         binding.readLoading
             .animate()
@@ -305,7 +321,7 @@ class ReadActivity : AppCompatActivity() {
         adapter2.setListNotify(emptyList())
         lifecycleScope.launch {
             model?.getChapterInfo()
-                ?.map { it.mapNotNull(Storage::link) }
+                ?.map { it.mapNotNull(KmpStorage::link) }
                 ?.catch { runOnUiThread { Toast.makeText(this@ReadActivity, it.localizedMessage, Toast.LENGTH_SHORT).show() } }
                 ?.flowOn(Dispatchers.Main)
                 ?.onEach { pages: List<String> ->

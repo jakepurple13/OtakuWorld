@@ -1,6 +1,5 @@
 package com.programmersbox.uiviews.utils
 
-import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.res.Configuration
@@ -21,6 +20,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -34,74 +34,70 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.programmersbox.extensionloader.SourceLoader
-import com.programmersbox.extensionloader.SourceRepository
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SettingsSerializer
+import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.favoritesdatabase.HistoryDatabase
-import com.programmersbox.favoritesdatabase.ItemDatabase
-import com.programmersbox.favoritesdatabase.ListDatabase
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
+import com.programmersbox.kmpmodels.KmpApiService
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.di.databases
+import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
+import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
+import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.sharedutils.AppLogo
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.OtakuWorldCatalog
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.di.databases
+import com.programmersbox.uiviews.di.androidViewModels
+import com.programmersbox.uiviews.di.appModules
+import com.programmersbox.uiviews.di.kmpInterop
 import com.programmersbox.uiviews.di.repository
-import com.programmersbox.uiviews.di.viewModels
-import com.programmersbox.uiviews.theme.LocalCustomListDao
-import com.programmersbox.uiviews.theme.LocalHistoryDao
-import com.programmersbox.uiviews.theme.LocalItemDao
-import com.programmersbox.uiviews.theme.LocalSourcesRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.compose.KoinIsolatedContext
-import org.koin.dsl.koinApplication
+import org.koin.compose.KoinApplication
+import org.koin.dsl.binds
 import org.koin.dsl.module
-import java.text.SimpleDateFormat
-import java.util.Locale
 
-val MockInfo = object : GenericInfo {
+class MockInfo(private val context: Context) : GenericInfo {
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
     override val deepLinkUri: String = ""
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? = null
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? = null
     override fun deepLinkSettings(context: Context): PendingIntent? = null
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
 
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
-
-    override fun toSource(s: String): ApiService? = null
-
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
 
     }
@@ -115,19 +111,19 @@ val MockInfo = object : GenericInfo {
                 .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.ic_site_settings) } }
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = painterResource(R.drawable.ic_site_settings)) } }
     }
 
     @ExperimentalFoundationApi
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -147,7 +143,7 @@ val MockInfo = object : GenericInfo {
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = R.drawable.ic_site_settings,
+                    placeHolder = { painterResource(R.drawable.ic_site_settings) },
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(
@@ -170,7 +166,7 @@ val MockInfo = object : GenericInfo {
     }
 }
 
-val MockApiService = object : ApiService {
+val MockApiService = object : KmpApiService {
     override val baseUrl: String = ""
 }
 
@@ -183,34 +179,34 @@ class AmoledProvider : PreviewParameterProvider<Boolean> {
 @Composable
 fun PreviewTheme(
     navController: NavHostController = rememberNavController(),
-    genericInfo: GenericInfo = MockInfo,
+    genericInfo: GenericInfo = MockInfo(LocalContext.current),
     isAmoledMode: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    KoinIsolatedContext(
-        koinApplication {
+    KoinApplication(
+        application = {
             androidLogger()
             androidContext(context)
-            module {
-                single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                single { SettingsHandling(context) }
-                single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
-            }
-            module {
-                single<GenericInfo> { MockInfo }
-                repository()
-                databases()
-                single { SourceLoader(context.applicationContext as Application, context, get<GenericInfo>().sourceType, get()) }
-                single {
-                    OtakuWorldCatalog(
-                        get<GenericInfo>().sourceType
-                            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            modules(
+                appModules,
+                androidViewModels,
+                repository,
+                databases,
+                kmpInterop,
+                module {
+                    single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
+                    single { SettingsHandling(context, PerformanceClass.create()) }
+                    single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
+                },
+                module {
+                    single<GenericInfo> { MockInfo(get()) } binds arrayOf(
+                        KmpGenericInfo::class,
+                        GenericInfo::class
                     )
+                    single { OtakuDataStoreHandling() }
                 }
-                single { DataStoreHandling(get()) }
-                viewModels()
-            }
+            )
         }
     ) {
         val darkTheme = isSystemInDarkTheme()
@@ -240,17 +236,23 @@ fun PreviewTheme(
             }
         ) {
             CompositionLocalProvider(
-                LocalNavController provides navController,
                 LocalGenericInfo provides genericInfo,
-                LocalSettingsHandling provides remember { SettingsHandling(context) },
-                LocalItemDao provides remember { ItemDatabase.getInstance(context).itemDao() },
-                LocalHistoryDao provides remember { HistoryDatabase.getInstance(context).historyDao() },
-                LocalCustomListDao provides remember { ListDatabase.getInstance(context).listDao() },
-                LocalSourcesRepository provides SourceRepository(),
-                LocalSystemDateTimeFormat provides remember { SimpleDateFormat("", Locale.getDefault()) },
+                LocalSettingsHandling provides remember {
+                    NewSettingsHandling(
+                        createProtobuf(context, SettingsSerializer()),
+                    )
+                },
                 LocalNavHostPadding provides PaddingValues(0.dp),
-                LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp))
-            ) { Surface { content() } }
+                LocalWindowSizeClass provides WindowSizeClass.calculateFromSize(DpSize(1000.dp, 1000.dp)),
+                //LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = DateTimeFormatHandler(LocalContext.current).is24Time())
+            ) {
+                KmpLocalCompositionSetup(
+                    navController,
+                    remember { TopLevelBackStack(Screen.RecentScreen) }
+                ) {
+                    Surface { content() }
+                }
+            }
         }
     }
 }
@@ -258,3 +260,48 @@ fun PreviewTheme(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, group = "themes")
 @Preview(showBackground = true, group = "themes")
 annotation class LightAndDarkPreviews
+
+@PreviewThemeColorsSizes
+@Composable
+private fun RecentPreview() {
+    PreviewTheme {
+        Text("Hello")
+    }
+}
+
+@Composable
+fun StandalonePreviewTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    isAmoledMode: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    MaterialTheme(
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
+            darkTheme -> darkColorScheme(
+                primary = Color(0xff90CAF9),
+                secondary = Color(0xff90CAF9)
+            )
+
+            else -> lightColorScheme(
+                primary = Color(0xff2196F3),
+                secondary = Color(0xff90CAF9)
+            )
+        }.let {
+            if (isAmoledMode && darkTheme) {
+                it.copy(
+                    surface = Color.Black,
+                    inverseSurface = Color.White,
+                    background = Color.Black
+                )
+            } else {
+                it
+            }
+        },
+    ) {
+        Surface {
+            content()
+        }
+    }
+}

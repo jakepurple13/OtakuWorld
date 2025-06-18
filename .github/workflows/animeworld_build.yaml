@@ -3,6 +3,11 @@ name: AnimeWorld Build
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      IS_PRERELEASE:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   animeworld:
@@ -11,7 +16,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
+      - run: |
+          echo $ANIME_GOOGLE_SERVICES_JSON > animeworld/google-services.json
+          echo "IS_PRERELEASE=${{ inputs.IS_PRERELEASE }}" >> $GITHUB_ENV
         env:
           ANIME_GOOGLE_SERVICES_JSON: ${{ secrets.ANIME_SERVICES_TWO }}
 

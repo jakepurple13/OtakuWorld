@@ -30,12 +30,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.AppUpdate
-import com.programmersbox.sharedutils.updateAppCheck
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
@@ -191,7 +185,7 @@ class MainFragment : BrowseSupportFragment() {
         gridRowAdapter.add(resources.getString(R.string.personal_settings))
         rowsAdapter.add(ListRow(gridHeader, gridRowAdapter))
 
-        lifecycleScope.launch {
+        /*lifecycleScope.launch {
             updateAppCheck
                 .filterNotNull()
                 .map {
@@ -203,7 +197,7 @@ class MainFragment : BrowseSupportFragment() {
                     else gridRowAdapter.remove(resources.getString(R.string.update_available))
                 }
                 .collect()
-        }
+        }*/
 
         adapter = rowsAdapter
     }

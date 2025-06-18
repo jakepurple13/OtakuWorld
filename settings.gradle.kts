@@ -7,6 +7,9 @@ pluginManagement {
         //maven { url "https://dl.bintray.com/piasy/maven" }
         maven("https://oss.sonatype.org/content/repositories/snapshots")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        //TODO: Remove these once material adaptive nav3 is not a snapshot
+        logger.error("REMOVE SNAPSHOT WHEN READY", Exception())
+        maven("https://androidx.dev/snapshots/builds/13508953/artifacts/repository")
     }
 }
 dependencyResolutionManagement {
@@ -17,12 +20,15 @@ dependencyResolutionManagement {
         maven("https://www.jitpack.io")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven("https://jogamp.org/deployment/maven")
+        //TODO: Remove these once material adaptive nav3 is not a snapshot
+        logger.error("REMOVE SNAPSHOT WHEN READY", Exception())
+        maven("https://androidx.dev/snapshots/builds/13508953/artifacts/repository")
     }
 
-    //TODO: Remove current ones and replace with this!
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2024.12.01")
+            from("androidx.gradle:gradle-version-catalog:2025.06.00")
         }
     }
 }
@@ -58,7 +64,6 @@ include(
     ":sharedutils",
     ":source_utilities",
     //":imageloader",
-    ":sharedutils:extensionloader"
     //":otakumanager",
 )
 
@@ -70,4 +75,10 @@ rootProject.name = "OtakuWorld"
 //include(":manga_sources:defaultmangasources")
 //include(":anime_sources:defaultanimesources")
 //include(":MangaWorldbaselineprofile")
-include(":gemini")
+include(":datastore")
+include(":datastore:mangasettings")
+include(":kmpuiviews")
+include(":kmpmodels")
+include(":sharedutils:kmpextensionloader")
+include(":mangaworld:desktop")
+include(":mangaworld:shared")

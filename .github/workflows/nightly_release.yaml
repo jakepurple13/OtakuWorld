@@ -6,6 +6,9 @@ on:
 
   workflow_dispatch:
 
+env:
+  IS_PRERELEASE: true
+
 jobs:
   checkNightly:
     name: Check for new commits
@@ -21,30 +24,52 @@ jobs:
         run: |
           set -x
           echo "NEW_COMMIT_COUNT=$(git log --oneline --since '24 hours ago' | wc -l)" >> $GITHUB_ENV
+      - name: Set variables.properties
+        run: |
+          cat <<EOF > variables.properties
+          IS_PRERELEASE:true
+          EOF
 
   mangaworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/mangaworld_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
+
+  # TODO: Will come eventually once everything is migrated
+  #  mangaworldDesktop:
+  #    needs: checkNightly
+  #    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+  #    uses: ./.github/workflows/mangaworld_desktop_build.yaml
+  #    secrets: inherit # pass all secrets
+  #    with:
+  #      IS_PRERELEASE: true
 
   animeworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   animeworldtv:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/animeworldtv_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   novelworld:
     needs: checkNightly
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     uses: ./.github/workflows/novelworld_build.yaml
     secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
 
   release:
     name: Release APK
@@ -62,7 +87,8 @@ jobs:
         run: |
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-          echo "NIGHTLY_TIME=$(date)" >> $GITHUB_ENV
+          echo "NIGHTLY_TIME=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
+          echo "NIGHTLY_TAG=$(date '+%Y_%m_%d')" >> $GITHUB_ENV
 
       - name: Create Nightly Release
         id: create_release
@@ -73,8 +99,8 @@ jobs:
           fail_on_unmatched_files: true
           prerelease: true
           generate_release_notes: true
-          tag_name: nightly
-          name: OtakuWorld Nightly Release
+          tag_name: nightly_${{ env.NIGHTLY_TAG }}
+          name: OtakuWorld Nightly Release ${{ env.NIGHTLY_TIME }}
           body: Nightly release of OtakuWorld at ${{ env.NIGHTLY_TIME }}
           files: |
             ${{ github.workspace }}/release-artifacts/**

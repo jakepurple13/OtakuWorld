@@ -1,11 +1,9 @@
 package com.programmersbox.mangaworld
 
-import android.Manifest
 import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Environment
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -20,61 +18,70 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
-import androidx.compose.material.icons.filled.BorderBottom
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.fragment.app.FragmentActivity
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entry
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.downloadManager
-import com.programmersbox.helpfulutils.requestPermissions
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import com.programmersbox.manga.shared.ChapterHolder
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.mangasettings.MangaNewSettingsSerializer
+import com.programmersbox.mangaworld.downloads.DownloadRoute
 import com.programmersbox.mangaworld.downloads.DownloadScreen
-import com.programmersbox.mangaworld.downloads.DownloadViewModel
+import com.programmersbox.mangaworld.onboarding.ReaderOnboarding
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.mangaworld.reader.compose.ReadView
 import com.programmersbox.mangaworld.reader.compose.ReadViewModel
 import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import com.programmersbox.mangaworld.settings.ImageLoaderSettingsRoute
 import com.programmersbox.mangaworld.settings.PlayerSettings
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.models.Storage
-import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.mangaworld.settings.ReaderSettings
+import com.programmersbox.mangaworld.settings.ReaderSettingsScreen
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.PreferenceSetting
-import com.programmersbox.uiviews.presentation.components.SwitchSetting
-import com.programmersbox.uiviews.presentation.settings.ComposeSettingsDsl
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.ComponentState
-import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.M3CoverCard
-import com.programmersbox.uiviews.utils.M3PlaceHolderCoverCard
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.adaptiveGridCell
 import com.programmersbox.uiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.trackScreen
 import kotlinx.coroutines.GlobalScope
@@ -84,28 +91,48 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.module.dsl.binds
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    single<GenericInfo> { GenericManga(get(), get(), get()) }
-    single { NetworkHelper(get()) }
+    singleOf(::GenericManga) {
+        binds(
+            listOf(
+                KmpGenericInfo::class,
+                GenericInfo::class
+            )
+        )
+    }
+
+    singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
-    single { ChapterHolder() }
-    single { MangaSettingsHandling(get()) }
+    singleOf(::ChapterHolder)
+    singleOf(::MangaSettingsHandling)
+    single {
+        MangaNewSettingsHandling(
+            createProtobuf(
+                context = get(),
+                serializer = MangaNewSettingsSerializer,
+                fileName = "MangaSettings.preferences_pb"
+            )
+        )
+    }
     viewModelOf(::ReadViewModel)
 }
 
-class ChapterHolder {
-    var chapterModel: ChapterModel? = null
-    var chapters: List<ChapterModel>? = null
-}
-
+//TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides
+// while ios and desktop just use the open class?
 class GenericManga(
     val context: Context,
     val chapterHolder: ChapterHolder,
-    val mangaSettingsHandling: MangaSettingsHandling,
+    val mangaSettingsHandling: MangaNewSettingsHandling,
+    val settingsHandling: NewSettingsHandling,
+    val appConfig: AppConfig,
 ) : GenericInfo {
 
     override val sourceType: String get() = "manga"
@@ -114,21 +141,20 @@ class GenericManga(
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildConfig.FLAVOR) {
-                "noFirebase" -> mangaNoFirebaseFile
-                "noCloudFirebase" -> mangaNoCloudFile
-                else -> mangaFile
+            when (appConfig.buildType) {
+                BuildType.NoFirebase -> mangaNoFirebaseFile
+                BuildType.NoCloudFirebase -> mangaNoCloudFile
+                BuildType.Full -> mangaFile
             }
         }
+
     override val scrollBuffer: Int = 4
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
         chapterHolder.chapters = allChapters
         if (runBlocking { mangaSettingsHandling.useNewReader.flow.first() }) {
@@ -142,8 +168,8 @@ class GenericManga(
         } else {
             context.startActivity(
                 Intent(context, ReadActivity::class.java).apply {
-                    putExtra("currentChapter", model.toJson(ChapterModel::class.java to ChapterModelSerializer()))
-                    putExtra("allChapters", allChapters.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("currentChapter", model.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
+                    putExtra("allChapters", allChapters.toJson(KmpChapterModel::class.java to ChapterModelSerializer()))
                     putExtra("mangaTitle", infoModel.title)
                     putExtra("mangaUrl", model.url)
                     putExtra("mangaInfoUrl", model.sourceUrl)
@@ -152,7 +178,7 @@ class GenericManga(
         }
     }
 
-    private fun downloadFullChapter(model: ChapterModel, title: String) {
+    private fun downloadFullChapter(model: KmpChapterModel, title: String) {
         //val fileLocation = runBlocking { context.folderLocationFlow.first() }
         val fileLocation = DOWNLOAD_FILE_PATH
 
@@ -162,7 +188,7 @@ class GenericManga(
         GlobalScope.launch {
             model.getChapterInfo()
                 .dispatchIo()
-                .map { it.mapNotNull(Storage::link) }
+                .map { it.mapNotNull(KmpStorage::link) }
                 .map {
                     it.mapIndexed { index, s ->
                         //val location = "/$fileLocation/$title/${model.name}"
@@ -190,22 +216,18 @@ class GenericManga(
     }
 
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
-        activity.requestPermissions(
+        /*activity.requestPermissions(
             *if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
             else arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }
+        ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }*/
+
+        downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
     }
-
-    override fun sourceList(): List<ApiService> = emptyList()
-
-    override fun toSource(s: String): ApiService? = null
 
     @Composable
     override fun ComposeShimmerItem() {
@@ -214,7 +236,7 @@ class GenericManga(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.fillMaxSize(),
-        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = R.drawable.manga_world_round_logo) } }
+        ) { items(10) { M3PlaceHolderCoverCard(placeHolder = painterResource(R.drawable.manga_world_round_logo)) } }
     }
 
     @OptIn(
@@ -222,13 +244,13 @@ class GenericManga(
     )
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
@@ -248,7 +270,7 @@ class GenericManga(
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = R.drawable.manga_world_round_logo,
+                    placeHolder = { painterResource(R.drawable.manga_world_round_logo) },
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(
@@ -273,17 +295,30 @@ class GenericManga(
 
     @OptIn(ExperimentalAnimationApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
-
         viewSettings {
-            val navController = LocalNavController.current
-            PreferenceSetting(
-                settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
-                settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
-                modifier = Modifier.clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) { navController.navigate(DownloadViewModel.DownloadRoute) { launchSingleTop = true } }
-            )
+            item {
+                val navController = LocalNavActions.current
+                PreferenceSetting(
+                    settingTitle = { Text(stringResource(R.string.downloaded_manga)) },
+                    settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { navController.navigate(DownloadRoute) }
+                )
+            }
+
+            item {
+                val navController = LocalNavActions.current
+                PreferenceSetting(
+                    settingTitle = { Text("Manga Reader Settings") },
+                    settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { navController.navigate(ReaderSettingsScreen) }
+                )
+            }
         }
 
         generalSettings {
@@ -379,27 +414,17 @@ class GenericManga(
         }
 
         playerSettings {
-            val navController = LocalNavController.current
             PlayerSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
-                onImageLoaderClick = { navController.navigate(ImageLoaderSettingsRoute) { launchSingleTop = true } }
             )
+        }
 
-            var userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
-            SwitchSetting(
-                value = userGestureAllowed,
-                updateValue = { userGestureAllowed = it },
-                settingTitle = { Text("Allow User Gestures for Chapter List in Reader") },
-                settingIcon = { Icon(Icons.Default.Gesture, null, modifier = Modifier.fillMaxSize()) }
-            )
-
-            var useFloatingBottomBar by mangaSettingsHandling.rememberUseFloatingReaderBottomBar()
-            SwitchSetting(
-                value = useFloatingBottomBar,
-                updateValue = { useFloatingBottomBar = it },
-                settingTitle = { Text("Use a Floating Bottom Bar in Reader") },
-                settingIcon = { Icon(Icons.Default.BorderBottom, null, modifier = Modifier.fillMaxSize()) }
-            )
+        onboardingSettings {
+            item {
+                ReaderOnboarding(
+                    mangaSettingsHandling = mangaSettingsHandling,
+                )
+            }
         }
     }
 
@@ -415,31 +440,77 @@ class GenericManga(
             exitTransition = { fadeOut() },
         ) {
             trackScreen("mangaReader")
-            ReadView()
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.MangaReader>()) }
+            )
+        }
+    }
+
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
+    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
+        entry<ReadViewModel.MangaReader> {
+            trackScreen("mangaReader")
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it) }
+            )
+        }
+    }
+
+    override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
+        entry<DownloadRoute> {
+            trackScreen(DownloadRoute.toString())
+            DownloadScreen()
+        }
+
+        entry<ImageLoaderSettingsRoute> {
+            trackScreen(ImageLoaderSettingsRoute.toString())
+            ImageLoaderSettings(mangaSettingsHandling)
+        }
+
+        entry<ReaderSettingsScreen> {
+            trackScreen("readerSettings")
+            ReaderSettings(
+                mangaSettingsHandling = mangaSettingsHandling,
+                settingsHandling = settingsHandling
+            )
         }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
-        composable(
-            DownloadViewModel.DownloadRoute,
+        composable<DownloadRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(DownloadViewModel.DownloadRoute)
+            trackScreen(DownloadRoute.toString())
             DownloadScreen()
         }
 
-        composable(
-            ImageLoaderSettingsRoute,
+        composable<ImageLoaderSettingsRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(ImageLoaderSettingsRoute)
+            trackScreen(ImageLoaderSettingsRoute.toString())
             ImageLoaderSettings(mangaSettingsHandling)
+        }
+
+        composable<ReaderSettingsScreen>(
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
+        ) {
+            trackScreen("readerSettings")
+            ReaderSettings(
+                mangaSettingsHandling = mangaSettingsHandling,
+                settingsHandling = settingsHandling
+            )
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

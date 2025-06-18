@@ -53,7 +53,7 @@ import com.programmersbox.models.ApiService
 import com.programmersbox.otakumanager.ui.theme.OtakuWorldTheme
 import com.programmersbox.sharedutils.FirebaseAuthentication
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.uiviews.utils.CoverCard
 import com.programmersbox.uiviews.presentation.components.CustomChip2
 import io.reactivex.Flowable

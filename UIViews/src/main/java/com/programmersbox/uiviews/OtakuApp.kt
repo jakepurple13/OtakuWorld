@@ -1,93 +1,78 @@
+@file:OptIn(DelicateCoroutinesApi::class)
+
 package com.programmersbox.uiviews
 
 import android.app.Application
-import android.content.Context
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import android.util.Log
 import androidx.annotation.CallSuper
+import androidx.compose.runtime.Composer
+import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Configuration
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequest
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.google.android.material.color.DynamicColors
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.crashlytics.setCustomKeys
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.remoteconfig.ConfigUpdate
-import com.google.firebase.remoteconfig.ConfigUpdateListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import com.google.firebase.remoteconfig.configUpdates
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
-import com.programmersbox.extensionloader.SourceLoader
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.DataStoreSettings
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomListItem
-import com.programmersbox.favoritesdatabase.ListDatabase
-import com.programmersbox.helpfulutils.NotificationChannelImportance
-import com.programmersbox.helpfulutils.createNotificationChannel
-import com.programmersbox.helpfulutils.createNotificationGroup
+import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.di.kmpModule
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.loggingutils.Loged
-import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseDb
-import com.programmersbox.sharedutils.FirebaseUIStyle
-import com.programmersbox.uiviews.checkers.AppCheckWorker
-import com.programmersbox.uiviews.checkers.SourceUpdateChecker
-import com.programmersbox.uiviews.checkers.UpdateFlowWorker
-import com.programmersbox.uiviews.checkers.UpdateNotification
-import com.programmersbox.uiviews.datastore.DataStoreHandling
+import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.di.databases
-import com.programmersbox.uiviews.di.repository
-import com.programmersbox.uiviews.di.viewModels
+import com.programmersbox.uiviews.datastore.migrateSettings
+import com.programmersbox.uiviews.di.androidViewModels
+import com.programmersbox.uiviews.di.appModules
+import com.programmersbox.uiviews.di.kmpInterop
+import com.programmersbox.uiviews.di.workers
+import com.programmersbox.uiviews.utils.NotificationChannels
+import com.programmersbox.uiviews.utils.NotificationGroups
+import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import java.util.Locale
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 abstract class OtakuApp : Application(), Configuration.Provider {
-
-    //TODO: Add a screen analytic to every screen
-
-    @OptIn(ExperimentalComposeUiApi::class)
+    @OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeRuntimeApi::class)
     @CallSuper
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
         ComposeUiFlags.isSemanticAutofillEnabled = true
+        Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
 
-        runCatching {
-            FirebaseApp.initializeApp(this)
-
-            Firebase.crashlytics.setCustomKeys {
-                key("buildType", BuildConfig.BUILD_TYPE)
-                key("buildFlavor", BuildConfig.FLAVOR)
-            }
-            Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
-            Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
-        }
+        DataStoreSettings { filesDir.resolve(it).absolutePath }
 
         // This acts funky if user enabled force dark mode from developer options
         DynamicColors.applyToActivitiesIfAvailable(this)
@@ -97,6 +82,83 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
         Loged.TAG = this::class.java.simpleName
 
+        firebaseSetup()
+
+        NotificationChannels.setupNotificationChannels(this)
+        NotificationGroups.setupNotificationGroups(this)
+
+        koinSetup()
+
+        onCreated()
+
+        get<SourceLoader>().load()
+
+        val dataStoreHandling = get<DataStoreHandling>()
+        val otakuDataStoreHandling = get<OtakuDataStoreHandling>()
+        val newSettingsHandling = get<NewSettingsHandling>()
+        val settingsHandling = get<SettingsHandling>()
+
+        //TODO: Remove the migration after the next full release
+        migrateSettings(
+            context = this,
+            dataStoreHandling = dataStoreHandling,
+            settingsHandling = settingsHandling,
+            newSettingsHandling = newSettingsHandling
+        )
+
+        forLaterSetup()
+
+        runCatching {
+            val backgroundWorkHandler = get<BackgroundWorkHandler>()
+            backgroundWorkHandler.setupPeriodicCheckers()
+        }
+
+        shortcutSetup()
+
+        runCatching {
+            val appConfig = get<AppConfig>()
+            if (appConfig.buildType != BuildType.NoFirebase) {
+                remoteConfigSetup(
+                    dataStoreHandling = dataStoreHandling,
+                    otakuDataStoreHandling = otakuDataStoreHandling,
+                    settingsHandling = settingsHandling,
+                    newSettingsHandling = newSettingsHandling
+                )
+            }
+        }
+    }
+
+    private fun koinSetup() {
+        startKoin {
+            androidLogger(if (BuildConfig.DEBUG) Level.DEBUG else Level.INFO)
+            androidContext(this@OtakuApp)
+            workManagerFactory()
+            loadKoinModules(
+                module {
+                    includes(
+                        buildModules,
+                        appModules,
+                        androidViewModels,
+                        kmpInterop,
+                        kmpModule
+                    )
+                    workers()
+                }
+            )
+        }
+    }
+
+    private fun firebaseSetup() {
+        runCatching {
+            FirebaseApp.initializeApp(this)
+            Firebase.crashlytics.setCustomKeys {
+                key("buildType", BuildConfig.BUILD_TYPE)
+                key("buildFlavor", BuildConfig.FLAVOR)
+            }
+            Firebase.analytics.setUserProperty("buildType", BuildConfig.BUILD_TYPE)
+            Firebase.analytics.setUserProperty("buildFlavor", BuildConfig.FLAVOR)
+        }
+
         createFirebaseIds().let {
             FirebaseDb.DOCUMENT_ID = it.documentId
             FirebaseDb.CHAPTERS_ID = it.chaptersId
@@ -104,67 +166,22 @@ abstract class OtakuApp : Application(), Configuration.Provider {
             FirebaseDb.ITEM_ID = it.itemId
             FirebaseDb.READ_OR_WATCHED_ID = it.readOrWatchedId
         }
+    }
 
-        createNotificationChannel("otakuChannel", importance = NotificationChannelImportance.HIGH)
-        createNotificationGroup("otakuGroup")
-        createNotificationChannel("updateCheckChannel", importance = NotificationChannelImportance.MIN)
-        createNotificationChannel("appUpdate", importance = NotificationChannelImportance.HIGH)
-        createNotificationChannel("sourceUpdate", importance = NotificationChannelImportance.DEFAULT)
-        createNotificationGroup("sources")
-
-        startKoin {
-            androidLogger()
-            androidContext(this@OtakuApp)
-            loadKoinModules(
-                module {
-                    buildModules()
-                    single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                    single { SettingsHandling(get()) }
-                    single {
-                        AppLogo(
-                            logo = applicationInfo.loadIcon(packageManager),
-                            logoId = applicationInfo.icon
-                        )
-                    }
-                    single { UpdateNotification(get()) }
-                    single { DataStoreHandling(get()) }
-                    workerOf(::UpdateFlowWorker)
-                    workerOf(::AppCheckWorker)
-                    workerOf(::SourceUpdateChecker)
-                    viewModels()
-                    databases()
-                    repository()
-
-                    single { SourceLoader(this@OtakuApp, get(), get<GenericInfo>().sourceType, get()) }
-                    single {
-                        OtakuWorldCatalog(
-                            get<GenericInfo>().sourceType
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-                        )
-                    }
-                }
-            )
-            workManagerFactory()
-        }
-
-        onCreated()
-
-        get<SourceLoader>().load()
-
-        val dataStoreHandling = get<DataStoreHandling>()
-
+    private fun forLaterSetup() {
         GlobalScope.launch(Dispatchers.IO) {
             val forLaterName = getString(R.string.for_later)
-            val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray()).also { forLaterUuid = it }
+            val forLaterUUID = UUID.nameUUIDFromBytes(forLaterName.toByteArray())
+                .toString()
+                .also { AppConfig.forLaterUuid = it }
+
             runCatching {
-                get<ListDatabase>()
-                    .listDao()
-                    .createList(
-                        CustomListItem(
-                            uuid = forLaterUUID,
-                            name = forLaterName,
-                        )
+                get<ListDao>().createList(
+                    CustomListItem(
+                        uuid = forLaterUUID,
+                        name = forLaterName,
                     )
+                )
             }
                 .onSuccess { println("For later list id: $it") }
                 .onFailure {
@@ -172,61 +189,17 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     it.printStackTrace()
                 }
         }
-
-        runCatching {
-            val work = WorkManager.getInstance(this)
-
-            work.enqueueUniquePeriodicWork(
-                "appChecks",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequest.Builder(AppCheckWorker::class.java, 1, TimeUnit.DAYS)
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .setRequiresDeviceIdle(false)
-                            .setRequiresStorageNotLow(false)
-                            .build()
-                    )
-                    .setInitialDelay(10, TimeUnit.SECONDS)
-                    .build()
-            ).state.observeForever { println(it) }
-
-            work.enqueueUniquePeriodicWork(
-                "sourceChecks",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequest.Builder(SourceUpdateChecker::class.java, 1, TimeUnit.DAYS)
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .setRequiresDeviceIdle(false)
-                            .setRequiresStorageNotLow(false)
-                            .build()
-                    )
-                    .setInitialDelay(10, TimeUnit.SECONDS)
-                    .build()
-            ).state.observeForever { println(it) }
-
-            //runBlocking { updateSetup(this@OtakuApp, dataStoreHandling.shouldCheck.get()) }
-            setupCheckWorker(dataStoreHandling)
-        }
-
-        shortcutSetup()
-
-        runCatching { if (BuildConfig.FLAVOR != "noFirebase") remoteConfigSetup(dataStoreHandling) }
     }
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .setMinimumLoggingLevel(Log.DEBUG)
+            .setWorkerExecutionExceptionHandler { it.throwable.printStackTrace() }
             .build()
 
     open fun onCreated() {}
 
-    abstract fun Module.buildModules()
+    abstract val buildModules: Module
     abstract fun createFirebaseIds(): FirebaseIds
 
     protected open fun shortcuts(): List<ShortcutInfo> = emptyList()
@@ -250,7 +223,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         manager.dynamicShortcuts = shortcuts
     }
 
-    private fun remoteConfigSetup(dataStoreHandling: DataStoreHandling) {
+    private fun remoteConfigSetup(
+        dataStoreHandling: DataStoreHandling,
+        otakuDataStoreHandling: OtakuDataStoreHandling,
+        settingsHandling: SettingsHandling,
+        newSettingsHandling: NewSettingsHandling,
+    ) {
         val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
             //Official docs say to only have this set for debug builds
@@ -259,38 +237,53 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         remoteConfig.setConfigSettingsAsync(configSettings)
         remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
 
-        //Updates
-        remoteConfig.addOnConfigUpdateListener(
-            object : ConfigUpdateListener {
-                override fun onUpdate(configUpdate: ConfigUpdate) {
-                    remoteConfig.activate().addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            GlobalScope.launch {
-                                val dataStoreKeys = RemoteConfigKeys.entries
-                                configUpdate.updatedKeys.forEach { t ->
-                                    if (BuildConfig.DEBUG) println("Updated key: $t")
-                                    runCatching {
-                                        dataStoreKeys.first { keys -> keys.key == t }
-                                    }
-                                        .onSuccess {
-                                            it.setDataStoreValue(
-                                                dataStoreHandling = dataStoreHandling,
-                                                remoteConfig = remoteConfig
-                                            )
-                                        }
-                                        .onFailure { it.printStackTrace() }
-                                }
-                            }
-                        }
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                GlobalScope.launch {
+                    RemoteConfigKeys.entries.forEach {
+                        it.setDataStoreValue(
+                            dataStoreHandling = dataStoreHandling,
+                            otakuDataStoreHandling = otakuDataStoreHandling,
+                            settingsHandling = settingsHandling,
+                            newSettingsHandling = newSettingsHandling,
+                            remoteConfig = remoteConfig,
+                        )
                     }
                 }
+            }
+        }
 
-                override fun onError(error: FirebaseRemoteConfigException) {
-                    error.printStackTrace()
-                    Firebase.crashlytics.recordException(error)
+        //Updates
+        remoteConfig
+            .configUpdates
+            .onEach { configUpdate ->
+                remoteConfig.activate().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        GlobalScope.launch {
+                            val dataStoreKeys = RemoteConfigKeys.entries
+                            configUpdate.updatedKeys.forEach { t ->
+                                logFirebaseMessage("Updated key: $t")
+                                runCatching {
+                                    dataStoreKeys.first { keys -> keys.key == t }
+                                }
+                                    .onSuccess {
+                                        it.setDataStoreValue(
+                                            dataStoreHandling = dataStoreHandling,
+                                            otakuDataStoreHandling = otakuDataStoreHandling,
+                                            settingsHandling = settingsHandling,
+                                            newSettingsHandling = newSettingsHandling,
+                                            remoteConfig = remoteConfig
+                                        )
+                                    }
+                                    .onFailure { it.printStackTrace() }
+                            }
+                        }
+                    } else {
+                        task.exception?.let(::recordFirebaseException)
+                    }
                 }
             }
-        )
+            .launchIn(GlobalScope)
     }
 
     data class FirebaseIds(
@@ -300,72 +293,4 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         val itemId: String,
         val readOrWatchedId: String,
     )
-
-    private fun setupCheckWorker(dataStoreHandling: DataStoreHandling) {
-        val work = WorkManager.getInstance(this)
-        dataStoreHandling
-            .shouldCheck
-            .asFlow()
-            .distinctUntilChanged()
-            .onEach { check ->
-                if (check) {
-                    work.enqueueUniquePeriodicWork(
-                        "updateFlowChecks",
-                        ExistingPeriodicWorkPolicy.KEEP,
-                        PeriodicWorkRequestBuilder<UpdateFlowWorker>(
-                            1, TimeUnit.HOURS,
-                            5, TimeUnit.MINUTES
-                        )
-                            .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
-                            .setConstraints(
-                                Constraints.Builder()
-                                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                                    .build()
-                            )
-                            .setInitialDelay(10, TimeUnit.SECONDS)
-                            .build()
-                    )
-                } else {
-                    work.cancelUniqueWork("updateFlowChecks")
-                }
-            }
-            .launchIn(GlobalScope)
-    }
-
-    companion object {
-
-        var forLaterUuid: UUID? = null
-
-        fun updateSetup(context: Context, boolean: Boolean) {
-            updateSetupNow(context, boolean)
-        }
-
-        fun updateSetupNow(context: Context, check: Boolean) {
-            val work = WorkManager.getInstance(context)
-            work.cancelUniqueWork("updateChecks")
-            //work.cancelAllWork()
-            //if (context.shouldCheck) {
-            if (check) {
-                work.enqueueUniquePeriodicWork(
-                    "updateFlowChecks",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    PeriodicWorkRequestBuilder<UpdateFlowWorker>(
-                        1, TimeUnit.HOURS,
-                        5, TimeUnit.MINUTES
-                    )
-                        .setInputData(workDataOf(UpdateFlowWorker.CHECK_ALL to false))
-                        .setConstraints(
-                            Constraints.Builder()
-                                .setRequiredNetworkType(NetworkType.CONNECTED)
-                                .build()
-                        )
-                        .setInitialDelay(10, TimeUnit.SECONDS)
-                        .build()
-                )
-            } else {
-                work.cancelUniqueWork("updateFlowChecks")
-                work.pruneWork()
-            }
-        }
-    }
 }

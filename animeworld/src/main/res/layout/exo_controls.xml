@@ -27,7 +27,7 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <me.ertugrul.lib.Rewind
+        <!--<me.ertugrul.lib.Rewind
             android:id="@+id/backThirty"
             app:r_color="#FFFFFF"
             app:r_textInput="30"
@@ -35,7 +35,7 @@
             app:r_arrowSize="8dp"
             app:r_strokeWidth="3dp"
             android:layout_width="104dp"
-            android:layout_height="52dp" />
+            android:layout_height="52dp" />-->
 
         <ImageButton
             android:id="@id/exo_rew"
@@ -57,7 +57,7 @@
             android:id="@id/exo_ffwd"
             style="@style/ExoMediaButton.FastForward" />
 
-        <me.ertugrul.lib.Forward
+        <!--<me.ertugrul.lib.Forward
             android:id="@+id/forwardThirty"
             app:f_color="#FFFFFF"
             app:f_textInput="30"
@@ -65,7 +65,7 @@
             app:f_arrowSize="8dp"
             app:f_strokeWidth="3dp"
             android:layout_width="104dp"
-            android:layout_height="52dp" />
+            android:layout_height="52dp" />-->
 
     </LinearLayout>
 

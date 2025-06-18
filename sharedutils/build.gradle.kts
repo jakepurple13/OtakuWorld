@@ -34,6 +34,11 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
+    noCloudFirebaseImplementation(libs.mlkitTranslate)
+    noCloudFirebaseImplementation(libs.mlkitLanguage)
+    noCloudFirebaseImplementation(libs.playServices)
+    noCloudFirebaseImplementation(libs.coroutinesPlayServices)
+
     fullImplementation(libs.mlkitTranslate)
     fullImplementation(libs.mlkitLanguage)
     fullImplementation(platform(libs.firebasePlatform))
@@ -58,4 +63,8 @@ dependencies {
     implementation(libs.uiUtil)
 }
 
-fun DependencyHandlerScope.fullImplementation(item: Provider<MinimalExternalModuleDependency>) = add("fullImplementation", item)
+fun DependencyHandlerScope.fullImplementation(item: Provider<MinimalExternalModuleDependency>) =
+    add("fullImplementation", item)
+
+fun DependencyHandlerScope.noCloudFirebaseImplementation(item: Provider<MinimalExternalModuleDependency>) =
+    add("noCloudFirebaseImplementation", item)

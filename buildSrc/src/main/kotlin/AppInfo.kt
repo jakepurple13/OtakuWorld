@@ -1,6 +1,18 @@
 object AppInfo {
-    const val otakuVersionName = "32.0.0"
-    const val compileVersion = 35
+    const val otakuVersionName = "32.1.0"
+    val versionCode by lazy {
+        val code = if (System.getenv("CI") != null) {
+            runCatching { System.getenv("GITHUB_RUN_NUMBER").toInt() }
+                .getOrNull()
+        } else {
+            null
+        } ?: 2
+
+        println("Version code: $code")
+
+        code
+    }
+    const val compileVersion = 36
     const val minimumSdk = 28
-    const val targetSdk = 35
+    const val targetSdk = 36
 }

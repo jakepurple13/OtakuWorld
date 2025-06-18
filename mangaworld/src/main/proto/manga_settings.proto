@@ -4,8 +4,6 @@ option java_package = "com.programmersbox.mangasettings";
 option java_multiple_files = true;
 
 message MangaSettings {
-  PlayingStartAction playingStartAction = 1;
-  PlayingMiddleAction playingMiddleAction = 2;
   bool useNewReader = 3;
   int32 pagePadding = 4;
   ReaderType readerType = 5;
@@ -13,17 +11,6 @@ message MangaSettings {
   bool useFlipPager = 7;
   bool allowUserDrawerGesture = 8;
   bool useFloatingReaderBottomBar = 9;
-}
-
-enum PlayingStartAction {
-  Battery = 0;
-  CurrentChapter = 1;
-  None = 2;
-}
-
-enum PlayingMiddleAction {
-  Time = 0;
-  Nothing = 1;
 }
 
 enum ImageLoaderType {

@@ -1,7 +1,6 @@
 package com.programmersbox.animeworldtv
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.leanback.preference.LeanbackPreferenceFragmentCompat
 import androidx.leanback.preference.LeanbackSettingsFragmentCompat
@@ -12,16 +11,8 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.anime_sources.Sources
-import com.programmersbox.sharedutils.AppUpdate
 import com.programmersbox.sharedutils.CustomFirebaseUser
 import com.programmersbox.sharedutils.FirebaseAuthentication
-import com.programmersbox.sharedutils.updateAppCheck
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -101,7 +92,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                 FirebaseAuthentication.addAuthStateListener { accountChanges(it) }
             }
 
-            findPreference<PreferenceScreen>("prefs_about")?.let { p ->
+            /*findPreference<PreferenceScreen>("prefs_about")?.let { p ->
                 lifecycleScope.launch {
                     updateAppCheck
                         .filterNotNull()
@@ -114,7 +105,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         }
                         .collect()
                 }
-            }
+            }*/
 
             findPreference<Preference>("about_version")?.let { p ->
                 p.title = getString(
@@ -129,7 +120,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
 
             }
 
-            findPreference<Preference>("updateAvailable")?.let { p ->
+            /*findPreference<Preference>("updateAvailable")?.let { p ->
                 p.isVisible = false
                 lifecycleScope.launch {
                     updateAppCheck
@@ -142,7 +133,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         }
                         .collect()
                 }
-            }
+            }*/
 
             findPreference<Preference>("current_source")?.let { p ->
 
@@ -176,7 +167,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
         private val checker = AtomicBoolean(false)
 
         private fun updateSetter() {
-            if (!checker.get()) {
+            /*if (!checker.get()) {
                 lifecycleScope.launch {
                     flow {
                         checker.set(true)
@@ -190,7 +181,7 @@ class SettingsFragment : LeanbackSettingsFragmentCompat(), DialogPreference.Targ
                         }
                         .collect()
                 }
-            }
+            }*/
         }
 
         override fun onPreferenceTreeClick(preference: Preference): Boolean {

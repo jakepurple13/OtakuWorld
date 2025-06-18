@@ -9,24 +9,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
 import androidx.core.net.toUri
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
-import com.programmersbox.mangaworld.ChapterHolder
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
-import com.programmersbox.sharedutils.FirebaseDb
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.fireListener
+import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -43,12 +41,11 @@ import java.io.File
 private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
-    savedStateHandle: SavedStateHandle,
-    private val dao: ItemDao,
+    mangaReader: MangaReader,
     private val chapterHolder: ChapterHolder,
+    private val favoritesRepository: FavoritesRepository,
+    itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
-
-    private val mangaReader: MangaReader = savedStateHandle.toRoute()
 
     val isDownloaded: Boolean = mangaReader.downloaded
     val headers: MutableMap<String, String> = mutableMapOf()
@@ -57,7 +54,7 @@ class ReadViewModel(
         ?.getChapterInfo()
         ?.map {
             headers.putAll(it.flatMap { h -> h.headers.toList() })
-            it.mapNotNull(Storage::link)
+            it.mapNotNull(KmpStorage::link)
         }
 
     val filePath: File? = runCatching { mangaReader.filePath?.let { File(it) } }.getOrNull()
@@ -78,7 +75,7 @@ class ReadViewModel(
 
     companion object {
         fun navigateToMangaReader(
-            navController: NavController,
+            navController: NavigationActions,
             mangaTitle: String? = null,
             mangaUrl: String? = null,
             mangaInfoUrl: String? = null,
@@ -93,7 +90,7 @@ class ReadViewModel(
                     downloaded = downloaded,
                     filePath = filePath
                 )
-            ) { launchSingleTop = true }
+            )// { launchSingleTop = true }
         }
     }
 
@@ -104,11 +101,11 @@ class ReadViewModel(
         val mangaInfoUrl: String? = null,
         val downloaded: Boolean,
         val filePath: String? = null,
-    )
+    ) : NavKey
 
     val title by lazy { mangaReader.mangaTitle ?: "" }
 
-    var list by mutableStateOf<List<ChapterModel>>(emptyList())
+    var list by mutableStateOf<List<KmpChapterModel>>(emptyList())
 
     private val mangaUrl by lazy { mangaReader.mangaInfoUrl ?: "" }
 
@@ -119,7 +116,7 @@ class ReadViewModel(
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
-    private val itemListener = FirebaseDb.FirebaseListener()
+    private val itemListener = fireListener(itemListener = itemListenerFirebase)
     var addToFavorites by mutableStateOf(FavoriteChecker(false, 0))
 
     data class FavoriteChecker(val hasShown: Boolean, val count: Int, val isFavorite: Boolean = false) {
@@ -133,10 +130,11 @@ class ReadViewModel(
 
         loadPages(modelPath)
 
-        combine(
-            itemListener.findItemByUrlFlow(mangaUrl),
-            dao.containsItem(mangaUrl)
-        ) { f, d -> f || d }
+        favoritesRepository
+            .isFavorite(
+                url = mangaUrl,
+                fireListenerClosable = itemListener
+            )
             .dispatchIo()
             .onEach { addToFavorites = addToFavorites.copy(isFavorite = it) }
             .launchIn(viewModelScope)
@@ -153,15 +151,16 @@ class ReadViewModel(
             ChapterWatched(item.url, item.name, mangaUrl)
                 .let {
                     viewModelScope.launch {
-                        dao.insertChapter(it)
-                        FirebaseDb.insertEpisodeWatchedFlow(it).collect()
+                        if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                            favoritesRepository.addWatched(it)
+                        }
                         withContext(Dispatchers.Main) { chapter() }
                     }
                 }
 
             item
                 .getChapterInfo()
-                .map { it.mapNotNull(Storage::link) }
+                .map { it.mapNotNull(KmpStorage::link) }
                 .let { loadPages(it) }
         }
     }
@@ -174,10 +173,7 @@ class ReadViewModel(
                 ?.getSourceByUrlFlow(mangaUrl)
                 ?.firstOrNull()
                 ?.toDbModel()
-                ?.let {
-                    dao.insertFavorite(it)
-                    FirebaseDb.insertShowFlow(it).collect()
-                }
+                ?.let { favoritesRepository.addFavorite(it) }
         }
     }
 
@@ -199,7 +195,7 @@ class ReadViewModel(
                 ?.getChapterInfo()
                 ?.map {
                     headers.putAll(it.flatMap { h -> h.headers.toList() })
-                    it.mapNotNull(Storage::link)
+                    it.mapNotNull(KmpStorage::link)
                 }
         )
     }
@@ -208,6 +204,5 @@ class ReadViewModel(
         super.onCleared()
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
-        itemListener.unregister()
     }
 }

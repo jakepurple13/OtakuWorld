@@ -42,6 +42,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -61,34 +62,33 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
-import coil.decode.VideoFrameDecoder
-import coil.request.ImageRequest
-import coil.request.videoFramePercent
+import coil3.ImageLoader
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.video.VideoFrameDecoder
+import coil3.video.videoFramePercent
 import com.programmersbox.animeworld.MainActivity
 import com.programmersbox.animeworld.R
 import com.programmersbox.animeworld.SlideToDeleteDialog
 import com.programmersbox.animeworld.VideoContent
 import com.programmersbox.animeworld.navigateToVideoPlayer
 import com.programmersbox.helpfulutils.stringForTime
-import com.programmersbox.uiviews.presentation.Screen
-import com.programmersbox.uiviews.presentation.components.BottomSheetDeleteScaffold
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.BottomSheetDeleteScaffold
+import com.programmersbox.kmpuiviews.presentation.components.ImageFlushListItem
+import com.programmersbox.kmpuiviews.theme.Emerald
+import com.programmersbox.kmpuiviews.utils.ComposableUtils
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
-import com.programmersbox.uiviews.presentation.components.ImageFlushListItem
 import com.programmersbox.uiviews.presentation.components.PermissionRequest
-import com.programmersbox.uiviews.utils.BackButton
-import com.programmersbox.uiviews.utils.ComposableUtils
-import com.programmersbox.uiviews.utils.Emerald
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
-import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalNavHostPadding
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -151,7 +151,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
     ) {
         BottomSheetDeleteScaffold(
             topBar = {
-                InsetSmallTopAppBar(
+                TopAppBar(
                     navigationIcon = { BackButton() },
                     title = { Text(stringResource(R.string.downloaded_videos)) },
                     actions = {
@@ -166,7 +166,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         IconButton(onClick = { scope.launch { state.bottomSheetState.expand() } }) { Icon(Icons.Default.Delete, null) }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                    modifier = Modifier.hazeChild(hazeState) {
+                    modifier = Modifier.hazeEffect(hazeState) {
                         backgroundColor = surface
                     }
                 )
@@ -186,6 +186,11 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                 false
             },
             onMultipleRemove = { downloadedItems ->
+                //TODO: Maybe?
+                /*MediaStore.createDeleteRequest(
+                    context.contentResolver,
+                    downloadedItems.mapNotNull { it.assetFileStringUri?.toUri() }
+                )*/
                 downloadedItems.forEach {
                     try {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -199,7 +204,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                         } else {
                             File(it.path!!).delete()
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         Toast.makeText(context, "Something went wrong with ${it.videoName}", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -238,7 +243,6 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                                 model = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(item.assetFileStringUri.orEmpty())
-                                        .lifecycle(LocalLifecycleOwner.current)
                                         .crossfade(true)
                                         .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
                                         .videoFramePercent(.1)
@@ -278,7 +282,7 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                     contentPadding = p,
                     modifier = Modifier
                         .fillMaxSize()
-                        .haze(hazeState)
+                        .hazeSource(hazeState)
                 ) {
                     items(
                         items = itemList,
@@ -323,7 +327,7 @@ private fun EmptyState(paddingValues: PaddingValues) {
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
-                val navController = LocalNavController.current
+                val navController = LocalNavActions.current
 
                 Button(
                     onClick = { navController.popBackStack(Screen.RecentScreen, false) },
@@ -349,7 +353,7 @@ private fun VideoContentView(
 
     SlideToDeleteDialog(showDialog = showDialog, onDialogDismiss = { showDialog = it }, video = item)
 
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     val context = LocalContext.current
 
     val dismissState = rememberSwipeToDismissBoxState(
@@ -471,7 +475,6 @@ private fun VideoContentView(
                                 model = rememberAsyncImagePainter(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(item.assetFileStringUri.orEmpty())
-                                        .lifecycle(LocalLifecycleOwner.current)
                                         .crossfade(true)
                                         .size(ComposableUtils.IMAGE_HEIGHT_PX, ComposableUtils.IMAGE_WIDTH_PX)
                                         .videoFramePercent(.1)

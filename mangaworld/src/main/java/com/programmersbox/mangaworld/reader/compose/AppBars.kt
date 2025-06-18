@@ -1,29 +1,27 @@
 package com.programmersbox.mangaworld.reader.compose
 
-import android.text.format.DateFormat
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowCircleLeft
+import androidx.compose.material.icons.filled.ArrowCircleRight
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Numbers
@@ -32,166 +30,71 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingAppBarDefaults
-import androidx.compose.material3.FloatingAppBarScrollBehavior
-import androidx.compose.material3.HorizontalFloatingAppBar
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarScrollBehavior
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalFloatingToolbar
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.helpfulutils.battery
-import com.programmersbox.helpfulutils.timeTick
-import com.programmersbox.mangasettings.PlayingMiddleAction
-import com.programmersbox.mangasettings.PlayingStartAction
+import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.BatteryInformation
-import com.programmersbox.uiviews.utils.LocalNavController
-import kotlinx.coroutines.flow.launchIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
 @Composable
-internal fun ReaderTopBar(
-    pages: List<String>,
-    currentPage: Int,
+fun ReaderTopBar(
     currentChapter: String,
-    playingStartAction: PlayingStartAction,
-    playingMiddleAction: PlayingMiddleAction,
+    onSettingsClick: () -> Unit,
     showBlur: Boolean,
     modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
-    CenterAlignedTopAppBar(
-        windowInsets = WindowInsets(0.dp),
+    TopAppBar(
+        windowInsets = windowInsets,
         modifier = modifier,
-        navigationIcon = {
-            Crossfade(
-                targetState = playingStartAction,
-                label = "startAction"
-            ) { target ->
-                when (target) {
-                    PlayingStartAction.Battery -> {
-                        val context = LocalContext.current
-                        var batteryColor by remember { mutableStateOf(Color.White) }
-                        var batteryIcon by remember { mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN) }
-                        var batteryPercent by remember { mutableFloatStateOf(0f) }
-                        val batteryInformation = remember(context) { BatteryInformation(context) }
-
-                        LaunchedEffect(context) {
-                            batteryInformation.composeSetupFlow(
-                                Color.White
-                            ) {
-                                batteryColor = it.first
-                                batteryIcon = it.second
-                            }
-                                .launchIn(this)
-                        }
-
-                        DisposableEffect(context) {
-                            val batteryInfo = context.battery {
-                                batteryPercent = it.percent
-                                batteryInformation.batteryLevel.tryEmit(it.percent)
-                                batteryInformation.batteryInfo.tryEmit(it)
-                            }
-                            onDispose { context.unregisterReceiver(batteryInfo) }
-                        }
-                        Row(
-                            modifier = Modifier.padding(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                batteryIcon.composeIcon,
-                                contentDescription = null,
-                                tint = animateColorAsState(
-                                    if (batteryColor == Color.White) MaterialTheme.colorScheme.onSurface
-                                    else batteryColor, label = ""
-                                ).value
-                            )
-                            Text(
-                                "${batteryPercent.toInt()}%",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-
-                    PlayingStartAction.CurrentChapter -> {
-                        Text(
-                            currentChapter,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-
-                    PlayingStartAction.None -> {}
-                    PlayingStartAction.UNRECOGNIZED -> {}
-                }
-            }
-        },
+        navigationIcon = { BackButton() },
         title = {
-            Crossfade(
-                targetState = playingMiddleAction,
-                label = "middleAction"
-            ) { target ->
-                when (target) {
-                    PlayingMiddleAction.Time -> {
-                        var time by remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-                        val activity = LocalActivity.current
-
-                        DisposableEffect(LocalContext.current) {
-                            val timeReceiver = activity?.timeTick { _, _ -> time = System.currentTimeMillis() }
-                            onDispose { activity?.unregisterReceiver(timeReceiver) }
-                        }
-
-                        Text(
-                            DateFormat.getTimeFormat(LocalContext.current).format(time).toString(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(4.dp)
-                        )
-                    }
-
-                    PlayingMiddleAction.Nothing -> {}
-                    PlayingMiddleAction.UNRECOGNIZED -> {}
-                }
-            }
-        },
-        actions = {
-            PageIndicator(
-                currentPage = currentPage + 1,
-                pageCount = pages.size,
-                modifier = Modifier
-                    .padding(4.dp)
-                    .align(Alignment.CenterVertically)
+            Text(
+                currentChapter,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.basicMarquee()
             )
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
+        actions = {
+            IconButton(
+                onClick = onSettingsClick,
+            ) { Icon(Icons.Default.Settings, null) }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
     )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun FloatingBottomBar(
+internal fun FloatingFloatingActionButton(
     vm: ReadViewModel,
     onPageSelectClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -200,73 +103,62 @@ internal fun FloatingBottomBar(
     modifier: Modifier = Modifier,
     showFloatBar: Boolean = true,
     onShowFloatBarChange: (Boolean) -> Unit = {},
-    exitAlwaysScrollBehavior: FloatingAppBarScrollBehavior? = null,
+    exitAlwaysScrollBehavior: FloatingToolbarScrollBehavior? = null,
 ) {
-    Box(
-        modifier = Modifier.fillMaxWidth()
+    //TODO: Maybe have a setting to choose between vertical and horizontal?
+    VerticalFloatingToolbar(
+        expanded = showFloatBar,
+        scrollBehavior = exitAlwaysScrollBehavior,
+        floatingActionButton = {
+            FloatingToolbarDefaults.StandardFloatingActionButton(
+                onClick = { onShowFloatBarChange(!showFloatBar) },
+            ) {
+                Icon(
+                    if (showFloatBar) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+        modifier = modifier
     ) {
-        HorizontalFloatingAppBar(
-            modifier = modifier
-                .align(Alignment.BottomEnd)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .offset(y = -FloatingAppBarDefaults.ScreenOffset),
-            expanded = showFloatBar,
-            leadingContent = {
-                val prevShown = vm.currentChapter < vm.list.lastIndex
-                val nextShown = vm.currentChapter > 0
+        val prevShown = vm.currentChapter < vm.list.lastIndex
+        val nextShown = vm.currentChapter > 0
 
-                AnimatedVisibility(
-                    visible = prevShown && vm.list.size > 1,
-                    enter = expandHorizontally(expandFrom = Alignment.Start),
-                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
-                ) {
-                    PreviousIconButton(
-                        previousChapter = chapterChange,
-                        vm = vm,
-                    )
-                }
+        AnimatedVisibility(
+            visible = prevShown && vm.list.size > 1,
+            enter = expandHorizontally(expandFrom = Alignment.Start),
+            exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+        ) {
+            PreviousIconButton(
+                previousChapter = chapterChange,
+                vm = vm,
+            )
+        }
 
-                GoBackIconButton()
+        GoBackIconButton()
 
-                AnimatedVisibility(
-                    visible = nextShown && vm.list.size > 1,
-                    enter = expandHorizontally(),
-                    exit = shrinkHorizontally()
-                ) {
-                    NextIconButton(
-                        nextChapter = chapterChange,
-                        vm = vm,
-                    )
-                }
+        AnimatedVisibility(
+            visible = nextShown && vm.list.size > 1,
+            enter = expandHorizontally(),
+            exit = shrinkHorizontally()
+        ) {
+            NextIconButton(
+                nextChapter = chapterChange,
+                vm = vm,
+            )
+        }
 
-                IconButton(
-                    onClick = onPageSelectClick,
-                ) { Icon(Icons.Default.GridOn, null) }
+        IconButton(
+            onClick = onPageSelectClick,
+        ) { Icon(Icons.Default.GridOn, null) }
 
-                IconButton(
-                    onClick = onChapterShow,
-                ) { Icon(Icons.Default.Numbers, null) }
-            },
-            trailingContent = {
-                IconButton(
-                    onClick = onSettingsClick,
-                    //modifier = Modifier.weight(1f)
-                ) { Icon(Icons.Default.Settings, null) }
-            },
-            scrollBehavior = exitAlwaysScrollBehavior,
-            content = {
-                FilledIconButton(
-                    onClick = { onShowFloatBarChange(!showFloatBar) },
-                    modifier = Modifier
-                        .width(64.dp)
-                ) {
-                    Icon(
-                        if (showFloatBar) Icons.Default.ChevronRight else Icons.Default.ChevronLeft,
-                        contentDescription = "Localized description"
-                    )
-                }
-            },
-        )
+        IconButton(
+            onClick = onChapterShow,
+        ) { Icon(Icons.Default.Numbers, null) }
+
+        IconButton(
+            onClick = onSettingsClick,
+        ) { Icon(Icons.Default.Settings, null) }
     }
 }
 
@@ -367,7 +259,7 @@ internal fun BottomBar(
 
 @Composable
 private fun GoBackButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,
@@ -413,7 +305,7 @@ private fun PreviousIconButton(
 
 @Composable
 private fun GoBackIconButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedIconButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,
@@ -431,4 +323,120 @@ private fun NextIconButton(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
         modifier = modifier
     ) { Icon(Icons.Default.ArrowForward, null) }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun FloatingBottomBar(
+    onPageSelectClick: () -> Unit,
+    onNextChapter: () -> Unit,
+    onPreviousChapter: () -> Unit,
+    onChapterShow: () -> Unit,
+    chapterNumber: String,
+    chapterCount: String,
+    currentPage: Int,
+    pages: Int,
+    showBlur: Boolean,
+    isAmoledMode: Boolean,
+    previousButtonEnabled: Boolean,
+    nextButtonEnabled: Boolean,
+    modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.extraLarge,
+    containerColor: Color = when {
+        showBlur -> Color.Transparent
+        isAmoledMode -> MaterialTheme.colorScheme.surface
+        else -> NavigationBarDefaults.containerColor
+    },
+    contentColor: Color = MaterialTheme.colorScheme.contentColorFor(containerColor),
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
+) {
+    FloatingNavigationBar(
+        modifier = modifier,
+        shape = shape,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        tonalElevation = tonalElevation
+    ) {
+        NavigationBarItem(
+            selected = false,
+            onClick = onPreviousChapter,
+            enabled = previousButtonEnabled,
+            icon = { Icon(Icons.Default.ArrowCircleLeft, null) },
+            label = { Text(stringResource(id = R.string.loadPreviousChapter)) }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onNextChapter,
+            enabled = nextButtonEnabled,
+            icon = { Icon(Icons.Default.ArrowCircleRight, null) },
+            label = { Text(stringResource(id = R.string.loadNextChapter)) }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onChapterShow,
+            icon = { Text("#$chapterNumber/$chapterCount") },
+            label = { Text("Chapters") }
+        )
+
+        NavigationBarItem(
+            selected = false,
+            onClick = onPageSelectClick,
+            icon = {
+                PageIndicator(
+                    currentPage = currentPage + 1,
+                    pageCount = pages,
+                    modifier = Modifier
+                )
+            },
+            label = { Text("Pages") }
+        )
+
+        //TODO: Maybe? Gotta think about this more.
+        // Might switch to the actual FloatingHorizontalToolBar
+        // maybe with the floating action bar menu for more options like translations
+        /*NavigationBarItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Default.MoreVert, null) },
+        )*/
+    }
+}
+
+@Composable
+private fun FloatingNavigationBar(
+    modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.extraLarge,
+    containerColor: Color = NavigationBarDefaults.containerColor,
+    contentColor: Color = MaterialTheme.colorScheme.contentColorFor(containerColor),
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Surface(
+        color = containerColor,
+        contentColor = contentColor,
+        tonalElevation = tonalElevation,
+        shape = shape,
+        border = BorderStroke(
+            width = 0.5.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.surfaceVariant,
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                ),
+            ),
+        ),
+        modifier = modifier,
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .fillMaxWidth()
+                .height(80.dp)
+                .selectableGroup(),
+            content = content,
+        )
+    }
 }

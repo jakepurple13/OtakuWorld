@@ -29,63 +29,77 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.core.app.TaskStackBuilder
-import androidx.fragment.app.FragmentActivity
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entry
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.gsonutils.getObject
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.defaultSharedPref
-import com.programmersbox.models.ApiService
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.InfoModel
-import com.programmersbox.models.ItemModel
-import com.programmersbox.sharedutils.AppUpdate
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
+import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.uiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.uiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.ComponentState
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.combineClickableWithIndication
 import com.programmersbox.uiviews.utils.trackScreen
+import org.koin.core.module.dsl.binds
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val appModule = module {
-    single<GenericInfo> { GenericNovel(get()) }
+    singleOf(::GenericNovel) {
+        binds(
+            listOf(
+                KmpGenericInfo::class,
+                GenericInfo::class
+            )
+        )
+    }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
 }
 
 class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
-    fun set(item: List<ChapterModel>?) {
-        val i = item.toJson(ChapterModel::class.java to ChapterModelSerializer())
+    fun set(item: List<KmpChapterModel>?) {
+        val i = item.toJson(KmpChapterModel::class.java to ChapterModelSerializer())
         context.defaultSharedPref.edit().putString("chapterList", i).commit()
     }
 
-    fun get(): List<ChapterModel>? = context.defaultSharedPref.getObject(
+    fun get(): List<KmpChapterModel>? = context.defaultSharedPref.getObject(
         "chapterList",
         null,
-        ChapterModel::class.java to ChapterModelDeserializer()
+        KmpChapterModel::class.java to ChapterModelDeserializer()
     )
 }
 
-class GenericNovel(val context: Context) : GenericInfo {
+class GenericNovel(
+    val context: Context,
+    val appConfig: AppConfig,
+) : GenericInfo {
 
     override val deepLinkUri: String get() = "novelworld://"
 
     override val sourceType: String get() = "novel"
 
     override fun chapterOnClick(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
         ChapterList(context, this@GenericNovel).set(allChapters)
         ReadViewModel.navigateToNovelReader(
@@ -97,26 +111,20 @@ class GenericNovel(val context: Context) : GenericInfo {
         )
     }
 
-    override fun sourceList(): List<ApiService> = emptyList()
-
-    override fun toSource(s: String): ApiService? = null
-
     override fun downloadChapter(
-        model: ChapterModel,
-        allChapters: List<ChapterModel>,
-        infoModel: InfoModel,
-        context: Context,
-        activity: FragmentActivity,
-        navController: NavController,
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
     ) {
     }
 
     override val apkString: AppUpdate.AppUpdates.() -> String?
         get() = {
-            when (BuildConfig.FLAVOR) {
-                "noFirebase" -> novelNoFirebaseFile
-                "noCloudFirebase" -> novelNoCloudFile
-                else -> novelFile
+            when (appConfig.buildType) {
+                BuildType.NoFirebase -> novelNoFirebaseFile
+                BuildType.NoCloudFirebase -> novelNoCloudFile
+                BuildType.Full -> novelFile
             }
         }
 
@@ -153,13 +161,13 @@ class GenericNovel(val context: Context) : GenericInfo {
     )
     @Composable
     override fun ItemListView(
-        list: List<ItemModel>,
+        list: List<KmpItemModel>,
         favorites: List<DbModel>,
         listState: LazyGridState,
-        onLongPress: (ItemModel, ComponentState) -> Unit,
+        onLongPress: (KmpItemModel, ComponentState) -> Unit,
         modifier: Modifier,
         paddingValues: PaddingValues,
-        onClick: (ItemModel) -> Unit,
+        onClick: (KmpItemModel) -> Unit,
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(1),
@@ -198,6 +206,22 @@ class GenericNovel(val context: Context) : GenericInfo {
         }
     }
 
+    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
+        //TODO: Need to make sure this works
+        entry<NovelReader>(
+            //ReadViewModel.NovelReaderRoute,
+            /*metadata = mapOf(
+                "currentChapter",
+               "novelTitle",
+               "novelUrl",
+               "novelInfoUrl",
+            )*/
+        ) {
+            trackScreen("novelReader")
+            NovelReader()
+        }
+    }
+
     @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.globalNavSetup() {
         composable(
@@ -214,7 +238,7 @@ class GenericNovel(val context: Context) : GenericInfo {
         }
     }
 
-    override fun deepLinkDetails(context: Context, itemModel: ItemModel?): PendingIntent? {
+    override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,
             deepLinkDetailsUri(itemModel),

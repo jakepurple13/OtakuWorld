@@ -27,6 +27,7 @@ object FirebaseAuthentication : KoinComponent {
     fun clear() = Unit
     fun signInOrOut(context: Context, activity: ComponentActivity, title: Int, message: Int, positive: Int, no: Int) = Unit
 
+    fun isLoggedIn(): Boolean = false
 }
 
 object FirebaseDbImpl : FirebaseConnection {

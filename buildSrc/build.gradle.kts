@@ -1,8 +1,8 @@
-repositories {
+/*repositories {
     google()
     mavenCentral()
     gradlePluginPortal()
-}
+}*/
 
 plugins {
     `java-gradle-plugin`
@@ -40,6 +40,11 @@ gradlePlugin {
         register("otaku-multiplatform") {
             id = "otaku-multiplatform"
             implementationClass = "plugins.MultiplatformLibraryPlugin"
+        }
+
+        register("otaku-multiplatform-application") {
+            id = "otaku-multiplatform-application"
+            implementationClass = "plugins.MultiplatformApplicationPlugin"
         }
 
         register("otaku-benchmark") {

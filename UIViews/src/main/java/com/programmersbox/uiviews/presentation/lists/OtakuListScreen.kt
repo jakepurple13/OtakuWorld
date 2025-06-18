@@ -1,9 +1,6 @@
-@file:Suppress("INLINE_FROM_HIGHER_PLATFORM")
-
 package com.programmersbox.uiviews.presentation.lists
 
 import androidx.activity.compose.BackHandler
-import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -12,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,8 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.allVerticalHingeBounds
@@ -34,6 +34,8 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldPaneScope
+import androidx.compose.material3.adaptive.layout.defaultDragHandleSemantics
+import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.adaptive.occludingVerticalHingeBounds
 import androidx.compose.material3.adaptive.separatingVerticalHingeBounds
@@ -55,11 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.uiviews.theme.LocalCustomListDao
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
-import com.programmersbox.uiviews.utils.biometricPrompting
-import com.programmersbox.uiviews.utils.findActivity
-import com.programmersbox.uiviews.utils.rememberBiometricPrompt
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreen
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
+import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListViewModel
+import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -91,7 +95,7 @@ fun OtakuListScreen(
     val details: @Composable ThreePaneScaffoldPaneScope.() -> Unit = {
         AnimatedPane {
             AnimatedContent(
-                targetState = customListViewModel.customItem,
+                targetState = customListViewModel.customList,
                 label = "",
                 transitionSpec = {
                     if (initialState != null && targetState != null)
@@ -110,8 +114,6 @@ fun OtakuListScreen(
                         rename = customListViewModel::rename,
                         searchQuery = customListViewModel.searchQuery,
                         setQuery = customListViewModel::setQuery,
-                        searchBarActive = customListViewModel.searchBarActive,
-                        onSearchBarActiveChange = { customListViewModel.searchBarActive = it },
                         navigateBack = {
                             customListViewModel.setList(null)
                             scope.launch { state.navigateBack() }
@@ -145,21 +147,24 @@ fun OtakuListScreen(
 
     var temp by remember { mutableStateOf<CustomList?>(null) }
 
-    val biometricPrompt = rememberBiometricPrompt(
-        onAuthenticationSucceeded = {
-            customListViewModel.setList(temp)
-            temp = null
-            navigate()
-        },
-        onAuthenticationFailed = {
-            customListViewModel.setList(null)
-            temp = null
-        }
-    )
+    val biometric = rememberBiometricPrompting()
 
     ListDetailPaneScaffold(
         directive = state.scaffoldDirective,
         value = state.scaffoldValue,
+        paneExpansionState = rememberPaneExpansionState(keyProvider = state.scaffoldValue),
+        paneExpansionDragHandle = { state ->
+            val interactionSource = remember { MutableInteractionSource() }
+            VerticalDragHandle(
+                interactionSource = interactionSource,
+                modifier = Modifier.paneExpansionDraggable(
+                    state = state,
+                    minTouchTargetSize = LocalMinimumInteractiveComponentSize.current,
+                    interactionSource = interactionSource,
+                    semanticsProperties = state.defaultDragHandleSemantics()
+                )
+            )
+        },
         listPane = {
             AnimatedPane {
                 OtakuListView(
@@ -168,15 +173,19 @@ fun OtakuListScreen(
                     navigateDetail = {
                         if (it.item.useBiometric) {
                             temp = it
-                            biometricPrompting(
-                                context.findActivity(),
-                                biometricPrompt
-                            ).authenticate(
-                                BiometricPrompt.PromptInfo.Builder()
-                                    .setTitle("Authentication required")
-                                    .setSubtitle("In order to view ${it.item.name}, please authenticate")
-                                    .setNegativeButtonText("Never Mind")
-                                    .build()
+                            biometric.authenticate(
+                                title = "Authentication required",
+                                subtitle = "In order to view ${it.item.name}, please authenticate",
+                                negativeButtonText = "Never Mind",
+                                onAuthenticationSucceeded = {
+                                    customListViewModel.setList(it)
+                                    temp = null
+                                    navigate()
+                                },
+                                onAuthenticationFailed = {
+                                    customListViewModel.setList(null)
+                                    temp = null
+                                }
                             )
                         } else {
                             customListViewModel.setList(it)
@@ -235,15 +244,14 @@ fun calculateStandardPaneScaffoldDirective(
             verticalSpacerSize = 24.dp
         }
     }
-    val maxVerticalPartitions: Int
     val horizontalSpacerSize: Dp = 0.dp
 
     // TODO(conradchen): Confirm the table top mode settings
-    if (windowAdaptiveInfo.windowPosture.isTabletop) {
-        maxVerticalPartitions = 2
+    val maxVerticalPartitions: Int = if (windowAdaptiveInfo.windowPosture.isTabletop) {
+        2
         //horizontalSpacerSize = 24.dp
     } else {
-        maxVerticalPartitions = 1
+        1
         //horizontalSpacerSize = 0.dp
     }
 
@@ -265,7 +273,7 @@ fun calculateStandardPaneScaffoldDirective(
 }
 
 @Composable
-private fun NoDetailSelected() {
+fun NoDetailSelected() {
     Surface {
         Box(
             contentAlignment = Alignment.Center,

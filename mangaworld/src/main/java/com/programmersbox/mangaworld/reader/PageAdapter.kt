@@ -13,17 +13,19 @@ import com.bumptech.glide.RequestBuilder
 import com.github.piasy.biv.indicator.progresspie.ProgressPieIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.helpfulutils.layoutInflater
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.mangaworld.R
 import com.programmersbox.mangaworld.databinding.PageEndChapterItemBinding
 import com.programmersbox.mangaworld.databinding.PageItemBinding
 import com.programmersbox.mangaworld.databinding.PageNextChapterItemBinding
-import com.programmersbox.models.ChapterModel
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.utils.DragSwipeGlideAdapter
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.Collections
 
 class PageAdapter(
@@ -33,15 +35,15 @@ class PageAdapter(
     dataList: MutableList<String>,
     private val onTap: () -> Unit,
     private val coordinatorLayout: CoordinatorLayout,
-    private val chapterModels: List<ChapterModel>,
+    private val chapterModels: List<KmpChapterModel>,
     var currentChapter: Int,
     private val mangaUrl: String,
-    private val loadNewPages: (ChapterModel) -> Unit = {}
-) : DragSwipeGlideAdapter<String, PageHolder, String>(dataList) {
+    private val loadNewPages: (KmpChapterModel) -> Unit = {},
+) : DragSwipeGlideAdapter<String, PageHolder, String>(dataList), KoinComponent {
 
     private val context: Context = activity
 
-    private val dao by lazy { ItemDatabase.getInstance(context).itemDao() }
+    private val dao by inject<ItemDao>()
 
     override val itemToModel: (String) -> String = { it }
 

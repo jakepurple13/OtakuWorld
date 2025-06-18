@@ -2,9 +2,11 @@ package com.programmersbox.mangaworld.reader.compose
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -13,11 +15,14 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
@@ -29,12 +34,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,22 +54,27 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.mangasettings.ImageLoaderType
-import com.programmersbox.mangasettings.ReaderType
-import com.programmersbox.mangaworld.MangaSettingsHandling
+import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.datastore.mangasettings.ReaderType
+import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import eu.wewox.pagecurl.ExperimentalPageCurlApi
 import eu.wewox.pagecurl.config.rememberPageCurlConfig
@@ -69,12 +83,14 @@ import eu.wewox.pagecurl.page.PageCurlState
 import eu.wewox.pagecurl.page.rememberPageCurlState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import net.engawapg.lib.zoomable.rememberZoomState
-import net.engawapg.lib.zoomable.zoomable
+import net.engawapg.lib.zoomable.zoomableWithScroll
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalZoomableApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
@@ -82,16 +98,20 @@ import org.koin.compose.koinInject
 @Composable
 fun ReadView(
     context: Context = LocalContext.current,
-    mangaSettingsHandling: MangaSettingsHandling = koinInject(),
-    readVm: ReadViewModel = koinViewModel(),
+    mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
+    viewModel: ReadViewModel = koinViewModel(),
 ) {
-    HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
+    RecordTimeSpentDoing()
+
+    val includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
+    var insetsController by insetController(includeInsets)
 
     val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
 
-    val pages = readVm.pageList
+    val pages = viewModel.pageList
 
     val settings = LocalSettingsHandling.current
 
@@ -115,7 +135,6 @@ fun ReadView(
                 ReaderType.List, ReaderType.FlipPager -> listState.firstVisibleItemIndex
                 ReaderType.Pager -> pagerState.currentPage
                 ReaderType.CurlPager -> curlState.current
-                else -> 0
             }
         }
     }
@@ -125,8 +144,6 @@ fun ReadView(
         .collectAsStateWithLifecycle(initialValue = 4)
 
     val imageLoaderType by mangaSettingsHandling.rememberImageLoaderType()
-    var startAction by mangaSettingsHandling.rememberPlayingStartAction()
-    var middleAction by mangaSettingsHandling.rememberPlayingMiddleAction()
 
     fun showToast() {
         scope.launch {
@@ -139,10 +156,10 @@ fun ReadView(
     val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && readerType != ReaderType.List } }
 
     val listIndex by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0 } }
-    LaunchedEffect(listIndex, pagerState.currentPage, readVm.showInfo) {
-        if (readVm.firstScroll && (listIndex > 0 || pagerState.currentPage > 0)) {
-            readVm.showInfo = false
-            readVm.firstScroll = false
+    LaunchedEffect(listIndex, pagerState.currentPage, viewModel.showInfo) {
+        if (viewModel.firstScroll && (listIndex > 0 || pagerState.currentPage > 0)) {
+            viewModel.showInfo = false
+            viewModel.firstScroll = false
         }
     }
 
@@ -167,7 +184,7 @@ fun ReadView(
         }
     }
 
-    val showItems by remember { derivedStateOf { readVm.showInfo || listShowItems || pagerShowItems } }
+    val showItems by remember { derivedStateOf { viewModel.showInfo || listShowItems || pagerShowItems } }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -177,6 +194,7 @@ fun ReadView(
     var showFloatBar by remember { mutableStateOf(false) }
 
     LaunchedEffect(showItems) {
+        if (includeInsets) insetsController = showItems
         if (showItems) {
             delay(250)
             showFloatBar = true
@@ -195,9 +213,9 @@ fun ReadView(
     }
 
     AddToFavoritesDialog(
-        show = readVm.addToFavorites.shouldShow,
-        onDismiss = { readVm.addToFavorites = readVm.addToFavorites.copy(hasShown = true) },
-        onAddToFavorites = readVm::addToFavorites
+        show = viewModel.addToFavorites.shouldShow,
+        onDismiss = { viewModel.addToFavorites = viewModel.addToFavorites.copy(hasShown = true) },
+        onAddToFavorites = viewModel::addToFavorites
     )
 
     var settingsPopup by remember { mutableStateOf(false) }
@@ -208,10 +226,6 @@ fun ReadView(
             mangaSettingsHandling = mangaSettingsHandling,
             readerType = readerType,
             readerTypeChange = { readerType = it },
-            startAction = startAction,
-            onStartActionChange = { startAction = it },
-            middleAction = middleAction,
-            onMiddleActionChange = { middleAction = it }
         )
     }
 
@@ -221,7 +235,7 @@ fun ReadView(
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
             SheetView(
-                readVm = readVm,
+                readVm = viewModel,
                 onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
                 pages = pages,
@@ -230,7 +244,6 @@ fun ReadView(
                         ReaderType.List, ReaderType.FlipPager -> listState.animateScrollToItem(it)
                         ReaderType.Pager -> pagerState.animateScrollToPage(it)
                         ReaderType.CurlPager -> curlState.snapTo(it)
-                        else -> {}
                     }
                 },
             )
@@ -242,15 +255,38 @@ fun ReadView(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
+            ) {
                 DrawerView(
-                    readVm = readVm,
+                    readVm = viewModel,
                     showToast = ::showToast
                 )
             }
         },
-        gesturesEnabled = (readVm.list.size > 1 && userGestureAllowed) || drawerState.isOpen
+        gesturesEnabled = (viewModel.list.size > 1 && userGestureAllowed) || drawerState.isOpen
     ) {
+        //TODO: Maybe make this an option?
+        val scrollAlpha by remember {
+            derivedStateOf {
+                when (readerType) {
+                    ReaderType.List -> {
+                        if (listState.firstVisibleItemIndex == 0) {
+                            listState.layoutInfo.visibleItemsInfo.firstOrNull()?.let {
+                                (it.offset / it.size.toFloat()).absoluteValue
+                            } ?: 1f
+                        } else {
+                            1f
+                        }
+                    }
+
+                    ReaderType.Pager -> 1f
+                    ReaderType.FlipPager -> 1f
+                    ReaderType.CurlPager -> 1f
+                }
+            }
+        }
+
         Scaffold(
             topBar = {
                 AnimatedVisibility(
@@ -263,53 +299,80 @@ fun ReadView(
                     )
                 ) {
                     ReaderTopBar(
-                        pages = pages,
-                        currentPage = currentPage,
-                        currentChapter = readVm
+                        currentChapter = viewModel
                             .currentChapterModel
                             ?.name
-                            ?: "Ch ${readVm.list.size - readVm.currentChapter}",
-                        playingStartAction = startAction,
-                        playingMiddleAction = middleAction,
+                            ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
+                        onSettingsClick = { settingsPopup = true },
                         showBlur = showBlur,
-                        modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
+                        windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
+                        modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                            blurEnabled = showBlur
                             progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                        } else Modifier
+                            alpha = scrollAlpha
+                        }
                     )
                 }
             },
             bottomBar = {
-                AnimatedVisibility(
-                    visible = showItems,
-                    enter = slideInVertically { it } + fadeIn(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    ),
-                    exit = slideOutVertically { it } + fadeOut(
-                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-                    )
-                ) {
-                    if (floatingBottomBar) {
+                if (!floatingBottomBar) {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically { it } + fadeIn(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ),
+                        exit = slideOutVertically { it } + fadeOut(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        )
+                    ) {
+                        //TODO: Can't really use key since it doesn't give the button animation
+                        //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onSettingsClick = { settingsPopup = true },
-                            chapterChange = ::showToast,
+                            onNextChapter = { viewModel.addChapterToWatched(--viewModel.currentChapter, ::showToast) },
+                            onPreviousChapter = { viewModel.addChapterToWatched(++viewModel.currentChapter, ::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
-                            vm = readVm,
-                            showFloatBar = showFloatBar,
-                            onShowFloatBarChange = { showFloatBar = it },
+                            showBlur = showBlur,
+                            isAmoledMode = isAmoledMode,
+                            chapterNumber = (viewModel.list.size - viewModel.currentChapter).toString(),
+                            chapterCount = viewModel.list.size.toString(),
+                            currentPage = currentPage,
+                            pages = animateIntAsState(pages.size).value,
+                            previousButtonEnabled = viewModel.currentChapter < viewModel.list.lastIndex && viewModel.list.size > 1,
+                            nextButtonEnabled = viewModel.currentChapter > 0 && viewModel.list.size > 1,
+                            modifier = Modifier
+                                .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
+                                .padding(16.dp)
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .hazeEffect(hazeState, style = HazeMaterials.thin()) {
+                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
+                                    blurEnabled = showBlur
+                                    //alpha = scrollAlpha
+                                }
                         )
-                    } else {
-                        BottomBar(
+                        //}
+                    }
+                }
+            },
+            floatingActionButton = {
+                if (floatingBottomBar) {
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = slideInVertically { it } + fadeIn(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        ),
+                        exit = slideOutVertically { it } + fadeOut(
+                            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+                        )
+                    ) {
+                        FloatingFloatingActionButton(
                             onPageSelectClick = { showBottomSheet = true },
                             onSettingsClick = { settingsPopup = true },
                             chapterChange = ::showToast,
                             onChapterShow = { scope.launch { drawerState.open() } },
-                            vm = readVm,
-                            showBlur = showBlur,
-                            isAmoledMode = isAmoledMode,
-                            modifier = if (showBlur) Modifier.hazeChild(hazeState, style = HazeMaterials.thin()) {
-                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
-                            } else Modifier,
+                            vm = viewModel,
+                            showFloatBar = showFloatBar,
+                            onShowFloatBarChange = { showFloatBar = it },
                         )
                     }
                 }
@@ -318,13 +381,13 @@ fun ReadView(
         ) { p ->
             Box(
                 modifier = if (showBlur)
-                    Modifier.haze(state = hazeState)
+                    Modifier.hazeSource(state = hazeState)
                 else
                     Modifier,
             ) {
                 OtakuPullToRefreshBox(
-                    isRefreshing = readVm.isLoadingPages,
-                    onRefresh = readVm::refresh,
+                    isRefreshing = viewModel.isLoadingPages,
+                    onRefresh = viewModel::refresh,
                     paddingValues = p
                 ) {
                     val spacing = LocalContext.current.dpToPx(paddingPage).dp
@@ -334,10 +397,10 @@ fun ReadView(
                         modifier = if (imageLoaderType == ImageLoaderType.Panpf) {
                             Modifier
                         } else {
-                            Modifier.zoomable(
+                            Modifier.zoomableWithScroll(
                                 zoomState = rememberZoomState(),
                                 enableOneFingerZoom = false,
-                                onTap = { readVm.showInfo = !readVm.showInfo }
+                                onTap = { viewModel.showInfo = !viewModel.showInfo }
                             )
                         }
                     ) {
@@ -346,42 +409,43 @@ fun ReadView(
                                 ListView(
                                     listState = listState,
                                     pages = pages,
-                                    readVm = readVm,
+                                    readVm = viewModel,
                                     itemSpacing = spacing,
-                                    paddingValues = PaddingValues(bottom = p.calculateBottomPadding()),
+                                    paddingValues = PaddingValues(
+                                        top = if (pages.isNotEmpty()) 0.dp else p.calculateTopPadding(),
+                                        bottom = p.calculateBottomPadding()
+                                    ).animate(),
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                )
                             }
 
                             ReaderType.Pager -> {
                                 PagerView(
                                     pagerState = pagerState,
                                     pages = pages,
-                                    vm = readVm,
+                                    vm = viewModel,
                                     itemSpacing = spacing,
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                )
                             }
 
                             ReaderType.FlipPager -> {
                                 FlipPagerView(
                                     pagerState = pagerState,
                                     pages = pages,
-                                    vm = readVm,
+                                    vm = viewModel,
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                )
                             }
 
                             ReaderType.CurlPager -> {
                                 CurlPagerView(
                                     pagerState = curlState,
                                     pages = pages,
-                                    vm = readVm,
+                                    vm = viewModel,
                                     imageLoaderType = imageLoaderType,
-                                ) { readVm.showInfo = !readVm.showInfo }
+                                )
                             }
-
-                            else -> {}
                         }
                     }
                 }
@@ -399,14 +463,13 @@ fun ListView(
     paddingValues: PaddingValues,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pages, readVm, onClick, imageLoaderType) }
+    ) { reader(pages, readVm, imageLoaderType) }
 }
 
 @Composable
@@ -417,7 +480,6 @@ fun PagerView(
     itemSpacing: Dp,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     VerticalPager(
         state = pagerState,
@@ -430,7 +492,6 @@ fun PagerView(
             ChapterPage(
                 chapterLink = { it },
                 isDownloaded = vm.isDownloaded,
-                openCloseOverlay = onClick,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -456,7 +517,6 @@ fun FlipPagerView(
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     FlipPager(
         state = pagerState,
@@ -468,7 +528,6 @@ fun FlipPagerView(
             ChapterPage(
                 chapterLink = { it },
                 isDownloaded = vm.isDownloaded,
-                openCloseOverlay = onClick,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -495,7 +554,6 @@ fun CurlPagerView(
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
 ) {
     //TODO: Make go reverse
     PageCurl(
@@ -516,7 +574,6 @@ fun CurlPagerView(
             ChapterPage(
                 chapterLink = { it },
                 isDownloaded = vm.isDownloaded,
-                openCloseOverlay = onClick,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -538,14 +595,16 @@ fun CurlPagerView(
 private fun LazyListScope.reader(
     pages: List<String>,
     vm: ReadViewModel,
-    onClick: () -> Unit,
     imageLoaderType: ImageLoaderType,
 ) {
-    items(pages, key = { it }, contentType = { it }) {
+    itemsIndexed(
+        pages,
+        key = { index, it -> "$it$index" },
+        contentType = { index, it -> it }
+    ) { _, it ->
         ChapterPage(
             chapterLink = { it },
             isDownloaded = vm.isDownloaded,
-            openCloseOverlay = onClick,
             headers = vm.headers,
             contentScale = ContentScale.FillWidth,
             imageLoaderType = imageLoaderType
@@ -561,4 +620,29 @@ private fun LazyListScope.reader(
             previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
         )
     }
+}
+
+@Composable
+private fun insetController(defaultValue: Boolean): MutableState<Boolean> {
+    val state = remember(defaultValue) { mutableStateOf(defaultValue) }
+
+    val activity = LocalActivity.current
+
+    val insetsController = remember {
+        activity?.let {
+            WindowCompat.getInsetsController(it.window, it.window.decorView)
+        }
+    }
+    DisposableEffect(state.value) {
+        insetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (state.value) {
+            insetsController?.show(WindowInsetsCompat.Type.systemBars())
+        } else {
+            insetsController?.hide(WindowInsetsCompat.Type.systemBars())
+        }
+
+        onDispose { insetsController?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
+
+    return state
 }

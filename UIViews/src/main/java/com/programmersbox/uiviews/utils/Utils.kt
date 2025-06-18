@@ -3,16 +3,13 @@ package com.programmersbox.uiviews.utils
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation3.runtime.NavKey
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.programmersbox.extensionloader.SourceRepository
-import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.uiviews.presentation.Screen
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
+import com.programmersbox.kmpuiviews.presentation.Screen
 import kotlin.experimental.ExperimentalTypeInference
 
 @OptIn(ExperimentalTypeInference::class)
@@ -24,19 +21,9 @@ fun recordFirebaseException(throwable: Throwable) = runCatching {
 }
 
 fun logFirebaseMessage(message: String) = runCatching {
+    println(message)
     Firebase.crashlytics.log(message)
 }.onFailure { println(message) }
-
-//TODO: This could probably go...somewhere
-fun combineSources(
-    sourceRepository: SourceRepository,
-    dao: ItemDao,
-) = combine(
-    sourceRepository.sources.map { it.filter { it.catalog == null } },
-    dao.getSourceOrder()
-) { list, order ->
-    list.sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
-}
 
 @SuppressLint("ComposableNaming")
 @Composable
@@ -46,7 +33,7 @@ fun trackScreen(screenName: Screen) {
             Firebase.analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, screenName.toString())
             }
-        }.onFailure { it.printStackTrace() }
+        }
     }
 }
 
@@ -58,6 +45,11 @@ fun trackScreen(screenName: String) {
             Firebase.analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
             }
-        }.onFailure { it.printStackTrace() }
+        }
     }
+}
+
+@Composable
+fun trackScreen(screenName: NavKey) {
+    trackScreen(screenName.toString())
 }

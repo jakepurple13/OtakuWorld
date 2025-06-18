@@ -1,0 +1,208 @@
+package com.programmersbox.uiviews.checkers
+
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.compose.ui.util.fastMap
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.helpfulutils.NotificationDslBuilder
+import com.programmersbox.helpfulutils.SemanticActions
+import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
+import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
+import com.programmersbox.uiviews.GenericInfo
+import com.programmersbox.uiviews.R
+import com.programmersbox.uiviews.utils.NotificationChannels
+import com.programmersbox.uiviews.utils.NotificationGroups
+import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.logFirebaseMessage
+import com.programmersbox.uiviews.utils.recordFirebaseException
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.net.HttpURLConnection
+import java.net.URL
+
+
+object SavedNotifications {
+
+    suspend fun viewNotificationFromDb(
+        context: Context,
+        n: NotificationItem,
+        notificationLogo: NotificationLogo,
+        info: GenericInfo,
+        sourceRepository: SourceRepository,
+        itemDao: ItemDao,
+        update: UpdateNotification,
+    ) {
+        val icon = notificationLogo.notificationId
+        itemDao.updateNotification(
+            url = n.url,
+            isShowing = true
+        )
+        (n.id to NotificationDslBuilder.builder(
+            context,
+            NotificationChannels.Otaku.id,
+            icon
+        ) {
+            title = n.notiTitle
+            subText = n.source
+            getBitmapFromURL(n.imageUrl)?.let {
+                largeIconBitmap = it
+                pictureStyle {
+                    bigPicture = it
+                    largeIcon = it
+                    contentTitle = n.contentTitle
+                    summaryText = n.summaryText
+                }
+            } ?: bigTextStyle {
+                contentTitle = n.contentTitle
+                bigText = n.summaryText
+            }
+            showWhen = true
+            groupId = NotificationGroups.Otaku.id
+            addAction {
+                actionTitle = context.getString(R.string.mark_read)
+                actionIcon = notificationLogo.notificationId
+                semanticAction = SemanticActions.MARK_AS_READ
+                pendingActionIntent {
+                    val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                    intent.action = "NOTIFICATION_DELETED_ACTION"
+                    intent.putExtra("url", n.url)
+                    intent.putExtra("id", n.id)
+                    PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
+                }
+            }
+            deleteIntent { context ->
+                val intent1 = Intent(context, SwipeAwayReceiver::class.java)
+                intent1.action = "NOTIFICATION_DELETED_ACTION"
+                intent1.putExtra("url", n.url)
+                PendingIntent.getBroadcast(context, n.id, intent1, PendingIntent.FLAG_IMMUTABLE)
+            }
+            pendingIntent { context ->
+                runBlocking {
+                    val itemModel = sourceRepository.toSourceByApiServiceName(n.source)
+                        ?.apiService
+                        ?.getSourceByUrlFlow(n.url)
+                        ?.firstOrNull()
+
+                    /*val d = Screen.DetailsScreen.Details(
+                        title = itemModel?.title.orEmpty(),
+                        imageUrl = itemModel?.imageUrl.orEmpty(),
+                        source = itemModel?.source?.serviceName.orEmpty(),
+                        url = itemModel?.url.orEmpty(),
+                        description = itemModel?.description.orEmpty(),
+                    )
+
+                    val c = d.generateRouteWithArgs(
+                        mapOf<String, NavType<Any?>>(
+                            "title" to NavType.StringType,
+                            "imageUrl" to NavType.StringType,
+                            "source" to NavType.StringType,
+                            "url" to NavType.StringType,
+                            "description" to NavType.StringType
+                        )
+                    )
+
+                    NavDeepLinkBuilder(context)
+                        .addDestination(c)
+                        .createPendingIntent()*/
+
+                    info.deepLinkDetails(context, itemModel)
+                }
+            }
+        })
+            .let { update.onEnd(listOf(it), info = info) }
+    }
+
+    fun viewNotificationsFromDb(
+        context: Context,
+        logo: NotificationLogo,
+        info: GenericInfo,
+        sourceRepository: SourceRepository,
+        dao: ItemDao,
+        update: UpdateNotification,
+    ) {
+        val icon = logo.notificationId
+        GlobalScope.launch {
+            dao.getAllNotifications()
+                .fastMap { n ->
+                    println(n)
+                    dao.updateNotification(
+                        url = n.url,
+                        isShowing = true
+                    )
+                    n.id to NotificationDslBuilder.builder(
+                        context,
+                        NotificationChannels.Otaku.id,
+                        icon
+                    ) {
+                        title = n.notiTitle
+                        subText = n.source
+                        getBitmapFromURL(n.imageUrl)?.let {
+                            largeIconBitmap = it
+                            pictureStyle {
+                                bigPicture = it
+                                largeIcon = it
+                                contentTitle = n.contentTitle
+                                summaryText = n.summaryText
+                            }
+                        } ?: bigTextStyle {
+                            contentTitle = n.contentTitle
+                            bigText = n.summaryText
+                        }
+                        showWhen = true
+                        groupId = NotificationGroups.Otaku.id
+                        addAction {
+                            actionTitle = context.getString(R.string.mark_read)
+                            actionIcon = logo.notificationId
+                            semanticAction = SemanticActions.MARK_AS_READ
+                            pendingActionIntent {
+                                val intent = Intent(context, DeleteNotificationReceiver::class.java)
+                                intent.action = "NOTIFICATION_DELETED_ACTION"
+                                intent.putExtra("url", n.url)
+                                intent.putExtra("id", n.id)
+                                PendingIntent.getBroadcast(context, n.id, intent, PendingIntent.FLAG_IMMUTABLE)
+                            }
+                        }
+                        deleteIntent { context ->
+                            val intent1 = Intent(context, SwipeAwayReceiver::class.java)
+                            intent1.action = "NOTIFICATION_DELETED_ACTION"
+                            intent1.putExtra("url", n.url)
+                            PendingIntent.getBroadcast(context, n.id, intent1, PendingIntent.FLAG_IMMUTABLE)
+                        }
+                        pendingIntent { context ->
+                            runBlocking {
+                                val itemModel = sourceRepository.toSourceByApiServiceName(n.source)//UpdateWorker.sourceFromString(n.source)
+                                    ?.apiService
+                                    ?.getSourceByUrlFlow(n.url)
+                                    ?.firstOrNull()
+
+                                info.deepLinkDetails(context, itemModel)
+                            }
+                        }
+                    }
+                }
+                .let { update.onEnd(it, info = info) }
+        }
+    }
+}
+
+fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = runCatching {
+    val url = URL(strURL)
+    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+    headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
+    connection.doInput = true
+    connection.connect()
+    BitmapFactory.decodeStream(connection.inputStream)
+}
+    .onFailure {
+        logFirebaseMessage("Getting bitmap from $strURL")
+        recordFirebaseException(it)
+        it.printStackTrace()
+    }
+    .getOrNull()

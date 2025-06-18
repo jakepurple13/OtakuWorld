@@ -54,6 +54,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDrawerState
@@ -86,26 +87,28 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.gsonutils.toJson
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.timeTick
-import com.programmersbox.models.ChapterModel
-import com.programmersbox.models.Storage
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.HideSystemBarsWhileOnScreen
-import com.programmersbox.uiviews.utils.InsetSmallTopAppBar
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.LocalNavController
-import com.programmersbox.uiviews.utils.LocalSettingsHandling
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -116,38 +119,53 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+
+//TODO: Need to change this to be more similar to the Manga Reader
+
+@Serializable
+data class NovelReader(
+    val title: String,
+    val url: String,
+    val infoUrl: String,
+    val currentChapter: KmpChapterModel,
+) : NavKey
 
 class ReadViewModel(
     activity: Activity?,
     handle: SavedStateHandle,
     genericInfo: GenericInfo,
     model: Flow<List<String>>? = handle.get<String>("currentChapter")
-        ?.fromJson<ChapterModel>(ChapterModel::class.java to ChapterModelDeserializer())
+        ?.fromJson<KmpChapterModel>(KmpChapterModel::class.java to ChapterModelDeserializer())
         ?.getChapterInfo()
-        ?.map { it.mapNotNull(Storage::link) },
-) : ViewModel() {
+        ?.map { it.mapNotNull(KmpStorage::link) },
+) : ViewModel(), KoinComponent {
 
     companion object {
         const val NovelReaderRoute =
             "novelreader?currentChapter={currentChapter}&novelTitle={novelTitle}&novelUrl={novelUrl}&novelInfoUrl={novelInfoUrl}"
 
         fun navigateToNovelReader(
-            navController: NavController,
-            currentChapter: ChapterModel,
+            navController: NavigationActions,
+            currentChapter: KmpChapterModel,
             novelTitle: String,
             novelUrl: String,
             novelInfoUrl: String,
         ) {
-            val current = Uri.encode(currentChapter.toJson(ChapterModel::class.java to ChapterModelSerializer()))
+            val current = Uri.encode(
+                currentChapter.toJson(KmpChapterModel::class.java to ChapterModelSerializer())
+            )
 
             navController.navigate(
                 "novelreader?currentChapter=$current&novelTitle=${novelTitle}&novelUrl=${novelUrl}&novelInfoUrl=${novelInfoUrl}"
-            ) { launchSingleTop = true }
+            )// { launchSingleTop = true }
         }
     }
 
-    private val dao by lazy { ItemDatabase.getInstance(activity!!).itemDao() }
+    private val dao by inject<ItemDao>()
 
     val list by lazy { ChapterList(activity!!, genericInfo).get().orEmpty() }
 
@@ -172,7 +190,7 @@ class ReadViewModel(
             ) {
                 batteryColor = it.first
                 batteryIcon = it.second
-            }
+            }.collect()
         }
 
         val url = handle.get<String>("novelUrl") ?: ""
@@ -222,9 +240,17 @@ class ReadViewModel(
 fun NovelReader(
     activity: Activity? = LocalActivity.current,
     genericInfo: GenericInfo = LocalGenericInfo.current,
-    readVm: ReadViewModel = viewModel { ReadViewModel(activity, createSavedStateHandle(), genericInfo) },
+    readVm: ReadViewModel = viewModel {
+        ReadViewModel(
+            activity = activity,
+            handle = createSavedStateHandle(),
+            genericInfo = genericInfo
+        )
+    },
 ) {
     HideSystemBarsWhileOnScreen()
+    HideNavBarWhileOnScreen()
+    RecordTimeSpentDoing()
 
     val context = LocalContext.current
 
@@ -301,7 +327,7 @@ fun NovelReader(
                 Scaffold(
                     modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     topBar = {
-                        InsetSmallTopAppBar(
+                        TopAppBar(
                             title = { Text(readVm.title) },
                             actions = { PageIndicator(readVm.list.size - readVm.currentChapter, readVm.list.size) },
                             scrollBehavior = scrollBehavior
@@ -387,7 +413,7 @@ fun NovelReader(
                     readVm.loadPages(
                         readVm.list.getOrNull(readVm.currentChapter)
                             ?.getChapterInfo()
-                            ?.map { it.mapNotNull(Storage::link) }
+                            ?.map { it.mapNotNull(KmpStorage::link) }
                     )
                 },
                 modifier = Modifier.padding(p)
@@ -628,7 +654,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
 
 @Composable
 private fun GoBackButton(modifier: Modifier = Modifier) {
-    val navController = LocalNavController.current
+    val navController = LocalNavActions.current
     OutlinedButton(
         onClick = { navController.popBackStack() },
         modifier = modifier,
