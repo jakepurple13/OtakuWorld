@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -29,7 +28,6 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
-import nl.jacobras.humanreadable.HumanReadable
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -117,7 +115,7 @@ fun AccountInfoScreen(
                         AccountInfoItem(
                             title = "Time Spent Doing",
                             description = "The amount of time spent doing things",
-                            amount = remember(state.timeSpentDoing) { HumanReadable.duration(state.timeSpentDoing) }
+                            amount = state.timeSpentDoing
                         )
                     }
                 }

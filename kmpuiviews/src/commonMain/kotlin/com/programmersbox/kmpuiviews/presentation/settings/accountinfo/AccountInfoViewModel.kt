@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlin.time.Duration
+import nl.jacobras.humanreadable.HumanReadable
 import kotlin.time.Duration.Companion.seconds
 
 class AccountInfoViewModel(
@@ -66,7 +66,7 @@ class AccountInfoViewModel(
             recommendationDao.getRecommendationCount()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
-                a.copy(timeSpentDoing = b.seconds)
+                a.copy(timeSpentDoing = HumanReadable.duration(b.seconds))
             }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
@@ -87,7 +87,7 @@ data class AccountInfoCount(
     val sourceCount: Int,
     val globalSearchHistory: Int,
     val savedRecommendations: Int,
-    val timeSpentDoing: Duration,
+    val timeSpentDoing: String,
 ) {
     constructor(array: Array<Int>) : this(
         cloudFavorites = array[0],
@@ -103,7 +103,7 @@ data class AccountInfoCount(
         sourceCount = array[10],
         globalSearchHistory = array[11],
         savedRecommendations = array[12],
-        timeSpentDoing = 0.seconds
+        timeSpentDoing = "0 seconds"
     )
 
     val totalFavorites: Int
@@ -124,7 +124,7 @@ data class AccountInfoCount(
             sourceCount = 0,
             globalSearchHistory = 0,
             savedRecommendations = 0,
-            timeSpentDoing = 0.seconds
+            timeSpentDoing = "0 seconds"
         )
     }
 }
