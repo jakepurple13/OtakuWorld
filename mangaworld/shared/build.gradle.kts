@@ -32,6 +32,13 @@ kotlin {
             implementation(projects.datastore.mangasettings)
             implementation(projects.kmpmodels)
             implementation(libs.bundles.datastoreLibs)
+
+            implementation(libs.androidx.navigation3.runtime)
+
+            implementation(libs.zoomableModifier)
+            implementation(libs.panpf.zoomimage.compose.glide)
+            implementation(libs.telephoto.zoomable.image.glide)
+            implementation(libs.coilCompose)
         }
 
         jvmMain.dependencies {

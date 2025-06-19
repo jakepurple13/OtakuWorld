@@ -1,11 +1,10 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pages
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -46,25 +44,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.load.model.GlideUrl
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
-import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.mangaworld.R
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -111,7 +100,7 @@ internal fun LastPageReached(
                     modifier = Modifier.graphicsLayer { this.alpha = alpha }
                 ) {
                     Text(
-                        stringResource(id = R.string.lastPage),
+                        "Reached Last Page",
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
@@ -120,7 +109,7 @@ internal fun LastPageReached(
                     )
                     if (currentChapter <= 0) {
                         Text(
-                            stringResource(id = R.string.reachedLastChapter),
+                            "Reached Last Chapter",
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -131,7 +120,7 @@ internal fun LastPageReached(
                 }
 
                 Text(
-                    stringResource(id = R.string.swipeChapter),
+                    "Swipe left or right and up to go to the previous or next chapter",
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -310,49 +299,19 @@ private fun ZoomableImage(
         val scope = rememberCoroutineScope()
         var showTheThing by remember { mutableStateOf(true) }
 
-        if (showTheThing) {
-            if (isDownloaded) {
-                val url = remember(painter) { GlideUrl(painter) { headers } }
-                GlideImage(
-                    imageModel = { if (isDownloaded) painter else url },
-                    imageOptions = ImageOptions(contentScale = contentScale),
-                    loading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) },
-                    failure = {
-                        Text(
-                            stringResource(R.string.pressToRefresh),
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .clickable {
-                                    scope.launch {
-                                        showTheThing = false
-                                        delay(1000)
-                                        showTheThing = true
-                                    }
-                                }
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-                        .align(Alignment.Center)
-                        .clipToBounds()
-                )
-            } else {
-                imageLoaderType.Composed(
-                    painter = painter,
-                    onRefresh = {
-                        scope.launch {
-                            showTheThing = false
-                            delay(1000)
-                            showTheThing = true
-                        }
-                    },
-                    contentScale = contentScale,
-                    headers = headers,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
+        imageLoaderType.Composed(
+            painter = painter,
+            onRefresh = {
+                scope.launch {
+                    showTheThing = false
+                    delay(1000)
+                    showTheThing = true
+                }
+            },
+            contentScale = contentScale,
+            headers = headers,
+            modifier = Modifier.align(Alignment.Center)
+        )
     }
 }
 
@@ -363,19 +322,4 @@ private fun clampOffset(centerPoint: Offset, offset: Offset, scale: Float): Offs
         x = offset.x.coerceIn(-maxPosition.x, maxPosition.x),
         y = offset.y.coerceIn(-maxPosition.y, maxPosition.y)
     )
-}
-
-@LightAndDarkPreviews
-@Composable
-private fun LastPagePreview() {
-    PreviewTheme {
-        LastPageReached(
-            isLoading = true,
-            currentChapter = 3,
-            lastChapter = 4,
-            chapterName = "Name".repeat(100),
-            nextChapter = {},
-            previousChapter = {}
-        )
-    }
 }

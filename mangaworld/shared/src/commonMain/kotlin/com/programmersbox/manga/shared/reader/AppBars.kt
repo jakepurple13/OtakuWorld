@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -55,12 +55,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.mangaworld.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @ExperimentalAnimationApi
@@ -264,7 +262,7 @@ private fun GoBackButton(modifier: Modifier = Modifier) {
         onClick = { navController.popBackStack() },
         modifier = modifier,
         border = BorderStroke(ButtonDefaults.outlinedButtonBorder(true).width, MaterialTheme.colorScheme.primary)
-    ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+    ) { Text("Back", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
 }
 
 @Composable
@@ -276,7 +274,7 @@ private fun NextButton(
     Button(
         onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
         modifier = modifier
-    ) { Text(stringResource(id = R.string.loadNextChapter)) }
+    ) { Text("Next") }
 }
 
 @Composable
@@ -288,7 +286,7 @@ private fun PreviousButton(
     TextButton(
         onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
         modifier = modifier
-    ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
+    ) { Text("Previous") }
 }
 
 @Composable
@@ -362,7 +360,7 @@ fun FloatingBottomBar(
             onClick = onPreviousChapter,
             enabled = previousButtonEnabled,
             icon = { Icon(Icons.Default.ArrowCircleLeft, null) },
-            label = { Text(stringResource(id = R.string.loadPreviousChapter)) }
+            label = { Text("Previous") }
         )
 
         NavigationBarItem(
@@ -370,7 +368,7 @@ fun FloatingBottomBar(
             onClick = onNextChapter,
             enabled = nextButtonEnabled,
             icon = { Icon(Icons.Default.ArrowCircleRight, null) },
-            label = { Text(stringResource(id = R.string.loadNextChapter)) }
+            label = { Text("Next") }
         )
 
         NavigationBarItem(
