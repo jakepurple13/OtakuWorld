@@ -1,6 +1,9 @@
 package com.programmersbox.desktop
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -9,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -19,9 +24,19 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.manga.shared.reader.ReadView
+import com.programmersbox.manga.shared.reader.ReadViewModel
+import com.programmersbox.manga.shared.settings.ImageLoaderSettings
+import com.programmersbox.manga.shared.settings.ImageLoaderSettingsRoute
+import com.programmersbox.manga.shared.settings.ReaderSettings
+import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 class GenericMangaDesktop(
     val settingsHandling: NewSettingsHandling,
+    val mangaSettingsHandling: MangaNewSettingsHandling,
 ) : KmpGenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
@@ -169,13 +184,14 @@ class GenericMangaDesktop(
         ExperimentalFoundationApi::class
     )
     override fun NavGraphBuilder.globalNavSetup() {
-        /*composable<ReadViewModel.MangaReader>(
+        composable<ReadViewModel.MangaReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) {
-            trackScreen("mangaReader")
-            ReadView()
-        }*/
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.MangaReader>()) }
+            )
+        }
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
@@ -186,14 +202,12 @@ class GenericMangaDesktop(
         ) {
             trackScreen(DownloadViewModel.DownloadRoute)
             DownloadScreen()
-        }
+        }*/
 
-        composable(
-            ImageLoaderSettingsRoute,
+        composable<ImageLoaderSettingsRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(ImageLoaderSettingsRoute)
             ImageLoaderSettings(mangaSettingsHandling)
         }
 
@@ -201,11 +215,10 @@ class GenericMangaDesktop(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen("readerSettings")
             ReaderSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
                 settingsHandling = settingsHandling
             )
-        }*/
+        }
     }
 }

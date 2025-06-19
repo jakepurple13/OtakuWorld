@@ -1,10 +1,7 @@
 package com.programmersbox.uiviews
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import com.programmersbox.models.ApiService
 import com.programmersbox.models.InfoModel
-import com.programmersbox.uiviews.details.SwatchInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.system.measureNanoTime
@@ -42,12 +39,6 @@ object TestItems {
     val TEST_SOURCE = object : ApiService {
         override val baseUrl: String get() = ""
     }
-
-    val TEST_SWATCH = SwatchInfo(
-        rgb = Color.Blue.toArgb(),
-        titleColor = Color.Red.toArgb(),
-        bodyColor = Color.Green.toArgb()
-    )
 
     val TEST_INFOMODEL = InfoModel(
         title = "Hello",
