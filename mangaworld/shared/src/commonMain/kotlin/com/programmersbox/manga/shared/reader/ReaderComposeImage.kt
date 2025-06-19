@@ -1,9 +1,8 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -12,41 +11,24 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
+import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
-import coil3.network.NetworkHeaders
-import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
-import com.bumptech.glide.load.model.GlideUrl
-import com.github.panpf.zoomimage.GlideZoomAsyncImage
-import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
-import com.github.panpf.zoomimage.rememberGlideZoomState
-import com.github.panpf.zoomimage.zoom.ReadMode
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.mangaworld.R
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.glide.GlideImage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import io.ktor.client.request.header
-import me.saket.telephoto.zoomable.glide.ZoomableGlideImage
-import me.saket.telephoto.zoomable.rememberZoomableImageState
 
 @Composable
 internal fun ImageLoaderType.Composed(
@@ -92,7 +74,7 @@ internal fun Kamel(
         },
         onFailure = {
             Text(
-                stringResource(R.string.pressToRefresh),
+                "Press to refresh",
                 modifier = Modifier.clickable { onRefresh() }
             )
         },
@@ -114,7 +96,7 @@ internal fun Glide(
     contentScale: ContentScale = ContentScale.Fit,
     onRefresh: () -> Unit,
 ) {
-    val url = remember(painter) { GlideUrl(painter) { headers } }
+    /*val url = remember(painter) { GlideUrl(painter) { headers } }
     GlideImage(
         imageModel = { url },
         imageOptions = ImageOptions(contentScale = contentScale),
@@ -131,7 +113,7 @@ internal fun Glide(
             .fillMaxSize()
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
             .clipToBounds()
-    )
+    )*/
 }
 
 @Composable
@@ -143,14 +125,14 @@ internal fun Coil(
     onRefresh: () -> Unit,
 ) {
     SubcomposeAsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
+        model = ImageRequest.Builder(LocalPlatformContext.current)
             .data(painter)
             .crossfade(true)
-            .httpHeaders(
+            /*.httpHeaders(
                 NetworkHeaders.Builder()
                     .apply { headers.forEach { (t, u) -> add(t, u) } }
                     .build()
-            )
+            )*/
             .size(Size.ORIGINAL)
             .build(),
         contentDescription = null,
@@ -163,7 +145,7 @@ internal fun Coil(
         val state by this.painter.state.collectAsStateWithLifecycle()
         when (state) {
             is AsyncImagePainter.State.Error -> Text(
-                stringResource(R.string.pressToRefresh),
+                "Press to refresh",
                 modifier = Modifier
                     .align(Alignment.Center)
                     .clickable { onRefresh() }
@@ -175,7 +157,6 @@ internal fun Coil(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 internal fun Panpf(
     painter: String,
@@ -183,7 +164,7 @@ internal fun Panpf(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
-    Box(
+    /*Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
@@ -201,7 +182,7 @@ internal fun Panpf(
             scrollBar = null,
             modifier = Modifier.fillMaxWidth()
         )
-    }
+    }*/
 }
 
 @Composable
@@ -212,24 +193,13 @@ internal fun Telephoto(
     contentScale: ContentScale = ContentScale.Fit,
     onRefresh: () -> Unit,
 ) {
-    val url = remember(painter) { GlideUrl(painter) { headers } }
+    /*val url = remember(painter) { GlideUrl(painter) { headers } }
 
     val state = rememberZoomableImageState()
 
     if (state.isImageDisplayed) {
         CircularProgressIndicator()
     }
-
-    /*SubSamplingImage(
-        state = rememberSubSamplingImageState(
-            imageSource = SubSamplingImageSource.file(""),
-            zoomableState = rememberZoomableState()
-        ),
-        contentDescription = null,
-        modifier = modifier
-            .fillMaxSize()
-            .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-    )*/
 
     ZoomableGlideImage(
         model = url,
@@ -240,5 +210,5 @@ internal fun Telephoto(
         modifier = modifier
             .fillMaxSize()
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)
-    )
+    )*/
 }

@@ -1,8 +1,5 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
-import android.content.Context
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -41,7 +38,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -54,14 +50,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.ReaderType
@@ -69,35 +62,33 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshB
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
+import com.programmersbox.manga.shared.reader.curl.ExperimentalPageCurlApi
+import com.programmersbox.manga.shared.reader.curl.PageCurl
+import com.programmersbox.manga.shared.reader.curl.PageCurlState
+import com.programmersbox.manga.shared.reader.curl.rememberPageCurlConfig
+import com.programmersbox.manga.shared.reader.curl.rememberPageCurlState
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
-import com.programmersbox.mangaworld.R
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
-import eu.wewox.pagecurl.ExperimentalPageCurlApi
-import eu.wewox.pagecurl.config.rememberPageCurlConfig
-import eu.wewox.pagecurl.page.PageCurl
-import eu.wewox.pagecurl.page.PageCurlState
-import eu.wewox.pagecurl.page.rememberPageCurlState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomableWithScroll
-import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalZoomableApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalZoomableApi::class, ExperimentalPageCurlApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
 @Composable
 fun ReadView(
-    context: Context = LocalContext.current,
     mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
     viewModel: ReadViewModel = koinViewModel(),
 ) {
@@ -105,7 +96,7 @@ fun ReadView(
     RecordTimeSpentDoing()
 
     val includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
-    var insetsController by insetController(includeInsets)
+    var insetsController by insetsController(includeInsets)
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -148,7 +139,7 @@ fun ReadView(
     fun showToast() {
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar(context.getString(R.string.addedChapterItem))
+            snackbarHostState.showSnackbar("Added Chapter")
         }
     }
 
@@ -390,7 +381,7 @@ fun ReadView(
                     onRefresh = viewModel::refresh,
                     paddingValues = p
                 ) {
-                    val spacing = LocalContext.current.dpToPx(paddingPage).dp
+                    val spacing = dpToPx(paddingPage).dp
                     Crossfade(
                         targetState = readerType,
                         label = "",
@@ -623,26 +614,4 @@ private fun LazyListScope.reader(
 }
 
 @Composable
-private fun insetController(defaultValue: Boolean): MutableState<Boolean> {
-    val state = remember(defaultValue) { mutableStateOf(defaultValue) }
-
-    val activity = LocalActivity.current
-
-    val insetsController = remember {
-        activity?.let {
-            WindowCompat.getInsetsController(it.window, it.window.decorView)
-        }
-    }
-    DisposableEffect(state.value) {
-        insetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        if (state.value) {
-            insetsController?.show(WindowInsetsCompat.Type.systemBars())
-        } else {
-            insetsController?.hide(WindowInsetsCompat.Type.systemBars())
-        }
-
-        onDispose { insetsController?.show(WindowInsetsCompat.Type.systemBars()) }
-    }
-
-    return state
-}
+expect fun insetsController(defaultValue: Boolean): MutableState<Boolean>

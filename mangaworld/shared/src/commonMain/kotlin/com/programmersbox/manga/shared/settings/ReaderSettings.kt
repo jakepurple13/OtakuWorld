@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.settings
+package com.programmersbox.manga.shared.settings
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.BorderStroke
@@ -32,8 +32,6 @@ import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,12 +45,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalFloatingToolbar
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -68,8 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
@@ -82,13 +76,10 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSett
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.manga.shared.reader.FloatingBottomBar
+import com.programmersbox.manga.shared.reader.ReaderTopBar
+import com.programmersbox.manga.shared.reader.dpToPx
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
-import com.programmersbox.mangaworld.R
-import com.programmersbox.mangaworld.reader.compose.FloatingBottomBar
-import com.programmersbox.mangaworld.reader.compose.ReaderTopBar
-import com.programmersbox.mangaworld.reader.compose.dpToPx
-import com.programmersbox.uiviews.utils.LightAndDarkPreviews
-import com.programmersbox.uiviews.utils.PreviewTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -370,8 +361,8 @@ fun SpacingSetting(
     ) {
         SliderSetting(
             sliderValue = readerPadding,
-            settingTitle = { Text(stringResource(R.string.reader_padding_between_pages)) },
-            settingSummary = { Text(stringResource(R.string.default_padding_summary)) },
+            settingTitle = { Text("Reader Padding Between Pages") },
+            settingSummary = { Text("Default is 4") },
             settingIcon = { Icon(Icons.Default.FormatLineSpacing, null) },
             range = 0f..10f,
             updateValue = onPaddingChange,
@@ -388,7 +379,7 @@ fun SpacingSetting(
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(LocalContext.current.dpToPx(readerPadding.toInt()).dp)
+                .height(dpToPx(readerPadding.toInt()).dp)
         )
 
         Box(
@@ -397,50 +388,6 @@ fun SpacingSetting(
                 .height(16.dp)
                 .background(Color.White)
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-internal fun BottomBar(
-    modifier: Modifier = Modifier,
-) {
-    BottomAppBar(
-        modifier = modifier,
-    ) {
-
-        TextButton(
-            onClick = {},
-            modifier = Modifier.weight(8f / 3f)
-        ) { Text(stringResource(id = R.string.loadPreviousChapter)) }
-
-        OutlinedButton(
-            onClick = {},
-            modifier = Modifier.weight(8f / 3f),
-            border = BorderStroke(ButtonDefaults.outlinedButtonBorder(true).width, MaterialTheme.colorScheme.primary)
-        ) { Text(stringResource(id = R.string.goBack), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-
-        Button(
-            onClick = {},
-            modifier = Modifier.weight(8f / 3f)
-        ) { Text(stringResource(id = R.string.loadNextChapter)) }
-
-        //The three buttons above will equal 8f
-        //So these two need to add up to 2f
-        IconButton(
-            onClick = {},
-            modifier = Modifier.weight(1f)
-        ) { Icon(Icons.Default.GridOn, null) }
-
-        IconButton(
-            onClick = {},
-            modifier = Modifier.weight(1f)
-        ) { Icon(Icons.Default.Numbers, null) }
-
-        IconButton(
-            onClick = {},
-            modifier = Modifier.weight(1f)
-        ) { Icon(Icons.Default.Settings, null) }
     }
 }
 
@@ -489,20 +436,5 @@ fun FloatingBottomBar(
         IconButton(
             onClick = {},
         ) { Icon(Icons.Default.Settings, null) }
-    }
-}
-
-@Composable
-@LightAndDarkPreviews
-private fun ReaderScreenPreview() {
-    PreviewTheme {
-        ReaderSettings(
-            imageLoaderType = ImageLoaderType.Coil,
-            readerPadding = 2f,
-            useFloatingBar = false,
-            allowUserGesture = true,
-            readerType = ReaderType.List,
-            includeInsets = true,
-        )
     }
 }
