@@ -1,16 +1,9 @@
-package com.programmersbox.mangaworld.downloads
+package com.programmersbox.manga.shared.downloads
 
-import android.Manifest
-import android.content.Intent
-import android.os.Build
-import android.provider.MediaStore
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronRight
@@ -31,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -45,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,33 +47,17 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
-import com.programmersbox.mangaworld.ChaptersGet
-import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
-import com.programmersbox.mangaworld.R
-import com.programmersbox.mangaworld.reader.ReadActivity
-import com.programmersbox.uiviews.presentation.components.PermissionRequest
-import com.programmersbox.uiviews.presentation.components.animatedItems
-import com.programmersbox.uiviews.presentation.components.updateAnimatedItemsState
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-import java.io.File
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -87,10 +65,9 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
     ExperimentalAnimationApi::class,
 )
 @Composable
-fun DownloadScreen() {
-
-    val defaultPathname = remember { File(DOWNLOAD_FILE_PATH) }
-
+fun DownloadScreen(
+    viewModel: DownloadViewModel = koinViewModel(),
+) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     OtakuScaffold(
@@ -98,25 +75,19 @@ fun DownloadScreen() {
         topBar = {
             TopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(stringResource(R.string.downloaded_chapters)) },
+                title = { Text("Downloaded Chapters") },
                 navigationIcon = { BackButton() }
             )
         }
     ) { p1 ->
-        PermissionRequest(
-            if (Build.VERSION.SDK_INT >= 33)
-                listOf(Manifest.permission.READ_MEDIA_VIDEO)
-            else listOf(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-            )
-        ) {
-            val context = LocalContext.current
-            val viewModel: DownloadViewModel = viewModel { DownloadViewModel(context, defaultPathname) }
+        PermissionRequester {
             DownloadViewer(viewModel, p1)
         }
     }
 }
+
+@Composable
+expect fun PermissionRequester(content: @Composable () -> Unit)
 
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
@@ -131,23 +102,30 @@ private fun DownloadViewer(
         .flow
         .collectAsStateWithLifecycle(initialValue = true)
 
-    val fileList = viewModel.fileList
+    val fileList by viewModel
+        .fileList
+        .collectAsStateWithLifecycle(emptyMap())
 
-    val f by updateAnimatedItemsState(newList = fileList.entries.toList())
-
-    if (fileList.isEmpty()) EmptyState(p1)
-    else LazyColumn(
-        contentPadding = p1,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(4.dp)
-    ) {
-        animatedItems(
-            f,
-            enterTransition = fadeIn(),
-            exitTransition = fadeOut()
-        ) { file -> ChapterItem(file, useNewReader) }
+    if (fileList.isEmpty()) {
+        EmptyState(p1)
+    } else {
+        LazyColumn(
+            contentPadding = p1,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp)
+        ) {
+            items(
+                items = fileList.entries.toList()
+            ) { file ->
+                ChapterItem(
+                    file = file,
+                    useNewReader = useNewReader,
+                    onDeleted = viewModel::delete
+                )
+            }
+        }
     }
 }
 
@@ -160,7 +138,7 @@ private fun EmptyState(p1: PaddingValues) {
             .fillMaxSize()
     ) {
         Surface(
-            shape = M3MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -169,14 +147,14 @@ private fun EmptyState(p1: PaddingValues) {
             Column(modifier = Modifier) {
 
                 Text(
-                    text = stringResource(id = R.string.get_started),
-                    style = M3MaterialTheme.typography.headlineSmall,
+                    text = "Get Started",
+                    style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
                 Text(
-                    text = stringResource(id = R.string.download_a_manga),
-                    style = M3MaterialTheme.typography.bodyLarge,
+                    text = "Download a Manga",
+                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
@@ -185,7 +163,7 @@ private fun EmptyState(p1: PaddingValues) {
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 4.dp)
-                ) { Text(text = stringResource(id = R.string.go_download)) }
+                ) { Text(text = "Go Download!") }
             }
         }
     }
@@ -194,11 +172,10 @@ private fun EmptyState(p1: PaddingValues) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChapterItem(
-    file: Map.Entry<String, Map<String, List<ChaptersGet.Chapters>>>,
+    file: Map.Entry<String, Map<String, List<DownloadedChapters>>>,
+    onDeleted: (DownloadedChapters) -> Unit,
     useNewReader: Boolean = true,
 ) {
-    val context = LocalContext.current
-
     var expanded by remember { mutableStateOf(false) }
 
     Column(
@@ -206,7 +183,7 @@ private fun ChapterItem(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Surface(
-            shape = M3MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.medium,
             tonalElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -218,7 +195,7 @@ private fun ChapterItem(
             ListItem(
                 modifier = Modifier.padding(4.dp),
                 headlineContent = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
-                supportingContent = { Text(stringResource(R.string.chapter_count, file.value.size)) },
+                supportingContent = { Text("Chapter Count ${file.value.size}") },
                 trailingContent = {
                     Icon(
                         Icons.Default.ArrowDropDown,
@@ -238,42 +215,18 @@ private fun ChapterItem(
                 if (showPopup) {
                     val onDismiss = { showPopup = false }
 
-                    val scope = rememberCoroutineScope()
-
                     AlertDialog(
                         onDismissRequest = onDismiss,
-                        title = { Text(stringResource(R.string.delete_title, c?.chapterName.orEmpty())) },
+                        title = { Text("Delete ${c?.chapterName.orEmpty()}") },
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    scope.launch {
-                                        flow {
-                                            try {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                                    chapter.fastForEach { f ->
-                                                        context.contentResolver.delete(
-                                                            f.assetFileStringUri.toUri(),
-                                                            "${MediaStore.Images.Media._ID} = ?",
-                                                            arrayOf(f.id)
-                                                        )
-                                                    }
-                                                } else {
-                                                    File(c?.chapterFolder!!).delete()
-                                                }
-                                                emit(true)
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                                emit(false)
-                                            }
-                                        }
-                                            .onEach { Toast.makeText(context, R.string.finished_deleting, Toast.LENGTH_SHORT).show() }
-                                            .collect()
-                                    }
+                                    chapter.fastForEach { onDeleted(it) }
                                     onDismiss()
                                 }
-                            ) { Text(stringResource(R.string.yes)) }
+                            ) { Text("Yes") }
                         },
-                        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.no)) } }
+                        dismissButton = { TextButton(onClick = onDismiss) { Text("No") } }
                     )
                 }
 
@@ -318,7 +271,7 @@ private fun ChapterItem(
                     content = {
                         val navController = LocalNavActions.current
                         Surface(
-                            shape = M3MaterialTheme.shapes.medium,
+                            shape = MaterialTheme.shapes.medium,
                             tonalElevation = 4.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -333,19 +286,19 @@ private fun ChapterItem(
                                             downloaded = true
                                         )
                                     } else {
-                                        context.startActivity(
+                                        /*context.startActivity(
                                             Intent(context, ReadActivity::class.java).apply {
                                                 putExtra("downloaded", true)
                                                 putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
                                             }
-                                        )
+                                        )*/
                                     }
                                 }
                         ) {
                             ListItem(
                                 modifier = Modifier.padding(4.dp),
                                 headlineContent = { Text(c?.chapterName.orEmpty()) },
-                                supportingContent = { Text(stringResource(R.string.page_count, chapter.size)) },
+                                supportingContent = { Text("Chapter Count ${chapter.size}") },
                                 trailingContent = { Icon(Icons.Default.ChevronRight, null) }
                             )
                         }

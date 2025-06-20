@@ -65,6 +65,10 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.manga.shared.ChapterHolder
+import com.programmersbox.manga.shared.downloads.DownloadRoute
+import com.programmersbox.manga.shared.downloads.DownloadScreen
+import com.programmersbox.manga.shared.downloads.DownloadViewModel
+import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.onboarding.ReaderOnboarding
 import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
@@ -75,8 +79,6 @@ import com.programmersbox.manga.shared.settings.ReaderSettings
 import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
-import com.programmersbox.mangaworld.downloads.DownloadRoute
-import com.programmersbox.mangaworld.downloads.DownloadScreen
 import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
@@ -93,6 +95,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.binds
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.parameter.parametersOf
@@ -123,6 +126,8 @@ val appModule = module {
         )
     }
     viewModelOf(::ReadViewModel)
+    factoryOf(::DownloadedMediaHandler)
+    viewModelOf(::DownloadViewModel)
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides

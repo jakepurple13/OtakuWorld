@@ -24,6 +24,8 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.manga.shared.downloads.DownloadRoute
+import com.programmersbox.manga.shared.downloads.DownloadScreen
 import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.manga.shared.settings.ImageLoaderSettings
@@ -195,14 +197,12 @@ class GenericMangaDesktop(
     }
 
     override fun NavGraphBuilder.settingsNavSetup() {
-        /*composable(
-            DownloadViewModel.DownloadRoute,
+        composable<DownloadRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(DownloadViewModel.DownloadRoute)
             DownloadScreen()
-        }*/
+        }
 
         composable<ImageLoaderSettingsRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
