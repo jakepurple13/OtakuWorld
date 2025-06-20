@@ -1,6 +1,7 @@
 package com.programmersbox.manga.shared.settings
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
 import androidx.compose.material.icons.filled.ArrowBack
@@ -372,6 +374,12 @@ fun SpacingSetting(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(
+                    MaterialTheme.shapes.small.copy(
+                        topStart = CornerSize(0f),
+                        topEnd = CornerSize(0f)
+                    )
+                )
                 .height(16.dp)
                 .background(Color.White)
         )
@@ -379,12 +387,18 @@ fun SpacingSetting(
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dpToPx(readerPadding.toInt()).dp)
+                .height(animateDpAsState(dpToPx(readerPadding.toInt()).dp).value)
         )
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(
+                    MaterialTheme.shapes.small.copy(
+                        bottomStart = CornerSize(0f),
+                        bottomEnd = CornerSize(0f)
+                    )
+                )
                 .height(16.dp)
                 .background(Color.White)
         )

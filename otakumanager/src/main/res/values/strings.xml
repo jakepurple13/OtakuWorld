@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">OtakuManager</string>
-    <string name="cancel">Cancel</string>
-    <string name="goto_app_for_fav">Go to Otaku App to Favorite</string>
-    <string name="no_favorites">No Favorites</string>
-    <string name="login_info">Please Log In to use this App</string>
-    <string name="login_button_text">Log In</string>
-    <string name="share">Share</string>
-</resources>

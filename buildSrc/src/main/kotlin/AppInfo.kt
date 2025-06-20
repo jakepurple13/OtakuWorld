@@ -1,5 +1,5 @@
 object AppInfo {
-    const val otakuVersionName = "32.1.1"
+    const val otakuVersionName = "32.1.2"
     val versionCode by lazy {
         val code = if (System.getenv("CI") != null) {
             runCatching { System.getenv("GITHUB_RUN_NUMBER").toInt() }
