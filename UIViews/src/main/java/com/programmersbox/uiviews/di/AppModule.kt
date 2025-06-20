@@ -37,4 +37,5 @@ val appModules = module {
     singleOf(::UpdateNotification)
     singleOf(::OtakuDataStoreHandling)
     singleOf(::SettingsHandling)
+    includes(repository)
 }

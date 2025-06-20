@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.settings
+package com.programmersbox.manga.shared.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,32 +23,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.github.panpf.zoomimage.GlideZoomAsyncImage
-import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
-import com.programmersbox.mangasettings.MangaNewSettingsSerializer
-import com.programmersbox.uiviews.utils.AmoledProvider
-import com.programmersbox.uiviews.utils.PreviewTheme
-import com.programmersbox.uiviews.utils.logFirebaseMessage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.serialization.Serializable
-import me.saket.telephoto.zoomable.glide.ZoomableGlideImage
 
 @Serializable
 data object ImageLoaderSettingsRoute : NavKey
@@ -154,19 +144,19 @@ private fun Kamel(
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun Glide(
     url: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
-    GlideImage(
+    Text("Not working right now")
+    /*GlideImage(
         model = url,
         contentDescription = null,
         contentScale = contentScale,
         modifier = modifier
-    )
+    )*/
 }
 
 @Composable
@@ -176,7 +166,7 @@ private fun Coil(
     contentScale: ContentScale = ContentScale.Fit,
 ) {
     AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
+        model = ImageRequest.Builder(LocalPlatformContext.current)
             .data(url)
             .crossfade(true)
             .build(),
@@ -186,19 +176,19 @@ private fun Coil(
     )
 }
 
-@OptIn(com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi::class)
 @Composable
 private fun Panpf(
     url: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
-    GlideZoomAsyncImage(
+    Text("Not working right now")
+    /*GlideZoomAsyncImage(
         model = url,
         contentDescription = null,
         contentScale = contentScale,
         modifier = modifier
-    )
+    )*/
 }
 
 @Composable
@@ -207,29 +197,11 @@ private fun Telephoto(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
-    ZoomableGlideImage(
+    Text("Not working right now")
+    /*ZoomableGlideImage(
         model = url,
         contentDescription = null,
         contentScale = contentScale,
         modifier = modifier
-    )
-}
-
-@Composable
-@PreviewLightDark
-private fun ImageLoaderSettingsPreview(
-    @PreviewParameter(AmoledProvider::class) isAmoledMode: Boolean,
-) {
-    PreviewTheme(
-        isAmoledMode = isAmoledMode
-    ) {
-        ImageLoaderSettings(
-            MangaNewSettingsHandling(
-                createProtobuf(
-                    context = LocalContext.current,
-                    serializer = MangaNewSettingsSerializer
-                )
-            )
-        )
-    }
+    )*/
 }

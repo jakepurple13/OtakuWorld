@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,11 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.mangaworld.R
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -94,7 +92,7 @@ internal fun DrawerView(
                 if (showChangeChapter) {
                     AlertDialog(
                         onDismissRequest = { showChangeChapter = false },
-                        title = { Text(stringResource(R.string.changeToChapter, c.name)) },
+                        title = { Text("Change to chapter ${c.name}") },
                         confirmButton = {
                             TextButton(
                                 onClick = {
@@ -102,10 +100,10 @@ internal fun DrawerView(
                                     readVm.currentChapter = i
                                     readVm.addChapterToWatched(readVm.currentChapter, showToast)
                                 }
-                            ) { Text(stringResource(R.string.yes)) }
+                            ) { Text("Yes") }
                         },
                         dismissButton = {
-                            TextButton(onClick = { showChangeChapter = false }) { Text(stringResource(R.string.no)) }
+                            TextButton(onClick = { showChangeChapter = false }) { Text("No") }
                         }
                     )
                 }

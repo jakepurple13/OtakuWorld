@@ -1,6 +1,5 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
-import androidx.annotation.StringRes
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -58,7 +57,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.NewSettingsHandling
@@ -70,9 +68,8 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSett
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
+import com.programmersbox.manga.shared.settings.ImageLoaderSettings
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
-import com.programmersbox.mangaworld.R
-import com.programmersbox.mangaworld.settings.ImageLoaderSettings
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.CoroutineScope
@@ -107,13 +104,13 @@ internal fun SettingsSheet(
                         }
                     ) { Icon(Icons.Default.Close, null) }
                 },
-                settingTitle = { Text(stringResource(R.string.settings)) }
+                settingTitle = { Text("Settings") }
             )
             SliderSetting(
                 scope = scope,
                 settingIcon = Icons.Default.FormatLineSpacing,
-                settingTitle = R.string.reader_padding_between_pages,
-                settingSummary = R.string.default_padding_summary,
+                settingTitle = "Reader Padding Between Pages",
+                settingSummary = "Default is 4",
                 preferenceUpdate = { mangaSettingsHandling.pagePadding.updateSetting(it) },
                 initialValue = runBlocking { mangaSettingsHandling.pagePadding.flow.firstOrNull() ?: 4 },
                 range = 0f..10f
@@ -218,8 +215,8 @@ internal fun SettingsSheet(
 private fun SliderSetting(
     scope: CoroutineScope,
     settingIcon: ImageVector,
-    @StringRes settingTitle: Int,
-    @StringRes settingSummary: Int,
+    settingTitle: String,
+    settingSummary: String,
     preferenceUpdate: suspend (Int) -> Unit,
     initialValue: Int,
     range: ClosedFloatingPointRange<Float>,
@@ -228,8 +225,8 @@ private fun SliderSetting(
 
     SliderSetting(
         sliderValue = sliderValue,
-        settingTitle = { Text(stringResource(id = settingTitle)) },
-        settingSummary = { Text(stringResource(id = settingSummary)) },
+        settingTitle = { Text(settingTitle) },
+        settingSummary = { Text(settingSummary) },
         range = range,
         updateValue = {
             sliderValue = it

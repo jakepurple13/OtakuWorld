@@ -1,14 +1,13 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
-import android.net.Uri
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
@@ -19,10 +18,15 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.manga.shared.ChapterHolder
-import com.programmersbox.uiviews.utils.dispatchIo
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.list
+import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
@@ -36,8 +40,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import java.io.File
-
 private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
@@ -48,7 +50,7 @@ class ReadViewModel(
 ) : ViewModel() {
 
     val isDownloaded: Boolean = mangaReader.downloaded
-    val headers: MutableMap<String, String> = mutableMapOf()
+    val headers = mutableStateMapOf<String, String>()
 
     val model: Flow<List<String>>? = chapterHolder.chapterModel
         ?.getChapterInfo()
@@ -57,15 +59,15 @@ class ReadViewModel(
             it.mapNotNull(KmpStorage::link)
         }
 
-    val filePath: File? = runCatching { mangaReader.filePath?.let { File(it) } }.getOrNull()
+    val filePath: PlatformFile? = runCatching { mangaReader.filePath?.let { PlatformFile(it) } }.getOrNull()
     val modelPath: Flow<List<String>>? = if (isDownloaded && filePath != null) {
         flow {
             filePath
-                .listFiles()
-                ?.sortedBy { f -> f.name.split(".").first().toInt() }
-                ?.fastMap(File::toUri)
-                ?.fastMap(Uri::toString)
-                ?.let { emit(it) } ?: throw Exception("Cannot find files")
+                .list()
+                .sortedBy { f -> f.name.split(".").first().toInt() }
+                .fastMap { it.toKotlinxIoPath() }
+                .fastMap { it.toString() }
+                .let { emit(it) }
         }
             .catch { emit(emptyList()) }
             .flowOn(Dispatchers.IO)

@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.reader.compose
+package com.programmersbox.manga.shared.reader
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState

@@ -64,6 +64,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangaworld.ChaptersGet
 import com.programmersbox.mangaworld.DOWNLOAD_FILE_PATH
@@ -326,7 +327,7 @@ private fun ChapterItem(
                                     interactionSource = null
                                 ) {
                                     if (useNewReader) {
-                                        com.programmersbox.mangaworld.reader.compose.ReadViewModel.navigateToMangaReader(
+                                        ReadViewModel.navigateToMangaReader(
                                             navController,
                                             filePath = c?.chapterFolder,
                                             downloaded = true

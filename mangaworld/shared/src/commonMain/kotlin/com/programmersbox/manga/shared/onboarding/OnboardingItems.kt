@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworld.onboarding
+package com.programmersbox.manga.shared.onboarding
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,10 +32,10 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategorySetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.manga.shared.settings.ImageLoaderSettings
+import com.programmersbox.manga.shared.settings.ReaderTypeSetting
+import com.programmersbox.manga.shared.settings.SpacingSetting
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
-import com.programmersbox.mangaworld.settings.ImageLoaderSettings
-import com.programmersbox.mangaworld.settings.ReaderTypeSetting
-import com.programmersbox.mangaworld.settings.SpacingSetting
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
