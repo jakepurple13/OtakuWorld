@@ -2,7 +2,7 @@
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
 blurhash = "0.4.0-SNAPSHOT"
-composeWebviewMultiplatform = "2.0.0"
+composeWebviewMultiplatform = "2.0.1"
 corePerformance = "1.0.0"
 coreVersion = "3.5.3"
 filekitCore = "0.10.0-beta04"
