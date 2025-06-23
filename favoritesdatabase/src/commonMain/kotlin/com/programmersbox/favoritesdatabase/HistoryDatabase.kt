@@ -99,5 +99,5 @@ data class RecentModel @OptIn(ExperimentalTime::class) constructor(
     @ColumnInfo(name = "sources")
     val source: String,
     @ColumnInfo(name = "timestamp")
-    var timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 )

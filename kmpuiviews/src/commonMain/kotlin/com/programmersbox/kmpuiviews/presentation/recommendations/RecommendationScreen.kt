@@ -84,7 +84,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.Recommendation
-import com.programmersbox.favoritesdatabase.RecommendationResponse
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions

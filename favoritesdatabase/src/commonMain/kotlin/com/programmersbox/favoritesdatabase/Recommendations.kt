@@ -54,12 +54,6 @@ class Converters {
     fun toList(value: String) = Json.decodeFromString<List<String>>(value)
 }
 
-@Serializable
-data class RecommendationResponse(
-    val response: String? = null,
-    val recommendations: List<Recommendation> = emptyList(),
-)
-
 @Entity("Recommendation")
 @Serializable
 data class Recommendation(

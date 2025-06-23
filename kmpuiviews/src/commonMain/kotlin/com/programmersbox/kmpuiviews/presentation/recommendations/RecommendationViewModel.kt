@@ -10,11 +10,11 @@ import com.programmersbox.datastore.AiSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.favoritesdatabase.RecommendationDao
-import com.programmersbox.favoritesdatabase.RecommendationResponse
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -92,3 +92,9 @@ sealed class Message {
     data class User(val text: String) : Message()
     data class Error(val text: String) : Message()
 }
+
+@Serializable
+data class RecommendationResponse(
+    val response: String? = null,
+    val recommendations: List<Recommendation> = emptyList(),
+)
