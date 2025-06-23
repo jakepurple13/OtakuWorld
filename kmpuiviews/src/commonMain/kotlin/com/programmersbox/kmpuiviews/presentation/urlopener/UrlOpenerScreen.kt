@@ -13,7 +13,9 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.FindInPage
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
@@ -48,7 +50,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UrlOpenerScreen(
     viewModel: UrlOpenerViewModel = koinViewModel(),
@@ -57,6 +59,7 @@ fun UrlOpenerScreen(
     val navActions = LocalNavActions.current
     val dao: ItemDao = koinInject()
     val scope = rememberCoroutineScope()
+    val listItemColors = ListItemDefaults.colors()
     var showSources by showCustomSourceChooser {
         viewModel.currentChosenSource = it
     }
@@ -102,8 +105,6 @@ fun UrlOpenerScreen(
             )
 
             viewModel.kmpItemModel?.let {
-                val listItemColors = ListItemDefaults.colors()
-
                 TextFlow(
                     text = buildAnnotatedString {
                         withStyle(
@@ -162,12 +163,14 @@ fun UrlOpenerScreen(
                             }
                         }
                     },
-                    enabled = viewModel.kmpItemModel != null
+                    enabled = viewModel.kmpItemModel != null,
+                    shapes = ButtonDefaults.shapes()
                 ) { Text("Save for later") }
 
                 Button(
                     onClick = { viewModel.kmpItemModel?.let { navActions.details(it) } },
-                    enabled = viewModel.kmpItemModel != null
+                    enabled = viewModel.kmpItemModel != null,
+                    shapes = ButtonDefaults.shapes()
                 ) { Text("Open") }
             }
         }
