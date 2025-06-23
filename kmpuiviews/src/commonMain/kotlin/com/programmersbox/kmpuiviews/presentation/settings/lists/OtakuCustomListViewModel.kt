@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.datastore.DataStoreHandler
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -28,9 +28,10 @@ import kotlinx.serialization.json.Json
 
 class OtakuCustomListViewModel(
     screen: Screen.CustomListScreen.CustomListItem,
+    dataStoreHandling: DataStoreHandling,
     private val listDao: ListDao,
-    private val showBySourceFlow: DataStoreHandler<Boolean>,
 ) : ViewModel() {
+    private val showBySourceFlow = dataStoreHandling.showBySource
     var customItem: CustomList? by mutableStateOf(null)
 
     var customList by mutableStateOf<CustomList?>(null)

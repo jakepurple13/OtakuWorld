@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.di
 
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
@@ -25,8 +24,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.prerelease.Prerelease
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.QrCodeScannerViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
+import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -54,7 +53,8 @@ val viewModels: Module = module {
     viewModelOf(::QrCodeScannerViewModel)
     viewModelOf(::WorkerInfoViewModel)
     viewModelOf(::RecommendationViewModel)
-    viewModel { OtakuCustomListViewModel(get(), get(), get<DataStoreHandling>().showBySource) }
+    viewModelOf(::UrlOpenerViewModel)
+    viewModelOf(::OtakuCustomListViewModel)
 
     includes(platformViewModels())
 }

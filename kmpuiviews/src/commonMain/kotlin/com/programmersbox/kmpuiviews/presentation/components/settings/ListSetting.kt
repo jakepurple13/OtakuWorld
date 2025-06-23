@@ -43,6 +43,7 @@ fun <T> ListSetting(
     confirmText: @Composable (MutableState<Boolean>) -> Unit,
     modifier: Modifier = Modifier,
     settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    endIcon: (@Composable () -> Unit)? = null,
     summaryValue: (@Composable () -> Unit)? = null,
     dialogIcon: (@Composable () -> Unit)? = null,
     cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
@@ -95,6 +96,7 @@ fun <T> ListSetting(
         settingTitle = settingTitle,
         summaryValue = summaryValue,
         settingIcon = settingIcon,
+        endIcon = endIcon,
         modifier = Modifier
             .clickable(
                 indication = ripple(),

@@ -15,10 +15,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.programmersbox.datastore.DataStoreHandler
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
@@ -126,11 +125,8 @@ private fun CustomListScreenPreview() {
         val viewModel: OtakuCustomListViewModel = viewModel {
             OtakuCustomListViewModel(
                 screen = Screen.CustomListScreen.CustomListItem(""),
-                listDao,
-                DataStoreHandler(
-                    defaultValue = false,
-                    key = booleanPreferencesKey("asdf")
-                )
+                dataStoreHandling = DataStoreHandling(),
+                listDao = listDao
             )
         }
         OtakuCustomListScreen(

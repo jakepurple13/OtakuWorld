@@ -211,7 +211,7 @@ fun ApplicationScope.BaseDesktopUi(
                                                     accountContent = {},
                                                 )
                                             },
-                                            settingsNavSetup = {},
+                                            settingsNavSetup = { with(genericInfo) { settingsNavSetup() } },
                                             profileIcon = { "" },
                                             windowSize = windowSize
                                         )
