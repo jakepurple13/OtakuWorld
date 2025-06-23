@@ -1,7 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.urlopener
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -17,7 +17,7 @@ class UrlOpenerViewModel(
     sourceRepository: SourceRepository,
 ) : ViewModel() {
 
-    val sourceList = mutableStateListOf<KmpSourceInformation>()
+    val sourceList = mutableStateMapOf<String, List<KmpSourceInformation>>()
 
     var currentChosenSource by mutableStateOf<KmpSourceInformation?>(null)
 
@@ -26,9 +26,18 @@ class UrlOpenerViewModel(
     init {
         sourceRepository
             .sources
-            .onEach {
-                sourceList.addAll(it.filter { it.apiService.notWorking })
-                currentChosenSource = sourceList.firstOrNull()
+            .onEach { list ->
+                sourceList.putAll(
+                    list
+                        .filterNot { it.apiService.notWorking }
+                        .distinctBy { it.packageName }
+                        .groupBy { it.packageName }
+                )
+                currentChosenSource = sourceList
+                    .entries
+                    .randomOrNull()
+                    ?.value
+                    ?.firstOrNull()
             }
             .launchIn(viewModelScope)
     }

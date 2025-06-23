@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -103,7 +105,7 @@ fun ShareViaQrCode(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShareViaQrCode(
     qrCodeInfo: QrCodeInfo,
@@ -202,6 +204,7 @@ fun ShareViaQrCode(
                                 )
                             }
                         },
+                        shapes = ButtonDefaults.shapes(),
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Share") }
 
@@ -214,6 +217,7 @@ fun ShareViaQrCode(
                                 )
                             }
                         },
+                        shapes = ButtonDefaults.shapes(),
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Save") }
 
@@ -223,6 +227,7 @@ fun ShareViaQrCode(
                                 qrCodeRepository.shareUrl(qrCodeInfo.url, qrCodeInfo.title)
                             }
                         },
+                        shapes = ButtonDefaults.shapes(),
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Share Url") }
                 }
@@ -231,7 +236,7 @@ fun ShareViaQrCode(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ScanQrCode(
     viewModel: QrCodeScannerViewModel = koinViewModel(),
@@ -333,6 +338,7 @@ fun ScanQrCode(
 
                 FilledTonalButton(
                     onClick = { filePicker.launch() },
+                    shapes = ButtonDefaults.shapes(),
                     modifier = Modifier.fillMaxWidth(.75f)
                 ) { Text("Upload Image") }
 
@@ -378,6 +384,7 @@ fun ScanQrCode(
                                 }
                             }.invokeOnCompletion { onDismiss() }
                         },
+                        shapes = ButtonDefaults.shapes(),
                         modifier = Modifier.fillMaxWidth(.75f)
                     ) { Text("Save for later") }
                 }
@@ -403,6 +410,7 @@ fun ScanQrCode(
                         }
                     },
                     enabled = qrCodeInfo != null && source != null,
+                    shapes = ButtonDefaults.shapes(),
                     modifier = Modifier.fillMaxWidth(.75f)
                 ) { Text("Open") }
             }

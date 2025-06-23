@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.urlopener
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,8 +38,9 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
+import com.programmersbox.kmpuiviews.presentation.settings.utils.showCustomSourceChooser
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
@@ -56,6 +57,9 @@ fun UrlOpenerScreen(
     val navActions = LocalNavActions.current
     val dao: ItemDao = koinInject()
     val scope = rememberCoroutineScope()
+    var showSources by showCustomSourceChooser {
+        viewModel.currentChosenSource = it
+    }
 
     OtakuScaffold(
         topBar = {
@@ -71,27 +75,16 @@ fun UrlOpenerScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            ListSetting(
-                value = viewModel.currentChosenSource,
-                updateValue = { source, dismiss ->
-                    viewModel.currentChosenSource = source
-                    dismiss.value = false
-                },
-                options = viewModel.sourceList,
-                dialogTitle = { Text("Source") },
+            PreferenceSetting(
                 settingTitle = { Text("Source") },
-                confirmText = {
-                    TextButton(
-                        onClick = { it.value = false }
-                    ) { Text("Close") }
-                },
                 settingIcon = { Icon(Icons.Default.Source, null) },
-                endIcon = { Icon(Icons.Default.ArrowDropDown, null) },
                 summaryValue = if (viewModel.currentChosenSource == null) {
                     {}
                 } else {
                     { Text(viewModel.currentChosenSource?.apiService?.serviceName.orEmpty()) }
-                }
+                },
+                endIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                modifier = Modifier.clickable { showSources = true }
             )
 
             OutlinedTextField(

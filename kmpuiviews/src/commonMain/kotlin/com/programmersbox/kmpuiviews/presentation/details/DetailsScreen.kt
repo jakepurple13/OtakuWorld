@@ -34,11 +34,13 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -431,7 +433,7 @@ private fun DetailError(
     }
 }
 
-@OptIn(ExperimentalTime::class)
+@OptIn(ExperimentalTime::class, ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
 @Composable
 fun ChapterItem(
@@ -553,10 +555,11 @@ fun ChapterItem(
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) markAs(c, true)
                         },
+                        shapes = ButtonDefaults.shapes(),
+                        border = BorderStroke(1.dp, LocalContentColor.current),
                         modifier = Modifier
                             .weight(1f, true)
-                            .padding(horizontal = 4.dp),
-                        border = BorderStroke(1.dp, LocalContentColor.current)
+                            .padding(horizontal = 4.dp)
                     ) {
                         Column {
                             Icon(
@@ -580,10 +583,11 @@ fun ChapterItem(
                             insertRecent()
                             if (!read.fastAny { it.url == c.url }) markAs(c, true)
                         },
+                        border = BorderStroke(1.dp, LocalContentColor.current),
+                        shapes = ButtonDefaults.shapes(),
                         modifier = Modifier
                             .weight(1f, true)
-                            .padding(horizontal = 4.dp),
-                        border = BorderStroke(1.dp, LocalContentColor.current)
+                            .padding(horizontal = 4.dp)
                     ) {
                         Column {
                             Icon(

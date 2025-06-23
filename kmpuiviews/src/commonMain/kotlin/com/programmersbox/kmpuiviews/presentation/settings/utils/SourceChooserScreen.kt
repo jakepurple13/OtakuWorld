@@ -72,7 +72,6 @@ fun showSourceChooser(): MutableState<Boolean> {
     return showSourceChooser
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SourceChooserScreen(
@@ -164,6 +163,135 @@ fun SourceChooserScreen(
                 service.firstOrNull()?.apiService?.serviceName?.let {
                     scope.launch { dataStoreHandling.currentService.set(it) }
                 }
+            } else {
+                showChooser = service
+            }
+        }
+    ) {
+        ListBottomSheetItemModel(
+            primaryText = "${it.firstOrNull()?.name ?: "Nothing"} (${it.size})",
+            icon = if (it.firstOrNull()?.apiService?.serviceName == currentService) Icons.Default.Check else null,
+            overlineText = it.firstOrNull()?.packageName
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun showCustomSourceChooser(
+    onChosen: (KmpSourceInformation) -> Unit,
+): MutableState<Boolean> {
+    val showSourceChooser = remember { mutableStateOf(false) }
+    val state = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    if (showSourceChooser.value) {
+        ModalBottomSheet(
+            onDismissRequest = { showSourceChooser.value = false },
+            sheetState = state,
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            SourceChooserScreen(
+                onChosen = { item ->
+                    onChosen(item)
+                    scope.launch { state.hide() }
+                        .invokeOnCompletion { showSourceChooser.value = false }
+                },
+                onClose = {
+                    scope.launch { state.hide() }
+                        .invokeOnCompletion { showSourceChooser.value = false }
+                }
+            )
+        }
+    }
+
+    return showSourceChooser
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SourceChooserScreen(
+    onChosen: (KmpSourceInformation) -> Unit,
+    onClose: () -> Unit,
+) {
+    val dataStoreHandling = koinInject<DataStoreHandling>()
+    val sourceRepository = LocalSourcesRepository.current
+    val itemDao = LocalItemDao.current
+
+    val currentService by dataStoreHandling.currentService
+        .asFlow()
+        .collectAsStateWithLifecycle(null)
+
+    var showChooser by remember { mutableStateOf<List<KmpSourceInformation>?>(null) }
+
+    val languageCode = remember { Locale.current.language }
+
+    showChooser?.let { list ->
+        ModalBottomSheet(
+            onDismissRequest = { showChooser = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            ListBottomScreen(
+                includeInsetPadding = false,
+                title = stringResource(Res.string.chooseASource),
+                list = list,
+                navigationIcon = {
+                    IconButton(
+                        onClick = onClose
+                    ) { Icon(Icons.Default.Close, null) }
+                },
+                onClick = { service ->
+                    onChosen(service)
+                },
+                lazyListContent = {
+                    list
+                        .find { it.apiService.serviceName == "${it.name}$languageCode" }
+                        ?.let {
+                            ListBottomSheetItemModel(
+                                primaryText = it.apiService.serviceName,
+                                icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
+                            ) to it
+                        }
+                        ?.let { (c, item) ->
+                            item {
+                                ListItem(
+                                    leadingContent = c.icon?.let { i -> { Icon(i, null) } },
+                                    headlineContent = { Text("Current Language Source") },
+                                    supportingContent = { Text(c.primaryText) },
+                                    modifier = Modifier.clickable { onChosen(item) }
+                                )
+                                HorizontalDivider()
+                            }
+                        }
+                }
+            ) {
+                ListBottomSheetItemModel(
+                    primaryText = it.apiService.serviceName,
+                    icon = if (it.apiService.serviceName == currentService) Icons.Default.Check else null
+                )
+            }
+        }
+    }
+
+    GroupBottomScreen(
+        includeInsetPadding = false,
+        title = stringResource(Res.string.chooseASource),
+        list = remember {
+            combine(
+                sourceRepository.sources,
+                itemDao.getSourceOrder()
+            ) { list, order ->
+                list
+                    .filterNot { it.apiService.notWorking }
+                    .sortedBy { order.find { o -> o.source == it.packageName }?.order ?: 0 }
+                    .groupBy { it.packageName }
+            }
+        }
+            .collectAsStateWithLifecycle(emptyMap())
+            .value,
+        onClick = { service ->
+            if (service.size == 1) {
+                service.firstOrNull()?.let { onChosen(it) }
             } else {
                 showChooser = service
             }

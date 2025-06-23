@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
@@ -66,9 +67,10 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImage
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.zoomOverlay
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -156,7 +158,18 @@ internal fun DetailsHeader(
 
         Column(
             modifier = Modifier
-                .hazeEffect(haze, style = HazeMaterials.ultraThin())
+                .hazeEffect(
+                    haze,
+                    style = HazeStyle(
+                        blurRadius = 12.dp,
+                        backgroundColor = MaterialTheme.colorScheme.surface,
+                        tint = HazeTint(
+                            MaterialTheme.colorScheme.surface.copy(
+                                alpha = if (MaterialTheme.colorScheme.surface.luminance() >= 0.5) 0.35f else 0.55f
+                            ),
+                        )
+                    )
+                )
                 .padding(4.dp)
                 .animateContentSize()
         ) {
