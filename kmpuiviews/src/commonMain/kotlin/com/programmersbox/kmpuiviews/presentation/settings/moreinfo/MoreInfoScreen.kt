@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.CatchingPokemon
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.SystemUpdateAlt
-import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,7 +39,6 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -98,18 +96,6 @@ fun MoreInfoScreen(
                         indication = ripple(),
                         interactionSource = null,
                         onClick = usedLibraryClick
-                    )
-                )
-            }
-
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("Url Opener") },
-                    settingIcon = { Icon(Icons.Default.Web, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null,
-                        onClick = { navController.navigate(Screen.UrlOpener) }
                     )
                 )
             }

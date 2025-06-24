@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
@@ -57,6 +59,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChoos
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.versionCode
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -166,6 +169,7 @@ private fun SettingsScreen(
     scanQrCode: () -> Unit,
     onDebugBuild: @Composable () -> Unit,
 ) {
+    val navController = LocalNavActions.current
     val uriHandler = LocalUriHandler.current
     val source by LocalCurrentSource
         .current
@@ -304,6 +308,18 @@ private fun SettingsScreen(
                     indication = ripple(),
                     interactionSource = null,
                     onClick = extensionClick
+                )
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text("Url Opener") },
+                settingIcon = { Icon(Icons.Default.Web, null, modifier = Modifier.fillMaxSize()) },
+                modifier = Modifier.clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onClick = { navController.navigate(Screen.UrlOpener) }
                 )
             )
         }
