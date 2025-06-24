@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.domain
 
+import com.programmersbox.kmpuiviews.utils.printLogs
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
@@ -24,7 +25,7 @@ object AppUpdate {
             .bodyAsText()
             .let { Json.decodeFromString<AppUpdates>(it) }
     }
-        .onSuccess { println(it) }
+        .onSuccess { printLogs { it } }
         .onFailure { it.printStackTrace() }
         .getOrNull()
 

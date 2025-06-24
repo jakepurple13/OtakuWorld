@@ -49,7 +49,7 @@ actual class DownloadAndInstaller(
         }
             .await()
             .let {
-                println(it)
+                printLogs { it }
                 Toast.makeText(context, "Uninstalled $packageName", Toast.LENGTH_SHORT).show()
             }
     }
@@ -72,7 +72,7 @@ actual class DownloadAndInstaller(
                     send(DownloadAndInstallStatus.Downloaded)
                 }
 
-                println("Starting Install Session")
+                printLogs { "Starting Install Session" }
 
                 install(
                     PlatformFile(file),
@@ -84,7 +84,7 @@ actual class DownloadAndInstaller(
         }
             .catch { it.printStackTrace() }
             .onEach {
-                println(it)
+                printLogs { it }
                 if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
                 if (it is DownloadAndInstallStatus.Installed) file.delete()
             }
@@ -110,7 +110,7 @@ actual class DownloadAndInstaller(
         }
             .catch { it.printStackTrace() }
             .onEach {
-                println(it)
+                printLogs { it }
                 if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
                 if (it is DownloadAndInstallStatus.Installed) file.delete()
             }

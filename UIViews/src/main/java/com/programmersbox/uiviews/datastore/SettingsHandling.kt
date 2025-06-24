@@ -17,6 +17,7 @@ import com.google.protobuf.InvalidProtocolBufferException
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.otakuDataStore
+import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.uiviews.GridChoice
 import com.programmersbox.uiviews.MiddleNavigationAction
 import com.programmersbox.uiviews.NotificationSortBy
@@ -321,7 +322,7 @@ fun migrateSettings(
                 .all
                 .firstOrNull()
                 ?.let { old ->
-                    println("Migrating old settings")
+                    printLogs { "Migrating old settings" }
                     newSettingsHandling.preferences.updateData {
                         it.copy(
                             themeSetting = when (old.themeSetting) {
@@ -372,7 +373,7 @@ fun migrateSettings(
                                 NotificationSortBy.UNRECOGNIZED -> com.programmersbox.datastore.NotificationSortBy.Date
                             },
                             hasMigrated = true,
-                        ).also { println(it) }
+                        ).also { printLogs { it } }
                     }
                 }
         }

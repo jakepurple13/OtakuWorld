@@ -13,6 +13,7 @@ import com.programmersbox.helpfulutils.SemanticActions
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
+import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.NotificationChannels
@@ -131,7 +132,7 @@ object SavedNotifications {
         GlobalScope.launch {
             dao.getAllNotifications()
                 .fastMap { n ->
-                    println(n)
+                    printLogs { n }
                     dao.updateNotification(
                         url = n.url,
                         isShowing = true

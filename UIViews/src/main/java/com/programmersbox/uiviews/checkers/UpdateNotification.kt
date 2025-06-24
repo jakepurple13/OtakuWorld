@@ -40,8 +40,8 @@ class UpdateNotification(
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
             dao.insertFavorite(item)
             FirebaseDb.updateShowFlow(item).catch {
+                logFirebaseMessage("Something went wrong: ${it.message}")
                 recordFirebaseException(it)
-                println("Something went wrong: ${it.message}")
             }.collect()
         }
     }

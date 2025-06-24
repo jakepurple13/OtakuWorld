@@ -10,6 +10,7 @@ import com.google.firebase.analytics.logEvent
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.utils.printLogs
 import kotlin.experimental.ExperimentalTypeInference
 
 @OptIn(ExperimentalTypeInference::class)
@@ -21,9 +22,9 @@ fun recordFirebaseException(throwable: Throwable) = runCatching {
 }
 
 fun logFirebaseMessage(message: String) = runCatching {
-    println(message)
+    printLogs { message }
     Firebase.crashlytics.log(message)
-}.onFailure { println(message) }
+}.onFailure { printLogs { message } }
 
 @SuppressLint("ComposableNaming")
 @Composable

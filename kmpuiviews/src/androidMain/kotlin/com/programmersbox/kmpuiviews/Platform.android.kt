@@ -48,6 +48,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.utils.AppLogo
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
 import com.programmersbox.kmpuiviews.utils.openInCustomChromeBrowser
+import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
@@ -160,9 +161,9 @@ actual fun recordFirebaseException(throwable: Throwable) {
 
 actual fun logFirebaseMessage(message: String) {
     runCatching {
-        println(message)
+        printLogs { message }
         Firebase.crashlytics.log(message)
-    }.onFailure { println(message) }
+    }.onFailure { printLogs { message } }
 }
 
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri.toUri())

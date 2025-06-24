@@ -68,6 +68,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.dispatchIo
+import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import dev.chrisbanes.haze.HazeProgressive
@@ -110,7 +111,9 @@ fun HistoryUi(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        scope.launch(Dispatchers.IO) { println("Deleted " + dao.deleteAllRecentHistory() + " rows") }
+                        scope.launch(Dispatchers.IO) {
+                            printLogs { "Deleted " + dao.deleteAllRecentHistory() + " rows" }
+                        }
                         onDismissRequest()
                     }
                 ) { Text(stringResource(Res.string.yes)) }

@@ -32,7 +32,8 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.loggingutils.Loged
+import com.programmersbox.kmpuiviews.utils.printLogs
+import com.programmersbox.kmpuiviews.utils.shouldPrintLogs
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
@@ -79,8 +80,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         //GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
 
-        Loged.FILTER_BY_PACKAGE_NAME = "programmersbox"
-        Loged.TAG = this::class.java.simpleName
+        shouldPrintLogs = BuildConfig.DEBUG
 
         firebaseSetup()
 
@@ -183,7 +183,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                     )
                 )
             }
-                .onSuccess { println("For later list id: $it") }
+                .onSuccess { printLogs { "For later list id: $it" } }
                 .onFailure {
                     recordFirebaseException(it)
                     it.printStackTrace()

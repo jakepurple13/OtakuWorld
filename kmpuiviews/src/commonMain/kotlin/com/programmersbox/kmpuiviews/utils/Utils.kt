@@ -24,3 +24,9 @@ fun SourceRepository.loadItem(
         } ?: apiSource.getSourceByUrlFlow(url)
     }
     ?.dispatchIo()
+
+var shouldPrintLogs = false
+
+inline fun printLogs(block: () -> Any?) {
+    if (shouldPrintLogs) println(block())
+}

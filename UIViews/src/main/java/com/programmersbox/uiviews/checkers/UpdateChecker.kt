@@ -17,6 +17,7 @@ import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.utils.logFirebaseMessage
@@ -96,7 +97,7 @@ class UpdateFlowWorker(
             var thread: Thread? = null
             val job = launch {
                 delay(10000)
-                println("Cancelling")
+                printLogs { "Cancelling" }
                 this@callbackFlow.cancel("Timed out")
                 thread?.interrupt()
             }

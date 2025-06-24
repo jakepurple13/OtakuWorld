@@ -39,13 +39,13 @@ actual class BiometricPrompting(
                     result: BiometricPrompt.AuthenticationResult,
                 ) {
                     super.onAuthenticationSucceeded(result)
-                    println("Authentication succeeded $result")
+                    printLogs { "Authentication succeeded $result" }
                     promptInfo.onAuthenticationSucceeded()
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    println("Authentication failed")
+                    printLogs { "Authentication failed" }
                     promptInfo.onAuthenticationFailed()
                 }
             }

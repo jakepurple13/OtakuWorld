@@ -25,8 +25,7 @@ class BootReceived : BroadcastReceiver(), KoinComponent {
     private val itemDao: ItemDao by inject()
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        logFirebaseMessage("BootReceived")
-        println(intent?.action)
+        logFirebaseMessage("BootReceived ${intent?.action}")
         runCatching {
             runBlocking {
                 if (settingsHandling.notifyOnReboot.get()) {

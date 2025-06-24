@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.mangasettings.ImageLoaderType
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaSettings
@@ -106,7 +107,7 @@ fun migrateMangaSettings(
                 .all
                 .firstOrNull()
                 ?.let { old ->
-                    println("Migrating old manga settings")
+                    logFirebaseMessage("Migrating old manga settings")
                     mangaNewSettingsHandling.preferences.updateData { new ->
                         new.copy(
                             useNewReader = old.useNewReader,

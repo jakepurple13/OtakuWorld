@@ -31,6 +31,7 @@ import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.fireListener
+import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.dialogs.compose.util.encodeToByteArray
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
@@ -129,7 +130,7 @@ class DetailsViewModel(
             .onEach {
                 runCatching { (it.second ?: it.first)?.generatePalette()!! }
                     .onSuccess { p -> palette = p }
-                    .onSuccess { println(it) }
+                    .onSuccess { printLogs { it } }
                     .onFailure { e -> e.printStackTrace() }
             }
             .dispatchIo()

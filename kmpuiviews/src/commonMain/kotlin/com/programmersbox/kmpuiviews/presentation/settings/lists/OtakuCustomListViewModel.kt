@@ -15,6 +15,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
@@ -154,7 +155,7 @@ class OtakuCustomListViewModel(
                 }*/
             }
         }
-            .onSuccess { println("Written!") }
+            .onSuccess { printLogs { "Written!" } }
             .onFailure { it.printStackTrace() }
     }
 }

@@ -12,6 +12,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.readPlatformFile
+import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -62,7 +63,7 @@ class ImportFullListViewModel(
                 }
             }
         }
-            .onSuccess { println("Read!") }
+            .onSuccess { printLogs { "Read!" } }
             .onFailure { it.printStackTrace() }
     }
 }

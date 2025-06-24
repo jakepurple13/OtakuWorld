@@ -10,6 +10,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.exists
@@ -67,7 +68,7 @@ class MoreSettingsViewModel(
             }
         }
             .onSuccess {
-                println("Written!")
+                printLogs { "Written!" }
                 importExportListStatus = ImportExportListStatus.Success
             }
             .onFailure {
@@ -88,7 +89,7 @@ class MoreSettingsViewModel(
             }
         }
             .onSuccess {
-                println("Written!")
+                printLogs { "Written!" }
                 importExportListStatus = ImportExportListStatus.Success
             }
             .onFailure {
@@ -108,7 +109,7 @@ class MoreSettingsViewModel(
                 document.writeString(Json.encodeToString(exportLists))
             }
                 .onSuccess {
-                    println("Written!")
+                    printLogs { "Written!" }
                     importExportListStatus = ImportExportListStatus.Success
                 }
                 .onFailure {

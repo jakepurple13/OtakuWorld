@@ -7,6 +7,7 @@ import android.content.Intent
 import androidx.core.content.getSystemService
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.kmpuiviews.utils.printLogs
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -22,11 +23,11 @@ class DeleteNotificationReceiver : BroadcastReceiver(), KoinComponent {
         }
         val url = intent?.getStringExtra("url")
         val id = intent?.getIntExtra("id", -1)
-        println(url)
+        printLogs { url }
         GlobalScope.launch {
             runCatching {
                 url?.let { dao.getNotificationItem(it) }
-                    .also { println(it) }
+                    .also { printLogs { it } }
                     ?.let { dao.deleteNotification(it) }
             }.onFailure { recordFirebaseException(it) }
             id?.let { if (it != -1) notificationManager?.cancel(it) }
