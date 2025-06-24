@@ -41,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
@@ -67,11 +69,6 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImage
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.zoomOverlay
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 import org.jetbrains.compose.resources.stringResource
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.addToFavorites
@@ -96,17 +93,7 @@ internal fun DetailsHeader(
     val settings = LocalSettingsHandling.current
 
     val blurEnabled by settings.rememberShowBlur()
-    val surface = MaterialTheme.colorScheme.surface
-    val imageUrl = model.imageUrl/*remember {
-        try {
-            GlideUrl(model.imageUrl) { model.extras.mapValues { it.value.toString() } }
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-            val b = createBitmap(5, 5)
-            Canvas(b).drawColor(surface.toArgb())
-            b
-        }
-    }*/
+    val imageUrl = model.imageUrl
 
     var imagePopup by remember { mutableStateOf(false) }
 
@@ -137,7 +124,7 @@ internal fun DetailsHeader(
             .animateContentSize()
     ) {
 
-        val haze = rememberHazeState()
+        //val haze = rememberHazeState()
 
         ImageLoaderChoice(
             imageUrl = imageUrl,
@@ -147,18 +134,33 @@ internal fun DetailsHeader(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .matchParentSize()
-                .let {
-                    if (blurEnabled) {
-                        it.hazeSource(haze)
-                    } else {
-                        it.blur(4.dp)
-                    }
+                .composed {
+                    val brush = Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                            MaterialTheme.colorScheme.surface
+                        )
+                    )
+
+                    this
+                        .blur(4.dp)
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(brush)
+                        }
                 }
+            //TODO: Maaaaybe add this to settings to be a blur and the old one is legacy blur?
+            /*.let {
+                if (blurEnabled) {
+                    it.hazeSource(haze)
+                } else {
+                }
+            }*/
         )
 
         Column(
             modifier = Modifier
-                .hazeEffect(
+                /*.hazeEffect(
                     haze,
                     style = HazeStyle(
                         blurRadius = 12.dp,
@@ -169,7 +171,9 @@ internal fun DetailsHeader(
                             ),
                         )
                     )
-                )
+                ) {
+                    this.blurEnabled = blurEnabled
+                }*/
                 .padding(4.dp)
                 .animateContentSize()
         ) {
