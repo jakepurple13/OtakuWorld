@@ -205,7 +205,7 @@ materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
-materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha02" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-SNAPSHOT+ok-jb-main-kotlin-2-2" }
 materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha02" }
 materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha02" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
