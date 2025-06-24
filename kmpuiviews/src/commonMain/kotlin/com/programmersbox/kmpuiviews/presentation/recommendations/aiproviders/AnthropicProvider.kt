@@ -38,6 +38,8 @@ class AnthropicProvider(
                 )
             }
             ?.text
+            ?.removePrefix("```json")
+            ?.removeSuffix("```")
+            ?.trim()
     }
-
 }
