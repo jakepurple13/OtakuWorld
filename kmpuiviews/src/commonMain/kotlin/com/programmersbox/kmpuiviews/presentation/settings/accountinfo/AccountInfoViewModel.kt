@@ -66,7 +66,12 @@ class AccountInfoViewModel(
             recommendationDao.getRecommendationCount()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
-                a.copy(timeSpentDoing = HumanReadable.duration(b.seconds))
+                val afterText = if (b <= 60) {
+                    ""
+                } else {
+                    "\n($b seconds)"
+                }
+                a.copy(timeSpentDoing = "${HumanReadable.duration(b.seconds)}$afterText")
             }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
