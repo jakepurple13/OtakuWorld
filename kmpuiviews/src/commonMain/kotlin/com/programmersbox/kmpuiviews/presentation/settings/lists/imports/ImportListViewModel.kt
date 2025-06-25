@@ -14,8 +14,9 @@ import com.programmersbox.kmpuiviews.readPlatformFile
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -49,7 +50,7 @@ class ImportListViewModel(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
+    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
     suspend fun importList(name: String) {
         runCatching {
             (importStatus as? ImportListStatus.Success)?.customList?.let { list ->

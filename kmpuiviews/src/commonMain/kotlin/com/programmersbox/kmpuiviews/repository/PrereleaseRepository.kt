@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.programmersbox.kmpuiviews.repository
 
 import io.ktor.client.HttpClient
@@ -5,10 +7,12 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 class PrereleaseRepository {
     private val client = HttpClient {
@@ -33,15 +37,19 @@ data class GitHubPrerelease(
     val prerelease: Boolean,
     val assets: List<GitHubAssets>,
     @SerialName("created_at")
-    val createdAt: Instant,
+    val createdAt: String,
     @SerialName("published_at")
-    val publishedAt: Instant,
+    val publishedAt: String,
     val name: String,
 ) {
-    fun getUpdatedTime() = assets
-        .maxByOrNull { it.updatedAt }
-        ?.updatedAt
-        ?: createdAt
+    fun getUpdatedTime() = runCatching {
+        assets
+            .maxByOrNull { Instant.parse(it.updatedAt) }
+            ?.updatedAt
+            ?: createdAt
+    }
+        .map { Instant.parse(it) }
+        .getOrDefault(Clock.System.now())
 }
 
 @Serializable
@@ -50,5 +58,5 @@ data class GitHubAssets(
     val url: String,
     val name: String,
     @SerialName("updated_at")
-    val updatedAt: Instant,
+    val updatedAt: String,
 )

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.programmersbox.kmpuiviews.presentation.settings.prerelease
 
 import androidx.compose.runtime.getValue
@@ -13,6 +15,7 @@ import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.time.ExperimentalTime
 
 class PrereleaseViewModel(
     private val prereleaseRepository: PrereleaseRepository,

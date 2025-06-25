@@ -63,12 +63,13 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
  * Creates a PageCurlConfig with the default properties and memorizes it.
@@ -698,6 +699,7 @@ internal data class DragConfig(
     val onChange: () -> Unit,
 )
 
+@OptIn(ExperimentalTime::class)
 internal suspend fun PointerInputScope.detectCurlGestures(
     scope: CoroutineScope,
     newEdgeCreator: NewEdgeCreator,

@@ -42,7 +42,7 @@ interface OnboardingScope {
     operator fun get(index: Int): @Composable () -> Unit
 }
 
-internal class OnboardingScopeImpl(
+private class OnboardingScopeImpl(
     content: OnboardingScope.() -> Unit = {},
 ) : OnboardingScope {
     val intervals: MutableIntervalList<@Composable () -> Unit> = MutableIntervalList()

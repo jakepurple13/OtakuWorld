@@ -35,8 +35,10 @@ import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalTime::class)
 @Composable
 fun PrereleaseScreen(
     viewModel: PrereleaseViewModel = koinViewModel(),
@@ -98,7 +100,7 @@ fun PrereleaseScreen(
                                 val updatedAtTime = localTimeFormat.format(
                                     it
                                         .updatedAt
-                                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                                        .let { Instant.parse(it).toLocalDateTime(TimeZone.currentSystemDefault()) }
                                 )
                                 ListItem(
                                     overlineContent = { Text("Updated at: $updatedAtTime") },

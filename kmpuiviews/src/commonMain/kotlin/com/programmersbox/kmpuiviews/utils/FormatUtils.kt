@@ -1,12 +1,13 @@
 package com.programmersbox.kmpuiviews.utils
 
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 private val DateFormatItem = LocalDate.Format {
     monthNumber()
@@ -36,6 +37,7 @@ internal fun DateTimeFormatItem(isUsing24HourTime: Boolean) = LocalDateTime.Form
     time(if (isUsing24HourTime) Format24 else Format12)
 }
 
+@OptIn(ExperimentalTime::class)
 fun Long.toLocalDateTime() = Instant
     .fromEpochMilliseconds(this)
     .toLocalDateTime(TimeZone.currentSystemDefault())
