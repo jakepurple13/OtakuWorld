@@ -6,7 +6,11 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.firstOrNull
 
 class LocalToCloudSyncWorker(
     appContext: Context,
@@ -15,24 +19,30 @@ class LocalToCloudSyncWorker(
     private val kmpFirebaseConnection: KmpFirebaseConnection,
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
-        return runCatching {
-            val allShows = dao.getAllFavoritesSync()
-            val cloudShows = kmpFirebaseConnection.getAllShows()
-            val newShows = allShows.filter { cloudShows.any { s -> s.url != it.url } }
-            newShows.forEachIndexed { index, it ->
-                setProgress(
-                    workDataOf(
-                        "progress" to index,
-                        "max" to newShows.size,
-                        "source" to it.title
+        return coroutineScope {
+            runCatching {
+                val allShows = dao.getAllFavoritesSync()
+                val cloudShows = kmpFirebaseConnection.getAllShows()
+                val newShows = allShows.filter { cloudShows.any { s -> s.url != it.url } }
+                newShows.mapIndexed { index, it ->
+                    setProgress(
+                        workDataOf(
+                            "progress" to index,
+                            "max" to newShows.size,
+                            "source" to it.title
+                        )
                     )
-                )
-                kmpFirebaseConnection.insertShowFlow(it).collect()
-            }
-        }.fold(
-            onSuccess = { Result.success() },
-            onFailure = { Result.failure() }
-        )
+                    async(start = CoroutineStart.LAZY) {
+                        kmpFirebaseConnection
+                            .insertShowFlow(it)
+                            .firstOrNull()
+                    }
+                }.awaitAll()
+            }.fold(
+                onSuccess = { Result.success() },
+                onFailure = { Result.failure() }
+            )
+        }
     }
 }
 

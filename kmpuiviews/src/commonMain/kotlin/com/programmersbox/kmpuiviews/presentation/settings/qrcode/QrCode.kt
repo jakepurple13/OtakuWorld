@@ -6,7 +6,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,7 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -139,98 +140,93 @@ fun ShareViaQrCode(
         sheetState = sheetState
     ) {
         Scaffold { padding ->
-            Box(
-                contentAlignment = Alignment.Center,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .padding(padding)
                     .fillMaxWidth()
-                    .animateContentSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.animateContentSize()
-                ) {
-                    val graphicsLayer = rememberGraphicsLayer()
-                    SelectionContainer {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.drawWithContent {
-                                // call record to capture the content in the graphics layer
-                                graphicsLayer.record {
-                                    // draw the contents of the composable into the graphics layer
-                                    this@drawWithContent.drawContent()
-                                }
-                                // draw the graphics layer on the visible canvas
-                                drawLayer(graphicsLayer)
+                val graphicsLayer = rememberGraphicsLayer()
+                SelectionContainer {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.drawWithContent {
+                            // call record to capture the content in the graphics layer
+                            graphicsLayer.record {
+                                // draw the contents of the composable into the graphics layer
+                                this@drawWithContent.drawContent()
                             }
-                        ) {
-                            Text(
-                                qrCodeInfo.title,
-                                style = MaterialTheme.typography.titleLarge,
-                                textAlign = TextAlign.Center
-                            )
-                            Image(
-                                painter = painter,
-                                contentDescription = "QR code",
-                                modifier = Modifier
-                                    .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
-                                    .padding(16.dp)
-                                    .animateContentSize()
-                            )
+                            // draw the graphics layer on the visible canvas
+                            drawLayer(graphicsLayer)
                         }
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("Include Logo")
-
-                        Switch(
-                            checked = includeLogo,
-                            onCheckedChange = { includeLogo = it }
+                        Text(
+                            qrCodeInfo.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Image(
+                            painter = painter,
+                            contentDescription = "QR code",
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
+                                .padding(16.dp)
+                                .animateContentSize()
                         )
                     }
-
-                    FilledTonalButton(
-                        onClick = {
-                            scope.launch {
-                                //TODO: In an update, change to copy to clipboard
-                                qrCodeRepository.shareImage(
-                                    bitmap = graphicsLayer.toImageBitmap(),
-                                    title = qrCodeInfo.title
-                                )
-                            }
-                        },
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier.fillMaxWidth(.75f)
-                    ) { Text("Share") }
-
-                    ElevatedButton(
-                        onClick = {
-                            scope.launch {
-                                qrCodeRepository.saveImage(
-                                    bitmap = graphicsLayer.toImageBitmap(),
-                                    title = qrCodeInfo.title
-                                )
-                            }
-                        },
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier.fillMaxWidth(.75f)
-                    ) { Text("Save") }
-
-                    OutlinedButton(
-                        onClick = {
-                            scope.launch {
-                                qrCodeRepository.shareUrl(qrCodeInfo.url, qrCodeInfo.title)
-                            }
-                        },
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier.fillMaxWidth(.75f)
-                    ) { Text("Share Url") }
                 }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text("Include Logo")
+
+                    Switch(
+                        checked = includeLogo,
+                        onCheckedChange = { includeLogo = it }
+                    )
+                }
+
+                FilledTonalButton(
+                    onClick = {
+                        scope.launch {
+                            //TODO: In an update, change to copy to clipboard
+                            qrCodeRepository.shareImage(
+                                bitmap = graphicsLayer.toImageBitmap(),
+                                title = qrCodeInfo.title
+                            )
+                        }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.fillMaxWidth(.75f)
+                ) { Text("Share") }
+
+                ElevatedButton(
+                    onClick = {
+                        scope.launch {
+                            qrCodeRepository.saveImage(
+                                bitmap = graphicsLayer.toImageBitmap(),
+                                title = qrCodeInfo.title
+                            )
+                        }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.fillMaxWidth(.75f)
+                ) { Text("Save") }
+
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            qrCodeRepository.shareUrl(qrCodeInfo.url, qrCodeInfo.title)
+                        }
+                    },
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier.fillMaxWidth(.75f)
+                ) { Text("Share Url") }
             }
         }
     }
