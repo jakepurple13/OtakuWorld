@@ -17,6 +17,8 @@ import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneSt
 import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -31,6 +33,8 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.analyticsScreen
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
@@ -66,7 +70,6 @@ fun NavigationGraph(
     startDestination: Screen,
     navController: NavHostController,
 ) {
-    //TODO: Maybe put in a little thing to switch between these two? Prolly not though
     if (USE_NAV3) {
         Nav3(
             backStack = (navigationActions as Navigation3Actions).backstack(),
@@ -99,6 +102,15 @@ private fun Nav3(
     customPreferences: ComposeSettingsDsl,
     notificationLogo: NotificationLogo,
 ) {
+    LaunchedEffect(Unit) {
+        snapshotFlow { backStack }
+            .collect {
+                val screen = it.lastOrNull()
+                logFirebaseMessage("Navigated to: ${screen.toString()}")
+                analyticsScreen(screen.toString())
+            }
+    }
+
     val sharedEntryInSceneNavEntryDecorator = navEntryDecorator { entry ->
         with(LocalSharedElementScope.current!!) {
             Box(
@@ -188,7 +200,11 @@ private fun Nav2(
                 )
             },
             profileIcon = {
-                koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString().orEmpty()
+                koinViewModel<AccountViewModel>()
+                    .accountInfo
+                    ?.photoUrl
+                    ?.toString()
+                    .orEmpty()
             },
             settingsScreen = {
                 SettingScreen(
