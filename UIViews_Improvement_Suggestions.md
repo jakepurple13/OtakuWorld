@@ -1559,7 +1559,6 @@ This document contains suggestions for improving the code in the UIViews module.
    important errors
 2. **Null Handling**: The `combineSources` function doesn't handle the case where `sourceRepository.sources` or
    `dao.getSourceOrder()` might emit null
-3. **Screen Tracking**: The `trackScreen` functions might fail if Firebase Analytics is not properly initialized
 
 ### FireListenerClosable.kt
 

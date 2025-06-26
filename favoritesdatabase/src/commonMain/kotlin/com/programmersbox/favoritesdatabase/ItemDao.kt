@@ -15,6 +15,9 @@ interface ItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(model: DbModel)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFavorites(vararg model: DbModel)
+
     @Delete
     suspend fun deleteFavorite(model: DbModel)
 

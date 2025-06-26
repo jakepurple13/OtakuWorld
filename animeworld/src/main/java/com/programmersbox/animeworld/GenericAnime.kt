@@ -111,7 +111,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.trackScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -576,14 +575,12 @@ class GenericAnime(
 
     override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
         entry<VideoScreen> {
-            trackScreen("video_player")
             VideoPlayerUi(it)
         }
     }
 
     override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
         entry<VideoViewerRoute> {
-            trackScreen(VideoViewerRoute.toString())
             ViewVideoScreen()
         }
     }
@@ -594,7 +591,6 @@ class GenericAnime(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen("video_player")
             VideoPlayerUi(
                 VideoScreen(
                     showPath = it.arguments?.getString("showPath") ?: "",
@@ -613,7 +609,6 @@ class GenericAnime(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
             deepLinks = listOf(navDeepLink { uriPattern = "animeworld://$VideoViewerRoute" })
         ) {
-            trackScreen(VideoViewerRoute)
             ViewVideoScreen()
         }
     }

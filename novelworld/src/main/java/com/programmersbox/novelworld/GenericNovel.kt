@@ -56,7 +56,6 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -217,7 +216,6 @@ class GenericNovel(
                "novelInfoUrl",
             )*/
         ) {
-            trackScreen("novelReader")
             NovelReader()
         }
     }
@@ -233,7 +231,6 @@ class GenericNovel(
                 navArgument("novelInfoUrl") { },
             )
         ) {
-            trackScreen("novelReader")
             NovelReader()
         }
     }

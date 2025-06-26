@@ -8,7 +8,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.google.firebase.perf.trace
 import com.programmersbox.kmpuiviews.logFirebaseMessage
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 class AppCleanupWorker(
@@ -29,10 +28,7 @@ class AppCleanupWorker(
                 }
         }
             .also { logFirebaseMessage("Deleted $count files") }
-            .fold(
-                onSuccess = { Result.success() },
-                onFailure = { Result.failure() }
-            )
+            .workerReturn()
     }
 
     companion object {

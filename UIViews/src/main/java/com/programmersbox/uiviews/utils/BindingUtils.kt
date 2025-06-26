@@ -1,7 +1,5 @@
 package com.programmersbox.uiviews.utils
 
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.ListPreloader
@@ -58,6 +56,3 @@ fun Int.getPaletteFromColor(): Palette {
 }
 
 fun String.getPaletteFromHexColor(): Palette = Color.parseColor(this@getPaletteFromHexColor).getPaletteFromColor()*/
-
-fun Int.toColorDrawable() = ColorDrawable(this)
-fun String.toColorDrawable() = ColorDrawable(Color.parseColor(this))

@@ -23,6 +23,7 @@ import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
+import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
@@ -53,7 +54,6 @@ import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.trackScreen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -93,7 +93,6 @@ fun entryGraph(
     }
 
     entry<Screen.AllScreen> {
-        trackScreen(Screen.AllScreen)
         AllScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
@@ -146,22 +145,18 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     twoPaneEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
 
     twoPaneEntry<Screen.OrderScreen> {
-        trackScreen(Screen.OrderScreen)
         SourceOrderScreen()
     }
 
     twoPaneEntry<Screen.NotificationsSettings> {
-        trackScreen(Screen.NotificationsSettings)
         NotificationSettings()
     }
 
     twoPaneEntry<Screen.GeneralSettings> {
-        trackScreen(Screen.GeneralSettings)
         GeneralSettings(customPreferences.generalSettings)
     }
 
     twoPaneEntry<Screen.MoreInfoSettings> {
-        trackScreen(Screen.MoreInfoSettings)
         MoreInfoScreen(
             usedLibraryClick = navigationActions::about,
             onPrereleaseClick = navigationActions::prerelease,
@@ -173,34 +168,28 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     entry<Screen.PrereleaseScreen> { PrereleaseScreen() }
 
     twoPaneEntry<Screen.OtherSettings> {
-        trackScreen(Screen.OtherSettings)
         PlaySettings(customPreferences.playerSettings)
     }
 
     twoPaneEntry<Screen.MoreSettings> {
-        trackScreen(Screen.MoreSettings)
         MoreSettingsScreen()
     }
 
     twoPaneEntry<Screen.HistoryScreen> {
-        trackScreen(Screen.HistoryScreen)
         HistoryUi()
     }
 
     entry<Screen.FavoriteScreen> {
-        trackScreen(Screen.FavoriteScreen)
         FavoriteScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
     }
 
     twoPaneEntry<Screen.AboutScreen> {
-        trackScreen(Screen.AboutScreen)
         AboutLibrariesScreen()
     }
 
     entry<Screen.GlobalSearchScreen> {
-        trackScreen("global_search")
         GlobalSearchScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
             screen = it
@@ -210,40 +199,37 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     entry<Screen.CustomListScreen>(
         metadata = TwoPaneScene.twoPane()
     ) {
-        trackScreen(Screen.CustomListScreen)
         OtakuListView()
     }
 
     twoPaneEntry<Screen.CustomListScreen.CustomListItem> {
-        trackScreen(Screen.CustomListScreen)
         OtakuCustomListScreenStandAlone(it)
     }
 
     dialogEntry<Screen.CustomListScreen.DeleteFromList> {
-        trackScreen("delete_from_list")
         DeleteFromListScreen(
             deleteFromList = it
         )
     }
 
     entry<Screen.ImportListScreen> {
-        trackScreen("import_list")
         ImportListScreen()
     }
 
     entry<Screen.ImportFullListScreen> {
-        trackScreen("import_full_list")
         ImportFullListScreen()
     }
 
     twoPaneEntry<Screen.NotificationScreen> {
-        trackScreen(Screen.NotificationScreen)
         NotificationScreen()
     }
 
     entry<Screen.ExtensionListScreen> {
-        trackScreen(Screen.ExtensionListScreen)
         ExtensionList()
+    }
+
+    entry<Screen.GeminiScreen> {
+        RecommendationScreen()
     }
 
     twoPaneEntry<Screen.AccountInfo> {

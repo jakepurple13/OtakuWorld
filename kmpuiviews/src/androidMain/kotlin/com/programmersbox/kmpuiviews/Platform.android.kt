@@ -40,6 +40,9 @@ import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
+import com.google.firebase.analytics.logEvent
 import com.google.firebase.crashlytics.crashlytics
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.util.withContext
@@ -164,6 +167,14 @@ actual fun logFirebaseMessage(message: String) {
         printLogs { message }
         Firebase.crashlytics.log(message)
     }.onFailure { printLogs { message } }
+}
+
+actual fun analyticsScreen(screenName: String) {
+    runCatching {
+        Firebase.analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
+        }
+    }
 }
 
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri.toUri())

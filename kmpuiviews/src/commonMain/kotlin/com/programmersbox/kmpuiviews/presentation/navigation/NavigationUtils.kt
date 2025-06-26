@@ -5,6 +5,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.navigation.NavController
 import androidx.navigation.NavController.OnDestinationChangedListener
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.analyticsScreen
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import org.koin.compose.koinInject
@@ -16,6 +17,7 @@ fun AddBreadcrumbLogging(navController: NavController) {
         DisposableEffect(Unit) {
             val destinationListener = OnDestinationChangedListener { _, destination, _ ->
                 logFirebaseMessage("Navigated to: ${destination.route}")
+                analyticsScreen(destination.route.orEmpty())
             }
             navController.addOnDestinationChangedListener(destinationListener)
             onDispose { navController.removeOnDestinationChangedListener(destinationListener) }

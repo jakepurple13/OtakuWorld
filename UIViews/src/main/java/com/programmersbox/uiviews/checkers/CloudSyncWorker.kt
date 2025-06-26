@@ -40,10 +40,7 @@ class LocalToCloudSyncWorker(
                             .firstOrNull()
                     }
                 }.awaitAll()
-            }.fold(
-                onSuccess = { Result.success() },
-                onFailure = { Result.failure() }
-            )
+            }.workerReturn()
         }
     }
 }
@@ -58,20 +55,19 @@ class CloudToLocalSyncWorker(
         return runCatching {
             val allShows = dao.getAllFavoritesSync()
             val cloudShows = kmpFirebaseConnection.getAllShows()
-            val newShows = cloudShows.filter { allShows.any { s -> s.url != it.url } }
+            val newShows = cloudShows
+                .filter { allShows.any { s -> s.url != it.url } }
+                .chunked(10)
+
             newShows.forEachIndexed { index, it ->
                 setProgress(
                     workDataOf(
                         "progress" to index,
                         "max" to newShows.size,
-                        "source" to it.title
                     )
                 )
-                dao.insertFavorite(it)
+                dao.insertFavorites(*it.toTypedArray())
             }
-        }.fold(
-            onSuccess = { Result.success() },
-            onFailure = { Result.failure() }
-        )
+        }.workerReturn()
     }
 }

@@ -85,7 +85,6 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.dispatchIo
-import com.programmersbox.uiviews.utils.trackScreen
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -444,7 +443,6 @@ class GenericManga(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) {
-            trackScreen("mangaReader")
             ReadView(
                 viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.MangaReader>()) }
             )
@@ -459,7 +457,6 @@ class GenericManga(
     )
     override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
         entry<ReadViewModel.MangaReader> {
-            trackScreen("mangaReader")
             ReadView(
                 viewModel = koinViewModel { parametersOf(it) }
             )
@@ -468,17 +465,14 @@ class GenericManga(
 
     override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
         entry<DownloadRoute> {
-            trackScreen(DownloadRoute.toString())
             DownloadScreen()
         }
 
         entry<ImageLoaderSettingsRoute> {
-            trackScreen(ImageLoaderSettingsRoute.toString())
             ImageLoaderSettings(mangaSettingsHandling)
         }
 
         entry<ReaderSettingsScreen> {
-            trackScreen("readerSettings")
             ReaderSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
                 settingsHandling = settingsHandling
@@ -491,7 +485,6 @@ class GenericManga(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(DownloadRoute.toString())
             DownloadScreen()
         }
 
@@ -499,7 +492,6 @@ class GenericManga(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen(ImageLoaderSettingsRoute.toString())
             ImageLoaderSettings(mangaSettingsHandling)
         }
 
@@ -507,7 +499,6 @@ class GenericManga(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
-            trackScreen("readerSettings")
             ReaderSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
                 settingsHandling = settingsHandling

@@ -318,17 +318,6 @@ private fun NavGraphBuilder.settings(
             ExtensionList()
         }
 
-        /*composable<Screen.GeminiScreen> {
-            trackScreen(Screen.GeminiScreen)
-            GeminiRecommendationScreen(
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                }
-            )
-        }*/
-
         composable<Screen.AccountInfo>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
