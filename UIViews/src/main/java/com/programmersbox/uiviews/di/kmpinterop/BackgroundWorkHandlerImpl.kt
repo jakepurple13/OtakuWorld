@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class BackgroundWorkHandlerImpl(
@@ -283,5 +284,9 @@ class BackgroundWorkHandlerImpl(
                     )
                     .build()
             )
+    }
+
+    override fun cancel(uuid: String) {
+        workManager.cancelWorkById(UUID.fromString(uuid))
     }
 }

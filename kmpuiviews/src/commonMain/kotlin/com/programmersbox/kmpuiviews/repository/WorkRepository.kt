@@ -27,4 +27,5 @@ interface BackgroundWorkHandler {
     fun setupPeriodicCheckers()
     fun workerInfoFlow(): Flow<List<WorkerInfoModel>>
     fun sourceUpdate()
+    fun cancel(uuid: String)
 }

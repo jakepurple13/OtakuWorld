@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.LocalDateTime
 
 class WorkerInfoViewModel(
-    backgroundWorkHandler: BackgroundWorkHandler,
+    private val backgroundWorkHandler: BackgroundWorkHandler,
 ) : ViewModel() {
     val workers = mutableStateListOf<WorkerInfoModel>()
 
@@ -21,6 +21,10 @@ class WorkerInfoViewModel(
                 workers.addAll(it)
             }
             .launchIn(viewModelScope)
+    }
+
+    fun cancelWorker(id: String) {
+        backgroundWorkHandler.cancel(id)
     }
 }
 
