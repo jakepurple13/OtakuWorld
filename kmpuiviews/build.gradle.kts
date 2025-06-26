@@ -127,7 +127,7 @@ kotlin {
 
                 implementation(libs.paging.compose.common)
 
-                implementation("nl.jacobras:Human-Readable:1.11.0")
+                implementation("nl.jacobras:Human-Readable:1.12.0")
 
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
