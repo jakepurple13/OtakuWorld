@@ -62,6 +62,7 @@ fun WorkerInfoScreen(
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Icon(Icons.Default.Warning, null, tint = Sunflower)
