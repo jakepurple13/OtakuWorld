@@ -438,8 +438,9 @@ class GenericManga(
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    override fun NavGraphBuilder.globalNavSetup() {
-        composable<ReadViewModel.MangaReader>(
+    context(navGraph: NavGraphBuilder)
+    override fun globalNavSetup() {
+        navGraph.composable<ReadViewModel.MangaReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) {
@@ -480,22 +481,23 @@ class GenericManga(
         }
     }
 
-    override fun NavGraphBuilder.settingsNavSetup() {
-        composable<DownloadRoute>(
+    context(navGraph: NavGraphBuilder)
+    override fun settingsNavSetup() {
+        navGraph.composable<DownloadRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
             DownloadScreen()
         }
 
-        composable<ImageLoaderSettingsRoute>(
+        navGraph.composable<ImageLoaderSettingsRoute>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {
             ImageLoaderSettings(mangaSettingsHandling)
         }
 
-        composable<ReaderSettingsScreen>(
+        navGraph.composable<ReaderSettingsScreen>(
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
         ) {

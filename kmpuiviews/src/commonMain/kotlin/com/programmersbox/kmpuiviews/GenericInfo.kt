@@ -83,9 +83,11 @@ interface KmpGenericInfo {
 
     fun debugMenuItem(): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
-    fun NavGraphBuilder.globalNavSetup() = Unit
+    context(navGraph: NavGraphBuilder)
+    fun globalNavSetup() = Unit
 
-    fun NavGraphBuilder.settingsNavSetup(): Unit = Unit
+    context(navGraph: NavGraphBuilder)
+    fun settingsNavSetup(): Unit = Unit
 
     @Composable
     fun DialogSetups() = Unit

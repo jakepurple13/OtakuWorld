@@ -28,6 +28,8 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             }
         }*/
 
+        target.setupKotlinCompileOptions()
+
         //target.afterEvaluate {
         target.extensions
             .findByType(KotlinMultiplatformExtension::class.java)
@@ -73,11 +75,7 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             }
         }
 
-        jvm {
-            compilations.all {
-                kotlinOptions.jvmTarget = "17"
-            }
-        }
+        jvm()
 
         applyDefaultHierarchyTemplate()
 

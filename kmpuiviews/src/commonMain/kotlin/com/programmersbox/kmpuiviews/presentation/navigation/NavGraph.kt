@@ -112,7 +112,7 @@ fun NavGraphBuilder.navGraph(
         settingsScreen = settingsScreen,
         profileIcon = profileIcon,
         deepLink = deepLink,
-    ) { with(genericInfo) { settingsNavSetup() } }
+    ) { genericInfo.settingsNavSetup() }
 
     animatedScopeComposable<Screen.DetailsScreen.Details>(
         deepLinks = listOf(
@@ -131,7 +131,7 @@ fun NavGraphBuilder.navGraph(
 
     settingsNavSetup()
 
-    with(genericInfo) { globalNavSetup() }
+    genericInfo.globalNavSetup()
 }
 
 @OptIn(

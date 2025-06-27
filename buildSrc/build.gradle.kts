@@ -1,13 +1,22 @@
-/*repositories {
-    google()
-    mavenCentral()
-    gradlePluginPortal()
-}*/
+@file:OptIn(ExperimentalAbiValidation::class)
+
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
     `version-catalog`
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath(libs.kotlinGp)
+    }
 }
 
 gradlePlugin {
@@ -56,11 +65,18 @@ gradlePlugin {
 
 dependencies {
     implementation(gradleApi())
+    implementation(gradleKotlinDsl())
     implementation(libs.kotlinStLib)
     implementation(libs.gradle)
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
+    implementation(libs.kotlinGp)
     implementation(libs.easylauncher)
     implementation(libs.androidx.baselineprofile.gradle.plugin)
     implementation(libs.protobuf.gradle.plugin)
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+}
+
+kotlin {
+    abiValidation {
+        enabled.set(true)
+    }
 }

@@ -585,8 +585,9 @@ class GenericAnime(
         }
     }
 
-    override fun NavGraphBuilder.globalNavSetup() {
-        composable(
+    context(navGraph: NavGraphBuilder)
+    override fun globalNavSetup() {
+        navGraph.composable(
             VideoViewModel.VideoPlayerRoute,
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
@@ -602,8 +603,9 @@ class GenericAnime(
         }
     }
 
-    override fun NavGraphBuilder.settingsNavSetup() {
-        composable(
+    context(navGraph: NavGraphBuilder)
+    override fun settingsNavSetup() {
+        navGraph.composable(
             VideoViewerRoute.toString(),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },

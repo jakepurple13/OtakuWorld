@@ -9,7 +9,7 @@ class MultiplatformApplicationPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
         target.pluginManager.apply("kotlin-multiplatform")
-
+        target.setupKotlinCompileOptions()
         target.extensions
             .findByType(KotlinMultiplatformExtension::class.java)
             ?.apply { setup() }

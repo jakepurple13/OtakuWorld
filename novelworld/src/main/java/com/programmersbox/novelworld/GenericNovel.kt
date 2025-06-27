@@ -34,15 +34,11 @@ import androidx.compose.ui.util.fastAny
 import androidx.core.app.TaskStackBuilder
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.gsonutils.getObject
-import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.defaultSharedPref
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -58,18 +54,15 @@ import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.novel.shared.reader.NovelReadView
+import com.programmersbox.novel.shared.reader.ReadViewModel
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.ChapterModelDeserializer
-import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
-import com.programmersbox.novel.shared.reader.ReadViewModel
-import com.programmersbox.novel.shared.reader.ReaderTopBar
-import org.koin.core.module.dsl.viewModelOf
 
 val appModule = module {
     singleOf(::GenericNovel) {
@@ -227,7 +220,8 @@ class GenericNovel(
     }
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-    override fun NavGraphBuilder.globalNavSetup() {
+    context(navGraph: NavGraphBuilder)
+    override fun globalNavSetup() {
         /*composable(
             ReadViewModel.NovelReaderRoute,
             arguments = listOf(
@@ -240,7 +234,7 @@ class GenericNovel(
             NovelReader()
         }*/
 
-        composable<ReadViewModel.NovelReader>(
+        navGraph.composable<ReadViewModel.NovelReader>(
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() },
         ) {

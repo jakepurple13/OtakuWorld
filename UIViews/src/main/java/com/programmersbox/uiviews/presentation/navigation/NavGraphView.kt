@@ -256,8 +256,6 @@ private fun Nav2(
                         DebugView()
                     }
                 }
-
-                with(genericInfo) { settingsNavSetup() }
             }
         )
     }
