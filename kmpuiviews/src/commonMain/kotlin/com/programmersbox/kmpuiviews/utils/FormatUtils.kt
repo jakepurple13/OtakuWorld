@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.Padding
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
@@ -12,7 +13,7 @@ import kotlin.time.Instant
 private val DateFormatItem = LocalDate.Format {
     monthNumber()
     char('/')
-    dayOfMonth()
+    day(padding = Padding.ZERO)
     char('/')
     year()
 }
