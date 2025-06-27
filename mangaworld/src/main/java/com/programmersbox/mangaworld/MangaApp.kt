@@ -19,10 +19,10 @@ class MangaApp : OtakuApp() {
         val mangaNewSettingsHandling by inject<MangaNewSettingsHandling>()
 
         //TODO: Remove the migration after the next full release
-        migrateMangaSettings(
+        /*migrateMangaSettings(
             mangaSettingsHandling = mangaSettingsHandling,
             mangaNewSettingsHandling = mangaNewSettingsHandling
-        )
+        )*/
     }
 
     override fun createFirebaseIds(): FirebaseIds = FirebaseIds(

@@ -83,6 +83,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -105,9 +107,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.components.AirBar
-import com.programmersbox.uiviews.utils.LifecycleHandle
 import com.programmersbox.uiviews.utils.LocalGenericInfo
-import com.programmersbox.uiviews.utils.findActivity
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -144,27 +144,30 @@ fun VideoPlayerUi(
     HideNavBarWhileOnScreen()
     RecordTimeSpentDoing()
 
-    LifecycleHandle(
-        onStop = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
-        },
-        onDestroy = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
-            activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
-        },
-        onCreate = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        },
-        onStart = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        },
-        onResume = {
-            context.findActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        }
-    )
+    LifecycleEventEffect(Lifecycle.Event.ON_CREATE) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_START) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+        activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_DESTROY) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, originalAudioLevel, 0)
+        activity?.let { setWindowBrightness(it, originalScreenBrightness.toFloat()) }
+    }
+
     viewModel.exoPlayer?.let { ExoPlayerAttributes(exoPlayer = it, viewModel = viewModel) }
 
     val overlayVisibility = viewModel.visibility == VideoPlayerVisibility.Visible || !viewModel.isPlaying

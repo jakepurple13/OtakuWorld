@@ -1,4 +1,5 @@
-package com.programmersbox.uiviews.utils
+package com.programmersbox.kmpuiviews.utils.composables
+
 
 /*
  *  Copyright 2022 Google Inc.

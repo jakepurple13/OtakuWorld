@@ -38,7 +38,6 @@ import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
 import com.programmersbox.uiviews.datastore.SettingsHandling
-import com.programmersbox.uiviews.datastore.migrateSettings
 import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
@@ -99,12 +98,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         val settingsHandling = get<SettingsHandling>()
 
         //TODO: Remove the migration after the next full release
-        migrateSettings(
+        /*migrateSettings(
             context = this,
             dataStoreHandling = dataStoreHandling,
             settingsHandling = settingsHandling,
             newSettingsHandling = newSettingsHandling
-        )
+        )*/
 
         forLaterSetup()
 
