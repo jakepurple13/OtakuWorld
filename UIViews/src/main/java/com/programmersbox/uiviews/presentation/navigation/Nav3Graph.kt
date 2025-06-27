@@ -106,8 +106,7 @@ fun entryGraph(
         navigationActions = navigationActions
     )
 
-    with(genericInfo) { globalNav3Setup() }
-
+    genericInfo.globalNav3Setup()
 }
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
@@ -250,7 +249,7 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
         }
     }
 
-    with(genericInfo) { settingsNav3Setup() }
+    genericInfo.settingsNav3Setup()
 }
 
 private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(

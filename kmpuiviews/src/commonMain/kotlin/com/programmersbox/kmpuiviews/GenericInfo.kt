@@ -92,3 +92,5 @@ interface KmpGenericInfo {
     @Composable
     fun DialogSetups() = Unit
 }
+
+expect interface PlatformGenericInfo : KmpGenericInfo

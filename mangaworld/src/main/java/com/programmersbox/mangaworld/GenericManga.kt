@@ -53,7 +53,6 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
@@ -84,6 +83,7 @@ import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.bindsGenericInfo
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
@@ -93,7 +93,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -102,14 +101,7 @@ import org.koin.dsl.module
 import java.io.File
 
 val appModule = module {
-    singleOf(::GenericManga) {
-        binds(
-            listOf(
-                KmpGenericInfo::class,
-                GenericInfo::class
-            )
-        )
-    }
+    singleOf(::GenericManga) { bindsGenericInfo() }
 
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
@@ -456,24 +448,26 @@ class GenericManga(
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
-        entry<ReadViewModel.MangaReader> {
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    override fun globalNav3Setup() {
+        navGraph.entry<ReadViewModel.MangaReader> {
             ReadView(
                 viewModel = koinViewModel { parametersOf(it) }
             )
         }
     }
 
-    override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
-        entry<DownloadRoute> {
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    override fun settingsNav3Setup() {
+        navGraph.entry<DownloadRoute> {
             DownloadScreen()
         }
 
-        entry<ImageLoaderSettingsRoute> {
+        navGraph.entry<ImageLoaderSettingsRoute> {
             ImageLoaderSettings(mangaSettingsHandling)
         }
 
-        entry<ReaderSettingsScreen> {
+        navGraph.entry<ReaderSettingsScreen> {
             ReaderSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
                 settingsHandling = settingsHandling

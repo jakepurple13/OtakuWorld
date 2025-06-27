@@ -1,51 +1,15 @@
 package com.programmersbox.uiviews
 
-import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.content.Context
-import android.net.Uri
-import androidx.core.net.toUri
-import androidx.navigation.NavType
-import androidx.navigation.serialization.generateRouteWithArgs
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
-import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.PlatformGenericInfo
 
-interface GenericInfo : KmpGenericInfo {
-
-    val deepLinkUri: String
-
-    fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent?
-
-    fun deepLinkSettings(context: Context): PendingIntent?
-
-    @SuppressLint("RestrictedApi")
-    fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
-        @Suppress("UNCHECKED_CAST")
-        val route = generateRouteWithArgs(
-            Screen.DetailsScreen.Details(
-                title = itemModel?.title ?: "",
-                description = itemModel?.description ?: "",
-                url = itemModel?.url ?: "",
-                imageUrl = itemModel?.imageUrl ?: "",
-                source = itemModel?.source?.serviceName ?: "",
-            ),
-            mapOf(
-                "title" to NavType.StringType as NavType<Any?>,
-                "description" to NavType.StringType as NavType<Any?>,
-                "url" to NavType.StringType as NavType<Any?>,
-                "imageUrl" to NavType.StringType as NavType<Any?>,
-                "source" to NavType.StringType as NavType<Any?>,
-            )
-        )
-
-        return "$deepLinkUri$route".toUri()
+interface GenericInfo : PlatformGenericInfo {
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    fun globalNav3Setup() {
     }
 
-    fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
-
-    fun EntryProviderBuilder<NavKey>.globalNav3Setup() {}
-    fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {}
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    fun settingsNav3Setup() {
+    }
 }

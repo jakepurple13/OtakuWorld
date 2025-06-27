@@ -94,7 +94,6 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
@@ -111,6 +110,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.bindsGenericInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -121,19 +121,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val appModule = module {
-    singleOf(::GenericAnime) {
-        binds(
-            listOf(
-                KmpGenericInfo::class,
-                GenericInfo::class
-            )
-        )
-    }
+    singleOf(::GenericAnime) { bindsGenericInfo() }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single { AnimeDataStoreHandling() }
@@ -573,14 +565,16 @@ class GenericAnime(
         }
     }
 
-    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
-        entry<VideoScreen> {
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    override fun globalNav3Setup() {
+        navGraph.entry<VideoScreen> {
             VideoPlayerUi(it)
         }
     }
 
-    override fun EntryProviderBuilder<NavKey>.settingsNav3Setup() {
-        entry<VideoViewerRoute> {
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    override fun settingsNav3Setup() {
+        navGraph.entry<VideoViewerRoute> {
             ViewVideoScreen()
         }
     }

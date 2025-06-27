@@ -43,7 +43,6 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
@@ -57,22 +56,15 @@ import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.novel.shared.reader.ReadViewModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.utils.bindsGenericInfo
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
 val appModule = module {
-    singleOf(::GenericNovel) {
-        binds(
-            listOf(
-                KmpGenericInfo::class,
-                GenericInfo::class
-            )
-        )
-    }
+    singleOf(::GenericNovel) { bindsGenericInfo() }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     singleOf(::ChapterHolder)
     viewModelOf(::ReadViewModel)
@@ -199,7 +191,8 @@ class GenericNovel(
     }
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-    override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
+    context(navGraph: EntryProviderBuilder<NavKey>)
+    override fun globalNav3Setup() {
         //TODO: Need to make sure this works
         /* entry<NovelReader>(
              //ReadViewModel.NovelReaderRoute,
@@ -212,7 +205,7 @@ class GenericNovel(
         ) {
             NovelReader()
         }*/
-        entry<ReadViewModel.NovelReader> {
+        navGraph.entry<ReadViewModel.NovelReader> {
             NovelReadView(
                 viewModel = koinViewModel { parametersOf(it) }
             )
