@@ -415,7 +415,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.12.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.12.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 androidxWebkit = "androidx.webkit:webkit:1.14.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
