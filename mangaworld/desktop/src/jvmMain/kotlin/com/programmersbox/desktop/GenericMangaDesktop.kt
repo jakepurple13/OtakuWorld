@@ -19,7 +19,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
@@ -39,7 +39,7 @@ import org.koin.core.parameter.parametersOf
 class GenericMangaDesktop(
     val settingsHandling: NewSettingsHandling,
     val mangaSettingsHandling: MangaNewSettingsHandling,
-) : KmpGenericInfo {
+) : PlatformGenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
 
