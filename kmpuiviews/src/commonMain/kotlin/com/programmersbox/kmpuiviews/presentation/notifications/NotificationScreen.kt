@@ -155,6 +155,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -996,9 +997,15 @@ internal fun NotifyAt(
 
                         val current = TimeZone.currentSystemDefault()
 
-                        val now = Clock
-                            .System
-                            .now()
+                        val now = Instant
+                            .fromEpochMilliseconds(
+                                dateState
+                                    .selectedDateMillis
+                                    ?: Clock
+                                        .System
+                                        .now()
+                                        .toEpochMilliseconds()
+                            )
                             .toLocalDateTime(current)
 
                         val trigger = LocalDateTime(
@@ -1049,7 +1056,5 @@ internal fun NotifyAt(
         }
     }
 
-    content(
-        { showDatePicker = true }
-    )
+    content { showDatePicker = true }
 }
