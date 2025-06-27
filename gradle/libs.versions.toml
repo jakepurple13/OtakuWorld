@@ -19,7 +19,7 @@ composeCollapsable = "0.4.0"
 dragselect = "3.0.2"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.4"
-googleServices = "4.4.2"
+googleServices = "4.4.3"
 haze = "1.6.4"
 kamelImage = "1.0.5"
 latestAboutLibsRelease = "12.2.3"
@@ -63,7 +63,7 @@ firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "1.4.2"
 
-firebaseBom = "33.15.0"
+firebaseBom = "33.16.0"
 
 kmpalette = "3.1.0"
 
@@ -88,7 +88,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.1.7"
-ackpineVersion = "0.13.2"
+ackpineVersion = "0.14.0"
 
 arcore = "1.0.0-alpha04"
 composeXr = "1.0.0-alpha04"
