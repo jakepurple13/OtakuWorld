@@ -32,6 +32,7 @@ actual class SourceInfoRepository(
     actual fun uninstall(kmpSourceInformation: KmpSourceInformation) {
         val uri = Uri.fromParts("package", kmpSourceInformation.packageName, null)
         val uninstall = Intent(Intent.ACTION_DELETE, uri)
+        uninstall.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         context.startActivity(uninstall)
     }
 
