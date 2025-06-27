@@ -52,4 +52,6 @@ dependencies {
     implementation(Deps.jakepurple13Libs)
 
     implementation(libs.ktorAndroid)
+
+    implementation(projects.novelworld.shared)
 }

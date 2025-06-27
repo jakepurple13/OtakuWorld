@@ -4,6 +4,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
@@ -32,6 +35,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
@@ -52,13 +56,20 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import com.programmersbox.novel.shared.ChapterHolder
+import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.NotificationLogo
+import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.binds
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
+import com.programmersbox.novel.shared.reader.ReadViewModel
+import com.programmersbox.novel.shared.reader.ReaderTopBar
+import org.koin.core.module.dsl.viewModelOf
 
 val appModule = module {
     singleOf(::GenericNovel) {
@@ -70,23 +81,13 @@ val appModule = module {
         )
     }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
-}
-
-class ChapterList(private val context: Context, private val genericInfo: GenericInfo) {
-    fun set(item: List<KmpChapterModel>?) {
-        val i = item.toJson(KmpChapterModel::class.java to ChapterModelSerializer())
-        context.defaultSharedPref.edit().putString("chapterList", i).commit()
-    }
-
-    fun get(): List<KmpChapterModel>? = context.defaultSharedPref.getObject(
-        "chapterList",
-        null,
-        KmpChapterModel::class.java to ChapterModelDeserializer()
-    )
+    singleOf(::ChapterHolder)
+    viewModelOf(::ReadViewModel)
 }
 
 class GenericNovel(
     val context: Context,
+    val chapterHolder: ChapterHolder,
     val appConfig: AppConfig,
 ) : GenericInfo {
 
@@ -100,11 +101,10 @@ class GenericNovel(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        ChapterList(context, this@GenericNovel).set(allChapters)
+        chapterHolder.chapterModel = model
         ReadViewModel.navigateToNovelReader(
             navController,
-            model,
-            model.name,
+            infoModel.title,
             model.url,
             model.sourceUrl
         )
@@ -205,24 +205,30 @@ class GenericNovel(
         }
     }
 
+    @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
     override fun EntryProviderBuilder<NavKey>.globalNav3Setup() {
         //TODO: Need to make sure this works
-        entry<NovelReader>(
-            //ReadViewModel.NovelReaderRoute,
-            /*metadata = mapOf(
+        /* entry<NovelReader>(
+             //ReadViewModel.NovelReaderRoute,
+             *//*metadata = mapOf(
                 "currentChapter",
                "novelTitle",
                "novelUrl",
                "novelInfoUrl",
-            )*/
+            )*//*
         ) {
             NovelReader()
+        }*/
+        entry<ReadViewModel.NovelReader> {
+            NovelReadView(
+                viewModel = koinViewModel { parametersOf(it) }
+            )
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
     override fun NavGraphBuilder.globalNavSetup() {
-        composable(
+        /*composable(
             ReadViewModel.NovelReaderRoute,
             arguments = listOf(
                 navArgument("currentChapter") { },
@@ -232,6 +238,15 @@ class GenericNovel(
             )
         ) {
             NovelReader()
+        }*/
+
+        composable<ReadViewModel.NovelReader>(
+            enterTransition = { fadeIn() },
+            exitTransition = { fadeOut() },
+        ) {
+            NovelReadView(
+                viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.NovelReader>()) }
+            )
         }
     }
 

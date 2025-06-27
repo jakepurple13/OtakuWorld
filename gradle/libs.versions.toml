@@ -20,7 +20,7 @@ dragselect = "3.0.2"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.4"
 googleServices = "4.4.3"
-haze = "1.6.4"
+haze = "1.6.5"
 kamelImage = "1.0.5"
 latestAboutLibsRelease = "12.2.3"
 coroutinesVersion = "1.10.2"
@@ -415,7 +415,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:2.12.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:2.12.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 androidxWebkit = "androidx.webkit:webkit:1.14.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
