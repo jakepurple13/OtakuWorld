@@ -111,11 +111,9 @@ import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
-import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -151,9 +149,6 @@ import otakuworld.kmpuiviews.generated.resources.selectDate
 import otakuworld.kmpuiviews.generated.resources.selectTime
 import otakuworld.kmpuiviews.generated.resources.yes
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -995,9 +990,9 @@ internal fun NotifyAt(
                     onClick = {
                         showTimePicker = false
 
-                        val current = TimeZone.currentSystemDefault()
+                        val currentTimeZone = TimeZone.currentSystemDefault()
 
-                        val now = Instant
+                        val selectedDate = Instant
                             .fromEpochMilliseconds(
                                 dateState
                                     .selectedDateMillis
@@ -1006,25 +1001,24 @@ internal fun NotifyAt(
                                         .now()
                                         .toEpochMilliseconds()
                             )
-                            .toLocalDateTime(current)
+                            .toLocalDateTime(currentTimeZone)
 
                         val trigger = LocalDateTime(
-                            year = now.year,
-                            month = now.month.number,
-                            day = now.day,
+                            year = selectedDate.year,
+                            month = selectedDate.month.number,
+                            day = selectedDate.day,
                             hour = timeState.hour,
                             minute = timeState.minute,
                             second = 0,
                             nanosecond = 0
                         )
 
+                        val currentTime = Clock.System.now().toEpochMilliseconds()
+                        val triggerTime = trigger.toInstant(currentTimeZone).toEpochMilliseconds()
+
                         notificationScreenInterface.scheduleNotification(
                             item = item,
-                            time = trigger
-                                .toInstant(current)
-                                .toEpochMilliseconds() - now
-                                .toInstant(current)
-                                .toEpochMilliseconds()
+                            time = triggerTime - currentTime
                         )
                     }
                 ) { Text(stringResource(Res.string.ok)) }
