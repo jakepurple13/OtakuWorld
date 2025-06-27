@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +44,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -52,17 +55,22 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -83,6 +91,7 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.GradientImage
@@ -102,9 +111,11 @@ import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
+import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
+import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
@@ -119,17 +130,31 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.areYouSureRemoveNoti
+import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.current_notification_count
 import otakuworld.kmpuiviews.generated.resources.no
 import otakuworld.kmpuiviews.generated.resources.notify
 import otakuworld.kmpuiviews.generated.resources.notifyAtTime
+import otakuworld.kmpuiviews.generated.resources.ok
 import otakuworld.kmpuiviews.generated.resources.removeNoti
+import otakuworld.kmpuiviews.generated.resources.selectDate
+import otakuworld.kmpuiviews.generated.resources.selectTime
 import otakuworld.kmpuiviews.generated.resources.yes
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.ExperimentalTime
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -496,8 +521,9 @@ private fun notificationOptionsSheet(
 
         HorizontalDivider()
 
-        notificationScreenInterface.NotifyAt(
+        NotifyAt(
             item = i,
+            notificationScreenInterface = notificationScreenInterface
         ) { dateShow ->
             Card(
                 onClick = { dateShow() },
@@ -923,3 +949,107 @@ private fun NotificationDeleteItem(
         }
     )
 }*/
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
+internal fun NotifyAt(
+    item: NotificationItem,
+    notificationScreenInterface: NotificationScreenInterface,
+    content: @Composable ((() -> Unit) -> Unit),
+) {
+    val dateFormatHandler: DateTimeFormatHandler = koinInject()
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val now = remember { Clock.System.now().toEpochMilliseconds() }
+
+    val dateState = rememberDatePickerState(
+        initialSelectedDateMillis = Clock.System.now().toEpochMilliseconds(),
+        selectableDates = remember {
+            object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return now < utcTimeMillis
+                }
+            }
+        }
+    )
+    val calendar = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
+    val is24HourFormat by rememberUpdatedState(dateFormatHandler.is24Time())
+    val timeState = rememberTimePickerState(
+        initialHour = calendar.hour,
+        initialMinute = calendar.minute,
+        is24Hour = is24HourFormat
+    )
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text(stringResource(Res.string.selectTime)) },
+            dismissButton = {
+                TextButton(
+                    onClick = { showTimePicker = false }
+                ) { Text(stringResource(Res.string.cancel)) }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showTimePicker = false
+
+                        val current = TimeZone.currentSystemDefault()
+
+                        val now = Clock
+                            .System
+                            .now()
+                            .toLocalDateTime(current)
+
+                        val trigger = LocalDateTime(
+                            year = now.year,
+                            month = now.month.number,
+                            day = now.day,
+                            hour = timeState.hour,
+                            minute = timeState.minute,
+                            second = 0,
+                            nanosecond = 0
+                        )
+
+                        notificationScreenInterface.scheduleNotification(
+                            item = item,
+                            time = trigger
+                                .toInstant(current)
+                                .toEpochMilliseconds() - now
+                                .toInstant(current)
+                                .toEpochMilliseconds()
+                        )
+                    }
+                ) { Text(stringResource(Res.string.ok)) }
+            }
+        ) { TimePicker(state = timeState) }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false }
+                ) { Text(stringResource(Res.string.cancel)) }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                        showTimePicker = true
+                    }
+                ) { Text(stringResource(Res.string.ok)) }
+            }
+        ) {
+            DatePicker(
+                state = dateState,
+                title = { Text(stringResource(Res.string.selectDate)) }
+            )
+        }
+    }
+
+    content(
+        { showDatePicker = true }
+    )
+}

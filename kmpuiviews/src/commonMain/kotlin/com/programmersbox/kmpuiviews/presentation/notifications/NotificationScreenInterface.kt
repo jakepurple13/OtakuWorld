@@ -6,9 +6,5 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 interface NotificationScreenInterface {
     suspend fun notifyItem(notificationItem: NotificationItem)
 
-    @Composable
-    fun NotifyAt(
-        item: NotificationItem,
-        content: @Composable (() -> Unit) -> Unit,
-    )
+    fun scheduleNotification(item: NotificationItem, time: Long)
 }

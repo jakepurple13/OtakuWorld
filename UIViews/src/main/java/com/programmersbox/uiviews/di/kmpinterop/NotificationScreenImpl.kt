@@ -62,113 +62,22 @@ class NotificationScreenImpl(
         )
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun NotifyAt(
-        item: NotificationItem,
-        content: @Composable ((() -> Unit) -> Unit),
-    ) {
-        val context = LocalContext.current
-        var showDatePicker by remember { mutableStateOf(false) }
-        var showTimePicker by remember { mutableStateOf(false) }
-
-        val dateState = rememberDatePickerState(
-            initialSelectedDateMillis = System.currentTimeMillis(),
-            selectableDates = remember {
-                object : SelectableDates {
-                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                        return DateValidatorPointForward.now().isValid(utcTimeMillis)
-                    }
-                }
-            }
-        )
-        val calendar = remember { Calendar.getInstance() }
-        val is24HourFormat by rememberUpdatedState(DateFormat.is24HourFormat(context))
-        val timeState = rememberTimePickerState(
-            initialHour = calendar[Calendar.HOUR_OF_DAY],
-            initialMinute = calendar[Calendar.MINUTE],
-            is24Hour = is24HourFormat
-        )
-
-        if (showTimePicker) {
-            TimePickerDialog(
-                onDismissRequest = { showTimePicker = false },
-                title = { Text(stringResource(id = R.string.selectTime)) },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showTimePicker = false }
-                    ) { Text(stringResource(R.string.cancel)) }
-                },
-                confirmButton = {
-                    val dateTimeFormatter = LocalSystemDateTimeFormat.current
-                    TextButton(
-                        onClick = {
-                            showTimePicker = false
-                            val c = Calendar.getInstance()
-                            c.timeInMillis = dateState.selectedDateMillis ?: 0L
-                            c[Calendar.DAY_OF_YEAR] += 1
-                            c[Calendar.HOUR_OF_DAY] = timeState.hour
-                            c[Calendar.MINUTE] = timeState.minute
-                            c[Calendar.SECOND] = 0
-                            c[Calendar.MILLISECOND] = 0
-
-                            WorkManager.getInstance(context)
-                                .enqueueUniqueWork(
-                                    item.notiTitle,
-                                    ExistingWorkPolicy.REPLACE,
-                                    OneTimeWorkRequestBuilder<NotifySingleWorker>()
-                                        .setInputData(
-                                            workDataOf(
-                                                "notiData" to item.toJson()
-                                            )
-                                        )
-                                        .setInitialDelay(
-                                            duration = c.timeInMillis - System.currentTimeMillis(),
-                                            timeUnit = TimeUnit.MILLISECONDS
-                                        )
-                                        .build()
-                                )
-
-                            Toast.makeText(
-                                context,
-                                context.getString(
-                                    R.string.willNotifyAt,
-                                    dateTimeFormatter.format(c.timeInMillis.toLocalDateTime())
-                                ),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    ) { Text(stringResource(R.string.ok)) }
-                }
-            ) { TimePicker(state = timeState) }
-        }
-
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showDatePicker = false }
-                    ) { Text(stringResource(R.string.cancel)) }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showDatePicker = false
-                            showTimePicker = true
-                        }
-                    ) { Text(stringResource(R.string.ok)) }
-                }
-            ) {
-                DatePicker(
-                    state = dateState,
-                    title = { Text(stringResource(R.string.selectDate)) }
-                )
-            }
-        }
-
-        content(
-            { showDatePicker = true }
-        )
+    override fun scheduleNotification(item: NotificationItem, time: Long) {
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                item.notiTitle,
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<NotifySingleWorker>()
+                    .setInputData(
+                        workDataOf(
+                            "notiData" to item.toJson()
+                        )
+                    )
+                    .setInitialDelay(
+                        duration = time,
+                        timeUnit = TimeUnit.MILLISECONDS
+                    )
+                    .build()
+            )
     }
 }
