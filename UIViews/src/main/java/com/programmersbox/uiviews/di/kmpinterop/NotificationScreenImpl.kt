@@ -35,10 +35,10 @@ import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.checkers.NotifySingleWorker
-import com.programmersbox.uiviews.checkers.SavedNotifications
-import com.programmersbox.uiviews.checkers.UpdateNotification
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.workers.NotifySingleWorker
+import com.programmersbox.kmpuiviews.workers.SavedNotifications
+import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 

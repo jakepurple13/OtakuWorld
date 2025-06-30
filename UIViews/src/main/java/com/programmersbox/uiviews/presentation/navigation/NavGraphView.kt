@@ -56,7 +56,7 @@ import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneS
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.settings.AccountSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 

@@ -127,15 +127,15 @@ kotlin {
 
                 implementation(libs.paging.compose.common)
 
-                implementation("nl.jacobras:Human-Readable:1.12.0")
+                implementation(libs.human.readable)
 
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
 
-                implementation("dev.shreyaspatil.generativeai:generativeai-google:0.9.0-1.1.0")
-                implementation("io.github.bay73:generic-ai:0.6.5")
-                implementation("com.xemantic.ai:anthropic-sdk-kotlin:0.20.2")
-                implementation("com.xemantic.ai:xemantic-ai-tool-schema:1.1.2")
+                implementation(libs.generativeai.google)
+                implementation(libs.generic.ai)
+                implementation(libs.anthropic.sdk.kotlin)
+                implementation(libs.xemantic.ai.tool.schema)
             }
         }
 
@@ -169,6 +169,8 @@ kotlin {
                 implementation(libs.biometric)
                 implementation(androidx.activity.activityKtx)
                 implementation(libs.lazyColumnScrollbar)
+                implementation(libs.workRuntime)
+                implementation(libs.koin.workmanager)
             }
         }
 

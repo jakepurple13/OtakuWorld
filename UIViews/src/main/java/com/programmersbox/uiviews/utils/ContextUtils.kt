@@ -52,9 +52,7 @@ import org.koin.core.component.inject
 import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.Locale
-
-@JvmInline
-value class NotificationLogo(val notificationId: Int)
+import androidx.core.graphics.createBitmap
 
 fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.() -> Unit = {}) = CustomTabsIntent.Builder()
     .setExitAnimations(this, android.R.anim.slide_in_left, android.R.anim.slide_out_right)
@@ -74,7 +72,7 @@ fun Bitmap.glowEffect(glowRadius: Int, glowColor: Int): Bitmap {
     val margin = 24
     val halfMargin = margin / 2f
     val alpha = extractAlpha()
-    val out = Bitmap.createBitmap(width + margin, height + margin, Bitmap.Config.ARGB_8888)
+    val out = createBitmap(width + margin, height + margin)
     val canvas = Canvas(out)
     val paint = Paint()
     paint.color = glowColor
@@ -194,95 +192,6 @@ class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeseria
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): KmpApiService? {
         return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService
     }
-}
-
-//TODO: Put in own file
-class BatteryInformation(val context: Context) : KoinComponent {
-
-    val batteryLevel by lazy { MutableStateFlow<Float>(0f) }
-    val batteryInfo by lazy { MutableSharedFlow<Battery>() }
-    val settingsHandling: NewSettingsHandling by inject()
-
-    private val batteryPercent by lazy { settingsHandling.batteryPercent }
-
-    enum class BatteryViewType(val icon: GoogleMaterial.Icon, val composeIcon: ImageVector) {
-        CHARGING_FULL(GoogleMaterial.Icon.gmd_battery_charging_full, Icons.Default.BatteryChargingFull),
-        DEFAULT(GoogleMaterial.Icon.gmd_battery_std, Icons.Default.BatteryStd),
-        FULL(GoogleMaterial.Icon.gmd_battery_full, Icons.Default.BatteryFull),
-        ALERT(GoogleMaterial.Icon.gmd_battery_alert, Icons.Default.BatteryAlert),
-        UNKNOWN(GoogleMaterial.Icon.gmd_battery_unknown, Icons.AutoMirrored.Filled.BatteryUnknown)
-    }
-
-    suspend fun composeSetupFlow(
-        normalBatteryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White,
-        subscribe: suspend (Pair<androidx.compose.ui.graphics.Color, BatteryViewType>) -> Unit,
-    ) = combine(
-        combine(
-            batteryLevel,
-            batteryPercent.asFlow()
-        ) { b, d -> b <= d }
-            .map { if (it) androidx.compose.ui.graphics.Color.Red else normalBatteryColor },
-        combine(
-            batteryInfo,
-            batteryPercent.asFlow()
-        ) { b, d -> b to d }
-            .map {
-                when {
-                    it.first.isCharging -> BatteryViewType.CHARGING_FULL
-                    it.first.percent <= it.second -> BatteryViewType.ALERT
-                    it.first.percent >= 95 -> BatteryViewType.FULL
-                    it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                    else -> BatteryViewType.DEFAULT
-                }
-            }
-            .distinctUntilChanged { t1, t2 -> t1 != t2 },
-    ) { l, b -> l to b }
-        .onEach(subscribe)
-
-    suspend fun setupFlow(
-        normalBatteryColor: Int = Color.WHITE,
-        size: Int,
-        subscribe: (Pair<Int, IconicsDrawable>) -> Unit,
-    ) {
-        combine(
-            combine(
-                batteryLevel,
-                batteryPercent.asFlow()
-            ) { b, d -> b <= d }
-                .map { if (it) Color.RED else normalBatteryColor },
-            combine(
-                batteryInfo,
-                batteryPercent.asFlow()
-            ) { b, d -> b to d }
-                .map {
-                    when {
-                        it.first.isCharging -> BatteryViewType.CHARGING_FULL
-                        it.first.percent <= it.second -> BatteryViewType.ALERT
-                        it.first.percent >= 95 -> BatteryViewType.FULL
-                        it.first.health == BatteryHealth.UNKNOWN -> BatteryViewType.UNKNOWN
-                        else -> BatteryViewType.DEFAULT
-                    }
-                }
-                .distinctUntilChanged { t1, t2 -> t1 != t2 }
-                .map { IconicsDrawable(context, it.icon).apply { sizePx = size } },
-        ) { l, b -> l to b }
-            .onEach(subscribe)
-            .collect()
-    }
-
-}
-
-fun Context.showErrorToast() = runOnUIThread { Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show() }
-
-fun Context.getSystemDateTimeFormat() = SimpleDateFormat(
-    "${(DateFormat.getDateFormat(this) as SimpleDateFormat).toLocalizedPattern()} ${(DateFormat.getTimeFormat(this) as SimpleDateFormat).toLocalizedPattern()}",
-    Locale.getDefault()
-)
-
-tailrec fun Context.findActivity(): FragmentActivity = when (this) {
-    is FragmentActivity -> this
-    is ContextWrapper -> this.baseContext.findActivity()
-    else -> error("Could not find activity in Context chain.")
 }
 
 val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }

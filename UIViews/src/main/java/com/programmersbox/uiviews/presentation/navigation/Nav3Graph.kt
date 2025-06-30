@@ -53,7 +53,7 @@ import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
 import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 

@@ -1,4 +1,5 @@
 [versions]
+anthropicSdkKotlin = "0.20.2"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
 blurhash = "0.4.0-SNAPSHOT"
@@ -7,7 +8,10 @@ corePerformance = "1.0.0"
 coreVersion = "3.5.3"
 filekitCore = "0.10.0-beta04"
 generativeai = "0.9.0"
+generativeaiGoogle = "0.9.0-1.1.0"
+genericAi = "0.6.5"
 gradle = "8.11.0"
+humanReadable = "1.12.0"
 kotlinxDatetime = "0.7.0"
 
 javase = "3.5.3"
@@ -49,6 +53,7 @@ textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
 urlencoderLib = "1.6.0"
 workVersion = "2.10.2"
+xemanticAiToolSchema = "1.1.2"
 ziplineVersion = "1.1.0"
 protobufVersion = "4.26.1"
 sketchVersion = "3.3.2"
@@ -150,6 +155,10 @@ androidx-navigationevent-compose = { module = "androidx.navigationevent:navigati
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded-core" }
 constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded" }
+anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
+generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" }
+generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
+human-readable = { module = "nl.jacobras:Human-Readable", version.ref = "humanReadable" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
 core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
@@ -343,6 +352,7 @@ constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.1"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
+xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
 zoomableModifier = "net.engawapg.lib:zoomable:2.8.0"
 

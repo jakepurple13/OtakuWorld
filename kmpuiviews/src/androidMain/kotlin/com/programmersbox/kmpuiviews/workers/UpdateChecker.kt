@@ -1,6 +1,4 @@
-@file:OptIn(DelicateCoroutinesApi::class)
-
-package com.programmersbox.uiviews.checkers
+package com.programmersbox.kmpuiviews.workers
 
 import android.app.Notification
 import android.content.Context
@@ -16,12 +14,12 @@ import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.utils.printLogs
-import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.R
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
@@ -30,13 +28,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.startingCheck
 
 class UpdateFlowWorker(
     context: Context,
     workerParams: WorkerParameters,
-    private val genericInfo: GenericInfo,
-    private val sourceRepository: SourceRepository,
-    private val sourceLoader: SourceLoader,
+    private val genericInfo: PlatformGenericInfo,
     private val update: UpdateNotification,
     private val dataStoreHandling: DataStoreHandling,
     private val mediaUpdateChecker: MediaUpdateChecker,
@@ -48,7 +47,7 @@ class UpdateFlowWorker(
 
     override suspend fun doWork(): Result = trace("update_checker") {
         try {
-            update.sendRunningNotification(100, 0, applicationContext.getString(R.string.startingCheck))
+            update.sendRunningNotification(100, 0, getString(Res.string.startingCheck))
             logFirebaseMessage("Starting check here")
             dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
             logFirebaseMessage("Start")
@@ -70,10 +69,7 @@ class UpdateFlowWorker(
                 }
             )
 
-            update.onEnd(
-                update.mapDbModel(items, genericInfo),
-                info = genericInfo
-            )/* { id, notification -> setForegroundInfo(id, notification) }*/
+            update.onEnd(update.mapDbModel(items),)/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
 
             Result.success()

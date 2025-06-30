@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.checkers
+package com.programmersbox.kmpuiviews.workers
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -12,7 +12,7 @@ class NotifySingleWorker(
     context: Context,
     workerParams: WorkerParameters,
     private val notificationScreenInterface: NotificationScreenInterface,
-) : CoroutineWorker(context, workerParams), KoinComponent {
+) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         inputData.getString("notiData")
             ?.let { Json.decodeFromString<NotificationItem>(it) }
