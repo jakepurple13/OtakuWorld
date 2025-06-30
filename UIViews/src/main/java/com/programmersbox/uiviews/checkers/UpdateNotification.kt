@@ -20,8 +20,8 @@ import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.NotificationChannels
-import com.programmersbox.uiviews.utils.NotificationGroups
+import com.programmersbox.kmpuiviews.utils.NotificationChannels
+import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.logFirebaseMessage
 import com.programmersbox.uiviews.utils.recordFirebaseException

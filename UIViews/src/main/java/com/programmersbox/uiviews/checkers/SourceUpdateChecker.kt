@@ -13,8 +13,8 @@ import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.uiviews.utils.NotificationChannels
-import com.programmersbox.uiviews.utils.NotificationGroups
+import com.programmersbox.kmpuiviews.utils.NotificationChannels
+import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.recordFirebaseException
 import org.koin.core.component.KoinComponent
