@@ -8,9 +8,6 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
-import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenInterface
-import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
-import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.sharedutils.CustomRemoteModel
@@ -21,14 +18,12 @@ import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import kotlinx.coroutines.flow.Flow
-import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val kmpInterop = module {
     singleOf<KmpFirebaseConnection>(::KmpFirebaseConnectionImpl)
     factory<KmpFirebaseConnection.KmpFirebaseListener> { KmpFirebaseConnectionImpl.KmpFirebaseListenerImpl() }
-    singleOf(::AboutLibraryBuilder)
 
     single {
         AppConfig(
