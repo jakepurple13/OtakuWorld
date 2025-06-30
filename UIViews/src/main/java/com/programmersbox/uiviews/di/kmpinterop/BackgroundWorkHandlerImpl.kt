@@ -20,9 +20,9 @@ import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.kmpuiviews.workers.AppCleanupWorker
 import com.programmersbox.kmpuiviews.workers.CloudToLocalSyncWorker
 import com.programmersbox.kmpuiviews.workers.LocalToCloudSyncWorker
+import com.programmersbox.kmpuiviews.workers.SourceUpdateChecker
 import com.programmersbox.kmpuiviews.workers.UpdateFlowWorker
 import com.programmersbox.uiviews.checkers.AppCheckWorker
-import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
@@ -125,8 +125,7 @@ class BackgroundWorkHandlerImpl(
         workManager.enqueueUniquePeriodicWork(
             "appChecks",
             ExistingPeriodicWorkPolicy.UPDATE,
-            PeriodicWorkRequest.Builder(
-                workerClass = AppCheckWorker::class.java,
+            PeriodicWorkRequestBuilder<AppCheckWorker>(
                 repeatInterval = 7,
                 repeatIntervalTimeUnit = TimeUnit.DAYS
             )
@@ -146,8 +145,7 @@ class BackgroundWorkHandlerImpl(
         workManager.enqueueUniquePeriodicWork(
             "sourceChecks",
             ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequest.Builder(
-                workerClass = SourceUpdateChecker::class.java,
+            PeriodicWorkRequestBuilder<SourceUpdateChecker>(
                 repeatInterval = 1,
                 repeatIntervalTimeUnit = TimeUnit.DAYS
             )

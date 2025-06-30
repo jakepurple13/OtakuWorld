@@ -4,13 +4,11 @@ import com.programmersbox.uiviews.checkers.AppCheckWorker
 import com.programmersbox.uiviews.checkers.DownloadAndInstallWorker
 import com.programmersbox.uiviews.checkers.DownloadWorker
 import com.programmersbox.uiviews.checkers.InstallWorker
-import com.programmersbox.uiviews.checkers.SourceUpdateChecker
 import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.Module
 
 fun Module.workers() {
     workerOf(::AppCheckWorker)
-    workerOf(::SourceUpdateChecker)
     workerOf(::DownloadAndInstallWorker)
     workerOf(::DownloadWorker)
     workerOf(::InstallWorker)

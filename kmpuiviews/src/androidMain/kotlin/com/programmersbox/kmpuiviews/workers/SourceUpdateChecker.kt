@@ -1,23 +1,25 @@
-package com.programmersbox.uiviews.checkers
+package com.programmersbox.kmpuiviews.workers
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.programmersbox.helpfulutils.GroupBehavior
-import com.programmersbox.helpfulutils.NotificationDslBuilder
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpExternalApiServicesCatalog
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdate
+import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.kmpuiviews.utils.GroupBehavior
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
+import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import org.koin.core.component.KoinComponent
+import kotlin.collections.orEmpty
 
 class SourceUpdateChecker(
     context: Context,
@@ -26,10 +28,10 @@ class SourceUpdateChecker(
     private val sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
     private val otakuWorldCatalog: OtakuWorldCatalog,
-) : CoroutineWorker(context, workerParams), KoinComponent {
+) : CoroutineWorker(context, workerParams) {
+    private val notificationManager by lazy { context.getSystemService<NotificationManager>() }
     override suspend fun doWork(): Result {
         return try {
-            val notificationManager = applicationContext.notificationManager
             val packageManager = applicationContext.packageManager
             if (sourceRepository.list.isEmpty()) {
                 sourceLoader.blockingLoad()
@@ -67,11 +69,11 @@ class SourceUpdateChecker(
                     subText = "${r.version} is available."
                     groupId = NotificationGroups.Sources.id
                 }
-                notificationManager.notify(it.hashCode(), n)
+                notificationManager?.notify(it.hashCode(), n)
             }
 
             if (updateList.isNotEmpty()) {
-                notificationManager.notify(
+                notificationManager?.notify(
                     15,
                     NotificationDslBuilder.builder(
                         applicationContext,

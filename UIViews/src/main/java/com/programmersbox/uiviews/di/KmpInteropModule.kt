@@ -21,7 +21,6 @@ import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.di.kmpinterop.BackgroundWorkHandlerImpl
-import com.programmersbox.uiviews.di.kmpinterop.NotificationScreenImpl
 import com.programmersbox.uiviews.di.kmpinterop.WorkRepositoryImpl
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.module.dsl.bind
@@ -46,7 +45,6 @@ val kmpInterop = module {
     }
 
     single<WorkRepository> { WorkRepositoryImpl(get()) }
-    singleOf(::NotificationScreenImpl) { bind<NotificationScreenInterface>() }
 
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
