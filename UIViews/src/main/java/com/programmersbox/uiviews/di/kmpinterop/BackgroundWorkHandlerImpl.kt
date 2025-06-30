@@ -144,7 +144,7 @@ class BackgroundWorkHandlerImpl(
 
         workManager.enqueueUniquePeriodicWork(
             "sourceChecks",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             PeriodicWorkRequestBuilder<SourceUpdateChecker>(
                 repeatInterval = 1,
                 repeatIntervalTimeUnit = TimeUnit.DAYS
