@@ -1,5 +1,6 @@
 package com.programmersbox.uiviews.utils
 
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

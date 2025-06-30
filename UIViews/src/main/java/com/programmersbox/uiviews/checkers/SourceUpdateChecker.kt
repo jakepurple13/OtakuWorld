@@ -16,7 +16,7 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.recordFirebaseException
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import org.koin.core.component.KoinComponent
 
 class SourceUpdateChecker(

@@ -10,8 +10,8 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.uiviews.R
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.uiviews.utils.NotificationLogo
-import com.programmersbox.uiviews.utils.logFirebaseMessage
-import com.programmersbox.uiviews.utils.recordFirebaseException
+import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.withTimeoutOrNull
 
 class AppCheckWorker(

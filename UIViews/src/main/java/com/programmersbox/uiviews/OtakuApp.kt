@@ -44,8 +44,8 @@ import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
 import com.programmersbox.uiviews.di.workers
-import com.programmersbox.uiviews.utils.logFirebaseMessage
-import com.programmersbox.uiviews.utils.recordFirebaseException
+import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope

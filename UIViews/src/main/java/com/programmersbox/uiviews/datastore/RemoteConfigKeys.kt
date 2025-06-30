@@ -3,7 +3,7 @@ package com.programmersbox.uiviews.datastore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.uiviews.utils.recordFirebaseException
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.Json
 

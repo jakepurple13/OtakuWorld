@@ -14,15 +14,6 @@ import kotlin.experimental.ExperimentalTypeInference
 inline fun <T> MutableList<T>.addNewList(@BuilderInference builderAction: MutableList<T>.() -> Unit): Boolean =
     addAll(buildList(builderAction))
 
-fun recordFirebaseException(throwable: Throwable) = runCatching {
-    Firebase.crashlytics.recordException(throwable)
-}
-
-fun logFirebaseMessage(message: String) = runCatching {
-    printLogs { message }
-    Firebase.crashlytics.log(message)
-}.onFailure { printLogs { message } }
-
 fun <T : GenericInfo> BeanDefinition<T>.bindsGenericInfo() {
     binds(
         listOf(
