@@ -4,7 +4,6 @@ import android.app.Application
 import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.checkers.UpdateNotification
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.PerformanceClass
@@ -34,7 +33,6 @@ val appModules = module {
     }
 
     single { PerformanceClass.create() }
-    singleOf(::UpdateNotification)
     singleOf(::OtakuDataStoreHandling)
     singleOf(::SettingsHandling)
     includes(repository)

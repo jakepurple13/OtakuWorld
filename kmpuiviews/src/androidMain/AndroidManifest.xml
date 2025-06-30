@@ -7,6 +7,27 @@
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
 
-    <application></application>
+    <application>
+
+        <receiver
+            android:name=".receivers.BootReceived"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receivers.DeleteNotificationReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".receivers.SwipeAwayReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
+    </application>
 
 </manifest>

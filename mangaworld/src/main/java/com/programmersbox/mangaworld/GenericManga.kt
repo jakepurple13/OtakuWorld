@@ -82,7 +82,7 @@ import com.programmersbox.mangaworld.reader.ReadActivity
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
 import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.GlobalScope

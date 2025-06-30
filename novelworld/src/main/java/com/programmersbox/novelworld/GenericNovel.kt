@@ -55,7 +55,7 @@ import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.novel.shared.reader.ReadViewModel
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.singleOf

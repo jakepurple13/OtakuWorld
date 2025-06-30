@@ -1,18 +1,22 @@
-package com.programmersbox.uiviews.checkers
+package com.programmersbox.kmpuiviews.workers
 
+import android.app.NotificationManager
 import android.content.Context
+import androidx.core.content.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.programmersbox.helpfulutils.NotificationDslBuilder
-import com.programmersbox.helpfulutils.notificationManager
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.uiviews.R
-import com.programmersbox.kmpuiviews.utils.NotificationChannels
-import com.programmersbox.uiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.kmpuiviews.utils.NotificationChannels
+import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import kotlinx.coroutines.withTimeoutOrNull
+import org.jetbrains.compose.resources.getString
+import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.theresAnUpdate
+import otakuworld.kmpuiviews.generated.resources.versionAvailable
 
 class AppCheckWorker(
     context: Context,
@@ -31,10 +35,10 @@ class AppCheckWorker(
                     NotificationChannels.AppUpdate.id,
                     logo.notificationId
                 ) {
-                    title = applicationContext.getString(R.string.theresAnUpdate)
-                    subText = applicationContext.getString(R.string.versionAvailable, f)
+                    title = getString(Res.string.theresAnUpdate)
+                    subText = getString(Res.string.versionAvailable, f)
                 }
-                applicationContext.notificationManager.notify(12, n)
+                applicationContext.getSystemService<NotificationManager>()?.notify(12, n)
             }
             Result.success()
         } catch (e: Exception) {

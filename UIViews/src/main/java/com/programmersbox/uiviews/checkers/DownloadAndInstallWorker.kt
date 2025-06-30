@@ -20,7 +20,7 @@ import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
-import com.programmersbox.uiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.delay

@@ -9,6 +9,7 @@ import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
+import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -36,4 +37,7 @@ actual fun platformModule(): Module = module {
             sourceRepository = get()
         )
     }
+
+    singleOf(::UpdateNotification)
+    kmpWorkers()
 }
