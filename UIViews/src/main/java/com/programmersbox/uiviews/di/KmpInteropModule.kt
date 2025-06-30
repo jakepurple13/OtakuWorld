@@ -20,7 +20,6 @@ import com.programmersbox.sharedutils.TranslateItems
 import com.programmersbox.sharedutils.TranslatorUtils
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.di.kmpinterop.BackgroundWorkHandlerImpl
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -45,8 +44,6 @@ val kmpInterop = module {
 
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
-
-    singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
 }
 
 class TranslationModelHandlerImpl : TranslationModelHandler {
