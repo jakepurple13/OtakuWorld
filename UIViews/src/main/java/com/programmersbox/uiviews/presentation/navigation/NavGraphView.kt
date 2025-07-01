@@ -42,6 +42,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.AddBreadcrumbLogging
 import com.programmersbox.kmpuiviews.presentation.navigation.navGraph
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -53,10 +54,10 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
 import com.programmersbox.uiviews.presentation.navigation.strategy.DialogStrategy
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneStrategy
-import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.uiviews.presentation.settings.AccountSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.presentation.onboarding.AccountContent
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -196,7 +197,8 @@ private fun Nav2(
             onboarding = {
                 OnboardingScreen(
                     navController = LocalNavActions.current,
-                    customPreferences = it
+                    customPreferences = it,
+                    accountContent = { AccountContent() }
                 )
             },
             profileIcon = {

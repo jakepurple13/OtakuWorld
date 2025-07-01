@@ -2,28 +2,41 @@ package com.programmersbox.uiviews.presentation.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
+import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
+import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
+import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationScreen
+import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
@@ -43,6 +56,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.BuildConfig
@@ -50,11 +64,12 @@ import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
 import com.programmersbox.uiviews.presentation.navigation.strategy.DialogScene
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
-import com.programmersbox.uiviews.presentation.onboarding.OnboardingScreen
-import com.programmersbox.uiviews.presentation.settings.SettingScreen
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.presentation.onboarding.AccountContent
+import com.programmersbox.uiviews.presentation.settings.AccountSettings
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
@@ -78,7 +93,8 @@ fun entryGraph(
     entry<Screen.OnboardingScreen> {
         OnboardingScreen(
             navController = LocalNavActions.current,
-            customPreferences = customPreferences
+            customPreferences = customPreferences,
+            accountContent = { AccountContent() }
         )
     }
 
@@ -127,17 +143,39 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
             historyClick = navigationActions::history,
             globalSearchClick = navigationActions::globalSearch,
             listClick = navigationActions::customList,
-            debugMenuClick = navigationActions::debug,
             extensionClick = navigationActions::extensionList,
             notificationSettingsClick = navigationActions::notificationsSettings,
             generalClick = navigationActions::general,
             otherClick = navigationActions::otherSettings,
             moreInfoClick = navigationActions::moreInfo,
             moreSettingsClick = navigationActions::moreSettings,
-            geminiClick = { /*navBackStack.add(Screen.GeminiScreen)*/ },
+            geminiClick = { navigationActions.navigate(Screen.GeminiScreen) },
             sourcesOrderClick = navigationActions::order,
             appDownloadsClick = navigationActions::downloadInstall,
             scanQrCode = navigationActions::scanQrCode,
+            accountSettings = {
+                val appConfig: AppConfig = koinInject()
+                if (appConfig.buildType == BuildType.Full) {
+                    AccountSettings()
+                }
+            },
+            onDebugBuild = {
+                if (BuildConfig.DEBUG) {
+                    CategoryGroup {
+                        item {
+                            PreferenceSetting(
+                                settingTitle = { Text("Debug Menu") },
+                                settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+                                modifier = Modifier.clickable(
+                                    indication = ripple(),
+                                    interactionSource = null,
+                                    onClick = navigationActions::debug
+                                )
+                            )
+                        }
+                    }
+                }
+            }
         )
     }
 

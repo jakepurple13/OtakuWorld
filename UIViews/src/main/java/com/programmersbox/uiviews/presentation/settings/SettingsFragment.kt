@@ -4,12 +4,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -17,7 +15,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,104 +28,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
-import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import com.programmersbox.uiviews.utils.PreviewTheme
 import com.programmersbox.uiviews.utils.PreviewThemeColorsSizes
 import com.skydoves.landscapist.glide.GlideImage
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-
-@ExperimentalComposeUiApi
-@ExperimentalMaterial3Api
-@Composable
-fun SettingScreen(
-    composeSettingsDsl: ComposeSettingsDsl,
-    debugMenuClick: () -> Unit = {},
-    notificationClick: () -> Unit = {},
-    favoritesClick: () -> Unit = {},
-    historyClick: () -> Unit = {},
-    globalSearchClick: () -> Unit = {},
-    listClick: () -> Unit = {},
-    extensionClick: () -> Unit = {},
-    notificationSettingsClick: () -> Unit = {},
-    generalClick: () -> Unit = {},
-    otherClick: () -> Unit = {},
-    moreInfoClick: () -> Unit = {},
-    moreSettingsClick: () -> Unit = {},
-    geminiClick: () -> Unit = {},
-    sourcesOrderClick: () -> Unit = {},
-    appDownloadsClick: () -> Unit = {},
-    scanQrCode: () -> Unit,
-    accountSettings: @Composable () -> Unit = {
-        val appConfig: AppConfig = koinInject()
-        if (appConfig.buildType == BuildType.Full) {
-            AccountSettings()
-        }
-    },
-) {
-    /*
-    //TODO: This will be for the future when this works again
-    // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
-    // once it doesn't, this will be fully implemented
-    val showGemini by vm.showGemini.collectAsStateWithLifecycle(false)
-    if (showGemini) {
-        PreferenceSetting(
-            settingTitle = { Text("Gemini Recommendations") },
-            settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = geminiClick
-            )
-        )
-    }
-     */
-    SettingScreen(
-        composeSettingsDsl = composeSettingsDsl,
-        notificationClick = notificationClick,
-        favoritesClick = favoritesClick,
-        historyClick = historyClick,
-        globalSearchClick = globalSearchClick,
-        listClick = listClick,
-        extensionClick = extensionClick,
-        notificationSettingsClick = notificationSettingsClick,
-        generalClick = generalClick,
-        otherClick = otherClick,
-        moreInfoClick = moreInfoClick,
-        moreSettingsClick = moreSettingsClick,
-        geminiClick = geminiClick,
-        sourcesOrderClick = sourcesOrderClick,
-        appDownloadsClick = appDownloadsClick,
-        accountSettings = accountSettings,
-        scanQrCode = scanQrCode,
-        onDebugBuild = {
-            if (BuildConfig.DEBUG) {
-                CategoryGroup {
-                    item {
-                        PreferenceSetting(
-                            settingTitle = { Text("Debug Menu") },
-                            settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-                            modifier = Modifier.clickable(
-                                indication = ripple(),
-                                interactionSource = null,
-                                onClick = debugMenuClick
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @PreviewThemeColorsSizes

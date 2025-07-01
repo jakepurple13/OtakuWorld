@@ -27,56 +27,44 @@ import com.skydoves.landscapist.glide.GlideImage
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun OnboardingScreen(
-    navController: NavigationActions,
-    customPreferences: ComposeSettingsDsl,
-    dataStoreHandling: DataStoreHandling = koinInject(),
-) {
-    OnboardingScreen(
-        navController = navController,
-        customPreferences = customPreferences,
-        accountContent = {
-            val viewModel: AccountViewModel = koinViewModel()
-            Crossfade(
-                viewModel.accountInfo
-            ) { target ->
-                if (target == null) {
-                    val context = LocalContext.current
-                    val activity = LocalActivity.current
+fun AccountContent() {
+    val viewModel: AccountViewModel = koinViewModel()
+    Crossfade(
+        viewModel.accountInfo
+    ) { target ->
+        if (target == null) {
+            val context = LocalContext.current
+            val activity = LocalActivity.current
 
-                    Card(
-                        onClick = {
-                            (activity as? ComponentActivity)?.let {
-                                viewModel.signInOrOut(context, it)
-                            }
-                        }
-                    ) {
-                        ListItem(
-                            headlineContent = { Text("Log in") },
-                            leadingContent = { Icon(Icons.Default.AccountCircle, null) }
-                        )
-                    }
-                } else {
-                    Card {
-                        ListItem(
-                            headlineContent = { Text(target.displayName.orEmpty()) },
-                            leadingContent = {
-                                GlideImage(
-                                    imageModel = { target.photoUrl },
-                                    loading = { Icon(Icons.Default.AccountCircle, null) },
-                                    failure = { Icon(Icons.Default.AccountCircle, null) },
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .size(40.dp)
-                                )
-                            }
-                        )
+            Card(
+                onClick = {
+                    (activity as? ComponentActivity)?.let {
+                        viewModel.signInOrOut(context, it)
                     }
                 }
+            ) {
+                ListItem(
+                    headlineContent = { Text("Log in") },
+                    leadingContent = { Icon(Icons.Default.AccountCircle, null) }
+                )
             }
-        },
-        appConfig = koinInject(),
-    )
+        } else {
+            Card {
+                ListItem(
+                    headlineContent = { Text(target.displayName.orEmpty()) },
+                    leadingContent = {
+                        GlideImage(
+                            imageModel = { target.photoUrl },
+                            loading = { Icon(Icons.Default.AccountCircle, null) },
+                            failure = { Icon(Icons.Default.AccountCircle, null) },
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(40.dp)
+                        )
+                    }
+                )
+            }
+        }
+    }
 }
