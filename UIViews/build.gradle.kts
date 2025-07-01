@@ -53,11 +53,6 @@ dependencies {
     implementation(libs.playServices)
     implementation(libs.bundles.firebaseCrashLibs)
 
-    implementation(androidx.browser.browser)
-    implementation(libs.androidBrowserHelper)
-
-    implementation(libs.reactiveNetwork)
-
     api(platform(libs.koin.bom))
     api(libs.bundles.koinLibs)
 
@@ -90,10 +85,6 @@ dependencies {
     //implementation(libs.palette)
     implementation(libs.bundles.roomLibs)
 
-    implementation(libs.showMoreLess)
-    implementation(libs.aboutLibrariesCore)
-    implementation(libs.aboutLibrariesCompose)
-
     implementation(libs.glide)
     ksp(libs.glideCompiler)
 
@@ -104,10 +95,6 @@ dependencies {
 
     implementation(libs.kotlinxSerialization)
 
-    // Kotlin
-    api(androidx.navigation.navigationUiKtx)
-    api(androidx.navigation.navigationFragmentKtx)
-
     // Testing Navigation
     androidTestImplementation(libs.navTesting)
 
@@ -117,11 +104,7 @@ dependencies {
     val composeBom = platform(libs.composePlatform)
     implementation(composeBom)
     implementation(libs.bundles.compose)
-    implementation(libs.toolbarCompose)
-    implementation(libs.lazyColumnScrollbar)
     implementation(libs.adaptive)
-    implementation(libs.pagingCompose)
-    implementation(libs.bundles.pagingLibs)
     implementation(libs.bundles.datastoreLibs)
 
     implementation(libs.bundles.ktorLibs)
@@ -142,10 +125,6 @@ dependencies {
     implementation(libs.adaptive.layout.android)
     implementation(libs.adaptive.navigation.android)
 
-    implementation(libs.dragselect)
-
-
-    implementation(libs.sonner)
     implementation(libs.glideCompose)
 
     implementation(libs.material.kolor)
@@ -153,31 +132,18 @@ dependencies {
     implementation(libs.blurhash)
     ksp(libs.roomCompiler)
 
-    implementation(libs.biometric)
-
     //implementation(projects.gemini)
 
-    implementation(libs.reorderable)
-
     debugImplementation(libs.workinspector)
-
-    implementation(libs.ackpine.core)
-    implementation(libs.ackpine.ktx)
 
     //implementation(libs.bundles.xr)
 
     //TODO: Use this to check recomposition count on every screen
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")
 
-    implementation(libs.zoomable.peek.overlay)
-
     implementation(libs.kotlinx.datetime)
 
     implementation(libs.androidx.core.performance)
-
-    implementation(libs.textflow.material3)
-
-    implementation(libs.lottie.compose)
 
     implementation(libs.filekit.core)
     implementation(libs.filekit.dialogs.compose)

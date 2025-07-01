@@ -60,6 +60,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
+import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import org.koin.compose.koinInject
 import java.util.Calendar
