@@ -72,7 +72,6 @@ import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
-import com.programmersbox.uiviews.di.repository
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.compose.KoinApplication
@@ -191,7 +190,6 @@ fun PreviewTheme(
             modules(
                 appModules,
                 androidViewModels,
-                repository,
                 databases,
                 kmpInterop,
                 module {

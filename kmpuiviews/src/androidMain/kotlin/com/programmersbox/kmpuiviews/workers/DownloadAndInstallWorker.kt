@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.checkers
+package com.programmersbox.kmpuiviews.workers
 
 import android.Manifest
 import android.annotation.SuppressLint

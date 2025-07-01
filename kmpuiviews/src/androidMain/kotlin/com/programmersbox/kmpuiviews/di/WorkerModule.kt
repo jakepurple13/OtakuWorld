@@ -3,6 +3,9 @@ package com.programmersbox.kmpuiviews.di
 import com.programmersbox.kmpuiviews.workers.AppCheckWorker
 import com.programmersbox.kmpuiviews.workers.AppCleanupWorker
 import com.programmersbox.kmpuiviews.workers.CloudToLocalSyncWorker
+import com.programmersbox.kmpuiviews.workers.DownloadAndInstallWorker
+import com.programmersbox.kmpuiviews.workers.DownloadWorker
+import com.programmersbox.kmpuiviews.workers.InstallWorker
 import com.programmersbox.kmpuiviews.workers.LocalToCloudSyncWorker
 import com.programmersbox.kmpuiviews.workers.NotifySingleWorker
 import com.programmersbox.kmpuiviews.workers.SourceUpdateChecker
@@ -18,4 +21,7 @@ fun Module.kmpWorkers() {
     workerOf(::UpdateFlowWorker)
     workerOf(::SourceUpdateChecker)
     workerOf(::AppCheckWorker)
+    workerOf(::DownloadAndInstallWorker)
+    workerOf(::DownloadWorker)
+    workerOf(::InstallWorker)
 }

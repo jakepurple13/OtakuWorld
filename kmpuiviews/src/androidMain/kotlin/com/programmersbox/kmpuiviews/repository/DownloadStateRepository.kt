@@ -1,12 +1,11 @@
-package com.programmersbox.uiviews.di.kmpinterop
+package com.programmersbox.kmpuiviews.repository
 
 import android.content.Context
 import androidx.core.net.toUri
 import androidx.work.WorkManager
-import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
-import com.programmersbox.uiviews.checkers.DownloadAndInstallWorker
-import com.programmersbox.uiviews.checkers.DownloadWorker
+import com.programmersbox.kmpuiviews.workers.DownloadAndInstallWorker
+import com.programmersbox.kmpuiviews.workers.DownloadWorker
 import io.github.vinceglb.filekit.PlatformFile
 import java.io.File
 import java.util.UUID

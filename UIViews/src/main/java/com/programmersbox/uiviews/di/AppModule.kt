@@ -35,5 +35,4 @@ val appModules = module {
     single { PerformanceClass.create() }
     singleOf(::OtakuDataStoreHandling)
     singleOf(::SettingsHandling)
-    includes(repository)
 }

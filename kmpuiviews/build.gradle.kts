@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
+import implementation
 
 plugins {
     `otaku-multiplatform`

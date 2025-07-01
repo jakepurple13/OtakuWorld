@@ -141,7 +141,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                         kmpInterop,
                         kmpModule
                     )
-                    workers()
                 }
             )
         }
