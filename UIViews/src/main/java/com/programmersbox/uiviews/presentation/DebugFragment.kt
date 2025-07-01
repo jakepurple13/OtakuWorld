@@ -61,7 +61,6 @@ import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.uiviews.R
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import org.koin.compose.koinInject
 import java.util.Calendar
 
@@ -74,7 +73,7 @@ fun DebugView() {
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
     val currentSourceRepository = LocalCurrentSource.current
-    val genericInfo = LocalGenericInfo.current
+    val genericInfo = koinInject<GenericInfo>()
     val navController = LocalNavActions.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val sourceRepo = LocalSourcesRepository.current

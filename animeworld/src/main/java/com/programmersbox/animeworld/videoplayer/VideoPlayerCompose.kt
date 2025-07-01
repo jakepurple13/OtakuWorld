@@ -98,6 +98,7 @@ import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.programmersbox.animeworld.StorageHolder
+import com.programmersbox.animeworld.composables.AirBar
 import com.programmersbox.animeworld.ignoreSsl
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -106,8 +107,6 @@ import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.presentation.components.AirBar
-import com.programmersbox.uiviews.utils.LocalGenericInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -130,7 +129,7 @@ import kotlin.math.abs
 fun VideoPlayerUi(
     screen: VideoScreen,
     context: Context = LocalContext.current,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
+    genericInfo: GenericInfo = koinInject(),
     storageHolder: StorageHolder = koinInject(),
     viewModel: VideoViewModel = viewModel { VideoViewModel(screen, context, storageHolder) },
 ) {

@@ -57,6 +57,7 @@ import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
+import com.programmersbox.uiviews.utils.BatteryInformation2
 import com.programmersbox.uiviews.utils.ChapterModelDeserializer
 import com.programmersbox.uiviews.utils.toolTipText
 import kotlinx.coroutines.delay
@@ -323,7 +324,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private var batteryInfo: BroadcastReceiver? = null
 
-    private val batteryInformation by lazy { BatteryInformation(this) }
+    private val batteryInformation by lazy { BatteryInformation2(this) }
 
     @SuppressLint("SetTextI18n")
     private fun batterySetup() {

@@ -234,7 +234,6 @@ fun PreviewTheme(
             }
         ) {
             CompositionLocalProvider(
-                LocalGenericInfo provides genericInfo,
                 LocalSettingsHandling provides remember {
                     NewSettingsHandling(
                         createProtobuf(context, SettingsSerializer()),

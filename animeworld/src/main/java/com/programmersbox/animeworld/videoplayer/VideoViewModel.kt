@@ -32,6 +32,7 @@ import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.uiviews.utils.BatteryInformation
+import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -115,9 +116,9 @@ class VideoViewModel(
     var isPlaying by mutableStateOf(false)
 
     var batteryColor by mutableStateOf(Color.White)
-    var batteryIcon by mutableStateOf(BatteryInformation.BatteryViewType.UNKNOWN)
+    var batteryIcon by mutableStateOf(BatteryInformation2.BatteryViewType.UNKNOWN)
     var batteryPercent by mutableFloatStateOf(0f)
-    val batteryInformation by lazy { BatteryInformation(context) }
+    val batteryInformation by lazy { BatteryInformation2(context) }
 
     init {
         viewModelScope.launch(Dispatchers.IO) {

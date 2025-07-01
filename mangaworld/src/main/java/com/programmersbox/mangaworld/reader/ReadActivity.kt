@@ -143,9 +143,7 @@ class ReadActivity : AppCompatActivity() {
         }
     }
 
-    private var batteryInfo: BroadcastReceiver? = null
-
-    private val batteryInformation by lazy { BatteryInformation(this) }
+    private val batteryInformation by inject<BatteryInformation>()
 
     private lateinit var binding: ActivityReadBinding
 
@@ -357,29 +355,24 @@ class ReadActivity : AppCompatActivity() {
             sizePx = binding.batteryInformation.textSize.roundToInt()
         }
 
-        lifecycleScope.launch {
-            batteryInformation.setupFlow(
+        batteryInformation
+            .setupFlow(
                 size = binding.batteryInformation.textSize.roundToInt(),
                 normalBatteryColor = normalBatteryColor
-            ) {
-                it.second.colorInt = it.first
-                binding.batteryInformation.startDrawable = it.second
-                binding.batteryInformation.setTextColor(it.first)
-                binding.batteryInformation.startDrawable?.setTint(it.first)
+            )
+            .onEach {
+                it.icon.colorInt = it.color
+                binding.batteryInformation.startDrawable = it.icon
+                binding.batteryInformation.setTextColor(it.color)
+                binding.batteryInformation.startDrawable?.setTint(it.color)
+                binding.batteryInformation.text = "${it.battery.percent.toInt()}%"
             }
-        }
-
-        batteryInfo = battery {
-            binding.batteryInformation.text = "${it.percent.toInt()}%"
-            batteryInformation.batteryLevel.tryEmit(it.percent)
-            batteryInformation.batteryInfo.tryEmit(it)
-        }
+            .launchIn(lifecycleScope)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Glide.get(this).clearMemory()
-        unregisterReceiver(batteryInfo)
     }
 
 }

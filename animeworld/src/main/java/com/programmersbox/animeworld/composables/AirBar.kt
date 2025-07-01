@@ -1,4 +1,4 @@
-package com.programmersbox.uiviews.presentation.components
+package com.programmersbox.animeworld.composables
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding

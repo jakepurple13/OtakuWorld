@@ -29,7 +29,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.uiviews.utils.LocalGenericInfo
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +39,7 @@ fun VideoChoiceScreen(
     infoModel: KmpInfoModel,
     isStreaming: Boolean,
     model: KmpChapterModel,
-    genericInfo: GenericInfo = LocalGenericInfo.current,
+    genericInfo: GenericInfo = koinInject(),
 ) {
     val navController = LocalNavActions.current
     val activity = LocalActivity.current

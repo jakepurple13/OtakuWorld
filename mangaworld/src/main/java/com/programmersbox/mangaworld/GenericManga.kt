@@ -83,8 +83,8 @@ import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
-import com.programmersbox.uiviews.utils.dispatchIo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first

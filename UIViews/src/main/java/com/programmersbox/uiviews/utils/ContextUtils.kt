@@ -54,14 +54,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.core.graphics.createBitmap
 
-fun Context.openInCustomChromeBrowser(url: Uri, build: CustomTabsIntent.Builder.() -> Unit = {}) = CustomTabsIntent.Builder()
-    .setExitAnimations(this, android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-    .apply(build)
-    .build()
-    .launchUrl(this, url)
-
-fun Context.openInCustomChromeBrowser(url: String, build: CustomTabsIntent.Builder.() -> Unit = {}) = openInCustomChromeBrowser(Uri.parse(url), build)
-
 fun View.toolTipText(text: CharSequence) {
     tooltipText = text
 }
@@ -193,5 +185,3 @@ class ApiServiceDeserializer(private val genericInfo: GenericInfo) : JsonDeseria
         return sourceRepository.toSourceByApiServiceName(json.asString)?.apiService
     }
 }
-
-val LocalGenericInfo = staticCompositionLocalOf<GenericInfo> { error("No Info") }

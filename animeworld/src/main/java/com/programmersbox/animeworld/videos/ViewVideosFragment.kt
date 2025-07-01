@@ -84,8 +84,8 @@ import com.programmersbox.kmpuiviews.theme.Emerald
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.PermissionRequest
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
-import com.programmersbox.uiviews.presentation.components.PermissionRequest
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
