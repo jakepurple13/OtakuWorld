@@ -47,7 +47,7 @@ jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
 okhttpVersion = "4.12.0"
 # TODO: https://youtrack.jetbrains.com/issue/KTOR-8583 They are aware, there will be a fix in the next version
-ktorVersion = "3.1.3"
+ktorVersion = "3.2.1"
 scanner = "0.4.0"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
