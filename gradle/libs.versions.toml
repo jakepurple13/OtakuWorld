@@ -108,11 +108,11 @@ core = "1.6.1"
 
 androidx-lifecycle = "2.9.1"
 
-compose-multiplatform = "1.9.0-alpha02"
+compose-multiplatform = "1.9.0-alpha03"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.9.0-alpha02"
+material3WindowSizeClassVersion = "1.9.0-alpha03"
 connectivity = "2.1.0"
 
 cmpLifecycle = "2.9.1"
