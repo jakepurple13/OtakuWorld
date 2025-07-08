@@ -5,25 +5,30 @@ import android.graphics.BitmapFactory
 import androidx.work.ListenableWorker
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
-import java.net.HttpURLConnection
-import java.net.URL
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsBytes
+import kotlinx.coroutines.withTimeout
 
 fun <T> Result<T>.workerReturn() = fold(
     onSuccess = { ListenableWorker.Result.success() },
     onFailure = { ListenableWorker.Result.failure() }
 )
 
-fun getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? = runCatching {
-    val url = URL(strURL)
-    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-    headers.forEach { connection.setRequestProperty(it.key, it.value.toString()) }
-    connection.doInput = true
-    connection.connect()
-    BitmapFactory.decodeStream(connection.inputStream)
-}
-    .onFailure {
-        logFirebaseMessage("Getting bitmap from $strURL")
-        recordFirebaseException(it)
-        it.printStackTrace()
+suspend fun HttpClient.getBitmapFromURL(strURL: String?, headers: Map<String, Any> = emptyMap()): Bitmap? {
+    return runCatching {
+        withTimeout(10000) {
+            get(requireNotNull(strURL)) { headers.forEach { (key, value) -> header(key, value) } }
+                .bodyAsBytes()
+                .inputStream()
+        }
     }
-    .getOrNull()
+        .mapCatching { BitmapFactory.decodeStream(it) }
+        .onFailure {
+            logFirebaseMessage("Getting bitmap from $strURL")
+            recordFirebaseException(it)
+            it.printStackTrace()
+        }
+        .getOrNull()
+}

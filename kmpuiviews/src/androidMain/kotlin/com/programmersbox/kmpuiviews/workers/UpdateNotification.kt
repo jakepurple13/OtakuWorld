@@ -26,6 +26,7 @@ import com.programmersbox.kmpuiviews.utils.GroupBehavior
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
 import com.programmersbox.kmpuiviews.utils.SemanticActions
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import org.jetbrains.compose.resources.getPluralString
@@ -45,6 +46,7 @@ class UpdateNotification(
     private val kmpFirebaseConnection: KmpFirebaseConnection,
     private val info: PlatformGenericInfo,
 ) {
+    private val client = HttpClient()
 
     private val notificationManager by lazy { context.getSystemService<NotificationManager>() }
 
@@ -78,7 +80,7 @@ class UpdateNotification(
                 ) {
                     title = pair.second.title
                     subText = pair.second.source
-                    getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
+                    client.getBitmapFromURL(pair.second.imageUrl, pair.first?.extras.orEmpty())?.let {
                         largeIconBitmap = it
                         pictureStyle {
                             bigPicture = it
@@ -210,6 +212,27 @@ class UpdateNotification(
         }
         notificationManager?.notify(13, notification)
         logFirebaseMessage("Checking for $contextText")
+    }
+
+    suspend fun sendRunningNotificationLongTerm(max: Int, progress: Int, contextText: CharSequence = ""): Notification {
+        val notification = NotificationDslBuilder.builder(
+            context,
+            NotificationChannels.UpdateCheck.id,
+            icon.notificationId
+        ) {
+            onlyAlertOnce = true
+            ongoing = true
+            progress {
+                this.max = max
+                this.progress = progress
+                indeterminate = progress == 0
+            }
+            showWhen = true
+            message = contextText
+            subText = getString(Res.string.checking)
+        }
+        logFirebaseMessage("Checking for $contextText")
+        return notification
     }
 
     suspend fun sendFinishedNotification() {

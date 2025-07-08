@@ -47,7 +47,16 @@ class UpdateFlowWorker(
 
     override suspend fun doWork(): Result = trace("update_checker") {
         try {
-            update.sendRunningNotification(100, 0, getString(Res.string.startingCheck))
+            //update.sendRunningNotification(100, 0, getString(Res.string.startingCheck))
+            runCatching {
+                setForeground(
+                    createNotification(
+                        max = 100,
+                        progress = 0,
+                        contextText = getString(Res.string.startingCheck)
+                    )
+                )
+            }
             logFirebaseMessage("Starting check here")
             dataStoreHandling.updateCheckingStart.set(System.currentTimeMillis())
             logFirebaseMessage("Start")
@@ -56,7 +65,8 @@ class UpdateFlowWorker(
                 checkAll = inputData.getBoolean(CHECK_ALL, false),
                 putMetric = { name, value -> putMetric(name, value) },
                 notificationUpdate = { max, progress, source ->
-                    update.sendRunningNotification(max, progress, source)
+                    //update.sendRunningNotification(max, progress, source)
+                    runCatching { setForeground(createNotification(max, progress, source)) }
                 },
                 setProgress = { max, progress, source ->
                     setProgress(
@@ -69,7 +79,7 @@ class UpdateFlowWorker(
                 }
             )
 
-            update.onEnd(update.mapDbModel(items),)/* { id, notification -> setForegroundInfo(id, notification) }*/
+            update.onEnd(update.mapDbModel(items))/* { id, notification -> setForegroundInfo(id, notification) }*/
             logFirebaseMessage("Finished!")
 
             Result.success()
@@ -123,6 +133,14 @@ class UpdateFlowWorker(
         }.firstOrNull()
     }.getOrNull()
 
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        return createNotification(
+            max = 100,
+            progress = 0,
+            contextText = getString(Res.string.startingCheck)
+        )
+    }
+
     private suspend fun setForegroundInfo(
         id: Int,
         notification: Notification,
@@ -142,6 +160,28 @@ class UpdateFlowWorker(
                     notification,
                 )
             )
+        }
+    }
+
+    private suspend fun createNotification(
+        max: Int,
+        progress: Int,
+        contextText: CharSequence = "",
+    ): ForegroundInfo {
+        val notification = update.sendRunningNotificationLongTerm(
+            max = max,
+            progress = progress,
+            contextText = contextText
+        )
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(
+                13,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            ForegroundInfo(13, notification)
         }
     }
 }

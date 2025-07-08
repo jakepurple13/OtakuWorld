@@ -16,6 +16,7 @@ import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.SemanticActions
 import com.programmersbox.kmpuiviews.utils.printLogs
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.getString
@@ -33,6 +34,7 @@ object SavedNotifications {
         itemDao: ItemDao,
         update: UpdateNotification,
     ) {
+        val client = HttpClient()
         val icon = notificationLogo.notificationId
         itemDao.updateNotification(
             url = n.url,
@@ -45,7 +47,7 @@ object SavedNotifications {
         ) {
             title = n.notiTitle
             subText = n.source
-            getBitmapFromURL(n.imageUrl)?.let {
+            client.getBitmapFromURL(n.imageUrl)?.let {
                 largeIconBitmap = it
                 pictureStyle {
                     bigPicture = it
@@ -121,6 +123,7 @@ object SavedNotifications {
         dao: ItemDao,
         update: UpdateNotification,
     ) {
+        val client = HttpClient()
         val icon = logo.notificationId
         dao.getAllNotifications()
             .fastMap { n ->
@@ -136,7 +139,7 @@ object SavedNotifications {
                 ) {
                     title = n.notiTitle
                     subText = n.source
-                    getBitmapFromURL(n.imageUrl)?.let {
+                    client.getBitmapFromURL(n.imageUrl)?.let {
                         largeIconBitmap = it
                         pictureStyle {
                             bigPicture = it

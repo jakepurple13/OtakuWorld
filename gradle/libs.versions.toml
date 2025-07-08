@@ -1,5 +1,5 @@
 [versions]
-anthropicSdkKotlin = "0.20.2"
+anthropicSdkKotlin = "0.21.1"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
 blurhash = "0.4.0-SNAPSHOT"
@@ -47,7 +47,7 @@ jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
 okhttpVersion = "4.12.0"
 # TODO: https://youtrack.jetbrains.com/issue/KTOR-8583 They are aware, there will be a fix in the next version
-ktorVersion = "3.1.3"
+ktorVersion = "3.2.1"
 scanner = "0.4.0"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
@@ -215,9 +215,9 @@ materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
-materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha02" }
-materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha02" }
-materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha02" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha03" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha03" }
+materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha03" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
 adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
 material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
