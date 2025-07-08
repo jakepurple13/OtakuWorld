@@ -172,6 +172,7 @@ kotlin {
                 implementation(libs.lazyColumnScrollbar)
                 implementation(libs.workRuntime)
                 implementation(libs.koin.workmanager)
+                implementation(androidx.paging.pagingCompose)
             }
         }
 
