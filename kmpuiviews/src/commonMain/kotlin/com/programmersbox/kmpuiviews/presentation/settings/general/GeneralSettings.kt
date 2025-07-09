@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.BlurOff
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocationOn
@@ -53,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
+import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
@@ -134,6 +136,10 @@ fun GeneralSettings(
             item {
                 Spacer(Modifier.height(16.dp))
                 PaletteSetting(handling = handling)
+            }
+
+            item {
+                ColorBlindTypeSettings(handling = handling)
             }
         }
 
@@ -362,6 +368,36 @@ fun GridTypeSettings(handling: NewSettingsHandling) {
         confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
         dialogTitle = { Text("Grid Type") },
         dialogIcon = { Icon(Icons.Default.GridView, null) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+fun ColorBlindTypeSettings(handling: NewSettingsHandling) {
+    var colorBlindType by handling.rememberColorBlindType()
+
+    ListSetting(
+        settingTitle = { Text("Color Blindness") },
+        settingIcon = { Icon(Icons.Default.ColorLens, null, modifier = Modifier.fillMaxSize()) },
+        value = colorBlindType,
+        updateValue = { it, d ->
+            d.value = false
+            colorBlindType = it
+        },
+        options = ColorBlindnessType.entries,
+        summaryValue = {
+            Text(
+                when (colorBlindType) {
+                    ColorBlindnessType.None -> "None - No Color Blindness"
+                    ColorBlindnessType.Protanopia -> "Protanopia - Red-green color blindness"
+                    ColorBlindnessType.Deuteranopia -> "Deuteranopia - Blue-yellow color blindness"
+                    ColorBlindnessType.Tritanopia -> "Tritanopia - Green-blue color blindness"
+                }
+            )
+        },
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+        dialogTitle = { Text("Color Blindness") },
+        dialogIcon = { Icon(Icons.Default.ColorLens, null) },
     )
 }
 

@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
@@ -373,6 +376,9 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         .doesNotificationExistFlow(url)
         .collectAsStateWithLifecycle(false)
 
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
     val listItemColors = ListItemDefaults.colors()
 
     TextFlow(
@@ -401,6 +407,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                 imageUrl = imageUrl,
                 name = title,
                 placeHolder = { painterLogo() },
+                colorFilter = colorFilter,
                 modifier = Modifier
                     .padding(end = 16.dp)
                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

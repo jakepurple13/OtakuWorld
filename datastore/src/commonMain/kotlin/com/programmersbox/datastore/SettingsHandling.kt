@@ -232,6 +232,13 @@ class NewSettingsHandling(
         )
     )
 
+    @Composable
+    fun rememberColorBlindType() = preferences.rememberPreference(
+        key = { it.colorBlindnessType },
+        update = { copy(colorBlindnessType = it) },
+        defaultValue = ColorBlindnessType.None
+    )
+
     val hasMigrated = ProtoStoreHandler(
         preferences = preferences,
         key = { it.hasMigrated },

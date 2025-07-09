@@ -57,6 +57,7 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSett
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSetting
+import com.programmersbox.kmpuiviews.presentation.settings.general.ColorBlindTypeSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShareChapterSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ShowDownloadSettings
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass

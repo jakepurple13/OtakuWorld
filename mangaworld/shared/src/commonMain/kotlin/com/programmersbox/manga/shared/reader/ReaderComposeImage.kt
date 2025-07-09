@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
@@ -25,6 +26,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -35,13 +37,14 @@ internal fun ImageLoaderType.Composed(
     painter: String,
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
+    colorFilter: ColorFilter? = null,
     contentScale: ContentScale = ContentScale.Fit,
     onRefresh: () -> Unit,
 ) {
     when (this) {
-        ImageLoaderType.Kamel -> Kamel(painter, headers, modifier, contentScale, onRefresh)
+        ImageLoaderType.Kamel -> Kamel(painter, headers, modifier, contentScale, colorFilter, onRefresh)
         ImageLoaderType.Glide -> Glide(painter, headers, modifier, contentScale, onRefresh)
-        ImageLoaderType.Coil -> Coil(painter, headers, modifier, contentScale, onRefresh)
+        ImageLoaderType.Coil -> Coil(painter, headers, modifier, contentScale, colorFilter, onRefresh)
         ImageLoaderType.Telephoto -> Telephoto(painter, headers, modifier, contentScale, onRefresh)
         else -> Image(
             imageVector = Icons.Default.Image,
@@ -58,6 +61,7 @@ internal fun Kamel(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    colorFilter: ColorFilter? = null,
     onRefresh: () -> Unit,
 ) {
     KamelImage(
@@ -80,6 +84,7 @@ internal fun Kamel(
         },
         contentDescription = null,
         contentScale = contentScale,
+        colorFilter = colorFilter,
         modifier = modifier
             .fillMaxSize()
             .fillMaxWidth()
@@ -122,6 +127,7 @@ internal fun Coil(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    colorFilter: ColorFilter? = null,
     onRefresh: () -> Unit,
 ) {
     SubcomposeAsyncImage(
@@ -137,6 +143,7 @@ internal fun Coil(
             .build(),
         contentDescription = null,
         contentScale = contentScale,
+        colorFilter = colorFilter,
         modifier = modifier
             .fillMaxSize()
             .heightIn(min = ComposableUtils.IMAGE_HEIGHT)

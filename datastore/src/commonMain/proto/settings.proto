@@ -25,6 +25,7 @@ message Settings {
   bool hasMigrated = 21;
   MediaCheckerSettings mediaCheckerSettings = 22;
   AiSettings aiSettings = 23;
+  ColorBlindnessType colorBlindnessType = 24;
 }
 
 enum SystemThemeMode {
@@ -110,4 +111,11 @@ message OpenAiSettings {
 message AnthropicSettings {
   string apiKey = 1;
   string modelName = 2;
+}
+
+enum ColorBlindnessType {
+  None = 0;
+  Protanopia = 1;    // Red-green color blindness (red weak/missing)
+  Deuteranopia = 2; // Blue-yellow color blindness (blue weak/missing)
+  Tritanopia = 3;   // Green-blue color blindness (green weak/missing)
 }
