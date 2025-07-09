@@ -134,6 +134,9 @@ sealed class Screen(val route: String) : NavKey {
 
     @Serializable
     data object UrlOpener : Screen("url_opener")
+
+    @Serializable
+    data object ColorHelper: Screen("color_helper")
 }
 
 fun NavController.navigateToDetails(model: KmpItemModel) = navigate(

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.CatchingPokemon
+import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
@@ -39,6 +40,7 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -152,6 +154,19 @@ fun MoreInfoScreen(
                             indication = ripple(),
                             interactionSource = null,
                             onClick = onPrereleaseClick
+                        )
+                    )
+                }
+
+                item {
+                    val navActions = LocalNavActions.current
+                    PreferenceSetting(
+                        settingTitle = { Text("Color Helper") },
+                        settingIcon = { Icon(Icons.Default.Colorize, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null,
+                            onClick = { navActions.navigate(Screen.ColorHelper) }
                         )
                     )
                 }

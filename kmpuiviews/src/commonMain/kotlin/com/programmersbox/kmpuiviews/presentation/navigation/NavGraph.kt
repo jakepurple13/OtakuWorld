@@ -43,6 +43,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
+import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
@@ -382,4 +383,6 @@ private fun NavGraphBuilder.settings(
     composable<Screen.UrlOpener> {
         UrlOpenerScreen()
     }
+
+    composable<Screen.ColorHelper> { ColorHelperScreen() }
 }

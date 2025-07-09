@@ -52,6 +52,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -63,6 +64,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -359,7 +361,7 @@ fun ChatBubbleItem(
     savedRecommendations: List<Recommendation> = emptyList(),
 ) {
     val backgroundColor = when (chatMessage) {
-        is Message.Gemini -> MaterialTheme.colorScheme.primaryContainer
+        is Message.Gemini -> MaterialTheme.colorScheme.primaryFixed
         is Message.User -> MaterialTheme.colorScheme.secondaryContainer
         is Message.Error -> MaterialTheme.colorScheme.errorContainer
     }
@@ -423,7 +425,11 @@ fun ChatBubbleItem(
                                                     null
                                                 )
                                             },
-                                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                            colors = ListItemDefaults.colors(
+                                                containerColor = Color.Transparent,
+                                                headlineColor = contentColorFor(backgroundColor),
+                                                trailingIconColor = contentColorFor(backgroundColor)
+                                            ),
                                             modifier = Modifier.clickable { showRecs = !showRecs }
                                         )
 
@@ -431,7 +437,9 @@ fun ChatBubbleItem(
                                             Recommendations(
                                                 recommendation = it,
                                                 trailingContent = {
-                                                    Column {
+                                                    Column(
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                    ) {
                                                         Crossfade(
                                                             savedRecommendations.fastAny { s -> s.title == it.title },
                                                             label = "",
@@ -454,30 +462,45 @@ fun ChatBubbleItem(
                                                             onClick = { onSearchClick(it) }
                                                         ) { Icon(Icons.Default.Search, null) }
                                                     }
-                                                }
+                                                },
+                                                colors = ListItemDefaults.colors(
+                                                    containerColor = Color.Transparent,
+                                                    headlineColor = contentColorFor(backgroundColor),
+                                                    supportingColor = contentColorFor(backgroundColor),
+                                                    overlineColor = contentColorFor(backgroundColor),
+                                                    trailingIconColor = contentColorFor(backgroundColor)
+                                                )
                                             )
                                         }
                                     }
                                 } else {
-                                    ListItem(
-                                        headlineContent = {
-                                            Column {
-                                                chatMessage
-                                                    .recommendationResponse
-                                                    .recommendations
-                                                    .forEach { Text(it.title) }
-                                            }
-                                        },
-                                        trailingContent = {
-                                            Icon(Icons.Default.KeyboardArrowDown, null)
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = Color.Transparent
-                                        ),
-                                        modifier = Modifier.clickable {
-                                            showRecs = !showRecs
-                                        }
-                                    )
+                                    Column {
+                                        HorizontalDivider(
+                                            color = contentColorFor(backgroundColor),
+                                            modifier = Modifier
+                                                .align(Alignment.CenterHorizontally)
+                                                .fillMaxWidth(0.5f)
+                                        )
+                                        ListItem(
+                                            headlineContent = {
+                                                Column {
+                                                    chatMessage
+                                                        .recommendationResponse
+                                                        .recommendations
+                                                        .forEach { Text(it.title) }
+                                                }
+                                            },
+                                            trailingContent = {
+                                                Icon(Icons.Default.KeyboardArrowDown, null)
+                                            },
+                                            colors = ListItemDefaults.colors(
+                                                containerColor = Color.Transparent,
+                                                headlineColor = contentColorFor(backgroundColor),
+                                                trailingIconColor = contentColorFor(backgroundColor)
+                                            ),
+                                            modifier = Modifier.clickable { showRecs = !showRecs }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -502,11 +525,12 @@ fun ChatBubbleItem(
 fun Recommendations(
     recommendation: Recommendation,
     modifier: Modifier = Modifier,
+    colors: ListItemColors = ListItemDefaults.colors(),
     trailingContent: @Composable () -> Unit = {},
 ) {
     Column(modifier = modifier) {
         HorizontalDivider(
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = colors.supportingTextColor
         )
         SelectionContainer {
             ListItem(
@@ -518,8 +542,8 @@ fun Recommendations(
                     ) {
                         Text(recommendation.description)
                         HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(0.5f),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = colors.supportingTextColor,
+                            modifier = Modifier.fillMaxWidth(0.5f)
                         )
                         Text("Reason: " + recommendation.reason)
                     }
@@ -533,9 +557,7 @@ fun Recommendations(
                         }
                     }
                 },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
-                )
+                colors = colors
             )
         }
     }
