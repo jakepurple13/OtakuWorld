@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.CatchingPokemon
@@ -44,7 +45,9 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
+import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.icons.Discord
 import com.programmersbox.kmpuiviews.utils.composables.icons.Github
@@ -75,9 +78,7 @@ import otakuworld.kmpuiviews.generated.resources.view_on_github
 fun MoreInfoScreen(
     infoViewModel: MoreInfoViewModel = koinViewModel(),
     usedLibraryClick: () -> Unit,
-    onPrereleaseClick: () -> Unit,
     onViewAccountInfoClick: () -> Unit,
-    shouldShowPrerelease: Boolean,
 ) {
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
@@ -144,34 +145,7 @@ fun MoreInfoScreen(
             }
         }
 
-        if (BuildKonfig.IS_PRERELEASE || shouldShowPrerelease) {
-            CategoryGroup {
-                item {
-                    PreferenceSetting(
-                        settingTitle = { Text("Update to latest pre release") },
-                        settingIcon = { Icon(Icons.Default.Bento, null, modifier = Modifier.fillMaxSize()) },
-                        modifier = Modifier.clickable(
-                            indication = ripple(),
-                            interactionSource = null,
-                            onClick = onPrereleaseClick
-                        )
-                    )
-                }
-
-                item {
-                    val navActions = LocalNavActions.current
-                    PreferenceSetting(
-                        settingTitle = { Text("Color Helper") },
-                        settingIcon = { Icon(Icons.Default.Colorize, null, modifier = Modifier.fillMaxSize()) },
-                        modifier = Modifier.clickable(
-                            indication = ripple(),
-                            interactionSource = null,
-                            onClick = { navActions.navigate(Screen.ColorHelper) }
-                        )
-                    )
-                }
-            }
-        }
+        DebugPrereleaseOptions()
 
         CategoryGroup {
             item {
@@ -291,6 +265,55 @@ fun MoreInfoScreen(
                         }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DebugPrereleaseOptions() {
+    val appConfig = koinInject<AppConfig>()
+
+    if (BuildKonfig.IS_PRERELEASE || appConfig.isDebug) {
+        val navActions = LocalNavActions.current
+
+        CategoryGroup {
+            if(appConfig.isDebug) {
+                item {
+                    PreferenceSetting(
+                        settingTitle = { Text("Debug Menu") },
+                        settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
+                        modifier = Modifier.clickable(
+                            indication = ripple(),
+                            interactionSource = null,
+                            onClick = navActions::debug
+                        )
+                    )
+                }
+            }
+
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text("Update to latest pre release") },
+                    settingIcon = { Icon(Icons.Default.Bento, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null,
+                        onClick = navActions::prerelease
+                    )
+                )
+            }
+
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text("Color Helper") },
+                    settingIcon = { Icon(Icons.Default.Colorize, null, modifier = Modifier.fillMaxSize()) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null,
+                        onClick = { navActions.navigate(Screen.ColorHelper) }
+                    )
+                )
             }
         }
     }

@@ -212,9 +212,7 @@ private fun NavGraphBuilder.settings(
         ) {
             MoreInfoScreen(
                 usedLibraryClick = navigationActions::about,
-                onPrereleaseClick = navigationActions::prerelease,
-                onViewAccountInfoClick = navigationActions::accountInfo,
-                shouldShowPrerelease = debug
+                onViewAccountInfoClick = navigationActions::accountInfo
             )
         }
 

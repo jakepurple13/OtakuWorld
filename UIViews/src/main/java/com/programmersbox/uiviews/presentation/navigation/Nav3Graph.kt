@@ -2,21 +2,13 @@ package com.programmersbox.uiviews.presentation.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
-import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
@@ -25,8 +17,6 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
@@ -158,23 +148,6 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
                 if (appConfig.buildType == BuildType.Full) {
                     AccountSettings()
                 }
-            },
-            onDebugBuild = {
-                if (BuildConfig.DEBUG) {
-                    CategoryGroup {
-                        item {
-                            PreferenceSetting(
-                                settingTitle = { Text("Debug Menu") },
-                                settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-                                modifier = Modifier.clickable(
-                                    indication = ripple(),
-                                    interactionSource = null,
-                                    onClick = navigationActions::debug
-                                )
-                            )
-                        }
-                    }
-                }
             }
         )
     }
@@ -196,9 +169,7 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     twoPaneEntry<Screen.MoreInfoSettings> {
         MoreInfoScreen(
             usedLibraryClick = navigationActions::about,
-            onPrereleaseClick = navigationActions::prerelease,
-            onViewAccountInfoClick = navigationActions::accountInfo,
-            shouldShowPrerelease = BuildConfig.DEBUG
+            onViewAccountInfoClick = navigationActions::accountInfo
         )
     }
 

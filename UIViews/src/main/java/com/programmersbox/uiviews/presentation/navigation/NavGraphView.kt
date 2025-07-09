@@ -4,17 +4,11 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
-import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,8 +30,6 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.analyticsScreen
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.AddBreadcrumbLogging
@@ -230,23 +222,6 @@ private fun Nav2(
                         val appConfig: AppConfig = koinInject()
                         if (appConfig.buildType == BuildType.Full) {
                             AccountSettings()
-                        }
-                    },
-                    onDebugBuild = {
-                        if (BuildConfig.DEBUG) {
-                            CategoryGroup {
-                                item {
-                                    PreferenceSetting(
-                                        settingTitle = { Text("Debug Menu") },
-                                        settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-                                        modifier = Modifier.clickable(
-                                            indication = ripple(),
-                                            interactionSource = null,
-                                            onClick = navigationActions::debug
-                                        )
-                                    )
-                                }
-                            }
                         }
                     }
                 )

@@ -200,7 +200,6 @@ fun ApplicationScope.BaseDesktopUi(
                                                     sourcesOrderClick = navigationActions::order,
                                                     appDownloadsClick = navigationActions::downloadInstall,
                                                     scanQrCode = navigationActions::scanQrCode,
-                                                    onDebugBuild = {},
                                                     accountSettings = {}
                                                 )
                                             },

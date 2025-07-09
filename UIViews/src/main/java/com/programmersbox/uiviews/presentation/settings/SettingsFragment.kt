@@ -61,7 +61,6 @@ private fun SettingsPreview() {
             sourcesOrderClick = {},
             appDownloadsClick = {},
             accountSettings = {},
-            onDebugBuild = {},
             scanQrCode = {}
         )
     }
