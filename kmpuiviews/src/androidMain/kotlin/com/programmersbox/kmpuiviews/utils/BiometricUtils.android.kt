@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
+import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -53,7 +54,11 @@ actual class BiometricPrompting(
             BiometricPrompt.PromptInfo.Builder()
                 .setTitle(promptInfo.title)
                 .setSubtitle(promptInfo.subtitle)
-                .setNegativeButtonText(promptInfo.negativeButtonText)
+                //.setNegativeButtonText(promptInfo.negativeButtonText)
+                .setAllowedAuthenticators(
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                )
                 .build()
         )
     }

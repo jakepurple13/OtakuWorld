@@ -455,7 +455,11 @@ fun ChapterItem(
 
     fun insertRecent() {
         scope.launch(Dispatchers.IO) {
-            if (favoritesRepository.isIncognito(infoModel.source.serviceName)) return@launch
+            if (
+                favoritesRepository.isIncognito(infoModel.source.serviceName) ||
+                favoritesRepository.isIncognito(infoModel.url)
+            ) return@launch
+
             historyDao.insertRecentlyViewed(
                 RecentModel(
                     title = infoModel.title,
@@ -466,7 +470,8 @@ fun ChapterItem(
                     timestamp = Clock.System.now().toEpochMilliseconds()
                 )
             )
-            val save = runBlocking { dataStoreHandling.historySave.get() }
+
+            val save = dataStoreHandling.historySave.get()
             if (save != -1) historyDao.removeOldData(save)
         }
     }

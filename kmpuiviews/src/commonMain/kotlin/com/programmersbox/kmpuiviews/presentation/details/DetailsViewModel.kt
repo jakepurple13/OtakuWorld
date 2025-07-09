@@ -226,7 +226,11 @@ class DetailsViewModel(
         )
 
         viewModelScope.launch {
-            if (favoritesRepository.isIncognito(info!!.source.serviceName)) return@launch
+            if (
+                favoritesRepository.isIncognito(info!!.source.serviceName) ||
+                favoritesRepository.isIncognito(info!!.url)
+            ) return@launch
+
             if (b) {
                 favoritesRepository.addWatched(chapter)
             } else {

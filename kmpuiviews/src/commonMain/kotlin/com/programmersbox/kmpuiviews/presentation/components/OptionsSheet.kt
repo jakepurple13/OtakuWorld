@@ -51,6 +51,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
+import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
@@ -352,6 +353,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     sheet: SheetState,
     dao: ItemDao = koinInject(),
     listDao: ListDao = koinInject(),
+    platformRepository: PlatformRepository = koinInject(),
     notificationRepository: NotificationRepository = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),
     moreContent: @Composable OptionsSheetScope.(T) -> Unit = {},
@@ -531,45 +533,52 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
 
         moreContent(optionsSheetValues)
 
-        Crossfade(isIncognito) { target ->
-            if (target == null) {
-                OptionsItem(
-                    title = "Add to Incognito",
-                    onClick = {
-                        biometric.authenticate(
-                            onAuthenticationSucceeded = {
-                                scope.launch {
-                                    dao.insertIncognitoSource(
-                                        IncognitoSource(
-                                            source = url,
-                                            name = title,
-                                            isIncognito = true
+        if (remember { platformRepository.hasBiometric() }) {
+            Crossfade(isIncognito) { target ->
+                if (target == null) {
+                    OptionsItem(
+                        title = "Add to Incognito",
+                        onClick = {
+                            biometric.authenticate(
+                                onAuthenticationSucceeded = {
+                                    scope.launch {
+                                        dao.insertIncognitoSource(
+                                            IncognitoSource(
+                                                source = url,
+                                                name = title,
+                                                isIncognito = true
+                                            )
                                         )
-                                    )
-                                }.invokeOnCompletion { dismiss() }
-                            },
-                            title = "Authentication required",
-                            subtitle = "In order to add ${title}, please authenticate",
-                            negativeButtonText = "Never Mind"
-                        )
-                    }
-                )
-            } else {
-                OptionsItem(
-                    title = "Remove from Incognito",
-                    onClick = {
-                        biometric.authenticate(
-                            onAuthenticationSucceeded = {
-                                scope.launch { dao.deleteIncognitoSource(url) }
-                                    .invokeOnCompletion { dismiss() }
-                            },
-                            title = "Authentication required",
-                            subtitle = "In order to remove ${title}, please authenticate",
-                            negativeButtonText = "Never Mind"
-                        )
-                    }
-                )
+                                    }.invokeOnCompletion { dismiss() }
+                                },
+                                title = "Authentication required",
+                                subtitle = "In order to add ${title}, please authenticate",
+                                negativeButtonText = "Never Mind"
+                            )
+                        }
+                    )
+                } else {
+                    OptionsItem(
+                        title = "Remove from Incognito",
+                        onClick = {
+                            biometric.authenticate(
+                                onAuthenticationSucceeded = {
+                                    scope.launch { dao.deleteIncognitoSource(url) }
+                                        .invokeOnCompletion { dismiss() }
+                                },
+                                title = "Authentication required",
+                                subtitle = "In order to remove ${title}, please authenticate",
+                                negativeButtonText = "Never Mind"
+                            )
+                        }
+                    )
+                }
             }
+        } else {
+            OptionsItem(
+                title = "Biometrics/Security not set",
+                onClick = {}
+            )
         }
     }
 }

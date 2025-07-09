@@ -40,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -86,7 +88,10 @@ fun ReaderTopBar(
                 onClick = onSettingsClick,
             ) { Icon(Icons.Default.Settings, null) }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = if (showBlur) Color.Transparent else Color.Unspecified)
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = if (showBlur) Color.Transparent else Color.Unspecified,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface
+        )
     )
 }
 
@@ -345,7 +350,10 @@ fun FloatingBottomBar(
         isAmoledMode -> MaterialTheme.colorScheme.surface
         else -> NavigationBarDefaults.containerColor
     },
-    contentColor: Color = MaterialTheme.colorScheme.contentColorFor(containerColor),
+    contentColor: Color = MaterialTheme
+        .colorScheme
+        .contentColorFor(containerColor)
+        .takeOrElse { MaterialTheme.colorScheme.onSurface },
     tonalElevation: Dp = NavigationBarDefaults.Elevation,
 ) {
     FloatingNavigationBar(
@@ -355,12 +363,18 @@ fun FloatingBottomBar(
         contentColor = contentColor,
         tonalElevation = tonalElevation
     ) {
+        val navBarColors = NavigationBarItemDefaults.colors(
+            unselectedIconColor = contentColor,
+            unselectedTextColor = contentColor,
+        )
+
         NavigationBarItem(
             selected = false,
             onClick = onPreviousChapter,
             enabled = previousButtonEnabled,
             icon = { Icon(Icons.Default.ArrowCircleLeft, null) },
-            label = { Text("Previous") }
+            label = { Text("Previous") },
+            colors = navBarColors
         )
 
         NavigationBarItem(
@@ -368,14 +382,16 @@ fun FloatingBottomBar(
             onClick = onNextChapter,
             enabled = nextButtonEnabled,
             icon = { Icon(Icons.Default.ArrowCircleRight, null) },
-            label = { Text("Next") }
+            label = { Text("Next") },
+            colors = navBarColors
         )
 
         NavigationBarItem(
             selected = false,
             onClick = onChapterShow,
             icon = { Text("#$chapterNumber/$chapterCount") },
-            label = { Text("Chapters") }
+            label = { Text("Chapters") },
+            colors = navBarColors
         )
 
         NavigationBarItem(
@@ -388,7 +404,8 @@ fun FloatingBottomBar(
                     modifier = Modifier
                 )
             },
-            label = { Text("Pages") }
+            label = { Text("Pages") },
+            colors = navBarColors
         )
 
         //TODO: Maybe? Gotta think about this more.

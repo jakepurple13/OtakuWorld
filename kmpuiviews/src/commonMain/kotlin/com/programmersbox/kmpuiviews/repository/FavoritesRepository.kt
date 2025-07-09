@@ -17,7 +17,7 @@ class FavoritesRepository(
     suspend fun isIncognito(source: String): Boolean {
         //TODO: Maybe also allow specific items?
         // Not many changes would be needed. Just some up changes
-        val incognito = dao.getIncognitoSourceByNameSync(source)
+        val incognito = dao.getIncognitoSourceSync(source)
         return incognito != null && incognito.isIncognito
     }
 
@@ -34,11 +34,13 @@ class FavoritesRepository(
     }
 
     suspend fun addWatched(chapterWatched: ChapterWatched) {
+        if(isIncognito(chapterWatched.favoriteUrl)) return
         dao.insertChapter(chapterWatched)
         firebaseDb.insertEpisodeWatchedFlow(chapterWatched).collect()
     }
 
     suspend fun removeWatched(chapterWatched: ChapterWatched) {
+        if(isIncognito(chapterWatched.favoriteUrl)) return
         dao.deleteChapter(chapterWatched)
         firebaseDb.removeEpisodeWatchedFlow(chapterWatched).collect()
     }

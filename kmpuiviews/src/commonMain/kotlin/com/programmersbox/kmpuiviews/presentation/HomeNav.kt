@@ -360,8 +360,8 @@ private fun HomeNavigationBar(
                     .then(appBarDragModifier),
             ) {
                 val colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
