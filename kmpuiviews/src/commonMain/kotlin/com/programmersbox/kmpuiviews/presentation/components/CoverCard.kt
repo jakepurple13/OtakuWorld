@@ -15,12 +15,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ColorMatrixColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
@@ -41,6 +45,7 @@ fun M3CoverCard(
     headers: Map<String, Any> = emptyMap(),
     onLongPress: ((ComponentState) -> Unit)? = null,
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
+    colorFilter: ColorFilter? = null,
     onClick: () -> Unit = {},
 ) {
     @Composable
@@ -88,6 +93,7 @@ fun M3CoverCard(
                 placeHolder = placeHolder,
                 error = error,
                 contentScale = ContentScale.FillBounds,
+                colorFilter = colorFilter,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -132,6 +138,7 @@ fun M3ImageCard(
     placeHolder: @Composable () -> Painter,
     modifier: Modifier = Modifier,
     error: @Composable () -> Painter = placeHolder,
+    colorFilter: ColorFilter? = null,
     headers: Map<String, Any> = emptyMap(),
 ) {
     Surface(
@@ -155,6 +162,7 @@ fun M3ImageCard(
                 error = error,
                 contentScale = ContentScale.FillBounds,
                 name = name,
+                colorFilter = colorFilter,
                 modifier = Modifier.matchParentSize()
             )
 
@@ -196,6 +204,7 @@ fun M3CoverCard(
     modifier: Modifier = Modifier,
     error: @Composable () -> Painter = placeHolder,
     headers: Map<String, Any> = emptyMap(),
+    colorFilter: ColorFilter? = null,
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
     onClick: () -> Unit = {},
 ) {
@@ -222,6 +231,7 @@ fun M3CoverCard(
                 headers = headers,
                 placeHolder = placeHolder,
                 error = error,
+                colorFilter = colorFilter,
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(
@@ -273,6 +283,7 @@ fun M3CoverCard2(
     modifier: Modifier = Modifier,
     error: @Composable () -> Painter = placeHolder,
     headers: Map<String, Any> = emptyMap(),
+    colorFilter: ColorFilter? = null,
     favoriteIcon: @Composable BoxScope.() -> Unit = {},
 ) {
     Surface(
@@ -297,6 +308,7 @@ fun M3CoverCard2(
                 headers = headers,
                 placeHolder = placeHolder,
                 error = error,
+                colorFilter = colorFilter,
                 modifier = Modifier
                     .matchParentSize()
                     .customSharedElement(

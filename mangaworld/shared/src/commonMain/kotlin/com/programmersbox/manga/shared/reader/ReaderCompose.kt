@@ -52,13 +52,17 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.ReaderType
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
@@ -112,6 +116,9 @@ fun ReadView(
     var readerType by mangaSettingsHandling.rememberReaderType()
 
     val userGestureAllowed by mangaSettingsHandling.rememberUserGestureEnabled()
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -402,6 +409,7 @@ fun ReadView(
                                     pages = pages,
                                     readVm = viewModel,
                                     itemSpacing = spacing,
+                                    colorFilter = colorFilter,
                                     paddingValues = PaddingValues(
                                         top = if (pages.isNotEmpty()) 0.dp else p.calculateTopPadding(),
                                         bottom = p.calculateBottomPadding()
@@ -415,6 +423,7 @@ fun ReadView(
                                     pagerState = pagerState,
                                     pages = pages,
                                     vm = viewModel,
+                                    colorFilter = colorFilter,
                                     itemSpacing = spacing,
                                     imageLoaderType = imageLoaderType,
                                 )
@@ -453,6 +462,7 @@ fun ListView(
     itemSpacing: Dp,
     paddingValues: PaddingValues,
     imageLoaderType: ImageLoaderType,
+    colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -460,7 +470,7 @@ fun ListView(
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pages, readVm, imageLoaderType) }
+    ) { reader(pages, readVm, imageLoaderType, colorFilter) }
 }
 
 @Composable
@@ -470,6 +480,7 @@ fun PagerView(
     vm: ReadViewModel,
     itemSpacing: Dp,
     imageLoaderType: ImageLoaderType,
+    colorFilter: ColorFilter? = null,
     modifier: Modifier = Modifier,
 ) {
     VerticalPager(
@@ -485,7 +496,8 @@ fun PagerView(
                 isDownloaded = vm.isDownloaded,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
-                imageLoaderType = imageLoaderType
+                imageLoaderType = imageLoaderType,
+                colorFilter = colorFilter
             )
         } ?: Box(modifier = Modifier.fillMaxSize()) {
             LastPageReached(
@@ -587,6 +599,7 @@ private fun LazyListScope.reader(
     pages: List<String>,
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
+    colorFilter: ColorFilter? = null,
 ) {
     itemsIndexed(
         pages,
@@ -598,7 +611,8 @@ private fun LazyListScope.reader(
             isDownloaded = vm.isDownloaded,
             headers = vm.headers,
             contentScale = ContentScale.FillWidth,
-            imageLoaderType = imageLoaderType
+            imageLoaderType = imageLoaderType,
+            colorFilter = colorFilter
         )
     }
     item {

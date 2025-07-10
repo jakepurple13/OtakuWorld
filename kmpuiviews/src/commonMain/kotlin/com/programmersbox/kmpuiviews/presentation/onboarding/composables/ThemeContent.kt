@@ -36,6 +36,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.seedColor
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.settings.general.ColorBlindTypeSettings
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -132,5 +133,7 @@ internal fun ThemeContent(
                     )
                 }
         }
+
+        ColorBlindTypeSettings(handling = handling)
     }
 }

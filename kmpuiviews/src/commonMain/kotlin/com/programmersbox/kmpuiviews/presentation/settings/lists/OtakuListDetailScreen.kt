@@ -75,6 +75,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,7 +87,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
@@ -101,6 +105,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItem
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
@@ -211,6 +216,9 @@ fun OtakuCustomListScreen(
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
 
     val sourceRepository = LocalSourcesRepository.current
 
@@ -361,6 +369,7 @@ fun OtakuCustomListScreen(
             onClearFilterAction = viewModel::clearFilter,
             showBySource = viewModel.showBySource,
             onShowBySource = { viewModel.toggleShowSource(it) },
+            colorFilter = colorFilter
         )
     }
 
@@ -531,6 +540,7 @@ fun OtakuCustomListScreen(
                                         }
                                     },
                                     onShowBanner = { optionsSheet = listOf(item.toOptionsSheetValues()) },
+                                    colorFilter = colorFilter,
                                     modifier = Modifier.animateItem()
                                 )
                             }
@@ -558,6 +568,7 @@ fun OtakuCustomListScreen(
                                 }
                             },
                             onShowBanner = { optionsSheet = item.value.map { it.toOptionsSheetValues() } },
+                            colorFilter = colorFilter,
                             modifier = Modifier.animateItem()
                         )
                     }
@@ -607,6 +618,7 @@ private fun CustomItemVertical(
     onError: () -> Unit,
     onShowBanner: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    colorFilter: ColorFilter? = null,
 ) {
     val biometrics = rememberBiometricOpening()
     val scope = rememberCoroutineScope()
@@ -712,6 +724,7 @@ private fun CustomItemVertical(
                 }
             }
         },
+        colorFilter = colorFilter,
         modifier = modifier
     )
 }
@@ -864,6 +877,7 @@ private fun InfoSheet(
     onClearFilterAction: () -> Unit,
     showBySource: Boolean,
     onShowBySource: (Boolean) -> Unit,
+    colorFilter: ColorFilter? = null,
 ) {
     val scope = rememberCoroutineScope()
     val biometric = rememberBiometricPrompting()
@@ -979,6 +993,7 @@ private fun InfoSheet(
                         imageUrl = customItem.list.firstOrNull()?.imageUrl.orEmpty(),
                         name = "",
                         placeHolder = { painterLogo() },
+                        colorFilter = colorFilter,
                         modifier = Modifier
                             .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                             .clip(MaterialTheme.shapes.small)

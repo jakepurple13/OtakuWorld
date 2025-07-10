@@ -178,7 +178,8 @@ kotlin {
 
         iosMain {
             dependencies {
-
+                implementation("dev.icerock.moko:biometry:0.4.0")
+                implementation("dev.icerock.moko:biometry-compose:0.4.0")
             }
         }
 

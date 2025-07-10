@@ -66,6 +66,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,9 +81,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.NotificationSortBy
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -102,6 +105,7 @@ import com.programmersbox.kmpuiviews.presentation.components.M3ImageCard
 import com.programmersbox.kmpuiviews.presentation.components.ModalBottomSheetDelete
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -167,6 +171,9 @@ fun NotificationScreen(
 ) {
     val settingsHandling: NewSettingsHandling = koinInject()
     val showBlur by settingsHandling.rememberShowBlur()
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
 
     var showLoadingDialog by remember { mutableStateOf(false) }
 
@@ -288,6 +295,7 @@ fun NotificationScreen(
                         cancelNotification = vm::cancelNotification,
                         showBlur = showBlur,
                         itemDao = itemDao,
+                        colorFilter = colorFilter,
                         onError = {
                             scope.launch {
                                 snackbarHostState.currentSnackbarData?.dismiss()
@@ -314,6 +322,7 @@ fun NotificationScreen(
                         onLoadingChange = { showLoadingDialog = it },
                         showBlur = showBlur,
                         itemDao = itemDao,
+                        colorFilter = colorFilter,
                         onError = {
                             scope.launch {
                                 snackbarHostState.currentSnackbarData?.dismiss()
@@ -381,6 +390,7 @@ private fun DateSort(
     onLoadingChange: (Boolean) -> Unit,
     showBlur: Boolean,
     itemDao: ItemDao,
+    colorFilter: ColorFilter?,
 ) {
     val hazeState = remember { HazeState() }
 
@@ -445,6 +455,7 @@ private fun DateSort(
                         deleteNotification = deleteNotification,
                         cancelNotification = cancelNotification,
                         itemDao = itemDao,
+                        colorFilter = colorFilter,
                         modifier = Modifier.hazeSource(hazeState)
                     )
                 }
@@ -562,6 +573,7 @@ private fun NotiItem(
     navController: NavigationActions,
     itemDao: ItemDao,
     modifier: Modifier = Modifier,
+    colorFilter: ColorFilter? = null,
     deleteNotification: (item: NotificationItem, block: () -> Unit) -> Unit,
     cancelNotification: (NotificationItem) -> Unit,
 ) {
@@ -645,6 +657,7 @@ private fun NotiItem(
                 imageUrl = i.imageUrl.orEmpty(),
                 name = i.notiTitle,
                 placeHolder = { rememberVectorPainter(Icons.Default.Settings) },
+                colorFilter = colorFilter,
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
                     .combinedClickable(
@@ -687,6 +700,7 @@ private fun GroupedSort(
     onLoadingChange: (Boolean) -> Unit,
     showBlur: Boolean,
     itemDao: ItemDao,
+    colorFilter: ColorFilter?,
     onError: (NotificationItem) -> Unit,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
@@ -751,6 +765,7 @@ private fun GroupedSort(
                                 onLoadingChange = onLoadingChange,
                                 itemDao = itemDao,
                                 onError = onError,
+                                colorFilter = colorFilter,
                             )
                         }
                     }
@@ -772,6 +787,7 @@ private fun NotificationItem(
     onLoadingChange: (Boolean) -> Unit,
     itemDao: ItemDao,
     modifier: Modifier = Modifier,
+    colorFilter: ColorFilter? = null,
 ) {
     val scope = rememberCoroutineScope()
     val biometricOpen = rememberBiometricOpening()
@@ -887,6 +903,7 @@ private fun NotificationItem(
                             placeholder = painterLogo(),
                             error = painterLogo(),
                             contentDescription = item.notiTitle,
+                            colorFilter = colorFilter,
                             modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                         )
                     },

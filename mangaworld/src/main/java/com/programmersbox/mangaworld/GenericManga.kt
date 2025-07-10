@@ -28,6 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -43,6 +47,7 @@ import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
+import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.DbModel
@@ -55,6 +60,7 @@ import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -93,6 +99,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -248,6 +255,9 @@ class GenericManga(
         paddingValues: PaddingValues,
         onClick: (KmpItemModel) -> Unit,
     ) {
+        val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+        val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
         LazyVerticalGrid(
             columns = adaptiveGridCell(),
             state = listState,
@@ -283,6 +293,7 @@ class GenericManga(
                             )
                         }
                     },
+                    colorFilter = colorFilter,
                     modifier = Modifier.animateItem()
                 ) { onClick(it) }
             }

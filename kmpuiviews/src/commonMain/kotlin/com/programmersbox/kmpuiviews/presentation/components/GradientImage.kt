@@ -31,6 +31,7 @@ fun GradientImage(
     saturation: Float = 3f,
     scaleX: Float = 1.5f,
     scaleY: Float = 1.5f,
+    colorFilter: ColorFilter? = null,
 ) {
     Box {
         when (val painter = asyncPainterResource(data = model)) {
@@ -49,6 +50,7 @@ fun GradientImage(
                     resource = { painter },
                     contentDescription = contentDescription,
                     contentScale = contentScale,
+                    colorFilter = colorFilter,
                     modifier = modifier
                 )
             }

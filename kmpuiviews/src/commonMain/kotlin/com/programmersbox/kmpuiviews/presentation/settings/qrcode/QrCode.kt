@@ -34,6 +34,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,11 +48,14 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.rememberUseLogoInQrCode
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -237,6 +241,9 @@ fun ShareViaQrCode(
 fun ScanQrCode(
     viewModel: QrCodeScannerViewModel = koinViewModel(),
 ) {
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
@@ -347,6 +354,7 @@ fun ScanQrCode(
                                 imageUrl = target?.imageUrl ?: "",
                                 name = target?.title ?: "Waiting for QR code",
                                 placeHolder = { painterLogo() },
+                                colorFilter = colorFilter,
                                 modifier = Modifier
                                     .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
                                     .clip(MaterialTheme.shapes.medium)

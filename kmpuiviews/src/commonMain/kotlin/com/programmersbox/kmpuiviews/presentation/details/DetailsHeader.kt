@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,8 +56,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.kmpalette.palette.graphics.Palette
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
@@ -70,6 +74,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitle
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.zoomOverlay
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.addToFavorites
 import otakuworld.kmpuiviews.generated.resources.chapter_count
@@ -93,6 +98,10 @@ internal fun DetailsHeader(
     val settings = LocalSettingsHandling.current
 
     val blurEnabled by settings.rememberShowBlur()
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
+
     val imageUrl = model.imageUrl
 
     var imagePopup by remember { mutableStateOf(false) }
@@ -109,6 +118,7 @@ internal fun DetailsHeader(
                     headers = model.extras.mapValues { it.value.toString() },
                     placeHolder = { painterLogo() },
                     contentScale = ContentScale.Fit,
+                    colorFilter = colorFilter,
                     modifier = Modifier
                         .scaleRotateOffsetReset()
                         .defaultMinSize(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
@@ -132,6 +142,7 @@ internal fun DetailsHeader(
             headers = model.extras.mapValues { it.value.toString() },
             placeHolder = { painterLogo() },
             contentScale = ContentScale.Crop,
+            colorFilter = colorFilter,
             modifier = Modifier
                 .matchParentSize()
                 .composed {
@@ -199,6 +210,7 @@ internal fun DetailsHeader(
                         contentScale = ContentScale.FillBounds,
                         placeHolder = { painterLogo() },
                         onImageSet = onBitmapSet,
+                        colorFilter = colorFilter,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
                             /*.combinedClickable(

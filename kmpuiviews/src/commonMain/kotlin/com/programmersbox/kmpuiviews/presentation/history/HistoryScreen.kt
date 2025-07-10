@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,12 +45,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.cash.paging.compose.collectAsLazyPagingItems
 import app.cash.paging.compose.itemContentType
 import app.cash.paging.compose.itemKey
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpuiviews.painterLogo
@@ -58,6 +62,7 @@ import com.programmersbox.kmpuiviews.presentation.components.GradientImage
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
@@ -81,6 +86,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.clear_all_history
@@ -101,6 +107,9 @@ fun HistoryUi(
     val snackbarHostState = remember { SnackbarHostState() }
     val biometrics = rememberBiometricOpening()
     var clearAllDialog by remember { mutableStateOf(false) }
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
 
     if (clearAllDialog) {
         val onDismissRequest = { clearAllDialog = false }
@@ -175,6 +184,7 @@ fun HistoryUi(
                         dao = dao,
                         scope = scope,
                         biometrics = biometrics,
+                        colorFilter = colorFilter,
                         onError = {
                             scope.launch {
                                 snackbarHostState.currentSnackbarData?.dismiss()
@@ -206,6 +216,7 @@ fun HistoryItem(
     scope: CoroutineScope,
     biometrics: BiometricOpen,
     modifier: Modifier = Modifier,
+    colorFilter: ColorFilter? = null,
     onError: () -> Unit,
 ) {
     var showPopup by remember { mutableStateOf(false) }
@@ -330,6 +341,7 @@ fun HistoryItem(
                             model = item.imageUrl,
                             placeholder = logo,
                             error = logo,
+                            colorFilter = colorFilter,
                             contentDescription = item.title,
                             modifier = Modifier
                                 .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)

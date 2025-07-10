@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -250,6 +251,7 @@ internal fun ChapterPage(
     headers: Map<String, String>,
     contentScale: ContentScale,
     imageLoaderType: ImageLoaderType,
+    colorFilter: ColorFilter? = null,
 ) {
     if (imageLoaderType == ImageLoaderType.Panpf) {
         Panpf(
@@ -269,9 +271,10 @@ internal fun ChapterPage(
                 painter = chapterLink(),
                 isDownloaded = isDownloaded,
                 headers = headers,
-                modifier = Modifier.fillMaxWidth(),
                 contentScale = contentScale,
-                imageLoaderType = imageLoaderType
+                imageLoaderType = imageLoaderType,
+                colorFilter = colorFilter,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -284,6 +287,7 @@ private fun ZoomableImage(
     headers: Map<String, String>,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    colorFilter: ColorFilter? = null,
     imageLoaderType: ImageLoaderType,
 ) {
     Box(
@@ -301,6 +305,7 @@ private fun ZoomableImage(
 
         imageLoaderType.Composed(
             painter = painter,
+            colorFilter = colorFilter,
             onRefresh = {
                 scope.launch {
                     showTheThing = false

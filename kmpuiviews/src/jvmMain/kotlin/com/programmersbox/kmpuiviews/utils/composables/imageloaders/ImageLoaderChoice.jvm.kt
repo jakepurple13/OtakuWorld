@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.utils.composables.imageloaders
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -15,6 +16,7 @@ actual fun CustomImageChoice(
     placeHolder: @Composable (() -> Painter),
     onError: @Composable (() -> Painter),
     contentScale: ContentScale,
+    colorFilter: ColorFilter?,
     onImageSet: (ImageBitmap) -> Unit,
 ) {
     CustomKamelImage(

@@ -59,6 +59,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,8 +71,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -85,6 +89,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItem
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.SourceNotInstalledModal
+import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheetList
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
@@ -121,6 +126,9 @@ fun FavoriteScreen(
     val navController = LocalNavActions.current
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
+
+    val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
+    val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
 
     var optionsSheet by optionsKmpSheetList()
     val scope = rememberCoroutineScope()
@@ -424,6 +432,7 @@ fun FavoriteScreen(
                 groupedSources = viewModel.groupedSources,
                 sourceRepository = sourceRepository,
                 navController = navController,
+                colorFilter = colorFilter,
                 moreInfoClick = {
                     scope.launch {
                         snackbarHostState.currentSnackbarData?.dismiss()
@@ -452,6 +461,7 @@ private fun FavoritesGrid(
     groupedSources: List<Map.Entry<String, List<DbModel>>>,
     sourceRepository: SourceRepository,
     navController: NavigationActions,
+    colorFilter: ColorFilter?,
     moreInfoClick: (DbModel) -> Unit,
     onLongPress: (List<KmpItemModel>) -> Unit,
     modifier: Modifier = Modifier,
@@ -516,6 +526,7 @@ private fun FavoritesGrid(
                 imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                 name = info.key,
                 placeHolder = { painterLogo() },
+                colorFilter = colorFilter,
                 favoriteIcon = {
                     if (info.value.size > 1) {
                         Box(
