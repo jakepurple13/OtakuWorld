@@ -37,6 +37,7 @@ interface NavigationActions {
     fun general()
     fun moreInfo()
     fun moreSettings()
+    fun security()
     fun accountInfo()
     fun prerelease()
     fun notificationsSettings()

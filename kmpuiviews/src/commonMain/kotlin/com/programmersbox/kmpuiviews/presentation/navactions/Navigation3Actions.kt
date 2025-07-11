@@ -130,6 +130,10 @@ class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : 
         navBackStack.add(Screen.AccountInfo)
     }
 
+    override fun security() {
+        navBackStack.add(Screen.SecuritySettings)
+    }
+
     override fun prerelease() {
         navBackStack.add(Screen.PrereleaseScreen)
     }

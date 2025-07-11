@@ -147,6 +147,10 @@ class Navigation2Actions(
         navController.navigate(Screen.ScanQrCodeScreen)
     }
 
+    override fun security() {
+        navController.navigate(Screen.SecuritySettings)
+    }
+
     override fun settings() {
         navController.navigate(Screen.Settings) {
             launchSingleTop = true

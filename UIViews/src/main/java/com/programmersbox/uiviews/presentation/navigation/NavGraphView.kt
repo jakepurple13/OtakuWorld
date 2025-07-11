@@ -203,21 +203,7 @@ private fun Nav2(
             settingsScreen = {
                 SettingScreen(
                     composeSettingsDsl = customPreferences,
-                    notificationClick = navigationActions::notifications,
-                    favoritesClick = navigationActions::favorites,
-                    historyClick = navigationActions::history,
-                    globalSearchClick = navigationActions::globalSearch,
-                    listClick = navigationActions::customList,
-                    extensionClick = navigationActions::extensionList,
-                    notificationSettingsClick = navigationActions::notificationsSettings,
-                    generalClick = navigationActions::general,
-                    otherClick = navigationActions::otherSettings,
-                    moreInfoClick = navigationActions::moreInfo,
-                    moreSettingsClick = navigationActions::moreSettings,
-                    geminiClick = { navigationActions.navigate(Screen.GeminiScreen) },
-                    sourcesOrderClick = navigationActions::order,
-                    appDownloadsClick = navigationActions::downloadInstall,
-                    scanQrCode = navigationActions::scanQrCode,
+                    navigationActions = navigationActions,
                     accountSettings = {
                         val appConfig: AppConfig = koinInject()
                         if (appConfig.buildType == BuildType.Full) {

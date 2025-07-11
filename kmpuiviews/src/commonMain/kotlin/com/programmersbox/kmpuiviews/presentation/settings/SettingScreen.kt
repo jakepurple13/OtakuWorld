@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Reorder
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
@@ -58,6 +59,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.showTranslationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -94,21 +96,23 @@ import otakuworld.kmpuiviews.generated.resources.view_source_in_browser
 @Composable
 fun SettingScreen(
     composeSettingsDsl: ComposeSettingsDsl,
-    notificationClick: () -> Unit = {},
-    favoritesClick: () -> Unit = {},
-    historyClick: () -> Unit = {},
-    globalSearchClick: () -> Unit = {},
-    listClick: () -> Unit = {},
-    extensionClick: () -> Unit = {},
-    notificationSettingsClick: () -> Unit = {},
-    generalClick: () -> Unit = {},
-    otherClick: () -> Unit = {},
-    moreInfoClick: () -> Unit = {},
-    moreSettingsClick: () -> Unit = {},
-    geminiClick: () -> Unit = {},
-    sourcesOrderClick: () -> Unit = {},
-    appDownloadsClick: () -> Unit = {},
-    scanQrCode: () -> Unit,
+    navigationActions: NavigationActions = LocalNavActions.current,
+    notificationClick: () -> Unit = navigationActions::notifications,
+    favoritesClick: () -> Unit = navigationActions::favorites,
+    historyClick: () -> Unit = navigationActions::history,
+    globalSearchClick: () -> Unit = navigationActions::globalSearch,
+    listClick: () -> Unit = navigationActions::customList,
+    extensionClick: () -> Unit = navigationActions::extensionList,
+    notificationSettingsClick: () -> Unit = navigationActions::notificationsSettings,
+    generalClick: () -> Unit = navigationActions::general,
+    otherClick: () -> Unit = navigationActions::otherSettings,
+    moreInfoClick: () -> Unit = navigationActions::moreInfo,
+    moreSettingsClick: () -> Unit = navigationActions::moreSettings,
+    geminiClick: () -> Unit = { navigationActions.navigate(Screen.GeminiScreen) },
+    sourcesOrderClick: () -> Unit = navigationActions::order,
+    appDownloadsClick: () -> Unit = navigationActions::downloadInstall,
+    scanQrCode: () -> Unit = navigationActions::scanQrCode,
+    securityClick: () -> Unit = navigationActions::security,
     accountSettings: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -146,7 +150,8 @@ fun SettingScreen(
                 geminiClick = geminiClick,
                 sourcesOrderClick = sourcesOrderClick,
                 appDownloadsClick = appDownloadsClick,
-                scanQrCode = scanQrCode
+                scanQrCode = scanQrCode,
+                securityClick = securityClick
             )
         }
     }
@@ -171,6 +176,7 @@ private fun SettingsScreen(
     sourcesOrderClick: () -> Unit,
     appDownloadsClick: () -> Unit,
     scanQrCode: () -> Unit,
+    securityClick: () -> Unit,
 ) {
     val navController = LocalNavActions.current
     val uriHandler = LocalUriHandler.current
@@ -397,6 +403,14 @@ private fun SettingsScreen(
                 settingTitle = { Text(stringResource(Res.string.general_menu_title)) },
                 settingIcon = { Icon(Icons.Default.PhoneAndroid, null, modifier = Modifier.fillMaxSize()) },
                 modifier = Modifier.click(generalClick)
+            )
+        }
+
+        item {
+            PreferenceSetting(
+                settingTitle = { Text("Security Settings") },
+                settingIcon = { Icon(Icons.Default.Security, null, modifier = Modifier.fillMaxSize()) },
+                onClick = securityClick
             )
         }
 

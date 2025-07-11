@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.di
 
 import android.content.Context
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpextensionloader.SourceLoader
@@ -18,11 +19,10 @@ import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
     singleOf(::DownloadAndInstaller)
-
     singleOf(::IconLoader)
     singleOf(::DateTimeFormatHandler)
-
     singleOf(::AboutLibraryBuilder)
+    singleOf(::PlatformDataStoreHandling)
 
     single {
         NewSettingsHandling(

@@ -30,6 +30,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountIn
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
+import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
@@ -42,6 +43,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.notifications.Notific
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.presentation.settings.security.SecurityScreen
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
@@ -383,4 +385,7 @@ private fun NavGraphBuilder.settings(
     }
 
     composable<Screen.ColorHelper> { ColorHelperScreen() }
+
+    composable<Screen.ThemeSettings> { ThemeSettingsScreen() }
+    composable<Screen.SecuritySettings> { SecurityScreen() }
 }

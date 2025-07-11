@@ -4,11 +4,17 @@ import android.content.Context
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.programmersbox.datastore.PlatformDataStoreHandling
+import com.programmersbox.datastore.asState
+import org.koin.compose.koinInject
 
 actual class BiometricPrompting(
     private val context: Context,
+    private val useStrongSecurity: Boolean,
+    private val useDeviceCredentials: Boolean,
 ) {
     actual fun authenticate(
         onAuthenticationSucceeded: () -> Unit,
@@ -27,6 +33,13 @@ actual class BiometricPrompting(
     )
 
     actual fun authenticate(promptInfo: PromptCallback) {
+        var biometricStrength = if (useStrongSecurity)
+            BiometricManager.Authenticators.BIOMETRIC_STRONG
+        else
+            BiometricManager.Authenticators.BIOMETRIC_WEAK
+
+        if (useDeviceCredentials) biometricStrength = biometricStrength or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
         BiometricPrompt(
             context.findActivity(),
             context.mainExecutor,
@@ -54,11 +67,12 @@ actual class BiometricPrompting(
             BiometricPrompt.PromptInfo.Builder()
                 .setTitle(promptInfo.title)
                 .setSubtitle(promptInfo.subtitle)
-                //.setNegativeButtonText(promptInfo.negativeButtonText)
-                .setAllowedAuthenticators(
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                            BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                )
+                .also {
+                    if (!useDeviceCredentials) {
+                        it.setNegativeButtonText(promptInfo.negativeButtonText)
+                    }
+                }
+                .setAllowedAuthenticators(biometricStrength)
                 .build()
         )
     }
@@ -67,8 +81,21 @@ actual class BiometricPrompting(
 @Composable
 actual fun rememberBiometricPrompting(): BiometricPrompting {
     val context = LocalContext.current
-    val biometricPrompt = remember(context) {
-        BiometricPrompting(context)
+    val platformDataStoreHandling = koinInject<PlatformDataStoreHandling>()
+    val useStrongSecurity by platformDataStoreHandling.useStrongSecurity.asState()
+    val useDeviceCredentials by platformDataStoreHandling.useDeviceCredentials.asState()
+
+    val biometricPrompt = remember(
+        context,
+        useStrongSecurity,
+        useDeviceCredentials
+    ) {
+        BiometricPrompting(
+            context = context,
+            useStrongSecurity = useStrongSecurity,
+            useDeviceCredentials = useDeviceCredentials
+        )
     }
+
     return biometricPrompt
 }

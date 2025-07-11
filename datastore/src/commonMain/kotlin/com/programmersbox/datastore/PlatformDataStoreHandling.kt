@@ -1,0 +1,3 @@
+package com.programmersbox.datastore
+
+expect class PlatformDataStoreHandling

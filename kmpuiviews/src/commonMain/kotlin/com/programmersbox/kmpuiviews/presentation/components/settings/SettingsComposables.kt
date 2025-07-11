@@ -49,6 +49,26 @@ fun PreferenceSetting(
 )
 
 @Composable
+fun PreferenceSetting(
+    settingTitle: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    settingIcon: (@Composable BoxScope.() -> Unit)? = null,
+    summaryValue: (@Composable () -> Unit)? = null,
+    endIcon: (@Composable () -> Unit)? = null,
+    onClick: () -> Unit,
+) = DefaultPreferenceLayout(
+    settingIcon = settingIcon,
+    settingTitle = settingTitle,
+    summaryValue = summaryValue,
+    content = endIcon,
+    modifier = modifier.clickable(
+        indication = ripple(),
+        interactionSource = null,
+        onClick = onClick
+    )
+)
+
+@Composable
 fun ShowMoreSetting(
     settingTitle: @Composable () -> Unit,
     modifier: Modifier = Modifier,

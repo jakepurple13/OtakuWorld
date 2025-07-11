@@ -185,21 +185,7 @@ fun ApplicationScope.BaseDesktopUi(
                                             settingsScreen = {
                                                 SettingScreen(
                                                     composeSettingsDsl = customSettings,
-                                                    notificationClick = navigationActions::notifications,
-                                                    favoritesClick = navigationActions::favorites,
-                                                    historyClick = navigationActions::history,
-                                                    globalSearchClick = navigationActions::globalSearch,
-                                                    listClick = navigationActions::customList,
-                                                    extensionClick = navigationActions::extensionList,
-                                                    notificationSettingsClick = navigationActions::notificationsSettings,
-                                                    generalClick = navigationActions::general,
-                                                    otherClick = navigationActions::otherSettings,
-                                                    moreInfoClick = navigationActions::moreInfo,
-                                                    moreSettingsClick = navigationActions::moreSettings,
-                                                    geminiClick = { navController.navigate(Screen.GeminiScreen) },
-                                                    sourcesOrderClick = navigationActions::order,
-                                                    appDownloadsClick = navigationActions::downloadInstall,
-                                                    scanQrCode = navigationActions::scanQrCode,
+                                                    navigationActions = navigationActions,
                                                     accountSettings = {}
                                                 )
                                             },
