@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -495,7 +497,7 @@ fun ChapterItem(
 
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
         when (behavior) {
-            DetailsChapterSwipeBehavior.MarkAsRead -> if (!updatedIsRead) markAs(c, true)
+            DetailsChapterSwipeBehavior.MarkAsRead -> markAs(c, !updatedIsRead)
 
             DetailsChapterSwipeBehavior.Read -> {
                 genericInfo.chapterOnClick(c, chapters, infoModel, navController)
@@ -507,21 +509,18 @@ fun ChapterItem(
         }
     }
 
-    val dismissState = rememberSwipeToDismissBoxState(
-        initialValue = SwipeToDismissBoxValue.Settled,
-        confirmValueChange = { value ->
+    val dismissState = rememberSwipeToDismissBoxState()
+
+    SwipeToDismissBox(
+        state = dismissState,
+        onDismiss = { value ->
             when (value) {
                 SwipeToDismissBoxValue.EndToStart -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
                 SwipeToDismissBoxValue.StartToEnd -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
                 SwipeToDismissBoxValue.Settled -> {}
             }
-
-            value == SwipeToDismissBoxValue.Settled
-        }
-    )
-
-    SwipeToDismissBox(
-        state = dismissState,
+            dismissState.reset()
+        },
         enableDismissFromEndToStart = swipeBehavior.detailsChapterSwipeBehaviorEndToStart != DetailsChapterSwipeBehavior.Nothing,
         enableDismissFromStartToEnd = swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,
         backgroundContent = {
@@ -544,21 +543,46 @@ fun ChapterItem(
                 else -> Icons.Default.Cancel
             }
             val scale by animateFloatAsState(
-                if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
+                if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 2f,
                 label = ""
             )
 
+            fun textSwipeBehavior(behavior: DetailsChapterSwipeBehavior) = when (behavior) {
+                DetailsChapterSwipeBehavior.MarkAsRead -> "Mark as read"
+                DetailsChapterSwipeBehavior.Read -> "Read"
+                DetailsChapterSwipeBehavior.Nothing -> "Cancel"
+            }
+
+            val textIndication = when(direction) {
+                SwipeToDismissBoxValue.StartToEnd -> textSwipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
+                SwipeToDismissBoxValue.EndToStart -> textSwipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
+                else -> "Cancel"
+
+            }
+
             Box(
-                Modifier
+                contentAlignment = alignment,
+                modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                contentAlignment = alignment
+                    .padding(horizontal = 20.dp)
             ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.scale(scale)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .background(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = CircleShape
+                        )
+                        .padding(16.dp)
+                ) {
+                    Text(textIndication)
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.scale(scale)
+                    )
+                }
             }
         },
         modifier = modifier.fillMaxWidth()
