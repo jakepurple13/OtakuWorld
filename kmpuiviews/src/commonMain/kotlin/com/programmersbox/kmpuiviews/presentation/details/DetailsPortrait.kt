@@ -421,7 +421,8 @@ fun DetailsView(
                         chapters = info.chapters,
                         shareChapter = shareChapter,
                         markAs = markAs,
-                        showDownload = showDownloadButton
+                        showDownload = showDownloadButton,
+                        modifier = Modifier.animateItem()
                     )
                 }
             }

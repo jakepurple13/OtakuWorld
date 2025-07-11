@@ -66,6 +66,8 @@ class SettingsSerializer : GenericSerializer<Settings> {
             ),
             mediaCheckerSettings = defaultMediaCheckerSettings,
             aiSettings = defaultAiSettings,
+            colorBlindnessType = ColorBlindnessType.None,
+            detailsChapterSwipeBehavior = defaultDetailsChapterSwipeBehavior
         )
 
     override val parseFrom: (input: BufferedSource) -> Settings get() = Settings.ADAPTER::decode
@@ -96,6 +98,11 @@ class SettingsSerializer : GenericSerializer<Settings> {
             requiresCharging = false,
             requiresBatteryNotLow = false,
             interval = 1,
+        )
+
+        val defaultDetailsChapterSwipeBehavior = DetailsChapterSwipeBehaviorHandle(
+            detailsChapterSwipeBehaviorEndToStart = DetailsChapterSwipeBehavior.Read,
+            detailsChapterSwipeBehaviorStartToEnd = DetailsChapterSwipeBehavior.MarkAsRead,
         )
     }
 }
@@ -258,6 +265,13 @@ class NewSettingsHandling(
         key = { it.aiSettings ?: SettingsSerializer.defaultAiSettings },
         update = { copy(aiSettings = it) },
         defaultValue = SettingsSerializer.defaultAiSettings
+    )
+
+    val detailsChapterSwipeBehavior = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.detailsChapterSwipeBehavior ?: SettingsSerializer.defaultDetailsChapterSwipeBehavior },
+        update = { copy(detailsChapterSwipeBehavior = it) },
+        defaultValue = SettingsSerializer.defaultDetailsChapterSwipeBehavior
     )
 }
 

@@ -26,6 +26,7 @@ message Settings {
   MediaCheckerSettings mediaCheckerSettings = 22;
   AiSettings aiSettings = 23;
   ColorBlindnessType colorBlindnessType = 24;
+ DetailsChapterSwipeBehaviorHandle detailsChapterSwipeBehavior = 27;
 }
 
 enum SystemThemeMode {
@@ -118,4 +119,15 @@ enum ColorBlindnessType {
   Protanopia = 1;    // Red-green color blindness (red weak/missing)
   Deuteranopia = 2; // Blue-yellow color blindness (blue weak/missing)
   Tritanopia = 3;   // Green-blue color blindness (green weak/missing)
+}
+
+message DetailsChapterSwipeBehaviorHandle {
+  DetailsChapterSwipeBehavior detailsChapterSwipeBehaviorStartToEnd = 1;
+  DetailsChapterSwipeBehavior detailsChapterSwipeBehaviorEndToStart = 2;
+}
+
+enum DetailsChapterSwipeBehavior {
+  Nothing = 0;
+  MarkAsRead = 1;
+  Read = 2;
 }

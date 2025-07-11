@@ -372,21 +372,6 @@ private fun SettingsScreen(
         }
     }
 
-    //TODO: This will be for the future when this works again
-    // right now it runs into java.lang.NoClassDefFoundError: Failed resolution of: Lio/ktor/client/plugins/HttpTimeout;
-    // once it doesn't, this will be fully implemented
-    /*val showGemini by vm.showGemini.collectAsStateWithLifecycle(false)
-    if (showGemini) {
-        PreferenceSetting(
-            settingTitle = { Text("Gemini Recommendations") },
-            settingIcon = { Icon(Icons.Default.AutoAwesome, null, modifier = Modifier.fillMaxSize()) },
-            modifier = Modifier.clickable(
-                indication = ripple(),
-                interactionSource = null,
-                onClick = geminiClick
-            )
-        )
-    }*/
     CategoryGroup {
         categorySetting { Text(stringResource(Res.string.additional_settings)) }
 

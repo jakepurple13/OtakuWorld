@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,6 +28,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
@@ -50,19 +53,26 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -75,6 +85,8 @@ import com.kmpalette.color
 import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.rememberDynamicMaterialThemeState
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.DetailsChapterSwipeBehavior
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
@@ -96,7 +108,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -444,6 +455,7 @@ fun ChapterItem(
     shareChapter: Boolean,
     showDownload: () -> Boolean,
     markAs: (KmpChapterModel, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val genericInfo = koinInject<KmpGenericInfo>()
     val qrCodeRepository = koinInject<QrCodeRepository>()
@@ -451,6 +463,8 @@ fun ChapterItem(
     val favoritesRepository: FavoritesRepository = koinInject()
     val navController = LocalNavActions.current
     val dataStoreHandling = koinInject<DataStoreHandling>()
+    val settingsHandling = koinInject<NewSettingsHandling>()
+    val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
     val scope = rememberCoroutineScope()
 
     fun insertRecent() {
@@ -476,135 +490,209 @@ fun ChapterItem(
         }
     }
 
-    ElevatedCard(
-        shape = RoundedCornerShape(2.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                indication = ripple(),
-                interactionSource = null,
-            ) { markAs(c, !read.fastAny { it.url == c.url }) },
-    ) {
-        Column(modifier = Modifier.padding(vertical = 16.dp)) {
-            if (shareChapter) {
-                ListItem(
-                    leadingContent = {
-                        Checkbox(
-                            checked = read.fastAny { it.url == c.url },
-                            onCheckedChange = { b -> markAs(c, b) },
-                        )
-                    },
-                    headlineContent = {
-                        Text(
-                            c.name,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    },
-                    trailingContent = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    qrCodeRepository.shareUrl(
-                                        url = c.url,
-                                        title = c.name
-                                    )
-                                }
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Share,
-                                null,
-                            )
-                        }
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                )
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = read.fastAny { it.url == c.url },
-                        onCheckedChange = { b -> markAs(c, b) },
-                    )
+    val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
+    val updatedIsRead by rememberUpdatedState(hasBeenRead)
 
-                    Text(
-                        c.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
+    fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
+        when (behavior) {
+            DetailsChapterSwipeBehavior.MarkAsRead -> if (!updatedIsRead) markAs(c, true)
+
+            DetailsChapterSwipeBehavior.Read -> {
+                genericInfo.chapterOnClick(c, chapters, infoModel, navController)
+                insertRecent()
+                if (!updatedIsRead) markAs(c, true)
             }
 
-            Text(
-                c.uploaded,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(horizontal = 16.dp)
-                    .padding(4.dp)
+            DetailsChapterSwipeBehavior.Nothing -> {}
+        }
+    }
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        initialValue = SwipeToDismissBoxValue.Settled,
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
+                SwipeToDismissBoxValue.StartToEnd -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
+                SwipeToDismissBoxValue.Settled -> {}
+            }
+
+            value == SwipeToDismissBoxValue.Settled
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromEndToStart = swipeBehavior.detailsChapterSwipeBehaviorEndToStart != DetailsChapterSwipeBehavior.Nothing,
+        enableDismissFromStartToEnd = swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            val alignment = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                else -> Alignment.Center
+            }
+
+            fun iconSwipeBehavior(behavior: DetailsChapterSwipeBehavior) = when (behavior) {
+                DetailsChapterSwipeBehavior.MarkAsRead -> Icons.Default.Check
+                DetailsChapterSwipeBehavior.Read -> Icons.Default.PlayArrow
+                DetailsChapterSwipeBehavior.Nothing -> Icons.Default.Cancel
+            }
+
+            val icon = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> iconSwipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
+                SwipeToDismissBoxValue.EndToStart -> iconSwipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
+                else -> Icons.Default.Cancel
+            }
+            val scale by animateFloatAsState(
+                if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
+                label = ""
             )
 
-            Row(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(horizontal = 16.dp)
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
             ) {
-                if (infoModel.source.canPlay) {
-                    OutlinedButton(
-                        onClick = {
-                            genericInfo.chapterOnClick(c, chapters, infoModel, navController)
-                            insertRecent()
-                            if (!read.fastAny { it.url == c.url }) markAs(c, true)
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale)
+                )
+            }
+        },
+        modifier = modifier.fillMaxWidth()
+    ) {
+        ElevatedCard(
+            shape = RoundedCornerShape(2.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                ) { markAs(c, !updatedIsRead) },
+        ) {
+            Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                if (shareChapter) {
+                    ListItem(
+                        leadingContent = {
+                            Checkbox(
+                                checked = updatedIsRead,
+                                onCheckedChange = { b -> markAs(c, b) },
+                            )
                         },
-                        shapes = ButtonDefaults.shapes(),
-                        border = BorderStroke(1.dp, LocalContentColor.current),
-                        modifier = Modifier
-                            .weight(1f, true)
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Column {
-                            Icon(
-                                Icons.Default.PlayArrow,
-                                "Play",
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                            )
+                        headlineContent = {
                             Text(
-                                stringResource(Res.string.read),
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                                c.name,
+                                style = MaterialTheme.typography.bodyLarge
                             )
-                        }
+                        },
+                        trailingContent = {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        qrCodeRepository.shareUrl(
+                                            url = c.url,
+                                            title = c.name
+                                        )
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    null,
+                                )
+                            }
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        ),
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxWidth()
+                    )
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = updatedIsRead,
+                            onCheckedChange = { b -> markAs(c, b) },
+                        )
+
+                        Text(
+                            c.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
                     }
                 }
 
-                if (infoModel.source.canDownload && showDownload()) {
-                    OutlinedButton(
-                        onClick = {
-                            genericInfo.downloadChapter(c, chapters, infoModel, navController)
-                            insertRecent()
-                            if (!read.fastAny { it.url == c.url }) markAs(c, true)
-                        },
-                        border = BorderStroke(1.dp, LocalContentColor.current),
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier
-                            .weight(1f, true)
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Column {
-                            Icon(
-                                Icons.Default.Download,
-                                "Download",
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                            )
-                            Text(
-                                stringResource(Res.string.download_chapter),
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            )
+                Text(
+                    c.uploaded,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(horizontal = 16.dp)
+                        .padding(4.dp)
+                )
+
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(horizontal = 16.dp)
+                ) {
+                    if (infoModel.source.canPlay) {
+                        OutlinedButton(
+                            onClick = {
+                                genericInfo.chapterOnClick(c, chapters, infoModel, navController)
+                                insertRecent()
+                                if (!updatedIsRead) markAs(c, true)
+                            },
+                            shapes = ButtonDefaults.shapes(),
+                            border = BorderStroke(1.dp, LocalContentColor.current),
+                            modifier = Modifier
+                                .weight(1f, true)
+                                .padding(horizontal = 4.dp)
+                        ) {
+                            Column {
+                                Icon(
+                                    Icons.Default.PlayArrow,
+                                    "Play",
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                )
+                                Text(
+                                    stringResource(Res.string.read),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+                    }
+
+                    if (infoModel.source.canDownload && showDownload()) {
+                        OutlinedButton(
+                            onClick = {
+                                genericInfo.downloadChapter(c, chapters, infoModel, navController)
+                                insertRecent()
+                                if (!updatedIsRead) markAs(c, true)
+                            },
+                            border = BorderStroke(1.dp, LocalContentColor.current),
+                            shapes = ButtonDefaults.shapes(),
+                            modifier = Modifier
+                                .weight(1f, true)
+                                .padding(horizontal = 4.dp)
+                        ) {
+                            Column {
+                                Icon(
+                                    Icons.Default.Download,
+                                    "Download",
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                )
+                                Text(
+                                    stringResource(Res.string.download_chapter),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            }
                         }
                     }
                 }

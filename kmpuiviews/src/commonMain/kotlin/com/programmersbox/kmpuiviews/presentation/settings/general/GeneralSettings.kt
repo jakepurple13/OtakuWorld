@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwipeLeft
+import androidx.compose.material.icons.filled.SwipeRight
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -55,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.DetailsChapterSwipeBehavior
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
@@ -70,12 +73,14 @@ import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupScope
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -120,6 +125,8 @@ fun GeneralSettings(
                 )
             }
         }
+
+        DetailsChapterSwipeBehaviorSettings(handling = handling)
 
         CategoryGroup {
             item {
@@ -438,6 +445,53 @@ private fun MultipleActionsSetting(
                     )
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun DetailsChapterSwipeBehaviorSettings(handling: NewSettingsHandling) {
+    var detailsChapterSwipeBehavior by handling.detailsChapterSwipeBehavior.rememberPreference()
+    CategoryGroup {
+        categorySetting { Text("Details Chapter Swipe Behavior") }
+
+        item {
+            ListSetting(
+                settingTitle = { Text("Start to End") },
+                dialogIcon = { Icon(Icons.Default.SwipeRight, null) },
+                settingIcon = { Icon(Icons.Default.SwipeRight, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose the behavior for the start to end swipe") },
+                summaryValue = { Text(detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorStartToEnd.name) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+                value = detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorStartToEnd,
+                options = DetailsChapterSwipeBehavior.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    detailsChapterSwipeBehavior = detailsChapterSwipeBehavior.copy(
+                        detailsChapterSwipeBehaviorStartToEnd = it
+                    )
+                }
+            )
+        }
+
+        item {
+            ListSetting(
+                settingTitle = { Text("End to Start") },
+                dialogIcon = { Icon(Icons.Default.SwipeLeft, null) },
+                settingIcon = { Icon(Icons.Default.SwipeLeft, null, modifier = Modifier.fillMaxSize()) },
+                dialogTitle = { Text("Choose the behavior for the end to start swipe") },
+                summaryValue = { Text(detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorEndToStart.name) },
+                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+                value = detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorEndToStart,
+                options = DetailsChapterSwipeBehavior.entries,
+                updateValue = { it, d ->
+                    d.value = false
+                    detailsChapterSwipeBehavior = detailsChapterSwipeBehavior.copy(
+                        detailsChapterSwipeBehaviorEndToStart = it
+                    )
+                }
+            )
         }
     }
 }
