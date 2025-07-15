@@ -93,6 +93,7 @@ import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -462,6 +463,7 @@ fun ChapterItem(
     val genericInfo = koinInject<KmpGenericInfo>()
     val qrCodeRepository = koinInject<QrCodeRepository>()
     val historyDao = LocalHistoryDao.current
+    val heatMapDao = koinInject<HeatMapDao>()
     val favoritesRepository: FavoritesRepository = koinInject()
     val navController = LocalNavActions.current
     val dataStoreHandling = koinInject<DataStoreHandling>()
@@ -495,16 +497,17 @@ fun ChapterItem(
     val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
     val updatedIsRead by rememberUpdatedState(hasBeenRead)
 
+    fun chapterClick() {
+        genericInfo.chapterOnClick(c, chapters, infoModel, navController)
+        insertRecent()
+        if (!updatedIsRead) markAs(c, true)
+        scope.launch(Dispatchers.IO) { heatMapDao.upsertHeatMap() }
+    }
+
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
         when (behavior) {
             DetailsChapterSwipeBehavior.MarkAsRead -> markAs(c, !updatedIsRead)
-
-            DetailsChapterSwipeBehavior.Read -> {
-                genericInfo.chapterOnClick(c, chapters, infoModel, navController)
-                insertRecent()
-                if (!updatedIsRead) markAs(c, true)
-            }
-
+            DetailsChapterSwipeBehavior.Read -> chapterClick()
             DetailsChapterSwipeBehavior.Nothing -> {}
         }
     }
@@ -666,11 +669,7 @@ fun ChapterItem(
                 ) {
                     if (infoModel.source.canPlay) {
                         OutlinedButton(
-                            onClick = {
-                                genericInfo.chapterOnClick(c, chapters, infoModel, navController)
-                                insertRecent()
-                                if (!updatedIsRead) markAs(c, true)
-                            },
+                            onClick = ::chapterClick,
                             shapes = ButtonDefaults.shapes(),
                             border = BorderStroke(1.dp, LocalContentColor.current),
                             modifier = Modifier
