@@ -5,8 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fleeys.heatmap.model.Heat
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
+import com.programmersbox.favoritesdatabase.HeatMapDao
+import com.programmersbox.favoritesdatabase.HeatMapItem
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
@@ -20,14 +23,25 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.monthsUntil
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.until
 import nl.jacobras.humanreadable.HumanReadable
+import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 class AccountInfoViewModel(
     itemDao: ItemDao,
     listDao: ListDao,
     historyDao: HistoryDao,
     blurHashDao: BlurHashDao,
+    heatMapDao: HeatMapDao,
     translationModelHandler: TranslationModelHandler,
     sourceRepository: SourceRepository,
     firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
@@ -73,9 +87,32 @@ class AccountInfoViewModel(
                 }
                 a.copy(timeSpentDoing = "${HumanReadable.duration(b.seconds)}$afterText")
             }
+            .combine(heatMapDao.getAllHeatMaps()) { a, b ->
+                a.copy(heatMaps = generateHeats(b))
+            }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
+
+    @OptIn(ExperimentalTime::class)
+    private fun generateHeats(
+        heatItems: List<HeatMapItem>
+    ): List<Heat<Int>> {
+        val startDate = heatItems.minBy { item -> item.time.toEpochDays() }.time
+        val curDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+        return generateSequence(startDate) { date ->
+            if (date < curDate) date + DatePeriod(days = 1) else null
+        }.map { date ->
+            val current = heatItems.find { it.time == date }!!
+            Heat(
+                current.time,
+                current.count.toDouble(),
+                current.count
+            )
+        }.toList()
+    }
+
 }
 
 data class AccountInfoCount(
@@ -93,7 +130,9 @@ data class AccountInfoCount(
     val globalSearchHistory: Int,
     val savedRecommendations: Int,
     val timeSpentDoing: String,
+    val heatMaps: List<Heat<Int>>,
 ) {
+    @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
         cloudFavorites = array[0],
         localFavorites = array[1],
@@ -108,13 +147,15 @@ data class AccountInfoCount(
         sourceCount = array[10],
         globalSearchHistory = array[11],
         savedRecommendations = array[12],
-        timeSpentDoing = "0 seconds"
+        timeSpentDoing = "0 seconds",
+        heatMaps = emptyList()
     )
 
     val totalFavorites: Int
         get() = cloudFavorites + localFavorites
 
     companion object {
+        @OptIn(ExperimentalTime::class)
         val Empty = AccountInfoCount(
             cloudFavorites = 0,
             localFavorites = 0,
@@ -129,7 +170,8 @@ data class AccountInfoCount(
             sourceCount = 0,
             globalSearchHistory = 0,
             savedRecommendations = 0,
-            timeSpentDoing = "0 seconds"
+            timeSpentDoing = "0 seconds",
+            heatMaps = emptyList()
         )
     }
 }

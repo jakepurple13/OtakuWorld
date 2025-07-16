@@ -50,6 +50,7 @@ kotlin {
             implementation(libs.roomRuntime)
             implementation(libs.roomPaging)
             implementation(projects.kmpmodels)
+            implementation(libs.kotlinx.datetime)
         }
 
         jvmMain.dependencies {

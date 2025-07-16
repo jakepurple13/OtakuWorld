@@ -137,6 +137,8 @@ kotlin {
                 implementation(libs.generic.ai)
                 implementation(libs.anthropic.sdk.kotlin)
                 implementation(libs.xemantic.ai.tool.schema)
+
+                implementation("com.fleeys:heatmap:1.0.5")
             }
         }
 
