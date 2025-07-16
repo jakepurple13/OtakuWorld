@@ -87,14 +87,8 @@ class AccountInfoViewModel(
                 a.copy(timeSpentDoing = "${HumanReadable.duration(b.seconds)}$afterText")
             }
             .combine(heatMapDao.getAllHeatMaps()) { a, b ->
-                val placeholderHeats = b
-                    .minByOrNull { it.time.toEpochDays() }
-                    ?.time
-                    ?.let { generateHeats(it) }
-                    .orEmpty()
-
                 a.copy(
-                    heatMaps = placeholderHeats + b.map { Heat(it.time, it.count.toDouble(), it.count) }
+                    heatMaps = b.map { Heat(it.time, it.count.toDouble(), it.count) }
                 )
             }
             .onEach { accountInfo = it }
@@ -102,25 +96,6 @@ class AccountInfoViewModel(
     }
 
 }
-
-    @OptIn(ExperimentalTime::class)
-    private fun generateHeats(
-        startDate: LocalDate,
-    ): List<Heat<Int>> {
-        val curDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-
-        val distance = startDate.monthsUntil(curDate) < 12
-
-        return if(distance) {
-            generateSequence(startDate) { date ->
-                if (date < curDate) date + DatePeriod(days = 1) else null
-            }.map { date ->
-                Heat(date, 0.0, 0)
-            }.toList()
-        } else {
-            emptyList()
-        }
-    }
 
 data class AccountInfoCount(
     val cloudFavorites: Int,
@@ -155,7 +130,7 @@ data class AccountInfoCount(
         globalSearchHistory = array[11],
         savedRecommendations = array[12],
         timeSpentDoing = "0 seconds",
-        heatMaps = generateHeats(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
+        heatMaps = emptyList()
     )
 
     val totalFavorites: Int
@@ -178,7 +153,7 @@ data class AccountInfoCount(
             globalSearchHistory = 0,
             savedRecommendations = 0,
             timeSpentDoing = "0 seconds",
-            heatMaps = generateHeats(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
+            heatMaps = emptyList()
         )
     }
 }

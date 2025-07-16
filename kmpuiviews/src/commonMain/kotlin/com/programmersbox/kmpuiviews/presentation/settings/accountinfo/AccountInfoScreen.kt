@@ -2,8 +2,10 @@ package com.programmersbox.kmpuiviews.presentation.settings.accountinfo
 
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -19,6 +21,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -84,23 +87,30 @@ fun AccountInfoScreen(
             modifier = Modifier.fillMaxSize()
         ) {
 
-            item {
-                //TODO: Need to test this out more
-                HeatMap(
-                    data = state.heatMaps,
-                    onHeatClick = {},
-                    style = HeatMapStyle().copy(
-                        heatStyle = HeatStyle().copy(
-                            heatColor = HeatColor().copy(
-                                activeLowestColor = Color(0xff212f57),
-                                activeHighestColor = MaterialTheme.colorScheme.primary,
+            if(state.heatMaps.isNotEmpty()) {
+                item {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Heat Map")
+                        HeatMap(
+                            data = state.heatMaps,
+                            onHeatClick = {},
+                            style = HeatMapStyle().copy(
+                                heatStyle = HeatStyle().copy(
+                                    heatColor = HeatColor().copy(
+                                        activeLowestColor = Color(0xff212f57),
+                                        activeHighestColor = MaterialTheme.colorScheme.primary,
+                                    ),
+                                    heatShape = CircleShape,
+                                ),
+                                startFromEnd = false
                             ),
-                            heatShape = CircleShape,
-                        ),
-                        startFromEnd = false
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
+                }
             }
 
             item {
