@@ -78,7 +78,7 @@ plugins {
     alias(libs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
     id("com.squareup.wire") version "5.3.5" apply false
-    id("org.jetbrains.compose.hot-reload") version "1.0.0-beta03" apply false
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-beta04" apply false
     alias(libs.plugins.buildKonfig) apply false
 }
 
