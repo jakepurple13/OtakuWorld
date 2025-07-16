@@ -6,11 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.wearable.DataItem
+import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.PutDataRequest
+import com.google.android.gms.wearable.Wearable
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
@@ -20,7 +25,9 @@ import com.programmersbox.uiviews.presentation.navigation.HomeNav
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import org.koin.android.ext.android.inject
 
 abstract class BaseMainActivity : FragmentActivity() {
@@ -41,6 +48,20 @@ abstract class BaseMainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         setupRepository.setup(lifecycleScope)
         onCreate()
+
+        runCatching {
+            lifecycleScope.launch {
+                val request = PutDataMapRequest.create("/COUNT_PATH").apply {
+                    dataMap.putInt("COUNT_KEY", 1)
+                    dataMap.putString("asdf", "asdf")
+                }
+                    .asPutDataRequest()
+                    .setUrgent()
+                Wearable.getDataClient(this@BaseMainActivity)
+                    .putDataItem(request)
+                    .await()
+            }
+        }.onFailure { it.printStackTrace() }
 
         enableEdgeToEdge()
 

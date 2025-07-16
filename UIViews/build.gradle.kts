@@ -155,4 +155,6 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.composeActivity)
     implementation(libs.androidx.activity)
+
+    implementation(libs.play.services.wearable)
 }
