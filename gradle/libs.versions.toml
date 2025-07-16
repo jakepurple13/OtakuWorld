@@ -11,6 +11,7 @@ generativeai = "0.9.0"
 generativeaiGoogle = "0.9.0-1.1.0"
 genericAi = "0.6.5"
 gradle = "8.11.0"
+heatmap = "1.0.5"
 humanReadable = "1.12.0"
 kotlinxDatetime = "0.7.1"
 
@@ -157,6 +158,7 @@ constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:cons
 anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
 generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" }
 generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
+heatmap = { module = "com.fleeys:heatmap", version.ref = "heatmap" }
 human-readable = { module = "nl.jacobras:Human-Readable", version.ref = "humanReadable" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
 core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
