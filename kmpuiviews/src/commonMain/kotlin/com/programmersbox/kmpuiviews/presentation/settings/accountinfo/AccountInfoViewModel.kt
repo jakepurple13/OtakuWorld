@@ -98,7 +98,7 @@ class AccountInfoViewModel(
     private fun generateHeats(
         heatItems: List<HeatMapItem>
     ): List<Heat<Int>> {
-        val startDate = heatItems.minBy { item -> item.time.toEpochDays() }.time
+        val startDate = heatItems.minByOrNull { item -> item.time.toEpochDays() }?.time
         val curDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
         return generateSequence(startDate) { date ->
