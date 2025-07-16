@@ -230,7 +230,7 @@ qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "scanner" }
 textflow-material3 = { module = "io.github.oleksandrbalan:textflow-material3", version.ref = "textflowMaterial3" }
-tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
+tv-material = { module = "androidx.tv:tv-material", version = "1.0.1" }
 tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha12" }
 ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "compose-multiplatform" }
 uiUtil = { group = "androidx.compose.ui", name = "ui-util" }
