@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,7 +28,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.fleeys.heatmap.HeatMap
-import com.fleeys.heatmap.model.Heat
 import com.fleeys.heatmap.style.HeatColor
 import com.fleeys.heatmap.style.HeatMapStyle
 import com.fleeys.heatmap.style.HeatStyle
@@ -39,16 +37,8 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.random.Random
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,7 +95,6 @@ fun AccountInfoScreen(
                                     ),
                                     heatShape = CircleShape,
                                 ),
-                                startFromEnd = false
                             ),
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -114,7 +103,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Total Favorites",
@@ -144,7 +135,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Local Chapters",
@@ -156,7 +149,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Time Spent Doing",
@@ -168,7 +163,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Source Count",
@@ -180,7 +177,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Notifications",
@@ -200,7 +199,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "History",
@@ -220,7 +221,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Lists",
@@ -240,7 +243,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Saved Recommendations",
@@ -252,7 +257,9 @@ fun AccountInfoScreen(
             }
 
             item {
-                CategoryGroup {
+                CategoryGroup(
+                    modifier = Modifier.animateItem()
+                ) {
                     item {
                         AccountInfoItem(
                             title = "Blur Hashes",
@@ -265,7 +272,9 @@ fun AccountInfoScreen(
 
             if (appConfig.buildType != BuildType.NoFirebase) {
                 item {
-                    CategoryGroup {
+                    CategoryGroup(
+                        modifier = Modifier.animateItem()
+                    ) {
                         item {
                             AccountInfoItem(
                                 title = "Translation Models",
