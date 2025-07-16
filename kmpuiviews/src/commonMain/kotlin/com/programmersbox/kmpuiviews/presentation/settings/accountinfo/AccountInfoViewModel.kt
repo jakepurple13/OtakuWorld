@@ -104,11 +104,11 @@ class AccountInfoViewModel(
         return generateSequence(startDate) { date ->
             if (date < curDate) date + DatePeriod(days = 1) else null
         }.map { date ->
-            val current = heatItems.find { it.time == date }!!
+            val current = heatItems.find { it.time == date }
             Heat(
-                current.time,
-                current.count.toDouble(),
-                current.count
+                current?.time ?: date,
+                current?.count?.toDouble() ?: 0.0,
+                current?.count ?: 0
             )
         }.toList()
     }
