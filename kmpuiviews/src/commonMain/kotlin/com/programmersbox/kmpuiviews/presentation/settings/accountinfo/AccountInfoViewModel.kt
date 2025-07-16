@@ -31,6 +31,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.until
 import nl.jacobras.humanreadable.HumanReadable
+import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -87,12 +88,29 @@ class AccountInfoViewModel(
                 a.copy(timeSpentDoing = "${HumanReadable.duration(b.seconds)}$afterText")
             }
             .combine(heatMapDao.getAllHeatMaps()) { a, b ->
-                a.copy(
-                    heatMaps = b.map { Heat(it.time, it.count.toDouble(), it.count) }
-                )
+                a.copy(heatMaps = generateHeats(b))
             }
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private fun generateHeats(
+        heatItems: List<HeatMapItem>
+    ): List<Heat<Int>> {
+        val startDate = heatItems.minBy { item -> item.time.toEpochDays() }.time
+        val curDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+        return generateSequence(startDate) { date ->
+            if (date < curDate) date + DatePeriod(days = 1) else null
+        }.map { date ->
+            val current = heatItems.find { it.time == date }!!
+            Heat(
+                current.time,
+                current.count.toDouble(),
+                current.count
+            )
+        }.toList()
     }
 
 }

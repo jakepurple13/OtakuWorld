@@ -28,17 +28,31 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.fleeys.heatmap.HeatMap
+import com.fleeys.heatmap.model.Heat
+import com.fleeys.heatmap.style.DaysLabelColor
+import com.fleeys.heatmap.style.DaysLabelStyle
 import com.fleeys.heatmap.style.HeatColor
 import com.fleeys.heatmap.style.HeatMapStyle
 import com.fleeys.heatmap.style.HeatStyle
+import com.fleeys.heatmap.style.LabelStyle
+import com.fleeys.heatmap.style.MonthsLabelColor
+import com.fleeys.heatmap.style.MonthsLabelStyle
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.random.Random
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +109,20 @@ fun AccountInfoScreen(
                                     ),
                                     heatShape = CircleShape,
                                 ),
+                                labelStyle = LabelStyle().copy(
+                                    daysLabelStyle = DaysLabelStyle(
+                                        color = DaysLabelColor(
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    ),
+                                    monthsLabelStyle = MonthsLabelStyle(
+                                        color = MonthsLabelColor(
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    )
+                                )
                             ),
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
