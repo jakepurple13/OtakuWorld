@@ -10,7 +10,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-private val DateFormatItem = LocalDate.Format {
+val DateFormatItem = LocalDate.Format {
     monthNumber()
     char('/')
     day(padding = Padding.ZERO)

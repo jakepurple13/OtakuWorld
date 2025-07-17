@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.accountinfo
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,17 +47,10 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.DateFormatItem
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.random.Random
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,14 +91,19 @@ fun AccountInfoScreen(
 
             if(state.heatMaps.isNotEmpty()) {
                 item {
+                    var heatItem by remember { mutableStateOf<Heat<Int>?>(null) }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .animateItem()
+                            .animateContentSize()
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
                     ) {
                         Text("Heat Map")
                         HeatMap(
                             data = state.heatMaps,
-                            onHeatClick = {},
+                            onHeatClick = { heatItem = it },
                             style = HeatMapStyle().copy(
                                 heatStyle = HeatStyle().copy(
                                     heatColor = HeatColor().copy(
@@ -124,8 +127,10 @@ fun AccountInfoScreen(
                                     )
                                 )
                             ),
-                            modifier = Modifier.padding(bottom = 16.dp)
                         )
+                        heatItem?.let {
+                            Text("Read/Watched ${it.data} on ${DateFormatItem.format(it.date)}")
+                        }
                     }
                 }
             }
