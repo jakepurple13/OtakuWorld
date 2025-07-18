@@ -2,6 +2,7 @@
 anthropicSdkKotlin = "0.22.0"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
+mokoBiometry = "0.4.0"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "2.0.1"
 corePerformance = "1.0.0"
@@ -13,6 +14,7 @@ genericAi = "0.6.5"
 gradle = "8.11.0"
 heatmap = "1.0.5"
 humanReadable = "1.12.0"
+knotify = "0.3.0"
 kotlinxDatetime = "0.7.1"
 
 javase = "3.5.3"
@@ -153,6 +155,8 @@ androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive"
 androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
 androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
+moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }
+moko-biometry = { module = "dev.icerock.moko:biometry", version.ref = "mokoBiometry" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded-core" }
 constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded" }
 anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
@@ -162,6 +166,7 @@ heatmap = { module = "com.fleeys:heatmap", version.ref = "heatmap" }
 human-readable = { module = "nl.jacobras:Human-Readable", version.ref = "humanReadable" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
 core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
+knotify = { module = "io.github.kdroidfilter:knotify", version.ref = "knotify" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCmp" }
 

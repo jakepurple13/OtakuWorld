@@ -1,5 +1,4 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
-import implementation
 
 plugins {
     `otaku-multiplatform`
@@ -180,8 +179,8 @@ kotlin {
 
         iosMain {
             dependencies {
-                implementation("dev.icerock.moko:biometry:0.4.0")
-                implementation("dev.icerock.moko:biometry-compose:0.4.0")
+                implementation(libs.moko.biometry)
+                implementation(libs.moko.biometry.compose)
             }
         }
 
@@ -189,6 +188,7 @@ kotlin {
             dependencies {
                 implementation(libs.core)
                 implementation(libs.javase)
+                implementation(libs.knotify)
             }
         }
 
