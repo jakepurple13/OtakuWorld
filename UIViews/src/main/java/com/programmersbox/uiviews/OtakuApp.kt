@@ -7,6 +7,8 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.util.Log
 import androidx.annotation.CallSuper
+import androidx.compose.foundation.ComposeFoundationFlags
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.compose.ui.ComposeUiFlags
@@ -30,6 +32,8 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.kmpModule
+import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
@@ -43,8 +47,6 @@ import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
-import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -63,12 +65,13 @@ import org.koin.dsl.module
 import java.util.UUID
 
 abstract class OtakuApp : Application(), Configuration.Provider {
-    @OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeRuntimeApi::class)
+    @OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeRuntimeApi::class, ExperimentalFoundationApi::class)
     @CallSuper
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
         ComposeUiFlags.isSemanticAutofillEnabled = true
+        ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = true
         Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
 
         DataStoreSettings { filesDir.resolve(it).absolutePath }
