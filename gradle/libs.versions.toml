@@ -66,7 +66,6 @@ compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2025.07.00"
 materialKolor = "3.0.0"
-firebaseKtx = "0.3.0"
 
 googlePerformancePlugin = "2.0.0"
 
@@ -446,8 +445,6 @@ analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:9.0.0"
 playServices = "com.google.android.gms:play-services-auth:21.3.0"
-
-firebase-database-ktx = { module = "com.github.skydoves:firebase-database-ktx", version.ref = "firebaseKtx" }
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
 protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }
