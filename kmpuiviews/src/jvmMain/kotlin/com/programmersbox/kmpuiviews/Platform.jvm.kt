@@ -151,3 +151,6 @@ actual fun InitialSetup() {
 @Composable
 actual fun HideScreen(shouldHide: Boolean) {
 }
+
+actual fun analyticsScreen(screenName: String) {
+}
