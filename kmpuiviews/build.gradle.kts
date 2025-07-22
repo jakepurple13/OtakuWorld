@@ -189,7 +189,7 @@ kotlin {
                 implementation(libs.core)
                 implementation(libs.javase)
                 implementation(libs.knotify)
-                implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
+                //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
             }
         }
 

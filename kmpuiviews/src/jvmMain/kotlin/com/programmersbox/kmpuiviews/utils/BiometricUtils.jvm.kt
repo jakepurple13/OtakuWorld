@@ -3,11 +3,8 @@ package com.programmersbox.kmpuiviews.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.remember
-import com.tecknobit.biometrik.engines.BiometrikHandling
-import com.tecknobit.biometrik.enums.AuthenticationResult
 
 actual class BiometricPrompting {
-    private val state = BiometrikHandling()
 
     actual fun authenticate(
         onAuthenticationSucceeded: () -> Unit,
@@ -29,10 +26,7 @@ actual class BiometricPrompting {
 
     @OptIn(ExperimentalComposeApi::class)
     actual fun authenticate(promptInfo: PromptCallback) {
-        when (state.requestAuth()) {
-            AuthenticationResult.AUTHENTICATION_SUCCESS -> promptInfo.onAuthenticationSucceeded()
-            else -> promptInfo.onAuthenticationFailed()
-        }
+        promptInfo.onAuthenticationFailed()
     }
 }
 
