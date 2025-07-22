@@ -68,7 +68,7 @@ composeBomVersion = "2025.07.00"
 materialKolor = "3.0.0"
 firebaseKtx = "0.3.0"
 
-googlePerformancePlugin = "1.4.2"
+googlePerformancePlugin = "2.0.0"
 
 firebaseBom = "33.16.0"
 
