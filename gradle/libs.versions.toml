@@ -222,7 +222,7 @@ materialYou-common = { group = "androidx.compose.material3", name = "material3-c
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
 materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha03" }
-materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha03" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-SNAPSHOT+release-1-8-data-source-prototype" }
 materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha03" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
 adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
