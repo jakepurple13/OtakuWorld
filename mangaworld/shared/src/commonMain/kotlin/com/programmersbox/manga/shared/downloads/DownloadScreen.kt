@@ -98,7 +98,8 @@ private fun DownloadViewer(
     p1: PaddingValues,
     mangaSettingsHandling: MangaNewSettingsHandling = koinInject(),
 ) {
-    val useNewReader by mangaSettingsHandling.useNewReader
+    val useNewReader by mangaSettingsHandling
+        .useNewReader
         .flow
         .collectAsStateWithLifecycle(initialValue = true)
 

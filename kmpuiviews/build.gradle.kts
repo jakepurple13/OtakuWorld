@@ -42,7 +42,9 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinStLib)
-                implementation(compose.material3)
+                //implementation(compose.material3)
+                //FIXME: Need this since m3 1.4 is not stable yet so normal m3 points to 1.8.2
+                implementation("org.jetbrains.compose.material3:material3:1.9.0-alpha04")
                 implementation(compose.materialIconsExtended)
                 implementation(compose.runtime)
                 implementation(compose.ui)
