@@ -444,7 +444,7 @@ crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:9.0.0"
-playServices = "com.google.android.gms:play-services-auth:21.3.0"
+playServices = "com.google.android.gms:play-services-auth:21.4.0"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
 protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }
