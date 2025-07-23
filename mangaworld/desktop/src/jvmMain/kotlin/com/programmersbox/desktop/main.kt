@@ -5,6 +5,7 @@ import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
+import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import org.koin.core.module.dsl.singleOf
@@ -20,6 +21,7 @@ fun main() {
                 modules(
                     module {
                         singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
+                        singleOf(::ChapterHolder)
                         single {
                             MangaNewSettingsHandling(
                                 createProtobuf(
