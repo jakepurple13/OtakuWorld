@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Bento
 import androidx.compose.material.icons.filled.CatchingPokemon
 import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,7 +46,6 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
-import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -141,6 +141,17 @@ fun MoreInfoScreen(
                         indication = ripple(),
                         interactionSource = null
                     ) { navController.workerInfo() }
+                )
+            }
+
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text("View Exceptions") },
+                    settingIcon = { Icon(Icons.Default.Error, null) },
+                    modifier = Modifier.clickable(
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { navController.navigate(Screen.ExceptionScreen) }
                 )
             }
         }

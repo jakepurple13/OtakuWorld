@@ -11,6 +11,7 @@ import com.programmersbox.kmpuiviews.presentation.recommendations.Recommendation
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListViewModel
@@ -55,6 +56,7 @@ val viewModels: Module = module {
     viewModelOf(::RecommendationViewModel)
     viewModelOf(::UrlOpenerViewModel)
     viewModelOf(::OtakuCustomListViewModel)
+    viewModelOf(::ExceptionViewModel)
 
     includes(platformViewModels())
 }

@@ -11,6 +11,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpApiService
@@ -46,6 +47,7 @@ class RecentViewModel(
     currentSourceRepository: CurrentSourceRepository,
     private val favoritesRepository: FavoritesRepository,
     itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
+    private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
     var isRefreshing by mutableStateOf(false)
@@ -134,6 +136,7 @@ class RecentViewModel(
             ?.dispatchIo()
             ?.catch {
                 it.printStackTrace()
+                exceptionDao.insertException(it)
                 withContext(Dispatchers.Main) {
                     snackbarHostState.showSnackbar(
                         "Something went wrong",

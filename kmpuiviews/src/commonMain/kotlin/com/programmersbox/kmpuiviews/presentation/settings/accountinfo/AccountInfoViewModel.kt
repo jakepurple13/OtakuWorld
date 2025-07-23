@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.fleeys.heatmap.model.Heat
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
 import com.programmersbox.favoritesdatabase.HistoryDao
@@ -24,14 +25,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.monthsUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.datetime.until
 import nl.jacobras.humanreadable.HumanReadable
-import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -47,6 +44,7 @@ class AccountInfoViewModel(
     firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
     dataStoreHandling: DataStoreHandling,
     recommendationDao: RecommendationDao,
+    exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
@@ -77,7 +75,8 @@ class AccountInfoViewModel(
                         .size
                 },
             historyDao.getAllHistoryCount(),
-            recommendationDao.getRecommendationCount()
+            recommendationDao.getRecommendationCount(),
+            exceptionDao.getExceptionCount()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
                 val afterText = if (b <= 60) {
@@ -131,6 +130,7 @@ data class AccountInfoCount(
     val savedRecommendations: Int,
     val timeSpentDoing: String,
     val heatMaps: List<Heat<Int>>,
+    val exceptionCount: Int,
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
@@ -148,7 +148,8 @@ data class AccountInfoCount(
         globalSearchHistory = array[11],
         savedRecommendations = array[12],
         timeSpentDoing = "0 seconds",
-        heatMaps = emptyList()
+        heatMaps = emptyList(),
+        exceptionCount = array[13]
     )
 
     val totalFavorites: Int
@@ -171,7 +172,8 @@ data class AccountInfoCount(
             globalSearchHistory = 0,
             savedRecommendations = 0,
             timeSpentDoing = "0 seconds",
-            heatMaps = emptyList()
+            heatMaps = emptyList(),
+            exceptionCount = 0
         )
     }
 }

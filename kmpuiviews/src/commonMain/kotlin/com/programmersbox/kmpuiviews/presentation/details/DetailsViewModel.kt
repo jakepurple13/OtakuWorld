@@ -17,6 +17,7 @@ import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashItem
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -56,6 +57,7 @@ class DetailsViewModel(
     firebaseDbModelListener: KmpFirebaseConnection.KmpFirebaseListener,
     firebaseChapterListener: KmpFirebaseConnection.KmpFirebaseListener,
     private val translationHandler: TranslationHandler,
+    private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -101,6 +103,7 @@ class DetailsViewModel(
             ?.dispatchIo()
             ?.catch {
                 recordFirebaseException(it)
+                exceptionDao.insertException(it)
                 it.printStackTrace()
                 emit(Result.failure(it))
                 detailState = DetailState.Error(it)

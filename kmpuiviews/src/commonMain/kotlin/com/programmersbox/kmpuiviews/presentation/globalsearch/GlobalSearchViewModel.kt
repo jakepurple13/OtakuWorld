@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -32,6 +34,7 @@ class GlobalSearchViewModel(
     handle: Screen.GlobalSearchScreen,
     val sourceRepository: SourceRepository,
     val dao: HistoryDao,
+    private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
     private val initialSearch: String = handle.title ?: ""
@@ -81,6 +84,7 @@ class GlobalSearchViewModel(
                     .filter { it.data.isNotEmpty() }
                     .onEach { searchListPublisher += it }
                     .onCompletion { isRefreshing = false }
+                    .catch { exceptionDao.insertException(it) }
             }
             .forEach { launch { send(it.firstOrNull()) } }
     }

@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.AiSettings
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import kotlinx.coroutines.flow.launchIn
@@ -23,6 +24,7 @@ import org.koin.core.qualifier.named
 class RecommendationViewModel(
     private val dao: RecommendationDao,
     newSettingsHandling: NewSettingsHandling,
+    private val exceptionDao: ExceptionDao,
 ) : ViewModel(), KoinComponent {
 
     private var aiRecommendationHandler: AiRecommendationHandler? = null
@@ -62,6 +64,7 @@ class RecommendationViewModel(
                 messageList.add(Message.Gemini(json.decodeFromString(response.orEmpty().trim())))
             }.onFailure {
                 it.printStackTrace()
+                exceptionDao.insertException(it)
                 messageList.add(Message.Error(it.message.orEmpty()))
             }
             isLoading = false

@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -40,6 +41,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+
 private const val FAVORITE_CHECK = 2
 
 class ReadViewModel(
@@ -47,6 +49,7 @@ class ReadViewModel(
     private val chapterHolder: ChapterHolder,
     private val favoritesRepository: FavoritesRepository,
     itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
+    private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
     val isDownloaded: Boolean = mangaReader.downloaded
@@ -185,6 +188,7 @@ class ReadViewModel(
                 isLoadingPages = true
                 pageList.clear()
             }
+            ?.catch { exceptionDao.insertException(it) }
             ?.onEach { pageList.addAll(it) }
             ?.onCompletion { isLoadingPages = false }
             ?.launchIn(viewModelScope)

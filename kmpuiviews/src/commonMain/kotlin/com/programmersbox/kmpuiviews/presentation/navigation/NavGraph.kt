@@ -28,6 +28,7 @@ import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
+import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettingsScreen
@@ -388,4 +389,5 @@ private fun NavGraphBuilder.settings(
 
     composable<Screen.ThemeSettings> { ThemeSettingsScreen() }
     composable<Screen.SecuritySettings> { SecurityScreen() }
+    composable<Screen.ExceptionScreen> { ExceptionsScreen() }
 }

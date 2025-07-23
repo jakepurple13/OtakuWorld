@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListItem
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -50,6 +51,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportL
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
+import org.koin.compose.koinInject
 import java.util.UUID
 
 @LightAndDarkPreviews
@@ -84,6 +86,7 @@ private fun FavoriteScreenPreview() {
 private fun GlobalScreenPreview() {
     PreviewTheme {
         val dao = LocalHistoryDao.current
+        val exceptionDao = koinInject<ExceptionDao>()
         GlobalSearchScreen(
             dao = dao,
             isHorizontal = false,
@@ -93,6 +96,7 @@ private fun GlobalScreenPreview() {
                     sourceRepository = SourceRepository(),
                     handle = Screen.GlobalSearchScreen(),
                     dao = dao,
+                    exceptionDao = exceptionDao
                 )
             }
         )

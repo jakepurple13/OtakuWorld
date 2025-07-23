@@ -136,13 +136,16 @@ sealed class Screen(val route: String) : NavKey {
     data object UrlOpener : Screen("url_opener")
 
     @Serializable
-    data object ColorHelper: Screen("color_helper")
+    data object ColorHelper : Screen("color_helper")
 
     @Serializable
-    data object ThemeSettings: Screen("theme_settings")
+    data object ThemeSettings : Screen("theme_settings")
 
     @Serializable
-    data object SecuritySettings: Screen("security_settings")
+    data object SecuritySettings : Screen("security_settings")
+
+    @Serializable
+    data object ExceptionScreen : Screen("exception")
 }
 
 fun NavController.navigateToDetails(model: KmpItemModel) = navigate(

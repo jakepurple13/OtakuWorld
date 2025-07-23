@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.domain
 
 import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.toItemModel
@@ -36,6 +37,7 @@ class MediaUpdateChecker(
     private val sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
     private val firebaseDb: KmpFirebaseConnection,
+    private val exceptionDao: ExceptionDao,
 ) {
 
     // Configurable network dispatcher based on the provided parallelism value
@@ -200,6 +202,7 @@ class MediaUpdateChecker(
                                 .firstOrNull() // Takes the first emission (should be a List<KmpItemModel>)
                         } ?: emptyList() // Return empty list if timeout occurs
                     } catch (e: Exception) {
+                        exceptionDao.insertException(e)
                         logFirebaseMessage("Exception during recent fetch for ${sourceApiService.serviceName}: ${e.message}")
                         recordFirebaseException(e)
                         emptyList()
@@ -252,6 +255,7 @@ class MediaUpdateChecker(
                         null
                     }
                 } catch (e: Exception) {
+                    exceptionDao.insertException(e)
                     logFirebaseMessage("Error checking update for ${model.title}: ${e.message}")
                     recordFirebaseException(e)
                     null

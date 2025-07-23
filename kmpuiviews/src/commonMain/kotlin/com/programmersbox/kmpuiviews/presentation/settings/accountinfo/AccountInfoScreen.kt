@@ -300,6 +300,14 @@ fun AccountInfoScreen(
                             amount = state.blurHashes
                         )
                     }
+
+                    item {
+                        AccountInfoItem(
+                            title = "Exception Count",
+                            description = "The amount of exceptions saved",
+                            amount = state.exceptionCount
+                        )
+                    }
                 }
             }
 
