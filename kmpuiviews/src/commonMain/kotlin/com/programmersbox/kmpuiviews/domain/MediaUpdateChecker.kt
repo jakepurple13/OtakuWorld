@@ -24,6 +24,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -236,11 +237,14 @@ class MediaUpdateChecker(
                     val infoModel = withTimeout(DEFAULT_TIMEOUT_MS) { // Timeout for fetching full info
                         // Explicitly switch context if toInfoModel might block or do heavy CPU work
                         // However, network operations are usually fine on networkDispatcher
-                        model
-                            .toItemModel(apiService) // This likely involves network I/O
-                            .toInfoModel() // This might involve more I/O or CPU work
-                            .firstOrNull()
-                            ?.getOrNull() // Assuming toInfoModel returns Flow<Result<KmpInfoModel>>
+                        flow {
+                            model
+                                .toItemModel(apiService) // This likely involves network I/O
+                                .toInfoModel() // This might involve more I/O or CPU work
+                                .firstOrNull()
+                                ?.getOrNull()
+                                .let { emit(it) }
+                        }.firstOrNull() // Assuming toInfoModel returns Flow<Result<KmpInfoModel>>
                     }
 
                     if (infoModel != null) {
