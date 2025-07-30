@@ -46,11 +46,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
+import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.asState
 import com.programmersbox.datastore.rememberFloatingNavigation
-import com.programmersbox.datastore.rememberHistorySave
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -84,12 +85,13 @@ fun GeneralSettings(
     customSettings: @Composable () -> Unit = {},
 ) {
     val navActions = LocalNavActions.current
+    val handling: NewSettingsHandling = koinInject()
+    val dataStoreHandling: DataStoreHandling = koinInject()
 
     SettingsScaffold(
         title = stringResource(Res.string.general_menu_title),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        val handling: NewSettingsHandling = koinInject()
 
         CategoryGroup {
             item {
@@ -122,7 +124,7 @@ fun GeneralSettings(
             }
 
             item { DetailPaneSettings(handling = handling) }
-            item { HistorySettings(handling = handling) }
+            item { HistorySettings(dataStoreHandling = dataStoreHandling) }
         }
 
         customSettings()
@@ -254,8 +256,8 @@ fun ShowDownloadSettings(handling: NewSettingsHandling) {
 }
 
 @Composable
-private fun HistorySettings(handling: NewSettingsHandling) {
-    var sliderValue by rememberHistorySave()
+private fun HistorySettings(dataStoreHandling: DataStoreHandling) {
+    var sliderValue by dataStoreHandling.historySave.asState()
 
     SliderSetting(
         sliderValue = sliderValue.toFloat(),

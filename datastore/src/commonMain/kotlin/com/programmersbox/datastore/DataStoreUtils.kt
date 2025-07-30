@@ -8,7 +8,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.materialkolor.PaletteStyle
@@ -105,12 +104,6 @@ fun <T, R> rememberPreference(
         }
     }
 }
-
-@Composable
-fun rememberHistorySave() = rememberPreference(
-    key = intPreferencesKey("history_save"),
-    defaultValue = 50
-)
 
 @Composable
 fun rememberFloatingNavigation() = rememberPreference(
