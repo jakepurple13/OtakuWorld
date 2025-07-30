@@ -28,7 +28,6 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import nl.jacobras.humanreadable.HumanReadable
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -79,12 +78,7 @@ class AccountInfoViewModel(
             exceptionDao.getExceptionCount()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
-                val afterText = if (b <= 60) {
-                    ""
-                } else {
-                    "\n($b seconds)"
-                }
-                a.copy(timeSpentDoing = "${HumanReadable.duration(b.seconds)}$afterText")
+                a.copy(timeSpentDoing = b.seconds.toString())
             }
             .combine(heatMapDao.getAllHeatMaps()) { a, b ->
                 a.copy(heatMaps = generateHeats(b))

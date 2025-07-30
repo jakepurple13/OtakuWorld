@@ -130,8 +130,6 @@ kotlin {
 
                 implementation(libs.paging.compose.common)
 
-                implementation(libs.human.readable)
-
                 /*implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.androidx.navigation3.ui)*/
 
