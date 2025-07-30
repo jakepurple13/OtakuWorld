@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ExceptionDao
+import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
@@ -49,6 +50,7 @@ class ReadViewModel(
     private val chapterHolder: ChapterHolder,
     private val favoritesRepository: FavoritesRepository,
     itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
+    private val heatMapDao: HeatMapDao,
     private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
@@ -190,6 +192,7 @@ class ReadViewModel(
             }
             ?.catch { exceptionDao.insertException(it) }
             ?.onEach { pageList.addAll(it) }
+            ?.onEach { heatMapDao.upsertHeatMap() }
             ?.onCompletion { isLoadingPages = false }
             ?.launchIn(viewModelScope)
     }
