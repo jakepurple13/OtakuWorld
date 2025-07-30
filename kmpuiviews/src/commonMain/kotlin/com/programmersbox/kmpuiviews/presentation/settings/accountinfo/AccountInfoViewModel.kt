@@ -19,6 +19,9 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.fireListener
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -89,8 +92,8 @@ class AccountInfoViewModel(
 
     @OptIn(ExperimentalTime::class)
     private fun generateHeats(
-        heatItems: List<HeatMapItem>
-    ): List<Heat<Int>> {
+        heatItems: List<HeatMapItem>,
+    ): PersistentList<Heat<Int>> {
         val startDate = heatItems.minByOrNull { item -> item.time.toEpochDays() }?.time
         val curDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
@@ -103,9 +106,8 @@ class AccountInfoViewModel(
                 current?.count?.toDouble() ?: 0.0,
                 current?.count ?: 0
             )
-        }.toList()
+        }.toPersistentList()
     }
-
 }
 
 data class AccountInfoCount(
@@ -123,7 +125,7 @@ data class AccountInfoCount(
     val globalSearchHistory: Int,
     val savedRecommendations: Int,
     val timeSpentDoing: String,
-    val heatMaps: List<Heat<Int>>,
+    val heatMaps: PersistentList<Heat<Int>>,
     val exceptionCount: Int,
 ) {
     @OptIn(ExperimentalTime::class)
@@ -142,7 +144,7 @@ data class AccountInfoCount(
         globalSearchHistory = array[11],
         savedRecommendations = array[12],
         timeSpentDoing = "0 seconds",
-        heatMaps = emptyList(),
+        heatMaps = persistentListOf(),
         exceptionCount = array[13]
     )
 
@@ -166,7 +168,7 @@ data class AccountInfoCount(
             globalSearchHistory = 0,
             savedRecommendations = 0,
             timeSpentDoing = "0 seconds",
-            heatMaps = emptyList(),
+            heatMaps = persistentListOf(),
             exceptionCount = 0
         )
     }
