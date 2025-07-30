@@ -1,9 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.settings.general
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,16 +18,12 @@ import androidx.compose.material.icons.filled.BlurOff
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.SettingsBrightness
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.SwipeLeft
-import androidx.compose.material.icons.filled.SwipeRight
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,58 +34,40 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.materialkolor.PaletteStyle
-import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.ColorBlindnessType
-import com.programmersbox.datastore.DetailsChapterSwipeBehavior
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.PaletteSwatchType
-import com.programmersbox.datastore.SystemThemeMode
-import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.datastore.rememberHistorySave
-import com.programmersbox.datastore.rememberSwatchStyle
-import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupScope
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
-import com.programmersbox.kmpuiviews.utils.seedColor
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.amoled_mode
 import otakuworld.kmpuiviews.generated.resources.cancel
-import otakuworld.kmpuiviews.generated.resources.choose_a_theme
 import otakuworld.kmpuiviews.generated.resources.general_menu_title
 import otakuworld.kmpuiviews.generated.resources.history_save_summary
 import otakuworld.kmpuiviews.generated.resources.history_save_title
@@ -99,7 +75,6 @@ import otakuworld.kmpuiviews.generated.resources.share_chapters
 import otakuworld.kmpuiviews.generated.resources.show_all_screen
 import otakuworld.kmpuiviews.generated.resources.show_download_button
 import otakuworld.kmpuiviews.generated.resources.show_list_detail_pane_for_lists
-import otakuworld.kmpuiviews.generated.resources.theme_choice_title
 
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalMaterial3Api
@@ -124,9 +99,15 @@ fun GeneralSettings(
                     onClick = { navActions.navigate(Screen.ThemeSettings) }
                 )
             }
-        }
 
-        DetailsChapterSwipeBehaviorSettings(handling = handling)
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text("Details Settings") },
+                    settingIcon = { Icon(Icons.Default.Animation, null, modifier = Modifier.fillMaxSize()) },
+                    onClick = { navActions.navigate(Screen.DetailsSettings) }
+                )
+            }
+        }
 
         CategoryGroup {
             item {
@@ -140,9 +121,7 @@ fun GeneralSettings(
                 GridTypeSettings(handling = handling)
             }
 
-            item { ShareChapterSettings(handling = handling) }
             item { DetailPaneSettings(handling = handling) }
-            item { ShowDownloadSettings(handling = handling) }
             item { HistorySettings(handling = handling) }
         }
 
@@ -445,53 +424,6 @@ private fun MultipleActionsSetting(
                     )
                 }
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
-@Composable
-private fun DetailsChapterSwipeBehaviorSettings(handling: NewSettingsHandling) {
-    var detailsChapterSwipeBehavior by handling.detailsChapterSwipeBehavior.rememberPreference()
-    CategoryGroup {
-        categorySetting { Text("Details Chapter Swipe Behavior") }
-
-        item {
-            ListSetting(
-                settingTitle = { Text("Start to End") },
-                dialogIcon = { Icon(Icons.Default.SwipeRight, null) },
-                settingIcon = { Icon(Icons.Default.SwipeRight, null, modifier = Modifier.fillMaxSize()) },
-                dialogTitle = { Text("Choose the behavior for the start to end swipe") },
-                summaryValue = { Text(detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorStartToEnd.name) },
-                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-                value = detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorStartToEnd,
-                options = DetailsChapterSwipeBehavior.entries,
-                updateValue = { it, d ->
-                    d.value = false
-                    detailsChapterSwipeBehavior = detailsChapterSwipeBehavior.copy(
-                        detailsChapterSwipeBehaviorStartToEnd = it
-                    )
-                }
-            )
-        }
-
-        item {
-            ListSetting(
-                settingTitle = { Text("End to Start") },
-                dialogIcon = { Icon(Icons.Default.SwipeLeft, null) },
-                settingIcon = { Icon(Icons.Default.SwipeLeft, null, modifier = Modifier.fillMaxSize()) },
-                dialogTitle = { Text("Choose the behavior for the end to start swipe") },
-                summaryValue = { Text(detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorEndToStart.name) },
-                confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-                value = detailsChapterSwipeBehavior.detailsChapterSwipeBehaviorEndToStart,
-                options = DetailsChapterSwipeBehavior.entries,
-                updateValue = { it, d ->
-                    d.value = false
-                    detailsChapterSwipeBehavior = detailsChapterSwipeBehavior.copy(
-                        detailsChapterSwipeBehaviorEndToStart = it
-                    )
-                }
-            )
         }
     }
 }

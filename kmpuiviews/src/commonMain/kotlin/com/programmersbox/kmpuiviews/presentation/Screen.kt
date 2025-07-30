@@ -142,6 +142,9 @@ sealed class Screen(val route: String) : NavKey {
     data object ThemeSettings : Screen("theme_settings")
 
     @Serializable
+    data object DetailsSettings : Screen("details_settings")
+
+    @Serializable
     data object SecuritySettings : Screen("security_settings")
 
     @Serializable
