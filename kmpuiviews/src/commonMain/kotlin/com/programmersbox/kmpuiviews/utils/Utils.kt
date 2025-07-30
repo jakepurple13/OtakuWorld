@@ -29,12 +29,6 @@ fun SourceRepository.loadItem(
     }
     ?.dispatchIo()
 
-var shouldPrintLogs = false
-
-inline fun printLogs(block: () -> Any?) {
-    if (shouldPrintLogs) println(block())
-}
-
 fun <T : PlatformGenericInfo> BeanDefinition<T>.bindsGenericInfo() {
     binds(
         listOf(

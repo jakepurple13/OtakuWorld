@@ -35,11 +35,12 @@ import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.utils.AndroidLogger
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
+import com.programmersbox.kmpuiviews.utils.OtakuLogger
 import com.programmersbox.kmpuiviews.utils.printLogs
-import com.programmersbox.kmpuiviews.utils.shouldPrintLogs
 import com.programmersbox.sharedutils.FirebaseDb
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
 import com.programmersbox.uiviews.datastore.RemoteConfigKeys
@@ -81,7 +82,8 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         //GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
 
-        shouldPrintLogs = BuildConfig.DEBUG
+        OtakuLogger.shouldPrintLogs = BuildConfig.DEBUG
+        OtakuLogger.init(AndroidLogger())
 
         firebaseSetup()
 
