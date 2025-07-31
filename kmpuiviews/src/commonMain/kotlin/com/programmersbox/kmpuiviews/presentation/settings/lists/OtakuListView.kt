@@ -179,9 +179,11 @@ fun OtakuListView(
                             { Icon(Icons.Default.WatchLater, null) }
                         } else null,
                         supportingContent = {
-                            Column {
-                                it.list.take(3).forEach { info ->
-                                    Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            if (!it.item.useBiometric) {
+                                Column {
+                                    it.list.take(3).forEach { info ->
+                                        Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
                                 }
                             }
                         }
