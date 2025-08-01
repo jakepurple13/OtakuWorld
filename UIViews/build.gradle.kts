@@ -129,7 +129,7 @@ dependencies {
 
     implementation(libs.material.kolor)
 
-    implementation(libs.blurhash)
+    //implementation(libs.blurhash)
     ksp(libs.roomCompiler)
 
     //implementation(projects.gemini)

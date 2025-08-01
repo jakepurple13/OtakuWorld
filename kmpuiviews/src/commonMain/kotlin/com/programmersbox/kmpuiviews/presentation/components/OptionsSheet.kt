@@ -76,6 +76,7 @@ interface OptionsSheetScope {
     fun OptionsItem(
         title: String,
         onClick: () -> Unit,
+        trailingContent: (@Composable () -> Unit)? = null,
         modifier: Modifier = Modifier,
     ) {
         Column(
@@ -90,6 +91,7 @@ interface OptionsSheetScope {
             ) {
                 ListItem(
                     headlineContent = { Text(title) },
+                    trailingContent = trailingContent,
                     colors = ListItemDefaults.colors(
                         containerColor = Color.Transparent
                     )
@@ -99,6 +101,44 @@ interface OptionsSheetScope {
             HorizontalDivider()
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun optionsSheet(
+    scope: CoroutineScope = rememberCoroutineScope(),
+    sheet: SheetState = rememberModalBottomSheetState(true),
+    moreContent: @Composable OptionsSheetScope.() -> Unit = {},
+): MutableState<Boolean> {
+    val show = remember { mutableStateOf(false) }
+    val optionsSheetScope = remember {
+        object : OptionsSheetScope {
+            override fun dismiss() {
+                scope.launch { sheet.hide() }
+                    .invokeOnCompletion { show.value = false }
+            }
+        }
+    }
+
+    if (show.value) {
+        ModalBottomSheet(
+            onDismissRequest = { show.value = false },
+            sheetState = sheet,
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .animateContentSize(),
+            ) {
+                with(optionsSheetScope) {
+                    moreContent()
+                }
+            }
+        }
+    }
+
+    return show
 }
 
 interface OptionsSheetValues {
