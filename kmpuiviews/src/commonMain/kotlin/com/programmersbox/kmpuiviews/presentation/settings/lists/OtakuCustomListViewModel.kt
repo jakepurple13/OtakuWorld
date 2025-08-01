@@ -194,6 +194,7 @@ sealed class OtakuListState {
                 .groupBy { it.source }
                 .entries
                 .toList()
+                .sortedByDescending { it.value.size }
         )
     }
 

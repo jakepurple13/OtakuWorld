@@ -39,7 +39,7 @@ protobufGradlePlugin = "0.9.5"
 qrose = "1.0.1"
 reorderable = "2.5.1"
 roomVersion = "2.7.2"
-navVersion = "2.9.2"
+navVersion = "2.9.3"
 koin-bom = "4.1.0"
 coil = "3.3.0"
 landscapist = "2.5.1"
@@ -54,7 +54,7 @@ scanner = "0.4.0"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
 urlencoderLib = "1.6.0"
-workVersion = "2.10.2"
+workVersion = "2.10.3"
 xemanticAiToolSchema = "1.1.2"
 ziplineVersion = "1.1.0"
 protobufVersion = "4.26.1"
@@ -78,7 +78,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.7.1"
+media3Version = "1.8.0"
 
 junit = "1.2.1"
 espresso-core = "3.6.1"
@@ -123,10 +123,10 @@ buildKonfig = "0.17.1"
 
 compottie = "2.0.0-rc04"
 
-lifecycleViewmodelNavigation3 = "1.0.0-alpha03"
-navigationevent = "1.0.0-alpha04"
+lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
+navigationevent = "1.0.0-alpha05"
 
-navigation3 = "1.0.0-alpha05"
+navigation3 = "1.0.0-alpha06"
 nav3Material = "1.0.0-SNAPSHOT"
 
 [plugins]
@@ -220,9 +220,9 @@ materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
-materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha03" }
-materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha03" }
-materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha03" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha04" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha04" }
+materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha04" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
 adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
 material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
@@ -336,7 +336,7 @@ fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
 androidxWindow = "androidx.window:window:1.4.0"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.6.2"
-androidxBrowser = "androidx.browser:browser:1.8.0"
+androidxBrowser = "androidx.browser:browser:1.9.0"
 
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 

@@ -157,6 +157,8 @@ fun OtakuListView(
             modifier = Modifier.fillMaxSize()
         ) {
             items(customLists) {
+                //TODO: Add a long click here that opens some options:
+                // like rename, delete, export, require biometrics, etc
                 ElevatedCard(
                     onClick = { navigateDetail(it) },
                     modifier = Modifier
@@ -171,6 +173,14 @@ fun OtakuListView(
                         }
                 ) {
                     val time = remember { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
+                    //TODO: Also, add a way to allow user to choose the cover
+                    // defaults to first item in the list cover
+                    // but we could allow user to:
+                    // choose a cover from items in list
+                    // enter a url themselves
+                    // choose an image from device
+                    // if the choice is an image from device, exporting will be a problem.
+                    // Might use the image loaders ability to show an error image
                     ListItem(
                         overlineContent = { Text(stringResource(Res.string.custom_list_updated_at, time)) },
                         trailingContent = { Text("(${it.list.size})") },

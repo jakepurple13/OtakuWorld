@@ -103,7 +103,7 @@ kotlin {
                 implementation(libs.sonner)
 
                 implementation(libs.urlencoder.lib)
-                implementation(libs.blurhash)
+                //implementation(libs.blurhash)
 
                 implementation(libs.dragselect)
 
