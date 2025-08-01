@@ -104,7 +104,7 @@ lottieCompose = "6.6.7"
 
 sqlite = "2.5.2"
 kotlinTest = "2.2.0"
-runner = "1.6.2"
+runner = "1.7.0"
 core = "1.6.1"
 
 androidx-lifecycle = "2.9.1"
