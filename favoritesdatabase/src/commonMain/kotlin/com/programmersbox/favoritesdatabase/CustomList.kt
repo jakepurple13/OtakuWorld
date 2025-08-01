@@ -96,7 +96,7 @@ abstract class ListDatabase : RoomDatabase() {
 interface ListDao {
 
     @Transaction
-    @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
+    @Query("SELECT * FROM CustomListItem ORDER BY useBiometric ASC, time DESC")
     fun getAllLists(): Flow<List<CustomList>>
 
     @Query("SELECT COUNT(uuid) FROM CustomListItem")
