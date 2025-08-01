@@ -232,24 +232,28 @@ fun OtakuListView(
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 },
-                                leadingContent = it
-                                    .list
-                                    .firstOrNull()
-                                    ?.let { image ->
-                                        {
-                                            ImageLoaderChoice(
-                                                imageUrl = image.imageUrl,
-                                                name = it.item.name,
-                                                placeHolder = { painterLogo() },
-                                                modifier = Modifier
-                                                    .size(
-                                                        width = ComposableUtils.IMAGE_WIDTH,
-                                                        height = ComposableUtils.IMAGE_HEIGHT
-                                                    )
-                                                    .clip(MaterialTheme.shapes.medium)
-                                            )
+                                leadingContent = if (it.item.useBiometric) {
+                                    null
+                                } else {
+                                    it
+                                        .list
+                                        .firstOrNull()
+                                        ?.let { image ->
+                                            {
+                                                ImageLoaderChoice(
+                                                    imageUrl = image.imageUrl,
+                                                    name = it.item.name,
+                                                    placeHolder = { painterLogo() },
+                                                    modifier = Modifier
+                                                        .size(
+                                                            width = ComposableUtils.IMAGE_WIDTH,
+                                                            height = ComposableUtils.IMAGE_HEIGHT
+                                                        )
+                                                        .clip(MaterialTheme.shapes.medium)
+                                                )
+                                            }
                                         }
-                                    },
+                                },
                                 colors = ListItemDefaults.colors(
                                     containerColor = Color.Transparent
                                 )
