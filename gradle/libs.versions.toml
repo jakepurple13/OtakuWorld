@@ -123,7 +123,7 @@ buildKonfig = "0.17.1"
 
 compottie = "2.0.0-rc04"
 
-lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
+lifecycleViewmodelNavigation3 = "1.0.0-SNAPSHOT"
 navigationevent = "1.0.0-alpha05"
 
 navigation3 = "1.0.0-alpha06"
