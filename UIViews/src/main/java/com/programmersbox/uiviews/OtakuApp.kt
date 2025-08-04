@@ -5,6 +5,7 @@ package com.programmersbox.uiviews
 import android.app.Application
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import android.os.StrictMode
 import android.util.Log
 import androidx.annotation.CallSuper
 import androidx.compose.foundation.ComposeFoundationFlags
@@ -84,6 +85,21 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         OtakuLogger.shouldPrintLogs = BuildConfig.DEBUG
         OtakuLogger.init(AndroidLogger())
+
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+        }
 
         firebaseSetup()
 
