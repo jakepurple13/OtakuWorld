@@ -10,15 +10,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,26 +32,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -71,6 +67,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -101,6 +98,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
@@ -115,9 +113,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.download_chapter
 import otakuworld.kmpuiviews.generated.resources.markAs
-import otakuworld.kmpuiviews.generated.resources.read
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -504,6 +500,27 @@ fun ChapterItem(
         scope.launch(Dispatchers.IO) { heatMapDao.upsertHeatMap() }
     }
 
+    var options by chapterItemOptions(
+        chapter = c,
+        hasBeenRead = updatedIsRead,
+        showDownload = showDownload,
+        onOpen = ::chapterClick,
+        downloadChapter = {
+            genericInfo.downloadChapter(c, chapters, infoModel, navController)
+            insertRecent()
+            if (!updatedIsRead) markAs(c, true)
+        },
+        markAsRead = { markAs(c, !updatedIsRead) },
+        shareChapter = {
+            scope.launch {
+                qrCodeRepository.shareUrl(
+                    url = c.url,
+                    title = c.name
+                )
+            }
+        }
+    )
+
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
         when (behavior) {
             DetailsChapterSwipeBehavior.MarkAsRead -> markAs(c, !updatedIsRead)
@@ -556,7 +573,7 @@ fun ChapterItem(
                 DetailsChapterSwipeBehavior.Nothing -> "Cancel"
             }
 
-            val textIndication = when(direction) {
+            val textIndication = when (direction) {
                 SwipeToDismissBoxValue.StartToEnd -> textSwipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
                 SwipeToDismissBoxValue.EndToStart -> textSwipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
                 else -> "Cancel"
@@ -594,51 +611,57 @@ fun ChapterItem(
             shape = RoundedCornerShape(2.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(
+                .combinedClickable(
                     indication = ripple(),
                     interactionSource = null,
-                ) { markAs(c, !updatedIsRead) },
+                    onLongClick = { options = true },
+                    onClick = {
+                        //markAs(c, !updatedIsRead)
+                        chapterClick()
+                    }
+                ),
         ) {
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                if (shareChapter) {
-                    ListItem(
-                        leadingContent = {
-                            Checkbox(
-                                checked = updatedIsRead,
-                                onCheckedChange = { b -> markAs(c, b) },
-                            )
-                        },
-                        headlineContent = {
-                            Text(
-                                c.name,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        },
-                        trailingContent = {
-                            IconButton(
-                                onClick = {
-                                    scope.launch {
-                                        qrCodeRepository.shareUrl(
-                                            url = c.url,
-                                            title = c.name
-                                        )
-                                    }
+                //if (shareChapter) {
+                ListItem(
+                    leadingContent = {
+                        Checkbox(
+                            checked = updatedIsRead,
+                            onCheckedChange = { b -> markAs(c, b) },
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            c.name,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    overlineContent = { Text(c.uploaded) },
+                    trailingContent = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    qrCodeRepository.shareUrl(
+                                        url = c.url,
+                                        title = c.name
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Default.Share,
-                                    null,
-                                )
                             }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        ),
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth()
-                    )
-                } else {
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                null,
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    ),
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth()
+                )
+                /*} else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = updatedIsRead,
@@ -651,18 +674,18 @@ fun ChapterItem(
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
-                }
+                }*/
 
-                Text(
+                /*Text(
                     c.uploaded,
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(horizontal = 16.dp)
                         .padding(4.dp)
-                )
+                )*/
 
-                Row(
+                /*Row(
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(horizontal = 16.dp)
@@ -718,8 +741,64 @@ fun ChapterItem(
                             }
                         }
                     }
-                }
+                }*/
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun chapterItemOptions(
+    chapter: KmpChapterModel,
+    hasBeenRead: Boolean,
+    showDownload: () -> Boolean,
+    onOpen: () -> Unit,
+    downloadChapter: () -> Unit,
+    markAsRead: () -> Unit,
+    shareChapter: () -> Unit,
+) = optionsSheet {
+
+    ListItem(
+        headlineContent = { Text(chapter.name) },
+    )
+
+    HorizontalDivider()
+
+    OptionsItem(
+        title = "Read",
+        onClick = {
+            dismiss()
+            onOpen()
+        }
+    )
+
+    if (chapter.source.canDownload && showDownload()) {
+        OptionsItem(
+            title = "Download",
+            onClick = {
+                dismiss()
+                downloadChapter()
+            }
+        )
+    }
+
+    OptionsItem(
+        title = "Mark as read",
+        onClick = markAsRead,
+        trailingContent = {
+            Checkbox(
+                checked = hasBeenRead,
+                onCheckedChange = { markAsRead() }
+            )
+        }
+    )
+
+    OptionsItem(
+        title = "Share",
+        onClick = {
+            dismiss()
+            shareChapter()
+        }
+    )
 }

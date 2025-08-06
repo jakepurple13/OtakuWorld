@@ -343,7 +343,6 @@ internal fun DetailsHeader(
     }
 }
 
-
 @ExperimentalFoundationApi
 @Composable
 internal fun PlaceHolderHeader(

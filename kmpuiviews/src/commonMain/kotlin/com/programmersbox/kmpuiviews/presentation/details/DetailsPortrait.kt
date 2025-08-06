@@ -19,11 +19,16 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SwipeDown
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +61,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -360,6 +366,9 @@ fun DetailsView(
                 .nestedScroll(collapsableBehavior.nestedScrollConnection)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
+            val bottomPadding = with(LocalDensity.current) {
+                LocalNavHostPadding.current.calculateBottomPadding().toPx().toInt()
+            }
             val modifiedPaddingValues = p// - LocalNavHostPadding.current
             var descriptionVisibility by remember { mutableStateOf(false) }
             val listOfChapters = remember(reverseChapters) {
@@ -413,7 +422,53 @@ fun DetailsView(
                     }
                 }
 
-                items(listOfChapters) { c ->
+                stickyHeader {
+                    ButtonGroup(
+                        overflowIndicator = { menuState ->
+                            FilledIconButton(
+                                onClick = {
+                                    if (menuState.isExpanded) {
+                                        menuState.dismiss()
+                                    } else {
+                                        menuState.show()
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = "Localized description",
+                                )
+                            }
+                        },
+                    ) {
+                        clickableItem(
+                            onClick = {
+                                scope.launch {
+                                    listState.animateScrollToItem(
+                                        index = listOfChapters
+                                            .indexOfFirst { r -> chapters.any { it.url == r.url } }
+                                            .let { if (it == -1) listOfChapters.lastIndex else it },
+                                        scrollOffset = bottomPadding
+                                    )
+                                }
+                            },
+                            icon = { Icon(Icons.Default.SwipeDown, null) },
+                            label = "Last Read"
+                        )
+
+                        toggleableItem(
+                            checked = reverseChapters,
+                            onCheckedChange = { reverseChapters = it },
+                            icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
+                            label = "Reverse"
+                        )
+                    }
+                }
+
+                items(
+                    listOfChapters,
+                    key = { it.url + it.name }
+                ) { c ->
                     ChapterItem(
                         infoModel = info,
                         c = c,
