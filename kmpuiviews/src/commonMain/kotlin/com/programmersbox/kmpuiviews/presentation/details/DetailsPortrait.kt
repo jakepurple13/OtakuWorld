@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.ArrowDropDownCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SwipeDown
+import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -465,6 +466,16 @@ fun DetailsView(
                             onCheckedChange = { reverseChapters = it },
                             icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
                             label = "Reverse"
+                        )
+
+                        clickableItem(
+                            onClick = {
+                                scope.launch {
+                                    listState.animateScrollToItem(index = 0)
+                                }
+                            },
+                            icon = { Icon(Icons.Default.VerticalAlignTop, null) },
+                            label = "Top"
                         )
 
                         clickableItem(
