@@ -636,7 +636,10 @@ fun ChapterItem(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     },
-                    overlineContent = { Text(c.uploaded) },
+                    overlineContent = c
+                        .uploaded
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { { Text(it) } },
                     trailingContent = {
                         IconButton(
                             onClick = {
