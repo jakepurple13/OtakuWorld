@@ -527,17 +527,18 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         )
 
         var showLists by remember { mutableStateOf(false) }
+        val listState = rememberModalBottomSheetState(true)
 
         if (showLists) {
             ModalBottomSheet(
                 onDismissRequest = { showLists = false },
                 containerColor = MaterialTheme.colorScheme.surface,
+                sheetState = listState
             ) {
                 ListChoiceScreen(
                     url = url,
                     onClick = { item ->
                         scope.launch {
-                            showLists = false
                             listDao.addToList(
                                 item.item.uuid,
                                 title,
@@ -546,7 +547,8 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                                 imageUrl,
                                 serviceName
                             )
-                        }
+                            listState.hide()
+                        }.invokeOnCompletion { showLists = false }
                     },
                     navigationIcon = {
                         IconButton(

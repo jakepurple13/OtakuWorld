@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.material3.animateFloatingActionButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -105,17 +106,18 @@ internal fun AddToList(
     scope: CoroutineScope,
 ) {
     if (showLists) {
+        val sheetState = rememberModalBottomSheetState(true)
         BackHandler { showListsChange(false) }
 
         ModalBottomSheet(
             onDismissRequest = { showListsChange(false) },
             containerColor = MaterialTheme.colorScheme.surface,
+            sheetState = sheetState
         ) {
             ListChoiceScreen(
                 url = info.url,
                 onClick = { item ->
                     scope.launch {
-                        showListsChange(false)
                         val result = listDao.addToList(
                             item.item.uuid,
                             info.title,
@@ -124,6 +126,7 @@ internal fun AddToList(
                             info.imageUrl,
                             info.source.serviceName
                         )
+                        sheetState.hide()
                         hostState?.showSnackbar(
                             getString(
                                 if (result) {
@@ -135,11 +138,14 @@ internal fun AddToList(
                             ),
                             withDismissAction = true
                         )
-                    }
+                    }.invokeOnCompletion { showListsChange(false) }
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = { showListsChange(false) }
+                        onClick = {
+                            scope.launch { sheetState.hide() }
+                                .invokeOnCompletion { showListsChange(false) }
+                        }
                     ) { Icon(Icons.Default.Close, null) }
                 },
             )

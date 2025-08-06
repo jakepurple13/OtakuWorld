@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SwipeDown
 import androidx.compose.material3.ButtonGroup
@@ -76,6 +77,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.rememberCollapsableTopBehavior
+import com.programmersbox.kmpuiviews.presentation.components.minus
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
@@ -377,10 +379,12 @@ fun DetailsView(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 state = listState,
-                contentPadding = modifiedPaddingValues,
+                //contentPadding = modifiedPaddingValues,
+                contentPadding = LocalNavHostPadding.current,
                 userScrollEnabled = !fabMenuExpanded,
                 modifier = Modifier
                     .fillMaxHeight()
+                    .padding(modifiedPaddingValues - LocalNavHostPadding.current)
                     .padding(vertical = 4.dp)
                     .let {
                         if (showBlur)
@@ -461,6 +465,12 @@ fun DetailsView(
                             onCheckedChange = { reverseChapters = it },
                             icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
                             label = "Reverse"
+                        )
+
+                        clickableItem(
+                            onClick = { scope.launch { scaffoldState.open() } },
+                            icon = { Icon(Icons.Default.Check, null) },
+                            label = "Mark As..."
                         )
                     }
                 }
