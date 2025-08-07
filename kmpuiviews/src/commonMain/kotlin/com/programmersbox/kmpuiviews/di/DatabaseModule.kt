@@ -20,7 +20,8 @@ import org.koin.dsl.module
 
 val databases: Module = module {
     includes(databaseBuilder)
-    single<ItemDao> { ItemDatabase.getInstance(get()).itemDao() }
+    single<ItemDatabase> { ItemDatabase.getInstance(get()) }
+    single<ItemDao> { get<ItemDatabase>().itemDao() }
     single<BlurHashDao> { BlurHashDatabase.getInstance(get()).blurDao() }
     single<HistoryDao> { HistoryDatabase.getInstance(get()).historyDao() }
     single<ListDao> { ListDatabase.getInstance(get()).listDao() }
