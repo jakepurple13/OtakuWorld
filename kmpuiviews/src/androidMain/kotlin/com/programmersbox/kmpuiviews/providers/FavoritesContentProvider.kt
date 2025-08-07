@@ -21,7 +21,7 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
 
     abstract val applicationId: String
 
-    private val AUTHORITY = "$applicationId.provider.favorites"
+    private val AUTHORITY by lazy { "$applicationId.provider.favorites" }
 
     private val sUriMatcher by lazy {
         UriMatcher(UriMatcher.NO_MATCH).apply {
@@ -76,6 +76,7 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
         if (values == null) return null
         val context = context ?: return null
 
+        println(AUTHORITY)
         println(uri)
 
         when (sUriMatcher.match(uri)) {
