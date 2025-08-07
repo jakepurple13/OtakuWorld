@@ -21,10 +21,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SwipeDown
+import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -225,6 +234,7 @@ fun DetailsViewLandscape(
                 info = info,
                 shareChapter = shareChapter,
                 reverseChapters = reverseChapters,
+                onReverse = { reverseChapters = it },
                 description = description,
                 onTranslateDescription = onTranslateDescription,
                 chapters = chapters,
@@ -237,6 +247,7 @@ fun DetailsViewLandscape(
                 canNotify = canNotify,
                 notifyAction = notifyAction,
                 onPaletteSet = onPaletteSet,
+                scaffoldState = scaffoldState,
                 modifier = Modifier.padding(p)
             )
         }
@@ -245,7 +256,7 @@ fun DetailsViewLandscape(
 
 @OptIn(
     ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalMaterial3WindowSizeClassApi::class
+    ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3ExpressiveApi::class
 )
 @Composable
 private fun DetailsLandscapeContent(
@@ -259,6 +270,8 @@ private fun DetailsLandscapeContent(
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     chapters: List<ChapterWatched>,
     reverseChapters: Boolean,
+    onReverse: (Boolean) -> Unit,
+    scaffoldState: DrawerState,
     listState: LazyListState,
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
@@ -395,6 +408,63 @@ private fun DetailsLandscapeContent(
                 modifier = Modifier.fillMaxHeight(),
                 state = listState
             ) {
+                stickyHeader {
+                    ButtonGroup(
+                        overflowIndicator = { menuState ->
+                            FilledIconButton(
+                                onClick = {
+                                    if (menuState.isExpanded) {
+                                        menuState.dismiss()
+                                    } else {
+                                        menuState.show()
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = "Localized description",
+                                )
+                            }
+                        },
+                    ) {
+                        clickableItem(
+                            onClick = {
+                                scope.launch {
+                                    listState.animateScrollToItem(
+                                        index = listOfChapters
+                                            .indexOfFirst { r -> chapters.any { it.url == r.url } }
+                                            .let { if (it == -1) listOfChapters.lastIndex else it },
+                                    )
+                                }
+                            },
+                            icon = { Icon(Icons.Default.SwipeDown, null) },
+                            label = "Last Read"
+                        )
+
+                        toggleableItem(
+                            checked = reverseChapters,
+                            onCheckedChange = onReverse,
+                            icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
+                            label = "Reverse"
+                        )
+
+                        clickableItem(
+                            onClick = {
+                                scope.launch {
+                                    listState.animateScrollToItem(index = 0)
+                                }
+                            },
+                            icon = { Icon(Icons.Default.VerticalAlignTop, null) },
+                            label = "Top"
+                        )
+
+                        clickableItem(
+                            onClick = { scope.launch { scaffoldState.open() } },
+                            icon = { Icon(Icons.Default.Check, null) },
+                            label = "Mark As..."
+                        )
+                    }
+                }
                 items(listOfChapters) { c ->
                     ChapterItem(
                         infoModel = info,

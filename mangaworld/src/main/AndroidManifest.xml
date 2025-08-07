@@ -6,6 +6,17 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
+    <!--<permission-group
+        android:name="${applicationId}.group"
+        android:description="@string/permission_description"
+        android:label="@string/permission_label" />
+    <permission
+        android:name="${applicationId}.READ_WRITE_FAVORITES"
+        android:description="@string/permission_description"
+        android:label="@string/permission_label"
+        android:permissionGroup="${applicationId}.group"
+        android:protectionLevel="dangerous" />
+-->
     <application
         android:name=".MangaApp"
         android:allowBackup="true"
@@ -91,6 +102,13 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <!-- Its com.programmersbox.mangaworld.noFirebase -->
+        <provider
+            android:name=".MangaFavoritesContentProvider"
+            android:authorities="${applicationId}.provider.favorites"
+            android:exported="true"
+            android:permission="${applicationId}.READ_WRITE_FAVORITES" />
 
     </application>
 

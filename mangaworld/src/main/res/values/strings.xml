@@ -27,4 +27,6 @@
     <string name="choose_a_directory">Choose a Folder</string>
     <string name="chooseText">Choose</string>
     <string name="cancelText">@android:string/cancel</string>
+    <string name="permission_label">Read and Write MangaWorld Favorites</string>
+    <string name="permission_description">Be able to modify MangaWorld Favorites</string>
 </resources>
