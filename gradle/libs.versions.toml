@@ -67,7 +67,7 @@ compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2025.07.00"
 materialKolor = "3.0.1"
 
-googlePerformancePlugin = "2.0.0"
+googlePerformancePlugin = "2.0.1"
 
 firebaseBom = "34.0.0"
 
