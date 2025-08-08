@@ -97,7 +97,7 @@ datastore = "1.1.7"
 ackpineVersion = "0.15.0"
 
 arcore = "1.0.0-alpha04"
-composeXr = "1.0.0-alpha04"
+composeXr = "1.0.0-SNAPSHOT"
 scenecore = "1.0.0-alpha04"
 
 lottieCompose = "6.6.7"
