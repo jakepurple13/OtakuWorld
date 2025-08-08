@@ -7,7 +7,6 @@ import android.database.Cursor
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -40,7 +39,7 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
         return when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> {
                 // Delete all matching rows
-                val count = db.delete(DbModel::class.java.simpleName, selection, selectionArgs)
+                val count = db.delete("FavoriteItem", selection, selectionArgs)
                 context.contentResolver.notifyChange(uri, null)
                 count
             }
@@ -49,12 +48,12 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
                 // Delete a specific item by ID
                 val id = uri.lastPathSegment
                 val count = if (selection.isNullOrEmpty()) {
-                    db.delete(DbModel::class.java.simpleName, "url = ?", arrayOf(id))
+                    db.delete("FavoriteItem", "url = ?", arrayOf(id))
                 } else {
                     // Create a new array with the ID appended
                     val newArgs = selectionArgs?.toMutableList() ?: mutableListOf()
                     newArgs.add(id)
-                    db.delete(DbModel::class.java.simpleName, "$selection AND url = ?", newArgs.toTypedArray())
+                    db.delete("FavoriteItem", "$selection AND url = ?", newArgs.toTypedArray())
                 }
                 context.contentResolver.notifyChange(uri, null)
                 count
