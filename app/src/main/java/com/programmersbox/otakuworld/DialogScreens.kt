@@ -1,5 +1,6 @@
 package com.programmersbox.otakuworld
 
+/*
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -139,9 +140,11 @@ class TestDialogFragment : BaseBottomSheetDialogFragment() {
         dialog?.window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
     }
 
-    /*override fun setupDialog(dialog: Dialog, style: Int) {
+    */
+/*override fun setupDialog(dialog: Dialog, style: Int) {
         dialog.window?.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
-    }*/
+    }*//*
+
 }
 
 enum class SettingLocation {
@@ -651,7 +654,8 @@ class MinimumTouchTargetModifierCustom(val size: DpSize) : LayoutModifier {
 @Composable
 fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    /*PreferenceSetting(
+    */
+/*PreferenceSetting(
         settingTitle = { Text("Text Field") },
         endIcon = {
             TextField(
@@ -662,7 +666,8 @@ fun TextFieldSetting(value: String, onValueChange: (String) -> Unit) {
                 modifier = Modifier.onFocusChanged { if (!it.isFocused) keyboardController?.hide() }
             )
         }
-    )*/
+    )*//*
+
 }
 
 @ExperimentalComposeUiApi
@@ -959,4 +964,4 @@ fun ThemeingView(closeClick: () -> Unit) {
 
         }
     }
-}
+}*/

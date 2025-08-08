@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.providers
 
-import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
@@ -8,6 +7,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
+import com.programmersbox.kmpuiviews.utils.printLogs
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -15,10 +15,8 @@ private const val FAVORITES_TABLE = "favorites"
 private const val FAVORITES_ID = 1
 private const val FAVORITES_ITEM_ID = 2
 
-abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
+abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
     private val itemDatabase by inject<ItemDatabase>()
-
-    abstract val applicationId: String
 
     private val AUTHORITY by lazy { "$applicationId.provider.favorites" }
 
@@ -33,6 +31,7 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String?>?): Int {
+        logWhoseCalling()
         val context = context ?: return 0
         val db = itemDatabase.openHelper.writableDatabase
 
@@ -72,11 +71,12 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
+        logWhoseCalling()
         if (values == null) return null
         val context = context ?: return null
 
-        println(AUTHORITY)
-        println(uri)
+        printLogs { AUTHORITY }
+        printLogs { uri }
 
         when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> {
@@ -84,7 +84,9 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
                 val url = values.getAsString("url") ?: return null
 
                 // Insert the new favorite
-                val rowId = db.insert("FavoriteItem", 0, values)
+                val rowId = runCatching { db.insert("FavoriteItem", 0, values) }
+                    .getOrNull()
+                    ?: return null
 
                 if (rowId > 0) {
                     val itemUri = "content://$AUTHORITY/$FAVORITES_TABLE/$url".toUri()
@@ -98,9 +100,7 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
         }
     }
 
-    override fun onCreate(): Boolean {
-        return true
-    }
+    override fun onCreate(): Boolean = true
 
     override fun query(
         uri: Uri,
@@ -108,14 +108,17 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
         selection: String?,
         selectionArgs: Array<out String?>?,
         sortOrder: String?,
-    ): Cursor? = itemDatabase.query(
-        query = SupportSQLiteQueryBuilder
-            .builder("FavoriteItem")
-            .selection(selection, selectionArgs)
-            .columns(projection?.filterNotNull()?.toTypedArray())
-            .orderBy(sortOrder)
-            .create(),
-    )
+    ): Cursor? {
+        logWhoseCalling()
+        return itemDatabase.query(
+            query = SupportSQLiteQueryBuilder
+                .builder("FavoriteItem")
+                .selection(selection, selectionArgs)
+                .columns(projection?.filterNotNull()?.toTypedArray())
+                .orderBy(sortOrder)
+                .create(),
+        )
+    }
 
     override fun update(
         uri: Uri,
@@ -123,6 +126,7 @@ abstract class FavoritesContentProvider : ContentProvider(), KoinComponent {
         selection: String?,
         selectionArgs: Array<out String?>?,
     ): Int {
+        logWhoseCalling()
         if (values == null) return 0
         val context = context ?: return 0
         val db = itemDatabase.openHelper.writableDatabase

@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <uses-permission android:name="com.programmersbox.mangaworld.noFirebase.READ_WRITE_LISTS" />
+    <uses-permission android:name="com.programmersbox.mangaworld.noFirebase.READ_WRITE_FAVORITES" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -14,7 +17,7 @@
         android:supportsRtl="true"
         android:name=".PlaygroundApp"
         android:usesCleartextTraffic="true"
-        android:theme="@style/Theme.OtakuWorld">
+        android:theme="@style/Theme.Material3.DayNight">
         <activity
             android:exported="true"
             android:name=".MainActivity">
@@ -25,7 +28,7 @@
             </intent-filter>
         </activity>
 
-        <receiver
+        <!--<receiver
             android:name="com.programmersbox.uiviews.checkers.DeleteNotificationReceiver"
             android:enabled="true"
             android:exported="true" />
@@ -37,7 +40,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.PACKAGE_FIRST_LAUNCH" />
             </intent-filter>
-        </receiver>
+        </receiver>-->
     </application>
 
 </manifest>
