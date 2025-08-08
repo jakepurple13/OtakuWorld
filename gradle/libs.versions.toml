@@ -338,7 +338,7 @@ androidxWindow = "androidx.window:window:1.4.0"
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.6.2"
 androidxBrowser = "androidx.browser:browser:1.9.0"
 
-showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
+showMoreLess = "com.github.noowenz:ShowMoreLess:V1.01"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.2.0"
