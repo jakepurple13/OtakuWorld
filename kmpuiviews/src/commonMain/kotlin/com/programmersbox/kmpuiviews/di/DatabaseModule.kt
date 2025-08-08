@@ -24,7 +24,8 @@ val databases: Module = module {
     single<ItemDao> { get<ItemDatabase>().itemDao() }
     single<BlurHashDao> { BlurHashDatabase.getInstance(get()).blurDao() }
     single<HistoryDao> { HistoryDatabase.getInstance(get()).historyDao() }
-    single<ListDao> { ListDatabase.getInstance(get()).listDao() }
+    single<ListDatabase> { ListDatabase.getInstance(get()) }
+    single<ListDao> { get<ListDatabase>().listDao() }
     single<RecommendationDao> { RecommendationDatabase.getInstance(get()).recommendationDao() }
     single<HeatMapDao> { HeatMapDatabase.getInstance(get()).heatMapDao() }
     single<ExceptionDao> { ExceptionDatabase.getInstance(get()).exceptionDao() }

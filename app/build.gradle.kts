@@ -38,12 +38,9 @@ dependencies {
 
     implementation(libs.recyclerview)
 
-    implementation(projects.uiViews)
+    //implementation(projects.uiViews)
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
-    implementation(projects.novelSources)
-    implementation(projects.animeSources)
-    implementation(projects.mangaSources)
 
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)

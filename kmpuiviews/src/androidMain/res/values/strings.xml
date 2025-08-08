@@ -230,6 +230,8 @@
 \n\nNow, let\'s create your perfect experience! You can change any of these settings at any time in the settings menu</string>
 
 
-    <string name="permission_label">Read and Write MangaWorld Favorites</string>
-    <string name="permission_description">Be able to modify MangaWorld Favorites</string>
+    <string name="permission_label">Read and Write Favorites</string>
+    <string name="permission_description">Be able to modify Favorites</string>
+    <string name="list_permission_label">Read and Write Lists</string>
+    <string name="list_permission_description">Be able to modify Lists</string>
 </resources>

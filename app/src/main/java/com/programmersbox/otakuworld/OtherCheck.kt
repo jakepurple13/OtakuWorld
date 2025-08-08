@@ -1,5 +1,6 @@
 package com.programmersbox.otakuworld
 
+/*
 import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ListItem
@@ -41,3 +42,4 @@ class OtherViewModel(context: Context) : ViewModel() {
             .launchIn(viewModelScope)
     }
 }
+*/

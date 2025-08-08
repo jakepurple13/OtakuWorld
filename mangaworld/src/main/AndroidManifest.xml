@@ -98,6 +98,12 @@
             android:exported="true"
             android:permission="${applicationId}.READ_WRITE_FAVORITES" />
 
+        <provider
+            android:name=".MangaListContentProvider"
+            android:authorities="${applicationId}.provider.customlist"
+            android:exported="true"
+            android:permission="${applicationId}.READ_WRITE_LISTS" />
+
     </application>
 
 </manifest>
