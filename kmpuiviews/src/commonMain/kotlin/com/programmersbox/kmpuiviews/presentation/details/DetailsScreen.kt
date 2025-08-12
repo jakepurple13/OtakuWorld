@@ -572,7 +572,7 @@ fun ChapterItem(
             )
 
             fun textSwipeBehavior(behavior: DetailsChapterSwipeBehavior) = when (behavior) {
-                DetailsChapterSwipeBehavior.MarkAsRead -> "Mark as read"
+                DetailsChapterSwipeBehavior.MarkAsRead -> if (updatedIsRead) "Mark as unread" else "Mark as read"
                 DetailsChapterSwipeBehavior.Read -> "Read"
                 DetailsChapterSwipeBehavior.Nothing -> "Cancel"
             }
