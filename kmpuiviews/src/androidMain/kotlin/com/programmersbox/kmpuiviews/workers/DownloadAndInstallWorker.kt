@@ -15,13 +15,13 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -407,7 +407,7 @@ class InstallWorker(
         runCatching {
             downloadAndInstaller.install(
                 file = PlatformFile(url),
-                confirmationType = ConfirmationType.IMMEDIATE
+                confirmationType = ConfirmationType.DEFERRED
             )
                 .onEach {
                     notify(notificationLogo, notificationId) {

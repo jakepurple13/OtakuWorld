@@ -25,6 +25,7 @@ data class DbModel(
     val shouldCheckForUpdate: Boolean = true,
 )
 
+@Serializable
 @Entity(tableName = "ChapterWatched")
 data class ChapterWatched(
     @PrimaryKey

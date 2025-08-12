@@ -10,7 +10,7 @@ expect class DownloadAndInstaller {
     fun downloadAndInstall(
         url: String,
         destinationPath: String = "",
-        confirmationType: ConfirmationType = ConfirmationType.IMMEDIATE,
+        confirmationType: ConfirmationType = ConfirmationType.DEFERRED,
     ): Flow<DownloadAndInstallStatus>
 
     fun download(
@@ -20,7 +20,7 @@ expect class DownloadAndInstaller {
 
     fun install(
         file: PlatformFile,
-        confirmationType: ConfirmationType = ConfirmationType.IMMEDIATE,
+        confirmationType: ConfirmationType = ConfirmationType.DEFERRED,
     ): Flow<DownloadAndInstallStatus>
 }
 
