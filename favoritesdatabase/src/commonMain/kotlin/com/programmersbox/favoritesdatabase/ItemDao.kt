@@ -54,6 +54,9 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 
+    @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
+    suspend fun getAllChaptersSync(url: String): List<ChapterWatched>
+
     @Query("SELECT COUNT(url) FROM ChapterWatched")
     fun getAllChaptersCount(): Flow<Int>
 

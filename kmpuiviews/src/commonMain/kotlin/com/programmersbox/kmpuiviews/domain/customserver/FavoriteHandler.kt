@@ -2,6 +2,16 @@ package com.programmersbox.kmpuiviews.domain.customserver
 
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpuiviews.utils.AppConfig
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 
 interface FavoriteHandler {
@@ -24,7 +34,7 @@ internal class FakeFavoriteHandler : FavoriteHandler {
     override suspend fun removeChapter(chapterWatched: ChapterWatched) = Unit
 }
 
-/*internal class FavoriteHandlerImpl(
+internal class FavoriteHandlerImpl(
     val appConfig: AppConfig,
     val client: HttpClient,
 ) : FavoriteHandler {
@@ -33,20 +43,20 @@ internal class FakeFavoriteHandler : FavoriteHandler {
     }
 
     override suspend fun addFavorite(dbModel: DbModel) {
-        runCatchLog(Unit) {
+        runCatchLog("") {
             client.post("/otaku/favorites") {
                 contentType(ContentType.Application.Json)
                 setBody(dbModel.toCustomServerDbModel())
-            }
+            }.bodyAsText()
         }
     }
 
     override suspend fun removeFavorite(dbModel: DbModel) {
-        runCatchLog(Unit) {
+        runCatchLog("") {
             client.delete("/otaku/favorites") {
                 contentType(ContentType.Application.Json)
                 setBody(dbModel.toCustomServerDbModel())
-            }
+            }.bodyAsText()
         }
     }
 
@@ -69,23 +79,23 @@ internal class FakeFavoriteHandler : FavoriteHandler {
     }
 
     override suspend fun addChapter(chapterWatched: ChapterWatched) {
-        runCatchLog(Unit) {
+        runCatchLog("") {
             client.post("/otaku/chapters") {
                 contentType(ContentType.Application.Json)
                 setBody(chapterWatched)
-            }
+            }.bodyAsText()
         }
     }
 
     override suspend fun removeChapter(chapterWatched: ChapterWatched) {
-        runCatchLog(Unit) {
+        runCatchLog("") {
             client.delete("/otaku/chapters") {
                 contentType(ContentType.Application.Json)
                 setBody(chapterWatched)
-            }
+            }.bodyAsText()
         }
     }
-}*/
+}
 
 @Serializable
 private data class CustomServerDbModel(

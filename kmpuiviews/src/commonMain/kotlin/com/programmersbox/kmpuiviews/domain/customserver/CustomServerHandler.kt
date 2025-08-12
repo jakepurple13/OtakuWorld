@@ -53,4 +53,5 @@ ListHandler by ListHandlerImpl(client)*/ {
 }
 
 internal suspend fun <T> runCatchLog(defaultValue: T, block: suspend () -> T) = runCatching { block() }
+    .onFailure { it.printStackTrace() }
     .getOrDefault(defaultValue)
