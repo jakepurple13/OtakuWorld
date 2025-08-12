@@ -19,29 +19,47 @@ interface ListHandler {
     suspend fun removeItem(customListInfo: CustomListInfo)
 }
 
+internal class FakeListHandler : ListHandler {
+    override suspend fun getAllLists(): List<CustomList> = emptyList()
+    override suspend fun addList(customList: CustomList) = Unit
+    override suspend fun removeList(customList: CustomList) = Unit
+    override suspend fun addItem(customListInfo: CustomListInfo) = Unit
+    override suspend fun removeItem(customListInfo: CustomListInfo) = Unit
+}
+
 internal class ListHandlerImpl(
     val client: HttpClient,
 ) : ListHandler {
-    override suspend fun getAllLists(): List<CustomList> = client.get("/otaku/lists").body()
+    override suspend fun getAllLists(): List<CustomList> = runCatchLog(emptyList()) {
+        client.get("/otaku/lists").body()
+    }
     override suspend fun addList(customList: CustomList) {
-        client.post("/otaku/lists") {
-            contentType(ContentType.Application.Json)
-            setBody(customList)
+        runCatchLog(Unit) {
+            client.post("/otaku/lists") {
+                contentType(ContentType.Application.Json)
+                setBody(customList)
+            }
         }
     }
 
     override suspend fun removeList(customList: CustomList) {
-        client.delete("/otaku/lists/all/${customList.item.uuid}")
+        runCatchLog(Unit) {
+            client.delete("/otaku/lists/all/${customList.item.uuid}")
+        }
     }
 
     override suspend fun addItem(customListInfo: CustomListInfo) {
-        client.post("/otaku/lists/item") {
-            contentType(ContentType.Application.Json)
-            setBody(customListInfo)
+        runCatchLog(Unit) {
+            client.post("/otaku/lists/item") {
+                contentType(ContentType.Application.Json)
+                setBody(customListInfo)
+            }
         }
     }
 
     override suspend fun removeItem(customListInfo: CustomListInfo) {
-        client.delete("/otaku/lists/${customListInfo.uniqueId}")
+        runCatchLog(Unit) {
+            client.delete("/otaku/lists/${customListInfo.uniqueId}")
+        }
     }
 }

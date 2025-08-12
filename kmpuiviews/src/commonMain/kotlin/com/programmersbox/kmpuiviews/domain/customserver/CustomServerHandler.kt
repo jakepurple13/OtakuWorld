@@ -7,7 +7,6 @@ import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.auth.providers.digest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -37,16 +36,21 @@ class CustomServerHandler(
             }
         }
 
-        defaultRequest {
+        /*defaultRequest {
             //TODO: Make sure this can change as needed
             url("http://0.0.0.0:8080")
-        }
+        }*/
     },
 ) : CustomServerHandle,
-    FavoriteHandler by FavoriteHandlerImpl(appConfig, client),
-    ListHandler by ListHandlerImpl(client) {
+    FavoriteHandler by FakeFavoriteHandler(),
+    ListHandler by FakeListHandler()
+/*FavoriteHandler by FavoriteHandlerImpl(appConfig, client),
+ListHandler by ListHandlerImpl(client)*/ {
 
     /*val d = client.post("http://0.0.0.0:8080/otaku/favorites") {
         contentType(ContentType.Application.Json)
     }*/
 }
+
+internal suspend fun <T> runCatchLog(defaultValue: T, block: suspend () -> T) = runCatching { block() }
+    .getOrDefault(defaultValue)

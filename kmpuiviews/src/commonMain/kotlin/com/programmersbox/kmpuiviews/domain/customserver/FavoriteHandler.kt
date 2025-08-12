@@ -23,23 +23,39 @@ interface FavoriteHandler {
     suspend fun removeChapter(chapterWatched: ChapterWatched)
 }
 
+internal class FakeFavoriteHandler : FavoriteHandler {
+    override suspend fun getFavorites() = emptyList<DbModel>()
+    override suspend fun addFavorite(dbModel: DbModel) = Unit
+    override suspend fun removeFavorite(dbModel: DbModel) = Unit
+
+    override suspend fun getChapters(dbModel: DbModel) = emptyList<ChapterWatched>()
+    override suspend fun addChapter(chapterWatched: ChapterWatched) = Unit
+    override suspend fun removeChapter(chapterWatched: ChapterWatched) = Unit
+}
+
 internal class FavoriteHandlerImpl(
     val appConfig: AppConfig,
     val client: HttpClient,
 ) : FavoriteHandler {
-    override suspend fun getFavorites() = client.get("/otaku/favorites/${appConfig.appName}").body<List<DbModel>>()
+    override suspend fun getFavorites() = runCatchLog(emptyList()) {
+        client.get("/otaku/favorites/${appConfig.appName}").body<List<DbModel>>()
+    }
 
     override suspend fun addFavorite(dbModel: DbModel) {
-        client.post("/otaku/favorites") {
-            contentType(ContentType.Application.Json)
-            setBody(dbModel.toCustomServerDbModel())
+        runCatchLog(Unit) {
+            client.post("/otaku/favorites") {
+                contentType(ContentType.Application.Json)
+                setBody(dbModel.toCustomServerDbModel())
+            }
         }
     }
 
     override suspend fun removeFavorite(dbModel: DbModel) {
-        client.delete("/otaku/favorites") {
-            contentType(ContentType.Application.Json)
-            setBody(dbModel.toCustomServerDbModel())
+        runCatchLog(Unit) {
+            client.delete("/otaku/favorites") {
+                contentType(ContentType.Application.Json)
+                setBody(dbModel.toCustomServerDbModel())
+            }
         }
     }
 
@@ -54,22 +70,28 @@ internal class FavoriteHandlerImpl(
         type = appConfig.appName
     )
 
-    override suspend fun getChapters(dbModel: DbModel) = client.get("/otaku/chapters") {
-        contentType(ContentType.Application.Json)
-        setBody(dbModel.toCustomServerDbModel())
-    }.body<List<ChapterWatched>>()
+    override suspend fun getChapters(dbModel: DbModel) = runCatchLog(emptyList()) {
+        client.get("/otaku/chapters") {
+            contentType(ContentType.Application.Json)
+            setBody(dbModel.toCustomServerDbModel())
+        }.body<List<ChapterWatched>>()
+    }
 
     override suspend fun addChapter(chapterWatched: ChapterWatched) {
-        client.post("/otaku/chapters") {
-            contentType(ContentType.Application.Json)
-            setBody(chapterWatched)
+        runCatchLog(Unit) {
+            client.post("/otaku/chapters") {
+                contentType(ContentType.Application.Json)
+                setBody(chapterWatched)
+            }
         }
     }
 
     override suspend fun removeChapter(chapterWatched: ChapterWatched) {
-        client.delete("/otaku/chapters") {
-            contentType(ContentType.Application.Json)
-            setBody(chapterWatched)
+        runCatchLog(Unit) {
+            client.delete("/otaku/chapters") {
+                contentType(ContentType.Application.Json)
+                setBody(chapterWatched)
+            }
         }
     }
 }
