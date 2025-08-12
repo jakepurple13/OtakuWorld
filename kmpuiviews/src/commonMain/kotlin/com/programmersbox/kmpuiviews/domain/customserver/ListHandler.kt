@@ -2,14 +2,6 @@ package com.programmersbox.kmpuiviews.domain.customserver
 
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.resources.get
-import io.ktor.client.plugins.resources.post
-import io.ktor.client.request.delete
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 
 interface ListHandler {
     suspend fun getAllLists(): List<CustomList>
@@ -27,6 +19,7 @@ internal class FakeListHandler : ListHandler {
     override suspend fun removeItem(customListInfo: CustomListInfo) = Unit
 }
 
+/*
 internal class ListHandlerImpl(
     val client: HttpClient,
 ) : ListHandler {
@@ -62,4 +55,4 @@ internal class ListHandlerImpl(
             client.delete("/otaku/lists/${customListInfo.uniqueId}")
         }
     }
-}
+}*/

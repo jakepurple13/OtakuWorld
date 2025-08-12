@@ -2,15 +2,6 @@ package com.programmersbox.kmpuiviews.domain.customserver
 
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.kmpuiviews.utils.AppConfig
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.resources.get
-import io.ktor.client.plugins.resources.post
-import io.ktor.client.request.delete
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 
 interface FavoriteHandler {
@@ -33,7 +24,7 @@ internal class FakeFavoriteHandler : FavoriteHandler {
     override suspend fun removeChapter(chapterWatched: ChapterWatched) = Unit
 }
 
-internal class FavoriteHandlerImpl(
+/*internal class FavoriteHandlerImpl(
     val appConfig: AppConfig,
     val client: HttpClient,
 ) : FavoriteHandler {
@@ -94,7 +85,7 @@ internal class FavoriteHandlerImpl(
             }
         }
     }
-}
+}*/
 
 @Serializable
 private data class CustomServerDbModel(
