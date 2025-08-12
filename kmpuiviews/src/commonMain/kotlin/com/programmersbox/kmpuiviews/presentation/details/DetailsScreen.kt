@@ -2,13 +2,16 @@ package com.programmersbox.kmpuiviews.presentation.details
 
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -21,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -608,7 +612,6 @@ fun ChapterItem(
         modifier = modifier.fillMaxWidth()
     ) {
         ElevatedCard(
-            shape = RoundedCornerShape(2.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .combinedClickable(
@@ -625,10 +628,17 @@ fun ChapterItem(
                 //if (shareChapter) {
                 ListItem(
                     leadingContent = {
-                        Checkbox(
-                            checked = updatedIsRead,
-                            onCheckedChange = { b -> markAs(c, b) },
-                        )
+                        AnimatedVisibility(
+                            !updatedIsRead,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            )
+                        }
                     },
                     headlineContent = {
                         Text(
