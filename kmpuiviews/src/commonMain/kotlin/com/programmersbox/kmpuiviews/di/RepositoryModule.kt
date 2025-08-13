@@ -22,7 +22,7 @@ val repositories = module {
     singleOf(::SetupRepository)
     includes(platformRepositories())
     //TODO: This will change into a repository that will return a CustomServerHandler based on data that changes
-    single { CustomServerHandler(get()) } binds arrayOf(CustomServerHandle::class)
+    single { CustomServerHandler(get(), get(), get()) } binds arrayOf(CustomServerHandle::class)
 }
 
 expect fun platformRepositories(): Module

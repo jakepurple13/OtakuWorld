@@ -16,9 +16,11 @@ import kotlinx.serialization.Serializable
 
 interface FavoriteHandler {
     suspend fun getFavorites(): List<DbModel>
+    suspend fun getFavorite(url: String): List<DbModel>
     suspend fun addFavorite(dbModel: DbModel)
     suspend fun removeFavorite(dbModel: DbModel)
 
+    suspend fun getChapter(url: String): List<ChapterWatched>
     suspend fun getChapters(dbModel: DbModel): List<ChapterWatched>
     suspend fun addChapter(chapterWatched: ChapterWatched)
     suspend fun removeChapter(chapterWatched: ChapterWatched)
@@ -26,10 +28,12 @@ interface FavoriteHandler {
 
 internal class FakeFavoriteHandler : FavoriteHandler {
     override suspend fun getFavorites() = emptyList<DbModel>()
+    override suspend fun getFavorite(url: String): List<DbModel> = emptyList()
     override suspend fun addFavorite(dbModel: DbModel) = Unit
     override suspend fun removeFavorite(dbModel: DbModel) = Unit
 
     override suspend fun getChapters(dbModel: DbModel) = emptyList<ChapterWatched>()
+    override suspend fun getChapter(url: String): List<ChapterWatched> = emptyList()
     override suspend fun addChapter(chapterWatched: ChapterWatched) = Unit
     override suspend fun removeChapter(chapterWatched: ChapterWatched) = Unit
 }
@@ -40,6 +44,13 @@ internal class FavoriteHandlerImpl(
 ) : FavoriteHandler {
     override suspend fun getFavorites() = runCatchLog(emptyList()) {
         client.get("/otaku/favorites/${appConfig.appName}").body<List<DbModel>>()
+    }
+
+    override suspend fun getFavorite(url: String) = runCatchLog(emptyList()) {
+        client.get("/otaku/favorites/item") {
+            contentType(ContentType.Application.Json)
+            setBody(url)
+        }.body<List<DbModel>>()
     }
 
     override suspend fun addFavorite(dbModel: DbModel) {
@@ -70,6 +81,13 @@ internal class FavoriteHandlerImpl(
         shouldCheckForUpdate = shouldCheckForUpdate,
         type = appConfig.appName
     )
+
+    override suspend fun getChapter(url: String): List<ChapterWatched> = runCatchLog(emptyList()) {
+        client.get("/otaku/chapters/item") {
+            contentType(ContentType.Application.Json)
+            setBody(url)
+        }.body<List<ChapterWatched>>()
+    }
 
     override suspend fun getChapters(dbModel: DbModel) = runCatchLog(emptyList()) {
         client.get("/otaku/chapters") {

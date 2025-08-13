@@ -42,6 +42,9 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem WHERE url=:url")
     fun getDbModel(url: String): Flow<DbModel?>
 
+    @Query("SELECT * FROM FavoriteItem WHERE url=:url")
+    suspend fun getDbModelSync(url: String): DbModel?
+
     @Query("SELECT EXISTS(SELECT * FROM FavoriteItem WHERE url=:url)")
     fun containsItem(url: String): Flow<Boolean>
 

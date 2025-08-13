@@ -14,6 +14,7 @@ import io.ktor.http.contentType
 
 interface ListHandler {
     suspend fun getAllLists(): List<CustomList>
+    suspend fun getList(id: String): List<CustomList>
     suspend fun addList(customList: CustomList)
     suspend fun removeList(customList: CustomList)
     suspend fun addItem(customListInfo: CustomListInfo)
@@ -22,6 +23,7 @@ interface ListHandler {
 
 internal class FakeListHandler : ListHandler {
     override suspend fun getAllLists(): List<CustomList> = emptyList()
+    override suspend fun getList(id: String): List<CustomList> = emptyList()
     override suspend fun addList(customList: CustomList) = Unit
     override suspend fun removeList(customList: CustomList) = Unit
     override suspend fun addItem(customListInfo: CustomListInfo) = Unit
@@ -34,6 +36,13 @@ internal class ListHandlerImpl(
     override suspend fun getAllLists(): List<CustomList> = runCatchLog(emptyList()) {
         client.get("/otaku/lists").body<List<CustomList>>()
     }
+
+    override suspend fun getList(id: String): List<CustomList> {
+        return runCatchLog(emptyList()) {
+            client.get("/otaku/list/$id").body<List<CustomList>>()
+        }
+    }
+
     override suspend fun addList(customList: CustomList) {
         runCatchLog("") {
             client.post("/otaku/lists") {

@@ -126,6 +126,9 @@ interface ListDao {
     @Delete
     suspend fun removeItem(listItem: CustomListInfo)
 
+    @Query("DELETE FROM CustomListInfo WHERE :uuid = uuid")
+    suspend fun removeItem(uuid: String)
+
     @Update
     suspend fun updateList(listItem: CustomListItem)
 
