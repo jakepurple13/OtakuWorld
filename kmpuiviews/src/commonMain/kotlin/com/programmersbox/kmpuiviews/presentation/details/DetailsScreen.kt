@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -21,6 +22,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -42,9 +44,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -53,6 +55,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -611,7 +614,98 @@ fun ChapterItem(
         },
         modifier = modifier.fillMaxWidth()
     ) {
-        ElevatedCard(
+        val body: @Composable ColumnScope.() -> Unit = {
+            Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                ListItem(
+                    leadingContent = {
+                        /*if(!updatedIsRead) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            )
+                        }*/
+                        AnimatedVisibility(
+                            !updatedIsRead,
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            )
+                        }
+                    },
+                    headlineContent = {
+                        Text(
+                            c.name,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    overlineContent = c
+                        .uploaded
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { { Text(it) } },
+                    trailingContent = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    qrCodeRepository.shareUrl(
+                                        url = c.url,
+                                        title = c.name
+                                    )
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                null,
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    ),
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth()
+                )
+            }
+        }
+
+        val elevatedCardColors = CardDefaults.elevatedCardColors()
+        val outlinedColors = CardDefaults.outlinedCardColors()
+
+        OutlinedCard(
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = animateColorAsState(
+                    if (updatedIsRead)
+                        outlinedColors.containerColor
+                    else
+                        elevatedCardColors.containerColor
+                ).value,
+                contentColor = animateColorAsState(
+                    if (updatedIsRead)
+                        outlinedColors.contentColor
+                    else
+                        elevatedCardColors.contentColor
+                ).value,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    indication = ripple(),
+                    interactionSource = null,
+                    onLongClick = { options = true },
+                    onClick = {
+                        //markAs(c, !updatedIsRead)
+                        chapterClick()
+                    }
+                ),
+            content = body
+        )
+        /*ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .combinedClickable(
@@ -674,7 +768,7 @@ fun ChapterItem(
                         .wrapContentHeight()
                         .fillMaxWidth()
                 )
-                /*} else {
+                *//*} else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = updatedIsRead,
@@ -687,18 +781,18 @@ fun ChapterItem(
                             modifier = Modifier.padding(start = 4.dp)
                         )
                     }
-                }*/
+                }*//*
 
-                /*Text(
+                *//*Text(
                     c.uploaded,
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(horizontal = 16.dp)
                         .padding(4.dp)
-                )*/
+                )*//*
 
-                /*Row(
+                *//*Row(
                     modifier = Modifier
                         .align(Alignment.End)
                         .padding(horizontal = 16.dp)
@@ -754,9 +848,9 @@ fun ChapterItem(
                             }
                         }
                     }
-                }*/
+                }*//*
             }
-        }
+        }*/
     }
 }
 
