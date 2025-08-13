@@ -3,6 +3,9 @@ package com.programmersbox.kmpuiviews.di
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.customserver.CustomServerHandle
 import com.programmersbox.kmpuiviews.domain.customserver.CustomServerHandler
+import com.programmersbox.kmpuiviews.domain.customserver.FavoriteHandler
+import com.programmersbox.kmpuiviews.domain.customserver.ListHandler
+import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
@@ -21,8 +24,13 @@ val repositories = module {
     singleOf(::PrereleaseRepository)
     singleOf(::SetupRepository)
     includes(platformRepositories())
+    singleOf(::ServerRepository)
     //TODO: This will change into a repository that will return a CustomServerHandler based on data that changes
-    single { CustomServerHandler(get(), get(), get()) } binds arrayOf(CustomServerHandle::class)
+    single { CustomServerHandler(get(), get(), get()) } binds arrayOf(
+        CustomServerHandle::class,
+        FavoriteHandler::class,
+        ListHandler::class
+    )
 }
 
 expect fun platformRepositories(): Module

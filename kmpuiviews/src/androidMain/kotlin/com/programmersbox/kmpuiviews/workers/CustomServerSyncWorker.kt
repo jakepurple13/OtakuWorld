@@ -5,7 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.kmpuiviews.domain.customserver.CustomServerHandler
+import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -15,12 +15,13 @@ import kotlinx.coroutines.launch
 class CustomServerSyncWorker(
     context: Context,
     workerParams: WorkerParameters,
-    private val customServerHandler: CustomServerHandler,
+    private val serverRepository: ServerRepository,
     private val listDao: ListDao,
     private val itemDao: ItemDao,
 ) : CoroutineWorker(context, workerParams) {
     private val dispatchers = Dispatchers.IO.limitedParallelism(5)
     override suspend fun doWork(): Result {
+        val customServerHandler = serverRepository.customServerHandle.value ?: return Result.success()
         //TODO: Gotta test this
         return runCatching {
             coroutineScope {

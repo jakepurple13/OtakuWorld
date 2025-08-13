@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.domain.customserver
 
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.auth.Auth
@@ -9,15 +10,18 @@ import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.auth.providers.digest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.sse
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-interface CustomServerHandle {
+interface CustomServerHandle : FavoriteHandler, ListHandler {
     val client: HttpClient
     val appConfig: AppConfig
+
+    suspend fun listenToSSE()
 }
 
 class CustomServerHandler(
@@ -48,10 +52,10 @@ class CustomServerHandler(
             }
         }
 
-        /*defaultRequest {
+        defaultRequest {
             //TODO: Make sure this can change as needed
             url("http://0.0.0.0:8080")
-        }*/
+        }
     },
 ) : CustomServerHandle,
     FavoriteHandler by FakeFavoriteHandler(),
@@ -59,13 +63,10 @@ class CustomServerHandler(
 /*FavoriteHandler by FavoriteHandlerImpl(appConfig, client),
 ListHandler by ListHandlerImpl(client)*/ {
 
-    /*val d = client.post("http://0.0.0.0:8080/otaku/favorites") {
-        contentType(ContentType.Application.Json)
-    }*/
-
-    suspend fun listenToSSE() {
+    override suspend fun listenToSSE() {
         client.sse("/otaku/sse") {
             incoming.collect { event ->
+                logFirebaseMessage("Event: ${event.event}")
                 runCatching {
                     val data = Json
                         .decodeFromString<CustomServerEvent>(event.data!!)

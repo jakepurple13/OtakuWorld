@@ -4,7 +4,8 @@ import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.kmpuiviews.domain.customserver.CustomServerHandler
+import com.programmersbox.kmpuiviews.domain.customserver.FavoriteHandler
+import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.utils.FireListenerClosable
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import kotlinx.coroutines.coroutineScope
@@ -15,8 +16,11 @@ import kotlinx.coroutines.launch
 class FavoritesRepository(
     private val dao: ItemDao,
     private val firebaseDb: KmpFirebaseConnection,
-    private val customServerHandler: CustomServerHandler,
+    private val serverRepository: ServerRepository,
 ) {
+
+    private val customServerHandler: FavoriteHandler?
+        get() = serverRepository.customServerHandle.value
 
     suspend fun isIncognito(source: String): Boolean {
         //TODO: Maybe also allow specific items?
@@ -28,7 +32,7 @@ class FavoritesRepository(
     suspend fun addFavorite(db: DbModel) {
         if (isIncognito(db.source)) return
         coroutineScope {
-            launch { customServerHandler.addFavorite(db) }
+            launch { customServerHandler?.addFavorite(db) }
             launch { dao.insertFavorite(db) }
             launch { firebaseDb.insertShowFlow(db).collect() }
         }
@@ -37,7 +41,7 @@ class FavoritesRepository(
     suspend fun removeFavorite(db: DbModel) {
         if (isIncognito(db.source)) return
         coroutineScope {
-            launch { customServerHandler.removeFavorite(db) }
+            launch { customServerHandler?.removeFavorite(db) }
             launch { dao.deleteFavorite(db) }
             launch { firebaseDb.removeShowFlow(db).collect() }
         }
@@ -46,7 +50,7 @@ class FavoritesRepository(
     suspend fun addWatched(chapterWatched: ChapterWatched) {
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
-            launch { customServerHandler.addChapter(chapterWatched) }
+            launch { customServerHandler?.addChapter(chapterWatched) }
             launch { dao.insertChapter(chapterWatched) }
             launch { firebaseDb.insertEpisodeWatchedFlow(chapterWatched).collect() }
         }
@@ -55,7 +59,7 @@ class FavoritesRepository(
     suspend fun removeWatched(chapterWatched: ChapterWatched) {
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
-            launch { customServerHandler.removeChapter(chapterWatched) }
+            launch { customServerHandler?.removeChapter(chapterWatched) }
             launch { dao.deleteChapter(chapterWatched) }
             launch { firebaseDb.removeEpisodeWatchedFlow(chapterWatched).collect() }
         }
@@ -67,7 +71,7 @@ class FavoritesRepository(
     }
 
     suspend fun getAllFavorites() = listOf(
-        customServerHandler.getFavorites(),
+        customServerHandler?.getFavorites() ?: emptyList(),
         dao.getAllFavoritesSync(),
         firebaseDb.getAllShows().requireNoNulls()
     )
