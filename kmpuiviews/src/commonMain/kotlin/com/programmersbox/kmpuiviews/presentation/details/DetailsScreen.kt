@@ -6,9 +6,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -499,6 +500,7 @@ fun ChapterItem(
 
     val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
     val updatedIsRead by rememberUpdatedState(hasBeenRead)
+    val updatedAnimated = updateTransition(updatedIsRead)
 
     fun chapterClick() {
         genericInfo.chapterOnClick(c, chapters, infoModel, navController)
@@ -618,15 +620,8 @@ fun ChapterItem(
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
                 ListItem(
                     leadingContent = {
-                        /*if(!updatedIsRead) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                            )
-                        }*/
-                        AnimatedVisibility(
-                            !updatedIsRead,
+                        updatedAnimated.AnimatedVisibility(
+                            { !it },
                             enter = fadeIn() + expandHorizontally(),
                             exit = fadeOut() + shrinkHorizontally()
                         ) {
@@ -679,18 +674,18 @@ fun ChapterItem(
 
         OutlinedCard(
             colors = CardDefaults.elevatedCardColors(
-                containerColor = animateColorAsState(
-                    if (updatedIsRead)
+                containerColor = updatedAnimated.animateColor {
+                    if (it)
                         outlinedColors.containerColor
                     else
                         elevatedCardColors.containerColor
-                ).value,
-                contentColor = animateColorAsState(
-                    if (updatedIsRead)
+                }.value,
+                contentColor = updatedAnimated.animateColor {
+                    if (it)
                         outlinedColors.contentColor
                     else
                         elevatedCardColors.contentColor
-                ).value,
+                }.value,
             ),
             modifier = Modifier
                 .fillMaxWidth()
