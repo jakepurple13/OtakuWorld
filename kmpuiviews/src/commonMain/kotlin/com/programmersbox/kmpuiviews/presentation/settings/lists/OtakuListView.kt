@@ -89,6 +89,7 @@ import otakuworld.kmpuiviews.generated.resources.custom_lists_title
 import otakuworld.kmpuiviews.generated.resources.delete_list_title
 import otakuworld.kmpuiviews.generated.resources.list_name
 import otakuworld.kmpuiviews.generated.resources.update_list_name_title
+import kotlin.uuid.ExperimentalUuidApi
 
 @Composable
 fun OtakuListView(
@@ -114,7 +115,7 @@ fun OtakuListView(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalUuidApi::class)
 @Composable
 fun OtakuListView(
     customLists: List<CustomList>,
@@ -151,9 +152,21 @@ fun OtakuListView(
                 )
             },
             confirmButton = {
+                //val serverRepository = koinInject<ServerRepository>()
+
                 TextButton(
                     onClick = {
                         scope.launch {
+                            /*val list = CustomListItem(
+                                uuid = Uuid.random().toString(),
+                                name = name,
+                            )
+                            serverRepository
+                                .customServerHandle
+                                .value
+                                ?.addList(list)
+                            dao.createList(list)*/
+                            //TODO: Need to create a list repository to handle server backups
                             dao.create(name)
                             showAdd = false
                         }

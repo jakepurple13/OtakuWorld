@@ -13,6 +13,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.sse
+import io.ktor.client.plugins.timeout
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -63,12 +64,25 @@ class CustomServerHandler(
 /*FavoriteHandler by FavoriteHandlerImpl(appConfig, client),
 ListHandler by ListHandlerImpl(client)*/ {
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = false
+    }
+
     override suspend fun listenToSSE() {
-        client.sse("/otaku/sse") {
+        client.sse(
+            "/otaku/sse",
+            request = {
+                timeout {
+                    socketTimeoutMillis = Long.MAX_VALUE
+                }
+            }
+        ) {
             incoming.collect { event ->
                 logFirebaseMessage("Event: ${event.event}")
                 runCatching {
-                    val data = Json
+                    val data = json
                         .decodeFromString<CustomServerEvent>(event.data!!)
                         .id
 

@@ -37,7 +37,7 @@ class CustomServerSyncWorker(
                             }
                         } else {
                             listDao.getAllListsSync().forEach {
-                                customServerHandler.addList(it)
+                                customServerHandler.addList(it.item)
                                 it.list.forEach { listInfo ->
                                     customServerHandler.addItem(listInfo)
                                 }

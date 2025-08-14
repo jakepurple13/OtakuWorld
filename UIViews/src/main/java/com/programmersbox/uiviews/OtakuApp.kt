@@ -127,6 +127,12 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         forLaterSetup()
 
+        /*runCatching {
+            get<ServerRepository>()
+                .init()
+                .launchIn(GlobalScope)
+        }*/
+
         runCatching {
             val backgroundWorkHandler = get<BackgroundWorkHandler>()
             backgroundWorkHandler.setupPeriodicCheckers()

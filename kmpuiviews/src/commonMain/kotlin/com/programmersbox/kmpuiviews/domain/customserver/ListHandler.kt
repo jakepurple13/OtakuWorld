@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.domain.customserver
 
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.favoritesdatabase.CustomListItem
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -15,7 +16,7 @@ import io.ktor.http.contentType
 interface ListHandler {
     suspend fun getAllLists(): List<CustomList>
     suspend fun getList(id: String): List<CustomList>
-    suspend fun addList(customList: CustomList)
+    suspend fun addList(customList: CustomListItem)
     suspend fun removeList(customList: CustomList)
     suspend fun addItem(customListInfo: CustomListInfo)
     suspend fun removeItem(customListInfo: CustomListInfo)
@@ -24,7 +25,7 @@ interface ListHandler {
 internal class FakeListHandler : ListHandler {
     override suspend fun getAllLists(): List<CustomList> = emptyList()
     override suspend fun getList(id: String): List<CustomList> = emptyList()
-    override suspend fun addList(customList: CustomList) = Unit
+    override suspend fun addList(customList: CustomListItem) = Unit
     override suspend fun removeList(customList: CustomList) = Unit
     override suspend fun addItem(customListInfo: CustomListInfo) = Unit
     override suspend fun removeItem(customListInfo: CustomListInfo) = Unit
@@ -43,7 +44,7 @@ internal class ListHandlerImpl(
         }
     }
 
-    override suspend fun addList(customList: CustomList) {
+    override suspend fun addList(customList: CustomListItem) {
         runCatchLog("") {
             client.post("/otaku/lists") {
                 contentType(ContentType.Application.Json)
