@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.preference) {
         isTransitive = true
     }
+    implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koinLibs)
 
     //Custom Libraries

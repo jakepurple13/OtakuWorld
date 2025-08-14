@@ -210,7 +210,7 @@ fun HomeNav(
                                     middleNavItem = middleNavItem,
                                     multipleActions = multipleActions,
                                     bottomBarAdditions = bottomBarAdditions,
-                                    modifier = Modifier.renderInSharedTransitionScopeOverlay()
+                                    //modifier = Modifier.renderInSharedTransitionScopeOverlay()
                                 )
                             } else {
                                 HomeNavigationBar(
@@ -231,7 +231,7 @@ fun HomeNav(
                                             style = HazeMaterials.ultraThin(),
                                         )
                                         .fillMaxWidth()
-                                        .renderInSharedTransitionScopeOverlay()
+                                    //.renderInSharedTransitionScopeOverlay()
                                 )
                             }
                         },

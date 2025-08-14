@@ -79,19 +79,19 @@ ListHandler by ListHandlerImpl(client)*/ {
                         }
 
                         EventType.DELETE_FAVORITE -> {
-                            itemDao.getDbModelSync(data)
+                            itemDao
+                                .getDbModelSync(data)
                                 ?.let { model -> itemDao.deleteFavorite(model) }
                         }
 
                         EventType.NEW_CHAPTER -> {
-                            val newChapters = getChapter(data)
-                            newChapters.forEach {
-                                itemDao.insertChapter(it)
-                            }
+                            getChapter(data)
+                                .forEach { itemDao.insertChapter(it) }
                         }
 
                         EventType.DELETE_CHAPTER -> {
-                            itemDao.getAllChaptersSync(data)
+                            itemDao
+                                .getAllChaptersSync(data)
                                 .forEach { chapterWatched -> itemDao.deleteChapter(chapterWatched) }
                         }
 
@@ -124,7 +124,7 @@ ListHandler by ListHandlerImpl(client)*/ {
                             listDao.removeItem(data)
                         }
                     }
-                }
+                }.onFailure { it.printStackTrace() }
             }
         }
     }
