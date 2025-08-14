@@ -103,7 +103,7 @@ scenecore = "1.0.0-alpha04"
 lottieCompose = "6.6.7"
 
 sqlite = "2.5.2"
-kotlinTest = "2.2.0"
+kotlinTest = "2.2.10"
 runner = "1.7.0"
 core = "1.7.0"
 
