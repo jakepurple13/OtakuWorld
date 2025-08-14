@@ -7,6 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -20,6 +21,8 @@ interface ListHandler {
     suspend fun removeList(customList: CustomList)
     suspend fun addItem(customListInfo: CustomListInfo)
     suspend fun removeItem(customListInfo: CustomListInfo)
+    suspend fun updateList(customList: CustomListItem)
+    suspend fun updateBiometric(uuid: String, useBiometric: Boolean)
 }
 
 internal class FakeListHandler : ListHandler {
@@ -29,6 +32,8 @@ internal class FakeListHandler : ListHandler {
     override suspend fun removeList(customList: CustomList) = Unit
     override suspend fun addItem(customListInfo: CustomListInfo) = Unit
     override suspend fun removeItem(customListInfo: CustomListInfo) = Unit
+    override suspend fun updateList(customList: CustomListItem) = Unit
+    override suspend fun updateBiometric(uuid: String, useBiometric: Boolean) = Unit
 }
 
 internal class ListHandlerImpl(
@@ -74,5 +79,19 @@ internal class ListHandlerImpl(
             client.delete("/otaku/lists/${customListInfo.uniqueId}")
                 .bodyAsText()
         }
+    }
+
+    override suspend fun updateList(customList: CustomListItem) {
+        client.patch("/otaku/lists") {
+            contentType(ContentType.Application.Json)
+            setBody(customList)
+        }.bodyAsText()
+    }
+
+    override suspend fun updateBiometric(uuid: String, useBiometric: Boolean) {
+        client.patch("/otaku/lists/biometric/$uuid") {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("useBiometric" to useBiometric))
+        }.bodyAsText()
     }
 }
