@@ -179,15 +179,17 @@ class DetailsViewModel(
         val imageUrl: String?,
     )
 
-    suspend fun toggleNotify() {
-        dbModel
-            ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
-            ?.let { favoritesRepository.toggleNotify(it) }
+    fun toggleNotify() {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbModel
+                ?.let { it.copy(shouldCheckForUpdate = !it.shouldCheckForUpdate) }
+                ?.let { favoritesRepository.toggleNotify(it) }
+        }
     }
 
 
     fun translateDescription(progress: MutableState<Boolean>) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             progress.value = true
             description = translationHandler.translate(info!!.description)
             progress.value = false
@@ -228,7 +230,7 @@ class DetailsViewModel(
             favoriteUrl = info!!.url
         )
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (
                 favoritesRepository.isIncognito(info!!.source.serviceName) ||
                 favoritesRepository.isIncognito(info!!.url)
@@ -238,6 +240,14 @@ class DetailsViewModel(
                 favoritesRepository.addWatched(chapter)
             } else {
                 favoritesRepository.removeWatched(chapter)
+            }
+        }
+    }
+
+    fun reread() {
+        viewModelScope.launch(Dispatchers.IO) {
+            chapters.forEach {
+                favoritesRepository.removeWatched(it)
             }
         }
     }

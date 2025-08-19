@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Markunread
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
@@ -23,15 +25,19 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwipeDown
+import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarScrollBehavior
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -64,9 +70,11 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
+import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
+import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
@@ -528,5 +536,82 @@ fun DetailFloatingActionButtonMenu(
                 text = { Text(if (canNotify) "Check for updates" else "Do not check for updates") },
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ChapterListHeader(
+    scope: CoroutineScope,
+    reverseChapters: Boolean,
+    onReverseChaptersClick: (Boolean) -> Unit,
+    bottomPadding: Int,
+    listState: LazyListState,
+    listOfChapters: List<KmpChapterModel>,
+    chapters: List<ChapterWatched>,
+    detailsActions: DetailsActions,
+    markAsClick: suspend () -> Unit,
+) {
+    ButtonGroup(
+        overflowIndicator = { menuState ->
+            FilledIconButton(
+                onClick = {
+                    if (menuState.isExpanded) {
+                        menuState.dismiss()
+                    } else {
+                        menuState.show()
+                    }
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = "Localized description",
+                )
+            }
+        },
+    ) {
+        clickableItem(
+            onClick = {
+                scope.launch {
+                    listState.animateScrollToItem(
+                        index = listOfChapters
+                            .indexOfFirst { r -> chapters.any { it.url == r.url } }
+                            .let { if (it == -1) listOfChapters.lastIndex else it },
+                        scrollOffset = bottomPadding
+                    )
+                }
+            },
+            icon = { Icon(Icons.Default.SwipeDown, null) },
+            label = "Last Read"
+        )
+
+        toggleableItem(
+            checked = reverseChapters,
+            onCheckedChange = onReverseChaptersClick,
+            icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
+            label = "Reverse"
+        )
+
+        clickableItem(
+            onClick = {
+                scope.launch {
+                    listState.animateScrollToItem(index = 0)
+                }
+            },
+            icon = { Icon(Icons.Default.VerticalAlignTop, null) },
+            label = "Top"
+        )
+
+        clickableItem(
+            onClick = { scope.launch { markAsClick() } },
+            icon = { Icon(Icons.Default.Check, null) },
+            label = "Mark As..."
+        )
+
+        clickableItem(
+            onClick = detailsActions.rereadClick,
+            icon = { Icon(Icons.Default.Markunread, null) },
+            label = "Reread"
+        )
     }
 }
