@@ -19,18 +19,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ArrowDropDownCircle
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.SwipeDown
-import androidx.compose.material.icons.filled.VerticalAlignTop
-import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -68,9 +61,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.kmpalette.palette.graphics.Palette
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
-import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.ScrollBar
@@ -115,16 +108,14 @@ fun DetailsView(
     shareChapter: Boolean,
     chapters: List<ChapterWatched>,
     isFavorite: Boolean,
-    onFavoriteClick: (Boolean) -> Unit,
     canNotify: Boolean,
-    notifyAction: () -> Unit,
-    markAs: (KmpChapterModel, Boolean) -> Unit,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: () -> Boolean,
     onPaletteSet: (Palette) -> Unit,
     blurHash: BitmapPainter?,
     onBitmapSet: (ImageBitmap) -> Unit,
+    detailsActions: DetailsActions,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
@@ -132,6 +123,9 @@ fun DetailsView(
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
     var reverseChapters by remember { mutableStateOf(false) }
+
+    val settingsHandling = koinInject<NewSettingsHandling>()
+    val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
 
     val settings = LocalSettingsHandling.current
     val showBlur by settings.rememberShowBlur()
@@ -190,7 +184,7 @@ fun DetailsView(
                     drawerState = scaffoldState,
                     info = info,
                     chapters = chapters,
-                    markAs = markAs
+                    markAs = detailsActions.markAsRead
                 )
             }
         }
@@ -245,7 +239,7 @@ fun DetailsView(
                                 dao = dao,
                                 isFavorite = isFavorite,
                                 canNotify = canNotify,
-                                notifyAction = notifyAction,
+                                notifyAction = detailsActions.notifyChange,
                                 onReverseChaptersClick = { reverseChapters = !reverseChapters },
                                 onShowLists = { showLists = true },
                                 addToForLater = {
@@ -302,7 +296,7 @@ fun DetailsView(
                     DetailsHeader(
                         model = info,
                         isFavorite = isFavorite,
-                        favoriteClick = onFavoriteClick,
+                        favoriteClick = { detailsActions.favoriteAction() },
                         onPaletteSet = onPaletteSet,
                         onBitmapSet = onBitmapSet,
                         blurHash = blurHash,
@@ -347,9 +341,9 @@ fun DetailsView(
                         }
                     },
                     canNotify = canNotify,
-                    notifyAction = notifyAction,
+                    notifyAction = detailsActions.notifyChange,
                     isFavorite = isFavorite,
-                    onFavoriteClick = onFavoriteClick,
+                    onFavoriteClick = { detailsActions.favoriteAction() },
                     fabMenuExpanded = fabMenuExpanded,
                     onFabMenuExpandedChange = { fabMenuExpanded = it },
                     modifier = Modifier.padding(LocalNavHostPadding.current)
@@ -428,62 +422,17 @@ fun DetailsView(
                 }
 
                 stickyHeader {
-                    ButtonGroup(
-                        overflowIndicator = { menuState ->
-                            FilledIconButton(
-                                onClick = {
-                                    if (menuState.isExpanded) {
-                                        menuState.dismiss()
-                                    } else {
-                                        menuState.show()
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = "Localized description",
-                                )
-                            }
-                        },
-                    ) {
-                        clickableItem(
-                            onClick = {
-                                scope.launch {
-                                    listState.animateScrollToItem(
-                                        index = listOfChapters
-                                            .indexOfFirst { r -> chapters.any { it.url == r.url } }
-                                            .let { if (it == -1) listOfChapters.lastIndex else it },
-                                        scrollOffset = bottomPadding
-                                    )
-                                }
-                            },
-                            icon = { Icon(Icons.Default.SwipeDown, null) },
-                            label = "Last Read"
-                        )
-
-                        toggleableItem(
-                            checked = reverseChapters,
-                            onCheckedChange = { reverseChapters = it },
-                            icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
-                            label = "Reverse"
-                        )
-
-                        clickableItem(
-                            onClick = {
-                                scope.launch {
-                                    listState.animateScrollToItem(index = 0)
-                                }
-                            },
-                            icon = { Icon(Icons.Default.VerticalAlignTop, null) },
-                            label = "Top"
-                        )
-
-                        clickableItem(
-                            onClick = { scope.launch { scaffoldState.open() } },
-                            icon = { Icon(Icons.Default.Check, null) },
-                            label = "Mark As..."
-                        )
-                    }
+                    ChapterListHeader(
+                        scope = scope,
+                        reverseChapters = reverseChapters,
+                        onReverseChaptersClick = { reverseChapters = it },
+                        bottomPadding = bottomPadding,
+                        listState = listState,
+                        listOfChapters = listOfChapters,
+                        chapters = chapters,
+                        markAsClick = { scaffoldState.open() },
+                        detailsActions = detailsActions
+                    )
                 }
 
                 items(
@@ -491,13 +440,11 @@ fun DetailsView(
                     key = { it.url + it.name }
                 ) { c ->
                     ChapterItem(
-                        infoModel = info,
                         c = c,
                         read = chapters,
-                        chapters = info.chapters,
-                        shareChapter = shareChapter,
-                        markAs = markAs,
+                        detailsActions = detailsActions,
                         showDownload = showDownloadButton,
+                        swipeBehavior = swipeBehavior,
                         modifier = Modifier.animateItem()
                     )
                 }

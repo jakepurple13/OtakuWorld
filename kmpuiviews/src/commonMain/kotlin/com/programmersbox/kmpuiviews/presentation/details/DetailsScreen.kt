@@ -93,13 +93,15 @@ import com.materialkolor.DynamicMaterialTheme
 import com.materialkolor.rememberDynamicMaterialThemeState
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DetailsChapterSwipeBehavior
-import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.DetailsChapterSwipeBehaviorHandle
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.rememberSwatchStyle
 import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -108,7 +110,9 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
+import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -116,11 +120,14 @@ import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
+import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
 import otakuworld.kmpuiviews.generated.resources.markAs
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -142,7 +149,7 @@ fun DetailsScreen(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
     ExperimentalComposeUiApi::class,
-    ExperimentalAnimationApi::class
+    ExperimentalAnimationApi::class, ExperimentalTime::class
 )
 @Composable
 private fun DetailsScreenInternal(
@@ -152,7 +159,16 @@ private fun DetailsScreenInternal(
     details: DetailsViewModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
+    val genericInfo = koinInject<KmpGenericInfo>()
     val handling = LocalSettingsHandling.current
+    val navActions = LocalNavActions.current
+    val qrCodeRepository = koinInject<QrCodeRepository>()
+    val historyDao = LocalHistoryDao.current
+    val heatMapDao = koinInject<HeatMapDao>()
+    val favoritesRepository: FavoritesRepository = koinInject()
+    val dataStoreHandling = koinInject<DataStoreHandling>()
+    val listDao = LocalCustomListDao.current
+    val notificationRepository = koinInject<NotificationRepository>()
 
     val showDownload by handling.rememberShowDownload()
     val usePalette by handling.rememberUsePalette()
@@ -218,6 +234,31 @@ private fun DetailsScreenInternal(
                 }
 
                 is DetailState.Success -> {
+                    val infoModel = state.info
+
+                    fun insertRecent() {
+                        scope.launch(Dispatchers.IO) {
+                            if (
+                                favoritesRepository.isIncognito(infoModel.source.serviceName) ||
+                                favoritesRepository.isIncognito(infoModel.url)
+                            ) return@launch
+
+                            historyDao.insertRecentlyViewed(
+                                RecentModel(
+                                    title = infoModel.title,
+                                    url = infoModel.url,
+                                    imageUrl = infoModel.imageUrl,
+                                    description = infoModel.description,
+                                    source = infoModel.source.serviceName,
+                                    timestamp = Clock.System.now().toEpochMilliseconds()
+                                )
+                            )
+
+                            val save = dataStoreHandling.historySave.get()
+                            if (save != -1) historyDao.removeOldData(save)
+                        }
+                    }
+
                     DetailContent(
                         dao = dao,
                         details = details,
@@ -225,13 +266,92 @@ private fun DetailsScreenInternal(
                         state = state,
                         windowSize = windowSize,
                         shareChapter = shareChapter,
-                        showDownload = showDownload
+                        showDownload = showDownload,
+                        detailsActions = DetailsActions(
+                            onClick = { model ->
+                                genericInfo.chapterOnClick(model, state.info.chapters, infoModel, navActions)
+                                insertRecent()
+                                if (!details.chapters.fastAny { it.url == model.url }) details.markAs(model, true)
+                                scope.launch(Dispatchers.IO) { heatMapDao.upsertHeatMap() }
+                            },
+                            onDownload = { model ->
+                                genericInfo.downloadChapter(model, state.info.chapters, infoModel, navActions)
+                                insertRecent()
+                                if (!details.chapters.fastAny { it.url == model.url }) details.markAs(model, true)
+                            },
+                            shareChapter = {
+                                scope.launch {
+                                    qrCodeRepository.shareUrl(
+                                        url = it.url,
+                                        title = it.name
+                                    )
+                                }
+                            },
+                            markAsRead = { model, read -> details.markAs(model, read) },
+                            favoriteAction = { details.favoriteAction(state.action) },
+                            notifyChange = { details.toggleNotify() },
+                            globalSearch = { navActions.globalSearch(infoModel.title) },
+                            addToList = { item ->
+                                listDao.addToList(
+                                    item.item.uuid,
+                                    infoModel.title,
+                                    infoModel.description,
+                                    infoModel.url,
+                                    infoModel.imageUrl,
+                                    infoModel.source.serviceName
+                                )
+                            },
+                            addToSaved = {
+                                scope.launch(Dispatchers.IO) {
+                                    dao.insertNotification(
+                                        NotificationItem(
+                                            id = infoModel.hashCode(),
+                                            url = infoModel.url,
+                                            summaryText = getString(
+                                                Res.string.hadAnUpdate,
+                                                infoModel.title,
+                                                infoModel.chapters.firstOrNull()?.name.orEmpty()
+                                            ),
+                                            notiTitle = infoModel.title,
+                                            imageUrl = infoModel.imageUrl,
+                                            source = infoModel.source.serviceName,
+                                            contentTitle = infoModel.title
+                                        )
+                                    )
+                                }
+                            },
+                            removeFromSaved = {
+                                scope.launch(Dispatchers.IO) {
+                                    dao.getNotificationItemFlow(infoModel.url)
+                                        .firstOrNull()
+                                        ?.let {
+                                            dao.deleteNotification(it)
+                                            notificationRepository.cancelNotification(it)
+                                        }
+                                }
+                            },
+                            rereadClick = details::reread
+                        )
                     )
                 }
             }
         }
     }
 }
+
+data class DetailsActions(
+    val onClick: (KmpChapterModel) -> Unit,
+    val onDownload: (KmpChapterModel) -> Unit,
+    val shareChapter: (KmpChapterModel) -> Unit,
+    val markAsRead: (KmpChapterModel, Boolean) -> Unit,
+    val favoriteAction: () -> Unit,
+    val notifyChange: () -> Unit,
+    val globalSearch: () -> Unit,
+    val addToList: suspend (CustomList) -> Boolean,
+    val addToSaved: suspend () -> Unit,
+    val removeFromSaved: suspend () -> Unit,
+    val rereadClick: () -> Unit,
+)
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -243,6 +363,7 @@ private fun DetailContent(
     windowSize: WindowSizeClass,
     shareChapter: Boolean,
     showDownload: Boolean,
+    detailsActions: DetailsActions,
 ) {
     val isSaved by dao
         .doesNotificationExistFlow(state.info.url)
@@ -254,15 +375,13 @@ private fun DetailContent(
             isSaved = isSaved,
             shareChapter = shareChapter,
             isFavorite = state.action is DetailFavoriteAction.Remove,
-            onFavoriteClick = { details.favoriteAction(state.action) },
             chapters = details.chapters,
-            markAs = details::markAs,
             description = details.description,
             onTranslateDescription = details::translateDescription,
             showDownloadButton = { showDownload },
             canNotify = details.dbModel?.shouldCheckForUpdate == true,
-            notifyAction = { scope.launch { details.toggleNotify() } },
-            onPaletteSet = { details.palette = it }
+            onPaletteSet = { details.palette = it },
+            detailsActions = detailsActions
         )
     } else {
         DetailsView(
@@ -270,17 +389,15 @@ private fun DetailContent(
             isSaved = isSaved,
             shareChapter = shareChapter,
             isFavorite = state.action is DetailFavoriteAction.Remove,
-            onFavoriteClick = { details.favoriteAction(state.action) },
             chapters = details.chapters,
-            markAs = details::markAs,
             description = details.description,
             onTranslateDescription = details::translateDescription,
             showDownloadButton = { showDownload },
             canNotify = details.dbModel?.shouldCheckForUpdate == true,
-            notifyAction = { scope.launch { details.toggleNotify() } },
             onPaletteSet = { details.palette = it },
             onBitmapSet = { details.imageBitmap = it },
-            blurHash = details.blurHash
+            blurHash = details.blurHash,
+            detailsActions = detailsActions
         )
     }
 }
@@ -455,85 +572,31 @@ private fun DetailError(
 @ExperimentalMaterial3Api
 @Composable
 fun ChapterItem(
-    infoModel: KmpInfoModel,
     c: KmpChapterModel,
     read: List<ChapterWatched>,
-    chapters: List<KmpChapterModel>,
-    shareChapter: Boolean,
     showDownload: () -> Boolean,
-    markAs: (KmpChapterModel, Boolean) -> Unit,
+    swipeBehavior: DetailsChapterSwipeBehaviorHandle,
+    detailsActions: DetailsActions,
     modifier: Modifier = Modifier,
 ) {
-    val genericInfo = koinInject<KmpGenericInfo>()
-    val qrCodeRepository = koinInject<QrCodeRepository>()
-    val historyDao = LocalHistoryDao.current
-    val heatMapDao = koinInject<HeatMapDao>()
-    val favoritesRepository: FavoritesRepository = koinInject()
-    val navController = LocalNavActions.current
-    val dataStoreHandling = koinInject<DataStoreHandling>()
-    val settingsHandling = koinInject<NewSettingsHandling>()
-    val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
-    val scope = rememberCoroutineScope()
-
-    fun insertRecent() {
-        scope.launch(Dispatchers.IO) {
-            if (
-                favoritesRepository.isIncognito(infoModel.source.serviceName) ||
-                favoritesRepository.isIncognito(infoModel.url)
-            ) return@launch
-
-            historyDao.insertRecentlyViewed(
-                RecentModel(
-                    title = infoModel.title,
-                    url = infoModel.url,
-                    imageUrl = infoModel.imageUrl,
-                    description = infoModel.description,
-                    source = infoModel.source.serviceName,
-                    timestamp = Clock.System.now().toEpochMilliseconds()
-                )
-            )
-
-            val save = dataStoreHandling.historySave.get()
-            if (save != -1) historyDao.removeOldData(save)
-        }
-    }
-
     val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
     val updatedIsRead by rememberUpdatedState(hasBeenRead)
     val updatedAnimated = updateTransition(updatedIsRead)
-
-    fun chapterClick() {
-        genericInfo.chapterOnClick(c, chapters, infoModel, navController)
-        insertRecent()
-        if (!updatedIsRead) markAs(c, true)
-        scope.launch(Dispatchers.IO) { heatMapDao.upsertHeatMap() }
-    }
 
     var options by chapterItemOptions(
         chapter = c,
         hasBeenRead = updatedIsRead,
         showDownload = showDownload,
-        onOpen = ::chapterClick,
-        downloadChapter = {
-            genericInfo.downloadChapter(c, chapters, infoModel, navController)
-            insertRecent()
-            if (!updatedIsRead) markAs(c, true)
-        },
-        markAsRead = { markAs(c, !updatedIsRead) },
-        shareChapter = {
-            scope.launch {
-                qrCodeRepository.shareUrl(
-                    url = c.url,
-                    title = c.name
-                )
-            }
-        }
+        onOpen = { detailsActions.onClick(c) },
+        downloadChapter = { detailsActions.onDownload(c) },
+        markAsRead = { detailsActions.markAsRead(c, !updatedIsRead) },
+        shareChapter = { detailsActions.shareChapter(c) }
     )
 
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
         when (behavior) {
-            DetailsChapterSwipeBehavior.MarkAsRead -> markAs(c, !updatedIsRead)
-            DetailsChapterSwipeBehavior.Read -> chapterClick()
+            DetailsChapterSwipeBehavior.MarkAsRead -> detailsActions.markAsRead(c, !updatedIsRead)
+            DetailsChapterSwipeBehavior.Read -> detailsActions.onClick(c)
             DetailsChapterSwipeBehavior.Nothing -> {}
         }
     }
@@ -644,14 +707,7 @@ fun ChapterItem(
                         ?.let { { Text(it) } },
                     trailingContent = {
                         IconButton(
-                            onClick = {
-                                scope.launch {
-                                    qrCodeRepository.shareUrl(
-                                        url = c.url,
-                                        title = c.name
-                                    )
-                                }
-                            }
+                            onClick = { detailsActions.shareChapter(c) }
                         ) {
                             Icon(
                                 Icons.Default.Share,
@@ -693,10 +749,7 @@ fun ChapterItem(
                     indication = ripple(),
                     interactionSource = null,
                     onLongClick = { options = true },
-                    onClick = {
-                        //markAs(c, !updatedIsRead)
-                        chapterClick()
-                    }
+                    onClick = { detailsActions.onClick(c) }
                 ),
             content = body
         )

@@ -6,9 +6,6 @@ import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.basic
-import io.ktor.client.plugins.auth.providers.bearer
-import io.ktor.client.plugins.auth.providers.digest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
@@ -40,17 +37,29 @@ class CustomServerHandler(
         }
 
         install(Auth) {
-            basic {
-
+            /*basic {
+                credentials {
+                    BasicAuthCredentials("username", "password")
+                }
             }
 
             bearer {
-
+                loadTokens {
+                    BearerTokens("access", "refresh")
+                }
+                refreshTokens {
+                    BearerTokens("access", "refresh")
+                }
+                sendWithoutRequest {
+                    true
+                }
             }
 
             digest {
-
-            }
+                credentials {
+                    DigestAuthCredentials("username", "password")
+                }
+            }*/
         }
 
         defaultRequest {

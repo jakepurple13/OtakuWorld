@@ -21,19 +21,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.SwipeDown
-import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material3.BottomAppBarDefaults
-import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -76,8 +69,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.kmpalette.palette.graphics.Palette
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
@@ -110,14 +103,12 @@ fun DetailsViewLandscape(
     shareChapter: Boolean,
     chapters: List<ChapterWatched>,
     isFavorite: Boolean,
-    onFavoriteClick: (Boolean) -> Unit,
-    markAs: (KmpChapterModel, Boolean) -> Unit,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
-    notifyAction: () -> Unit,
     onPaletteSet: (Palette) -> Unit,
+    detailsActions: DetailsActions,
 ) {
     val dao = LocalItemDao.current
     val listDao = LocalCustomListDao.current
@@ -163,7 +154,7 @@ fun DetailsViewLandscape(
                     drawerState = scaffoldState,
                     info = info,
                     chapters = chapters,
-                    markAs = markAs
+                    markAs = detailsActions.markAsRead
                 )
             }
         }
@@ -190,7 +181,7 @@ fun DetailsViewLandscape(
                             dao = dao,
                             isFavorite = isFavorite,
                             canNotify = canNotify,
-                            notifyAction = notifyAction,
+                            notifyAction = detailsActions.notifyChange,
                             onReverseChaptersClick = { reverseChapters = !reverseChapters },
                             onShowLists = { showLists = true },
                             addToForLater = {
@@ -238,16 +229,14 @@ fun DetailsViewLandscape(
                 description = description,
                 onTranslateDescription = onTranslateDescription,
                 chapters = chapters,
-                markAs = markAs,
                 isFavorite = isFavorite,
-                onFavoriteClick = onFavoriteClick,
                 listState = listState,
                 isSaved = isSaved,
                 showDownloadButton = showDownloadButton,
                 canNotify = canNotify,
-                notifyAction = notifyAction,
                 onPaletteSet = onPaletteSet,
                 scaffoldState = scaffoldState,
+                detailsActions = detailsActions,
                 modifier = Modifier.padding(p)
             )
         }
@@ -263,9 +252,7 @@ private fun DetailsLandscapeContent(
     info: KmpInfoModel,
     shareChapter: Boolean,
     isFavorite: Boolean,
-    onFavoriteClick: (Boolean) -> Unit,
     isSaved: Boolean,
-    markAs: (KmpChapterModel, Boolean) -> Unit,
     description: String,
     onTranslateDescription: (MutableState<Boolean>) -> Unit,
     chapters: List<ChapterWatched>,
@@ -275,14 +262,17 @@ private fun DetailsLandscapeContent(
     listState: LazyListState,
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
-    notifyAction: () -> Unit,
     onPaletteSet: (Palette) -> Unit,
+    detailsActions: DetailsActions,
     modifier: Modifier = Modifier,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
     val scope = rememberCoroutineScope()
     val dao = LocalItemDao.current
     var showLists by remember { mutableStateOf(false) }
+
+    val settingsHandling = koinInject<NewSettingsHandling>()
+    val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
 
     AddToList(
         showLists = showLists,
@@ -332,7 +322,7 @@ private fun DetailsLandscapeContent(
                         },
                         isSaved = isSaved,
                         canNotify = canNotify,
-                        notifyAction = notifyAction,
+                        notifyAction = detailsActions.notifyChange,
                         modifier = Modifier
                             .padding(LocalNavHostPadding.current)
                             .drawWithCache {
@@ -346,7 +336,7 @@ private fun DetailsLandscapeContent(
                                 }
                             },
                         isFavorite = isFavorite,
-                        onFavoriteClick = onFavoriteClick,
+                        onFavoriteClick = { detailsActions.favoriteAction() },
                         windowInsets = BottomAppBarDefaults.windowInsets
                     )
                 },
@@ -362,7 +352,7 @@ private fun DetailsLandscapeContent(
                     DetailsHeader(
                         model = info,
                         isFavorite = isFavorite,
-                        favoriteClick = onFavoriteClick,
+                        favoriteClick = { detailsActions.favoriteAction() },
                         onPaletteSet = onPaletteSet,
                         possibleDescription = {
                             if (info.description.isNotEmpty()) {
@@ -409,71 +399,26 @@ private fun DetailsLandscapeContent(
                 state = listState
             ) {
                 stickyHeader {
-                    ButtonGroup(
-                        overflowIndicator = { menuState ->
-                            FilledIconButton(
-                                onClick = {
-                                    if (menuState.isExpanded) {
-                                        menuState.dismiss()
-                                    } else {
-                                        menuState.show()
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = "Localized description",
-                                )
-                            }
-                        },
-                    ) {
-                        clickableItem(
-                            onClick = {
-                                scope.launch {
-                                    listState.animateScrollToItem(
-                                        index = listOfChapters
-                                            .indexOfFirst { r -> chapters.any { it.url == r.url } }
-                                            .let { if (it == -1) listOfChapters.lastIndex else it },
-                                    )
-                                }
-                            },
-                            icon = { Icon(Icons.Default.SwipeDown, null) },
-                            label = "Last Read"
-                        )
-
-                        toggleableItem(
-                            checked = reverseChapters,
-                            onCheckedChange = onReverse,
-                            icon = { Icon(Icons.AutoMirrored.Filled.Sort, null) },
-                            label = "Reverse"
-                        )
-
-                        clickableItem(
-                            onClick = {
-                                scope.launch {
-                                    listState.animateScrollToItem(index = 0)
-                                }
-                            },
-                            icon = { Icon(Icons.Default.VerticalAlignTop, null) },
-                            label = "Top"
-                        )
-
-                        clickableItem(
-                            onClick = { scope.launch { scaffoldState.open() } },
-                            icon = { Icon(Icons.Default.Check, null) },
-                            label = "Mark As..."
-                        )
-                    }
+                    ChapterListHeader(
+                        scope = scope,
+                        reverseChapters = reverseChapters,
+                        onReverseChaptersClick = onReverse,
+                        bottomPadding = 0,
+                        listState = listState,
+                        listOfChapters = listOfChapters,
+                        chapters = chapters,
+                        markAsClick = { scaffoldState.open() },
+                        detailsActions = detailsActions
+                    )
                 }
                 items(listOfChapters) { c ->
                     ChapterItem(
-                        infoModel = info,
                         c = c,
                         read = chapters,
-                        chapters = info.chapters,
-                        shareChapter = shareChapter,
-                        markAs = markAs,
-                        showDownload = showDownloadButton
+                        showDownload = showDownloadButton,
+                        detailsActions = detailsActions,
+                        swipeBehavior = swipeBehavior,
+                        modifier = Modifier.animateItem()
                     )
                 }
             }
