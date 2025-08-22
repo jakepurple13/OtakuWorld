@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SendTimeExtension
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -103,6 +104,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -128,6 +130,10 @@ fun ExtensionList(
     val iconLoader = koinInject<IconLoader>()
 
     val navController = LocalNavActions.current
+
+    val createZip = rememberFileSaverLauncher { document ->
+        document?.let { viewModel.shareExtensions(it) }
+    }
 
     var showUrlDialog by remember { mutableStateOf(false) }
     if (showUrlDialog) {
@@ -217,6 +223,15 @@ fun ExtensionList(
                                 navController.incognito()
                             },
                             leadingIcon = { Icon(Icons.Default.HideSource, null) }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Share Extensions") },
+                            onClick = {
+                                showDropDown = false
+                                createZip.launch("extensions", "zip")
+                            },
+                            leadingIcon = { Icon(Icons.Default.Share, null) }
                         )
 
                         if (viewModel.hasCustomBridge) {

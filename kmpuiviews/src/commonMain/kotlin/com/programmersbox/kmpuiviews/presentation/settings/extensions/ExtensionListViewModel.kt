@@ -18,18 +18,20 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class ExtensionListViewModel(
-    sourceRepository: SourceRepository,
+    private val sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
     otakuWorldCatalog: OtakuWorldCatalog,
     settingsHandling: NewSettingsHandling,
     val downloadAndInstaller: DownloadAndInstaller,
     private val downloadStateRepository: DownloadStateInterface,
+    private val extensionShareHandler: ExtensionShareHandler,
 ) : ViewModel() {
     private val installedSources = mutableStateListOf<KmpSourceInformation>()
     val remoteSources = mutableStateMapOf<String, RemoteState>()
@@ -111,6 +113,15 @@ class ExtensionListViewModel(
 
     fun refreshExtensions() {
         viewModelScope.launch { sourceLoader.blockingLoad() }
+    }
+
+    fun shareExtensions(platformFile: PlatformFile) {
+        viewModelScope.launch {
+            extensionShareHandler.shareExtensions(
+                platformFile,
+                installedSources.distinctBy { it.packageName }
+            )
+        }
     }
 }
 
