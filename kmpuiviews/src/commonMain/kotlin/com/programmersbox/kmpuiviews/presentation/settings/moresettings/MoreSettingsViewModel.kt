@@ -10,6 +10,7 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
@@ -25,9 +26,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 class MoreSettingsViewModel(
+    private val backgroundWorkHandler: BackgroundWorkHandler,
     private val favoritesRepository: FavoritesRepository,
     private val listDao: ListDao,
-    private val backgroundWorkHandler: BackgroundWorkHandler,
+    private val backup: Backup,
 ) : ViewModel() {
 
     val lists = listDao.getAllLists()
@@ -116,6 +118,18 @@ class MoreSettingsViewModel(
                     it.printStackTrace()
                     importExportListStatus = ImportExportListStatus.Error(it)
                 }
+        }
+    }
+
+    fun exportFullBackup(document: PlatformFile) {
+        viewModelScope.launch {
+            println(backup.createBackup(document))
+        }
+    }
+
+    fun importFullBackup(document: PlatformFile) {
+        viewModelScope.launch {
+            println(backup.restoreBackup(document))
         }
     }
 

@@ -54,6 +54,9 @@ interface ItemDao {
     @Delete
     suspend fun deleteChapter(chapterWatched: ChapterWatched)
 
+    @Query("SELECT * FROM ChapterWatched")
+    suspend fun getAllChaptersSync(): List<ChapterWatched>
+
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 

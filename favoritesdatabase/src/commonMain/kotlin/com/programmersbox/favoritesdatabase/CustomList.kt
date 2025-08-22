@@ -120,7 +120,7 @@ interface ListDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun createList(listItem: CustomListItem): Long
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addItem(listItem: CustomListInfo)
 
     @Delete

@@ -59,6 +59,7 @@ data class NotificationItem(
     val isShowing: Boolean = false,
 )
 
+@Serializable
 @Entity("SourceOrder")
 data class SourceOrder(
     @PrimaryKey
@@ -70,6 +71,7 @@ data class SourceOrder(
     val order: Int,
 )
 
+@Serializable
 @Entity("IncognitoSourceTable")
 data class IncognitoSource(
     @PrimaryKey

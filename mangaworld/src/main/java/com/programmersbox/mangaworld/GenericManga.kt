@@ -25,6 +25,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.manga.shared.ChapterHolder
@@ -58,6 +59,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.parameter.parametersOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.io.File
 
@@ -80,6 +82,7 @@ val appModule = module {
     viewModelOf(::ReadViewModel)
     factoryOf(::DownloadedMediaHandler)
     viewModelOf(::DownloadViewModel)
+    singleOf(::MangaWorldBackup) bind Backup::class
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides

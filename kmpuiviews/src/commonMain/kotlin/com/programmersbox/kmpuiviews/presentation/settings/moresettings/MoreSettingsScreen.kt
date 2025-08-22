@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Publish
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.BottomAppBar
@@ -292,6 +294,46 @@ fun MoreSettingsScreen(
                         indication = ripple(),
                         interactionSource = null
                     ) { importListLauncher.launch() }
+                )
+            }
+        }
+
+        CategoryGroup {
+            categorySetting(
+                settingIcon = {
+                    Icon(Icons.Default.Backup, null)
+                }
+            ) { Text("Backup") }
+
+            item {
+                val createBackupLauncher = rememberFileSaverLauncher { document ->
+                    document?.let { viewModel.exportFullBackup(it) }
+                }
+
+                PreferenceSetting(
+                    settingTitle = { Text("Create Full Backup") },
+                    settingIcon = { Icon(Icons.Default.Backup, null) },
+                    modifier = Modifier.clickable(
+                        enabled = true,
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { createBackupLauncher.launch("${appName}_backup", "json") }
+                )
+            }
+
+            item {
+                val importBackupLauncher = rememberFilePickerLauncher(
+                    type = FileKitType.File("json")
+                ) { document -> document?.let { viewModel.importFullBackup(it) } }
+
+                PreferenceSetting(
+                    settingTitle = { Text("Restore Full Backup") },
+                    settingIcon = { Icon(Icons.Default.Restore, null) },
+                    modifier = Modifier.clickable(
+                        enabled = true,
+                        indication = ripple(),
+                        interactionSource = null
+                    ) { importBackupLauncher.launch() }
                 )
             }
         }

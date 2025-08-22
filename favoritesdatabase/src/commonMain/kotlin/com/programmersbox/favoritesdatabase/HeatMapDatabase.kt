@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -44,6 +45,9 @@ interface HeatMapDao {
     @Query("SELECT * FROM HeatMapItem ORDER BY time DESC")
     fun getAllHeatMaps(): Flow<List<HeatMapItem>>
 
+    @Query("SELECT * FROM HeatMapItem ORDER BY time DESC")
+    suspend fun getAllHeatMapsSync(): List<HeatMapItem>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHeatMap(model: HeatMapItem)
 
@@ -70,6 +74,7 @@ interface HeatMapDao {
 
 }
 
+@Serializable
 @Entity(tableName = "HeatMapItem")
 data class HeatMapItem(
     @PrimaryKey

@@ -110,7 +110,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
 
         onCreated()
 
-        get<SourceLoader>().load()
+        GlobalScope.launch { get<SourceLoader>().blockingLoad() }
 
         val dataStoreHandling = get<DataStoreHandling>()
         val otakuDataStoreHandling = get<OtakuDataStoreHandling>()

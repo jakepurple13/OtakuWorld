@@ -104,12 +104,13 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -129,6 +130,7 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
     single { AnimeDataStoreHandling() }
+    singleOf(::Backup)
 }
 
 class StorageHolder {

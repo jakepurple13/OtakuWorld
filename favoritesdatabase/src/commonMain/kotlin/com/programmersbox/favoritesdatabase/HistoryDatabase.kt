@@ -13,6 +13,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -40,6 +41,9 @@ interface HistoryDao {
 
     @Query("SELECT * FROM History ORDER BY time DESC")
     fun getAllHistory(): Flow<List<HistoryItem>>
+
+    @Query("SELECT * FROM History ORDER BY time DESC")
+    suspend fun getAllHistorySync(): List<HistoryItem>
 
     @Query("SELECT COUNT(search_text) FROM History")
     fun getAllHistoryCount(): Flow<Int>
@@ -76,6 +80,7 @@ interface HistoryDao {
 
 }
 
+@Serializable
 @Entity(tableName = "History")
 data class HistoryItem(
     @ColumnInfo(name = "time")
@@ -85,6 +90,7 @@ data class HistoryItem(
     val searchText: String
 )
 
+@Serializable
 @Entity(tableName = "RecentlyViewed")
 data class RecentModel @OptIn(ExperimentalTime::class) constructor(
     @ColumnInfo(name = "title")

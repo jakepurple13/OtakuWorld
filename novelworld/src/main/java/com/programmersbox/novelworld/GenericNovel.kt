@@ -49,13 +49,14 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3place
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComponentState
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.novel.shared.reader.NovelReadView
 import com.programmersbox.novel.shared.reader.ReadViewModel
 import com.programmersbox.uiviews.GenericInfo
-import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.singleOf
@@ -68,6 +69,7 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     singleOf(::ChapterHolder)
     viewModelOf(::ReadViewModel)
+    singleOf(::Backup)
 }
 
 class GenericNovel(
