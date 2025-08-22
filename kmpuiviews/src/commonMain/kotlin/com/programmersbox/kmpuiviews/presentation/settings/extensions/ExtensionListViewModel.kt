@@ -115,12 +115,16 @@ class ExtensionListViewModel(
         viewModelScope.launch { sourceLoader.blockingLoad() }
     }
 
+    var extensionSharing by mutableStateOf(false)
+
     fun shareExtensions(platformFile: PlatformFile) {
         viewModelScope.launch {
+            extensionSharing = true
             extensionShareHandler.shareExtensions(
                 platformFile,
                 installedSources.distinctBy { it.packageName }
             )
+            extensionSharing = false
         }
     }
 }

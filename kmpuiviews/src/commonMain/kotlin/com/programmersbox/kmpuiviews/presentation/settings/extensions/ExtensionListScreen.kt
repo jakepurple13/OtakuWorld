@@ -98,10 +98,12 @@ import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.SourceIcon
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
+import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -129,11 +131,19 @@ fun ExtensionList(
     val scope = rememberCoroutineScope()
     val iconLoader = koinInject<IconLoader>()
 
+    val appConfig = koinInject<AppConfig>()
+    val appName = appConfig.appName
+
     val navController = LocalNavActions.current
 
     val createZip = rememberFileSaverLauncher { document ->
         document?.let { viewModel.shareExtensions(it) }
     }
+
+    LoadingDialog(
+        showLoadingDialog = viewModel.extensionSharing,
+        onDismissRequest = {/* viewModel.extensionSharing = false */ },
+    )
 
     var showUrlDialog by remember { mutableStateOf(false) }
     if (showUrlDialog) {
@@ -229,7 +239,7 @@ fun ExtensionList(
                             text = { Text("Share Extensions") },
                             onClick = {
                                 showDropDown = false
-                                createZip.launch("extensions", "zip")
+                                createZip.launch("${appName}_extensions", "zip")
                             },
                             leadingIcon = { Icon(Icons.Default.Share, null) }
                         )
