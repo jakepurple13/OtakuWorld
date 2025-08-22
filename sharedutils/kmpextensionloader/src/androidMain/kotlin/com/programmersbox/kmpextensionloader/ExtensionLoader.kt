@@ -9,6 +9,7 @@ import android.os.Build
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 
 private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
@@ -58,7 +59,7 @@ class ExtensionLoader<T, R>(
     }
 
     @SuppressLint("QueryPermissionsNeeded")
-    suspend fun loadExtensionsBlocking(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> {
+    suspend fun loadExtensionsBlocking(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> = coroutineScope {
         val packageManager = context.packageManager
         val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
@@ -67,11 +68,9 @@ class ExtensionLoader<T, R>(
         }
             .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
 
-        return runBlocking {
-            packages
-                .map { async(limitedDispatcher) { loadExtension(it, mapped) } }
-                .flatMap { it.await() }
-        }
+        packages
+            .map { async(limitedDispatcher) { loadExtension(it, mapped) } }
+            .flatMap { it.await() }
     }
 
     private fun loadExtension(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {

@@ -60,7 +60,7 @@ class ExtensionListViewModel(
     fun uninstall(packageName: String) {
         viewModelScope.launch {
             downloadAndInstaller.uninstall(packageName)
-            sourceLoader.load()
+            sourceLoader.blockingLoad()
         }
     }
 
@@ -110,7 +110,7 @@ class ExtensionListViewModel(
     }
 
     fun refreshExtensions() {
-        sourceLoader.load()
+        viewModelScope.launch { sourceLoader.blockingLoad() }
     }
 }
 
