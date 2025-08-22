@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.extensions
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.createChooser
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.uri
@@ -15,6 +16,7 @@ import java.util.zip.ZipOutputStream
 
 actual class ExtensionShareHandler(
     private val context: Context,
+    private val exceptionDao: ExceptionDao,
 ) {
     actual suspend fun shareExtensions(platformFile: PlatformFile, extensions: List<KmpSourceInformation>) {
         runCatching {
@@ -34,7 +36,10 @@ actual class ExtensionShareHandler(
                             zip.putNextEntry(ZipEntry("${source.packageName}${source.name}.apk"))
                             file.inputStream().copyTo(zip)
                         }
-                            .onFailure { it.printStackTrace() }
+                            .onFailure {
+                                it.printStackTrace()
+                                exceptionDao.insertException(it)
+                            }
                             .getOrNull()
                     }
                 }
@@ -51,6 +56,9 @@ actual class ExtensionShareHandler(
                     .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) },
                 null
             )
-        }.onFailure { it.printStackTrace() }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+        }
     }
 }
