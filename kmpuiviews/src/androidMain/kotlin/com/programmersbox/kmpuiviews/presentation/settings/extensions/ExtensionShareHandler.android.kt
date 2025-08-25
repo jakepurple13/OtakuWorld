@@ -19,6 +19,10 @@ actual class ExtensionShareHandler(
     private val exceptionDao: ExceptionDao,
 ) {
     actual suspend fun shareExtensions(platformFile: PlatformFile, extensions: List<KmpSourceInformation>) {
+        //TODO: Maybe make a desktop tool that looks for these apps
+        // it could handle exporting everything and installing and setting everything?
+        // Maybe everything pulls into a single zip file?
+        // Desktop tool can also list all of the extensions for each app?
         runCatching {
             val f = platformFile.uri
             withContext(Dispatchers.IO) {
