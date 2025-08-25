@@ -14,6 +14,8 @@ import org.koin.core.component.inject
 private const val FAVORITES_TABLE = "favorites"
 private const val FAVORITES_ID = 1
 private const val FAVORITES_ITEM_ID = 2
+private const val CHAPTER_TABLE = "chapters"
+private const val CHAPTER_ID = 3
 
 abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
     private val itemDatabase by inject<ItemDatabase>()
@@ -27,6 +29,49 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
 
             // URI for a specific favorite item
             addURI(AUTHORITY, "$FAVORITES_TABLE/#", FAVORITES_ITEM_ID)
+            addURI(AUTHORITY, "$FAVORITES_TABLE/$CHAPTER_TABLE/*", CHAPTER_ID)
+        }
+    }
+
+    override fun onCreate(): Boolean = true
+
+    override fun query(
+        uri: Uri,
+        projection: Array<out String?>?,
+        selection: String?,
+        selectionArgs: Array<out String?>?,
+        sortOrder: String?,
+    ): Cursor? {
+        logWhoseCalling()
+        return when (sUriMatcher.match(uri)) {
+            FAVORITES_ID -> itemDatabase.query(
+                query = SupportSQLiteQueryBuilder
+                    .builder("FavoriteItem")
+                    .selection(selection, selectionArgs)
+                    .columns(projection?.filterNotNull()?.toTypedArray())
+                    .orderBy(sortOrder)
+                    .create(),
+            )
+
+            FAVORITES_ITEM_ID -> itemDatabase.query(
+                query = SupportSQLiteQueryBuilder
+                    .builder("FavoriteItem")
+                    .selection(selection, selectionArgs)
+                    .columns(projection?.filterNotNull()?.toTypedArray())
+                    .orderBy(sortOrder)
+                    .create(),
+            )
+
+            CHAPTER_ID -> itemDatabase.query(
+                query = SupportSQLiteQueryBuilder
+                    .builder("ChapterWatched")
+                    .selection(selection, selectionArgs)
+                    .columns(projection?.filterNotNull()?.toTypedArray())
+                    .orderBy(sortOrder)
+                    .create(),
+            )
+
+            else -> null
         }
     }
 
@@ -58,6 +103,13 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
                 count
             }
 
+            CHAPTER_ID -> {
+                // Delete all matching rows
+                val count = db.delete("ChapterWatched", selection, selectionArgs)
+                context.contentResolver.notifyChange(uri, null)
+                count
+            }
+
             else -> throw IllegalArgumentException("Unknown URI: $uri")
         }
     }
@@ -66,6 +118,7 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
         return when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> "vnd.android.cursor.dir/vnd.$AUTHORITY.$FAVORITES_TABLE"
             FAVORITES_ITEM_ID -> "vnd.android.cursor.item/vnd.$AUTHORITY.$FAVORITES_TABLE"
+            CHAPTER_ID -> "vnd.android.cursor.dir/vnd.$AUTHORITY.$CHAPTER_TABLE"
             else -> null
         }
     }
@@ -96,28 +149,25 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
                 return null
             }
 
+            CHAPTER_ID -> {
+                val db = itemDatabase.openHelper.writableDatabase
+                val url = values.getAsString("url") ?: return null
+
+                val rowId = runCatching {
+                    db.insert("ChapterWatched", 0, values)
+                }.getOrNull() ?: return null
+
+                if (rowId > 0) {
+                    val itemUri = "content://$AUTHORITY/$CHAPTER_TABLE/$url".toUri()
+                    context.contentResolver.notifyChange(uri, null)
+                    return itemUri
+                }
+
+                return null
+            }
+
             else -> throw IllegalArgumentException("Unknown URI: $uri")
         }
-    }
-
-    override fun onCreate(): Boolean = true
-
-    override fun query(
-        uri: Uri,
-        projection: Array<out String?>?,
-        selection: String?,
-        selectionArgs: Array<out String?>?,
-        sortOrder: String?,
-    ): Cursor? {
-        logWhoseCalling()
-        return itemDatabase.query(
-            query = SupportSQLiteQueryBuilder
-                .builder("FavoriteItem")
-                .selection(selection, selectionArgs)
-                .columns(projection?.filterNotNull()?.toTypedArray())
-                .orderBy(sortOrder)
-                .create(),
-        )
     }
 
     override fun update(
@@ -152,6 +202,15 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
                     newArgs.add(id)
                     db.update("FavoriteItem", 0, values, "$selection AND url = ?", newArgs.toTypedArray())
                 }
+                if (count > 0) {
+                    context.contentResolver.notifyChange(uri, null)
+                }
+                count
+            }
+
+            CHAPTER_ID -> {
+                // Update all matching rows
+                val count = db.update("ChapterWatched", 0, values, selection, selectionArgs)
                 if (count > 0) {
                     context.contentResolver.notifyChange(uri, null)
                 }
