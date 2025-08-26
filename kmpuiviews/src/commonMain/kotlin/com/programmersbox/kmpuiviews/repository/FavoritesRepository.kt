@@ -11,6 +11,7 @@ import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class FavoritesRepository(
@@ -83,7 +84,9 @@ class FavoritesRepository(
         url: String,
         fireListenerClosable: FireListenerClosable,
     ) = combine(
-        fireListenerClosable.findItemByUrlFlow(url),
+        fireListenerClosable
+            .findItemByUrlFlow(url)
+            .onStart { emit(false) },
         dao.containsItem(url)
     ) { f, d -> f || d }
 
