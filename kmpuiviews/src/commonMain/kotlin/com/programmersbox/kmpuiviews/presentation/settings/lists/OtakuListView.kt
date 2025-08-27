@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.WatchLater
@@ -46,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -256,7 +258,8 @@ fun OtakuListView(
                                                 ImageLoaderChoice(
                                                     imageUrl = image.imageUrl,
                                                     name = it.item.name,
-                                                    placeHolder = { painterLogo() },
+                                                    //placeHolder = { painterLogo() },
+                                                    placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                                                     modifier = Modifier
                                                         .size(
                                                             width = ComposableUtils.IMAGE_WIDTH,

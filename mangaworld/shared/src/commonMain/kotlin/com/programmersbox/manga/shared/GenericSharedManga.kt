@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ChromeReaderMode
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -128,7 +130,8 @@ abstract class GenericSharedManga(
                     imageUrl = it.imageUrl,
                     name = it.title,
                     headers = it.extras,
-                    placeHolder = { painterLogo() },
+                    //placeHolder = { painterLogo() },
+                    placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                     favoriteIcon = {
                         if (favorites.any { f -> f.url == it.url }) {
                             Icon(

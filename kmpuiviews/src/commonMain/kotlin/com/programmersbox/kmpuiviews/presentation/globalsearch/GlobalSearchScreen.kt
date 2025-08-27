@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudOff
@@ -67,6 +68,7 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
@@ -515,7 +517,8 @@ fun SearchCoverCard(
             ImageLoaderChoice(
                 imageUrl = model.imageUrl,
                 name = model.title,
-                placeHolder = { painterLogo() },
+                //placeHolder = { painterLogo() },
+                placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.matchParentSize()
             )

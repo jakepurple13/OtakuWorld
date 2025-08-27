@@ -33,6 +33,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Circle
@@ -88,6 +89,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
@@ -677,7 +679,8 @@ private fun CustomItemVertical(
         onLongPress = { c -> onShowBanner(c == ComponentState.Pressed) },
         imageUrl = remember(items) { items.firstOrNull()?.imageUrl.orEmpty() },
         name = title,
-        placeHolder = { painterLogo() },
+        //placeHolder = { painterLogo() },
+        placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
         favoriteIcon = {
             if (items.size > 1) {
                 Box(
@@ -839,7 +842,8 @@ private fun DeleteItemsModal(
                         M3CoverCard(
                             imageUrl = item.imageUrl,
                             name = item.title,
-                            placeHolder = { painterLogo() },
+                            //placeHolder = { painterLogo() },
+                            placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                             onClick = {
                                 if (item in itemsToDelete) itemsToDelete.remove(item) else itemsToDelete.add(item)
                             },

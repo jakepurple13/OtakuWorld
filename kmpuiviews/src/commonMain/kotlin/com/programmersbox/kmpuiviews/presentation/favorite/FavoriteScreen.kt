@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReadMore
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
@@ -73,6 +74,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
@@ -80,7 +82,6 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.DynamicSearchBar
@@ -525,7 +526,8 @@ private fun FavoritesGrid(
                 },
                 imageUrl = remember { info.value.randomOrNull()?.imageUrl.orEmpty() },
                 name = info.key,
-                placeHolder = { painterLogo() },
+                //placeHolder = { painterLogo() },
+                placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                 colorFilter = colorFilter,
                 favoriteIcon = {
                     if (info.value.size > 1) {

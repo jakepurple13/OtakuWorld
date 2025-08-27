@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -49,6 +50,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,7 +61,6 @@ import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpInfoModel
-import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
@@ -116,7 +117,8 @@ internal fun DetailsHeader(
                     imageUrl = imageUrl,
                     name = "",
                     headers = model.extras.mapValues { it.value.toString() },
-                    placeHolder = { painterLogo() },
+                    //placeHolder = { painterLogo() },
+                    placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                     contentScale = ContentScale.Fit,
                     colorFilter = colorFilter,
                     modifier = Modifier
@@ -140,7 +142,8 @@ internal fun DetailsHeader(
             imageUrl = imageUrl,
             name = "",
             headers = model.extras.mapValues { it.value.toString() },
-            placeHolder = { painterLogo() },
+            //placeHolder = { painterLogo() },
+            placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
             contentScale = ContentScale.Crop,
             colorFilter = colorFilter,
             modifier = Modifier
@@ -208,7 +211,8 @@ internal fun DetailsHeader(
                         name = "",
                         headers = model.extras.mapValues { it.value.toString() },
                         contentScale = ContentScale.FillBounds,
-                        placeHolder = { painterLogo() },
+                        //placeHolder = { painterLogo() },
+                        placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                         onImageSet = onBitmapSet,
                         colorFilter = colorFilter,
                         modifier = Modifier
