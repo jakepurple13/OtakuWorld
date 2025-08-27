@@ -17,8 +17,8 @@ class DialogScene<T : Any>(
     override val entries: List<NavEntry<T>> = listOf(firstEntry, secondEntry)
     override val content: @Composable (() -> Unit) = {
         Box(modifier = Modifier.fillMaxSize()) {
-            firstEntry.content.invoke(firstEntry.key)
-            secondEntry.content.invoke(secondEntry.key)
+            firstEntry.Content()
+            secondEntry.Content()
         }
     }
 
