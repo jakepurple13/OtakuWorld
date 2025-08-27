@@ -60,6 +60,7 @@ import com.programmersbox.novel.shared.reader.ReadViewModel
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.parameter.parametersOf
@@ -71,7 +72,7 @@ val appModule = module {
     singleOf(::ChapterHolder)
     viewModelOf(::ReadViewModel)
     singleOf(::Backup)
-    factory(::Zipper)
+    factoryOf(::Zipper)
 }
 
 class GenericNovel(
