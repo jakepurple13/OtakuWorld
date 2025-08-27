@@ -121,7 +121,7 @@ navigationCmp = "2.9.10-alpha01"
 
 buildKonfig = "0.17.1"
 
-compottie = "2.0.0-rc04"
+compottie = "2.0.0-rc05"
 
 lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
 navigationevent = "1.0.0-alpha06"
