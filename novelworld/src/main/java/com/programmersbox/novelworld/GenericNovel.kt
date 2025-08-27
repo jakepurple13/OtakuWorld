@@ -52,6 +52,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.novel.shared.ChapterHolder
 import com.programmersbox.novel.shared.reader.NovelReadView
@@ -70,6 +71,7 @@ val appModule = module {
     singleOf(::ChapterHolder)
     viewModelOf(::ReadViewModel)
     singleOf(::Backup)
+    factory(::Zipper)
 }
 
 class GenericNovel(

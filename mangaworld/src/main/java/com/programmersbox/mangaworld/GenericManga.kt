@@ -25,8 +25,8 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
@@ -82,7 +82,7 @@ val appModule = module {
     viewModelOf(::ReadViewModel)
     factoryOf(::DownloadedMediaHandler)
     viewModelOf(::DownloadViewModel)
-    singleOf(::MangaWorldBackup) bind Backup::class
+    factoryOf(::MangaWorldZipper) bind Zipper::class
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides

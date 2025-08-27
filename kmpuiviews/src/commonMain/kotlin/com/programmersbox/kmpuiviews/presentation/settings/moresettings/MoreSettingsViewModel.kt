@@ -123,13 +123,15 @@ class MoreSettingsViewModel(
 
     fun exportFullBackup(document: PlatformFile) {
         viewModelScope.launch {
-            println(backup.createBackup(document))
+            runCatching { println(backup.createBackup(document)) }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun importFullBackup(document: PlatformFile) {
         viewModelScope.launch {
-            println(backup.restoreBackup(document))
+            runCatching { println(backup.restoreBackup(document)) }
+                .onFailure { it.printStackTrace() }
         }
     }
 

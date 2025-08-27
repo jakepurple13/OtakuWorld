@@ -317,13 +317,13 @@ fun MoreSettingsScreen(
                         enabled = true,
                         indication = ripple(),
                         interactionSource = null
-                    ) { createBackupLauncher.launch("${appName}_backup", "json") }
+                    ) { createBackupLauncher.launch("${appName}_backup", "zip") }
                 )
             }
 
             item {
                 val importBackupLauncher = rememberFilePickerLauncher(
-                    type = FileKitType.File("json")
+                    type = FileKitType.File("zip")
                 ) { document -> document?.let { viewModel.importFullBackup(it) } }
 
                 PreferenceSetting(
