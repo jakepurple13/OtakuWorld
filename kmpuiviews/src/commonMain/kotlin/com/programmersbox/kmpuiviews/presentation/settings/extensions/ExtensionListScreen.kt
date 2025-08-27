@@ -376,7 +376,7 @@ private fun InstalledExtensionItems(
                     if (u.showItems) {
                         itemsIndexed(
                             itemList,
-                            key = { i, it -> it.apiService.serviceName + i },
+                            key = { i, it -> it.apiService.serviceName + i + it.packageName },
                             contentType = { _, it -> it }
                         ) { index, source ->
                             val version = remember { sourceInfoRepository.versionName(source) }
