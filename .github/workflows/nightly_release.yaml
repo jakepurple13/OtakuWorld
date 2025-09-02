@@ -17,7 +17,7 @@ jobs:
       shouldRun: ${{ env.NEW_COMMIT_COUNT > 0 }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Required to count the commits
       - name: Get new commits
