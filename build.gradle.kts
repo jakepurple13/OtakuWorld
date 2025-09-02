@@ -77,8 +77,8 @@ plugins {
     alias(libs.plugins.google.firebase.performance) apply false
     alias(libs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
-    id("com.squareup.wire") version "5.3.10" apply false
-    id("org.jetbrains.compose.hot-reload") version "1.0.0-beta05" apply false
+    id("com.squareup.wire") version "5.3.11" apply false
+    id("org.jetbrains.compose.hot-reload") version "1.0.0-beta06" apply false
     alias(libs.plugins.buildKonfig) apply false
 }
 
