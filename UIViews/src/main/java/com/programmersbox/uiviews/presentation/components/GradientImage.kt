@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
-import com.bumptech.glide.integration.compose.CrossFade
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
@@ -77,7 +76,6 @@ fun GlideGradientImage(
             model = model,
             loading = placeholder(placeholder),
             failure = placeholder(placeholder),
-            transition = CrossFade,
             contentDescription = contentDescription,
             contentScale = contentScale,
             colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }),
@@ -87,7 +85,6 @@ fun GlideGradientImage(
         )
         GlideImage(
             model = model,
-            transition = CrossFade,
             loading = placeholder(placeholder),
             failure = placeholder(placeholder),
             contentDescription = contentDescription,
