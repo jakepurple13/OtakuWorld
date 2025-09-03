@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.AppBarWithSearch
+import androidx.compose.material3.AppBarWithSearchColors
 import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.ExpandedDockedSearchBar
 import androidx.compose.material3.ExpandedFullScreenSearchBar
@@ -14,7 +16,6 @@ import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarScrollBehavior
 import androidx.compose.material3.SearchBarState
-import androidx.compose.material3.TopSearchBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -114,7 +115,7 @@ fun DynamicSearchBar(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     shape: Shape = if (isDocked) SearchBarDefaults.dockedShape else SearchBarDefaults.inputFieldShape,
-    colors: SearchBarColors = SearchBarDefaults.colors(),
+    colors: AppBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(),
     tonalElevation: Dp = SearchBarDefaults.TonalElevation,
     shadowElevation: Dp = SearchBarDefaults.ShadowElevation,
     windowInsets: WindowInsets = SearchBarDefaults.windowInsets,
@@ -131,11 +132,11 @@ fun DynamicSearchBar(
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             interactionSource = interactionSource,
-            colors = colors.inputFieldColors
+            colors = colors.searchBarColors.inputFieldColors
         )
     }
 
-    TopSearchBar(
+    AppBarWithSearch(
         state = searchBarState,
         inputField = inputField,
         colors = colors,
@@ -152,7 +153,7 @@ fun DynamicSearchBar(
             inputField = inputField,
             state = searchBarState,
             content = content,
-            colors = colors,
+            colors = colors.searchBarColors,
             shape = shape,
             tonalElevation = tonalElevation,
             shadowElevation = shadowElevation,
@@ -163,7 +164,7 @@ fun DynamicSearchBar(
             inputField = inputField,
             state = searchBarState,
             content = content,
-            colors = colors,
+            colors = colors.searchBarColors,
             tonalElevation = tonalElevation,
             shadowElevation = shadowElevation,
             modifier = modifier,

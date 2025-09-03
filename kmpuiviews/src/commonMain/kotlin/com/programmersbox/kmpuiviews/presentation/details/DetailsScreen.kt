@@ -579,6 +579,7 @@ fun ChapterItem(
     detailsActions: DetailsActions,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
     val hasBeenRead by remember(read) { derivedStateOf { read.fastAny { it.url == c.url } } }
     val updatedIsRead by rememberUpdatedState(hasBeenRead)
     val updatedAnimated = updateTransition(updatedIsRead)
@@ -606,12 +607,14 @@ fun ChapterItem(
     SwipeToDismissBox(
         state = dismissState,
         onDismiss = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.EndToStart -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
-                SwipeToDismissBoxValue.StartToEnd -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
-                SwipeToDismissBoxValue.Settled -> {}
-            }
-            dismissState.reset()
+            scope.launch { dismissState.reset() }
+                .invokeOnCompletion {
+                    when (value) {
+                        SwipeToDismissBoxValue.EndToStart -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
+                        SwipeToDismissBoxValue.StartToEnd -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
+                        SwipeToDismissBoxValue.Settled -> {}
+                    }
+                }
         },
         enableDismissFromEndToStart = swipeBehavior.detailsChapterSwipeBehaviorEndToStart != DetailsChapterSwipeBehavior.Nothing,
         enableDismissFromStartToEnd = swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,

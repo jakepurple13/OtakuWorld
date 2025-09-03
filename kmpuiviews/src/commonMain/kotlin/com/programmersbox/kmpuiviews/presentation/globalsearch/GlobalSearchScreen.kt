@@ -203,14 +203,16 @@ fun GlobalSearchScreen(
                         }
                     }
                 },
-                colors = SearchBarDefaults.colors(
-                    inputFieldColors = if (showBlur)
-                        SearchBarDefaults.inputFieldColors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                        )
-                    else
-                        SearchBarDefaults.inputFieldColors()
+                colors = SearchBarDefaults.appBarWithSearchColors(
+                    searchBarColors = SearchBarDefaults.colors(
+                        inputFieldColors = if (showBlur)
+                            SearchBarDefaults.inputFieldColors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                            )
+                        else
+                            SearchBarDefaults.inputFieldColors()
+                    )
                 ),
                 modifier = Modifier.let {
                     if (showBlur) {

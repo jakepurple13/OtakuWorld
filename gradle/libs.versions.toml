@@ -2,6 +2,7 @@
 anthropicSdkKotlin = "0.22.1"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
+material3 = "1.10.0-alpha01"
 mokoBiometry = "0.4.0"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "2.0.3"
@@ -109,11 +110,11 @@ core = "1.7.0"
 
 androidx-lifecycle = "2.9.3"
 
-compose-multiplatform = "1.9.0-rc01"
+compose-multiplatform = "1.10.0-alpha01"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.9.0-alpha04"
+material3WindowSizeClassVersion = "1.10.0-alpha01"
 connectivity = "2.2.0"
 
 cmpLifecycle = "2.9.3"
@@ -154,6 +155,7 @@ androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive"
 androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
 androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
 moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }
 moko-biometry = { module = "dev.icerock.moko:biometry", version.ref = "mokoBiometry" }
 compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded-core" }
@@ -220,9 +222,9 @@ materialYou = { group = "androidx.compose.material3", name = "material3" }
 materialYou-common = { group = "androidx.compose.material3", name = "material3-common" }
 materialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 materialAdaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive" }
-materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha05" }
-materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha05" }
-materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha05" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0-alpha06" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0-alpha06" }
+materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0-alpha06" }
 adaptive-layout-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout-android" }
 adaptive-navigation-android = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation-android" }
 material-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
