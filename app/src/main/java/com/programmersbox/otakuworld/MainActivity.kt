@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         // Probably also want to show some of the app info? Version code and name?
         // I'd want a full, noFirebase, and noCloudFirebase versions to handle each type
         // Maybe there's even reverse support? The apps try and detect if OtakuWorld is installed and logged in?
-
+        // Maybe this app even handles firebase? And the OtakuWorld apps are purely local?
 
         /*Single.merge(
             SourceChoice
