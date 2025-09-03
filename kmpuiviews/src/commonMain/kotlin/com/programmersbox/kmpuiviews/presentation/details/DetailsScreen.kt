@@ -607,14 +607,16 @@ fun ChapterItem(
     SwipeToDismissBox(
         state = dismissState,
         onDismiss = { value ->
-            scope.launch { dismissState.reset() }
-                .invokeOnCompletion {
+            scope.launch {
+                launch {
                     when (value) {
                         SwipeToDismissBoxValue.EndToStart -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorEndToStart)
                         SwipeToDismissBoxValue.StartToEnd -> swipeBehavior(swipeBehavior.detailsChapterSwipeBehaviorStartToEnd)
                         SwipeToDismissBoxValue.Settled -> {}
                     }
                 }
+                dismissState.reset()
+            }
         },
         enableDismissFromEndToStart = swipeBehavior.detailsChapterSwipeBehaviorEndToStart != DetailsChapterSwipeBehavior.Nothing,
         enableDismissFromStartToEnd = swipeBehavior.detailsChapterSwipeBehaviorStartToEnd != DetailsChapterSwipeBehavior.Nothing,
