@@ -217,6 +217,21 @@ fun ApplicationProductFlavor.setupUris(
                 provider = productFlavor
             }
         )
+        println(
+            "Putting ${"${app.name.lowercase()}_LISTS_PERMISSION"} into manifest as ${
+                otakuProvider.listPermissions {
+                    appType = app
+                    provider = productFlavor
+                }
+            }"
+        )
+        manifestPlaceholders.put(
+            "${app.name.lowercase()}_LISTS_PERMISSION",
+            otakuProvider.listPermissions {
+                appType = app
+                provider = productFlavor
+            }
+        )
 
         dualStringBuildConfig(
             "${app.name.uppercase()}_PACKAGE",

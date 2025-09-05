@@ -165,7 +165,6 @@ private fun OtakuItemScreen(
 
     Crossfade(hasFavoritePermission) { target ->
         if (target) {
-
             val list by remember {
                 derivedStateOf {
                     item
