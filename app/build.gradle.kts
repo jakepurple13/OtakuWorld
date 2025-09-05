@@ -2,7 +2,7 @@ import com.android.build.api.dsl.ApplicationProductFlavor
 import plugins.ProductFlavorTypes
 
 plugins {
-    id("otaku-application")
+    id("otaku-manager-application")
     kotlin("android")
     id("com.mikepenz.aboutlibraries.plugin")
     id("kotlinx-serialization")
@@ -195,6 +195,14 @@ fun ApplicationProductFlavor.setupUris(
     val otakuProvider = OtakuProvider()
 
     App.entries.forEach { app ->
+        manifestPlaceholders.putAll(
+            mapOf(
+                "mangaworldPackage" to "com.programmersbox.${app.name.lowercase()}$suffix",
+                "animeworldPackage" to "com.programmersbox.${app.name.lowercase()}$suffix",
+                "novelworldPackage" to "com.programmersbox.${app.name.lowercase()}$suffix",
+            )
+        )
+
         dualStringBuildConfig(
             "${app.name.uppercase()}_PACKAGE",
             "com.programmersbox.${app.name.lowercase()}$suffix"

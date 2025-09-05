@@ -26,6 +26,11 @@ gradlePlugin {
             implementationClass = "plugins.AndroidApplicationPlugin"
         }
 
+        register("otaku-manager-application") {
+            id = "otaku-manager-application"
+            implementationClass = "plugins.OtakuManagerPlugin"
+        }
+
         register("otaku-library") {
             id = "otaku-library"
             implementationClass = "plugins.AndroidLibraryPlugin"

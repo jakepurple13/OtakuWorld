@@ -111,28 +111,37 @@ fun InfoScreen(viewModel: InfoViewModel = koinViewModel()) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(padding)
         ) {
-            PrimaryScrollableTabRow(
-                selectedTabIndex = state,
-                scrollState = scrollState,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                tabsState.forEachIndexed { index, title ->
-                    Tab(
-                        selected = state == index,
-                        onClick = { state = index },
-                        text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                    )
+            if (viewModel.hasApps.let { it.hasMangaWorld || it.hasAnimeWorld || it.hasNovelWorld }) {
+                PrimaryScrollableTabRow(
+                    selectedTabIndex = state,
+                    scrollState = scrollState,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    tabsState.forEachIndexed { index, title ->
+                        Tab(
+                            selected = state == index,
+                            onClick = { state = index },
+                            text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                        )
+                    }
                 }
-            }
 
-            val stateHolder = rememberSaveableStateHolder()
+                val stateHolder = rememberSaveableStateHolder()
 
-            HorizontalPager(
-                pagerState,
-                //modifier = Modifier.fillMaxSize()
-            ) {
-                stateHolder.SaveableStateProvider(it) {
-                    OtakuItemScreen(viewModel, tabsState[it])
+                HorizontalPager(
+                    pagerState,
+                    //modifier = Modifier.fillMaxSize()
+                ) {
+                    stateHolder.SaveableStateProvider(it) {
+                        OtakuItemScreen(viewModel, tabsState[it])
+                    }
+                }
+            } else {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Text("No Apps Found")
                 }
             }
         }

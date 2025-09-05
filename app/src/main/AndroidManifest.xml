@@ -18,9 +18,9 @@
     <uses-permission android:name="@string/NovelWorld_LISTS_PERMISSION" />
 
     <queries>
-        <package android:name="@string/ANIMEWORLD_PACKAGE" />
-        <package android:name="@string/MANGAWORLD_PACKAGE" />
-        <package android:name="@string/NOVELWORLD_PACKAGE" />
+        <package android:name="${animeworldPackage}" />
+        <package android:name="${novelworldPackage}" />
+        <package android:name="${mangaworldPackage}" />
     </queries>
 
     <application
