@@ -202,6 +202,22 @@ fun ApplicationProductFlavor.setupUris(
             "com.programmersbox.${app.name.lowercase()}$suffix"
         )
 
+        println(
+            "Putting ${"${app.name.lowercase()}_FAVORITES_PERMISSION"} into manifest as ${
+                otakuProvider.favoritesPermissions {
+                    appType = app
+                    provider = productFlavor
+                }
+            }"
+        )
+        manifestPlaceholders.put(
+            "${app.name.lowercase()}_FAVORITES_PERMISSION",
+            otakuProvider.favoritesPermissions {
+                appType = app
+                provider = productFlavor
+            }
+        )
+
         dualStringBuildConfig(
             "${app.name.uppercase()}_PACKAGE",
             "com.programmersbox.${app.name.lowercase()}$suffix"

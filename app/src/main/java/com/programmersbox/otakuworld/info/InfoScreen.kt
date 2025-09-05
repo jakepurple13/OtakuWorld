@@ -23,6 +23,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
@@ -207,12 +208,24 @@ private fun OtakuItemScreen(
                         },
                     ) { Text("Setup Syncs") }
                 }
-                items(item.otakuItem.favorites) {
-                    M3CoverCard(
-                        imageUrl = it.imageUrl,
-                        name = it.title,
-                    )
-                }
+
+                item.otakuItem
+                    .favorites
+                    .groupBy { it.source }
+                    .forEach { (source, favorites) ->
+                        stickyHeader {
+                            ListItem(
+                                headlineContent = { Text(source) }
+                            )
+                        }
+
+                        items(favorites) {
+                            M3CoverCard(
+                                imageUrl = it.imageUrl,
+                                name = it.title,
+                            )
+                        }
+                    }
             }
         } else {
             Box(
@@ -220,7 +233,10 @@ private fun OtakuItemScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Button(
-                    onClick = { launcher.launch(item.otakuItem.favoritePermission) },
+                    onClick = {
+                        println(item.otakuItem.favoritePermission)
+                        launcher.launch(item.otakuItem.favoritePermission)
+                    },
                 ) { Text("Allow Access to favorites ${item.appName}") }
             }
         }

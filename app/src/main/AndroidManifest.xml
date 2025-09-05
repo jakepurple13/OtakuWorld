@@ -10,12 +10,12 @@
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
 
-    <uses-permission android:name="@string/MangaWorld_FAVORITES_PERMISSION" />
-    <uses-permission android:name="@string/AnimeWorld_FAVORITES_PERMISSION" />
-    <uses-permission android:name="@string/NovelWorld_FAVORITES_PERMISSION" />
     <uses-permission android:name="@string/AnimeWorld_LISTS_PERMISSION" />
     <uses-permission android:name="@string/MangaWorld_LISTS_PERMISSION" />
     <uses-permission android:name="@string/NovelWorld_LISTS_PERMISSION" />
+    <uses-permission android:name="${animeworld_FAVORITES_PERMISSION}" />
+    <uses-permission android:name="${novelworld_FAVORITES_PERMISSION}" />
+    <uses-permission android:name="${mangaworld_FAVORITES_PERMISSION}" />
 
     <queries>
         <package android:name="${animeworldPackage}" />
