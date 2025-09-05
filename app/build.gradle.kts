@@ -195,12 +195,11 @@ fun ApplicationProductFlavor.setupUris(
     val otakuProvider = OtakuProvider()
 
     App.entries.forEach { app ->
-        manifestPlaceholders.putAll(
-            mapOf(
-                "mangaworldPackage" to "com.programmersbox.${app.name.lowercase()}$suffix",
-                "animeworldPackage" to "com.programmersbox.${app.name.lowercase()}$suffix",
-                "novelworldPackage" to "com.programmersbox.${app.name.lowercase()}$suffix",
-            )
+        println("Setting up $app")
+        println("Putting ${"${app.name.lowercase()}Package"} into manifest as ${"com.programmersbox.${app.name.lowercase()}$suffix"}")
+        manifestPlaceholders.put(
+            "${app.name.lowercase()}Package",
+            "com.programmersbox.${app.name.lowercase()}$suffix"
         )
 
         dualStringBuildConfig(
