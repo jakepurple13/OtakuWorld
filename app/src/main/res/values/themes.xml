@@ -1,3 +1,4 @@
 <resources>
     <!-- Base application theme. -->
+    <style name="Theme.OtakuWorldBase" parent="Theme.Material3.DayNight.NoActionBar" />
 </resources>
