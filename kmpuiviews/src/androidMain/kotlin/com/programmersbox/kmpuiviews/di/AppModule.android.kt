@@ -24,7 +24,6 @@ actual fun platformModule(): Module = module {
     singleOf(::DateTimeFormatHandler)
     singleOf(::AboutLibraryBuilder)
     singleOf(::PlatformDataStoreHandling)
-
     single {
         NewSettingsHandling(
             createProtobuf(

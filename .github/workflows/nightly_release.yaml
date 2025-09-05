@@ -71,9 +71,17 @@ jobs:
     with:
       IS_PRERELEASE: true
 
+  otakuworld:
+    needs: checkNightly
+    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+    uses: ./.github/workflows/otakuworld_build.yaml
+    secrets: inherit # pass all secrets
+    with:
+      IS_PRERELEASE: true
+
   release:
     name: Release APK
-    needs: [ mangaworld, animeworld, novelworld, animeworldtv ]
+    needs: [ mangaworld, animeworld, novelworld, animeworldtv, otakuworld ]
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     runs-on: ubuntu-latest
     steps:

@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.text.format.DateFormat
 import android.view.WindowManager
@@ -47,6 +48,7 @@ import com.google.firebase.crashlytics.crashlytics
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.util.withContext
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.utils.AppLogo
 import com.programmersbox.kmpuiviews.utils.navigateChromeCustomTabs
@@ -292,4 +294,38 @@ actual fun ScrollBar(lazyListState: LazyListState) {
             thumbSelectedColor = MaterialTheme.colorScheme.primary.copy(alpha = .6f),
         ),
     )
+}
+
+actual class SystemAlerter(
+    private val itemDao: ItemDao,
+    private val context: Context,
+    private val packageName: String,
+) {
+    actual fun alertFavoritesChange() {
+        runCatching {
+            context
+                .contentResolver
+                .notifyChange(
+                    Uri.withAppendedPath(
+                        "content://${packageName}.provider.favorites".toUri(),
+                        "favorites"
+                    ),
+                    null
+                )
+        }.onFailure { it.printStackTrace() }
+    }
+
+    actual fun alertChapterChange() {
+        runCatching {
+            context
+                .contentResolver
+                .notifyChange(
+                    Uri.withAppendedPath(
+                        "content://${packageName}.provider.favorites".toUri(),
+                        "favorites/chapters"
+                    ),
+                    null
+                )
+        }.onFailure { it.printStackTrace() }
+    }
 }

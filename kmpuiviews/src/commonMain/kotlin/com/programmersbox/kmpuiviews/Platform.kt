@@ -86,3 +86,8 @@ expect fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation)
 
 @Composable
 expect fun ScrollBar(lazyListState: LazyListState)
+
+expect class SystemAlerter {
+    fun alertFavoritesChange()
+    fun alertChapterChange()
+}

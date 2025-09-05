@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accountType="@string/ACCOUNT_TYPE"
+    android:allowParallelSyncs="true"
+    android:contentAuthority="@string/MangaWorld_FAVORITES_URI"
+    android:isAlwaysSyncable="true"
+    android:supportsUploading="true"
+    android:userVisible="true" />

@@ -29,4 +29,6 @@
     <string name="cancelText">@android:string/cancel</string>
     <string name="permission_label">Read and Write MangaWorld Favorites</string>
     <string name="permission_description">Be able to modify MangaWorld Favorites</string>
+    <string name="manga_favorites_provider_label">Manga Favorites</string>
+    <string name="manga_lists_provider">Manga Lists</string>
 </resources>

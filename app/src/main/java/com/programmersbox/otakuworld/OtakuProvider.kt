@@ -1,150 +1,143 @@
 package com.programmersbox.otakuworld
 
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
-import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import android.os.Handler
+import android.os.Looper
 import androidx.core.net.toUri
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.DbModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
+import kotlin.properties.Delegates
 
+private const val favoritesUri = "provider.favorites"
+private const val listsUri = "provider.customlist"
 
-@Composable
-fun ContentProviderTest() {
-    val context = LocalContext.current
+private const val mangaWorldPackageName = "com.programmersbox.mangaworld"
+private const val animeWorldPackageName = "com.programmersbox.animeworld"
+private const val novelWorldPackageName = "com.programmersbox.novelworld"
 
-    LaunchedEffect(Unit) {
-        val pm: PackageManager = context.packageManager
-        val providers = pm.queryContentProviders(null, 0, 0)
-        for (providerInfo in providers) {
-            // Access details about each content provider, e.g., providerInfo.authority, providerInfo.packageName
-            println("Authority: " + providerInfo.authority + ", Package: " + providerInfo.packageName)
-        }
-    }
+private const val noCloudFirebaseSuffix = ".noCloudFirebase"
+private const val noFirebaseSuffix = ".noFirebase"
+private const val fullSuffix = ""
 
-    val otakuProvider = remember {
-        OtakuProvider()
-    }
+private const val favoritePermissions = "READ_WRITE_FAVORITES"
+private const val listPermissions = "READ_WRITE_LISTS"
 
-    val mangaWorldFavoritePermission = remember {
-        otakuProvider.favoritesPermissions {
-            appType = App.MangaWorld
-            provider = Provider.NoFirebase
-        }
-    }
+enum class App {
+    MangaWorld,
+    AnimeWorld,
+    NovelWorld
+}
 
-    val mangaWorldFavorites = remember {
-        otakuProvider.favoritesBuilder {
-            appType = App.MangaWorld
-            provider = Provider.NoFirebase
-        }
-    }
+enum class Provider {
+    NoCloudFirebase,
+    NoFirebase,
+    Full
+}
 
-    val mangaWorldListPermissions = remember {
-        otakuProvider.listPermissions {
-            appType = App.MangaWorld
-            provider = Provider.NoFirebase
-        }
-    }
+class OtakuProvider {
+    fun favoritesBuilder(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuFavoritesContentProviderHelper(
+        OtakuBuilder()
+            .apply(builder)
+            .build() + ".$favoritesUri"
+    )
 
-    val mangaWorldLists = remember {
-        otakuProvider.listsBuilder {
-            appType = App.MangaWorld
-            provider = Provider.NoFirebase
-        }
-    }
+    fun favoritesUri(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$favoritesUri"
 
-    LaunchedEffect(Unit) {
-        mangaWorldFavorites
-            .getAllFavoritesFlow(context)
-            .collect {
-                println("Favorites:")
-                println(it)
+    fun favoritesPermissions(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$favoritePermissions"
+
+    fun listsBuilder(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuCustomListContentProviderHelper(
+        OtakuBuilder()
+            .apply(builder)
+            .build() + ".$listsUri"
+    )
+
+    fun listsUri(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$listsUri"
+
+    fun listPermissions(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$listPermissions"
+
+    class OtakuBuilder {
+        private var packageName by Delegates.notNull<String>()
+        private var suffix by Delegates.notNull<String>()
+
+        var appType: App
+            get() = error("App type not set")
+            set(value) {
+                setPackage(value)
             }
-    }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        val launcher = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) {
-            println(it)
-            if (it) {
-                val response = mangaWorldFavorites.insertFavorite(
-                    context,
-                    DbModel(
-                        title = "Test2",
-                        description = "Test",
-                        url = "Test3",
-                        imageUrl = "Test",
-                        source = "Test",
-                        numChapters = 0,
-                        shouldCheckForUpdate = true
-                    )
-                )
-                println(response)
-                println(mangaWorldFavorites.getAllFavoritesAsList(context))
+        var provider: Provider
+            get() = error("Provider not set")
+            set(value) {
+                setProvider(value)
             }
-        }
-        Button(
-            onClick = { launcher.launch(mangaWorldFavoritePermission) },
-        ) { Text("Allow Access to favorites") }
 
-        val launcher2 = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) {
-            println(it)
-            if (it) {
-                val response = mangaWorldLists.getAllLists(context)
-                    ?.let { mangaWorldLists.cursorToCustomListItems(it) }
-                    .orEmpty()
-
-                println(response)
+        fun setPackage(app: App) = apply {
+            packageName = when (app) {
+                App.MangaWorld -> mangaWorldPackageName
+                App.AnimeWorld -> animeWorldPackageName
+                App.NovelWorld -> novelWorldPackageName
             }
         }
 
-        Button(
-            onClick = { launcher2.launch(mangaWorldListPermissions) },
-        ) { Text("Allow Access to lists") }
+        fun setProvider(provider: Provider) = apply {
+            suffix = when (provider) {
+                Provider.NoCloudFirebase -> noCloudFirebaseSuffix
+                Provider.NoFirebase -> noFirebaseSuffix
+                Provider.Full -> fullSuffix
+            }
+        }
+
+        fun build() = "$packageName$suffix"
     }
 }
 
-/**
- * Helper class for accessing the FavoritesContentProvider.
- * Provides convenient methods for querying, inserting, updating, and deleting favorites.
- */
-object FavoritesContentProviderHelper {
+class OtakuFavoritesContentProviderHelper(
+    private val authority: String,
+) {
 
-    private const val AUTHORITY = "com.programmersbox.mangaworld.noFirebase.provider.favorites"
-    private const val FAVORITES_TABLE = "favorites"
+    private val FAVORITES_TABLE = "favorites"
 
     /**
      * The base URI for the favorites content provider
      */
-    val CONTENT_URI: Uri = "content://$AUTHORITY/$FAVORITES_TABLE".toUri()
+    val CONTENT_URI: Uri = "content://$authority/$FAVORITES_TABLE".toUri()
 
     /**
      * Creates a URI for a specific favorite item
      * @param url The URL of the favorite item
      * @return The URI for the specific favorite item
      */
-    fun getItemUri(url: String): Uri = "content://$AUTHORITY/$FAVORITES_TABLE/$url".toUri()
+    fun getItemUri(url: String): Uri = "content://$authority/$FAVORITES_TABLE/$url".toUri()
 
     /**
      * Retrieves all favorites from the content provider
@@ -160,6 +153,10 @@ object FavoritesContentProviderHelper {
             null
         )
     }
+
+    fun getAllFavoritesFlow(context: Context) = context
+        .contentResolver
+        .observeUri(CONTENT_URI) { getAllFavorites(context)?.let { cursorToFavorites(it) } }
 
     /**
      * Retrieves a specific favorite by URL
@@ -177,6 +174,10 @@ object FavoritesContentProviderHelper {
         )
     }
 
+    fun getFavoriteByUrlFlow(context: Context, url: String) = context
+        .contentResolver
+        .observeUri(getItemUri(url)) { getFavoriteByUrl(context, url)?.let { cursorToFavorites(it) } }
+
     /**
      * Checks if a favorite with the given URL exists
      * @param context The context to use for accessing the content resolver
@@ -189,6 +190,10 @@ object FavoritesContentProviderHelper {
         cursor?.close()
         return exists
     }
+
+    fun favoriteExistsFlow(context: Context, url: String) = context
+        .contentResolver
+        .observeUri(getItemUri(url)) { favoriteExists(context, url) }
 
     /**
      * Inserts a new favorite into the content provider
@@ -295,6 +300,10 @@ object FavoritesContentProviderHelper {
         return favorites
     }
 
+    fun getAllFavoritesAsListFlow(context: Context) = context
+        .contentResolver
+        .observeUri(CONTENT_URI) { getAllFavoritesAsList(context) }
+
     /**
      * Retrieves a specific favorite as a DbModel object
      * @param context The context to use for accessing the content resolver
@@ -307,6 +316,10 @@ object FavoritesContentProviderHelper {
         cursor.close()
         return favorites.firstOrNull()
     }
+
+    fun getFavoriteByUrlAsModelFlow(context: Context, url: String) = context
+        .contentResolver
+        .observeUri(getItemUri(url)) { getFavoriteByUrlAsModel(context, url) }
 }
 
 
@@ -315,35 +328,47 @@ object FavoritesContentProviderHelper {
  * Provides convenient methods for querying, inserting, updating, and deleting
  * from CustomListItem (lists) and CustomListInfo (list entries).
  */
-object CustomListContentProviderHelper {
+class OtakuCustomListContentProviderHelper(
+    private val authority: String,
+) {
 
-    private const val AUTHORITY = "com.programmersbox.mangaworld.noFirebase.provider.customlist"
-
-    private const val LISTS_PATH = "lists"
-    private const val LIST_ITEMS_PATH = "list_items"
+    private val LISTS_PATH = "lists"
+    private val LIST_ITEMS_PATH = "list_items"
 
     /** Base URI for CustomListItem (lists) */
-    val LISTS_URI: Uri = "content://$AUTHORITY/$LISTS_PATH".toUri()
+    val LISTS_URI: Uri = "content://$authority/$LISTS_PATH".toUri()
 
     /** Base URI for CustomListInfo (entries/items) */
-    val LIST_ITEMS_URI: Uri = "content://$AUTHORITY/$LIST_ITEMS_PATH".toUri()
+    val LIST_ITEMS_URI: Uri = "content://$authority/$LIST_ITEMS_PATH".toUri()
 
     /** URI for a specific CustomListItem by uuid */
-    fun getListUri(uuid: String): Uri = "content://$AUTHORITY/$LISTS_PATH/$uuid".toUri()
+    fun getListUri(uuid: String): Uri = "content://$authority/$LISTS_PATH/$uuid".toUri()
 
     /** URI for a specific CustomListInfo by uniqueId */
-    fun getListItemUri(uniqueId: String): Uri = "content://$AUTHORITY/$LIST_ITEMS_PATH/$uniqueId".toUri()
+    fun getListItemUri(uniqueId: String): Uri = "content://$authority/$LIST_ITEMS_PATH/$uniqueId".toUri()
 
     // region Queries
 
     fun getAllLists(context: Context): Cursor? =
         context.contentResolver.query(LISTS_URI, null, null, null, null)
 
+    fun getAllListsFlow(context: Context) = context
+        .contentResolver
+        .observeUri(LISTS_URI) { getAllLists(context)?.let { cursorToCustomListItems(it) } }
+
     fun getListByUuid(context: Context, uuid: String): Cursor? =
         context.contentResolver.query(getListUri(uuid), null, null, null, null)
 
+    fun getListByUuidFlow(context: Context, uuid: String) = context
+        .contentResolver
+        .observeUri(getListUri(uuid)) { getListByUuid(context, uuid) }
+
     fun getAllListItems(context: Context): Cursor? =
         context.contentResolver.query(LIST_ITEMS_URI, null, null, null, null)
+
+    fun getAllListItemsFlow(context: Context) = context
+        .contentResolver
+        .observeUri(LIST_ITEMS_URI) { getAllListItems(context) }
 
     /**
      * Get items belonging to a list by uuid using a selection filter.
@@ -356,6 +381,10 @@ object CustomListContentProviderHelper {
             arrayOf(uuid),
             null
         )
+
+    fun getItemsForListFlow(context: Context, uuid: String) = context
+        .contentResolver
+        .observeUri(LIST_ITEMS_URI) { getItemsForList(context, uuid) }
 
     // endregion
 
@@ -484,61 +513,25 @@ object CustomListContentProviderHelper {
     // endregion
 }
 
-/*
-@Serializable
-data class CustomList(
-    @Embedded
-    val item: CustomListItem,
-    @Relation(
-        parentColumn = "uuid",
-        entityColumn = "uuid"
-    )
-    val list: List<CustomListInfo>,
-)
+internal fun <T> ContentResolver.observeUri(
+    uri: Uri,
+    getData: suspend () -> T?,
+) = callbackFlow<T> {
+    launch {
+        getData()?.let { send(it) }
+    }
 
-@Serializable
-@Entity(tableName = "CustomListItem")
-data class CustomListItem(
-    @PrimaryKey
-    @ColumnInfo(name = "uuid")
-    val uuid: String,
-    @ColumnInfo(name = "name")
-    val name: String,
-    @ColumnInfo(name = "time")
-    val time: Long = Clock.System.now().toEpochMilliseconds(),
-    @ColumnInfo(defaultValue = "0")
-    val useBiometric: Boolean = false,
-)
+    val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            launch(Dispatchers.IO) {
+                getData()?.let { send(it) }
+            }
+        }
+    }
 
-@OptIn(ExperimentalUuidApi::class)
-@Serializable
-@Entity(tableName = "CustomListInfo")
-data class CustomListInfo(
-    @PrimaryKey
-    @ColumnInfo(defaultValue = "0c65586e-f3dc-4878-be63-b134fb46466c")
-    val uniqueId: String = Uuid.random().toString(),
-    @ColumnInfo("uuid")
-    val uuid: String,
-    @ColumnInfo(name = "title")
-    val title: String,
-    @ColumnInfo(name = "description")
-    val description: String,
-    @ColumnInfo(name = "url")
-    val url: String,
-    @ColumnInfo(name = "imageUrl")
-    val imageUrl: String,
-    @ColumnInfo(name = "sources")
-    val source: String,
-)
+    registerContentObserver(uri, true, observer)
 
-
-@Serializable
-data class DbModel(
-    val title: String,
-    val description: String,
-    val url: String,
-    val imageUrl: String,
-    val source: String,
-    var numChapters: Int = 0,
-    val shouldCheckForUpdate: Boolean = true,
-)*/
+    awaitClose {
+        unregisterContentObserver(observer)
+    }
+}

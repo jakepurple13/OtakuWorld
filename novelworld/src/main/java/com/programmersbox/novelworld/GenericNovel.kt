@@ -43,6 +43,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
@@ -71,6 +72,7 @@ val appModule = module {
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     singleOf(::ChapterHolder)
     viewModelOf(::ReadViewModel)
+    single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
     singleOf(::Backup)
     factoryOf(::Zipper)
 }

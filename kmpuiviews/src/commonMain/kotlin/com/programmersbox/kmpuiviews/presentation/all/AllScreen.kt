@@ -216,7 +216,6 @@ fun AllScreen(
             }
         }
     ) { p1 ->
-
         Crossfade(targetState = isConnected, label = "") { connected ->
             if (!connected) {
                 Column(

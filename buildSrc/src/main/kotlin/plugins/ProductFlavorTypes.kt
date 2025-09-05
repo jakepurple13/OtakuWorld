@@ -19,6 +19,15 @@ enum class ProductFlavorTypes(
         }
     }
 
+    fun <T: ProductFlavor> edit(receiver: NamedDomainObjectContainer<T>, block: T.() -> Unit = {}) {
+        with(receiver) {
+            getByName(nameType) {
+                dimension = "version"
+                block()
+            }
+        }
+    }
+
     companion object {
         val dimension = PRODUCT_FLAVOR_DIMENSION
     }

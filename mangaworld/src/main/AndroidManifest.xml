@@ -96,12 +96,17 @@
             android:name=".MangaFavoritesContentProvider"
             android:authorities="${applicationId}.provider.favorites"
             android:exported="true"
+            android:label="@string/manga_favorites_provider_label"
+            android:icon="@drawable/manga_world_round_logo"
+            android:syncable="true"
+            android:enabled="true"
             android:permission="${applicationId}.READ_WRITE_FAVORITES" />
 
         <provider
             android:name=".MangaListContentProvider"
             android:authorities="${applicationId}.provider.customlist"
             android:exported="true"
+            android:label="@string/manga_lists_provider"
             android:permission="${applicationId}.READ_WRITE_LISTS" />
 
     </application>
