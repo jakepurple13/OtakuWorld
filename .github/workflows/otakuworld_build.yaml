@@ -1,0 +1,84 @@
+name: OtakuWorld Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      IS_PRERELEASE:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  otakuworld:
+    name: Generate Otakuworld APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: adopt
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          add-job-summary-as-pr-comment: always
+
+      - name: Build Otakuworld artifacts
+        id: buildOtakuApks
+        run: ./gradlew otakuworld:assembleRelease
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: otaku_sign
+        with:
+          releaseDirectory: otakuworld/build/outputs/apk/full/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: otaku_sign_no_firebase
+        with:
+          releaseDirectory: otakuworld/build/outputs/apk/noFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign app APK
+        id: otaku_sign_no_cloud_firebase
+        with:
+          releaseDirectory: otakuworld/build/outputs/apk/noCloudFirebase/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up Otakuworld artifacts
+        run: |
+          cp ${{ steps.otaku_sign.outputs.signedReleaseFile }} otakuworld-release.apk
+          cp ${{ steps.otaku_sign_no_firebase.outputs.signedReleaseFile }} otakuworld-no-firebase-release.apk
+          cp ${{ steps.otaku_sign_no_cloud_firebase.outputs.signedReleaseFile }} otakuworld-no-cloud-firebase-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Otaku App
+          path: otakuworld-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Otaku No Firebase App
+          path: otakuworld-no-firebase-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Signed Otaku No Cloud Firebase App
+          path: otakuworld-no-cloud-firebase-release.apk

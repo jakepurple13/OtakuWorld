@@ -9,10 +9,7 @@ class OtakuManagerPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModu
 
     override fun Project.projectSetup() {
         pluginManager.apply("com.android.application")
-        pluginManager.apply("com.google.gms.google-services")
-        pluginManager.apply("com.google.firebase.crashlytics")
         pluginManager.apply(libs.plugins.compose.compiler.get().pluginId)
-        afterEvaluate { useGoogleType() }
     }
 
     override fun BaseAppModuleExtension.androidConfig(project: Project) {
