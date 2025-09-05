@@ -11,6 +11,24 @@ plugins {
 android {
     defaultConfig {
         applicationId = "com.programmersbox.otakuworld"
+
+        fun dualStringBuildConfig(
+            key: String,
+            value: String,
+        ) {
+            buildConfigField("String", key, "\"$value\"")
+            resValue("string", key, value)
+        }
+
+        dualStringBuildConfig(
+            "ACCOUNT_TYPE",
+            "com.programmersbox.otaku.world"
+        )
+
+        dualStringBuildConfig(
+            "AUTH_TOKEN_TYPE",
+            "com.programmersbox.otaku.world.apps"
+        )
     }
 
     buildFeatures {
