@@ -23,6 +23,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
@@ -65,7 +66,7 @@ import java.io.File
 
 val appModule = module {
     singleOf(::GenericManga) { bindsGenericInfo() }
-
+    single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     singleOf(::ChapterHolder)

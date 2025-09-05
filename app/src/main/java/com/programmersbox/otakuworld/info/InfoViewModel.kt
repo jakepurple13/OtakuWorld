@@ -14,6 +14,7 @@ import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.OtakuProvider
 import com.programmersbox.otakuworld.repository.OtakuRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.launchIn
@@ -100,6 +101,10 @@ class InfoViewModel(
             }
             .getAllFavoritesAsListFlow(appInfo.context)
     }
+        .catch {
+            it.printStackTrace()
+            emit(emptyList())
+        }
         .onEach {
             otakuItem.favorites.clear()
             otakuItem.favorites.addAll(it)

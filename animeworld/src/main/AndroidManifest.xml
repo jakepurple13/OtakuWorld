@@ -113,6 +113,18 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <provider
+            android:name=".AnimeFavoritesContentProvider"
+            android:authorities="${applicationId}.provider.favorites"
+            android:exported="true"
+            android:permission="${applicationId}.READ_WRITE_FAVORITES" />
+
+        <provider
+            android:name=".AnimeListContentProvider"
+            android:authorities="${applicationId}.provider.customlist"
+            android:exported="true"
+            android:permission="${applicationId}.READ_WRITE_LISTS" />
     </application>
 
 </manifest>

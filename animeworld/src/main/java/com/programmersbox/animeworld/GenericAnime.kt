@@ -94,6 +94,7 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
@@ -134,6 +135,7 @@ val appModule = module {
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)
     factoryOf(::Zipper)
+    single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
 }
 
 class StorageHolder {
