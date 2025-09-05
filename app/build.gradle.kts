@@ -215,5 +215,21 @@ fun ApplicationProductFlavor.setupUris(
                 provider = productFlavor
             }
         )
+
+        dualStringBuildConfig(
+            "${app.name}_FAVORITES_PERMISSION",
+            otakuProvider.favoritesPermissions {
+                appType = app
+                provider = productFlavor
+            }
+        )
+
+        dualStringBuildConfig(
+            "${app.name}_LISTS_PERMISSION",
+            otakuProvider.listPermissions {
+                appType = app
+                provider = productFlavor
+            }
+        )
     }
 }

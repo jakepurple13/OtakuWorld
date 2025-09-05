@@ -10,15 +10,17 @@
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
 
-    <uses-permission android:name="com.programmersbox.mangaworld.noFirebase.READ_WRITE_LISTS" />
-    <uses-permission android:name="com.programmersbox.mangaworld.noFirebase.READ_WRITE_FAVORITES" />
-    <uses-permission android:name="com.programmersbox.novelworld.noFirebase.READ_WRITE_FAVORITES" />
-    <uses-permission android:name="com.programmersbox.novelworld.noFirebase.READ_WRITE_LISTS" />
-
+    <uses-permission android:name="@string/MangaWorld_FAVORITES_PERMISSION" />
+    <uses-permission android:name="@string/AnimeWorld_FAVORITES_PERMISSION" />
+    <uses-permission android:name="@string/NovelWorld_FAVORITES_PERMISSION" />
+    <uses-permission android:name="@string/AnimeWorld_LISTS_PERMISSION" />
+    <uses-permission android:name="@string/MangaWorld_LISTS_PERMISSION" />
+    <uses-permission android:name="@string/NovelWorld_LISTS_PERMISSION" />
 
     <queries>
-        <package android:name="com.programmersbox.mangaworld.noFirebase" />
-        <package android:name="com.programmersbox.novelworld.noFirebase" />
+        <package android:name="@string/ANIMEWORLD_PACKAGE" />
+        <package android:name="@string/MANGAWORLD_PACKAGE" />
+        <package android:name="@string/NOVELWORLD_PACKAGE" />
     </queries>
 
     <application
@@ -96,6 +98,18 @@
             <meta-data
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter_favorites_novel" />
+        </service>
+
+        <service
+            android:name=".syncadapters.AnimeFavoritesSyncService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter_favorites_anime" />
         </service>
     </application>
 
