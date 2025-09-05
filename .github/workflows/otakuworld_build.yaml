@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Otakuworld artifacts
         id: buildOtakuApks
-        run: ./gradlew otakuworld:assembleRelease
+        run: ./gradlew app:assembleRelease
 
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
