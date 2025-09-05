@@ -22,8 +22,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
@@ -163,6 +165,22 @@ private fun OtakuItemScreen(
 
     Crossfade(hasFavoritePermission) { target ->
         if (target) {
+
+            val list by remember {
+                derivedStateOf {
+                    item
+                        .otakuItem
+                        .favorites
+                        .groupBy { it.source }
+                }
+            }
+
+            val showing by remember {
+                derivedStateOf {
+                    list.mapValues { mutableStateOf(false) }
+                }
+            }
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -209,16 +227,24 @@ private fun OtakuItemScreen(
                     ) { Text("Setup Syncs") }
                 }
 
-                item.otakuItem
-                    .favorites
-                    .groupBy { it.source }
-                    .forEach { (source, favorites) ->
-                        stickyHeader {
+
+
+                list.forEach { (source, favorites) ->
+                    stickyHeader {
+                        Card(
+                            onClick = { showing[source]?.value = showing[source]?.value?.not() ?: false },
+                        ) {
                             ListItem(
-                                headlineContent = { Text(source) }
+                                headlineContent = { Text(source) },
+                                trailingContent = { Text(favorites.size.toString()) },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color.Transparent
+                                )
                             )
                         }
+                    }
 
+                    if (showing[source]?.value == true) {
                         items(favorites) {
                             M3CoverCard(
                                 imageUrl = it.imageUrl,
@@ -226,6 +252,7 @@ private fun OtakuItemScreen(
                             )
                         }
                     }
+                }
             }
         } else {
             Box(
