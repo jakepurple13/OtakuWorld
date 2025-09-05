@@ -65,12 +65,14 @@
             android:name=".NovelFavoritesContentProvider"
             android:authorities="${applicationId}.provider.favorites"
             android:exported="true"
+            android:label="Novel Favorites"
             android:permission="${applicationId}.READ_WRITE_FAVORITES" />
 
         <provider
             android:name=".NovelListContentProvider"
             android:authorities="${applicationId}.provider.customlist"
             android:exported="true"
+            android:label="Novel Lists"
             android:permission="${applicationId}.READ_WRITE_LISTS" />
     </application>
 

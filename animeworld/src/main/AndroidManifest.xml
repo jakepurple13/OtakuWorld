@@ -118,12 +118,14 @@
             android:name=".AnimeFavoritesContentProvider"
             android:authorities="${applicationId}.provider.favorites"
             android:exported="true"
+            android:label="Anime Favorites"
             android:permission="${applicationId}.READ_WRITE_FAVORITES" />
 
         <provider
             android:name=".AnimeListContentProvider"
             android:authorities="${applicationId}.provider.customlist"
             android:exported="true"
+            android:label="Anime Lists"
             android:permission="${applicationId}.READ_WRITE_LISTS" />
     </application>
 

@@ -53,6 +53,12 @@ class OtakuProvider {
             .build() + ".$favoritesUri"
     )
 
+    fun favoritesUri(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$favoritesUri"
+
     fun favoritesPermissions(
         builder: OtakuBuilder.() -> Unit,
     ) = OtakuBuilder()
@@ -66,6 +72,12 @@ class OtakuProvider {
             .apply(builder)
             .build() + ".$listsUri"
     )
+
+    fun listsUri(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$listsUri"
 
     fun listPermissions(
         builder: OtakuBuilder.() -> Unit,

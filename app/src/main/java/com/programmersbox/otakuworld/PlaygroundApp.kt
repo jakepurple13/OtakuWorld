@@ -1,15 +1,25 @@
 package com.programmersbox.otakuworld
 
+import android.accounts.Account
+import android.accounts.AccountManager
+import android.accounts.OnAccountsUpdateListener
 import android.app.Application
+import android.content.ContentResolver
+import android.content.SyncRequest
+import android.os.Handler
+import android.os.Looper
 import com.google.android.material.color.DynamicColors
 import com.programmersbox.otakuworld.info.InfoViewModel
 import com.programmersbox.otakuworld.repository.OtakuRepository
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 
 class PlaygroundApp : Application() {
     override fun onCreate() {
@@ -28,5 +38,50 @@ class PlaygroundApp : Application() {
                 }
             )
         }
+
+        val otakuProvider = get<OtakuProvider>()
+        val providerType = get<AppInfo>().provider
+
+        AccountManager
+            .get(this)
+            .addOnAccountsUpdatedListener(
+                object : OnAccountsUpdateListener {
+                    override fun onAccountsUpdated(accounts: Array<out Account?>?) {
+                        runCatching {
+                            accounts?.forEach { account ->
+                                account?.let {
+                                    ContentResolver.setSyncAutomatically(
+                                        it,
+                                        otakuProvider.favoritesUri {
+                                            appType = App.MangaWorld
+                                            provider = providerType
+                                        },
+                                        true
+                                    )
+                                    ContentResolver.requestSync(
+                                        SyncRequest.Builder()
+                                            .setDisallowMetered(true)
+                                            .setSyncAdapter(
+                                                it,
+                                                otakuProvider.favoritesUri {
+                                                    appType = App.MangaWorld
+                                                    provider = providerType
+                                                }
+                                            )
+                                            .syncPeriodic(
+                                                1.days.inWholeSeconds,
+                                                1.hours.inWholeSeconds
+                                            )
+                                            .build()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                Handler(Looper.getMainLooper()),
+                true,
+                arrayOf(BuildConfig.ACCOUNT_TYPE)
+            )
     }
 }

@@ -13,6 +13,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.Text
@@ -20,6 +23,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.expressiveLightColorScheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
@@ -63,7 +68,21 @@ class LoginActivity : CustomAccountAuthenticatorActivity() {
             }
 
             MaterialExpressiveTheme(colorScheme) {
-                Text("Here!")
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Button(
+                        onClick = {
+                            createAccountWith(
+                                AccountInfo(
+                                    username = "Otaku!",
+                                    password = "null"
+                                )
+                            )
+                        }
+                    ) { Text(text = "Login") }
+                }
             }
         }
     }
