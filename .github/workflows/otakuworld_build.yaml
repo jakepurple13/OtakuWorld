@@ -36,7 +36,7 @@ jobs:
         name: Sign app APK
         id: otaku_sign
         with:
-          releaseDirectory: otakuworld/build/outputs/apk/full/release
+          releaseDirectory: app/build/outputs/apk/full/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -46,7 +46,7 @@ jobs:
         name: Sign app APK
         id: otaku_sign_no_firebase
         with:
-          releaseDirectory: otakuworld/build/outputs/apk/noFirebase/release
+          releaseDirectory: app/build/outputs/apk/noFirebase/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -56,7 +56,7 @@ jobs:
         name: Sign app APK
         id: otaku_sign_no_cloud_firebase
         with:
-          releaseDirectory: otakuworld/build/outputs/apk/noCloudFirebase/release
+          releaseDirectory: app/build/outputs/apk/noCloudFirebase/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
