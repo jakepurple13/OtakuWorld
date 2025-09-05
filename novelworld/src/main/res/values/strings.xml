@@ -7,4 +7,6 @@
     <string name="removedChapterItem">Removed Chapter</string>
     <string name="playSettings">Reader Settings</string>
     <string name="changeToChapter">Change to %s</string>
+    <string name="novel_lists_provider">Novel Lists</string>
+    <string name="novel_favorites_provider">Novel Favorites</string>
 </resources>

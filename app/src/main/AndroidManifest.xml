@@ -6,8 +6,15 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+
     <uses-permission android:name="com.programmersbox.mangaworld.noFirebase.READ_WRITE_LISTS" />
     <uses-permission android:name="com.programmersbox.mangaworld.noFirebase.READ_WRITE_FAVORITES" />
+    <uses-permission android:name="com.programmersbox.novelworld.noFirebase.READ_WRITE_FAVORITES" />
+    <uses-permission android:name="com.programmersbox.novelworld.noFirebase.READ_WRITE_LISTS" />
+
 
     <queries>
         <package android:name="com.programmersbox.mangaworld.noFirebase" />
@@ -68,7 +75,7 @@
         </service>
 
         <service
-            android:name=".syncadapters.FavoritesSyncService"
+            android:name=".syncadapters.MangaFavoritesSyncService"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -77,6 +84,18 @@
             <meta-data
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter_favorites_manga" />
+        </service>
+
+        <service
+            android:name=".syncadapters.NovelFavoritesSyncService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter_favorites_novel" />
         </service>
     </application>
 

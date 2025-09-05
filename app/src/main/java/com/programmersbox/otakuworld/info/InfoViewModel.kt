@@ -11,7 +11,9 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
+import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.OtakuProvider
+import com.programmersbox.otakuworld.Provider
 import com.programmersbox.otakuworld.repository.OtakuRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -34,34 +36,19 @@ class InfoViewModel(
     )
 
     val animeWorld = OtakuItem(
-        favoritePermission = otakuProvider.favoritesPermissions {
-            appType = App.AnimeWorld
-            provider = appInfo.provider
-        },
-        listsPermission = otakuProvider.listPermissions {
-            appType = App.AnimeWorld
-            provider = appInfo.provider
-        }
+        app = App.AnimeWorld,
+        appProvider = appInfo.provider,
+        otakuProvider = otakuProvider
     )
     val mangaWorld = OtakuItem(
-        favoritePermission = otakuProvider.favoritesPermissions {
-            appType = App.MangaWorld
-            provider = appInfo.provider
-        },
-        listsPermission = otakuProvider.listPermissions {
-            appType = App.MangaWorld
-            provider = appInfo.provider
-        }
+        app = App.MangaWorld,
+        appProvider = appInfo.provider,
+        otakuProvider = otakuProvider
     )
     val novelWorld = OtakuItem(
-        favoritePermission = otakuProvider.favoritesPermissions {
-            appType = App.NovelWorld
-            provider = appInfo.provider
-        },
-        listsPermission = otakuProvider.listPermissions {
-            appType = App.NovelWorld
-            provider = appInfo.provider
-        }
+        app = App.NovelWorld,
+        appProvider = appInfo.provider,
+        otakuProvider = otakuProvider
     )
 
     init {
@@ -128,9 +115,26 @@ data class AppCheck(
 )
 
 class OtakuItem(
-    val favoritePermission: String,
-    val listsPermission: String,
+    val app: App,
+    val appProvider: Provider,
+    otakuProvider: OtakuProvider,
 ) {
     val favorites = mutableStateListOf<DbModel>()
     val list = mutableStateListOf<CustomList>()
+
+    val favoritePermission: String = otakuProvider.favoritesPermissions {
+        appType = app
+        provider = appProvider
+    }
+    
+    val listsPermission: String = otakuProvider.listPermissions {
+        appType = app
+        provider = appProvider
+    }
+
+    val favoritesUri = when (app) {
+        App.AnimeWorld -> BuildConfig.AnimeWorld_FAVORITES_URI
+        App.MangaWorld -> BuildConfig.MangaWorld_FAVORITES_URI
+        App.NovelWorld -> BuildConfig.NovelWorld_FAVORITES_URI
+    }
 }

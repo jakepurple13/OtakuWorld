@@ -2,7 +2,7 @@
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
     android:accountType="@string/ACCOUNT_TYPE"
     android:allowParallelSyncs="true"
-    android:contentAuthority="@string/MangaWorld_FAVORITES_URI"
+    android:contentAuthority="@string/NovelWorld_FAVORITES_URI"
     android:isAlwaysSyncable="true"
     android:supportsUploading="true"
     android:userVisible="true" />

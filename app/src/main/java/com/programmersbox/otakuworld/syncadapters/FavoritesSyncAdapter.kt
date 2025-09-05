@@ -1,14 +1,11 @@
 package com.programmersbox.otakuworld.syncadapters
 
 import android.accounts.Account
-import android.app.Service
 import android.content.AbstractThreadedSyncAdapter
 import android.content.ContentProviderClient
 import android.content.Context
-import android.content.Intent
 import android.content.SyncResult
 import android.os.Bundle
-import android.os.IBinder
 
 class FavoritesSyncAdapter(
     context: Context,
@@ -20,24 +17,18 @@ class FavoritesSyncAdapter(
         provider: ContentProviderClient?,
         syncResult: SyncResult?,
     ) {
+        println(account)
+        println(authority)
         //TODO: Might need to make multiple of these. Also have to figure out the names for the sync items
-    }
-}
-
-class FavoritesSyncService : Service() {
-    override fun onCreate() {
-        super.onCreate()
-        synchronized(syncAdapterLock) {
-            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(applicationContext)
+        runCatching {
+            val keySet = extras?.keySet()
+            if (keySet?.isNotEmpty() == true) {
+                keySet.forEach {
+                    runCatching {
+                        println(it + " | " + extras.get(it))
+                    }
+                }
+            }
         }
-    }
-
-    override fun onBind(intent: Intent): IBinder {
-        return syncAdapter?.syncAdapterBinder ?: throw IllegalStateException()
-    }
-
-    companion object {
-        private var syncAdapter: FavoritesSyncAdapter? = null
-        private val syncAdapterLock = Any()
     }
 }
