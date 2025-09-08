@@ -57,9 +57,9 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.presentation.components.thenIf
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
@@ -80,6 +80,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.are_you_sure_delete_list
@@ -130,7 +131,7 @@ fun OtakuListView(
     val biometricPrompting = rememberBiometricPrompting()
 
     val dateTimeFormatter = LocalSystemDateTimeFormat.current
-    val dao = LocalCustomListDao.current
+    val dao = koinInject<ListRepository>()
     val scope = rememberCoroutineScope()
 
     val pickDocumentLauncher = rememberFilePickerLauncher(

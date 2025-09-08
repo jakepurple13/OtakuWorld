@@ -29,13 +29,13 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomListItem
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.AndroidLogger
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
@@ -200,7 +200,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
                 .also { AppConfig.forLaterUuid = it }
 
             runCatching {
-                get<ListDao>().createList(
+                get<ListRepository>().createList(
                     CustomListItem(
                         uuid = forLaterUUID,
                         name = forLaterName,

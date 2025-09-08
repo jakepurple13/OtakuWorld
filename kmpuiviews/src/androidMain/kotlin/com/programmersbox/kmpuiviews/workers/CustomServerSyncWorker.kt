@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -17,6 +18,7 @@ class CustomServerSyncWorker(
     workerParams: WorkerParameters,
     private val serverRepository: ServerRepository,
     private val listDao: ListDao,
+    private val listRepository: ListRepository,
     private val itemDao: ItemDao,
 ) : CoroutineWorker(context, workerParams) {
     private val dispatchers = Dispatchers.IO.limitedParallelism(5)
@@ -30,9 +32,9 @@ class CustomServerSyncWorker(
                         if ((listDao.getAllListsSync().size - 1).coerceAtLeast(0) == 0) {
                             val lists = customServerHandler.getAllLists()
                             lists.forEach {
-                                listDao.createList(it.item)
+                                listRepository.createList(it.item)
                                 it.list.forEach { listInfo ->
-                                    listDao.addItem(listInfo)
+                                    listRepository.addItem(listInfo)
                                 }
                             }
                         } else {

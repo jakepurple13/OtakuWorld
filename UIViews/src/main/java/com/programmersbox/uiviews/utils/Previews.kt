@@ -198,7 +198,7 @@ private fun ImportScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
         val context: Context = LocalContext.current
-        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(listDao, createSavedStateHandle()) }
+        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(createSavedStateHandle()) }
         ImportFullListScreen(
             vm = vm
         )

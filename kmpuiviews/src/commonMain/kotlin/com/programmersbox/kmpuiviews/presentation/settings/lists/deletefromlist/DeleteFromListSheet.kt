@@ -40,12 +40,14 @@ import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.areYouSureRemove
 import otakuworld.kmpuiviews.generated.resources.cancel
@@ -61,6 +63,7 @@ fun DeleteFromListScreen(
 ) {
     val navController = LocalNavActions.current
     val dao = LocalCustomListDao.current
+    val listRepository = koinInject<ListRepository>()
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     val onDismiss: () -> Unit = {
@@ -104,8 +107,8 @@ fun DeleteFromListScreen(
                             removing = true
                             scope.launch {
                                 runCatching {
-                                    itemsToDelete.forEach { item -> dao.removeItem(item) }
-                                    customList?.item?.let { dao.updateFullList(it) }
+                                    itemsToDelete.forEach { item -> listRepository.removeItem(item) }
+                                    customList?.item?.let { listRepository.updateFullList(it) }
                                 }.onSuccess {
                                     removing = false
                                     itemsToDelete.clear()

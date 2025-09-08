@@ -45,7 +45,6 @@ import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.painterLogo
@@ -53,6 +52,7 @@ import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
@@ -395,7 +395,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     onDismiss: () -> Unit,
     sheet: SheetState,
     dao: ItemDao = koinInject(),
-    listDao: ListDao = koinInject(),
+    listDao: ListRepository = koinInject(),
     platformRepository: PlatformRepository = koinInject(),
     notificationRepository: NotificationRepository = koinInject(),
     scope: CoroutineScope = rememberCoroutineScope(),

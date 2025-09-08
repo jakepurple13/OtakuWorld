@@ -4,53 +4,60 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.kmpuiviews.domain.customserver.ListHandler
-import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
+import com.programmersbox.kmpuiviews.SystemAlerter
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class ListRepository(
     private val listDao: ListDao,
-    private val serverRepository: ServerRepository,
+    private val systemAlerter: SystemAlerter,
 ) {
-
-    private val listHandler: ListHandler?
-        get() = serverRepository
-            .customServerHandle
-            .value
-
     @OptIn(ExperimentalUuidApi::class)
     suspend fun addList(name: String) {
         val item = CustomListItem(
             uuid = Uuid.random().toString(),
             name = name,
         )
-        runCatching { listHandler!!.addList(item) }
         listDao.createList(item)
     }
 
+    suspend fun addToList(uuid: String, title: String, description: String, url: String, imageUrl: String, source: String): Boolean {
+        return listDao.addToList(uuid, title, description, url, imageUrl, source)
+            .also { systemAlerter.alertListChange() }
+    }
+
+    suspend fun create(name: String) {
+        listDao.create(name)
+        systemAlerter.alertListChange()
+    }
+
+    suspend fun updateFullList(item: CustomListItem) {
+        listDao.updateFullList(item)
+        systemAlerter.alertListChange()
+    }
+
     suspend fun removeList(item: CustomList) {
-        runCatching { listHandler!!.removeList(item) }
         listDao.removeList(item)
+        systemAlerter.alertListChange()
     }
 
     suspend fun addItem(customListItem: CustomListInfo) {
-        runCatching { listHandler!!.addItem(customListItem) }
         listDao.addItem(customListItem)
+        systemAlerter.alertListItemChange()
+    }
+
+    suspend fun createList(listItem: CustomListItem): Long {
+        return listDao.createList(listItem)
+            .also { systemAlerter.alertListChange() }
     }
 
     suspend fun removeItem(customListItem: CustomListInfo) {
-        runCatching { listHandler!!.removeItem(customListItem) }
         listDao.removeItem(customListItem)
-    }
-
-    suspend fun updateList(item: CustomListItem) {
-        runCatching { listHandler!!.updateList(item) }
-        listDao.updateList(item)
+        systemAlerter.alertListItemChange()
     }
 
     suspend fun updateBiometric(uuid: String, useBiometric: Boolean) {
-        runCatching { listHandler!!.updateBiometric(uuid, useBiometric) }
         listDao.updateBiometric(uuid, useBiometric)
+        systemAlerter.alertListChange()
     }
 }

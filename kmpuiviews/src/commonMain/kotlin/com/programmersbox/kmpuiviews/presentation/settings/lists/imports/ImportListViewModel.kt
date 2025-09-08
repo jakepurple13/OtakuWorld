@@ -8,9 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.readPlatformFile
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
@@ -21,7 +21,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class ImportListViewModel(
-    private val listDao: ListDao,
+    private val listRepository: ListRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -55,8 +55,8 @@ class ImportListViewModel(
         runCatching {
             (importStatus as? ImportListStatus.Success)?.customList?.let { list ->
                 val newUUID = Uuid.random().toString()
-                listDao.createList(list.item.copy(uuid = newUUID, name = name, time = Clock.System.now().toEpochMilliseconds()))
-                list.list.forEach { listDao.addItem(it.copy(uniqueId = Uuid.random().toString(), uuid = newUUID)) }
+                listRepository.createList(list.item.copy(uuid = newUUID, name = name, time = Clock.System.now().toEpochMilliseconds()))
+                list.list.forEach { listRepository.addItem(it.copy(uniqueId = Uuid.random().toString(), uuid = newUUID)) }
             }
         }
             .onSuccess { printLogs { "Read!" } }

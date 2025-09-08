@@ -72,7 +72,6 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.asState
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -81,6 +80,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -109,7 +109,7 @@ internal fun AddToList(
     showLists: Boolean,
     showListsChange: (Boolean) -> Unit,
     info: KmpInfoModel,
-    listDao: ListDao,
+    listDao: ListRepository,
     hostState: SnackbarHostState?,
     scope: CoroutineScope,
 ) {

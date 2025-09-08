@@ -75,9 +75,9 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -111,7 +111,7 @@ fun DetailsViewLandscape(
     detailsActions: DetailsActions,
 ) {
     val dao = LocalItemDao.current
-    val listDao = LocalCustomListDao.current
+    val listDao = koinInject<ListRepository>()
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
 
@@ -278,7 +278,7 @@ private fun DetailsLandscapeContent(
         showLists = showLists,
         showListsChange = { showLists = it },
         info = info,
-        listDao = LocalCustomListDao.current,
+        listDao = koinInject(),
         hostState = null,
         scope = scope,
     )

@@ -72,9 +72,9 @@ import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.rememberCollapsableTopBehavior
 import com.programmersbox.kmpuiviews.presentation.components.minus
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -136,7 +136,7 @@ fun DetailsView(
 
     val fabVisible = listState.isScrollingUp()//remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
 
-    val listDao = LocalCustomListDao.current
+    val listDao = koinInject<ListRepository>()
 
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)

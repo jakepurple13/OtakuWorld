@@ -110,9 +110,9 @@ import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -167,7 +167,7 @@ private fun DetailsScreenInternal(
     val heatMapDao = koinInject<HeatMapDao>()
     val favoritesRepository: FavoritesRepository = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()
-    val listDao = LocalCustomListDao.current
+    val listDao = koinInject<ListRepository>()
     val notificationRepository = koinInject<NotificationRepository>()
 
     val showDownload by handling.rememberShowDownload()

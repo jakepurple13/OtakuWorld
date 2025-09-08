@@ -25,10 +25,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.cancel
 import otakuworld.kmpuiviews.generated.resources.choose_list_title
@@ -48,6 +50,7 @@ fun ListChoiceScreen(
     },
     onClick: (CustomList) -> Unit,
 ) {
+    val listRepository = koinInject<ListRepository>()
     val dao = LocalCustomListDao.current
     val scope = rememberCoroutineScope()
     val list by dao
@@ -92,7 +95,7 @@ fun ListChoiceScreen(
                             TextButton(
                                 onClick = {
                                     scope.launch {
-                                        dao.create(name)
+                                        listRepository.create(name)
                                         showAdd = false
                                     }
                                 },

@@ -95,7 +95,6 @@ import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpuiviews.HideScreen
@@ -110,6 +109,7 @@ import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -168,7 +168,7 @@ fun OtakuCustomListScreenStandAlone(
     screen: Screen.CustomListScreen.CustomListItem,
     viewModel: OtakuCustomListViewModel = koinViewModel { parametersOf(screen) },
     isHorizontal: Boolean = false,
-    dao: ListDao = koinInject(),
+    dao: ListRepository = koinInject(),
 ) {
     val scope = rememberCoroutineScope()
     val navController = LocalNavActions.current
@@ -212,7 +212,7 @@ fun OtakuCustomListScreen(
     isHorizontal: Boolean = false,
     addSecurityItem: (String) -> Unit,
     removeSecurityItem: (String) -> Unit,
-    dao: ListDao = koinInject(),
+    dao: ListRepository = koinInject(),
 ) {
     val hazeState = remember { HazeState() }
     val navController = LocalNavActions.current

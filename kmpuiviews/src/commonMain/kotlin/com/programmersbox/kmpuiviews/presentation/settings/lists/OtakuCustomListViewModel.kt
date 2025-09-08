@@ -15,6 +15,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
@@ -31,6 +32,7 @@ class OtakuCustomListViewModel(
     screen: Screen.CustomListScreen.CustomListItem,
     dataStoreHandling: DataStoreHandling,
     private val listDao: ListDao,
+    private val listRepository: ListRepository,
 ) : ViewModel() {
     private val showBySourceFlow = dataStoreHandling.showBySource
     var customItem: CustomList? by mutableStateOf(null)
@@ -112,17 +114,17 @@ class OtakuCustomListViewModel(
     }
 
     suspend fun removeItems(items: List<CustomListInfo>): Result<Boolean> = runCatching {
-        items.forEach { item -> listDao.removeItem(item) }
-        customList?.item?.let { listDao.updateFullList(it) }
+        items.forEach { item -> listRepository.removeItem(item) }
+        customList?.item?.let { listRepository.updateFullList(it) }
         true
     }
 
     fun rename(newName: String) {
-        viewModelScope.launch { customList?.item?.copy(name = newName)?.let { listDao.updateFullList(it) } }
+        viewModelScope.launch { customList?.item?.copy(name = newName)?.let { listRepository.updateFullList(it) } }
     }
 
     fun deleteAll() {
-        viewModelScope.launch { customList?.let { item -> listDao.removeList(item) } }
+        viewModelScope.launch { customList?.let { item -> listRepository.removeList(item) } }
     }
 
     fun setQuery(query: String) {

@@ -75,13 +75,11 @@ class MainActivity : AppCompatActivity() {
         // Maybe display to all of the sources for each app?
         // It'd have SyncAdapters for every one of the content providers
         // I'd need to modify the content providers to allow for everything that's allowed in the server
-        // Permissions would need to be setup
         // Login would need to be setup to communicate with the server,
         // making this app very modifiable and won't have any firebase stuff apart of it
         // I'd also need to make sure to notify whenever the databases change.
         // Maybe it'd also be able view everything? Maybe clicking on items open it in that app?
         // Probably also want to show some of the app info? Version code and name?
-        // I'd want a full, noFirebase, and noCloudFirebase versions to handle each type
         // Maybe there's even reverse support? The apps try and detect if OtakuWorld is installed and logged in?
         // Maybe this app even handles firebase? And the OtakuWorld apps are purely local?
 

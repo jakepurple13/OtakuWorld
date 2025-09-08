@@ -90,4 +90,6 @@ expect fun ScrollBar(lazyListState: LazyListState)
 expect class SystemAlerter {
     fun alertFavoritesChange()
     fun alertChapterChange()
+    fun alertListChange()
+    fun alertListItemChange()
 }

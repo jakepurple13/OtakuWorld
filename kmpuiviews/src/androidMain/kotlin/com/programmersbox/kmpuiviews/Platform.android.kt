@@ -328,4 +328,32 @@ actual class SystemAlerter(
                 )
         }.onFailure { it.printStackTrace() }
     }
+
+    actual fun alertListChange() {
+        runCatching {
+            context
+                .contentResolver
+                .notifyChange(
+                    Uri.withAppendedPath(
+                        "content://${packageName}.provider.customlist".toUri(),
+                        "lists"
+                    ),
+                    null
+                )
+        }.onFailure { it.printStackTrace() }
+    }
+
+    actual fun alertListItemChange() {
+        runCatching {
+            context
+                .contentResolver
+                .notifyChange(
+                    Uri.withAppendedPath(
+                        "content://${packageName}.provider.customlist".toUri(),
+                        "list_items"
+                    ),
+                    null
+                )
+        }.onFailure { it.printStackTrace() }
+    }
 }

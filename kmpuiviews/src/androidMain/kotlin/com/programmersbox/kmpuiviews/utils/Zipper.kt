@@ -26,6 +26,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.SourceOrder
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.uri
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +46,7 @@ actual open class Zipper(
     private val context: Context,
     private val favoritesRepository: FavoritesRepository,
     private val listDao: ListDao,
+    private val listRepository: ListRepository,
     private val itemDao: ItemDao,
     private val heatMapDao: HeatMapDao,
     private val historyDao: HistoryDao,
@@ -79,8 +81,8 @@ actual open class Zipper(
             input = { stream ->
                 Json.decodeFromString<List<CustomList>>(stream.reader().readText())
                     .forEach {
-                        listDao.createList(it.item)
-                        it.list.forEach { listItem -> listDao.addItem(listItem) }
+                        listRepository.createList(it.item)
+                        it.list.forEach { listItem -> listRepository.addItem(listItem) }
                     }
             },
             output = { dataToOutputStream(listDao.getAllListsSync(), it) }

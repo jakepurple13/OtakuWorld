@@ -9,16 +9,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.readPlatformFile
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 class ImportFullListViewModel(
-    private val listDao: ListDao,
+    private val listRepository: ListRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -58,8 +58,8 @@ class ImportFullListViewModel(
         runCatching {
             importingList.let { list ->
                 list.forEach {
-                    listDao.createList(it.item)
-                    it.list.forEach { item -> listDao.addItem(item) }
+                    listRepository.createList(it.item)
+                    it.list.forEach { item -> listRepository.addItem(item) }
                 }
             }
         }
