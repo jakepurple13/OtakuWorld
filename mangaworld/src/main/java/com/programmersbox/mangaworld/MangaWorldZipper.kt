@@ -9,6 +9,7 @@ import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import kotlinx.coroutines.flow.firstOrNull
@@ -17,12 +18,13 @@ class MangaWorldZipper(
     context: Context,
     favoritesRepository: FavoritesRepository,
     listDao: ListDao,
+    listRepository: ListRepository,
     itemDao: ItemDao,
     heatMapDao: HeatMapDao,
     historyDao: HistoryDao,
     newSettingsHandling: NewSettingsHandling,
     private val mangaNewSettingsHandling: MangaNewSettingsHandling, exceptionDao: ExceptionDao,
-) : Zipper(context, favoritesRepository, listDao, itemDao, heatMapDao, historyDao, newSettingsHandling, exceptionDao) {
+) : Zipper(context, favoritesRepository, listDao, listRepository, itemDao, heatMapDao, historyDao, newSettingsHandling, exceptionDao) {
     override fun additionalHandlers(): Map<String, ZipHandler> = mapOf(
         "manga_settings" to ZipHandler(
             input = { inputStream ->
