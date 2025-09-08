@@ -48,6 +48,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportF
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportFullListViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
@@ -124,13 +125,15 @@ private fun GlobalSearchCoverPreview() {
 @Composable
 private fun CustomListScreenPreview() {
     PreviewTheme {
-        val listDao: ListDao = LocalCustomListDao.current
+        val listDao = LocalCustomListDao.current
+        val listRepository = koinInject<ListRepository>()
         val context = LocalContext.current
         val viewModel: OtakuCustomListViewModel = viewModel {
             OtakuCustomListViewModel(
                 screen = Screen.CustomListScreen.CustomListItem(""),
                 dataStoreHandling = DataStoreHandling(),
-                listDao = listDao
+                listDao = listDao,
+                listRepository = listRepository
             )
         }
         OtakuCustomListScreen(
@@ -197,8 +200,14 @@ private fun ExtensionListPreview() {
 private fun ImportScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
+        val listRepository = koinInject<ListRepository>()
         val context: Context = LocalContext.current
-        val vm: ImportFullListViewModel = viewModel { ImportFullListViewModel(createSavedStateHandle()) }
+        val vm: ImportFullListViewModel = viewModel {
+            ImportFullListViewModel(
+                listRepository,
+                createSavedStateHandle()
+            )
+        }
         ImportFullListScreen(
             vm = vm
         )
@@ -210,8 +219,9 @@ private fun ImportScreenPreview() {
 private fun ImportListScreenPreview() {
     PreviewTheme {
         val listDao: ListDao = LocalCustomListDao.current
+        val listRepository = koinInject<ListRepository>()
         val context: Context = LocalContext.current
-        val vm: ImportListViewModel = viewModel { ImportListViewModel(listDao, createSavedStateHandle()) }
+        val vm: ImportListViewModel = viewModel { ImportListViewModel(listRepository, createSavedStateHandle()) }
         ImportListScreen(
             listDao = listDao,
             vm = vm
