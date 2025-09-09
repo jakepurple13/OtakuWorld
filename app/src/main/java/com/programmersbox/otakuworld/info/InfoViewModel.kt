@@ -54,49 +54,69 @@ class InfoViewModel(
     init {
         val appCheck = snapshotFlow { hasApps }
 
-        appCheck
-            .filter { it.hasAnimeWorld }
-            .setupApp(
-                app = App.AnimeWorld,
-                otakuItem = animeWorld
-            )
+        setupApp(
+            flow = appCheck.filter { it.hasAnimeWorld },
+            app = App.AnimeWorld,
+            otakuItem = animeWorld
+        )
 
-        appCheck
-            .filter { it.hasMangaWorld }
-            .setupApp(
-                app = App.MangaWorld,
-                otakuItem = mangaWorld
-            )
 
-        appCheck
-            .filter { it.hasNovelWorld }
-            .setupApp(
-                app = App.NovelWorld,
-                otakuItem = novelWorld
-            )
+        setupApp(
+            flow = appCheck.filter { it.hasMangaWorld },
+            app = App.MangaWorld,
+            otakuItem = mangaWorld
+        )
+
+
+        setupApp(
+            flow = appCheck.filter { it.hasNovelWorld },
+            app = App.NovelWorld,
+            otakuItem = novelWorld
+        )
 
     }
 
-    private fun Flow<AppCheck>.setupApp(
+    private fun setupApp(
+        flow: Flow<AppCheck>,
         app: App,
         otakuItem: OtakuItem,
-    ) = flatMapMerge {
-        otakuProvider
-            .favoritesBuilder {
-                appType = app
-                provider = appInfo.provider
+    ) {
+        flow.flatMapMerge {
+            otakuProvider
+                .favoritesBuilder {
+                    appType = app
+                    provider = appInfo.provider
+                }
+                .getAllFavoritesAsListFlow(appInfo.context)
+        }
+            .catch {
+                it.printStackTrace()
+                emit(emptyList())
             }
-            .getAllFavoritesAsListFlow(appInfo.context)
+            .onEach {
+                otakuItem.favorites.clear()
+                otakuItem.favorites.addAll(it)
+            }
+            .launchIn(viewModelScope)
+
+        flow.flatMapMerge {
+            otakuProvider
+                .listsBuilder {
+                    appType = app
+                    provider = appInfo.provider
+                }
+                .getAllCustomListsFlow(appInfo.context)
+        }
+            .catch {
+                it.printStackTrace()
+                emit(emptyList())
+            }
+            .onEach {
+                otakuItem.list.clear()
+                otakuItem.list.addAll(it)
+            }
+            .launchIn(viewModelScope)
     }
-        .catch {
-            it.printStackTrace()
-            emit(emptyList())
-        }
-        .onEach {
-            otakuItem.favorites.clear()
-            otakuItem.favorites.addAll(it)
-        }
-        .launchIn(viewModelScope)
 
     fun checkForApps() {
         hasApps = AppCheck(
@@ -105,7 +125,6 @@ class InfoViewModel(
             hasNovelWorld = otakuRepository.hasNovelWorld()
         )
     }
-
 }
 
 data class AppCheck(
@@ -126,7 +145,7 @@ class OtakuItem(
         appType = app
         provider = appProvider
     }
-    
+
     val listsPermission: String = otakuProvider.listPermissions {
         appType = app
         provider = appProvider

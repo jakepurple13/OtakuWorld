@@ -24,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -158,10 +159,10 @@ private fun OtakuItemScreen(
 ) {
     var hasFavoritePermission by rememberSaveable { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { hasFavoritePermission = it }
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { hasFavoritePermission = it.all { it.value } }
 
-    SideEffect { launcher.launch(item.otakuItem.favoritePermission) }
+    SideEffect { launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission)) }
 
     Crossfade(hasFavoritePermission) { target ->
         if (target) {
@@ -177,6 +178,15 @@ private fun OtakuItemScreen(
             val showing by remember {
                 derivedStateOf {
                     list.mapValues { mutableStateOf(false) }
+                }
+            }
+
+            val customListsShowing by remember {
+                derivedStateOf {
+                    item
+                        .otakuItem
+                        .list
+                        .associate { it to mutableStateOf(false) }
                 }
             }
 
@@ -226,7 +236,53 @@ private fun OtakuItemScreen(
                     ) { Text("Setup Syncs") }
                 }
 
+                stickyHeader {
+                    ListItem(
+                        headlineContent = { Text("Lists") },
+                        trailingContent = { Text(item.otakuItem.list.size.toString()) },
+                        supportingContent = { HorizontalDivider() },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
 
+                //TODO: Bring OptionsSheet over to handle removing, toggling notifying, biometrics, etc
+                item.otakuItem.list.forEach { list ->
+                    stickyHeader {
+                        Card(
+                            onClick = { customListsShowing[list]?.value = customListsShowing[list]?.value?.not() ?: false },
+                        ) {
+                            ListItem(
+                                headlineContent = { Text(list.item.name) },
+                                trailingContent = { Text(list.list.size.toString()) },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = Color.Transparent
+                                )
+                            )
+                        }
+                    }
+
+                    if (customListsShowing[list]?.value == true) {
+                        items(list.list) {
+                            M3CoverCard(
+                                imageUrl = it.imageUrl,
+                                name = it.title,
+                            )
+                        }
+                    }
+                }
+
+                stickyHeader {
+                    ListItem(
+                        headlineContent = { Text("Favorites") },
+                        trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
+                        supportingContent = { HorizontalDivider() },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
 
                 list.forEach { (source, favorites) ->
                     stickyHeader {
@@ -261,7 +317,7 @@ private fun OtakuItemScreen(
                 Button(
                     onClick = {
                         println(item.otakuItem.favoritePermission)
-                        launcher.launch(item.otakuItem.favoritePermission)
+                        launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission))
                     },
                 ) { Text("Allow Access to favorites ${item.appName}") }
             }

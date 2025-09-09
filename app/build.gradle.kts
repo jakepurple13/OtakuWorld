@@ -37,6 +37,7 @@ android {
     productFlavors {
         ProductFlavorTypes.NoFirebase.edit(this) {
             setupUris(".noFirebase", Provider.NoFirebase)
+            isDefault = true
         }
         ProductFlavorTypes.NoCloudFirebase.edit(this) {
             setupUris(".noCloudFirebase", Provider.NoCloudFirebase)

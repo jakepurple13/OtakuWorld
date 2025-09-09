@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.core.net.toUri
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.DbModel
@@ -355,6 +356,21 @@ class OtakuCustomListContentProviderHelper(
     fun getAllListsFlow(context: Context) = context
         .contentResolver
         .observeUri(LISTS_URI) { getAllLists(context)?.let { cursorToCustomListItems(it) } }
+
+    fun getAllCustomListsFlow(context: Context) = context
+        .contentResolver
+        .observeUri(LISTS_URI) {
+            getAllLists(context)
+                ?.let { cursorToCustomListItems(it) }
+                ?.map { list ->
+                    CustomList(
+                        item = list,
+                        list = getItemsForList(context, list.uuid)
+                            ?.let { cursorToCustomListInfos(it) }
+                            ?: emptyList()
+                    )
+                }
+        }
 
     fun getListByUuid(context: Context, uuid: String): Cursor? =
         context.contentResolver.query(getListUri(uuid), null, null, null, null)
