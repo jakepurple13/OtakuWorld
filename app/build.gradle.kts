@@ -24,10 +24,10 @@ android {
         }
 
         //TODO: Put these in the setup uris
-        dualStringBuildConfig(
+        /*dualStringBuildConfig(
             "ACCOUNT_TYPE",
             "com.programmersbox.otaku.world"
-        )
+        )*/
 
         dualStringBuildConfig(
             "AUTH_TOKEN_TYPE",
@@ -195,6 +195,11 @@ fun ApplicationProductFlavor.setupUris(
     }
 
     val otakuProvider = OtakuProvider()
+
+    dualStringBuildConfig(
+        "ACCOUNT_TYPE",
+        "com.programmersbox.otaku.world$suffix"
+    )
 
     App.entries.forEach { app ->
         println("Setting up $app")

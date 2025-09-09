@@ -208,6 +208,16 @@ private fun OtakuItemScreen(
                                 .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
                                 .forEach { account ->
                                     println(account)
+                                    ContentResolver.setIsSyncable(
+                                        account,
+                                        item.otakuItem.favoritesUri,
+                                        1
+                                    )
+                                    ContentResolver.setIsSyncable(
+                                        account,
+                                        item.otakuItem.listsUri,
+                                        1
+                                    )
                                     ContentResolver.setSyncAutomatically(
                                         account,
                                         item.otakuItem.favoritesUri,
