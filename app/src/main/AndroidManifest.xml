@@ -79,6 +79,7 @@
         <service
             android:name=".syncadapters.MangaFavoritesSyncService"
             android:enabled="true"
+            android:process=":sync"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -91,6 +92,7 @@
         <service
             android:name=".syncadapters.NovelFavoritesSyncService"
             android:enabled="true"
+            android:process=":sync"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -103,6 +105,7 @@
         <service
             android:name=".syncadapters.AnimeFavoritesSyncService"
             android:enabled="true"
+            android:process=":sync"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -115,6 +118,7 @@
         <service
             android:name=".syncadapters.AnimeListSyncService"
             android:enabled="true"
+            android:process=":sync"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -127,6 +131,7 @@
         <service
             android:name=".syncadapters.MangaListSyncService"
             android:enabled="true"
+            android:process=":sync"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
@@ -139,6 +144,7 @@
         <service
             android:name=".syncadapters.NovelListSyncService"
             android:enabled="true"
+            android:process=":sync"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
