@@ -111,6 +111,42 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter_favorites_anime" />
         </service>
+
+        <service
+            android:name=".syncadapters.AnimeListSyncService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter_list_anime" />
+        </service>
+
+        <service
+            android:name=".syncadapters.MangaListSyncService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter_list_manga" />
+        </service>
+
+        <service
+            android:name=".syncadapters.NovelListSyncService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter_list_novel" />
+        </service>
     </application>
 
 </manifest>

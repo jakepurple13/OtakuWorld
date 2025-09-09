@@ -231,6 +231,30 @@ private fun OtakuItemScreen(
                                             )
                                             .build()
                                     )
+
+                                    ContentResolver.setSyncAutomatically(
+                                        account,
+                                        item.otakuItem.listsUri,
+                                        true
+                                    )
+                                    ContentResolver.requestSync(
+                                        SyncRequest.Builder()
+                                            .setDisallowMetered(true)
+                                            .setSyncAdapter(
+                                                account,
+                                                item.otakuItem.listsUri
+                                            )
+                                            .setExtras(
+                                                bundleOf(
+                                                    "type" to item.otakuItem.app.name
+                                                )
+                                            )
+                                            .syncPeriodic(
+                                                1.days.inWholeSeconds,
+                                                1.hours.inWholeSeconds
+                                            )
+                                            .build()
+                                    )
                                 }
                         },
                     ) { Text("Setup Syncs") }
@@ -248,6 +272,7 @@ private fun OtakuItemScreen(
                 }
 
                 //TODO: Bring OptionsSheet over to handle removing, toggling notifying, biometrics, etc
+                // Maybe put OptionsSheet into its own module? Maybe a components module?
                 item.otakuItem.list.forEach { list ->
                     stickyHeader {
                         Card(

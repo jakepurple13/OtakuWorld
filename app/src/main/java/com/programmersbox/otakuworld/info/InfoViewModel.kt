@@ -156,4 +156,10 @@ class OtakuItem(
         App.MangaWorld -> BuildConfig.MangaWorld_FAVORITES_URI
         App.NovelWorld -> BuildConfig.NovelWorld_FAVORITES_URI
     }
+
+    val listsUri = when (app) {
+        App.AnimeWorld -> BuildConfig.AnimeWorld_LISTS_URI
+        App.MangaWorld -> BuildConfig.MangaWorld_LISTS_URI
+        App.NovelWorld -> BuildConfig.NovelWorld_LISTS_URI
+    }
 }
