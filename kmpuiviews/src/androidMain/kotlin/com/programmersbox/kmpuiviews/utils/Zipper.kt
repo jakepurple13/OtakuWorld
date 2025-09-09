@@ -28,7 +28,7 @@ import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.uri
+import io.github.vinceglb.filekit.dialogs.toAndroidUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
@@ -200,7 +200,7 @@ actual open class Zipper(
     protected open fun additionalHandlers(): Map<String, ZipHandler> = emptyMap()
 
     actual suspend fun zipFile(platformFile: PlatformFile) {
-        val f = platformFile.uri
+        val f = platformFile.toAndroidUri("")
         withContext(Dispatchers.IO) {
             val pfd = context
                 .contentResolver
@@ -223,7 +223,7 @@ actual open class Zipper(
         withContext(Dispatchers.IO) {
             val pfd = context
                 .contentResolver
-                .openFileDescriptor(platformFile.uri, "r")!!
+                .openFileDescriptor(platformFile.toAndroidUri(""), "r")!!
             pfd.use {
                 FileInputStream(it.fileDescriptor).use { inStream ->
                     ZipInputStream(inStream).use { zipIs ->

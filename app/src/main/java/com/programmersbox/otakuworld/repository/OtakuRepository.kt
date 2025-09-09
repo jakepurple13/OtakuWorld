@@ -25,5 +25,4 @@ class OtakuRepository(
         .onSuccess { println(it.toString()) }
         .onFailure { it.printStackTrace() }
         .getOrNull() != null
-
 }

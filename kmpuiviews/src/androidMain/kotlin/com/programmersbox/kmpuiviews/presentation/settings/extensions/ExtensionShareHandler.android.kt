@@ -6,7 +6,7 @@ import android.content.Intent.createChooser
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.uri
+import io.github.vinceglb.filekit.dialogs.toAndroidUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -24,7 +24,7 @@ actual class ExtensionShareHandler(
         // Maybe everything pulls into a single zip file?
         // Desktop tool can also list all of the extensions for each app?
         runCatching {
-            val f = platformFile.uri
+            val f = platformFile.toAndroidUri("")
             withContext(Dispatchers.IO) {
                 val pfd = context.contentResolver.openFileDescriptor(f, "w")!!
                 ZipOutputStream(
