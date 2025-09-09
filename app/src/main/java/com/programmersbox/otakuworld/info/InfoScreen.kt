@@ -186,7 +186,7 @@ private fun OtakuItemScreen(
                     item
                         .otakuItem
                         .list
-                        .associate { it to mutableStateOf(false) }
+                        .associateWith { mutableStateOf(false) }
                 }
             }
 

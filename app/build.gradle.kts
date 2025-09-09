@@ -23,6 +23,7 @@ android {
             resValue("string", key, value)
         }
 
+        //TODO: Put these in the setup uris
         dualStringBuildConfig(
             "ACCOUNT_TYPE",
             "com.programmersbox.otaku.world"
