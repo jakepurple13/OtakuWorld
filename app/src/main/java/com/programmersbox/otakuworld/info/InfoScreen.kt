@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -346,12 +347,17 @@ private fun SelectionScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListsScreen(
     item: OtakuItemState,
     onBack: () -> Unit,
 ) {
     BackHandler { onBack() }
+
+    val scope = rememberCoroutineScope()
+    val searchBarState = rememberSearchBarState()
+    val textFieldState = rememberTextFieldState()
 
     val customListsShowing by remember {
         derivedStateOf {
@@ -362,35 +368,67 @@ private fun ListsScreen(
         }
     }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        //TODO: Bring OptionsSheet over to handle removing, toggling notifying, biometrics, etc
-        // Maybe put OptionsSheet into its own module? Maybe a components module?
-        item.otakuItem.list.forEach { list ->
-            stickyHeader {
-                Card(
-                    onClick = { customListsShowing[list]?.value = customListsShowing[list]?.value?.not() ?: false },
-                ) {
-                    ListItem(
-                        headlineContent = { Text(list.item.name) },
-                        trailingContent = { Text(list.list.size.toString()) },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
+    Scaffold(
+        topBar = {
+            DynamicSearchBar(
+                textFieldState = textFieldState,
+                onSearch = { },
+                searchBarState = searchBarState,
+                placeholder = { Text("Search") },
+                leadingIcon = {
+                    IconButton(
+                        onClick = onBack
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                },
+                windowInsets = WindowInsets(0.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                /*searchValues
+                    .take(10)
+                    .forEach {
+                        ListItem(
+                            headlineContent = { Text(it.title) },
+                            modifier = Modifier.clickable {
+                                textFieldState.setTextAndPlaceCursorAtEnd(it.title)
+                                scope.launch { searchBarState.animateToCollapsed() }
+                            }
                         )
-                    )
-                }
+                    }*/
             }
+        },
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { padding ->
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = padding,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            //TODO: Bring OptionsSheet over to handle removing, toggling notifying, biometrics, etc
+            // Maybe put OptionsSheet into its own module? Maybe a components module?
+            item.otakuItem.list.forEach { list ->
+                stickyHeader {
+                    Card(
+                        onClick = { customListsShowing[list]?.value = customListsShowing[list]?.value?.not() ?: false },
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(list.item.name) },
+                            trailingContent = { Text(list.list.size.toString()) },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
 
-            if (customListsShowing[list]?.value == true) {
-                items(list.list) {
-                    M3CoverCard(
-                        imageUrl = it.imageUrl,
-                        name = it.title,
-                    )
+                if (customListsShowing[list]?.value == true) {
+                    items(list.list) {
+                        M3CoverCard(
+                            imageUrl = it.imageUrl,
+                            name = it.title,
+                        )
+                    }
                 }
             }
         }
@@ -449,20 +487,20 @@ private fun FavoritesScreen(
                         onClick = onBack
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
-                windowInsets = WindowInsets(0.dp)
+                windowInsets = WindowInsets(0.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                searchValues.take(10).forEach {
-                    Card(
-                        onClick = {
-                            textFieldState.setTextAndPlaceCursorAtEnd(it.title)
-                            scope.launch { searchBarState.animateToCollapsed() }
-                        }
-                    ) {
+                searchValues
+                    .take(10)
+                    .forEach {
                         ListItem(
                             headlineContent = { Text(it.title) },
+                            modifier = Modifier.clickable {
+                                textFieldState.setTextAndPlaceCursorAtEnd(it.title)
+                                scope.launch { searchBarState.animateToCollapsed() }
+                            }
                         )
                     }
-                }
             }
         },
         contentWindowInsets = WindowInsets(0.dp)
@@ -588,7 +626,6 @@ fun favoritesSheet(
     onToggleNotifyClick: (DbModel) -> Unit,
 ) = optionsKmpSheet {
     val dbModel = it.itemModel
-
 
     if (dbModel.shouldCheckForUpdate) {
         OptionsItem(
