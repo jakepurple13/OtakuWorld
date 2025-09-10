@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,7 +58,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.BuildConfig
+import com.programmersbox.otakuworld.ShareViaQrCode
+import com.programmersbox.otakuworld.optionsKmpSheet
 import com.skydoves.landscapist.glide.GlideImage
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.Duration.Companion.days
@@ -336,9 +341,14 @@ private fun OtakuItemScreen(
 
                     if (showing[source]?.value == true) {
                         items(favorites) {
+                            var favoritesInfo by favoritesSheet(
+                                onRemoveClick = item.otakuItem::deleteFavorite,
+                                onToggleNotifyClick = item.otakuItem::toggleNotify
+                            )
                             M3CoverCard(
                                 imageUrl = it.imageUrl,
                                 name = it.title,
+                                onClick = { favoritesInfo = it }
                             )
                         }
                     }
@@ -426,4 +436,70 @@ object ComposableUtils {
     const val IMAGE_HEIGHT_PX = 480
     val IMAGE_WIDTH @Composable get() = with(LocalDensity.current) { IMAGE_WIDTH_PX.toDp() }
     val IMAGE_HEIGHT @Composable get() = with(LocalDensity.current) { IMAGE_HEIGHT_PX.toDp() }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun favoritesSheet(
+    onRemoveClick: (DbModel) -> Unit,
+    onToggleNotifyClick: (DbModel) -> Unit,
+) = optionsKmpSheet {
+    val dbModel = it.itemModel
+
+
+    if (dbModel.shouldCheckForUpdate) {
+        OptionsItem(
+            title = "Don't check for update",
+            onClick = { onToggleNotifyClick(dbModel) }
+        )
+    } else {
+        OptionsItem(
+            title = "Check for update",
+            onClick = { onToggleNotifyClick(dbModel) }
+        )
+    }
+
+    var showQr by remember { mutableStateOf(false) }
+    if (showQr) {
+        ShareViaQrCode(
+            url = dbModel.url,
+            title = dbModel.title,
+            imageUrl = dbModel.imageUrl,
+            apiService = dbModel.source,
+            onClose = { showQr = false }
+        )
+    }
+
+    OptionsItem(
+        title = "Share via QR Code",
+        onClick = { showQr = true }
+    )
+
+    var showRemoveDialog by remember { mutableStateOf(false) }
+
+    if (showRemoveDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveDialog = false },
+            title = { Text("Remove from favorites") },
+            text = { Text("Are you sure you want to remove this item from favorites?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRemoveClick(dbModel)
+                        showRemoveDialog = false
+                    }
+                ) { Text("Remove") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showRemoveDialog = false }
+                ) { Text("Cancel") }
+            }
+        )
+    }
+
+    OptionsItem(
+        title = "Remove from favorites",
+        onClick = { showRemoveDialog = true }
+    )
 }

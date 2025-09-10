@@ -13,6 +13,7 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.DbModel
+import io.ktor.util.encodeBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -138,7 +139,7 @@ class OtakuFavoritesContentProviderHelper(
      * @param url The URL of the favorite item
      * @return The URI for the specific favorite item
      */
-    fun getItemUri(url: String): Uri = "content://$authority/$FAVORITES_TABLE/$url".toUri()
+    fun getItemUri(url: String): Uri = "content://$authority/$FAVORITES_TABLE/${url.encodeBase64()}".toUri()
 
     /**
      * Retrieves all favorites from the content provider
@@ -224,6 +225,7 @@ class OtakuFavoritesContentProviderHelper(
      */
     fun updateFavorite(context: Context, favorite: DbModel): Int {
         val values = ContentValues().apply {
+            put("url", favorite.url)
             put("title", favorite.title)
             put("description", favorite.description)
             put("imageUrl", favorite.imageUrl)
@@ -233,10 +235,10 @@ class OtakuFavoritesContentProviderHelper(
         }
 
         return context.contentResolver.update(
-            getItemUri(favorite.url),
+            CONTENT_URI,//getItemUri(favorite.url),
             values,
-            null,
-            null
+            "url=?",
+            arrayOf(favorite.url)
         )
     }
 
@@ -248,9 +250,9 @@ class OtakuFavoritesContentProviderHelper(
      */
     fun deleteFavorite(context: Context, url: String): Int {
         return context.contentResolver.delete(
-            getItemUri(url),
-            null,
-            null
+            CONTENT_URI,//getItemUri(url),
+            "url=?",
+            arrayOf(url)
         )
     }
 

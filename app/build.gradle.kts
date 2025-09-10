@@ -96,6 +96,15 @@ dependencies {
     implementation(libs.bundles.compose)
 
     implementation(libs.androidxWindow)
+
+    implementation(libs.qrose)
+
+    implementation(libs.ktorCore)
+    implementation(libs.ktorAuth)
+    implementation(libs.ktorLogging)
+    implementation(libs.ktorSerialization)
+    implementation(libs.ktorJson)
+    implementation(libs.ktorContentNegotiation)
 }
 
 enum class App {

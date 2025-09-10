@@ -68,8 +68,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
-import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.datastore.asState
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
@@ -184,7 +183,9 @@ internal fun DetailActions(
 
     val dropDownDismiss = { showDropDown = false }
 
-    val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()
+    val shouldCheck by koinInject<NewSettingsHandling>()
+        .mediaCheckerSettings
+        .rememberPreference()
 
     DropdownMenu(
         expanded = showDropDown,
@@ -267,7 +268,7 @@ internal fun DetailActions(
             )
         }
 
-        if (isFavorite && shouldCheck) {
+        if (isFavorite && shouldCheck.shouldRun) {
             DropdownMenuItem(
                 onClick = {
                     dropDownDismiss()
@@ -352,7 +353,9 @@ fun DetailBottomBar(
 ) {
     BottomAppBar(
         actions = {
-            val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()
+            val shouldCheck by koinInject<NewSettingsHandling>()
+                .mediaCheckerSettings
+                .rememberPreference()
 
             ToolTipWrapper(
                 info = { Text("Add to List") }
@@ -382,7 +385,7 @@ fun DetailBottomBar(
             }
 
             AnimatedVisibility(
-                visible = isFavorite && shouldCheck,
+                visible = isFavorite && shouldCheck.shouldRun,
                 enter = fadeIn() + slideInHorizontally(),
                 exit = slideOutHorizontally() + fadeOut()
             ) {
@@ -522,9 +525,11 @@ fun DetailFloatingActionButtonMenu(
             text = { Text(stringResource(if (isFavorite) Res.string.removeFromFavorites else Res.string.addToFavorites)) },
         )
 
-        val shouldCheck by koinInject<DataStoreHandling>().shouldCheck.asState()
+        val shouldCheck by koinInject<NewSettingsHandling>()
+            .mediaCheckerSettings
+            .rememberPreference()
 
-        if (isFavorite && shouldCheck) {
+        if (isFavorite && shouldCheck.shouldRun) {
             FloatingActionButtonMenuItem(
                 onClick = notifyAction,
                 icon = {

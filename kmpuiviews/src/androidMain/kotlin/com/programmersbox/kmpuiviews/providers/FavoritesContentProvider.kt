@@ -3,11 +3,13 @@ package com.programmersbox.kmpuiviews.providers
 import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.utils.printLogs
+import io.ktor.util.decodeBase64String
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -28,7 +30,7 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             addURI(AUTHORITY, FAVORITES_TABLE, FAVORITES_ID)
 
             // URI for a specific favorite item
-            addURI(AUTHORITY, "$FAVORITES_TABLE/#", FAVORITES_ITEM_ID)
+            addURI(AUTHORITY, "$FAVORITES_TABLE/*", FAVORITES_ITEM_ID)
             addURI(AUTHORITY, "$FAVORITES_TABLE/$CHAPTER_TABLE/*", CHAPTER_ID)
         }
     }
@@ -183,8 +185,15 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
 
         return when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> {
+                println("Updating FAVORITES_ID")
                 // Update all matching rows
-                val count = db.update("FavoriteItem", 0, values, selection, selectionArgs)
+                val count = db.update(
+                    table = "FavoriteItem",
+                    conflictAlgorithm = SQLiteDatabase.CONFLICT_REPLACE,
+                    values = values,
+                    whereClause = selection,
+                    whereArgs = selectionArgs
+                )
                 if (count > 0) {
                     context.contentResolver.notifyChange(uri, null)
                 }
@@ -192,15 +201,28 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             }
 
             FAVORITES_ITEM_ID -> {
+                println("Updating FAVORITES_ITEM_ID")
                 // Update a specific item by ID
-                val id = uri.lastPathSegment
+                val id = uri.lastPathSegment?.decodeBase64String()
                 val count = if (selection.isNullOrEmpty()) {
-                    db.update("FavoriteItem", 0, values, "url = ?", arrayOf(id))
+                    db.update(
+                        table = "FavoriteItem",
+                        conflictAlgorithm = SQLiteDatabase.CONFLICT_REPLACE,
+                        values = values,
+                        whereClause = "url = ?",
+                        whereArgs = arrayOf(id)
+                    )
                 } else {
                     // Create a new array with the ID appended
                     val newArgs = selectionArgs?.toMutableList() ?: mutableListOf()
                     newArgs.add(id)
-                    db.update("FavoriteItem", 0, values, "$selection AND url = ?", newArgs.toTypedArray())
+                    db.update(
+                        table = "FavoriteItem",
+                        conflictAlgorithm = SQLiteDatabase.CONFLICT_REPLACE,
+                        values = values,
+                        whereClause = "$selection AND url = ?",
+                        whereArgs = newArgs.toTypedArray()
+                    )
                 }
                 if (count > 0) {
                     context.contentResolver.notifyChange(uri, null)
@@ -209,6 +231,7 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             }
 
             CHAPTER_ID -> {
+                println("Updating CHAPTER_ID")
                 // Update all matching rows
                 val count = db.update("ChapterWatched", 0, values, selection, selectionArgs)
                 if (count > 0) {

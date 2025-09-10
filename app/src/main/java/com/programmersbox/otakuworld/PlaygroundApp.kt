@@ -26,6 +26,7 @@ class PlaygroundApp : Application() {
                     singleOf(::OtakuProvider)
                     singleOf(::OtakuRepository)
                     singleOf(::AppInfo)
+                    singleOf(::QrCodeRepository)
                 }
             )
         }

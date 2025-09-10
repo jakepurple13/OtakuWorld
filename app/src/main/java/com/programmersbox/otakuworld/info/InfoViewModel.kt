@@ -38,16 +38,19 @@ class InfoViewModel(
     val animeWorld = OtakuItem(
         app = App.AnimeWorld,
         appProvider = appInfo.provider,
+        appInfo = appInfo,
         otakuProvider = otakuProvider
     )
     val mangaWorld = OtakuItem(
         app = App.MangaWorld,
         appProvider = appInfo.provider,
+        appInfo = appInfo,
         otakuProvider = otakuProvider
     )
     val novelWorld = OtakuItem(
         app = App.NovelWorld,
         appProvider = appInfo.provider,
+        appInfo = appInfo,
         otakuProvider = otakuProvider
     )
 
@@ -136,6 +139,7 @@ data class AppCheck(
 class OtakuItem(
     val app: App,
     val appProvider: Provider,
+    private val appInfo: AppInfo,
     otakuProvider: OtakuProvider,
 ) {
     val favorites = mutableStateListOf<DbModel>()
@@ -161,5 +165,31 @@ class OtakuItem(
         App.AnimeWorld -> BuildConfig.AnimeWorld_LISTS_URI
         App.MangaWorld -> BuildConfig.MangaWorld_LISTS_URI
         App.NovelWorld -> BuildConfig.NovelWorld_LISTS_URI
+    }
+
+    private val favoritesHelper by lazy {
+        otakuProvider.favoritesBuilder {
+            appType = app
+            provider = appProvider
+        }
+    }
+
+    private val listsHelper by lazy {
+        otakuProvider.listsBuilder {
+            appType = app
+            provider = appProvider
+        }
+    }
+
+    fun deleteFavorite(dbModel: DbModel) {
+        favoritesHelper.deleteFavorite(appInfo.context, dbModel.url)
+    }
+
+    fun toggleNotify(dbModel: DbModel) {
+        val updated = favoritesHelper.updateFavorite(
+            context = appInfo.context,
+            favorite = dbModel.copy(shouldCheckForUpdate = !dbModel.shouldCheckForUpdate)
+        )
+        println("Row updated: $updated")
     }
 }
