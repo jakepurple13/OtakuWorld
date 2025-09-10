@@ -6,6 +6,7 @@ import android.content.ContentProviderClient
 import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
+import com.programmersbox.otakuworld.OtakuFavoritesContentProviderHelper
 
 class FavoritesSyncAdapter(
     context: Context,
@@ -17,8 +18,11 @@ class FavoritesSyncAdapter(
         provider: ContentProviderClient?,
         syncResult: SyncResult?,
     ) {
+        authority ?: return
         println(account)
         println(authority)
+        val favorites = OtakuFavoritesContentProviderHelper(authority)
+            .getAllFavoritesAsList(context)
         //TODO: Might need to make multiple of these. Also have to figure out the names for the sync items
         runCatching {
             val keySet = extras?.keySet()
