@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -27,6 +28,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.NotInterested
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -44,6 +46,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarScrollBehavior
@@ -66,6 +69,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -76,11 +80,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entry
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.otakuworld.App
+import com.programmersbox.otakuworld.Navigation2
 import com.programmersbox.otakuworld.ShareViaQrCode
+import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -182,6 +192,173 @@ fun InfoScreen(viewModel: InfoViewModel = koinViewModel()) {
 }
 
 @Composable
+fun InfoScreen2(
+    viewModel: InfoViewModel = koinViewModel(),
+) {
+    val backStack = remember { TopLevelBackStack<NavKey>(SelectionScreen(App.MangaWorld)) }
+
+    LaunchedEffect(Unit) {
+        viewModel.checkForApps()
+    }
+
+    //TODO: Need to make sure this changes on backstack changes
+    var state by remember(viewModel.hasApps) { mutableIntStateOf(0) }
+
+    val tabsState by remember {
+        derivedStateOf {
+            listOfNotNull(
+                OtakuItemState(
+                    "MangaWorld",
+                    viewModel.mangaWorld
+                ),
+                OtakuItemState(
+                    "AnimeWorld",
+                    viewModel.animeWorld
+                ),
+                OtakuItemState(
+                    "NovelWorld",
+                    viewModel.novelWorld
+                ),
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { backStack.topLevelKey }
+            .collect {
+                println(it)
+                println(state)
+
+                state = when (it) {
+                    is SelectionScreen -> it.app
+                    is FavScreen -> it.app
+                    is ListScreen -> it.app
+                    else -> App.MangaWorld
+                }
+                    .ordinal
+                    .also { println(it) }
+
+                println(state)
+            }
+    }
+
+    Scaffold(
+        topBar = {
+            if (viewModel.hasApps.let { it.hasMangaWorld || it.hasAnimeWorld || it.hasNovelWorld }) {
+                PrimaryTabRow(
+                    selectedTabIndex = state,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                ) {
+                    tabsState.forEachIndexed { index, title ->
+                        Tab(
+                            selected = state == index,
+                            onClick = {
+                                state = index
+                                backStack.addTopLevel(
+                                    when (index) {
+                                        0 -> SelectionScreen(App.MangaWorld)
+                                        1 -> SelectionScreen(App.AnimeWorld)
+                                        2 -> SelectionScreen(App.NovelWorld)
+                                        else -> SelectionScreen(App.MangaWorld)
+                                    }
+                                )
+                            },
+                            text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                            icon = if (
+                                when (index) {
+                                    0 -> !viewModel.hasApps.hasMangaWorld
+                                    1 -> !viewModel.hasApps.hasAnimeWorld
+                                    2 -> !viewModel.hasApps.hasNovelWorld
+                                    else -> false
+                                }
+                            ) {
+                                { Icon(Icons.Default.NotInterested, null) }
+                            } else {
+                                null
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    ) { padding ->
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(padding)
+        ) {
+            Navigation2(
+                backStack = backStack.backStack,
+                onBack = { backStack.removeLast() },
+            ) {
+                entry<SelectionScreen> {
+                    PermissionGetter(
+                        item = tabsState[it.app.ordinal],
+                    ) {
+                        SelectionScreen(
+                            item = when (it.app) {
+                                App.MangaWorld -> tabsState[0]
+                                App.AnimeWorld -> tabsState[1]
+                                App.NovelWorld -> tabsState[2]
+                            },
+                            onShowingType = { showing ->
+                                backStack.add(
+                                    when (showing) {
+                                        ShowingType.Selection -> SelectionScreen(it.app)
+                                        ShowingType.Favorites -> FavScreen(it.app)
+                                        ShowingType.Lists -> ListScreen(it.app)
+                                    }
+                                )
+                            },
+                        )
+                    }
+                }
+
+                entry<FavScreen> {
+                    PermissionGetter(
+                        item = tabsState[it.app.ordinal],
+                    ) {
+                        FavoritesScreen(
+                            item = when (it.app) {
+                                App.MangaWorld -> tabsState[0]
+                                App.AnimeWorld -> tabsState[1]
+                                App.NovelWorld -> tabsState[2]
+                            },
+                            onBack = {}
+                        )
+                    }
+                }
+
+                entry<ListScreen> {
+                    PermissionGetter(
+                        item = tabsState[it.app.ordinal],
+                    ) {
+                        ListsScreen(
+                            item = when (it.app) {
+                                App.MangaWorld -> tabsState[0]
+                                App.AnimeWorld -> tabsState[1]
+                                App.NovelWorld -> tabsState[2]
+                            },
+                            onBack = {}
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Serializable
+data class SelectionScreen(val app: App) : NavKey
+
+@Serializable
+data class FavScreen(val app: App) : NavKey
+
+@Serializable
+data class ListScreen(val app: App) : NavKey
+
+@Composable
 private fun OtakuItemScreen(
     viewModel: InfoViewModel,
     item: OtakuItemState,
@@ -267,7 +444,38 @@ private fun OtakuItemScreen(
                     ) { Text("Setup Syncs") }
              */
 
-            ShowingSelectionScreen(item)
+            //ShowingSelectionScreen(item)
+        } else {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Button(
+                    onClick = {
+                        println(item.otakuItem.favoritePermission)
+                        launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission))
+                    },
+                ) { Text("Allow Access to favorites ${item.appName}") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionGetter(
+    item: OtakuItemState,
+    onPermissionGranted: @Composable () -> Unit,
+) {
+    var hasFavoritePermission by rememberSaveable { mutableStateOf(false) }
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { hasFavoritePermission = it.all { it.value } }
+
+    SideEffect { launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission)) }
+
+    Crossfade(hasFavoritePermission) { target ->
+        if (target) {
+            onPermissionGranted()
         } else {
             Box(
                 contentAlignment = Alignment.Center,

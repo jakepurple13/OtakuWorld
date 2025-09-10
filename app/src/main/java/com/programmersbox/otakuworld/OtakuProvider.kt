@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlin.properties.Delegates
 
 private const val favoritesUri = "provider.favorites"
@@ -34,6 +35,7 @@ private const val fullSuffix = ""
 private const val favoritePermissions = "READ_WRITE_FAVORITES"
 private const val listPermissions = "READ_WRITE_LISTS"
 
+@Serializable
 enum class App {
     MangaWorld,
     AnimeWorld,

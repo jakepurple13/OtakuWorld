@@ -20,9 +20,17 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
@@ -31,6 +39,7 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.otakuworld.info.InfoScreen
+import com.programmersbox.otakuworld.info.InfoScreen2
 import kotlinx.serialization.Serializable
 
 class MainActivity : AppCompatActivity() {
@@ -56,7 +65,6 @@ class MainActivity : AppCompatActivity() {
         // Probably also want to show some of the app info? Version code and name?
         // Maybe there's even reverse support? The apps try and detect if OtakuWorld is installed and logged in?
         // Maybe this app even handles firebase? And the OtakuWorld apps are purely local?
-        // Maybe use Junie to create a sync strategy?
 
         setContent {
             val darkTheme = isSystemInDarkTheme()
@@ -71,48 +79,148 @@ class MainActivity : AppCompatActivity() {
                 colorScheme = colorScheme,
                 motionScheme = MotionScheme.expressive()
             ) {
-
-                val backStack = rememberNavBackStack(Info)
-
-                NavDisplay(
-                    backStack = backStack,
-                    //onBack = { backStack.removeLastOrNull() },
-                    onBack = { count ->
-                        repeat(count) {
-                            if (backStack.isNotEmpty()) {
-                                backStack.removeLastOrNull()
-                            }
-                        }
-                    },
-                    entryDecorators = listOf(
-                        rememberSceneSetupNavEntryDecorator(),
-                        rememberSavedStateNavEntryDecorator(),
-                        rememberViewModelStoreNavEntryDecorator()
-                    ),
-                    entryProvider = entryProvider<NavKey> {
-                        entry<Info> { InfoScreen() }
-                    },
-                    transitionSpec = {
-                        // Slide in from right when navigating forward
-                        slideInHorizontally(initialOffsetX = { it }) togetherWith
-                                slideOutHorizontally(targetOffsetX = { -it })
-                    },
-                    popTransitionSpec = {
-                        // Slide in from left when navigating back
-                        slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                                slideOutHorizontally(targetOffsetX = { it })
-                    },
-                    predictivePopTransitionSpec = {
-                        // Slide in from left when navigating back
-                        slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                                slideOutHorizontally(targetOffsetX = { it })
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                //Navigation()
+                InfoScreen2()
             }
         }
     }
 }
 
+@Composable
+fun Navigation() {
+    val backStack = rememberNavBackStack(Info)
+
+    NavDisplay(
+        backStack = backStack,
+        //onBack = { backStack.removeLastOrNull() },
+        onBack = { count ->
+            repeat(count) {
+                if (backStack.isNotEmpty()) {
+                    backStack.removeLastOrNull()
+                }
+            }
+        },
+        entryDecorators = listOf(
+            rememberSceneSetupNavEntryDecorator(),
+            rememberSavedStateNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider<NavKey> {
+            entry<Info> { InfoScreen() }
+        },
+        transitionSpec = {
+            // Slide in from right when navigating forward
+            slideInHorizontally(initialOffsetX = { it }) togetherWith
+                    slideOutHorizontally(targetOffsetX = { -it })
+        },
+        popTransitionSpec = {
+            // Slide in from left when navigating back
+            slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                    slideOutHorizontally(targetOffsetX = { it })
+        },
+        predictivePopTransitionSpec = {
+            // Slide in from left when navigating back
+            slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                    slideOutHorizontally(targetOffsetX = { it })
+        },
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+@Composable
+fun Navigation2(
+    backStack: NavBackStack,
+    onBack: (Int) -> Unit,
+    entries: EntryProviderBuilder<NavKey>.() -> Unit,
+) {
+    NavDisplay(
+        backStack = backStack,
+        //onBack = { backStack.removeLastOrNull() },
+        onBack = onBack,
+        entryDecorators = listOf(
+            rememberSceneSetupNavEntryDecorator(),
+            rememberSavedStateNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider<NavKey> { entries() },
+        transitionSpec = {
+            // Slide in from right when navigating forward
+            slideInHorizontally(initialOffsetX = { it }) togetherWith
+                    slideOutHorizontally(targetOffsetX = { -it })
+        },
+        popTransitionSpec = {
+            // Slide in from left when navigating back
+            slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                    slideOutHorizontally(targetOffsetX = { it })
+        },
+        predictivePopTransitionSpec = {
+            // Slide in from left when navigating back
+            slideInHorizontally(initialOffsetX = { -it }) togetherWith
+                    slideOutHorizontally(targetOffsetX = { it })
+        },
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
 @Serializable
 data object Info : NavKey
+
+@Serializable
+data object Anime : NavKey
+
+@Serializable
+data object Manga : NavKey
+
+@Serializable
+data object Novel : NavKey
+
+class TopLevelBackStack<T : Any>(startKey: T) {
+
+    // Maintain a stack for each top level route
+    private var topLevelStacks: LinkedHashMap<T, SnapshotStateList<T>> = linkedMapOf(
+        startKey to mutableStateListOf(startKey)
+    )
+
+    // Expose the current top level route for consumers
+    var topLevelKey by mutableStateOf(startKey)
+        private set
+
+    // Expose the back stack so it can be rendered by the NavDisplay
+    val backStack = mutableStateListOf(startKey)
+
+    private fun updateBackStack() =
+        backStack.apply {
+            clear()
+            addAll(topLevelStacks.flatMap { it.value })
+        }
+
+    fun addTopLevel(key: T) {
+
+        // If the top level doesn't exist, add it
+        if (topLevelStacks[key] == null) {
+            topLevelStacks.put(key, mutableStateListOf(key))
+        } else {
+            // Otherwise just move it to the end of the stacks
+            topLevelStacks.apply {
+                remove(key)?.let {
+                    put(key, it)
+                }
+            }
+        }
+        topLevelKey = key
+        updateBackStack()
+    }
+
+    fun add(key: T) {
+        topLevelStacks[topLevelKey]?.add(key)
+        updateBackStack()
+    }
+
+    fun removeLast() {
+        val removedKey = topLevelStacks[topLevelKey]?.removeLastOrNull()
+        // If the removed key was a top level key, remove the associated top level stack
+        topLevelStacks.remove(removedKey)
+        topLevelKey = topLevelStacks.keys.last()
+        updateBackStack()
+    }
+}
