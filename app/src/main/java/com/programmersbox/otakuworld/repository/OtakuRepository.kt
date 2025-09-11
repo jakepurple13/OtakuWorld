@@ -1,6 +1,7 @@
 package com.programmersbox.otakuworld.repository
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.OtakuProvider
@@ -9,20 +10,23 @@ class OtakuRepository(
     private val context: Context,
     private val appInfo: AppInfo,
 ) {
-    fun hasAnimeWorld(): Boolean = hasApp(App.AnimeWorld)
-    fun hasMangaWorld(): Boolean = hasApp(App.MangaWorld)
-    fun hasNovelWorld(): Boolean = hasApp(App.NovelWorld)
+    fun hasAnimeWorld(): OtakuInfo? = hasApp(App.AnimeWorld)
+    fun hasMangaWorld(): OtakuInfo? = hasApp(App.MangaWorld)
+    fun hasNovelWorld(): OtakuInfo? = hasApp(App.NovelWorld)
 
     private fun hasApp(app: App) = runCatching {
-        context.packageManager.getPackageInfo(
-            OtakuProvider.OtakuBuilder()
-                .setPackage(app)
-                .setProvider(appInfo.provider)
-                .build(),
-            0
-        )
+        val packageName = OtakuProvider.OtakuBuilder()
+            .setPackage(app)
+            .setProvider(appInfo.provider)
+            .build()
+        context.packageManager.getApplicationIcon(packageName)
     }
         .onSuccess { println(it.toString()) }
         .onFailure { it.printStackTrace() }
-        .getOrNull() != null
+        .mapCatching { OtakuInfo(it) }
+        .getOrNull()
 }
+
+data class OtakuInfo(
+    val drawable: Drawable,
+)

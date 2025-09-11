@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
@@ -129,7 +128,7 @@ fun Navigation() {
 
 @Composable
 fun Navigation2(
-    backStack: NavBackStack,
+    backStack: SnapshotStateList<NavKey>,
     onBack: (Int) -> Unit,
     entries: EntryProviderBuilder<NavKey>.() -> Unit,
 ) {

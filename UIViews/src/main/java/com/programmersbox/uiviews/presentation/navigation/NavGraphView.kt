@@ -13,13 +13,13 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.navEntryDecorator
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
@@ -88,7 +88,7 @@ fun NavigationGraph(
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun Nav3(
-    backStack: NavBackStack,
+    backStack: SnapshotStateList<NavKey>,
     navigationActions: NavigationActions,
     genericInfo: GenericInfo,
     windowSize: WindowSizeClass,

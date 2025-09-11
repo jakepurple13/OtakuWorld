@@ -14,6 +14,7 @@ import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.OtakuProvider
 import com.programmersbox.otakuworld.Provider
+import com.programmersbox.otakuworld.repository.OtakuInfo
 import com.programmersbox.otakuworld.repository.OtakuRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -29,9 +30,9 @@ class InfoViewModel(
 ) : ViewModel() {
     var hasApps by mutableStateOf(
         AppCheck(
-            hasAnimeWorld = false,
-            hasMangaWorld = false,
-            hasNovelWorld = false
+            hasAnimeWorld = null,
+            hasMangaWorld = null,
+            hasNovelWorld = null
         )
     )
 
@@ -58,21 +59,21 @@ class InfoViewModel(
         val appCheck = snapshotFlow { hasApps }
 
         setupApp(
-            flow = appCheck.filter { it.hasAnimeWorld },
+            flow = appCheck.filter { it.hasAnimeWorld != null },
             app = App.AnimeWorld,
             otakuItem = animeWorld
         )
 
 
         setupApp(
-            flow = appCheck.filter { it.hasMangaWorld },
+            flow = appCheck.filter { it.hasMangaWorld != null },
             app = App.MangaWorld,
             otakuItem = mangaWorld
         )
 
 
         setupApp(
-            flow = appCheck.filter { it.hasNovelWorld },
+            flow = appCheck.filter { it.hasNovelWorld != null },
             app = App.NovelWorld,
             otakuItem = novelWorld
         )
@@ -131,9 +132,9 @@ class InfoViewModel(
 }
 
 data class AppCheck(
-    val hasAnimeWorld: Boolean,
-    val hasMangaWorld: Boolean,
-    val hasNovelWorld: Boolean,
+    val hasAnimeWorld: OtakuInfo?,
+    val hasMangaWorld: OtakuInfo?,
+    val hasNovelWorld: OtakuInfo?,
 )
 
 class OtakuItem(

@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -82,6 +83,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.Navigation2
@@ -108,15 +110,15 @@ fun InfoScreen(viewModel: InfoViewModel = koinViewModel()) {
                 OtakuItemState(
                     "MangaWorld",
                     viewModel.mangaWorld
-                ).takeIf { viewModel.hasApps.hasMangaWorld },
+                ).takeIf { viewModel.hasApps.hasMangaWorld != null },
                 OtakuItemState(
                     "AnimeWorld",
                     viewModel.animeWorld
-                ).takeIf { viewModel.hasApps.hasAnimeWorld },
+                ).takeIf { viewModel.hasApps.hasAnimeWorld != null },
                 OtakuItemState(
                     "NovelWorld",
                     viewModel.novelWorld
-                ).takeIf { viewModel.hasApps.hasNovelWorld },
+                ).takeIf { viewModel.hasApps.hasNovelWorld != null },
             )
         }
     }
@@ -154,7 +156,7 @@ fun InfoScreen(viewModel: InfoViewModel = koinViewModel()) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(padding)
         ) {
-            if (viewModel.hasApps.let { it.hasMangaWorld || it.hasAnimeWorld || it.hasNovelWorld }) {
+            if (viewModel.hasApps.let { it.hasMangaWorld != null || it.hasAnimeWorld != null || it.hasNovelWorld != null }) {
                 PrimaryScrollableTabRow(
                     selectedTabIndex = state,
                     scrollState = scrollState,
@@ -244,7 +246,7 @@ fun InfoScreen2(
 
     Scaffold(
         topBar = {
-            if (viewModel.hasApps.let { it.hasMangaWorld || it.hasAnimeWorld || it.hasNovelWorld }) {
+            if (viewModel.hasApps.let { it.hasMangaWorld != null || it.hasAnimeWorld != null || it.hasNovelWorld != null }) {
                 PrimaryTabRow(
                     selectedTabIndex = state,
                     modifier = Modifier
@@ -266,17 +268,18 @@ fun InfoScreen2(
                                 )
                             },
                             text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                            icon = if (
+                            icon = {
                                 when (index) {
-                                    0 -> !viewModel.hasApps.hasMangaWorld
-                                    1 -> !viewModel.hasApps.hasAnimeWorld
-                                    2 -> !viewModel.hasApps.hasNovelWorld
-                                    else -> false
-                                }
-                            ) {
-                                { Icon(Icons.Default.NotInterested, null) }
-                            } else {
-                                null
+                                    0 -> viewModel.hasApps.hasMangaWorld
+                                    1 -> viewModel.hasApps.hasAnimeWorld
+                                    2 -> viewModel.hasApps.hasNovelWorld
+                                    else -> null
+                                }?.let {
+                                    Image(
+                                        painter = rememberDrawablePainter(it.drawable),
+                                        contentDescription = null
+                                    )
+                                } ?: Icon(Icons.Default.NotInterested, null)
                             }
                         )
                     }

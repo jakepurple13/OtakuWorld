@@ -19,8 +19,8 @@ knotify = "0.3.0"
 kotlinxDatetime = "0.7.1"
 
 javase = "3.5.3"
-kotlin = "2.2.10"
-kspVersion = "2.2.10-2.0.2"
+kotlin = "2.2.20"
+kspVersion = "2.2.20-2.0.2"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
@@ -55,12 +55,12 @@ scanner = "0.4.0"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
 urlencoderLib = "1.6.0"
-workVersion = "2.10.3"
+workVersion = "2.10.4"
 xemanticAiToolSchema = "1.1.2"
 ziplineVersion = "1.1.0"
 protobufVersion = "4.26.1"
 sketchVersion = "3.3.2"
-activity = "1.12.0-alpha07"
+activity = "1.12.0-alpha08"
 composeVersion = "1.8.0-alpha01"
 compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
@@ -125,10 +125,10 @@ buildKonfig = "0.17.1"
 compottie = "2.0.0"
 
 lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
-navigationevent = "1.0.0-alpha07"
+navigationevent = "1.0.0-alpha08"
 
-navigation3 = "1.0.0-alpha08"
-nav3Material = "1.0.0-alpha01"
+navigation3 = "1.0.0-alpha09"
+nav3Material = "1.0.0-alpha02"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
@@ -210,7 +210,7 @@ navigation-safe-args-gradle-plugin = { module = "androidx.navigation:navigation-
 pagecurl = { module = "io.github.oleksandrbalan:pagecurl", version.ref = "pagecurl" }
 paging-compose-common = { module = "app.cash.paging:paging-compose-common", version.ref = "pagingComposeCommon" }
 palette = "androidx.palette:palette-ktx:1.0.0"
-gson = "com.google.code.gson:gson:2.13.1"
+gson = "com.google.code.gson:gson:2.13.2"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 
 #Compose
