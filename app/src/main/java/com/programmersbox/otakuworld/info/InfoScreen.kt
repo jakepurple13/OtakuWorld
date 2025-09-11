@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -36,16 +35,19 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExpandedDockedSearchBar
 import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -193,6 +195,7 @@ fun InfoScreen(viewModel: InfoViewModel = koinViewModel()) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoScreen2(
     viewModel: InfoViewModel = koinViewModel(),
@@ -246,42 +249,55 @@ fun InfoScreen2(
 
     Scaffold(
         topBar = {
-            if (viewModel.hasApps.let { it.hasMangaWorld != null || it.hasAnimeWorld != null || it.hasNovelWorld != null }) {
-                PrimaryTabRow(
-                    selectedTabIndex = state,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                ) {
-                    tabsState.forEachIndexed { index, title ->
-                        Tab(
-                            selected = state == index,
-                            onClick = {
-                                state = index
-                                backStack.addTopLevel(
-                                    when (index) {
-                                        0 -> SelectionScreen(App.MangaWorld)
-                                        1 -> SelectionScreen(App.AnimeWorld)
-                                        2 -> SelectionScreen(App.NovelWorld)
-                                        else -> SelectionScreen(App.MangaWorld)
-                                    }
-                                )
-                            },
-                            text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                            icon = {
-                                when (index) {
-                                    0 -> viewModel.hasApps.hasMangaWorld
-                                    1 -> viewModel.hasApps.hasAnimeWorld
-                                    2 -> viewModel.hasApps.hasNovelWorld
-                                    else -> null
-                                }?.let {
-                                    Image(
-                                        painter = rememberDrawablePainter(it.drawable),
-                                        contentDescription = null
+            Column {
+                TopAppBar(
+                    title = { Text("OtakuWorld") },
+                    actions = {
+                        IconButton(
+                            onClick = viewModel::checkForApps
+                        ) { Icon(Icons.Default.Refresh, null) }
+
+                        IconButton(
+                            onClick = {}
+                        ) { Icon(Icons.Default.Settings, null) }
+                    }
+                )
+
+                if (viewModel.hasApps.let { it.hasMangaWorld != null || it.hasAnimeWorld != null || it.hasNovelWorld != null }) {
+                    PrimaryTabRow(
+                        selectedTabIndex = state,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        tabsState.forEachIndexed { index, title ->
+                            Tab(
+                                selected = state == index,
+                                onClick = {
+                                    state = index
+                                    backStack.addTopLevel(
+                                        when (index) {
+                                            0 -> SelectionScreen(App.MangaWorld)
+                                            1 -> SelectionScreen(App.AnimeWorld)
+                                            2 -> SelectionScreen(App.NovelWorld)
+                                            else -> SelectionScreen(App.MangaWorld)
+                                        }
                                     )
-                                } ?: Icon(Icons.Default.NotInterested, null)
-                            }
-                        )
+                                },
+                                text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                                icon = {
+                                    when (index) {
+                                        0 -> viewModel.hasApps.hasMangaWorld
+                                        1 -> viewModel.hasApps.hasAnimeWorld
+                                        2 -> viewModel.hasApps.hasNovelWorld
+                                        else -> null
+                                    }?.let {
+                                        Image(
+                                            painter = rememberDrawablePainter(it.drawable),
+                                            contentDescription = null
+                                        )
+                                    } ?: Icon(Icons.Default.NotInterested, null)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -296,56 +312,44 @@ fun InfoScreen2(
                 onBack = { backStack.removeLast() },
             ) {
                 entry<SelectionScreen> {
-                    PermissionGetter(
-                        item = tabsState[it.app.ordinal],
-                    ) {
-                        SelectionScreen(
-                            item = when (it.app) {
-                                App.MangaWorld -> tabsState[0]
-                                App.AnimeWorld -> tabsState[1]
-                                App.NovelWorld -> tabsState[2]
-                            },
-                            onShowingType = { showing ->
-                                backStack.add(
-                                    when (showing) {
-                                        ShowingType.Selection -> SelectionScreen(it.app)
-                                        ShowingType.Favorites -> FavScreen(it.app)
-                                        ShowingType.Lists -> ListScreen(it.app)
-                                    }
-                                )
-                            },
-                        )
-                    }
+                    SelectionScreen(
+                        item = when (it.app) {
+                            App.MangaWorld -> tabsState[0]
+                            App.AnimeWorld -> tabsState[1]
+                            App.NovelWorld -> tabsState[2]
+                        },
+                        onShowingType = { showing ->
+                            backStack.add(
+                                when (showing) {
+                                    ShowingType.Selection -> SelectionScreen(it.app)
+                                    ShowingType.Favorites -> FavScreen(it.app)
+                                    ShowingType.Lists -> ListScreen(it.app)
+                                }
+                            )
+                        },
+                    )
                 }
 
                 entry<FavScreen> {
-                    PermissionGetter(
-                        item = tabsState[it.app.ordinal],
-                    ) {
-                        FavoritesScreen(
-                            item = when (it.app) {
-                                App.MangaWorld -> tabsState[0]
-                                App.AnimeWorld -> tabsState[1]
-                                App.NovelWorld -> tabsState[2]
-                            },
-                            onBack = {}
-                        )
-                    }
+                    FavoritesScreen(
+                        item = when (it.app) {
+                            App.MangaWorld -> tabsState[0]
+                            App.AnimeWorld -> tabsState[1]
+                            App.NovelWorld -> tabsState[2]
+                        },
+                        onBack = {}
+                    )
                 }
 
                 entry<ListScreen> {
-                    PermissionGetter(
-                        item = tabsState[it.app.ordinal],
-                    ) {
-                        ListsScreen(
-                            item = when (it.app) {
-                                App.MangaWorld -> tabsState[0]
-                                App.AnimeWorld -> tabsState[1]
-                                App.NovelWorld -> tabsState[2]
-                            },
-                            onBack = {}
-                        )
-                    }
+                    ListsScreen(
+                        item = when (it.app) {
+                            App.MangaWorld -> tabsState[0]
+                            App.AnimeWorld -> tabsState[1]
+                            App.NovelWorld -> tabsState[2]
+                        },
+                        onBack = {}
+                    )
                 }
             }
         }
@@ -464,17 +468,18 @@ private fun OtakuItemScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PermissionGetter(
+    permission: String,
     item: OtakuItemState,
+    type: String,
     onPermissionGranted: @Composable () -> Unit,
 ) {
     var hasFavoritePermission by rememberSaveable { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { hasFavoritePermission = it.all { it.value } }
-
-    SideEffect { launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission)) }
+        ActivityResultContracts.RequestPermission()
+    ) { hasFavoritePermission = it }
 
     Crossfade(hasFavoritePermission) { target ->
         if (target) {
@@ -482,14 +487,12 @@ private fun PermissionGetter(
         } else {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Button(
-                    onClick = {
-                        println(item.otakuItem.favoritePermission)
-                        launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission))
-                    },
-                ) { Text("Allow Access to favorites ${item.appName}") }
+                OutlinedButton(
+                    onClick = { launcher.launch(permission) },
+                    shapes = ButtonDefaults.shapes()
+                ) { Text("Allow Access to $type ${item.appName}") }
             }
         }
     }
@@ -530,30 +533,42 @@ private fun SelectionScreen(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        Card(
-            onClick = { onShowingType(ShowingType.Lists) }
+        PermissionGetter(
+            permission = item.otakuItem.listsPermission,
+            item = item,
+            type = "lists"
         ) {
-            ListItem(
-                headlineContent = { Text("Lists") },
-                trailingContent = { Text(item.otakuItem.list.size.toString()) },
-                supportingContent = { HorizontalDivider() },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
+            Card(
+                onClick = { onShowingType(ShowingType.Lists) }
+            ) {
+                ListItem(
+                    headlineContent = { Text("Lists") },
+                    trailingContent = { Text(item.otakuItem.list.size.toString()) },
+                    supportingContent = { HorizontalDivider() },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    )
                 )
-            )
+            }
         }
 
-        Card(
-            onClick = { onShowingType(ShowingType.Favorites) }
+        PermissionGetter(
+            permission = item.otakuItem.favoritePermission,
+            item = item,
+            type = "favorites"
         ) {
-            ListItem(
-                headlineContent = { Text("Favorites") },
-                trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
-                supportingContent = { HorizontalDivider() },
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Transparent
+            Card(
+                onClick = { onShowingType(ShowingType.Favorites) }
+            ) {
+                ListItem(
+                    headlineContent = { Text("Favorites") },
+                    trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
+                    supportingContent = { HorizontalDivider() },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    )
                 )
-            )
+            }
         }
     }
 }
