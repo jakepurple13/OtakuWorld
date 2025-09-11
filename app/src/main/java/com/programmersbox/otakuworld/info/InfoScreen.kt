@@ -206,8 +206,7 @@ fun InfoScreen2(
         viewModel.checkForApps()
     }
 
-    //TODO: Need to make sure this changes on backstack changes
-    var state by remember(viewModel.hasApps) { mutableIntStateOf(0) }
+    var state by remember { mutableIntStateOf(0) }
 
     val tabsState by remember {
         derivedStateOf {
