@@ -3,12 +3,16 @@ package com.programmersbox.otakuworld.syncadapters
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import org.koin.android.ext.android.get
 
 class MangaFavoritesSyncService : Service() {
     override fun onCreate() {
         super.onCreate()
         synchronized(syncAdapterLock) {
-            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(applicationContext)
+            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(
+                context = applicationContext,
+                serverHandler = get()
+            )
         }
     }
 
@@ -26,7 +30,10 @@ class NovelFavoritesSyncService : Service() {
     override fun onCreate() {
         super.onCreate()
         synchronized(syncAdapterLock) {
-            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(applicationContext)
+            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(
+                context = applicationContext,
+                serverHandler = get()
+            )
         }
     }
 
@@ -44,7 +51,10 @@ class AnimeFavoritesSyncService : Service() {
     override fun onCreate() {
         super.onCreate()
         synchronized(syncAdapterLock) {
-            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(applicationContext)
+            syncAdapter = syncAdapter ?: FavoritesSyncAdapter(
+                context = applicationContext,
+                serverHandler = get(),
+            )
         }
     }
 

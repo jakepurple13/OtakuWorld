@@ -7,14 +7,14 @@ import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
 import com.programmersbox.otakuworld.OtakuFavoritesContentProviderHelper
-import com.programmersbox.otakuworld.repository.MockServerHandler
+import com.programmersbox.otakuworld.repository.ServerHandler
 import kotlinx.coroutines.runBlocking
 
 class FavoritesSyncAdapter(
     context: Context,
+    private val serverHandler: ServerHandler,
 ) : AbstractThreadedSyncAdapter(context, true, false) {
     //TODO: Change this!
-    private val serverHandler = MockServerHandler()
     override fun onPerformSync(
         account: Account?,
         extras: Bundle?,

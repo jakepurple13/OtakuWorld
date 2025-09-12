@@ -6,9 +6,11 @@ import android.content.ContentProviderClient
 import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
+import com.programmersbox.otakuworld.repository.ServerHandler
 
 class ListSyncAdapter(
     context: Context,
+    private val serverHandler: ServerHandler,
 ) : AbstractThreadedSyncAdapter(context, true, false) {
     override fun onPerformSync(
         account: Account?,

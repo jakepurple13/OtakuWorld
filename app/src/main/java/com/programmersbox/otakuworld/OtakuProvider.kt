@@ -376,6 +376,17 @@ class OtakuCustomListContentProviderHelper(
                 }
         }
 
+    fun getAllCustomLists(context: Context) = getAllLists(context)
+        ?.let { cursorToCustomListItems(it) }
+        ?.map { list ->
+            CustomList(
+                item = list,
+                list = getItemsForList(context, list.uuid)
+                    ?.let { cursorToCustomListInfos(it) }
+                    ?: emptyList()
+            )
+        }
+
     fun getListByUuid(context: Context, uuid: String): Cursor? =
         context.contentResolver.query(getListUri(uuid), null, null, null, null)
 

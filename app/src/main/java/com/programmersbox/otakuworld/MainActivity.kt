@@ -109,7 +109,6 @@ fun Navigation(
 ) {
     NavDisplay(
         backStack = backStack,
-        //onBack = { backStack.removeLastOrNull() },
         onBack = onBack,
         entryDecorators = listOf(
             rememberSceneSetupNavEntryDecorator(),
