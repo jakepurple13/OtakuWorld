@@ -6,8 +6,8 @@ import android.content.ContentProviderClient
 import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
-import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.otakuworld.CustomList
+import com.programmersbox.otakuworld.CustomListInfo
 import com.programmersbox.otakuworld.OtakuCustomListContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
 import kotlinx.coroutines.runBlocking

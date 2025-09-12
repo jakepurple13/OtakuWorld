@@ -79,8 +79,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.App
+import com.programmersbox.otakuworld.DbModel
 import com.programmersbox.otakuworld.Navigation
 import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack

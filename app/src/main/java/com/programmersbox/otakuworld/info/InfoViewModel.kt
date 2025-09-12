@@ -7,11 +7,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.BuildConfig
+import com.programmersbox.otakuworld.CustomList
+import com.programmersbox.otakuworld.DbModel
 import com.programmersbox.otakuworld.OtakuProvider
 import com.programmersbox.otakuworld.Provider
 import com.programmersbox.otakuworld.repository.OtakuInfo

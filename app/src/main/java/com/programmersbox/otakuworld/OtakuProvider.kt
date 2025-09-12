@@ -9,10 +9,6 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.core.net.toUri
-import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.favoritesdatabase.CustomListInfo
-import com.programmersbox.favoritesdatabase.CustomListItem
-import com.programmersbox.favoritesdatabase.DbModel
 import io.ktor.util.encodeBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose

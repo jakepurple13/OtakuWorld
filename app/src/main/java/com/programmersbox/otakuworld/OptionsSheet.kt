@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.info.ComposableUtils
 import com.programmersbox.otakuworld.textflow.TextFlow
 import com.skydoves.landscapist.glide.GlideImage

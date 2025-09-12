@@ -75,8 +75,6 @@ dependencies {
     implementation(libs.recyclerview)
 
     //implementation(projects.uiViews)
-    implementation(projects.models)
-    implementation(projects.favoritesdatabase)
 
     implementation(libs.bundles.roomLibs)
     ksp(libs.roomCompiler)

@@ -1,7 +1,7 @@
 package com.programmersbox.otakuworld.repository
 
-import com.programmersbox.favoritesdatabase.CustomList
-import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.otakuworld.CustomList
+import com.programmersbox.otakuworld.DbModel
 
 interface ServerHandler {
     suspend fun getFavorites(): List<DbModel>
