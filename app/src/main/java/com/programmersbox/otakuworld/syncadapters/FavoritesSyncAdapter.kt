@@ -60,53 +60,10 @@ class FavoritesSyncAdapter(
             .getOrThrow()
 
         // Index by URL for quick diff
-        val localByUrl = localFavorites.associateBy { it.url }
-        val remoteByUrl = remoteFavorites.favorites.associateBy { it.url }
+        var localByUrl = localFavorites.associateBy { it.url }
+        var remoteByUrl = remoteFavorites.favorites.associateBy { it.url }
 
-        // 3) Pull: Add remote-only items to local provider
-        val toInsertLocally = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
-        println("[FavoritesSyncAdapter] To insert locally: ${toInsertLocally.size}")
-        toInsertLocally.forEach { model ->
-            runCatching { helper.insertFavorite(context, model) }
-                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
-        }
-
-        // 4) Push: Add local-only items to remote (server upsert)
-        val toPushRemotely = localByUrl.keys.minus(remoteByUrl.keys).mapNotNull { localByUrl[it] }
-        println("[FavoritesSyncAdapter] To push remotely: ${toPushRemotely.size}")
-        runBlocking {
-            toPushRemotely
-                .map { model ->
-                    async(dispatchers, start = CoroutineStart.LAZY) {
-                        runCatching { serverHandler.upsertFavorite(app, model) }
-                            .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
-                    }
-                }.awaitAll()
-        }
-
-        // 5) Resolve conflicts: If present in both but different, prefer server and update local
-        val intersecting = localByUrl.keys.intersect(remoteByUrl.keys)
-        println("[FavoritesSyncAdapter] Intersecting: ${intersecting.size}")
-        val toUpdateLocal = intersecting.mapNotNull { url ->
-            val local = localByUrl[url]
-            val remote = remoteByUrl[url]
-            if (local != null && remote != null && local != remote) {
-                listOf(local, remote).maxByOrNull { it.numChapters }
-            } else null
-        }
-        toUpdateLocal.forEach { model ->
-            runCatching { helper.updateFavorite(context, model) }
-                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
-        }
-
-        // 6) Deletes strategy using FavoritesData.lastTimeUpdated and DataStoreHandling.lastTimeFavoritesSynced
-        // We use remote's lastTimeUpdated to infer who has the newer source of truth:
-        // - If flags provided in extras, they override and force direction.
-        // - If no flags:
-        //   - If either timestamp is 0, skip destructive deletes to avoid data loss on first syncs.
-        //   - If remoteUpdated > lastSyncTime -> server newer -> delete local-only items.
-        //   - If remoteUpdated < lastSyncTime -> local newer -> delete remote-only items.
-        //   - If equal and > 0 -> perform symmetric deletes to converge.
+        // 3) Decide delete strategy FIRST to avoid re-adding items that should be deleted
         val lastSyncTime = runCatching { runBlocking { dataStoreHandling.lastTimeFavoritesSynced.get() } }
             .getOrDefault(0L)
         val remoteUpdated = remoteFavorites.lastTimeUpdated
@@ -167,6 +124,51 @@ class FavoritesSyncAdapter(
                         }
                     }.awaitAll()
             }
+        }
+
+        // Re-fetch states after deletions to ensure diffs reflect the latest state
+        val refreshedLocal = runCatching { helper.getAllFavoritesAsList(context) }
+            .getOrElse { emptyList() }
+        val refreshedRemote = runCatching { runBlocking { serverHandler.getFavorites(app) } }
+            .getOrElse { remoteFavorites } // fall back to previous if failed
+
+        localByUrl = refreshedLocal.associateBy { it.url }
+        remoteByUrl = refreshedRemote.favorites.associateBy { it.url }
+
+        // 4) Pull: Add remote-only items to local provider (after deletes)
+        val toInsertLocally = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
+        println("[FavoritesSyncAdapter] To insert locally (post-delete): ${toInsertLocally.size}")
+        toInsertLocally.forEach { model ->
+            runCatching { helper.insertFavorite(context, model) }
+                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
+        }
+
+        // 5) Push: Add local-only items to remote (server upsert) (after deletes)
+        val toPushRemotely = localByUrl.keys.minus(remoteByUrl.keys).mapNotNull { localByUrl[it] }
+        println("[FavoritesSyncAdapter] To push remotely (post-delete): ${toPushRemotely.size}")
+        runBlocking {
+            toPushRemotely
+                .map { model ->
+                    async(dispatchers, start = CoroutineStart.LAZY) {
+                        runCatching { serverHandler.upsertFavorite(app, model) }
+                            .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
+                    }
+                }.awaitAll()
+        }
+
+        // 6) Resolve conflicts: If present in both but different, prefer the item with higher numChapters
+        val intersecting = localByUrl.keys.intersect(remoteByUrl.keys)
+        println("[FavoritesSyncAdapter] Intersecting (post-delete): ${intersecting.size}")
+        val toUpdateLocal = intersecting.mapNotNull { url ->
+            val local = localByUrl[url]
+            val remote = remoteByUrl[url]
+            if (local != null && remote != null && local != remote) {
+                listOf(local, remote).maxByOrNull { it.numChapters }
+            } else null
+        }
+        toUpdateLocal.forEach { model ->
+            runCatching { helper.updateFavorite(context, model) }
+                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
         }
 
         // Update last successful sync time
