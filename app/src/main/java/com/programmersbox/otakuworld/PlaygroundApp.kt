@@ -7,7 +7,6 @@ import com.programmersbox.otakuworld.repository.OtakuRepository
 import com.programmersbox.otakuworld.repository.ServerHandler
 import com.programmersbox.otakuworld.repository.ServerHandling
 import com.programmersbox.otakuworld.settings.SettingsViewModel
-import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
@@ -36,56 +35,5 @@ class PlaygroundApp : Application() {
                 }
             )
         }
-
-        val otakuProvider = get<OtakuProvider>()
-        val providerType = get<AppInfo>().provider
-
-        /*AccountManager
-            .get(this)
-            .addOnAccountsUpdatedListener(
-                object : OnAccountsUpdateListener {
-                    override fun onAccountsUpdated(accounts: Array<out Account?>?) {
-                        runCatching {
-                            accounts?.forEach { account ->
-                                account?.let {
-                                    ContentResolver.setSyncAutomatically(
-                                        it,
-                                        otakuProvider.favoritesUri {
-                                            appType = App.MangaWorld
-                                            provider = providerType
-                                        },
-                                        true
-                                    )
-                                    ContentResolver.requestSync(
-                                        SyncRequest.Builder()
-                                            .setDisallowMetered(true)
-                                            //TODO: Set extras so we can use the same sync adapter!
-                                            .setSyncAdapter(
-                                                it,
-                                                otakuProvider.favoritesUri {
-                                                    appType = App.MangaWorld
-                                                    provider = providerType
-                                                }
-                                            )
-                                            .setExtras(
-                                                bundleOf(
-                                                    "type" to "manga"
-                                                )
-                                            )
-                                            .syncPeriodic(
-                                                1.days.inWholeSeconds,
-                                                1.hours.inWholeSeconds
-                                            )
-                                            .build()
-                                    )
-                                }
-                            }
-                        }
-                    }
-                },
-                Handler(Looper.getMainLooper()),
-                true,
-                arrayOf(BuildConfig.ACCOUNT_TYPE)
-            )*/
     }
 }
