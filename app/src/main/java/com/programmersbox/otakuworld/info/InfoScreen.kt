@@ -85,6 +85,7 @@ import com.programmersbox.otakuworld.Navigation
 import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
+import com.programmersbox.otakuworld.repository.OtakuInfo
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -107,18 +108,24 @@ fun InfoScreen(
 
     val tabsState by remember {
         derivedStateOf {
-            listOfNotNull(
+            listOf(
                 OtakuItemState(
-                    "MangaWorld",
-                    viewModel.mangaWorld
+                    appName = "MangaWorld",
+                    otakuItem = viewModel.mangaWorld,
+                    otakuInfo = viewModel.hasApps.hasMangaWorld,
+                    app = App.MangaWorld
                 ),
                 OtakuItemState(
-                    "AnimeWorld",
-                    viewModel.animeWorld
+                    appName = "AnimeWorld",
+                    otakuItem = viewModel.animeWorld,
+                    otakuInfo = viewModel.hasApps.hasAnimeWorld,
+                    app = App.AnimeWorld
                 ),
                 OtakuItemState(
-                    "NovelWorld",
-                    viewModel.novelWorld
+                    appName = "NovelWorld",
+                    otakuItem = viewModel.novelWorld,
+                    otakuInfo = viewModel.hasApps.hasNovelWorld,
+                    app = App.NovelWorld
                 ),
             )
         }
@@ -158,34 +165,15 @@ fun InfoScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         tabsState.forEachIndexed { index, title ->
-                            Tab(
-                                selected = state == index,
-                                onClick = {
-                                    state = index
-                                    backStack.addTopLevel(
-                                        when (index) {
-                                            0 -> SelectionScreen(App.MangaWorld)
-                                            1 -> SelectionScreen(App.AnimeWorld)
-                                            2 -> SelectionScreen(App.NovelWorld)
-                                            else -> SelectionScreen(App.MangaWorld)
-                                        }
-                                    )
-                                },
-                                text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                                icon = {
-                                    when (index) {
-                                        0 -> viewModel.hasApps.hasMangaWorld
-                                        1 -> viewModel.hasApps.hasAnimeWorld
-                                        2 -> viewModel.hasApps.hasNovelWorld
-                                        else -> null
-                                    }?.let {
-                                        Image(
-                                            painter = rememberDrawablePainter(it.drawable),
-                                            contentDescription = null
-                                        )
-                                    } ?: Icon(Icons.Default.NotInterested, null)
-                                }
-                            )
+                            if (title.otakuInfo != null) {
+                                OtakuTab(
+                                    state = state,
+                                    onStateUpdate = { state = it },
+                                    index = index,
+                                    backStack = backStack,
+                                    title = title
+                                )
+                            }
                         }
                     }
                 }
@@ -239,6 +227,34 @@ fun InfoScreen(
             }
         }
     }
+}
+
+@Composable
+private fun OtakuTab(
+    state: Int,
+    onStateUpdate: (Int) -> Unit,
+    index: Int,
+    backStack: TopLevelBackStack<NavKey>,
+    title: OtakuItemState,
+) {
+    Tab(
+        selected = state == index,
+        onClick = {
+            onStateUpdate(index)
+            backStack.addTopLevel(SelectionScreen(title.app))
+        },
+        text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        icon = {
+            title
+                .otakuInfo
+                ?.let {
+                    Image(
+                        painter = rememberDrawablePainter(it.drawable),
+                        contentDescription = null
+                    )
+                } ?: Icon(Icons.Default.NotInterested, null)
+        }
+    )
 }
 
 @Serializable
@@ -590,6 +606,8 @@ fun M3CoverCard(
 data class OtakuItemState(
     val appName: String,
     val otakuItem: OtakuItem,
+    val otakuInfo: OtakuInfo?,
+    val app: App,
 )
 
 object ComposableUtils {
