@@ -5,7 +5,6 @@ import com.programmersbox.sharedutils.AppLogo
 import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.PerformanceClass
 import org.koin.core.module.dsl.factoryOf
@@ -36,6 +35,5 @@ val appModules = module {
 
     single { PerformanceClass.create() }
     singleOf(::OtakuDataStoreHandling)
-    singleOf(::SettingsHandling)
     factoryOf(::BatteryInformation)
 }

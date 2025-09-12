@@ -2,7 +2,6 @@ import plugins.ProductFlavorTypes
 
 plugins {
     `otaku-library`
-    `otaku-protobuf`
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
     `kotlin-parcelize`
@@ -130,7 +129,6 @@ dependencies {
     implementation(libs.material.kolor)
 
     //implementation(libs.blurhash)
-    ksp(libs.roomCompiler)
 
     //implementation(projects.gemini)
 

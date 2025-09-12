@@ -68,7 +68,6 @@ import com.programmersbox.sharedutils.FirebaseUIStyle
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.R
 import com.programmersbox.uiviews.datastore.OtakuDataStoreHandling
-import com.programmersbox.uiviews.datastore.SettingsHandling
 import com.programmersbox.uiviews.di.androidViewModels
 import com.programmersbox.uiviews.di.appModules
 import com.programmersbox.uiviews.di.kmpInterop
@@ -194,7 +193,6 @@ fun PreviewTheme(
                 kmpInterop,
                 module {
                     single { FirebaseUIStyle(R.style.Theme_OtakuWorldBase) }
-                    single { SettingsHandling(context, PerformanceClass.create()) }
                     single { AppLogo(AppCompatResources.getDrawable(context, R.drawable.ic_site_settings)!!, R.drawable.ic_site_settings) }
                 },
                 module {

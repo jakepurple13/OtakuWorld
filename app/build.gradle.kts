@@ -94,7 +94,6 @@ dependencies {
     val composeBom = platform(libs.composePlatform)
     implementation(composeBom)
     implementation(libs.bundles.compose)
-    implementation("androidx.compose.material3:material3:1.5.0-alpha04")
 
     implementation(libs.androidxWindow)
 

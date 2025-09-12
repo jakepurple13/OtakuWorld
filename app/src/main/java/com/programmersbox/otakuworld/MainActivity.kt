@@ -31,14 +31,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.otakuworld.info.InfoScreen
-import com.programmersbox.otakuworld.info.InfoScreen2
 import kotlinx.serialization.Serializable
 
 class MainActivity : AppCompatActivity() {
@@ -79,57 +76,17 @@ class MainActivity : AppCompatActivity() {
                 motionScheme = MotionScheme.expressive()
             ) {
                 //Navigation()
-                InfoScreen2()
+                InfoScreen()
             }
         }
     }
 }
 
 @Composable
-fun Navigation() {
-    val backStack = rememberNavBackStack(Info)
-
-    NavDisplay(
-        backStack = backStack,
-        //onBack = { backStack.removeLastOrNull() },
-        onBack = { count ->
-            repeat(count) {
-                if (backStack.isNotEmpty()) {
-                    backStack.removeLastOrNull()
-                }
-            }
-        },
-        entryDecorators = listOf(
-            rememberSceneSetupNavEntryDecorator(),
-            rememberSavedStateNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
-        ),
-        entryProvider = entryProvider<NavKey> {
-            entry<Info> { InfoScreen() }
-        },
-        transitionSpec = {
-            // Slide in from right when navigating forward
-            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-        predictivePopTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-        modifier = Modifier.fillMaxSize()
-    )
-}
-
-@Composable
-fun Navigation2(
+fun Navigation(
     backStack: SnapshotStateList<NavKey>,
     onBack: (Int) -> Unit,
+    modifier: Modifier = Modifier,
     entries: EntryProviderBuilder<NavKey>.() -> Unit,
 ) {
     NavDisplay(
@@ -157,7 +114,7 @@ fun Navigation2(
             slideInHorizontally(initialOffsetX = { -it }) togetherWith
                     slideOutHorizontally(targetOffsetX = { it })
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     )
 }
 

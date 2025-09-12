@@ -114,12 +114,12 @@ kotlin {
                 implementation(libs.compose.constraintlayout.compose.multiplatform)
 
                 implementation(libs.qrose)
-                implementation(libs.androidx.navigationevent)
-                implementation(libs.androidx.navigationevent.compose)
-                implementation(libs.scanner)
-
-                implementation(libs.multiplatform.lifecycle.runtime.compose)
+                //implementation(libs.androidx.navigationevent)
+                //implementation(libs.androidx.navigationevent.compose)
                 implementation(libs.androidx.navigation3.runtime)
+
+                implementation(libs.scanner)
+                implementation(libs.multiplatform.lifecycle.runtime.compose)
 
                 implementation(libs.materialAdaptiveCmp)
                 implementation(libs.materialAdaptiveLayoutCmp)

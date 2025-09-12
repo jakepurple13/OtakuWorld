@@ -15,7 +15,6 @@ enum class RemoteConfigKeys(val key: String) {
     suspend fun setDataStoreValue(
         dataStoreHandling: DataStoreHandling,
         otakuDataStoreHandling: OtakuDataStoreHandling,
-        settingsHandling: SettingsHandling,
         newSettingsHandling: NewSettingsHandling,
         remoteConfig: FirebaseRemoteConfig,
     ) {

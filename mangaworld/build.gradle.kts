@@ -2,7 +2,6 @@ plugins {
     `otaku-application`
     id("androidx.navigation.safeargs.kotlin")
     id("com.mikepenz.aboutlibraries.plugin")
-    `otaku-protobuf`
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
     //id("androidx.baselineprofile")

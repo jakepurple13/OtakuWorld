@@ -1,6 +1,5 @@
 package com.programmersbox.otakuworld.info
 
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
@@ -20,9 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -34,7 +30,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExpandedDockedSearchBar
@@ -48,7 +43,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
@@ -70,7 +64,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -88,7 +81,7 @@ import androidx.navigation3.runtime.entry
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.otakuworld.App
-import com.programmersbox.otakuworld.Navigation2
+import com.programmersbox.otakuworld.Navigation
 import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
@@ -99,108 +92,12 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InfoScreen(viewModel: InfoViewModel = koinViewModel()) {
-    LaunchedEffect(Unit) {
-        viewModel.checkForApps()
-    }
-
-    var state by remember(viewModel.hasApps) { mutableIntStateOf(0) }
-
-    val tabsState by remember {
-        derivedStateOf {
-            listOfNotNull(
-                OtakuItemState(
-                    "MangaWorld",
-                    viewModel.mangaWorld
-                ).takeIf { viewModel.hasApps.hasMangaWorld != null },
-                OtakuItemState(
-                    "AnimeWorld",
-                    viewModel.animeWorld
-                ).takeIf { viewModel.hasApps.hasAnimeWorld != null },
-                OtakuItemState(
-                    "NovelWorld",
-                    viewModel.novelWorld
-                ).takeIf { viewModel.hasApps.hasNovelWorld != null },
-            )
-        }
-    }
-
-    val scrollState = rememberScrollState()
-
-    val pagerState = rememberPagerState { tabsState.size }
-
-    LaunchedEffect(pagerState.currentPage) {
-        state = pagerState.currentPage
-        scrollState.animateScrollTo(pagerState.currentPage)
-    }
-
-    LaunchedEffect(scrollState, state) {
-        pagerState.animateScrollToPage(state)
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("OtakuWorld") },
-                actions = {
-                    IconButton(
-                        onClick = viewModel::checkForApps
-                    ) { Icon(Icons.Default.Refresh, null) }
-
-                    IconButton(
-                        onClick = {}
-                    ) { Icon(Icons.Default.Settings, null) }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(padding)
-        ) {
-            if (viewModel.hasApps.let { it.hasMangaWorld != null || it.hasAnimeWorld != null || it.hasNovelWorld != null }) {
-                PrimaryScrollableTabRow(
-                    selectedTabIndex = state,
-                    scrollState = scrollState,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    tabsState.forEachIndexed { index, title ->
-                        Tab(
-                            selected = state == index,
-                            onClick = { state = index },
-                            text = { Text(text = title.appName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                        )
-                    }
-                }
-
-                val stateHolder = rememberSaveableStateHolder()
-
-                HorizontalPager(
-                    pagerState,
-                    //modifier = Modifier.fillMaxSize()
-                ) {
-                    stateHolder.SaveableStateProvider(it) {
-                        OtakuItemScreen(viewModel, tabsState[it])
-                    }
-                }
-            } else {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Text("No Apps Found")
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InfoScreen2(
+fun InfoScreen(
     viewModel: InfoViewModel = koinViewModel(),
 ) {
-    val backStack = remember { TopLevelBackStack<NavKey>(SelectionScreen(App.MangaWorld)) }
+    val backStack = remember {
+        TopLevelBackStack<NavKey>(SelectionScreen(App.MangaWorld))
+    }
 
     LaunchedEffect(Unit) {
         viewModel.checkForApps()
@@ -230,19 +127,12 @@ fun InfoScreen2(
     LaunchedEffect(Unit) {
         snapshotFlow { backStack.topLevelKey }
             .collect {
-                println(it)
-                println(state)
-
                 state = when (it) {
                     is SelectionScreen -> it.app
                     is FavScreen -> it.app
                     is ListScreen -> it.app
                     else -> App.MangaWorld
-                }
-                    .ordinal
-                    .also { println(it) }
-
-                println(state)
+                }.ordinal
             }
     }
 
@@ -302,54 +192,50 @@ fun InfoScreen2(
             }
         }
     ) { padding ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+        Navigation(
+            backStack = backStack.backStack,
+            onBack = { backStack.removeLast() },
             modifier = Modifier.padding(padding)
         ) {
-            Navigation2(
-                backStack = backStack.backStack,
-                onBack = { backStack.removeLast() },
+            fun getApp(app: App) = when (app) {
+                App.MangaWorld -> tabsState[0]
+                App.AnimeWorld -> tabsState[1]
+                App.NovelWorld -> tabsState[2]
+            }
+
+            entry<SelectionScreen>(
+
             ) {
-                entry<SelectionScreen> {
-                    SelectionScreen(
-                        item = when (it.app) {
-                            App.MangaWorld -> tabsState[0]
-                            App.AnimeWorld -> tabsState[1]
-                            App.NovelWorld -> tabsState[2]
-                        },
-                        onShowingType = { showing ->
-                            backStack.add(
-                                when (showing) {
-                                    ShowingType.Selection -> SelectionScreen(it.app)
-                                    ShowingType.Favorites -> FavScreen(it.app)
-                                    ShowingType.Lists -> ListScreen(it.app)
-                                }
-                            )
-                        },
-                    )
-                }
+                SelectionScreen(
+                    item = getApp(it.app),
+                    onShowingType = { showing ->
+                        backStack.add(
+                            when (showing) {
+                                ShowingType.Selection -> SelectionScreen(it.app)
+                                ShowingType.Favorites -> FavScreen(it.app)
+                                ShowingType.Lists -> ListScreen(it.app)
+                            }
+                        )
+                    },
+                )
+            }
 
-                entry<FavScreen> {
-                    FavoritesScreen(
-                        item = when (it.app) {
-                            App.MangaWorld -> tabsState[0]
-                            App.AnimeWorld -> tabsState[1]
-                            App.NovelWorld -> tabsState[2]
-                        },
-                        onBack = {}
-                    )
-                }
+            entry<FavScreen>(
 
-                entry<ListScreen> {
-                    ListsScreen(
-                        item = when (it.app) {
-                            App.MangaWorld -> tabsState[0]
-                            App.AnimeWorld -> tabsState[1]
-                            App.NovelWorld -> tabsState[2]
-                        },
-                        onBack = {}
-                    )
-                }
+            ) {
+                FavoritesScreen(
+                    item = getApp(it.app),
+                    onBack = { backStack.removeLast() }
+                )
+            }
+
+            entry<ListScreen>(
+
+            ) {
+                ListsScreen(
+                    item = getApp(it.app),
+                    onBack = { backStack.removeLast() }
+                )
             }
         }
     }
@@ -364,109 +250,6 @@ data class FavScreen(val app: App) : NavKey
 @Serializable
 data class ListScreen(val app: App) : NavKey
 
-@Composable
-private fun OtakuItemScreen(
-    viewModel: InfoViewModel,
-    item: OtakuItemState,
-) {
-    var hasFavoritePermission by rememberSaveable { mutableStateOf(false) }
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { hasFavoritePermission = it.all { it.value } }
-
-    SideEffect { launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission)) }
-
-    Crossfade(hasFavoritePermission) { target ->
-        if (target) {
-            /*
-            //TODO: This all will go into a settings screen
-                    val context = LocalContext.current
-
-                    Button(
-                        onClick = {
-                            AccountManager.get(context)
-                                .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
-                                .forEach { account ->
-                                    println(account)
-                                    ContentResolver.setIsSyncable(
-                                        account,
-                                        item.otakuItem.favoritesUri,
-                                        1
-                                    )
-                                    ContentResolver.setIsSyncable(
-                                        account,
-                                        item.otakuItem.listsUri,
-                                        1
-                                    )
-                                    ContentResolver.setSyncAutomatically(
-                                        account,
-                                        item.otakuItem.favoritesUri,
-                                        true
-                                    )
-                                    ContentResolver.requestSync(
-                                        SyncRequest.Builder()
-                                            .setDisallowMetered(true)
-                                            .setSyncAdapter(
-                                                account,
-                                                item.otakuItem.favoritesUri
-                                            )
-                                            .setExtras(
-                                                bundleOf(
-                                                    "type" to item.otakuItem.app.name
-                                                )
-                                            )
-                                            .syncPeriodic(
-                                                1.days.inWholeSeconds,
-                                                1.hours.inWholeSeconds
-                                            )
-                                            .build()
-                                    )
-
-                                    ContentResolver.setSyncAutomatically(
-                                        account,
-                                        item.otakuItem.listsUri,
-                                        true
-                                    )
-                                    ContentResolver.requestSync(
-                                        SyncRequest.Builder()
-                                            .setDisallowMetered(true)
-                                            .setSyncAdapter(
-                                                account,
-                                                item.otakuItem.listsUri
-                                            )
-                                            .setExtras(
-                                                bundleOf(
-                                                    "type" to item.otakuItem.app.name
-                                                )
-                                            )
-                                            .syncPeriodic(
-                                                1.days.inWholeSeconds,
-                                                1.hours.inWholeSeconds
-                                            )
-                                            .build()
-                                    )
-                                }
-                        },
-                    ) { Text("Setup Syncs") }
-             */
-
-            //ShowingSelectionScreen(item)
-        } else {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Button(
-                    onClick = {
-                        println(item.otakuItem.favoritePermission)
-                        launcher.launch(arrayOf(item.otakuItem.favoritePermission, item.otakuItem.listsPermission))
-                    },
-                ) { Text("Allow Access to favorites ${item.appName}") }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PermissionGetter(
@@ -479,6 +262,8 @@ private fun PermissionGetter(
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { hasFavoritePermission = it }
+
+    SideEffect { launcher.launch(permission) }
 
     Crossfade(hasFavoritePermission) { target ->
         if (target) {
@@ -493,32 +278,6 @@ private fun PermissionGetter(
                     shapes = ButtonDefaults.shapes()
                 ) { Text("Allow Access to $type ${item.appName}") }
             }
-        }
-    }
-}
-
-@Composable
-private fun ShowingSelectionScreen(
-    item: OtakuItemState,
-) {
-    var selectionType by rememberSaveable { mutableStateOf(ShowingType.Selection) }
-
-    Crossfade(selectionType) { target ->
-        when (target) {
-            ShowingType.Selection -> SelectionScreen(
-                item = item,
-                onShowingType = { selectionType = it }
-            )
-
-            ShowingType.Favorites -> FavoritesScreen(
-                item = item,
-                onBack = { selectionType = ShowingType.Selection }
-            )
-
-            ShowingType.Lists -> ListsScreen(
-                item = item,
-                onBack = { selectionType = ShowingType.Selection }
-            )
         }
     }
 }
@@ -578,8 +337,6 @@ private fun ListsScreen(
     item: OtakuItemState,
     onBack: () -> Unit,
 ) {
-    BackHandler { onBack() }
-
     val scope = rememberCoroutineScope()
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
@@ -666,8 +423,6 @@ private fun FavoritesScreen(
     item: OtakuItemState,
     onBack: () -> Unit,
 ) {
-    BackHandler { onBack() }
-
     val scope = rememberCoroutineScope()
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()

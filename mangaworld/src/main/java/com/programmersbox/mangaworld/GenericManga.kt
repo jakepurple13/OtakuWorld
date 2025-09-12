@@ -70,7 +70,6 @@ val appModule = module {
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
     singleOf(::ChapterHolder)
-    singleOf(::MangaSettingsHandling)
     single {
         MangaNewSettingsHandling(
             createProtobuf(
