@@ -57,7 +57,7 @@ class FavoritesSyncAdapter(
                 // If remote fetch fails, bail out gracefully
                 syncResult.databaseError = true
             }
-            .getOrThrow()
+            .getOrNull() ?: return
 
         // Index by URL for quick diff
         var localByUrl = localFavorites.associateBy { it.url }

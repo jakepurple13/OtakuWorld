@@ -46,6 +46,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -354,6 +355,33 @@ private fun SelectionScreen(
             }
         }
 
+        var showSettings by remember { mutableStateOf(false) }
+
+        if (showSettings) {
+            SelectionSettings(
+                item = item,
+                onDismiss = { showSettings = false }
+            )
+        }
+
+        Button(
+            onClick = { showSettings = true },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) { Text("Settings") }
+
+
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectionSettings(
+    item: OtakuItemState,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss
+    ) {
         val context = LocalContext.current
 
         Button(

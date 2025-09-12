@@ -35,7 +35,7 @@ class ListSyncAdapter(
                 // 1) Load local and remote data
                 val localLists = helper.getAllCustomLists(context) ?: emptyList()
                 val remoteLists = runCatching { serverHandler.getLists(app) }
-                    .getOrElse { emptyList() }
+                    .getOrNull() ?: return@runBlocking
 
                 // Index by uuid for quick lookups
                 val localById = localLists.associateBy { it.item.uuid }
