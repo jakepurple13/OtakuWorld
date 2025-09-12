@@ -57,7 +57,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TwoRowsTopAppBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -76,6 +77,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -100,7 +102,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InfoScreen(
     viewModel: InfoViewModel = koinViewModel(),
@@ -153,42 +155,49 @@ fun InfoScreen(
             }
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
         topBar = {
-            Column {
-                TopAppBar(
-                    title = { Text("OtakuWorld") },
-                    actions = {
-                        IconButton(
-                            onClick = viewModel::checkForApps
-                        ) { Icon(Icons.Default.Refresh, null) }
+            TwoRowsTopAppBar(
+                title = { Text("OtakuWorld") },
+                actions = {
+                    IconButton(
+                        onClick = viewModel::checkForApps
+                    ) { Icon(Icons.Default.Refresh, null) }
 
-                        IconButton(
-                            onClick = onSettingsClick
-                        ) { Icon(Icons.Default.Settings, null) }
-                    }
-                )
-
-                if (viewModel.hasApps.let { it.hasMangaWorld != null || it.hasAnimeWorld != null || it.hasNovelWorld != null }) {
-                    PrimaryTabRow(
-                        selectedTabIndex = state,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        tabsState.forEachIndexed { index, title ->
-                            if (title.otakuInfo != null) {
-                                OtakuTab(
-                                    state = state,
-                                    onStateUpdate = { state = it },
-                                    index = index,
-                                    backStack = backStack,
-                                    title = title
-                                )
+                    IconButton(
+                        onClick = onSettingsClick
+                    ) { Icon(Icons.Default.Settings, null) }
+                },
+                subtitle = { expanded ->
+                    if (expanded) {
+                        PrimaryTabRow(
+                            selectedTabIndex = state,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            tabsState.forEachIndexed { index, title ->
+                                if (title.otakuInfo != null) {
+                                    OtakuTab(
+                                        state = state,
+                                        onStateUpdate = { state = it },
+                                        index = index,
+                                        backStack = backStack,
+                                        title = title
+                                    )
+                                }
                             }
                         }
+                    } else {
+                        Text(
+                            text = tabsState[state].appName,
+                        )
                     }
-                }
-            }
-        }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { padding ->
         Navigation(
             backStack = backStack.backStack,

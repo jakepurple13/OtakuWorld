@@ -135,7 +135,9 @@ data class AppCheck(
     val hasAnimeWorld: OtakuInfo?,
     val hasMangaWorld: OtakuInfo?,
     val hasNovelWorld: OtakuInfo?,
-)
+) {
+    val hasAllApps = hasAnimeWorld != null || hasMangaWorld != null || hasNovelWorld != null
+}
 
 class OtakuItem(
     val app: App,
