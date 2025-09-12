@@ -1,19 +1,23 @@
 package com.programmersbox.otakuworld.syncadapters
 
 import android.accounts.Account
-import android.content.AbstractThreadedSyncAdapter
 import android.content.ContentProviderClient
 import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
 import com.programmersbox.otakuworld.OtakuFavoritesContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 
 class FavoritesSyncAdapter(
     context: Context,
     private val serverHandler: ServerHandler,
-) : AbstractThreadedSyncAdapter(context, true, false) {
+) : BaseSyncAdapter(context, true, false) {
+    private val dispatchers = Dispatchers.IO.limitedParallelism(5)
     override fun onPerformSync(
         account: Account?,
         extras: Bundle?,
@@ -21,19 +25,29 @@ class FavoritesSyncAdapter(
         provider: ContentProviderClient?,
         syncResult: SyncResult?,
     ) {
+        super.onPerformSync(account, extras, authority, provider, syncResult)
         authority ?: return
         syncResult ?: return
+
+        val app = getApp(authority) ?: return
+
+        println("Syncing favorites for $app")
+
         val helper = OtakuFavoritesContentProviderHelper(authority)
 
         // 1) Fetch local favorites
         val localFavorites = runCatching { helper.getAllFavoritesAsList(context) }
+            .onSuccess { println("[FavoritesSyncAdapter] Local favorites: ${it.size}") }
+            .onFailure { it.printStackTrace() }
             .getOrElse {
                 syncResult.stats?.numIoExceptions = (syncResult.stats?.numIoExceptions ?: 0) + 1
                 emptyList()
             }
 
         // 2) Fetch remote favorites from GET endpoint
-        val remoteFavorites = runCatching { runBlocking { serverHandler.getFavorites() } }
+        val remoteFavorites = runCatching { runBlocking { serverHandler.getFavorites(app) } }
+            .onSuccess { println("[FavoritesSyncAdapter] Remote favorites: ${it.size}") }
+            .onFailure { it.printStackTrace() }
             .getOrElse {
                 // If remote fetch fails, bail out gracefully
                 syncResult.databaseError = true
@@ -46,6 +60,7 @@ class FavoritesSyncAdapter(
 
         // 3) Pull: Add remote-only items to local provider
         val toInsertLocally = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
+        println("[FavoritesSyncAdapter] To insert locally: ${toInsertLocally.size}")
         toInsertLocally.forEach { model ->
             runCatching { helper.insertFavorite(context, model) }
                 .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
@@ -53,13 +68,20 @@ class FavoritesSyncAdapter(
 
         // 4) Push: Add local-only items to remote (server upsert)
         val toPushRemotely = localByUrl.keys.minus(remoteByUrl.keys).mapNotNull { localByUrl[it] }
-        toPushRemotely.forEach { model ->
-            runCatching { runBlocking { serverHandler.upsertFavorite(model) } }
-                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
+        println("[FavoritesSyncAdapter] To push remotely: ${toPushRemotely.size}")
+        runBlocking {
+            toPushRemotely
+                .map { model ->
+                    async(dispatchers, start = CoroutineStart.LAZY) {
+                        runCatching { serverHandler.upsertFavorite(app, model) }
+                            .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
+                    }
+                }.awaitAll()
         }
 
         // 5) Resolve conflicts: If present in both but different, prefer server and update local
         val intersecting = localByUrl.keys.intersect(remoteByUrl.keys)
+        println("[FavoritesSyncAdapter] Intersecting: ${intersecting.size}")
         val toUpdateLocal = intersecting.mapNotNull { url ->
             val local = localByUrl[url]
             val remote = remoteByUrl[url]

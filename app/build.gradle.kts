@@ -103,6 +103,7 @@ dependencies {
     implementation(libs.qrose)
 
     implementation(libs.ktorCore)
+    implementation(libs.ktorAndroid)
     implementation(libs.ktorAuth)
     implementation(libs.ktorLogging)
     implementation(libs.ktorSerialization)

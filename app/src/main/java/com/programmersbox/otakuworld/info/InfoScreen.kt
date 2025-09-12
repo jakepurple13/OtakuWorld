@@ -1,5 +1,7 @@
 package com.programmersbox.otakuworld.info
 
+import android.accounts.AccountManager
+import android.content.ContentResolver
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExpandedDockedSearchBar
@@ -71,15 +74,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.os.bundleOf
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.otakuworld.App
+import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.DbModel
 import com.programmersbox.otakuworld.Navigation
 import com.programmersbox.otakuworld.ShareViaQrCode
@@ -345,6 +351,36 @@ private fun SelectionScreen(
                 )
             }
         }
+
+        val context = LocalContext.current
+
+        Button(
+            onClick = {
+                AccountManager.get(context)
+                    .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
+                    .forEach { account ->
+                        ContentResolver.requestSync(
+                            account,
+                            item.otakuItem.listsUri,
+                            bundleOf()
+                        )
+                    }
+            }
+        ) { Text("Sync Lists Now") }
+
+        Button(
+            onClick = {
+                AccountManager.get(context)
+                    .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
+                    .forEach { account ->
+                        ContentResolver.requestSync(
+                            account,
+                            item.otakuItem.favoritesUri,
+                            bundleOf()
+                        )
+                    }
+            }
+        ) { Text("Sync Favorites Now") }
     }
 }
 

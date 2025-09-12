@@ -1,7 +1,6 @@
 package com.programmersbox.otakuworld.syncadapters
 
 import android.accounts.Account
-import android.content.AbstractThreadedSyncAdapter
 import android.content.ContentProviderClient
 import android.content.Context
 import android.content.SyncResult
@@ -15,7 +14,7 @@ import kotlinx.coroutines.runBlocking
 class ListSyncAdapter(
     context: Context,
     private val serverHandler: ServerHandler,
-) : AbstractThreadedSyncAdapter(context, true, false) {
+) : BaseSyncAdapter(context, true, false) {
 
     override fun onPerformSync(
         account: Account?,
@@ -24,7 +23,10 @@ class ListSyncAdapter(
         provider: ContentProviderClient?,
         syncResult: SyncResult?,
     ) {
+        super.onPerformSync(account, extras, authority, provider, syncResult)
         if (authority.isNullOrBlank()) return
+
+        val app = getApp(authority) ?: return
 
         val helper = OtakuCustomListContentProviderHelper(authority)
 
@@ -32,7 +34,7 @@ class ListSyncAdapter(
             try {
                 // 1) Load local and remote data
                 val localLists = helper.getAllCustomLists(context) ?: emptyList()
-                val remoteLists = runCatching { serverHandler.getLists() }
+                val remoteLists = runCatching { serverHandler.getLists(app) }
                     .getOrElse { emptyList() }
 
                 // Index by uuid for quick lookups
@@ -44,13 +46,13 @@ class ListSyncAdapter(
                     val remote = remoteById[uuid]
                     if (remote == null) {
                         // Not on server → push local
-                        runCatching { serverHandler.upsertList(local) }
+                        runCatching { serverHandler.upsertList(app, local) }
                             .onFailure { syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1 }
                     } else {
                         // Conflict resolution by updated time
                         if (local.item.time > remote.item.time) {
                             // Local is newer → push to server
-                            runCatching { serverHandler.upsertList(local) }
+                            runCatching { serverHandler.upsertList(app, local) }
                                 .onFailure { syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1 }
                         }
                     }
