@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -31,11 +32,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.otakuworld.info.InfoScreen
+import com.programmersbox.otakuworld.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 
 class MainActivity : AppCompatActivity() {
@@ -43,7 +47,7 @@ class MainActivity : AppCompatActivity() {
     @OptIn(
         ExperimentalMaterial3Api::class,
         ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class
+        ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3AdaptiveApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,8 +79,22 @@ class MainActivity : AppCompatActivity() {
                 colorScheme = colorScheme,
                 motionScheme = MotionScheme.expressive()
             ) {
-                //Navigation()
-                InfoScreen()
+                val backStack = rememberNavBackStack(Info)
+                Navigation(
+                    backStack = backStack,
+                    onBack = { if (backStack.isNotEmpty()) backStack.removeLastOrNull() },
+                ) {
+                    entry<Info> {
+                        InfoScreen(
+                            onSettingsClick = { backStack.add(Settings) }
+                        )
+                    }
+                    entry<Settings> {
+                        SettingsScreen(
+                            onBack = { backStack.removeLastOrNull() }
+                        )
+                    }
+                }
             }
         }
     }
@@ -84,7 +102,7 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun Navigation(
-    backStack: SnapshotStateList<NavKey>,
+    backStack: List<NavKey>,
     onBack: (Int) -> Unit,
     modifier: Modifier = Modifier,
     entries: EntryProviderBuilder<NavKey>.() -> Unit,
@@ -122,13 +140,7 @@ fun Navigation(
 data object Info : NavKey
 
 @Serializable
-data object Anime : NavKey
-
-@Serializable
-data object Manga : NavKey
-
-@Serializable
-data object Novel : NavKey
+data object Settings : NavKey
 
 class TopLevelBackStack<T : Any>(startKey: T) {
 

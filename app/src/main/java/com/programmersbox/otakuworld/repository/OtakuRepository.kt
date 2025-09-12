@@ -21,7 +21,6 @@ class OtakuRepository(
             .build()
         context.packageManager.getApplicationIcon(packageName)
     }
-        .onSuccess { println(it.toString()) }
         .onFailure { it.printStackTrace() }
         .mapCatching { OtakuInfo(it) }
         .getOrNull()

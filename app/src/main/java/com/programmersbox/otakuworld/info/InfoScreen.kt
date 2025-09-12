@@ -95,6 +95,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun InfoScreen(
     viewModel: InfoViewModel = koinViewModel(),
+    onSettingsClick: () -> Unit,
 ) {
     val backStack = remember {
         TopLevelBackStack<NavKey>(SelectionScreen(App.MangaWorld))
@@ -154,7 +155,7 @@ fun InfoScreen(
                         ) { Icon(Icons.Default.Refresh, null) }
 
                         IconButton(
-                            onClick = {}
+                            onClick = onSettingsClick
                         ) { Icon(Icons.Default.Settings, null) }
                     }
                 )

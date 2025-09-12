@@ -4,6 +4,7 @@ import android.app.Application
 import com.google.android.material.color.DynamicColors
 import com.programmersbox.otakuworld.info.InfoViewModel
 import com.programmersbox.otakuworld.repository.OtakuRepository
+import com.programmersbox.otakuworld.settings.SettingsViewModel
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
@@ -23,6 +24,7 @@ class PlaygroundApp : Application() {
             loadKoinModules(
                 module {
                     viewModelOf(::InfoViewModel)
+                    viewModelOf(::SettingsViewModel)
                     singleOf(::OtakuProvider)
                     singleOf(::OtakuRepository)
                     singleOf(::AppInfo)
