@@ -204,6 +204,10 @@ fun GlobalSearchScreen(
                     }
                 },
                 colors = SearchBarDefaults.appBarWithSearchColors(
+                    appBarContainerColor = if (showBlur)
+                        Color.Transparent
+                    else
+                        MaterialTheme.colorScheme.surface,
                     searchBarColors = SearchBarDefaults.colors(
                         inputFieldColors = if (showBlur)
                             SearchBarDefaults.inputFieldColors(

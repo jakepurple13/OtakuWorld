@@ -65,6 +65,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarDuration
@@ -437,6 +438,21 @@ fun OtakuCustomListScreen(
                         }
                     }
                 },
+                colors = SearchBarDefaults.appBarWithSearchColors(
+                    appBarContainerColor = if (showBlur)
+                        Color.Transparent
+                    else
+                        MaterialTheme.colorScheme.surface,
+                    searchBarColors = SearchBarDefaults.colors(
+                        inputFieldColors = if (showBlur)
+                            SearchBarDefaults.inputFieldColors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                            )
+                        else
+                            SearchBarDefaults.inputFieldColors()
+                    )
+                ),
                 modifier = Modifier.let {
                     if (showBlur)
                         it.hazeEffect(
