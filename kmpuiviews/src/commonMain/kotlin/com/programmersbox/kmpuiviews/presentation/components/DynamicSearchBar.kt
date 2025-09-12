@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.input.TextFieldState
@@ -114,6 +115,8 @@ fun DynamicSearchBar(
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
+    navigationIcon: @Composable (() -> Unit)? = null,
+    actions: @Composable (RowScope.() -> Unit)? = null,
     shape: Shape = if (isDocked) SearchBarDefaults.dockedShape else SearchBarDefaults.inputFieldShape,
     colors: AppBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(),
     tonalElevation: Dp = SearchBarDefaults.TonalElevation,
@@ -144,6 +147,8 @@ fun DynamicSearchBar(
         tonalElevation = tonalElevation,
         shadowElevation = shadowElevation,
         windowInsets = windowInsets,
+        navigationIcon = navigationIcon,
+        actions = actions,
         scrollBehavior = scrollBehavior,
         modifier = modifier,
     )

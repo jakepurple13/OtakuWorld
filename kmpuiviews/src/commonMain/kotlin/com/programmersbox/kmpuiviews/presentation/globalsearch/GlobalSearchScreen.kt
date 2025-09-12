@@ -41,7 +41,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -187,15 +186,11 @@ fun GlobalSearchScreen(
                 },
                 placeholder = { Text(stringResource(Res.string.global_search)) },
                 leadingIcon = {
-                    if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                        IconButton(
-                            onClick = { closeSearchBar() }
-                        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
-                    } else {
-                        BackButton()
-                    }
+                    IconButton(
+                        onClick = { closeSearchBar() }
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
+                navigationIcon = { BackButton() },
                 trailingIcon = {
                     AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
                         IconButton(onClick = { viewModel.searchText = TextFieldState() }) {

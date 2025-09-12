@@ -66,7 +66,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -394,15 +393,14 @@ fun OtakuCustomListScreen(
                 onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
                 placeholder = { Text(stringResource(Res.string.search) + " " + customItem.item.name) },
                 leadingIcon = {
-                    if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                        IconButton(
-                            onClick = { scope.launch { searchBarState.animateToCollapsed() } }
-                        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                    } else {
-                        IconButton(
-                            onClick = navigateBack
-                        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                    }
+                    IconButton(
+                        onClick = { scope.launch { searchBarState.animateToCollapsed() } }
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = navigateBack
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
                 trailingIcon = {
                     Row(
@@ -415,27 +413,26 @@ fun OtakuCustomListScreen(
                         }
 
                         Text("(${customItem.list.size})")
-
-                        AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        scope.launch {
-                                            qrCodeRepository.shareUrl(
-                                                customItem.list.joinToString("\n") { "${it.title} - ${it.url}" },
-                                                customItem.item.name
-                                            )
-                                        }
-                                    }
-                                ) { Icon(Icons.Default.Share, null) }
-
-                                IconButton(
-                                    onClick = { showInfoSheet = true }
-                                ) { Icon(Icons.Default.Info, null) }
+                    }
+                },
+                actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    qrCodeRepository.shareUrl(
+                                        customItem.list.joinToString("\n") { "${it.title} - ${it.url}" },
+                                        customItem.item.name
+                                    )
+                                }
                             }
-                        }
+                        ) { Icon(Icons.Default.Share, null) }
+
+                        IconButton(
+                            onClick = { showInfoSheet = true }
+                        ) { Icon(Icons.Default.Info, null) }
                     }
                 },
                 colors = SearchBarDefaults.appBarWithSearchColors(

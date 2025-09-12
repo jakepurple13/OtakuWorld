@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -47,7 +46,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -267,31 +265,20 @@ fun FavoriteScreen(
                             )
                         },
                         leadingIcon = {
-                            if (searchBarState.currentValue == SearchBarValue.Expanded) {
-                                IconButton(
-                                    onClick = { closeSearchBar() }
-                                ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-
-                            } else {
-                                BackButton()
+                            IconButton(
+                                onClick = { closeSearchBar() }
+                            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                        },
+                        actions = {
+                            IconButton(onClick = { showSort = true }) {
+                                Icon(Icons.AutoMirrored.Filled.Sort, null)
                             }
                         },
+                        navigationIcon = { BackButton() },
                         trailingIcon = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AnimatedVisibility(viewModel.searchText.text.isNotEmpty()) {
-                                    IconButton(
-                                        onClick = { viewModel.searchText = TextFieldState() }
-                                    ) { Icon(Icons.Default.Cancel, null) }
-                                }
-
-                                AnimatedVisibility(searchBarState.currentValue == SearchBarValue.Collapsed) {
-                                    IconButton(onClick = { showSort = true }) {
-                                        Icon(Icons.AutoMirrored.Filled.Sort, null)
-                                    }
-                                }
-                            }
+                            IconButton(
+                                onClick = { viewModel.searchText = TextFieldState() }
+                            ) { Icon(Icons.Default.Cancel, null) }
                         },
                         colors = SearchBarDefaults.appBarWithSearchColors(
                             appBarContainerColor = if (showBlur)

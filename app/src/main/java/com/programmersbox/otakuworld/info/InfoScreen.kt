@@ -578,6 +578,9 @@ private fun FavoritesScreen(
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
                 windowInsets = WindowInsets(0.dp),
+                colors = SearchBarDefaults.appBarWithSearchColors(
+                    appBarContainerColor = Color.Transparent
+                ),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 searchValues
@@ -804,7 +807,6 @@ fun DynamicSearchBar(
             onSearch = onSearch,
             enabled = enabled,
             placeholder = placeholder,
-            leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             interactionSource = interactionSource,
             colors = colors.searchBarColors.inputFieldColors
@@ -819,6 +821,7 @@ fun DynamicSearchBar(
         tonalElevation = tonalElevation,
         shadowElevation = shadowElevation,
         windowInsets = windowInsets,
+        navigationIcon = leadingIcon,
         scrollBehavior = scrollBehavior,
         modifier = modifier,
     )
