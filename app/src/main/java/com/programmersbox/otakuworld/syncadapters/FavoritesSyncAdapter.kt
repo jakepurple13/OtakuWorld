@@ -14,7 +14,6 @@ class FavoritesSyncAdapter(
     context: Context,
     private val serverHandler: ServerHandler,
 ) : AbstractThreadedSyncAdapter(context, true, false) {
-    //TODO: Change this!
     override fun onPerformSync(
         account: Account?,
         extras: Bundle?,
