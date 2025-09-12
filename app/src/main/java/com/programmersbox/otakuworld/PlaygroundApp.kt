@@ -32,6 +32,7 @@ class PlaygroundApp : Application() {
                     singleOf(::AppInfo)
                     singleOf(::QrCodeRepository)
                     singleOf(::ServerHandling) bind ServerHandler::class
+                    singleOf(::DataStoreHandling)
                 }
             )
         }

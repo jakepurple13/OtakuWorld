@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -92,6 +93,7 @@ import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
 import com.programmersbox.otakuworld.repository.OtakuInfo
+import com.programmersbox.otakuworld.syncadapters.FavoritesSyncAdapter
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -368,19 +370,46 @@ private fun SelectionScreen(
             }
         ) { Text("Sync Lists Now") }
 
-        Button(
-            onClick = {
-                AccountManager.get(context)
-                    .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
-                    .forEach { account ->
-                        ContentResolver.requestSync(
-                            account,
-                            item.otakuItem.favoritesUri,
-                            bundleOf()
-                        )
-                    }
-            }
-        ) { Text("Sync Favorites Now") }
+        FlowRow {
+            Button(
+                onClick = {
+                    AccountManager.get(context)
+                        .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
+                        .forEach { account ->
+                            FavoritesSyncAdapter.syncToRemote(
+                                item.otakuItem.favoritesUri,
+                                account
+                            )
+                        }
+                }
+            ) { Text("Sync Favorites to Cloud Now") }
+
+            Button(
+                onClick = {
+                    AccountManager.get(context)
+                        .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
+                        .forEach { account ->
+                            FavoritesSyncAdapter.syncToLocal(
+                                item.otakuItem.favoritesUri,
+                                account
+                            )
+                        }
+                }
+            ) { Text("Sync Favorites to Local Now") }
+
+            Button(
+                onClick = {
+                    AccountManager.get(context)
+                        .getAccountsByType(BuildConfig.ACCOUNT_TYPE)
+                        .forEach { account ->
+                            FavoritesSyncAdapter.sync(
+                                item.otakuItem.favoritesUri,
+                                account
+                            )
+                        }
+                }
+            ) { Text("Sync Favorites Now") }
+        }
     }
 }
 

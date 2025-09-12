@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 interface ServerHandler {
-    suspend fun getFavorites(app: App): List<DbModel>
+    suspend fun getFavorites(app: App): FavoritesData
     suspend fun upsertFavorite(app: App, model: DbModel)
     suspend fun deleteFavorite(app: App, model: DbModel)
     suspend fun getLists(app: App): List<CustomList>
@@ -45,9 +45,9 @@ class ServerHandling : ServerHandler {
         }
     }
 
-    override suspend fun getFavorites(app: App): List<DbModel> {
+    override suspend fun getFavorites(app: App): FavoritesData {
         return client.get("/otaku/favorites/${app.toName()}")
-            .body<List<DbModel>>()
+            .body<FavoritesData>()
     }
 
     override suspend fun upsertFavorite(app: App, model: DbModel) {
@@ -120,4 +120,10 @@ private data class CustomServerDbModel(
     val numChapters: Int,
     val shouldCheckForUpdate: Boolean,
     val type: String,
+)
+
+@Serializable
+data class FavoritesData(
+    val lastTimeUpdated: Long,
+    val favorites: List<DbModel>,
 )

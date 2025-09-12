@@ -11,7 +11,8 @@ class MangaFavoritesSyncService : Service() {
         synchronized(syncAdapterLock) {
             syncAdapter = syncAdapter ?: FavoritesSyncAdapter(
                 context = applicationContext,
-                serverHandler = get()
+                serverHandler = get(),
+                dataStoreHandling = get()
             )
         }
     }
@@ -32,7 +33,8 @@ class NovelFavoritesSyncService : Service() {
         synchronized(syncAdapterLock) {
             syncAdapter = syncAdapter ?: FavoritesSyncAdapter(
                 context = applicationContext,
-                serverHandler = get()
+                serverHandler = get(),
+                dataStoreHandling = get()
             )
         }
     }
@@ -54,6 +56,7 @@ class AnimeFavoritesSyncService : Service() {
             syncAdapter = syncAdapter ?: FavoritesSyncAdapter(
                 context = applicationContext,
                 serverHandler = get(),
+                dataStoreHandling = get()
             )
         }
     }

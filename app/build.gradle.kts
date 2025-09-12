@@ -109,6 +109,8 @@ dependencies {
     implementation(libs.ktorSerialization)
     implementation(libs.ktorJson)
     implementation(libs.ktorContentNegotiation)
+
+    implementation(libs.bundles.datastoreLibs)
 }
 
 enum class App {

@@ -94,6 +94,8 @@ class ListSyncAdapter(
                 }
             }
         }
+
+        println("[ListSyncAdapter] Sync complete")
     }
 
     private fun upsertLocalList(helper: OtakuCustomListContentProviderHelper, remote: CustomList) {
