@@ -4,6 +4,7 @@ import android.app.Application
 import com.google.android.material.color.DynamicColors
 import com.programmersbox.otakuworld.info.InfoViewModel
 import com.programmersbox.otakuworld.repository.OtakuRepository
+import com.programmersbox.otakuworld.repository.ServerHandler
 import com.programmersbox.otakuworld.repository.ServerHandling
 import com.programmersbox.otakuworld.settings.SettingsViewModel
 import org.koin.android.ext.android.get
@@ -12,6 +13,7 @@ import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 class PlaygroundApp : Application() {
@@ -30,7 +32,7 @@ class PlaygroundApp : Application() {
                     singleOf(::OtakuRepository)
                     singleOf(::AppInfo)
                     singleOf(::QrCodeRepository)
-                    singleOf(::ServerHandling)
+                    singleOf(::ServerHandling) bind ServerHandler::class
                 }
             )
         }
