@@ -171,15 +171,13 @@ fun InfoScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             tabsState.forEachIndexed { index, title ->
-                                if (title.otakuInfo != null) {
-                                    OtakuTab(
-                                        state = state,
-                                        onStateUpdate = { state = it },
-                                        index = index,
-                                        backStack = backStack,
-                                        title = title
-                                    )
-                                }
+                                OtakuTab(
+                                    state = state,
+                                    onStateUpdate = { state = it },
+                                    index = index,
+                                    backStack = backStack,
+                                    title = title
+                                )
                             }
                         }
                     } else {
@@ -316,63 +314,83 @@ private fun SelectionScreen(
     item: OtakuItemState,
     onShowingType: (ShowingType) -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        PermissionGetter(
-            permission = item.otakuItem.listsPermission,
-            item = item,
-            type = "lists"
-        ) {
-            Card(
-                onClick = { onShowingType(ShowingType.Lists) }
+    Crossfade(item.otakuInfo) { target ->
+        if (target != null) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
-                ListItem(
-                    headlineContent = { Text("Lists") },
-                    trailingContent = { Text(item.otakuItem.list.size.toString()) },
-                    supportingContent = { HorizontalDivider() },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
+                PermissionGetter(
+                    permission = item.otakuItem.listsPermission,
+                    item = item,
+                    type = "lists"
+                ) {
+                    Card(
+                        onClick = { onShowingType(ShowingType.Lists) }
+                    ) {
+                        ListItem(
+                            headlineContent = { Text("Lists") },
+                            trailingContent = { Text(item.otakuItem.list.size.toString()) },
+                            supportingContent = { HorizontalDivider() },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+
+                PermissionGetter(
+                    permission = item.otakuItem.favoritePermission,
+                    item = item,
+                    type = "favorites"
+                ) {
+                    Card(
+                        onClick = { onShowingType(ShowingType.Favorites) }
+                    ) {
+                        ListItem(
+                            headlineContent = { Text("Favorites") },
+                            trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
+                            supportingContent = { HorizontalDivider() },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+
+                Column {
+                    ListItem(
+                        headlineContent = { Text(item.appName) },
+                        trailingContent = { Text(item.otakuInfo?.version.orEmpty()) },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
                     )
-                )
+                    HorizontalDivider()
+                }
+
+                var showSettings by remember { mutableStateOf(false) }
+
+                if (showSettings) {
+                    SelectionSettings(
+                        item = item,
+                        onDismiss = { showSettings = false }
+                    )
+                }
+
+                Button(
+                    onClick = { showSettings = true },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) { Text("Settings") }
+            }
+        } else {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text("No App Found")
             }
         }
-
-        PermissionGetter(
-            permission = item.otakuItem.favoritePermission,
-            item = item,
-            type = "favorites"
-        ) {
-            Card(
-                onClick = { onShowingType(ShowingType.Favorites) }
-            ) {
-                ListItem(
-                    headlineContent = { Text("Favorites") },
-                    trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
-                    supportingContent = { HorizontalDivider() },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    )
-                )
-            }
-        }
-
-        var showSettings by remember { mutableStateOf(false) }
-
-        if (showSettings) {
-            SelectionSettings(
-                item = item,
-                onDismiss = { showSettings = false }
-            )
-        }
-
-        Button(
-            onClick = { showSettings = true },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) { Text("Settings") }
-
-
     }
 }
 

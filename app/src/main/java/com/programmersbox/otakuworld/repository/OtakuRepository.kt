@@ -19,13 +19,16 @@ class OtakuRepository(
             .setPackage(app)
             .setProvider(appInfo.provider)
             .build()
-        context.packageManager.getApplicationIcon(packageName)
+        OtakuInfo(
+            context.packageManager.getApplicationIcon(packageName),
+            context.packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        )
     }
         .onFailure { it.printStackTrace() }
-        .mapCatching { OtakuInfo(it) }
         .getOrNull()
 }
 
 data class OtakuInfo(
     val drawable: Drawable,
+    val version: String,
 )
