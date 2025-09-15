@@ -29,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.NotInterested
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AppBarWithSearch
 import androidx.compose.material3.AppBarWithSearchColors
@@ -106,7 +105,6 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun InfoScreen(
     viewModel: InfoViewModel = koinViewModel(),
-    onSettingsClick: () -> Unit,
 ) {
     val backStack = remember {
         TopLevelBackStack<NavKey>(SelectionScreen(App.MangaWorld))
@@ -165,10 +163,6 @@ fun InfoScreen(
                     IconButton(
                         onClick = viewModel::checkForApps
                     ) { Icon(Icons.Default.Refresh, null) }
-
-                    IconButton(
-                        onClick = onSettingsClick
-                    ) { Icon(Icons.Default.Settings, null) }
                 },
                 subtitle = { expanded ->
                     if (expanded) {

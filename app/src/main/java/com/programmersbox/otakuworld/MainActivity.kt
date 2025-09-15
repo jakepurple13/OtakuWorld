@@ -76,9 +76,7 @@ class MainActivity : AppCompatActivity() {
                 colorScheme = colorScheme,
                 motionScheme = MotionScheme.expressive()
             ) {
-                InfoScreen(
-                    onSettingsClick = { /*backStack.add(Settings)*/ }
-                )
+                InfoScreen()
             }
         }
     }
