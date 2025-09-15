@@ -4,7 +4,6 @@ plugins {
     `otaku-library`
     id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
-    `kotlin-parcelize`
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
 }
