@@ -280,19 +280,13 @@ data class ListScreen(val app: App) : NavKey
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PermissionGetter(
-    permission: String,
     item: OtakuItemState,
     type: String,
+    onPermissionRequest: () -> Unit,
+    hasPermission: Boolean,
     onPermissionGranted: @Composable () -> Unit,
 ) {
-    var hasFavoritePermission by rememberSaveable { mutableStateOf(false) }
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { hasFavoritePermission = it }
-
-    SideEffect { launcher.launch(permission) }
-
-    Crossfade(hasFavoritePermission) { target ->
+    Crossfade(hasPermission) { target ->
         if (target) {
             onPermissionGranted()
         } else {
@@ -301,7 +295,7 @@ private fun PermissionGetter(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedButton(
-                    onClick = { launcher.launch(permission) },
+                    onClick = onPermissionRequest,
                     shapes = ButtonDefaults.shapes()
                 ) { Text("Allow Access to $type ${item.appName}") }
             }
@@ -316,21 +310,36 @@ private fun SelectionScreen(
 ) {
     Crossfade(item.otakuInfo) { target ->
         if (target != null) {
+            var hasListPermission by rememberSaveable { mutableStateOf(false) }
+            val listLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { hasListPermission = it }
+            var hasFavoritePermission by rememberSaveable { mutableStateOf(false) }
+            val launcher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) {
+                hasFavoritePermission = it
+                listLauncher.launch(item.otakuItem.listsPermission)
+            }
+
+            SideEffect { launcher.launch(item.otakuItem.favoritePermission) }
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 PermissionGetter(
-                    permission = item.otakuItem.listsPermission,
                     item = item,
-                    type = "lists"
+                    type = "favorites",
+                    onPermissionRequest = { launcher.launch(item.otakuItem.favoritePermission) },
+                    hasPermission = hasFavoritePermission
                 ) {
                     Card(
-                        onClick = { onShowingType(ShowingType.Lists) }
+                        onClick = { onShowingType(ShowingType.Favorites) }
                     ) {
                         ListItem(
-                            headlineContent = { Text("Lists") },
-                            trailingContent = { Text(item.otakuItem.list.size.toString()) },
+                            headlineContent = { Text("Favorites") },
+                            trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
                             supportingContent = { HorizontalDivider() },
                             colors = ListItemDefaults.colors(
                                 containerColor = Color.Transparent
@@ -340,16 +349,17 @@ private fun SelectionScreen(
                 }
 
                 PermissionGetter(
-                    permission = item.otakuItem.favoritePermission,
                     item = item,
-                    type = "favorites"
+                    type = "lists",
+                    onPermissionRequest = { listLauncher.launch(item.otakuItem.listsPermission) },
+                    hasPermission = hasListPermission
                 ) {
                     Card(
-                        onClick = { onShowingType(ShowingType.Favorites) }
+                        onClick = { onShowingType(ShowingType.Lists) }
                     ) {
                         ListItem(
-                            headlineContent = { Text("Favorites") },
-                            trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
+                            headlineContent = { Text("Lists") },
+                            trailingContent = { Text(item.otakuItem.list.size.toString()) },
                             supportingContent = { HorizontalDivider() },
                             colors = ListItemDefaults.colors(
                                 containerColor = Color.Transparent

@@ -144,7 +144,7 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
                     ?: return null
 
                 if (rowId > 0) {
-                    val itemUri = "content://$AUTHORITY/$FAVORITES_TABLE/$url".toUri()
+                    val itemUri = "content://$AUTHORITY/$FAVORITES_TABLE".toUri()
                     context.contentResolver.notifyChange(uri, null)
                     return itemUri
                 }
