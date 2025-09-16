@@ -8,6 +8,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -42,6 +44,10 @@ class ServerHandling : ServerHandler {
 
         defaultRequest {
             url("http://192.168.1.9:8080")
+        }
+
+        install(Logging) {
+            level = LogLevel.ALL
         }
     }
 
