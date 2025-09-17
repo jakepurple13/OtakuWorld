@@ -42,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -161,7 +162,8 @@ fun InfoScreen(
                 title = { Text("OtakuWorld") },
                 actions = {
                     IconButton(
-                        onClick = viewModel::checkForApps
+                        onClick = viewModel::checkForApps,
+                        shapes = IconButtonDefaults.shapes()
                     ) { Icon(Icons.Default.Refresh, null) }
                 },
                 subtitle = { expanded ->
@@ -303,6 +305,7 @@ private fun PermissionGetter(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SelectionScreen(
     item: OtakuItemState,
@@ -390,6 +393,7 @@ private fun SelectionScreen(
 
                 Button(
                     onClick = { showSettings = true },
+                    shapes = ButtonDefaults.shapes(),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) { Text("Settings") }
             }
@@ -404,7 +408,7 @@ private fun SelectionScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SelectionSettings(
     item: OtakuItemState,
@@ -426,7 +430,8 @@ private fun SelectionSettings(
                             bundleOf()
                         )
                     }
-            }
+            },
+            shapes = ButtonDefaults.shapes()
         ) { Text("Sync Lists Now") }
 
         FlowRow {
@@ -440,7 +445,8 @@ private fun SelectionSettings(
                                 account
                             )
                         }
-                }
+                },
+                shapes = ButtonDefaults.shapes()
             ) { Text("Sync Favorites to Cloud Now") }
 
             Button(
@@ -453,7 +459,8 @@ private fun SelectionSettings(
                                 account
                             )
                         }
-                }
+                },
+                shapes = ButtonDefaults.shapes()
             ) { Text("Sync Favorites to Local Now") }
 
             Button(
@@ -466,13 +473,14 @@ private fun SelectionSettings(
                                 account
                             )
                         }
-                }
+                },
+                shapes = ButtonDefaults.shapes()
             ) { Text("Sync Favorites Now") }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ListsScreen(
     item: OtakuItemState,
@@ -500,7 +508,8 @@ private fun ListsScreen(
                 placeholder = { Text("Search") },
                 leadingIcon = {
                     IconButton(
-                        onClick = onBack
+                        onClick = onBack,
+                        shapes = IconButtonDefaults.shapes()
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
                 windowInsets = WindowInsets(0.dp),
@@ -558,7 +567,7 @@ private fun ListsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FavoritesScreen(
     item: OtakuItemState,
@@ -605,7 +614,8 @@ private fun FavoritesScreen(
                 placeholder = { Text("Search") },
                 leadingIcon = {
                     IconButton(
-                        onClick = onBack
+                        onClick = onBack,
+                        shapes = IconButtonDefaults.shapes()
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                 },
                 windowInsets = WindowInsets(0.dp),
@@ -686,11 +696,10 @@ fun M3CoverCard(
         onClick = onClick,
         tonalElevation = 4.dp,
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier
-            .size(
-                ComposableUtils.IMAGE_WIDTH,
-                ComposableUtils.IMAGE_HEIGHT
-            )
+        modifier = modifier.size(
+            ComposableUtils.IMAGE_WIDTH,
+            ComposableUtils.IMAGE_HEIGHT
+        )
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
