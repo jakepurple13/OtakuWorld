@@ -30,56 +30,59 @@ class ListSyncAdapter(
 
         val helper = OtakuCustomListContentProviderHelper(authority)
 
-        runBlocking {
-            try {
-                // 1) Load local and remote data
-                val localLists = helper.getAllCustomLists(context) ?: emptyList()
-                val remoteLists = runCatching { serverHandler.getLists(app) }
-                    .getOrNull() ?: return@runBlocking
+        runCatching {
+            runBlocking {
+                try {
+                    // 1) Load local and remote data
+                    val localLists = helper.getAllCustomLists(context) ?: emptyList()
+                    val remoteLists = runCatching { serverHandler.getLists(app) }
+                        .getOrNull() ?: return@runBlocking
 
-                // Index by uuid for quick lookups
-                val localById = localLists.associateBy { it.item.uuid }
-                val remoteById = remoteLists.associateBy { it.item.uuid }
+                    // Index by uuid for quick lookups
+                    val localById = localLists.associateBy { it.item.uuid }
+                    val remoteById = remoteLists.associateBy { it.item.uuid }
 
-                // 2) Push local lists missing on server or newer than server
-                for ((uuid, local) in localById) {
-                    val remote = remoteById[uuid]
-                    if (remote == null) {
-                        // Not on server → push local
-                        runCatching { serverHandler.upsertList(app, local) }
-                            .onFailure { syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1 }
-                    } else {
-                        // Conflict resolution by updated time
-                        if (local.item.time > remote.item.time) {
-                            // Local is newer → push to server
+                    // 2) Push local lists missing on server or newer than server
+                    for ((uuid, local) in localById) {
+                        val remote = remoteById[uuid]
+                        if (remote == null) {
+                            // Not on server → push local
                             runCatching { serverHandler.upsertList(app, local) }
                                 .onFailure { syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1 }
+                        } else {
+                            // Conflict resolution by updated time
+                            if (local.item.time > remote.item.time) {
+                                // Local is newer → push to server
+                                runCatching { serverHandler.upsertList(app, local) }
+                                    .onFailure { syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1 }
+                            }
                         }
                     }
-                }
 
-                // 3) Pull remote lists missing locally or newer than local
-                for ((uuid, remote) in remoteById) {
-                    val local = localById[uuid]
-                    if (local == null) {
-                        // Not locally → create the full list and entries locally
-                        upsertLocalList(helper, remote)
-                        syncResult?.stats?.numInserts = syncResult.stats?.numInserts?.plus(1) ?: 1
-                    } else {
-                        if (remote.item.time > local.item.time) {
-                            // Remote newer → replace locally
+                    // 3) Pull remote lists missing locally or newer than local
+                    for ((uuid, remote) in remoteById) {
+                        val local = localById[uuid]
+                        if (local == null) {
+                            // Not locally → create the full list and entries locally
                             upsertLocalList(helper, remote)
-                            syncResult?.stats?.numUpdates = syncResult.stats?.numUpdates?.plus(1) ?: 1
-                        } else if (remote.item.time == local.item.time) {
-                            // Same header time, ensure entries consistency (handle possible item-level drifts)
-                            syncEntries(helper, uuid, local, remote)
+                            syncResult?.stats?.numInserts = syncResult.stats?.numInserts?.plus(1) ?: 1
+                        } else {
+                            if (remote.item.time > local.item.time) {
+                                // Remote newer → replace locally
+                                upsertLocalList(helper, remote)
+                                syncResult?.stats?.numUpdates = syncResult.stats?.numUpdates?.plus(1) ?: 1
+                            } else if (remote.item.time == local.item.time) {
+                                // Same header time, ensure entries consistency (handle possible item-level drifts)
+                                syncEntries(helper, uuid, local, remote)
+                            }
                         }
                     }
-                }
 
-            } catch (t: Throwable) {
-                // Count as a soft error so sync framework can retry if needed
-                syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                    // Count as a soft error so sync framework can retry if needed
+                    syncResult?.stats?.numIoExceptions = syncResult.stats?.numIoExceptions?.plus(1) ?: 1
+                }
             }
         }
 

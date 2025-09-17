@@ -15,7 +15,7 @@ genericAi = "0.6.6"
 gradle = "8.12.0"
 heatmap = "1.0.5"
 humanReadable = "1.12.0"
-knotify = "0.3.0"
+knotify = "0.4.0"
 kotlinxDatetime = "0.7.1"
 
 javase = "3.5.3"
@@ -32,7 +32,7 @@ haze = "1.6.10"
 kamelImage = "1.0.7"
 latestAboutLibsRelease = "12.2.4"
 coroutinesVersion = "1.10.2"
-glideVersion = "5.0.4"
+glideVersion = "5.0.5"
 pagecurl = "1.5.1"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 pagingVersion = "3.3.6"
@@ -43,7 +43,7 @@ roomVersion = "2.8.0"
 navVersion = "2.9.4"
 koin-bom = "4.1.1"
 coil = "3.3.0"
-landscapist = "2.5.2"
+landscapist = "2.6.0"
 lifecycle = "2.9.3"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
@@ -87,7 +87,7 @@ uiautomator = "2.3.0"
 benchmark-macro-junit4 = "1.3.3"
 androidx-baselineprofile = "1.3.3"
 profileinstaller = "1.4.1"
-telephoto = "0.16.0"
+telephoto = "0.17.0"
 zoomimageComposeGlide = "1.4.0"
 
 workinspector = "1.2"
@@ -108,7 +108,7 @@ kotlinTest = "2.2.10"
 runner = "1.7.0"
 core = "1.7.0"
 
-androidx-lifecycle = "2.9.3"
+androidx-lifecycle = "2.9.4"
 
 compose-multiplatform = "1.10.0-alpha01"
 
@@ -158,8 +158,8 @@ barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref =
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
 moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }
 moko-biometry = { module = "dev.icerock.moko:biometry", version.ref = "mokoBiometry" }
-compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded-core" }
-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.0-shaded" }
+compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded-core" }
+constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded" }
 anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
 generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" }
 generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
@@ -274,7 +274,7 @@ coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-pl
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
-glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta07"
+glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta08"
 
 androidCore = "androidx.core:core-ktx:1.17.0"
 appCompat = "androidx.appcompat:appcompat:1.7.1"
