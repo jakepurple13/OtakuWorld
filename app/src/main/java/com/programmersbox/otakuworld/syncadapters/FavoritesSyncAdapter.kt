@@ -140,6 +140,7 @@ class FavoritesSyncAdapter(
         println("[FavoritesSyncAdapter] To insert locally (post-delete): ${toInsertLocally.size}")
         toInsertLocally.forEach { model ->
             runCatching { helper.insertFavorite(context, model) }
+                .onSuccess { syncResult.stats?.numInserts = (syncResult.stats?.numInserts ?: 0) + 1 }
                 .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
         }
 
@@ -168,6 +169,7 @@ class FavoritesSyncAdapter(
         }
         toUpdateLocal.forEach { model ->
             runCatching { helper.updateFavorite(context, model) }
+                .onSuccess { syncResult.stats?.numUpdates = (syncResult.stats?.numUpdates ?: 0) + 1 }
                 .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
         }
 
