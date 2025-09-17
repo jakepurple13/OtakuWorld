@@ -10,6 +10,7 @@ import androidx.core.os.bundleOf
 import com.programmersbox.otakuworld.DataStoreHandling
 import com.programmersbox.otakuworld.OtakuFavoritesContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -50,7 +51,7 @@ class FavoritesSyncAdapter(
             }
 
         // 2) Fetch remote favorites from GET endpoint
-        val remoteFavorites = runCatching { runBlocking { serverHandler.getFavorites(app) } }
+        val remoteFavorites = runCatching { runBlockingIo { serverHandler.getFavorites(app) } }
             .onSuccess { println("[FavoritesSyncAdapter] Remote favorites: ${it.favorites.size}") }
             .onFailure {
                 it.printStackTrace()
@@ -64,7 +65,7 @@ class FavoritesSyncAdapter(
         var remoteByUrl = remoteFavorites.favorites.associateBy { it.url }
 
         // 3) Decide delete strategy FIRST to avoid re-adding items that should be deleted
-        val lastSyncTime = runCatching { runBlocking { dataStoreHandling.lastTimeFavoritesSynced.get() } }
+        val lastSyncTime = runCatching { runBlockingIo { dataStoreHandling.lastTimeFavoritesSynced.get() } }
             .getOrDefault(0L)
         val remoteUpdated = remoteFavorites.lastTimeUpdated
 
@@ -119,7 +120,7 @@ class FavoritesSyncAdapter(
             hasDeleted = true
             val toDeleteRemotely = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
             println("[FavoritesSyncAdapter] Deleting remotely (missing locally): ${toDeleteRemotely.size}")
-            runBlocking {
+            runBlockingIo {
                 toDeleteRemotely
                     .map { model ->
                         async(dispatchers, start = CoroutineStart.LAZY) {
@@ -136,7 +137,7 @@ class FavoritesSyncAdapter(
         }
             .getOrElse { emptyList() }
         val refreshedRemote = runCatching {
-            if (hasDeleted) runBlocking { serverHandler.getFavorites(app) } else remoteFavorites
+            if (hasDeleted) runBlockingIo { serverHandler.getFavorites(app) } else remoteFavorites
         }
             .getOrElse { remoteFavorites } // fall back to previous if failed
 
@@ -160,7 +161,7 @@ class FavoritesSyncAdapter(
         // 5) Push: Add local-only items to remote (server upsert) (after deletes)
         val toPushRemotely = localByUrl.keys.minus(remoteByUrl.keys).mapNotNull { localByUrl[it] }
         println("[FavoritesSyncAdapter] To push remotely (post-delete): ${toPushRemotely.size}")
-        runBlocking {
+        runBlockingIo {
             runCatching { serverHandler.upsertFavorites(app, toPushRemotely) }
                 .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
         }
@@ -182,11 +183,16 @@ class FavoritesSyncAdapter(
         }
 
         // Update last successful sync time
-        runCatching { runBlocking { dataStoreHandling.lastTimeFavoritesSynced.set(System.currentTimeMillis()) } }
+        runCatching { runBlockingIo { dataStoreHandling.lastTimeFavoritesSynced.set(System.currentTimeMillis()) } }
             .onFailure { it.printStackTrace() }
 
         println("[FavoritesSyncAdapter] Sync complete")
     }
+
+    private fun <T> runBlockingIo(block: suspend CoroutineScope.() -> T): T {
+        return runBlocking(dispatchers, block = block)
+    }
+
 
     companion object {
         fun syncToLocal(
