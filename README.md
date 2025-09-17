@@ -20,6 +20,13 @@ A combined version of my [MangaWorld](https://github.com/jakepurple13/MangaWorld
 These apps do not contain ANY sources themselves. In order to pull sources, the apps do contain some
 default sources.
 
+Right now, we do support cloud syncing via Firebase, however, that will be going away soon.
+We are making an alternative way that requires some manual configuration.
+Using [OtakuWorld](app/readme.md) will allow you to setup a manual configuration!
+A server is required, fortunately, we have made a basic server that will only work on a local
+network.
+Help wanted to help set up a more solid solution!
+
 For MangaWorld: Any sources that work with [Mihon](https://mihon.app/) will work with
 MangaWorld...After the bridge
 is installed.
