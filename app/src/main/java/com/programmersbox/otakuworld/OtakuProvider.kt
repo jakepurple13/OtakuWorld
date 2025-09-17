@@ -154,6 +154,16 @@ class OtakuFavoritesContentProviderHelper(
         )
     }
 
+    fun getAllFavorites(contentResolver: ContentResolver): Cursor? {
+        return contentResolver.query(
+            CONTENT_URI,
+            null,
+            null,
+            null,
+            null
+        )
+    }
+
     fun getAllFavoritesFlow(context: Context) = context
         .contentResolver
         .observeUri(CONTENT_URI) { getAllFavorites(context)?.let { cursorToFavorites(it) } }
@@ -316,15 +326,20 @@ class OtakuFavoritesContentProviderHelper(
      * @return A list of DbModel objects representing all favorites
      */
     fun getAllFavoritesAsList(context: Context): List<DbModel> {
-        val cursor = getAllFavorites(context) ?: return emptyList()
-        val favorites = cursorToFavorites(cursor)
-        cursor.close()
-        return favorites
+        return getAllFavorites(context)
+            ?.use { cursorToFavorites(it) }
+            ?: return emptyList()
+    }
+
+    fun getAllFavoritesAsList(contentResolver: ContentResolver): List<DbModel> {
+        return getAllFavorites(contentResolver)
+            ?.use { cursorToFavorites(it) }
+            ?: return emptyList()
     }
 
     fun getAllFavoritesAsListFlow(context: Context) = context
         .contentResolver
-        .observeUri(CONTENT_URI) { getAllFavoritesAsList(context) }
+        .observeUri(CONTENT_URI) { getAllFavoritesAsList(it) }
 
     /**
      * Retrieves a specific favorite as a DbModel object
@@ -563,16 +578,16 @@ class OtakuCustomListContentProviderHelper(
 
 internal fun <T> ContentResolver.observeUri(
     uri: Uri,
-    getData: suspend () -> T?,
+    getData: suspend (ContentResolver) -> T?,
 ) = callbackFlow<T> {
     launch {
-        getData()?.let { send(it) }
+        getData(this@observeUri)?.let { send(it) }
     }
 
     val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
             launch(Dispatchers.IO) {
-                getData()?.let { send(it) }
+                getData(this@observeUri)?.let { send(it) }
             }
         }
     }

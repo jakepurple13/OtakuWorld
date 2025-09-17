@@ -146,14 +146,16 @@ class FavoritesSyncAdapter(
         // 4) Pull: Add remote-only items to local provider (after deletes)
         val toInsertLocally = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
         println("[FavoritesSyncAdapter] To insert locally (post-delete): ${toInsertLocally.size}")
-        toInsertLocally.chunked(10) { items ->
-            runCatching { helper.insertFavorites(context, items) }
-                .onSuccess {
-                    println("[FavoritesSyncAdapter] Inserted locally: $it")
-                    syncResult.stats?.numInserts = (syncResult.stats?.numInserts ?: 0) + it
-                }
-                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
-        }
+        toInsertLocally
+            .chunked(10)
+            .forEach { items ->
+                runCatching { helper.insertFavorites(context, items) }
+                    .onSuccess {
+                        println("[FavoritesSyncAdapter] Inserted locally: $it")
+                        syncResult.stats?.numInserts = (syncResult.stats?.numInserts ?: 0) + it
+                    }
+                    .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
+            }
 
         // 5) Push: Add local-only items to remote (server upsert) (after deletes)
         val toPushRemotely = localByUrl.keys.minus(remoteByUrl.keys).mapNotNull { localByUrl[it] }

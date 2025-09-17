@@ -16,10 +16,12 @@ import com.programmersbox.otakuworld.OtakuProvider
 import com.programmersbox.otakuworld.Provider
 import com.programmersbox.otakuworld.repository.OtakuInfo
 import com.programmersbox.otakuworld.repository.OtakuRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -93,6 +95,7 @@ class InfoViewModel(
                 }
                 .getAllFavoritesAsListFlow(appInfo.context)
         }
+            .flowOn(Dispatchers.IO)
             .catch {
                 it.printStackTrace()
                 emit(emptyList())
@@ -111,6 +114,7 @@ class InfoViewModel(
                 }
                 .getAllCustomListsFlow(appInfo.context)
         }
+            .flowOn(Dispatchers.IO)
             .catch {
                 it.printStackTrace()
                 emit(emptyList())
