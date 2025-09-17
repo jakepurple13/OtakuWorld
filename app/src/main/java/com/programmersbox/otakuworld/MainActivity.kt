@@ -59,7 +59,6 @@ class MainActivity : AppCompatActivity() {
         // I'd also need to make sure to notify whenever the databases change.
         // Maybe there's even reverse support? The apps try and detect if OtakuWorld is installed and logged in?
         // Maybe this app even handles firebase? And the OtakuWorld apps are purely local?
-        // Create a readme for this app
 
         setContent {
             val darkTheme = isSystemInDarkTheme()

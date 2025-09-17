@@ -86,18 +86,6 @@ class ListSyncAdapter(
             }
         }
 
-        // Optional debug of extras
-        runCatching {
-            val keySet = extras?.keySet()
-            if (keySet?.isNotEmpty() == true) {
-                keySet.forEach {
-                    runCatching {
-                        println(it + " | " + extras.get(it))
-                    }
-                }
-            }
-        }
-
         println("[ListSyncAdapter] Sync complete")
     }
 

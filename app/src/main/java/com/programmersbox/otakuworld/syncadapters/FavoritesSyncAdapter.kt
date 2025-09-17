@@ -36,7 +36,7 @@ class FavoritesSyncAdapter(
 
         val app = getApp(authority) ?: return
 
-        println("Syncing favorites for $app")
+        println("[FavoritesSyncAdapter] Syncing favorites for $app")
 
         val helper = OtakuFavoritesContentProviderHelper(authority)
 
@@ -84,7 +84,7 @@ class FavoritesSyncAdapter(
             doDeleteRemoteMissingOnLocal = localIsSourceFlag
             println("[FavoritesSyncAdapter] Overrides provided: serverIsSource=$serverIsSourceFlag, localIsSource=$localIsSourceFlag")
         } else {
-            if (remoteUpdated == 0L || lastSyncTime == 0L) {
+            if (remoteUpdated == 0L || lastSyncTime == 0L || localFavorites.isEmpty() || remoteFavorites.favorites.isEmpty()) {
                 // First-time sync on one side; skip deletes
                 println("[FavoritesSyncAdapter] Skipping deletes (remoteUpdated=$remoteUpdated, lastSyncTime=$lastSyncTime)")
             } else if (remoteUpdated > lastSyncTime) {
@@ -103,7 +103,10 @@ class FavoritesSyncAdapter(
             }
         }
 
+        var hasDeleted = false
+
         if (doDeleteLocalMissingOnServer) {
+            hasDeleted = true
             val toDeleteLocally = localByUrl.keys.minus(remoteByUrl.keys)
             println("[FavoritesSyncAdapter] Deleting locally (missing on server): ${toDeleteLocally.size}")
             toDeleteLocally.forEach { url ->
@@ -113,6 +116,7 @@ class FavoritesSyncAdapter(
         }
 
         if (doDeleteRemoteMissingOnLocal) {
+            hasDeleted = true
             val toDeleteRemotely = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
             println("[FavoritesSyncAdapter] Deleting remotely (missing locally): ${toDeleteRemotely.size}")
             runBlocking {
@@ -127,9 +131,13 @@ class FavoritesSyncAdapter(
         }
 
         // Re-fetch states after deletions to ensure diffs reflect the latest state
-        val refreshedLocal = runCatching { helper.getAllFavoritesAsList(context) }
+        val refreshedLocal = runCatching {
+            if (hasDeleted) helper.getAllFavoritesAsList(context) else localFavorites
+        }
             .getOrElse { emptyList() }
-        val refreshedRemote = runCatching { runBlocking { serverHandler.getFavorites(app) } }
+        val refreshedRemote = runCatching {
+            if (hasDeleted) runBlocking { serverHandler.getFavorites(app) } else remoteFavorites
+        }
             .getOrElse { remoteFavorites } // fall back to previous if failed
 
         localByUrl = refreshedLocal.associateBy { it.url }
@@ -138,9 +146,12 @@ class FavoritesSyncAdapter(
         // 4) Pull: Add remote-only items to local provider (after deletes)
         val toInsertLocally = remoteByUrl.keys.minus(localByUrl.keys).mapNotNull { remoteByUrl[it] }
         println("[FavoritesSyncAdapter] To insert locally (post-delete): ${toInsertLocally.size}")
-        toInsertLocally.forEach { model ->
-            runCatching { helper.insertFavorite(context, model) }
-                .onSuccess { syncResult.stats?.numInserts = (syncResult.stats?.numInserts ?: 0) + 1 }
+        toInsertLocally.chunked(10) { items ->
+            runCatching { helper.insertFavorites(context, items) }
+                .onSuccess {
+                    println("[FavoritesSyncAdapter] Inserted locally: $it")
+                    syncResult.stats?.numInserts = (syncResult.stats?.numInserts ?: 0) + it
+                }
                 .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
         }
 
@@ -148,13 +159,8 @@ class FavoritesSyncAdapter(
         val toPushRemotely = localByUrl.keys.minus(remoteByUrl.keys).mapNotNull { localByUrl[it] }
         println("[FavoritesSyncAdapter] To push remotely (post-delete): ${toPushRemotely.size}")
         runBlocking {
-            toPushRemotely
-                .map { model ->
-                    async(dispatchers, start = CoroutineStart.LAZY) {
-                        runCatching { serverHandler.upsertFavorite(app, model) }
-                            .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
-                    }
-                }.awaitAll()
+            runCatching { serverHandler.upsertFavorites(app, toPushRemotely) }
+                .onFailure { syncResult.stats?.numSkippedEntries = (syncResult.stats?.numSkippedEntries ?: 0) + 1 }
         }
 
         // 6) Resolve conflicts: If present in both but different, prefer the item with higher numChapters
@@ -176,16 +182,6 @@ class FavoritesSyncAdapter(
         // Update last successful sync time
         runCatching { runBlocking { dataStoreHandling.lastTimeFavoritesSynced.set(System.currentTimeMillis()) } }
             .onFailure { it.printStackTrace() }
-
-        // Optional logging of extras for debugging
-        runCatching {
-            val keySet = extras?.keySet()
-            if (keySet?.isNotEmpty() == true) {
-                keySet.forEach { key ->
-                    runCatching { println("[FavoritesSyncAdapter] Extra: " + key + " = " + extras.get(key)) }
-                }
-            }
-        }
 
         println("[FavoritesSyncAdapter] Sync complete")
     }

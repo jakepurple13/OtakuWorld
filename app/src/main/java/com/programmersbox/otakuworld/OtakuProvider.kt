@@ -215,6 +215,27 @@ class OtakuFavoritesContentProviderHelper(
         return context.contentResolver.insert(CONTENT_URI, values)
     }
 
+    fun insertFavorites(context: Context, favorites: List<DbModel>): Int {
+        return context
+            .contentResolver
+            .bulkInsert(
+                CONTENT_URI,
+                favorites
+                    .map { favorite ->
+                        ContentValues().apply {
+                            put("title", favorite.title)
+                            put("description", favorite.description)
+                            put("url", favorite.url)
+                            put("imageUrl", favorite.imageUrl)
+                            put("sources", favorite.source)
+                            put("numChapters", favorite.numChapters)
+                            put("shouldCheckForUpdate", if (favorite.shouldCheckForUpdate) 1 else 0)
+                        }
+                    }
+                    .toTypedArray()
+            )
+    }
+
     /**
      * Updates an existing favorite in the content provider
      * @param context The context to use for accessing the content resolver

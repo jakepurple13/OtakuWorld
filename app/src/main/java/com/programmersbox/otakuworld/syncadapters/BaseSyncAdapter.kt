@@ -30,5 +30,14 @@ abstract class BaseSyncAdapter(
         syncResult: SyncResult?,
     ) {
         println("Performing sync for $authority")
+        // Optional logging of extras for debugging
+        runCatching {
+            val keySet = extras?.keySet()
+            if (keySet?.isNotEmpty() == true) {
+                keySet.forEach { key ->
+                    runCatching { println("[BaseSyncAdapter] Extra: " + key + " = " + extras.get(key)) }
+                }
+            }
+        }
     }
 }

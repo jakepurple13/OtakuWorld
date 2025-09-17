@@ -1,6 +1,15 @@
 # OtakuWorld
 
 This is a modifiable app to handle syncing with whatever server you want!
+So you don't have to change anything about each of the other apps, MangaWorld, AnimeWorld,
+NovelWorld.
+Right now, Firebase is being used for cloud syncing, however, that will soon be phased out. (Not
+sure when, just know its coming.)
+There is no official alternative right now that we can just switch to, however, this app gives you
+the tools to find a possible alternative.
+If someone wants to help and setup a server, we can work together on that, but until then, this is a
+warning.
+
 The current setup is for the custom made
 server [OtakuWorld Server](https://github.com/jakepurple13/OtakuWorldServer).
 But anyone can modify this to point to any server they want as well as handle the data however they

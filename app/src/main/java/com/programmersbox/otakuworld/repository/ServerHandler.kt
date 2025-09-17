@@ -24,6 +24,7 @@ import kotlinx.serialization.json.Json
 interface ServerHandler {
     suspend fun getFavorites(app: App): FavoritesData
     suspend fun upsertFavorite(app: App, model: DbModel)
+    suspend fun upsertFavorites(app: App, model: List<DbModel>)
     suspend fun deleteFavorite(app: App, model: DbModel)
     suspend fun getLists(app: App): List<CustomList>
     suspend fun upsertList(app: App, list: CustomList)
@@ -60,6 +61,13 @@ class ServerHandling : ServerHandler {
         client.post("/otaku/favorites") {
             contentType(ContentType.Application.Json)
             setBody(model.toCustomServerDbModel(app.toName()))
+        }.bodyAsText()
+    }
+
+    override suspend fun upsertFavorites(app: App, model: List<DbModel>) {
+        client.post("/otaku/favoritesAll") {
+            contentType(ContentType.Application.Json)
+            setBody(model.map { it.toCustomServerDbModel(app.toName()) })
         }.bodyAsText()
     }
 
