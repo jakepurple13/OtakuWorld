@@ -212,9 +212,7 @@ fun InfoScreen(
                 App.NovelWorld -> tabsState[2]
             }
 
-            entry<SelectionScreen>(
-
-            ) {
+            entry<SelectionScreen> {
                 SelectionScreen(
                     item = getApp(it.app),
                     onShowingType = { showing ->
@@ -230,27 +228,21 @@ fun InfoScreen(
                 )
             }
 
-            entry<FavScreen>(
-
-            ) {
+            entry<FavScreen> {
                 FavoritesScreen(
                     item = getApp(it.app),
                     onBack = { backStack.removeLast() }
                 )
             }
 
-            entry<ListScreen>(
-
-            ) {
+            entry<ListScreen> {
                 ListsScreen(
                     item = getApp(it.app),
                     onBack = { backStack.removeLast() }
                 )
             }
 
-            entry<IncognitoScreen>(
-
-            ) {
+            entry<IncognitoScreen> {
                 IncognitoScreen(
                     item = getApp(it.app),
                     onBack = { backStack.removeLast() }
@@ -354,13 +346,37 @@ private fun SelectionScreen(
 
             val format = remember { SimpleDateFormat.getDateTimeInstance() }
 
-            val formatted by remember {
+            val formattedFavoritesSync by remember {
                 derivedStateOf {
                     format.format(
                         when (item.app) {
                             App.MangaWorld -> multiprocessDataStoreHandler.lastFavoritesSyncManga
                             App.AnimeWorld -> multiprocessDataStoreHandler.lastFavoritesSyncAnime
                             App.NovelWorld -> multiprocessDataStoreHandler.lastFavoritesSyncNovel
+                        }
+                    )
+                }
+            }
+
+            val formattedListSync by remember {
+                derivedStateOf {
+                    format.format(
+                        when (item.app) {
+                            App.MangaWorld -> multiprocessDataStoreHandler.lastListsSyncManga
+                            App.AnimeWorld -> multiprocessDataStoreHandler.lastListsSyncAnime
+                            App.NovelWorld -> multiprocessDataStoreHandler.lastListsSyncNovel
+                        }
+                    )
+                }
+            }
+
+            val formattedIncognitoSync by remember {
+                derivedStateOf {
+                    format.format(
+                        when (item.app) {
+                            App.MangaWorld -> multiprocessDataStoreHandler.lastIncognitoSyncManga
+                            App.AnimeWorld -> multiprocessDataStoreHandler.lastIncognitoSyncAnime
+                            App.NovelWorld -> multiprocessDataStoreHandler.lastIncognitoSyncNovel
                         }
                     )
                 }
@@ -382,7 +398,7 @@ private fun SelectionScreen(
                         ListItem(
                             headlineContent = { Text("Favorites") },
                             trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
-                            overlineContent = { Text("Last Synced: $formatted") },
+                            overlineContent = { Text("Last Synced: $formattedFavoritesSync") },
                             supportingContent = { HorizontalDivider() },
                             colors = ListItemDefaults.colors(
                                 containerColor = Color.Transparent
@@ -403,6 +419,7 @@ private fun SelectionScreen(
                         ListItem(
                             headlineContent = { Text("Lists") },
                             trailingContent = { Text(item.otakuItem.list.size.toString()) },
+                            overlineContent = { Text("Last Synced: $formattedListSync") },
                             supportingContent = { HorizontalDivider() },
                             colors = ListItemDefaults.colors(
                                 containerColor = Color.Transparent
@@ -418,6 +435,7 @@ private fun SelectionScreen(
                     ListItem(
                         headlineContent = { Text("Incognito") },
                         trailingContent = { Text(item.otakuItem.incognitoSources.size.toString()) },
+                        overlineContent = { Text("Last Synced: $formattedIncognitoSync") },
                         supportingContent = { HorizontalDivider() },
                         colors = ListItemDefaults.colors(
                             containerColor = Color.Transparent
