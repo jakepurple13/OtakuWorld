@@ -88,12 +88,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.DbModel
+import com.programmersbox.otakuworld.MultiprocessDataStoreHandler
 import com.programmersbox.otakuworld.Navigation
+import com.programmersbox.otakuworld.OtakuSettings
 import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
@@ -104,6 +107,8 @@ import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -343,6 +348,18 @@ private fun SelectionScreen(
 
             SideEffect { launcher.launch(item.otakuItem.favoritePermission) }
 
+            val multiprocessDataStoreHandler by koinInject<MultiprocessDataStoreHandler>()
+                .getFlow()
+                .collectAsStateWithLifecycle(OtakuSettings(0))
+
+            val format = remember { SimpleDateFormat.getDateTimeInstance() }
+
+            val formatted by remember {
+                derivedStateOf {
+                    format.format(multiprocessDataStoreHandler.lastFavoritesSync)
+                }
+            }
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize()
@@ -359,6 +376,7 @@ private fun SelectionScreen(
                         ListItem(
                             headlineContent = { Text("Favorites") },
                             trailingContent = { Text(item.otakuItem.favorites.size.toString()) },
+                            overlineContent = { Text("Last Synced: $formatted") },
                             supportingContent = { HorizontalDivider() },
                             colors = ListItemDefaults.colors(
                                 containerColor = Color.Transparent

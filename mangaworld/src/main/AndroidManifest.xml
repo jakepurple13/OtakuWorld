@@ -113,7 +113,7 @@
             android:name=".MangaIncognitoContentProvider"
             android:authorities="${applicationId}.provider.incognito"
             android:exported="true"
-            android:label="@string/manga_lists_provider" />
+            android:label="@string/manga_incognito_provider" />
 
     </application>
 

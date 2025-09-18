@@ -8,6 +8,7 @@ import android.content.SyncResult
 import android.os.Bundle
 import androidx.core.os.bundleOf
 import com.programmersbox.otakuworld.DataStoreHandling
+import com.programmersbox.otakuworld.MultiprocessDataStoreHandler
 import com.programmersbox.otakuworld.providers.OtakuFavoritesContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,7 @@ class FavoritesSyncAdapter(
     context: Context,
     private val serverHandler: ServerHandler,
     private val dataStoreHandling: DataStoreHandling,
+    private val multiprocessDataStoreHandler: MultiprocessDataStoreHandler,
 ) : BaseSyncAdapter(context, true, false) {
     private val dispatchers = Dispatchers.IO.limitedParallelism(5)
     override fun onPerformSync(
@@ -65,7 +67,7 @@ class FavoritesSyncAdapter(
         var remoteByUrl = remoteFavorites.favorites.associateBy { it.url }
 
         // 3) Decide delete strategy FIRST to avoid re-adding items that should be deleted
-        val lastSyncTime = runCatching { runBlockingIo { dataStoreHandling.lastTimeFavoritesSynced.get() } }
+        val lastSyncTime = runCatching { runBlockingIo { multiprocessDataStoreHandler.get().lastFavoritesSync } }
             .getOrDefault(0L)
         val remoteUpdated = remoteFavorites.lastTimeUpdated
 
@@ -183,8 +185,9 @@ class FavoritesSyncAdapter(
         }
 
         // Update last successful sync time
-        runCatching { runBlockingIo { dataStoreHandling.lastTimeFavoritesSynced.set(System.currentTimeMillis()) } }
-            .onFailure { it.printStackTrace() }
+        runCatching {
+            runBlockingIo { multiprocessDataStoreHandler.updateData { it.copy(lastFavoritesSync = System.currentTimeMillis()) } }
+        }.onFailure { it.printStackTrace() }
 
         println("[FavoritesSyncAdapter] Sync complete")
     }

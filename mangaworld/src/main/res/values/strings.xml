@@ -31,4 +31,5 @@
     <string name="permission_description">Be able to modify MangaWorld Favorites</string>
     <string name="manga_favorites_provider_label">Manga Favorites</string>
     <string name="manga_lists_provider">Manga Lists</string>
+    <string name="manga_incognito_provider">Manga Incognito</string>
 </resources>
