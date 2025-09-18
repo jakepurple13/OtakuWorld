@@ -37,3 +37,10 @@ data class DbModel(
     val numChapters: Int,
     val shouldCheckForUpdate: Boolean,
 )
+
+@Serializable
+data class IncognitoSource(
+    val source: String,
+    val name: String,
+    val isIncognito: Boolean,
+)

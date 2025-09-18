@@ -19,9 +19,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -57,6 +59,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TwoRowsTopAppBar
 import androidx.compose.material3.rememberSearchBarState
@@ -88,13 +91,13 @@ import androidx.core.os.bundleOf
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.DbModel
 import com.programmersbox.otakuworld.Navigation
 import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
+import com.programmersbox.otakuworld.providers.App
 import com.programmersbox.otakuworld.repository.OtakuInfo
 import com.programmersbox.otakuworld.syncadapters.FavoritesSyncAdapter
 import com.skydoves.landscapist.glide.GlideImage
@@ -215,6 +218,7 @@ fun InfoScreen(
                                 ShowingType.Selection -> SelectionScreen(it.app)
                                 ShowingType.Favorites -> FavScreen(it.app)
                                 ShowingType.Lists -> ListScreen(it.app)
+                                ShowingType.Incognito -> IncognitoScreen(it.app)
                             }
                         )
                     },
@@ -234,6 +238,15 @@ fun InfoScreen(
 
             ) {
                 ListsScreen(
+                    item = getApp(it.app),
+                    onBack = { backStack.removeLast() }
+                )
+            }
+
+            entry<IncognitoScreen>(
+
+            ) {
+                IncognitoScreen(
                     item = getApp(it.app),
                     onBack = { backStack.removeLast() }
                 )
@@ -278,6 +291,9 @@ data class FavScreen(val app: App) : NavKey
 
 @Serializable
 data class ListScreen(val app: App) : NavKey
+
+@Serializable
+data class IncognitoScreen(val app: App) : NavKey
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -369,6 +385,20 @@ private fun SelectionScreen(
                             )
                         )
                     }
+                }
+
+                //TODO: Show biometrics before opening
+                Card(
+                    onClick = { onShowingType(ShowingType.Incognito) }
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Incognito") },
+                        trailingContent = { Text(item.otakuItem.incognitoSources.size.toString()) },
+                        supportingContent = { HorizontalDivider() },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
                 }
 
                 Column {
@@ -569,6 +599,48 @@ private fun ListsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
+private fun IncognitoScreen(
+    item: OtakuItemState,
+    onBack: () -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Incognito Sources") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        shapes = IconButtonDefaults.shapes()
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                },
+                windowInsets = WindowInsets(0.dp),
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(item.otakuItem.incognitoSources) {
+                Card(
+                    onClick = { },
+                ) {
+                    ListItem(
+                        headlineContent = { Text(it.name) },
+                        supportingContent = { Text(it.source) },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
 private fun FavoritesScreen(
     item: OtakuItemState,
     onBack: () -> Unit,
@@ -682,7 +754,8 @@ private fun FavoritesScreen(
 enum class ShowingType {
     Selection,
     Favorites,
-    Lists
+    Lists,
+    Incognito
 }
 
 @Composable

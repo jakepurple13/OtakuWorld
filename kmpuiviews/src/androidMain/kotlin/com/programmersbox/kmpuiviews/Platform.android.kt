@@ -356,4 +356,18 @@ actual class SystemAlerter(
                 )
         }.onFailure { it.printStackTrace() }
     }
+
+    actual fun alertIncognitoChange() {
+        runCatching {
+            context
+                .contentResolver
+                .notifyChange(
+                    Uri.withAppendedPath(
+                        "content://${packageName}.provider.incognito".toUri(),
+                        "incognito"
+                    ),
+                    null
+                )
+        }.onFailure { it.printStackTrace() }
+    }
 }

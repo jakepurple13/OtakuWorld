@@ -7,7 +7,7 @@ import android.content.SyncResult
 import android.os.Bundle
 import com.programmersbox.otakuworld.CustomList
 import com.programmersbox.otakuworld.CustomListInfo
-import com.programmersbox.otakuworld.OtakuCustomListContentProviderHelper
+import com.programmersbox.otakuworld.providers.OtakuCustomListContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
 import kotlinx.coroutines.runBlocking
 

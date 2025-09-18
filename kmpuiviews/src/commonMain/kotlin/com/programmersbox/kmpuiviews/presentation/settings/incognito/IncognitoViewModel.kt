@@ -7,6 +7,7 @@ import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.repository.IncognitoRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 class IncognitoViewModel(
     private val itemDao: ItemDao,
     private val sourceRepository: SourceRepository,
+    private val incognitoRepository: IncognitoRepository,
 ) : ViewModel() {
 
     val incognitoModels = mutableStateListOf<IncognitoModel>()
@@ -55,8 +57,8 @@ class IncognitoViewModel(
                     .list
                     .filter { it.packageName == sourceInformation.packageName }
                     .forEach {
-                        itemDao.updateIncognitoSource(
-                            source = it.packageName,
+                        incognitoRepository.updateIncognito(
+                            url = it.packageName,
                             isIncognito = value
                         )
                     }
@@ -65,12 +67,10 @@ class IncognitoViewModel(
                     .list
                     .filter { it.packageName == sourceInformation.packageName }
                     .forEach {
-                        itemDao.insertIncognitoSource(
-                            IncognitoSource(
-                                source = it.packageName,
-                                name = it.apiService.serviceName,
-                                isIncognito = value
-                            )
+                        incognitoRepository.addIncognito(
+                            url = it.packageName,
+                            title = it.apiService.serviceName,
+                            isIncognito = value
                         )
                     }
             }

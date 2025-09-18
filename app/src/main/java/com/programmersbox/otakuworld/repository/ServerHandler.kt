@@ -1,9 +1,9 @@
 package com.programmersbox.otakuworld.repository
 
-import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.CustomList
 import com.programmersbox.otakuworld.CustomListInfo
 import com.programmersbox.otakuworld.DbModel
+import com.programmersbox.otakuworld.providers.App
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

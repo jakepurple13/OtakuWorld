@@ -4,12 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.BuildConfig
-import com.programmersbox.otakuworld.OtakuProvider
-import com.programmersbox.otakuworld.Provider
 import com.programmersbox.otakuworld.info.AppCheck
+import com.programmersbox.otakuworld.providers.App
+import com.programmersbox.otakuworld.providers.OtakuProvider
+import com.programmersbox.otakuworld.providers.Provider
 import com.programmersbox.otakuworld.repository.OtakuRepository
 
 class SettingsViewModel(

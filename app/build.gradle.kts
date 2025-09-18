@@ -128,6 +128,7 @@ enum class Provider {
 class OtakuProvider {
     private val favoritesUri = "provider.favorites"
     private val listsUri = "provider.customlist"
+    private val incognitoUri = "provider.incognito"
     private val favoritePermissions = "READ_WRITE_FAVORITES"
     private val listPermissions = "READ_WRITE_LISTS"
 
@@ -154,6 +155,12 @@ class OtakuProvider {
     ) = OtakuBuilder()
         .apply(builder)
         .build() + ".$listPermissions"
+
+    fun incognitoUri(
+        builder: OtakuBuilder.() -> Unit,
+    ) = OtakuBuilder()
+        .apply(builder)
+        .build() + ".$incognitoUri"
 }
 
 class OtakuBuilder {
@@ -288,6 +295,14 @@ fun ApplicationProductFlavor.setupUris(
         dualStringBuildConfig(
             "${app.name}_LISTS_PERMISSION",
             otakuProvider.listPermissions {
+                appType = app
+                provider = productFlavor
+            }
+        )
+
+        dualStringBuildConfig(
+            "${app.name}_INCOGNITO_URI",
+            otakuProvider.incognitoUri {
                 appType = app
                 provider = productFlavor
             }

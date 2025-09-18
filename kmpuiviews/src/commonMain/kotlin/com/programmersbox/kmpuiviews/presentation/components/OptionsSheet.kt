@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.favoritesdatabase.IncognitoSource
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpItemModel
@@ -52,6 +51,7 @@ import com.programmersbox.kmpuiviews.presentation.components.textflow.TextFlow
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.lists.addtolist.ListChoiceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ShareViaQrCode
+import com.programmersbox.kmpuiviews.repository.IncognitoRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.PlatformRepository
@@ -395,6 +395,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
     onDismiss: () -> Unit,
     sheet: SheetState,
     dao: ItemDao = koinInject(),
+    incognitoRepository: IncognitoRepository = koinInject(),
     listDao: ListRepository = koinInject(),
     platformRepository: PlatformRepository = koinInject(),
     notificationRepository: NotificationRepository = koinInject(),
@@ -591,12 +592,9 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                             biometric.authenticate(
                                 onAuthenticationSucceeded = {
                                     scope.launch {
-                                        dao.insertIncognitoSource(
-                                            IncognitoSource(
-                                                source = url,
-                                                name = title,
-                                                isIncognito = true
-                                            )
+                                        incognitoRepository.addIncognito(
+                                            url = url,
+                                            title = title,
                                         )
                                     }.invokeOnCompletion { dismiss() }
                                 },
@@ -612,7 +610,7 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
                         onClick = {
                             biometric.authenticate(
                                 onAuthenticationSucceeded = {
-                                    scope.launch { dao.deleteIncognitoSource(url) }
+                                    scope.launch { incognitoRepository.removeIncognito(url) }
                                         .invokeOnCompletion { dismiss() }
                                 },
                                 title = "Authentication required",

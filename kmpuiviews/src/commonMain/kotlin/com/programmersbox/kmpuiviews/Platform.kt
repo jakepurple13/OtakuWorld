@@ -92,4 +92,5 @@ expect class SystemAlerter {
     fun alertChapterChange()
     fun alertListChange()
     fun alertListItemChange()
+    fun alertIncognitoChange()
 }

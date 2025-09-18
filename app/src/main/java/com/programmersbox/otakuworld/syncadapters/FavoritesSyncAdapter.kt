@@ -8,7 +8,7 @@ import android.content.SyncResult
 import android.os.Bundle
 import androidx.core.os.bundleOf
 import com.programmersbox.otakuworld.DataStoreHandling
-import com.programmersbox.otakuworld.OtakuFavoritesContentProviderHelper
+import com.programmersbox.otakuworld.providers.OtakuFavoritesContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart

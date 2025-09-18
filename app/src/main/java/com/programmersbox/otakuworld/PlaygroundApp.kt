@@ -3,6 +3,7 @@ package com.programmersbox.otakuworld
 import android.app.Application
 import com.google.android.material.color.DynamicColors
 import com.programmersbox.otakuworld.info.InfoViewModel
+import com.programmersbox.otakuworld.providers.OtakuProvider
 import com.programmersbox.otakuworld.repository.OtakuRepository
 import com.programmersbox.otakuworld.repository.ServerHandler
 import com.programmersbox.otakuworld.repository.ServerHandling

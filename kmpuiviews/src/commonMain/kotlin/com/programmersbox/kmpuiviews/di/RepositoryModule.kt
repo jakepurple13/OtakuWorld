@@ -9,6 +9,7 @@ import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
+import com.programmersbox.kmpuiviews.repository.IncognitoRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.PrereleaseRepository
 import com.programmersbox.kmpuiviews.repository.SetupRepository
@@ -27,6 +28,7 @@ val repositories = module {
     includes(platformRepositories())
     singleOf(::ListRepository)
     singleOf(::ServerRepository)
+    singleOf(::IncognitoRepository)
     //TODO: This will change into a repository that will return a CustomServerHandler based on data that changes
     single { CustomServerHandler(get(), get(), get()) } binds arrayOf(
         CustomServerHandle::class,

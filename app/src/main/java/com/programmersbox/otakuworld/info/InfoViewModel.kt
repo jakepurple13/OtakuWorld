@@ -5,15 +5,18 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.CustomList
 import com.programmersbox.otakuworld.DbModel
-import com.programmersbox.otakuworld.OtakuProvider
-import com.programmersbox.otakuworld.Provider
+import com.programmersbox.otakuworld.IncognitoSource
+import com.programmersbox.otakuworld.providers.App
+import com.programmersbox.otakuworld.providers.IncognitoSourceContentHelper
+import com.programmersbox.otakuworld.providers.OtakuProvider
+import com.programmersbox.otakuworld.providers.Provider
 import com.programmersbox.otakuworld.repository.OtakuInfo
 import com.programmersbox.otakuworld.repository.OtakuRepository
 import kotlinx.coroutines.Dispatchers
@@ -66,20 +69,17 @@ class InfoViewModel(
             otakuItem = animeWorld
         )
 
-
         setupApp(
             flow = appCheck.filter { it.hasMangaWorld != null },
             app = App.MangaWorld,
             otakuItem = mangaWorld
         )
 
-
         setupApp(
             flow = appCheck.filter { it.hasNovelWorld != null },
             app = App.NovelWorld,
             otakuItem = novelWorld
         )
-
     }
 
     private fun setupApp(
@@ -124,6 +124,28 @@ class InfoViewModel(
                 otakuItem.list.addAll(it)
             }
             .launchIn(viewModelScope)
+
+        flow.flatMapMerge {
+            IncognitoSourceContentHelper(
+                when (app) {
+                    App.AnimeWorld -> BuildConfig.AnimeWorld_INCOGNITO_URI
+                    App.MangaWorld -> BuildConfig.MangaWorld_INCOGNITO_URI
+                    App.NovelWorld -> BuildConfig.NovelWorld_INCOGNITO_URI
+                }
+                    .toUri()
+                    .also { println(it) }
+            ).getAllIncognitoSourcesFlow(appInfo.context)
+        }
+            .flowOn(Dispatchers.IO)
+            .catch {
+                it.printStackTrace()
+                emit(emptyList())
+            }
+            .onEach {
+                otakuItem.incognitoSources.clear()
+                otakuItem.incognitoSources.addAll(it)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun checkForApps() {
@@ -151,6 +173,7 @@ class OtakuItem(
 ) {
     val favorites = mutableStateListOf<DbModel>()
     val list = mutableStateListOf<CustomList>()
+    val incognitoSources = mutableStateListOf<IncognitoSource>()
 
     val favoritePermission: String = otakuProvider.favoritesPermissions {
         appType = app

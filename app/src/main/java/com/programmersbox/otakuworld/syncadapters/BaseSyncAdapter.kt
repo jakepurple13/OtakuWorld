@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
 import androidx.annotation.CallSuper
-import com.programmersbox.otakuworld.App
+import com.programmersbox.otakuworld.providers.App
 
 abstract class BaseSyncAdapter(
     context: Context,

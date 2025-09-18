@@ -26,10 +26,10 @@ import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.programmersbox.otakuworld.App
 import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.BuildConfig
-import com.programmersbox.otakuworld.OtakuProvider
+import com.programmersbox.otakuworld.providers.App
+import com.programmersbox.otakuworld.providers.OtakuProvider
 import org.koin.android.ext.android.inject
 
 class AuthenticatorService : Service() {
