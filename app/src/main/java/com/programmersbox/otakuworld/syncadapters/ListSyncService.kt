@@ -11,7 +11,8 @@ class MangaListSyncService : Service() {
         synchronized(syncAdapterLock) {
             syncAdapter = syncAdapter ?: ListSyncAdapter(
                 context = applicationContext,
-                serverHandler = get()
+                serverHandler = get(),
+                multiprocessDataStoreHandler = get()
             )
         }
     }
@@ -32,7 +33,8 @@ class NovelListSyncService : Service() {
         synchronized(syncAdapterLock) {
             syncAdapter = syncAdapter ?: ListSyncAdapter(
                 context = applicationContext,
-                serverHandler = get()
+                serverHandler = get(),
+                multiprocessDataStoreHandler = get()
             )
         }
     }
@@ -53,7 +55,8 @@ class AnimeListSyncService : Service() {
         synchronized(syncAdapterLock) {
             syncAdapter = syncAdapter ?: ListSyncAdapter(
                 context = applicationContext,
-                serverHandler = get()
+                serverHandler = get(),
+                multiprocessDataStoreHandler = get()
             )
         }
     }

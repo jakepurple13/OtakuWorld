@@ -21,7 +21,7 @@ class MultiprocessDataStoreHandler(
         produceFile = { context.preferencesDataStoreFile("otakuworld_mps") },
         corruptionHandler = ReplaceFileCorruptionHandler {
             it.printStackTrace()
-            OtakuSettings(0)
+            OtakuSettings()
         }
     )
 
@@ -34,17 +34,25 @@ class MultiprocessDataStoreHandler(
     suspend fun get() = multiprocessDataStore
         .data
         .firstOrNull()
-        ?: OtakuSettings(0)
+        ?: OtakuSettings()
 }
 
 @Serializable
 data class OtakuSettings(
-    val lastFavoritesSync: Long,
+    val lastFavoritesSyncManga: Long = 0,
+    val lastFavoritesSyncAnime: Long = 0,
+    val lastFavoritesSyncNovel: Long = 0,
+    val lastListsSyncManga: Long = 0,
+    val lastListsSyncAnime: Long = 0,
+    val lastListsSyncNovel: Long = 0,
+    val lastIncognitoSyncManga: Long = 0,
+    val lastIncognitoSyncAnime: Long = 0,
+    val lastIncognitoSyncNovel: Long = 0,
 )
 
 class SettingsSerializer : Serializer<OtakuSettings> {
 
-    override val defaultValue = OtakuSettings(lastFavoritesSync = 0)
+    override val defaultValue = OtakuSettings()
 
     override suspend fun readFrom(input: InputStream): OtakuSettings = try {
         Json.decodeFromString(

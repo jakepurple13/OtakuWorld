@@ -350,13 +350,19 @@ private fun SelectionScreen(
 
             val multiprocessDataStoreHandler by koinInject<MultiprocessDataStoreHandler>()
                 .getFlow()
-                .collectAsStateWithLifecycle(OtakuSettings(0))
+                .collectAsStateWithLifecycle(OtakuSettings())
 
             val format = remember { SimpleDateFormat.getDateTimeInstance() }
 
             val formatted by remember {
                 derivedStateOf {
-                    format.format(multiprocessDataStoreHandler.lastFavoritesSync)
+                    format.format(
+                        when (item.app) {
+                            App.MangaWorld -> multiprocessDataStoreHandler.lastFavoritesSyncManga
+                            App.AnimeWorld -> multiprocessDataStoreHandler.lastFavoritesSyncAnime
+                            App.NovelWorld -> multiprocessDataStoreHandler.lastFavoritesSyncNovel
+                        }
+                    )
                 }
             }
 

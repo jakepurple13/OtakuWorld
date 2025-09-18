@@ -8,6 +8,10 @@ import android.content.SyncResult
 import android.os.Bundle
 import androidx.annotation.CallSuper
 import com.programmersbox.otakuworld.providers.App
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.CoroutineContext
 
 abstract class BaseSyncAdapter(
     context: Context,
@@ -39,5 +43,12 @@ abstract class BaseSyncAdapter(
                 }
             }
         }
+    }
+
+    protected fun <T> runBlockingIo(
+        context: CoroutineContext = Dispatchers.IO,
+        block: suspend CoroutineScope.() -> T,
+    ): T {
+        return runBlocking(context, block = block)
     }
 }

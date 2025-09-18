@@ -7,6 +7,8 @@ import android.content.SyncResult
 import android.os.Bundle
 import com.programmersbox.otakuworld.CustomList
 import com.programmersbox.otakuworld.CustomListInfo
+import com.programmersbox.otakuworld.MultiprocessDataStoreHandler
+import com.programmersbox.otakuworld.providers.App
 import com.programmersbox.otakuworld.providers.OtakuCustomListContentProviderHelper
 import com.programmersbox.otakuworld.repository.ServerHandler
 import kotlinx.coroutines.runBlocking
@@ -14,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 class ListSyncAdapter(
     context: Context,
     private val serverHandler: ServerHandler,
+    private val multiprocessDataStoreHandler: MultiprocessDataStoreHandler,
 ) : BaseSyncAdapter(context, true, false) {
 
     override fun onPerformSync(
@@ -85,6 +88,18 @@ class ListSyncAdapter(
                 }
             }
         }
+
+        runCatching {
+            runBlockingIo {
+                multiprocessDataStoreHandler.updateData {
+                    when (app) {
+                        App.MangaWorld -> it.copy(lastListsSyncManga = System.currentTimeMillis())
+                        App.AnimeWorld -> it.copy(lastListsSyncAnime = System.currentTimeMillis())
+                        App.NovelWorld -> it.copy(lastListsSyncNovel = System.currentTimeMillis())
+                    }
+                }
+            }
+        }.onFailure { it.printStackTrace() }
 
         println("[ListSyncAdapter] Sync complete")
     }
