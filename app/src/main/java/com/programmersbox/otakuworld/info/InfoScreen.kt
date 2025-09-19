@@ -4,6 +4,7 @@ import android.accounts.AccountManager
 import android.content.ContentResolver
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -430,28 +431,30 @@ private fun SelectionScreen(
                     }
                 }
 
-                val biometric = rememberBiometricPrompting()
+                AnimatedVisibility(item.otakuItem.incognitoSources.isNotEmpty()) {
+                    val biometric = rememberBiometricPrompting()
 
-                Card(
-                    onClick = {
-                        biometric.authenticate(
-                            onAuthenticationSucceeded = { onShowingType(ShowingType.Incognito) },
-                            onAuthenticationFailed = {},
-                            title = "Security required to view",
-                            subtitle = "Please authenticate to view incognito",
-                            negativeButtonText = "Never Mind"
+                    Card(
+                        onClick = {
+                            biometric.authenticate(
+                                onAuthenticationSucceeded = { onShowingType(ShowingType.Incognito) },
+                                onAuthenticationFailed = {},
+                                title = "Security required to view",
+                                subtitle = "Please authenticate to view incognito",
+                                negativeButtonText = "Never Mind"
+                            )
+                        }
+                    ) {
+                        ListItem(
+                            headlineContent = { Text("Incognito") },
+                            trailingContent = { Text(item.otakuItem.incognitoSources.size.toString()) },
+                            overlineContent = { Text("Last Synced: $formattedIncognitoSync") },
+                            supportingContent = { HorizontalDivider() },
+                            colors = ListItemDefaults.colors(
+                                containerColor = Color.Transparent
+                            )
                         )
                     }
-                ) {
-                    ListItem(
-                        headlineContent = { Text("Incognito") },
-                        trailingContent = { Text(item.otakuItem.incognitoSources.size.toString()) },
-                        overlineContent = { Text("Last Synced: $formattedIncognitoSync") },
-                        supportingContent = { HorizontalDivider() },
-                        colors = ListItemDefaults.colors(
-                            containerColor = Color.Transparent
-                        )
-                    )
                 }
 
                 Column {
