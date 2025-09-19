@@ -127,6 +127,12 @@
             android:exported="true"
             android:label="@string/anime_lists_provider"
             android:permission="${applicationId}.READ_WRITE_LISTS" />
+
+        <provider
+            android:name=".AnimeIncognitoContentProvider"
+            android:authorities="${applicationId}.provider.incognito"
+            android:exported="true"
+            android:label="@string/anime_incognito_provider" />
     </application>
 
 </manifest>

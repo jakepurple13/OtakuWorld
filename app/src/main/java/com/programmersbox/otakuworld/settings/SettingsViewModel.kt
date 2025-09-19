@@ -9,7 +9,6 @@ import com.programmersbox.otakuworld.BuildConfig
 import com.programmersbox.otakuworld.info.AppCheck
 import com.programmersbox.otakuworld.providers.App
 import com.programmersbox.otakuworld.providers.OtakuProvider
-import com.programmersbox.otakuworld.providers.Provider
 import com.programmersbox.otakuworld.repository.OtakuRepository
 
 class SettingsViewModel(
@@ -27,18 +26,12 @@ class SettingsViewModel(
 
     val animeWorld = OtakuSettingsItem(
         app = App.AnimeWorld,
-        appProvider = appInfo.provider,
-        otakuProvider = otakuProvider
     )
     val mangaWorld = OtakuSettingsItem(
         app = App.MangaWorld,
-        appProvider = appInfo.provider,
-        otakuProvider = otakuProvider
     )
     val novelWorld = OtakuSettingsItem(
         app = App.NovelWorld,
-        appProvider = appInfo.provider,
-        otakuProvider = otakuProvider
     )
 
     fun checkForApps() {
@@ -52,19 +45,7 @@ class SettingsViewModel(
 
 class OtakuSettingsItem(
     val app: App,
-    val appProvider: Provider,
-    otakuProvider: OtakuProvider,
 ) {
-    val favoritePermission: String = otakuProvider.favoritesPermissions {
-        appType = app
-        provider = appProvider
-    }
-
-    val listsPermission: String = otakuProvider.listPermissions {
-        appType = app
-        provider = appProvider
-    }
-
     val favoritesUri = when (app) {
         App.AnimeWorld -> BuildConfig.AnimeWorld_FAVORITES_URI
         App.MangaWorld -> BuildConfig.MangaWorld_FAVORITES_URI

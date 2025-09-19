@@ -9,4 +9,5 @@
     <string name="changeToChapter">Change to %s</string>
     <string name="novel_lists_provider">Novel Lists</string>
     <string name="novel_favorites_provider">Novel Favorites</string>
+    <string name="novel_incognito_provider">Novel Incognito</string>
 </resources>

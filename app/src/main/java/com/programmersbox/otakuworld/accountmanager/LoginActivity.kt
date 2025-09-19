@@ -28,8 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.programmersbox.otakuworld.AppInfo
 import com.programmersbox.otakuworld.BuildConfig
-import com.programmersbox.otakuworld.providers.App
-import com.programmersbox.otakuworld.providers.OtakuProvider
 import org.koin.android.ext.android.inject
 
 class AuthenticatorService : Service() {
@@ -116,12 +114,11 @@ class LoginActivity : CustomAccountAuthenticatorActivity() {
 
             accountManager.setAccountVisibilityForPackages(
                 accounts = arrayOf(account),
-                packages = App.entries.map { app ->
-                    OtakuProvider.OtakuBuilder()
-                        .setPackage(app)
-                        .setProvider(appInfo.provider)
-                        .build()
-                },
+                packages = listOf(
+                    BuildConfig.ANIMEWORLD_PACKAGE,
+                    BuildConfig.MANGAWORLD_PACKAGE,
+                    BuildConfig.NOVELWORLD_PACKAGE
+                ),
                 visibility = AccountManager.VISIBILITY_VISIBLE
             ).onFailure { it.printStackTrace() }
         } else {
