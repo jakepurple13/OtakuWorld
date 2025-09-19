@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -947,6 +948,7 @@ fun DynamicSearchBar(
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
+    actions: @Composable (RowScope.() -> Unit)? = null,
     shape: Shape = if (isDocked) SearchBarDefaults.dockedShape else SearchBarDefaults.inputFieldShape,
     colors: AppBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(),
     tonalElevation: Dp = SearchBarDefaults.TonalElevation,
@@ -977,6 +979,7 @@ fun DynamicSearchBar(
         shadowElevation = shadowElevation,
         windowInsets = windowInsets,
         navigationIcon = leadingIcon,
+        actions = actions,
         scrollBehavior = scrollBehavior,
         modifier = modifier,
     )
