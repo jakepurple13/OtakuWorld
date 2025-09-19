@@ -102,6 +102,7 @@ import com.programmersbox.otakuworld.ShareViaQrCode
 import com.programmersbox.otakuworld.TopLevelBackStack
 import com.programmersbox.otakuworld.optionsKmpSheet
 import com.programmersbox.otakuworld.providers.App
+import com.programmersbox.otakuworld.rememberBiometricPrompting
 import com.programmersbox.otakuworld.repository.OtakuInfo
 import com.programmersbox.otakuworld.syncadapters.FavoritesSyncAdapter
 import com.skydoves.landscapist.glide.GlideImage
@@ -429,9 +430,18 @@ private fun SelectionScreen(
                     }
                 }
 
-                //TODO: Show biometrics before opening
+                val biometric = rememberBiometricPrompting()
+
                 Card(
-                    onClick = { onShowingType(ShowingType.Incognito) }
+                    onClick = {
+                        biometric.authenticate(
+                            onAuthenticationSucceeded = { onShowingType(ShowingType.Incognito) },
+                            onAuthenticationFailed = {},
+                            title = "Security required to view",
+                            subtitle = "Please authenticate to view incognito",
+                            negativeButtonText = "Never Mind"
+                        )
+                    }
                 ) {
                     ListItem(
                         headlineContent = { Text("Incognito") },

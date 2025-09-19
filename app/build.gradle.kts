@@ -111,6 +111,7 @@ dependencies {
     implementation(libs.ktorContentNegotiation)
 
     implementation(libs.bundles.datastoreLibs)
+    implementation(libs.biometric)
 }
 
 enum class App {
