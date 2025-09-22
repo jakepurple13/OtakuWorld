@@ -37,7 +37,6 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.otakuworld.info.InfoScreen
-import kotlinx.serialization.Serializable
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,9 +52,9 @@ class MainActivity : AppCompatActivity() {
         //TODO: MAYBE this app (or a new one) becomes the syncing with a custom server
         // It'd use Account Manager
         // It'd have SyncAdapters for every one of the content providers
-        // (Maybe include more content providers for notifications, incognito, etc)?
+        // (Maybe include more content providers for heat maps, maybe history)?
         // Login would need to be setup to communicate with the server,
-        // making this app very modifiable and won't have any firebase stuff apart of it
+        // This would make this app very modifiable and won't have any firebase stuff apart of it
         // I'd also need to make sure to notify whenever the databases change.
         // Maybe there's even reverse support? The apps try and detect if OtakuWorld is installed and logged in?
         // Maybe this app even handles firebase? And the OtakuWorld apps are purely local?
@@ -94,7 +93,7 @@ fun Navigation(
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
-        entryProvider = entryProvider<NavKey> { entries() },
+        entryProvider = entryProvider(builder = entries),
         transitionSpec = {
             // Slide in from right when navigating forward
             slideInHorizontally(initialOffsetX = { it }) togetherWith
@@ -113,12 +112,6 @@ fun Navigation(
         modifier = modifier.fillMaxSize()
     )
 }
-
-@Serializable
-data object Info : NavKey
-
-@Serializable
-data object Settings : NavKey
 
 class TopLevelBackStack<T : Any>(startKey: T) {
 

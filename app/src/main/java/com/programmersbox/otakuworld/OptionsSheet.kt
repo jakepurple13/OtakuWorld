@@ -42,6 +42,8 @@ import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+//TODO: Move OptionsSheet, Biometrics, QrCode into a separate module
+
 interface OptionsSheetScope {
     fun dismiss()
 
