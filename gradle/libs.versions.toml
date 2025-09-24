@@ -128,7 +128,7 @@ lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
 navigationevent = "1.0.0-alpha08"
 
 navigation3 = "1.0.0-alpha09"
-nav3Material = "1.0.0-alpha02"
+nav3Material = "1.0.0-alpha03"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
