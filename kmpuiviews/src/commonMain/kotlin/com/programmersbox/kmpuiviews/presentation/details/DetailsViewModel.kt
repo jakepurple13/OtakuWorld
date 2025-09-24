@@ -29,6 +29,7 @@ import com.programmersbox.kmpuiviews.presentation.toItemModel
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
+import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.fireListener
@@ -58,6 +59,7 @@ class DetailsViewModel(
     firebaseChapterListener: KmpFirebaseConnection.KmpFirebaseListener,
     private val translationHandler: TranslationHandler,
     private val exceptionDao: ExceptionDao,
+    private val imageModifier: ImageModifier,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -170,6 +172,15 @@ class DetailsViewModel(
                 }
             }
             .launchIn(viewModelScope)
+
+        snapshotFlow { imageBitmap }
+            .onEach {
+                it
+                    ?.let { bitmap -> imageModifier.startImageDescription(bitmap) }
+                    ?: println("[ImageModifier] Not ready yet")
+            }
+            .dispatchIo()
+            .launchIn(viewModelScope)
     }
 
     class BlurAdd(
@@ -275,6 +286,7 @@ class DetailsViewModel(
     override fun onCleared() {
         super.onCleared()
         translationHandler.clear()
+        imageModifier.close()
     }
 }
 
