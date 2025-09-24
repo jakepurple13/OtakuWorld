@@ -11,8 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.scene.DialogSceneStrategy
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
@@ -49,15 +49,14 @@ import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.navigation.strategy.DialogScene
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
-import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
-import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.presentation.onboarding.AccountContent
 import com.programmersbox.uiviews.presentation.settings.AccountSettings
+import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
@@ -247,20 +246,20 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     genericInfo.settingsNav3Setup()
 }
 
-private inline fun <reified T : Any> EntryProviderBuilder<*>.twoPaneEntry(
+private inline fun <reified T : NavKey> EntryProviderBuilder<NavKey>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
     metadata = TwoPaneScene.twoPaneDetails()
 ) { content(it) }
 
-private inline fun <reified T : Any> EntryProviderBuilder<*>.dialogEntry(
+private inline fun <reified T : NavKey> EntryProviderBuilder<NavKey>.dialogEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    metadata = DialogScene.dialog()
+    metadata = DialogSceneStrategy.dialog()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-private inline fun <reified T : Any> EntryProviderBuilder<*>.detailEntry(
+private inline fun <reified T : NavKey> EntryProviderBuilder<NavKey>.detailEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
     metadata = ListDetailSceneStrategy.detailPane()

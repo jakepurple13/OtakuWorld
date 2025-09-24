@@ -23,9 +23,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.navEntryDecorator
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.scene.DialogSceneStrategy
+import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.analyticsScreen
 import com.programmersbox.kmpuiviews.logFirebaseMessage
@@ -45,7 +46,6 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalShare
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.navigation.strategy.DialogStrategy
 import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.presentation.onboarding.AccountContent
 import com.programmersbox.uiviews.presentation.settings.AccountSettings
@@ -122,7 +122,7 @@ private fun Nav3(
         //onBack = { backStack.removeLastOrNull() },
         sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
                 then TwoPaneSceneStrategy()
-                then DialogStrategy(),
+                then DialogSceneStrategy(),
         onBack = { count ->
             repeat(count) {
                 if (backStack.isNotEmpty()) {

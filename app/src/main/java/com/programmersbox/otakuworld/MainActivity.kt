@@ -34,8 +34,8 @@ import androidx.navigation3.runtime.EntryProviderBuilder
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.programmersbox.otakuworld.info.InfoScreen
 
 class MainActivity : AppCompatActivity() {
@@ -137,7 +137,7 @@ class TopLevelBackStack<T : Any>(startKey: T) {
 
         // If the top level doesn't exist, add it
         if (topLevelStacks[key] == null) {
-            topLevelStacks.put(key, mutableStateListOf(key))
+            topLevelStacks[key] = mutableStateListOf(key)
         } else {
             // Otherwise just move it to the end of the stacks
             topLevelStacks.apply {
