@@ -127,7 +127,7 @@ compottie = "2.0.0"
 lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
 navigationevent = "1.0.0-alpha08"
 
-navigation3 = "1.0.0-alpha09"
+navigation3 = "1.0.0-alpha10"
 nav3Material = "1.0.0-alpha02"
 
 [plugins]
