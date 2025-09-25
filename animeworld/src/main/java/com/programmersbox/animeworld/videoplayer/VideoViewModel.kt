@@ -28,10 +28,10 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.animeworld.StorageHolder
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -51,7 +51,7 @@ data class VideoScreen(
     val showName: String,
     val downloadOrStream: Boolean,
     val referer: String,
-)
+) : NavKey
 
 class VideoViewModel(
     videoScreen: VideoScreen,
