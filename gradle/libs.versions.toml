@@ -101,7 +101,7 @@ arcore = "1.0.0-alpha04"
 composeXr = "1.0.0-alpha04"
 scenecore = "1.0.0-alpha04"
 
-lottieCompose = "6.6.9"
+lottieCompose = "6.6.10"
 
 sqlite = "2.6.1"
 kotlinTest = "2.2.10"
