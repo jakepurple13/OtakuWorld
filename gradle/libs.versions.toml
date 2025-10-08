@@ -125,7 +125,7 @@ buildKonfig = "0.17.1"
 compottie = "2.0.1"
 
 lifecycleViewmodelNavigation3 = "1.0.0-alpha04"
-navigationevent = "1.0.0-alpha09"
+navigationevent = "1.0.0-beta01"
 
 navigation3 = "1.0.0-alpha10"
 nav3Material = "1.0.0-alpha03"
