@@ -228,10 +228,7 @@ fun ApplicationProductFlavor.setupUris(
     App.entries.forEach { app ->
         println("Setting up $app")
         println("Putting ${"${app.name.lowercase()}Package"} into manifest as ${"com.programmersbox.${app.name.lowercase()}$suffix"}")
-        manifestPlaceholders.put(
-            "${app.name.lowercase()}Package",
-            "com.programmersbox.${app.name.lowercase()}$suffix"
-        )
+        manifestPlaceholders["${app.name.lowercase()}Package"] = "com.programmersbox.${app.name.lowercase()}$suffix"
 
         println(
             "Putting ${"${app.name.lowercase()}_FAVORITES_PERMISSION"} into manifest as ${
@@ -241,13 +238,12 @@ fun ApplicationProductFlavor.setupUris(
                 }
             }"
         )
-        manifestPlaceholders.put(
-            "${app.name.lowercase()}_FAVORITES_PERMISSION",
-            otakuProvider.favoritesPermissions {
-                appType = app
-                provider = productFlavor
-            }
-        )
+
+        manifestPlaceholders["${app.name.lowercase()}_FAVORITES_PERMISSION"] = otakuProvider.favoritesPermissions {
+            appType = app
+            provider = productFlavor
+        }
+
         println(
             "Putting ${"${app.name.lowercase()}_LISTS_PERMISSION"} into manifest as ${
                 otakuProvider.listPermissions {
@@ -256,13 +252,11 @@ fun ApplicationProductFlavor.setupUris(
                 }
             }"
         )
-        manifestPlaceholders.put(
-            "${app.name.lowercase()}_LISTS_PERMISSION",
-            otakuProvider.listPermissions {
-                appType = app
-                provider = productFlavor
-            }
-        )
+
+        manifestPlaceholders["${app.name.lowercase()}_LISTS_PERMISSION"] = otakuProvider.listPermissions {
+            appType = app
+            provider = productFlavor
+        }
 
         dualStringBuildConfig(
             "${app.name.uppercase()}_PACKAGE",

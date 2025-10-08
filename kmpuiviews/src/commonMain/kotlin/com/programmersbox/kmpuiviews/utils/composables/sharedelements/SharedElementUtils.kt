@@ -49,7 +49,7 @@ fun Modifier.customSharedElement(
     },*/
 ) = composed {
     this
-    /*val scope = LocalSharedElementScope.current
+    val scope = LocalSharedElementScope.current
     val animatedScope = LocalNavigationAnimatedScope.current
 
     if (animatedScope != null && key != null && scope != null) {
@@ -57,16 +57,16 @@ fun Modifier.customSharedElement(
             sharedElement(
                 sharedContentState = rememberSharedContentState(key = key),
                 animatedVisibilityScope = animatedScope,
-                *//*boundsTransform = boundsTransform,
+                /*boundsTransform = boundsTransform,
                 placeHolderSize = placeHolderSize,
                 renderInOverlayDuringTransition = renderInOverlayDuringTransition,
                 zIndexInOverlay = zIndexInOverlay,
-                clipInOverlayDuringTransition = clipInOverlayDuringTransition*//*
+                clipInOverlayDuringTransition = clipInOverlayDuringTransition*/
             )
         }
     } else {
         this
-    }*/
+    }
 }
 
 public inline fun <reified T : Any> NavGraphBuilder.animatedScopeComposable(
