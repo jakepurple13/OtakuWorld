@@ -30,11 +30,10 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.otakuworld.info.InfoScreen
 
@@ -81,16 +80,15 @@ class MainActivity : AppCompatActivity() {
 @Composable
 fun Navigation(
     backStack: List<NavKey>,
-    onBack: (Int) -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    entries: EntryProviderBuilder<NavKey>.() -> Unit,
+    entries: EntryProviderScope<NavKey>.() -> Unit,
 ) {
     NavDisplay(
         backStack = backStack,
         onBack = onBack,
         entryDecorators = listOf(
-            rememberSceneSetupNavEntryDecorator(),
-            rememberSavedStateNavEntryDecorator(),
+            rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider(builder = entries),

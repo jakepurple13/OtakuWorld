@@ -9,7 +9,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
@@ -53,7 +53,6 @@ import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneScene
 import com.programmersbox.uiviews.presentation.onboarding.AccountContent
 import com.programmersbox.uiviews.presentation.settings.AccountSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
@@ -115,7 +114,7 @@ fun entryGraph(
 }
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
-private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
+private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     customPreferences: ComposeSettingsDsl,
     notificationLogo: NotificationLogo,
     windowSize: WindowSizeClass,
@@ -123,7 +122,7 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     navigationActions: NavigationActions,
 ) {
     entry<Screen.Settings>(
-        metadata = TwoPaneScene.twoPane()
+        //metadata = TwoPaneScene.twoPane()
     ) {
         SettingScreen(
             composeSettingsDsl = customPreferences,
@@ -190,7 +189,7 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     }
 
     entry<Screen.CustomListScreen>(
-        metadata = TwoPaneScene.twoPane()
+        //metadata = TwoPaneScene.twoPane()
     ) {
         OtakuListView()
     }
@@ -246,20 +245,20 @@ private fun EntryProviderBuilder<NavKey>.settingsEntryGraph(
     genericInfo.settingsNav3Setup()
 }
 
-private inline fun <reified T : NavKey> EntryProviderBuilder<NavKey>.twoPaneEntry(
+private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    metadata = TwoPaneScene.twoPaneDetails()
+    //metadata = TwoPaneScene.twoPaneDetails()
 ) { content(it) }
 
-private inline fun <reified T : NavKey> EntryProviderBuilder<NavKey>.dialogEntry(
+private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
     metadata = DialogSceneStrategy.dialog()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-private inline fun <reified T : NavKey> EntryProviderBuilder<NavKey>.detailEntry(
+private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.detailEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
     metadata = ListDetailSceneStrategy.detailPane()

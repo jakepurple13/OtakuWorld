@@ -35,7 +35,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
@@ -197,7 +197,7 @@ class GenericNovel(
     }
 
     @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-    context(navGraph: EntryProviderBuilder<NavKey>)
+    context(navGraph: EntryProviderScope<NavKey>)
     override fun globalNav3Setup() {
         //TODO: Need to make sure this works
         /* entry<NovelReader>(

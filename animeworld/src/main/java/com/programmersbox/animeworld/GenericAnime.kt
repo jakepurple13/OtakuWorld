@@ -70,7 +70,7 @@ import androidx.mediarouter.app.MediaRouteDialogFactory
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -571,14 +571,14 @@ class GenericAnime(
         }
     }
 
-    context(navGraph: EntryProviderBuilder<NavKey>)
+    context(navGraph: EntryProviderScope<NavKey>)
     override fun globalNav3Setup() {
         navGraph.entry<VideoScreen> {
             VideoPlayerUi(it)
         }
     }
 
-    context(navGraph: EntryProviderBuilder<NavKey>)
+    context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
         navGraph.entry<VideoViewerRoute> {
             ViewVideoScreen()

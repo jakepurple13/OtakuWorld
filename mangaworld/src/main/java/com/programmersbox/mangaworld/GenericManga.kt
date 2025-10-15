@@ -12,7 +12,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.navigation3.runtime.EntryProviderBuilder
+import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
@@ -185,7 +185,7 @@ class GenericManga(
         ExperimentalAnimationApi::class,
         ExperimentalFoundationApi::class
     )
-    context(navGraph: EntryProviderBuilder<NavKey>)
+    context(navGraph: EntryProviderScope<NavKey>)
     override fun globalNav3Setup() {
         navGraph.entry<ReadViewModel.MangaReader> {
             ReadView(
@@ -194,7 +194,7 @@ class GenericManga(
         }
     }
 
-    context(navGraph: EntryProviderBuilder<NavKey>)
+    context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
         navGraph.entry<DownloadRoute> {
             DownloadScreen()

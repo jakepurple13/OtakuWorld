@@ -20,11 +20,11 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.navEntryDecorator
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.BuildType
@@ -46,7 +46,6 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalShare
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.navigation.strategy.TwoPaneSceneStrategy
 import com.programmersbox.uiviews.presentation.onboarding.AccountContent
 import com.programmersbox.uiviews.presentation.settings.AccountSettings
 import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
@@ -104,36 +103,35 @@ private fun Nav3(
             }
     }
 
-    val sharedEntryInSceneNavEntryDecorator = navEntryDecorator<NavKey> { entry ->
-        with(LocalSharedElementScope.current!!) {
-            Box(
-                Modifier.sharedElement(
-                    rememberSharedContentState(entry.contentKey),
-                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
-                ),
-            ) {
-                entry.Content()
+    val sharedEntryInSceneNavEntryDecorator = SharedElementNavDecorator<NavKey>(
+        onPop = {},
+        { entry ->
+            with(LocalSharedElementScope.current!!) {
+                Box(
+                    Modifier.sharedElement(
+                        rememberSharedContentState(entry.contentKey),
+                        animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                    ),
+                ) {
+                    entry.Content()
+                }
             }
         }
-    }
+    )
 
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
         sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
-                then TwoPaneSceneStrategy()
                 then DialogSceneStrategy(),
-        onBack = { count ->
-            repeat(count) {
-                if (backStack.isNotEmpty()) {
-                    backStack.removeLastOrNull()
-                }
+        onBack = {
+            if (backStack.isNotEmpty()) {
+                backStack.removeLastOrNull()
             }
         },
         entryDecorators = listOf(
             sharedEntryInSceneNavEntryDecorator,
-            rememberSceneSetupNavEntryDecorator(),
-            rememberSavedStateNavEntryDecorator(),
+            rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryGraph(
@@ -161,6 +159,11 @@ private fun Nav3(
         modifier = Modifier.fillMaxSize()
     )
 }
+
+private class SharedElementNavDecorator<T : Any>(
+    onPop: (key: Any) -> Unit,
+    decorate: @Composable ((entry: NavEntry<T>) -> Unit),
+) : NavEntryDecorator<T>(onPop, decorate)
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
