@@ -12,7 +12,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.scene.DialogSceneStrategy
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
@@ -29,8 +28,11 @@ import com.programmersbox.kmpuiviews.presentation.recommendations.Recommendation
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
+import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
+import com.programmersbox.kmpuiviews.presentation.settings.general.DetailsSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
+import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
@@ -43,8 +45,11 @@ import com.programmersbox.kmpuiviews.presentation.settings.notifications.Notific
 import com.programmersbox.kmpuiviews.presentation.settings.player.PlaySettings
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseScreen
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
+import com.programmersbox.kmpuiviews.presentation.settings.security.SecurityScreen
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
+import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
+import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -122,7 +127,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     navigationActions: NavigationActions,
 ) {
     entry<Screen.Settings>(
-        //metadata = TwoPaneScene.twoPane()
+        metadata = ListDetailSceneStrategy.listPane()
     ) {
         SettingScreen(
             composeSettingsDsl = customPreferences,
@@ -189,7 +194,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     }
 
     entry<Screen.CustomListScreen>(
-        //metadata = TwoPaneScene.twoPane()
+        metadata = ListDetailSceneStrategy.listPane()
     ) {
         OtakuListView()
     }
@@ -242,19 +247,28 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         }
     }
 
+    entry<Screen.UrlOpener> { UrlOpenerScreen() }
+    entry<Screen.ColorHelper> { ColorHelperScreen() }
+    entry<Screen.ThemeSettings> { ThemeSettingsScreen() }
+    entry<Screen.DetailsSettings> { DetailsSettingsScreen() }
+    entry<Screen.SecuritySettings> { SecurityScreen() }
+    entry<Screen.ExceptionScreen> { ExceptionsScreen() }
+
     genericInfo.settingsNav3Setup()
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    //metadata = TwoPaneScene.twoPaneDetails()
+    metadata = ListDetailSceneStrategy.extraPane()
 ) { content(it) }
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    metadata = DialogSceneStrategy.dialog()
+    //TODO: Need to fix
+    //metadata = DialogSceneStrategy.dialog()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)

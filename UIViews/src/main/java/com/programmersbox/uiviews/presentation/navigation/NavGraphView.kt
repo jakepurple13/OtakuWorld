@@ -24,7 +24,6 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.BuildType
@@ -122,8 +121,9 @@ private fun Nav3(
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
-        sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
-                then DialogSceneStrategy(),
+        sceneStrategy = rememberListDetailSceneStrategy<NavKey>(),
+        //TODO: Need to fix
+        //then remember { DialogSceneStrategy<NavKey>() },
         onBack = {
             if (backStack.isNotEmpty()) {
                 backStack.removeLastOrNull()

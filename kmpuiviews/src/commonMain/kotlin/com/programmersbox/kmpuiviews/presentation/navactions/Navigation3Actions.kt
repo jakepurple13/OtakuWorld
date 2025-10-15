@@ -17,7 +17,7 @@ class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : 
     fun backstack() = navBackStack.backStack
 
     override fun recent() {
-        navBackStack.add(Screen.RecentScreen)
+        navBackStack.addTopLevel(Screen.RecentScreen)
     }
 
     override fun details(
@@ -75,7 +75,7 @@ class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : 
     }
 
     override fun settings() {
-        navBackStack.add(Screen.Settings)
+        navBackStack.addTopLevel(Screen.Settings)
     }
 
     override fun globalSearch(searchText: String?) {
@@ -238,7 +238,7 @@ class TopLevelBackStack<T : Any>(startKey: T) {
 
         // If the top level doesn't exist, add it
         if (topLevelStacks[key] == null) {
-            topLevelStacks.put(key, mutableStateListOf(key))
+            topLevelStacks[key] = mutableStateListOf(key)
         } else {
             // Otherwise just move it to the end of the stacks
             topLevelStacks.apply {
