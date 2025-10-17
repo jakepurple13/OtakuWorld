@@ -5,6 +5,7 @@ plugins {
     id("otaku-manager-application")
     kotlin("android")
     id("com.mikepenz.aboutlibraries.plugin")
+    id("com.mikepenz.aboutlibraries.plugin.android")
     id("kotlinx-serialization")
     `otaku-easylauncher`
     alias(libs.plugins.ksp)

@@ -3,6 +3,7 @@ plugins {
     kotlin("kapt")
     id("androidx.navigation.safeargs.kotlin")
     id("com.mikepenz.aboutlibraries.plugin")
+    id("com.mikepenz.aboutlibraries.plugin.android")
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.firebase.performance)
 }
