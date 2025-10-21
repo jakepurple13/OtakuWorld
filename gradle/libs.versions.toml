@@ -114,7 +114,7 @@ compose-multiplatform = "1.10.0-alpha02"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.10.0-alpha02"
+material3WindowSizeClassVersion = "1.10.0-alpha03"
 connectivity = "2.3.0"
 
 cmpLifecycle = "2.9.5"
