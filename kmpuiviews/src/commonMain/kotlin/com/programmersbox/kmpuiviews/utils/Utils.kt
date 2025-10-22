@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
 import org.koin.core.definition.BeanDefinition
 import org.koin.core.module.dsl.binds
 
-const val USE_NAV3 = false
+const val USE_NAV3 = true
 
 fun SourceRepository.loadItem(
     source: String,

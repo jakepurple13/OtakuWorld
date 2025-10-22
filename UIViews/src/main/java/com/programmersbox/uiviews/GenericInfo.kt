@@ -1,15 +1,17 @@
 package com.programmersbox.uiviews
 
-import androidx.navigation3.runtime.EntryProviderScope
-import androidx.navigation3.runtime.NavKey
+import androidx.compose.runtime.Composable
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
+import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
+import org.koin.androidx.compose.koinViewModel
 
 interface GenericInfo : PlatformGenericInfo {
-    context(navGraph: EntryProviderScope<NavKey>)
-    fun globalNav3Setup() {
-    }
+    @Composable
+    override fun AccountContent() = com.programmersbox.uiviews.presentation.onboarding.AccountContent()
 
-    context(navGraph: EntryProviderScope<NavKey>)
-    fun settingsNav3Setup() {
-    }
+    @Composable
+    override fun AccountSettings() = com.programmersbox.uiviews.presentation.settings.AccountSettings()
+
+    @Composable
+    override fun ProfileIcon(): String = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString().orEmpty()
 }

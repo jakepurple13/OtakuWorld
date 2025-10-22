@@ -1,38 +1,20 @@
 package com.programmersbox.uiviews.presentation.navigation
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation3.runtime.NavEntry
-import androidx.navigation3.runtime.NavEntryDecorator
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.BuildType
-import com.programmersbox.kmpuiviews.analyticsScreen
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.AddBreadcrumbLogging
+import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
 import com.programmersbox.kmpuiviews.presentation.navigation.navGraph
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
@@ -41,7 +23,6 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.USE_NAV3
-import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
@@ -68,7 +49,6 @@ fun NavigationGraph(
             genericInfo = genericInfo,
             windowSize = windowSize,
             customPreferences = customPreferences,
-            notificationLogo = notificationLogo
         )
     } else {
         Nav2(
@@ -82,88 +62,6 @@ fun NavigationGraph(
         )
     }
 }
-
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
-@Composable
-private fun Nav3(
-    backStack: SnapshotStateList<NavKey>,
-    navigationActions: NavigationActions,
-    genericInfo: GenericInfo,
-    windowSize: WindowSizeClass,
-    customPreferences: ComposeSettingsDsl,
-    notificationLogo: NotificationLogo,
-) {
-    LaunchedEffect(Unit) {
-        snapshotFlow { backStack }
-            .collect {
-                val screen = it.lastOrNull()
-                logFirebaseMessage("Navigated to: ${screen.toString()}")
-                analyticsScreen(screen.toString())
-            }
-    }
-
-    val sharedEntryInSceneNavEntryDecorator = SharedElementNavDecorator<NavKey>(
-        onPop = {},
-        { entry ->
-            with(LocalSharedElementScope.current!!) {
-                Box(
-                    Modifier.sharedElement(
-                        rememberSharedContentState(entry.contentKey),
-                        animatedVisibilityScope = LocalNavAnimatedContentScope.current,
-                    ),
-                ) {
-                    entry.Content()
-                }
-            }
-        }
-    )
-
-    NavDisplay(
-        backStack = backStack,
-        //onBack = { backStack.removeLastOrNull() },
-        sceneStrategy = rememberListDetailSceneStrategy<NavKey>(),
-        //TODO: Need to fix
-        //then remember { DialogSceneStrategy<NavKey>() },
-        onBack = {
-            if (backStack.isNotEmpty()) {
-                backStack.removeLastOrNull()
-            }
-        },
-        entryDecorators = listOf(
-            sharedEntryInSceneNavEntryDecorator,
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
-        ),
-        entryProvider = entryGraph(
-            customPreferences = customPreferences,
-            notificationLogo = notificationLogo,
-            windowSize = windowSize,
-            navigationActions = navigationActions,
-            genericInfo = genericInfo
-        ),
-        transitionSpec = {
-            // Slide in from right when navigating forward
-            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { -it })
-        },
-        popTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-        predictivePopTransitionSpec = {
-            // Slide in from left when navigating back
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                    slideOutHorizontally(targetOffsetX = { it })
-        },
-        modifier = Modifier.fillMaxSize()
-    )
-}
-
-private class SharedElementNavDecorator<T : Any>(
-    onPop: (key: Any) -> Unit,
-    decorate: @Composable ((entry: NavEntry<T>) -> Unit),
-) : NavEntryDecorator<T>(onPop, decorate)
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
