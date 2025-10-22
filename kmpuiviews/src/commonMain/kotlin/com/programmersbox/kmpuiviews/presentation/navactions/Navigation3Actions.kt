@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -14,7 +15,7 @@ import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : NavigationActions {
 
-    fun backstack() = navBackStack.backStack
+    val backStack by derivedStateOf { navBackStack.backStack }
 
     override fun recent() {
         navBackStack.addTopLevel(Screen.RecentScreen)
@@ -210,7 +211,7 @@ class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : 
     @Composable
     override fun currentDestination(screen: Screen): Boolean {
         //return navBackStack.lastOrNull() == screen
-        return screen == navBackStack.topLevelKey
+        return navBackStack.contains(screen)
     }
 }
 
@@ -227,6 +228,8 @@ class TopLevelBackStack<T : Any>(startKey: T) {
 
     // Expose the back stack so it can be rendered by the NavDisplay
     val backStack = mutableStateListOf(startKey)
+
+    fun contains(key: T) = topLevelStacks[topLevelKey]?.contains(key) == true || topLevelKey == key
 
     private fun updateBackStack() =
         backStack.apply {

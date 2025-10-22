@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -89,8 +91,25 @@ interface KmpGenericInfo {
     context(navGraph: NavGraphBuilder)
     fun settingsNavSetup(): Unit = Unit
 
+    context(navGraph: EntryProviderScope<NavKey>)
+    fun globalNav3Setup() {
+    }
+
+    context(navGraph: EntryProviderScope<NavKey>)
+    fun settingsNav3Setup() {
+    }
+
     @Composable
     fun DialogSetups() = Unit
+
+    @Composable
+    fun AccountContent() = Unit
+
+    @Composable
+    fun AccountSettings() = Unit
+
+    @Composable
+    fun ProfileIcon(): String
 }
 
 expect interface PlatformGenericInfo : KmpGenericInfo
