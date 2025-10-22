@@ -22,6 +22,10 @@ on:
         description: 'Build NovelWorld?'
         required: true
         default: 'true'
+      build_otakuworld:
+        description: 'Build OtakuWorld?'
+        required: true
+        default: 'true'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -46,4 +50,9 @@ jobs:
   novelworld:
     uses: ./.github/workflows/novelworld_build.yaml
     if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'push'
+    secrets: inherit # pass all secrets
+
+  otakuworld:
+    uses: ./.github/workflows/otakuworld_build.yaml
+    if: github.event.inputs.build_otakuworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
