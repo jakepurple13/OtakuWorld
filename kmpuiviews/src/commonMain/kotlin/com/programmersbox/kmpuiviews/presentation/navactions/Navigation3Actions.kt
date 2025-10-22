@@ -183,11 +183,12 @@ class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : 
     }
 
     override fun onboardingToRecent() {
-        clearBackStack(Screen.RecentScreen)
+        navBackStack.removeTopLevel(Screen.OnboardingScreen)
+        navBackStack.addTopLevel(Screen.RecentScreen)
     }
 
     override fun toOnboarding() {
-        clearBackStack(Screen.OnboardingScreen)
+        navBackStack.addTopLevel(Screen.OnboardingScreen)
     }
 
     override fun <T : Any> homeScreenNavigate(nav: T) {
@@ -251,6 +252,11 @@ class TopLevelBackStack<T : Any>(startKey: T) {
             }
         }
         topLevelKey = key
+        updateBackStack()
+    }
+
+    fun removeTopLevel(key: T) {
+        topLevelStacks.remove(key)
         updateBackStack()
     }
 
