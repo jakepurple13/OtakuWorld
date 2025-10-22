@@ -371,6 +371,7 @@ private fun HomeNavigationBar(
                     screen: Screen,
                     icon: ImageVector,
                     label: StringResource,
+                    onClick: () -> Unit = { navActions.homeScreenNavigate(screen) },
                     badge: @Composable BoxScope.() -> Unit = {},
                 ) {
                     NavigationBarItem(
@@ -378,7 +379,7 @@ private fun HomeNavigationBar(
                         label = { Text(stringResource(label)) },
                         selected = navActions.currentDestination(screen),
                         colors = colors,
-                        onClick = { navActions.homeScreenNavigate(screen) }
+                        onClick = onClick
                     )
                 }
 
@@ -407,7 +408,8 @@ private fun HomeNavigationBar(
                     screen = Screen.Settings,
                     icon = if (navActions.currentDestination(Screen.Settings)) Icons.Default.Settings else Icons.Outlined.Settings,
                     label = Res.string.settings,
-                    badge = { if (updateCheck()) Badge { Text("") } }
+                    badge = { if (updateCheck()) Badge { Text("") } },
+                    onClick = { navActions.settings() }
                 )
             }
 

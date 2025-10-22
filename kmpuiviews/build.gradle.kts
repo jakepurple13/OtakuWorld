@@ -141,6 +141,7 @@ kotlin {
 
                 implementation(libs.cmp.navigation3.ui)
                 implementation(libs.cmp.lifecycle.viewmodel.navigation3)
+                implementation(libs.cmp.material3.adaptive)
             }
         }
 

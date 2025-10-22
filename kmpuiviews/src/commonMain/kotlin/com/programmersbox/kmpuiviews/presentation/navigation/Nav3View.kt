@@ -10,32 +10,33 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.analyticsScreen
 import com.programmersbox.kmpuiviews.logFirebaseMessage
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun Nav3(
-    backStack: SnapshotStateList<NavKey>,
-    navigationActions: NavigationActions,
+    navigation3Actions: Navigation3Actions,
     genericInfo: KmpGenericInfo,
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
 ) {
+    val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {
         snapshotFlow { backStack }
             .collect {
@@ -47,12 +48,17 @@ fun Nav3(
 
     val sharedEntryInSceneNavEntryDecorator = SharedElementNavDecorator<NavKey>(
         onPop = {},
-        { entry ->
+        decorate = { entry ->
+            val animatedScope = runCatching { LocalNavAnimatedContentScope.current }.getOrNull()
+            if (animatedScope == null) {
+                entry.Content()
+                return@SharedElementNavDecorator
+            }
             with(LocalSharedElementScope.current!!) {
                 Box(
                     Modifier.sharedElement(
                         rememberSharedContentState(entry.contentKey),
-                        animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                        animatedVisibilityScope = animatedScope,
                     ),
                 ) {
                     entry.Content()
@@ -67,11 +73,8 @@ fun Nav3(
         //sceneStrategy = rememberListDetailSceneStrategy<NavKey>(),
         //TODO: Need to fix
         //then remember { DialogSceneStrategy<NavKey>() },
-        onBack = {
-            if (backStack.isNotEmpty()) {
-                backStack.removeLastOrNull()
-            }
-        },
+        sceneStrategy = remember { DialogSceneStrategy() },
+        onBack = { navigation3Actions.popBackStack() },
         entryDecorators = listOf(
             sharedEntryInSceneNavEntryDecorator,
             rememberSaveableStateHolderNavEntryDecorator(),
@@ -80,7 +83,7 @@ fun Nav3(
         entryProvider = entryGraph(
             customPreferences = customPreferences,
             windowSize = windowSize,
-            navigationActions = navigationActions,
+            navigationActions = navigation3Actions,
             genericInfo = genericInfo
         ),
         transitionSpec = {

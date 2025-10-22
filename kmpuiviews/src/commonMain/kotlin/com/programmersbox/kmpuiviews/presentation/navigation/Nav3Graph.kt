@@ -11,6 +11,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.scene.DialogSceneStrategy
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -252,7 +253,7 @@ private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
     //TODO: Need to fix
-    //metadata = DialogSceneStrategy.dialog()
+    metadata = DialogSceneStrategy.dialog()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)

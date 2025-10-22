@@ -114,7 +114,7 @@ compose-multiplatform = "1.10.0-alpha03"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.10.0-alpha02"
+material3WindowSizeClassVersion = "1.10.0-alpha03"
 connectivity = "2.3.0"
 
 cmpLifecycle = "2.10.0-alpha03"
@@ -155,7 +155,8 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "nav3Material" }
 
 cmp-navigation3-ui = { group = "org.jetbrains.androidx.navigation3", name = "navigation3-ui", version.ref = "cmp-nav3" }
-cmp-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version = "2.10.0-alpha03" }
+cmp-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "cmpLifecycle" }
+cmp-material3-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version = "1.2.0-beta01" }
 
 androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
 androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }

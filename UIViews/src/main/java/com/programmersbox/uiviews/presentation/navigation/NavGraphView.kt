@@ -44,8 +44,7 @@ fun NavigationGraph(
 ) {
     if (USE_NAV3) {
         Nav3(
-            backStack = (navigationActions as Navigation3Actions).backstack(),
-            navigationActions = navigationActions,
+            navigation3Actions = navigationActions as Navigation3Actions,
             genericInfo = genericInfo,
             windowSize = windowSize,
             customPreferences = customPreferences,
