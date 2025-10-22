@@ -130,7 +130,7 @@ navigationevent = "1.0.0-beta01"
 navigation3 = "1.0.0-beta01"
 nav3Material = "1.3.0-alpha01"
 
-cmp-nav3 = "1.0.0-alpha03"
+cmp-nav3 = "1.0.0-SNAPSHOT+parallel-upload-1"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
