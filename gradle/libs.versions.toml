@@ -99,7 +99,7 @@ ackpineVersion = "0.16.1"
 
 arcore = "1.0.0-alpha04"
 composeXr = "1.0.0-alpha04"
-scenecore = "1.0.0-alpha04"
+scenecore = "1.0.0-alpha08"
 
 lottieCompose = "6.6.10"
 
