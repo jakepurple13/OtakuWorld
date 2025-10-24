@@ -76,17 +76,17 @@ jobs:
           cp ${{ steps.anime_sign_no_firebase.outputs.signedReleaseFile }} animeworld-no-firebase-release.apk
           cp ${{ steps.anime_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworld-no-cloud-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Anime App
           path: animeworld-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Anime No Firebase App
           path: animeworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Anime No Cloud Firebase App
           path: animeworld-no-cloud-firebase-release.apk

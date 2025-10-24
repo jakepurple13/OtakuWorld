@@ -76,17 +76,17 @@ jobs:
           cp ${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile }} mangaworld-no-firebase-release.apk
           cp ${{ steps.manga_sign_no_cloud_firebase.outputs.signedReleaseFile }} mangaworld-no-cloud-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Manga App
           path: mangaworld-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Manga No Firebase App
           path: mangaworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Manga No Cloud Firebase App
           path: mangaworld-no-cloud-firebase-release.apk
