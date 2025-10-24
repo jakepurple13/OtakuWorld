@@ -114,7 +114,7 @@ compose-multiplatform = "1.10.0-alpha03"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.10.0-alpha03"
+material3WindowSizeClassVersion = "1.10.0-SNAPSHOT+shish-switch-to-embeddable-compose-compiler-plugin"
 connectivity = "2.3.0"
 
 cmpLifecycle = "2.10.0-alpha03"
