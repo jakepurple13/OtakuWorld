@@ -76,17 +76,17 @@ jobs:
           cp ${{ steps.novel_sign_no_firebase.outputs.signedReleaseFile }} novelworld-no-firebase-release.apk
           cp ${{ steps.novel_sign_no_cloud_firebase.outputs.signedReleaseFile }} novelworld-no-cloud-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Novel App
           path: novelworld-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Novel No Firebase App
           path: novelworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Novel No Cloud Firebase App
           path: novelworld-no-cloud-firebase-release.apk

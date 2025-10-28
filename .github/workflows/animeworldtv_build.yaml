@@ -73,17 +73,17 @@ jobs:
           cp ${{ steps.anime_tv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
           cp ${{ steps.anime_tv_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworldtv-no-cloud-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Anime Tv App
           path: animeworldtv-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Anime Tv No Firebase App
           path: animeworldtv-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Anime Tv No Cloud Firebase App
           path: animeworldtv-no-cloud-firebase-release.apk

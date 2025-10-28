@@ -71,17 +71,17 @@ jobs:
           cp ${{ steps.otaku_sign_no_firebase.outputs.signedReleaseFile }} otakuworld-no-firebase-release.apk
           cp ${{ steps.otaku_sign_no_cloud_firebase.outputs.signedReleaseFile }} otakuworld-no-cloud-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Otaku App
           path: otakuworld-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Otaku No Firebase App
           path: otakuworld-no-firebase-release.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Signed Otaku No Cloud Firebase App
           path: otakuworld-no-cloud-firebase-release.apk

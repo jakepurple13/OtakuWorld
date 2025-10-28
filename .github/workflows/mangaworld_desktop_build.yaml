@@ -57,7 +57,7 @@ jobs:
           arguments: ":mangaworld:desktop:packageDistributionForCurrentOS"
 
       - name: Upload ${{ matrix.os }} Build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.os }}-build
           path: |
