@@ -2,6 +2,7 @@ package com.programmersbox.uiviews
 
 import android.app.assist.AssistContent
 import android.os.Bundle
+import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
@@ -70,6 +71,7 @@ abstract class BaseMainActivity : FragmentActivity() {
                 customPreferences = customPreferences,
                 bottomBarAdditions = { BottomBarAdditions() }
             )
+            ReportDrawn()
         }
     }
 

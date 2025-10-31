@@ -131,6 +131,7 @@ navigation3 = "1.0.0-beta01"
 nav3Material = "1.3.0-alpha02"
 
 cmp-nav3 = "1.0.0-alpha03"
+cmp-navevent = "1.0.0-alpha02"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
@@ -159,6 +160,7 @@ cmp-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecyc
 
 androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
 androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
+cmp-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "cmp-navevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
 moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }

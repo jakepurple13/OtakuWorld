@@ -35,5 +35,14 @@
             android:exported="false"
             android:process=":error_handler" />-->
 
+        <activity
+            android:name=".NotificationSettingsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MANAGE_NETWORK_USAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
     </application>
 </manifest>
