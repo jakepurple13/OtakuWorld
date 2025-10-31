@@ -29,8 +29,6 @@ class NotificationSettingsActivity : ComponentActivity() {
                 CompositionLocalProvider(
                     LocalNavHostPadding provides PaddingValues(),
                 ) {
-                    //FIXME: Need to fix the back button crash since right now it always does the nav action,
-                    // but we should do built in back action
                     NotificationSettings()
                 }
             }
