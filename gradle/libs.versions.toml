@@ -68,9 +68,9 @@ compose3AdaptiveVersion = "1.1.0-alpha02"
 composeBomVersion = "2025.10.00"
 materialKolor = "5.0.0-alpha02"
 
-googlePerformancePlugin = "2.0.1"
+googlePerformancePlugin = "2.0.2"
 
-firebaseBom = "34.4.0"
+firebaseBom = "34.5.0"
 
 kmpalette = "3.1.0"
 
@@ -101,7 +101,7 @@ arcore = "1.0.0-alpha04"
 composeXr = "1.0.0-alpha04"
 scenecore = "1.0.0-alpha04"
 
-lottieCompose = "6.7.0"
+lottieCompose = "6.7.1"
 
 sqlite = "2.6.1"
 kotlinTest = "2.2.10"
