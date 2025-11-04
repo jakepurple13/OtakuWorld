@@ -132,7 +132,7 @@ nav3Material = "1.3.0-alpha02"
 
 cmp-nav3 = "1.0.0-alpha04"
 cmp-navevent = "1.0.0-beta01"
-cmp-nav3-material3 = "1.3.0-alpha01"
+cmp-nav3-material3 = "1.3.0-SNAPSHOT+update-templates-demos"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
