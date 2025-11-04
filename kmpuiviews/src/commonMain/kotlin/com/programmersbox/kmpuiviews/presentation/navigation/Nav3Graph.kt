@@ -4,6 +4,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -118,7 +119,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     navigationActions: NavigationActions,
 ) {
     entry<Screen.Settings>(
-        //metadata = ListDetailSceneStrategy.listPane()
+        metadata = ListDetailSceneStrategy.listPane()
     ) {
         SettingScreen(
             composeSettingsDsl = customPreferences,
@@ -185,7 +186,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     }
 
     entry<Screen.CustomListScreen>(
-        //metadata = ListDetailSceneStrategy.listPane()
+        metadata = ListDetailSceneStrategy.listPane()
     ) {
         OtakuListView()
     }
@@ -246,7 +247,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    //metadata = ListDetailSceneStrategy.extraPane()
+    metadata = ListDetailSceneStrategy.extraPane()
 ) { content(it) }
 
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
@@ -260,7 +261,7 @@ private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.detailEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
-    //metadata = ListDetailSceneStrategy.detailPane()
+    metadata = ListDetailSceneStrategy.detailPane()
 ) { content(it) }
 
 /*

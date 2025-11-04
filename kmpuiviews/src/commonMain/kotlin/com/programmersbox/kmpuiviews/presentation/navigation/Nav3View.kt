@@ -7,6 +7,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,10 +71,8 @@ fun Nav3(
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
-        //sceneStrategy = rememberListDetailSceneStrategy<NavKey>(),
-        //TODO: Need to fix
-        //then remember { DialogSceneStrategy<NavKey>() },
-        sceneStrategy = remember { DialogSceneStrategy() },
+        sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
+                then remember { DialogSceneStrategy() },
         onBack = { navigation3Actions.popBackStack() },
         entryDecorators = listOf(
             sharedEntryInSceneNavEntryDecorator,
