@@ -14,7 +14,7 @@ generativeaiGoogle = "0.9.0-1.1.0"
 genericAi = "0.6.6"
 gradle = "8.12.3"
 heatmap = "1.0.5"
-humanReadable = "1.12.0"
+humanReadable = "1.12.1"
 knotify = "0.4.3"
 kotlinxDatetime = "0.7.1"
 
