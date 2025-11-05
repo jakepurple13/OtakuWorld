@@ -133,21 +133,21 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         )
     }
 
-    twoPaneEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
+    detailEntry<Screen.WorkerInfoScreen> { WorkerInfoScreen() }
 
-    twoPaneEntry<Screen.OrderScreen> {
+    detailEntry<Screen.OrderScreen> {
         SourceOrderScreen()
     }
 
-    twoPaneEntry<Screen.NotificationsSettings> {
+    detailEntry<Screen.NotificationsSettings> {
         NotificationSettings()
     }
 
-    twoPaneEntry<Screen.GeneralSettings> {
+    detailEntry<Screen.GeneralSettings> {
         GeneralSettings(customPreferences.generalSettings)
     }
 
-    twoPaneEntry<Screen.MoreInfoSettings> {
+    detailEntry<Screen.MoreInfoSettings> {
         MoreInfoScreen(
             usedLibraryClick = navigationActions::about,
             onViewAccountInfoClick = navigationActions::accountInfo
@@ -156,15 +156,15 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     entry<Screen.PrereleaseScreen> { PrereleaseScreen() }
 
-    twoPaneEntry<Screen.OtherSettings> {
+    detailEntry<Screen.OtherSettings> {
         PlaySettings(customPreferences.playerSettings)
     }
 
-    twoPaneEntry<Screen.MoreSettings> {
+    detailEntry<Screen.MoreSettings> {
         MoreSettingsScreen()
     }
 
-    twoPaneEntry<Screen.HistoryScreen> {
+    detailEntry<Screen.HistoryScreen> {
         HistoryUi()
     }
 
@@ -185,21 +185,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         )
     }
 
-    entry<Screen.CustomListScreen>(
-        metadata = ListDetailSceneStrategy.listPane()
-    ) {
-        OtakuListView()
-    }
-
-    twoPaneEntry<Screen.CustomListScreen.CustomListItem> {
-        OtakuCustomListScreenStandAlone(it)
-    }
-
-    dialogEntry<Screen.CustomListScreen.DeleteFromList> {
-        DeleteFromListScreen(
-            deleteFromList = it
-        )
-    }
+    listSettings()
 
     entry<Screen.ImportListScreen> {
         ImportListScreen()
@@ -209,7 +195,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         ImportFullListScreen()
     }
 
-    twoPaneEntry<Screen.NotificationScreen> {
+    entry<Screen.NotificationScreen> {
         NotificationScreen()
     }
 
@@ -235,12 +221,31 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     entry<Screen.UrlOpener> { UrlOpenerScreen() }
     entry<Screen.ColorHelper> { ColorHelperScreen() }
-    entry<Screen.ThemeSettings> { ThemeSettingsScreen() }
-    entry<Screen.DetailsSettings> { DetailsSettingsScreen() }
-    entry<Screen.SecuritySettings> { SecurityScreen() }
-    entry<Screen.ExceptionScreen> { ExceptionsScreen() }
+    twoPaneEntry<Screen.ThemeSettings> { ThemeSettingsScreen() }
+    twoPaneEntry<Screen.DetailsSettings> { DetailsSettingsScreen() }
+    twoPaneEntry<Screen.SecuritySettings> { SecurityScreen() }
+    twoPaneEntry<Screen.ExceptionScreen> { ExceptionsScreen() }
 
     genericInfo.settingsNav3Setup()
+}
+
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+private fun EntryProviderScope<NavKey>.listSettings() {
+    entry<Screen.CustomListScreen>(
+        metadata = ListDetailSceneStrategy.listPane()
+    ) {
+        OtakuListView()
+    }
+
+    twoPaneEntry<Screen.CustomListScreen.CustomListItem> {
+        OtakuCustomListScreenStandAlone(it)
+    }
+
+    dialogEntry<Screen.CustomListScreen.DeleteFromList> {
+        DeleteFromListScreen(
+            deleteFromList = it
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
