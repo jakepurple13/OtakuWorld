@@ -26,6 +26,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.analyticsScreen
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
+import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 
@@ -72,7 +73,8 @@ fun Nav3(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
         sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
-                then remember { DialogSceneStrategy() },
+                then remember { DialogSceneStrategy() }
+                then remember { BottomSheetSceneStrategy() },
         onBack = { navigation3Actions.popBackStack() },
         entryDecorators = listOf(
             sharedEntryInSceneNavEntryDecorator,

@@ -248,18 +248,17 @@ private fun EntryProviderScope<NavKey>.listSettings() {
     }
 }
 
+private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
+    noinline content: @Composable (T) -> Unit,
+) = entry<T>(
+    metadata = DialogSceneStrategy.dialog()
+) { content(it) }
+
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
 ) = entry<T>(
     metadata = ListDetailSceneStrategy.extraPane()
-) { content(it) }
-
-private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
-    noinline content: @Composable (T) -> Unit,
-) = entry<T>(
-    //TODO: Need to fix
-    metadata = DialogSceneStrategy.dialog()
 ) { content(it) }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
