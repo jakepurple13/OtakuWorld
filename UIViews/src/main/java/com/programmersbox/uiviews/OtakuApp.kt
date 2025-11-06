@@ -12,6 +12,7 @@ import androidx.compose.foundation.ComposeFoundationFlags
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
+import androidx.compose.runtime.tooling.ComposeStackTraceMode
 import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Configuration
@@ -73,7 +74,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
         //If firebase is giving issues, comment these lines out
         ComposeUiFlags.isSemanticAutofillEnabled = true
         ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = true
-        Composer.setDiagnosticStackTraceEnabled(BuildConfig.DEBUG)
+        Composer.setDiagnosticStackTraceMode(if (BuildConfig.DEBUG) ComposeStackTraceMode.SourceInformation else ComposeStackTraceMode.None)
 
         DataStoreSettings { filesDir.resolve(it).absolutePath }
 
