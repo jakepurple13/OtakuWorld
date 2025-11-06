@@ -111,7 +111,7 @@ kotlinTest = "2.2.10"
 runner = "1.7.0"
 core = "1.7.0"
 
-androidx-lifecycle = "2.9.5"
+androidx-lifecycle = "2.9.6"
 
 compose-multiplatform = "1.10.0-beta01"
 
