@@ -1,5 +1,5 @@
 [versions]
-anthropicSdkKotlin = "0.24.0"
+anthropicSdkKotlin = "0.25.2"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
 foundation = "1.10.0-beta01"
