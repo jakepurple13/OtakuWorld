@@ -18,5 +18,5 @@ object Deps {
     )
 
     const val materialTypeface = "com.mikepenz:google-material-typeface:4.0.0.3-kotlin@aar"
-    const val fontawesomeTypeface = "com.mikepenz:fontawesome-typeface:5.13.3.1-kotlin@aar"
+    const val fontawesomeTypeface = "com.mikepenz:fontawesome-typeface:5.13.3.2-kotlin@aar"
 }
