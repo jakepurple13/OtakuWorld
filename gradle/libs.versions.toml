@@ -374,7 +374,7 @@ preference = "androidx.preference:preference-ktx:1.2.1"
 
 recyclerview = "androidx.recyclerview:recyclerview:1.4.0"
 constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.1"
-swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
 xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
