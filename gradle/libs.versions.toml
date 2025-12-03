@@ -21,7 +21,7 @@ humanReadable = "1.12.1"
 knotify = "0.4.3"
 kotlinxDatetime = "0.7.1"
 
-javase = "3.5.3"
+javase = "3.5.4"
 kotlin = "2.2.21"
 kspVersion = "2.3.2"
 
