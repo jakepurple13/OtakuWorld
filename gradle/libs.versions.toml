@@ -10,7 +10,6 @@ mokoBiometry = "0.4.0"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "2.0.3"
 corePerformance = "1.0.0"
-coreVersion = "3.5.3"
 filekitCore = "0.12.0"
 generativeai = "0.9.0"
 generativeaiGoogle = "0.9.0-1.1.0"
@@ -21,7 +20,7 @@ humanReadable = "1.12.1"
 knotify = "0.4.3"
 kotlinxDatetime = "0.7.1"
 
-javase = "3.5.3"
+javase = "3.5.4"
 kotlin = "2.2.21"
 kspVersion = "2.3.2"
 
@@ -120,7 +119,7 @@ kotlinx-coroutines = "1.10.2"
 material3WindowSizeClassVersion = "1.10.0-alpha04"
 connectivity = "2.3.0"
 
-cmpLifecycle = "2.10.0-alpha05"
+cmpLifecycle = "2.10.0-alpha06"
 navigationCmp = "2.9.10-alpha01"
 
 buildKonfig = "0.17.1"
@@ -182,7 +181,7 @@ generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-goo
 heatmap = { module = "com.fleeys:heatmap", version.ref = "heatmap" }
 human-readable = { module = "nl.jacobras:Human-Readable", version.ref = "humanReadable" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
-core = { module = "com.google.zxing:core", version.ref = "coreVersion" }
+core = { module = "com.google.zxing:core", version.ref = "javase" }
 knotify = { module = "io.github.kdroidfilter:knotify", version.ref = "knotify" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCmp" }
