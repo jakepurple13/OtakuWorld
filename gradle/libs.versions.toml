@@ -2,7 +2,7 @@
 anthropicSdkKotlin = "0.25.2"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha04"
-foundation = "1.10.0-beta01"
+foundation = "1.10.0-SNAPSHOT+release-1-10"
 material3 = "1.10.0-alpha01"
 material3AdaptiveNavigationSuite = "1.10.0-alpha04"
 materialIconsExtended = "1.7.3"
