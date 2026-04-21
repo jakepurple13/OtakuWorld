@@ -1,8 +1,8 @@
 package com.programmersbox.favoritesdatabase
 
 import android.content.Context
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
 
 actual class DatabaseBuilder(
     val context: Context,

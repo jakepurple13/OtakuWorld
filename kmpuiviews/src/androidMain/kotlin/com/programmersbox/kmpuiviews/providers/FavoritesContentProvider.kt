@@ -3,13 +3,9 @@ package com.programmersbox.kmpuiviews.providers
 import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
-import androidx.core.net.toUri
-import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.utils.printLogs
-import io.ktor.util.decodeBase64String
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -45,7 +41,8 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
         sortOrder: String?,
     ): Cursor? {
         logWhoseCalling()
-        return when (sUriMatcher.match(uri)) {
+        return null
+        /*return when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> itemDatabase.query(
                 query = SupportSQLiteQueryBuilder
                     .builder("FavoriteItem")
@@ -74,13 +71,14 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             )
 
             else -> null
-        }
+        }*/
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String?>?): Int {
         logWhoseCalling()
         val context = context ?: return 0
-        val db = itemDatabase.openHelper.writableDatabase
+        return 0
+        /*val db = itemDatabase.openHelper.writableDatabase
 
         return when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> {
@@ -113,7 +111,7 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             }
 
             else -> throw IllegalArgumentException("Unknown URI: $uri")
-        }
+        }*/
     }
 
     override fun getType(uri: Uri): String? {
@@ -133,7 +131,9 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
         printLogs { AUTHORITY }
         printLogs { uri }
 
-        when (sUriMatcher.match(uri)) {
+        return null
+
+        /*when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> {
                 val db = itemDatabase.openHelper.writableDatabase
                 val url = values.getAsString("url") ?: return null
@@ -169,7 +169,7 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             }
 
             else -> throw IllegalArgumentException("Unknown URI: $uri")
-        }
+        }*/
     }
 
     override fun update(
@@ -181,7 +181,8 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
         logWhoseCalling()
         if (values == null) return 0
         val context = context ?: return 0
-        val db = itemDatabase.openHelper.writableDatabase
+        return 0
+        /*val db = itemDatabase.openHelper.writableDatabase
 
         return when (sUriMatcher.match(uri)) {
             FAVORITES_ID -> {
@@ -241,6 +242,6 @@ abstract class FavoritesContentProvider : BaseContentProvider(), KoinComponent {
             }
 
             else -> throw IllegalArgumentException("Unknown URI: $uri")
-        }
+        }*/
     }
 }

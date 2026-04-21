@@ -42,7 +42,7 @@ pagingVersion = "3.4.2"
 protobufGradlePlugin = "0.10.0"
 qrose = "1.1.2"
 reorderable = "3.1.0"
-roomVersion = "2.8.4"
+roomVersion = "3.0.0-alpha03"
 navVersion = "2.9.7"
 koin-bom = "4.2.1"
 coil = "3.4.0"
@@ -146,7 +146,7 @@ org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.re
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "googleAndroidLibrariesMapsplatformSecretsGradlePlugin" }
 google-firebase-performance = { id = "com.google.firebase.firebase-perf", version.ref = "googlePerformancePlugin" }
-room = { id = "androidx.room", version.ref = "roomVersion" }
+room = { id = "androidx.room3", version.ref = "roomVersion" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "gradle" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
@@ -318,9 +318,8 @@ koinComposeKmp = { module = "io.insert-koin:koin-compose" }
 koinViewModel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koinViewModelNavigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation" }
 
-roomCompiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
-roomRuntime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
-roomKtx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
+roomCompiler = { module = "androidx.room3:room3-compiler", version.ref = "roomVersion" }
+roomRuntime = { module = "androidx.room3:room3-runtime", version.ref = "roomVersion" }
 
 ktorCore = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
 ktorAuth = { module = "io.ktor:ktor-client-auth", version.ref = "ktorVersion" }
@@ -337,7 +336,7 @@ urlencoder-lib = { module = "net.thauvin.erik.urlencoder:urlencoder-lib", versio
 workRuntime = { module = "androidx.work:work-runtime", version.ref = "workVersion" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
-roomPaging = { module = "androidx.room:room-paging", version.ref = "roomVersion" }
+roomPaging = { module = "androidx.room3:room3-paging", version.ref = "roomVersion" }
 
 aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
 aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "latestAboutLibsRelease" }
@@ -573,7 +572,7 @@ ktorLibs = [
     "ktorJsoup"
 ]
 
-roomLibs = ["roomRuntime", "roomKtx"]
+roomLibs = ["roomRuntime"]
 
 pagingLibs = ["pagingRuntime", "roomPaging"]
 

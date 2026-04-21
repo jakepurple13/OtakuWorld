@@ -38,7 +38,7 @@ dependencies {
     add("ksp", libs.roomCompiler)
 }
 
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
