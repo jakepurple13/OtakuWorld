@@ -78,7 +78,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -104,6 +103,8 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.HazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.MultipleActions
 import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
@@ -114,10 +115,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -180,7 +178,7 @@ fun HomeNav(
 
             val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
             val floatingNavigation by rememberFloatingNavigation()
-            val hazeState = remember { HazeState() }
+            val blurKindState = rememberBlurKindState()
 
             val navigationActions = LocalNavActions.current
 
@@ -198,7 +196,7 @@ fun HomeNav(
                     )
 
                     HazeScaffold(
-                        hazeState = hazeState,
+                        blurKindState = blurKindState,
                         bottomBar = {
                             if (!floatingNavigation) {
                                 BottomNav(
@@ -226,10 +224,7 @@ fun HomeNav(
                                         .padding(horizontal = 24.dp)
                                         .windowInsetsPadding(WindowInsets.navigationBars)
                                         .clip(MaterialTheme.shapes.extraLarge)
-                                        .hazeEffect(
-                                            state = hazeState,
-                                            style = HazeMaterials.ultraThin(),
-                                        )
+                                        .setBlurKind(blurKindState)
                                         .fillMaxWidth()
                                     //.renderInSharedTransitionScopeOverlay()
                                 )
@@ -279,23 +274,24 @@ fun FloatingNavigationBar(
         shape = shape,
         border = BorderStroke(
             width = 0.5.dp,
-            brush = Brush.verticalGradient(
+            color = MaterialTheme.colorScheme.surfaceVariant
+            /*brush = Brush.verticalGradient(
                 colors = listOf(
                     MaterialTheme.colorScheme.surfaceVariant,
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 ),
-            ),
+            ),*/
         ),
         modifier = modifier,
     ) {
         Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            content = content,
             modifier = Modifier
                 .padding(horizontal = 8.dp)
                 .fillMaxWidth()
                 .height(80.dp)
                 .selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            content = content,
         )
     }
 }

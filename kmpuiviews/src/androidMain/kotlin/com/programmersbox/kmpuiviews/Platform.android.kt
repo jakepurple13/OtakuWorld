@@ -80,17 +80,20 @@ actual fun createColorScheme(
     darkTheme: Boolean,
     isExpressive: Boolean,
 ): ColorScheme {
-    return when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(LocalContext.current)
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
-        darkTheme -> darkColorScheme(
-            primary = Color(0xff90CAF9),
-            secondary = Color(0xff90CAF9)
-        )
+    val context = LocalContext.current
+    return remember(context, darkTheme, isExpressive) {
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(context)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme -> dynamicLightColorScheme(context)
+            darkTheme -> darkColorScheme(
+                primary = Color(0xff90CAF9),
+                secondary = Color(0xff90CAF9)
+            )
 
-        isExpressive -> expressiveLightColorScheme()
+            isExpressive -> expressiveLightColorScheme()
 
-        else -> lightColorScheme()
+            else -> lightColorScheme()
+        }
     }
 }
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.ktx.animateColorScheme
@@ -54,5 +55,5 @@ fun generateColorScheme(
         )
     }
 
-    return animateColorScheme(colorScheme)
+    return animateColorScheme(remember(isAmoledMode, isExpressive, themeColor, themeSetting, colorScheme) { colorScheme })
 }

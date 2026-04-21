@@ -32,6 +32,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountIn
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
+import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.DetailsSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettingsScreen
@@ -222,6 +223,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     entry<Screen.UrlOpener> { UrlOpenerScreen() }
     entry<Screen.ColorHelper> { ColorHelperScreen() }
     twoPaneEntry<Screen.ThemeSettings> { ThemeSettingsScreen() }
+    twoPaneEntry<Screen.Settings.Blur> { BlurSettingsScreen() }
     twoPaneEntry<Screen.DetailsSettings> { DetailsSettingsScreen() }
     twoPaneEntry<Screen.SecuritySettings> { SecurityScreen() }
     twoPaneEntry<Screen.ExceptionScreen> { ExceptionsScreen() }

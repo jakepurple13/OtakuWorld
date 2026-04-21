@@ -109,6 +109,14 @@ fun GeneralSettings(
                     onClick = { navActions.navigate(Screen.DetailsSettings) }
                 )
             }
+
+            item {
+                PreferenceSetting(
+                    settingTitle = { Text("Blur Settings") },
+                    settingIcon = { Icon(Icons.Default.BlurOn, null, modifier = Modifier.fillMaxSize()) },
+                    onClick = { navActions.navigate(Screen.Settings.Blur) }
+                )
+            }
         }
 
         CategoryGroup {
