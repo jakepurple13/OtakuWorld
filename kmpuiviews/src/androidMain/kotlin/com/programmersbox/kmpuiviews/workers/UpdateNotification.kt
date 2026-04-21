@@ -14,17 +14,17 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
-import com.programmersbox.kmpuiviews.utils.NotificationChannels
-import com.programmersbox.kmpuiviews.utils.NotificationGroups
-import com.programmersbox.kmpuiviews.utils.NotificationLogo
-import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.GroupBehavior
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
+import com.programmersbox.kmpuiviews.utils.NotificationGroups
+import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.SemanticActions
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.catch
@@ -214,7 +214,12 @@ class UpdateNotification(
         logFirebaseMessage("Checking for $contextText")
     }
 
-    suspend fun sendRunningNotificationLongTerm(max: Int, progress: Int, contextText: CharSequence = ""): Notification {
+    suspend fun sendRunningNotificationLongTerm(
+        max: Int,
+        progress: Int,
+        contextText: CharSequence = "",
+        block: NotificationDslBuilder.() -> Unit = {},
+    ): Notification {
         val notification = NotificationDslBuilder.builder(
             context,
             NotificationChannels.UpdateCheck.id,
@@ -230,6 +235,8 @@ class UpdateNotification(
             showWhen = true
             message = contextText
             subText = getString(Res.string.checking)
+
+            block()
         }
         logFirebaseMessage("Checking for $contextText")
         return notification

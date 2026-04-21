@@ -106,6 +106,7 @@ import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -136,7 +137,9 @@ fun ExtensionList(
 
     val navController = LocalNavActions.current
 
-    val createZip = rememberFileSaverLauncher { document ->
+    val createZip = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { document ->
         document?.let { viewModel.shareExtensions(it) }
     }
 

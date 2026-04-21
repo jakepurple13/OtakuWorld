@@ -31,7 +31,6 @@ class MultiplatformApplicationPlugin : Plugin<Project> {
         val xcfName = "sharedKit"
 
         listOf(
-            iosX64(),
             iosArm64(),
             iosSimulatorArm64()
         ).forEach { iosTarget ->

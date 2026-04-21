@@ -18,6 +18,7 @@ multiplatform this project grows stronger and stronger.
 - Workers
   - desktop
     - https://github.com/InsanusMokrassar/krontab?
+    - https://github.com/vietnguyentuan2019/KMPTaskManager
 - Icon getting
 - Need to figure our initial setup like what is done in the application class
 - Better handling of large screen devices

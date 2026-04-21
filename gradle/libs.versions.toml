@@ -1,78 +1,79 @@
 [versions]
-anthropicSdkKotlin = "0.25.2"
+anthropicSdkKotlin = "0.29.0"
 barcodeScanning = "17.3.0"
-biometricVersion = "1.4.0-alpha04"
-foundation = "1.10.0-beta01"
+biometricVersion = "1.4.0-alpha06"
+foundation = "1.10.3"
 material3 = "1.10.0-alpha01"
-material3AdaptiveNavigationSuite = "1.10.0-alpha04"
+material3AdaptiveNavigationSuite = "1.10.0-alpha05"
 materialIconsExtended = "1.7.3"
 mokoBiometry = "0.4.0"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "2.0.3"
 corePerformance = "1.0.0"
-filekitCore = "0.12.0"
+filekitCore = "0.13.0"
 generativeai = "0.9.0"
 generativeaiGoogle = "0.9.0-1.1.0"
 genericAi = "0.6.6"
-gradle = "8.12.3"
+gradle = "9.1.1"
+backdrop = "2.0.0-alpha03"
 heatmap = "1.0.5"
-humanReadable = "1.12.1"
+humanReadable = "1.12.3"
 knotify = "0.4.3"
 kotlinxDatetime = "0.7.1"
 
 javase = "3.5.4"
-kotlin = "2.2.21"
-kspVersion = "2.3.2"
+kotlin = "2.3.20"
+kspVersion = "2.3.6"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
-dragselect = "3.1.0"
+dragselect = "3.3.0"
 easylauncher = "6.4.1"
-firebaseCrashlyticsGradle = "3.0.6"
+firebaseCrashlyticsGradle = "3.0.7"
 googleServices = "4.4.4"
-haze = "1.7.1"
-kamelImage = "1.0.8"
-latestAboutLibsRelease = "13.1.0"
+haze = "1.7.2"
+kamelImage = "1.0.9"
+latestAboutLibsRelease = "14.0.1"
 coroutinesVersion = "1.10.2"
-glideVersion = "5.0.5"
+glideVersion = "5.0.7"
 pagecurl = "1.5.1"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
-pagingVersion = "3.3.6"
-protobufGradlePlugin = "0.9.5"
-qrose = "1.0.1"
-reorderable = "2.5.1"
+pagingVersion = "3.4.2"
+protobufGradlePlugin = "0.10.0"
+qrose = "1.1.2"
+reorderable = "3.1.0"
 roomVersion = "2.8.4"
-navVersion = "2.9.6"
-koin-bom = "4.1.1"
-coil = "3.3.0"
-landscapist = "2.6.1"
+navVersion = "2.9.7"
+koin-bom = "4.2.1"
+coil = "3.4.0"
+landscapist = "2.9.7"
 lifecycle = "2.10.0"
 jetpack = "1.6.0-alpha03"
 jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
-okhttpVersion = "4.12.0"
-ktorVersion = "3.3.2"
-scanner = "0.5.0"
+okhttpVersion = "5.3.2"
+ktorVersion = "3.4.2"
+scanner = "0.7.1"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
 urlencoderLib = "1.6.0"
-workVersion = "2.11.0"
+workVersion = "2.11.2"
 xemanticAiToolSchema = "1.2.0"
-ziplineVersion = "1.1.0"
-protobufVersion = "4.26.1"
+ziplineVersion = "1.27.0"
+protobufVersion = "4.34.1"
 sketchVersion = "3.3.2"
-activity = "1.12.0"
-composeVersion = "1.8.0-alpha01"
+activity = "1.13.0"
+composeVersion = "1.11.0-beta03"
 compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
-composeBomVersion = "2025.11.01"
-materialKolor = "5.0.0-alpha02"
+composeBomVersion = "2026.04.00"
+materialKolor = "5.0.0-alpha07"
 
 googlePerformancePlugin = "2.0.2"
 
-firebaseBom = "34.6.0"
+firebaseBom = "34.12.0"
 
 kmpalette = "3.1.0"
 
@@ -80,61 +81,61 @@ kmpalette = "3.1.0"
 piasy = "1.8.1"
 
 ### AnimeWorld
-autoBinding = "1.1-beta04"
-media3Version = "1.8.0"
+autoBinding = "1.1-beta05"
+media3Version = "1.10.0"
 
-junit = "1.2.1"
-espresso-core = "3.6.1"
+junit = "1.3.0"
+espresso-core = "3.7.0"
 uiautomator = "2.3.0"
-benchmark-macro-junit4 = "1.3.3"
-androidx-baselineprofile = "1.3.3"
+benchmark-macro-junit4 = "1.4.1"
+androidx-baselineprofile = "1.4.1"
 profileinstaller = "1.4.1"
-telephoto = "0.18.0"
+telephoto = "0.19.0"
 zoomimageComposeGlide = "1.4.0"
 
 workinspector = "1.2"
 
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
-datastore = "1.2.0"
-ackpineVersion = "0.16.1"
+datastore = "1.2.1"
+ackpineVersion = "0.22.5"
 
-arcore = "1.0.0-alpha04"
-composeXr = "1.0.0-alpha04"
-scenecore = "1.0.0-alpha04"
+arcore = "1.0.0-alpha12"
+composeXr = "1.0.0-alpha12"
+scenecore = "1.0.0-alpha13"
 
 lottieCompose = "6.7.1"
 
 sqlite = "2.6.2"
-kotlinTest = "2.2.10"
+kotlinTest = "2.3.20"
 runner = "1.7.0"
 core = "1.7.0"
 
-androidx-lifecycle = "2.9.6"
+androidx-lifecycle = "2.10.0"
 
-compose-multiplatform = "1.10.0-rc01"
+compose-multiplatform = "1.11.0-beta03"
 
 kotlinx-coroutines = "1.10.2"
 
-material3WindowSizeClassVersion = "1.10.0-alpha04"
-connectivity = "2.3.0"
+material3WindowSizeClassVersion = "1.10.0-alpha05"
+connectivity = "2.4.1"
 
-cmpLifecycle = "2.10.0-alpha06"
+cmpLifecycle = "2.10.0"
 navigationCmp = "2.9.10-alpha01"
 
-buildKonfig = "0.17.1"
+buildKonfig = "0.18.0"
 
-compottie = "2.0.2"
+compottie = "2.1.0"
 
 lifecycleViewmodelNavigation3 = "2.10.0"
-navigationevent = "1.0.0"
+navigationevent = "1.0.2"
 
-navigation3 = "1.0.0"
-nav3Material = "1.3.0-alpha04"
+navigation3 = "1.1.0"
+nav3Material = "1.3.0-alpha10"
 
-cmp-nav3 = "1.0.0-alpha06"
-cmp-navevent = "1.0.0-rc01"
-cmp-nav3-material3 = "1.3.0-alpha02"
+cmp-nav3 = "1.1.0"
+cmp-navevent = "1.0.1"
+cmp-nav3-material3 = "1.3.0-alpha07"
 
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
@@ -167,7 +168,7 @@ androidx-navigationevent-compose = { module = "androidx.navigationevent:navigati
 cmp-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "cmp-navevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.10.0-alpha04" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.10.0-alpha05" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
@@ -178,6 +179,7 @@ constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:cons
 anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
 generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" }
 generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
+backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 heatmap = { module = "com.fleeys:heatmap", version.ref = "heatmap" }
 human-readable = { module = "nl.jacobras:Human-Readable", version.ref = "humanReadable" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
@@ -252,8 +254,8 @@ reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reo
 runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "scanner" }
 textflow-material3 = { module = "io.github.oleksandrbalan:textflow-material3", version.ref = "textflowMaterial3" }
-tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
-tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-alpha12" }
+tv-material = { module = "androidx.tv:tv-material", version = "1.0.1" }
+tv-foundation = { module = "androidx.tv:tv-foundation", version = "1.0.0-rc01" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
 ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "compose-multiplatform" }
 cmp-ui-util = { module = "org.jetbrains.compose.ui:ui-util", version.ref = "compose-multiplatform" }
@@ -292,9 +294,9 @@ coroutinesPlayServices = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-pl
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glideCompiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideVersion" }
 glideRecyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glideVersion" }
-glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta08"
+glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta09"
 
-androidCore = "androidx.core:core-ktx:1.17.0"
+androidCore = "androidx.core:core-ktx:1.18.0"
 appCompat = "androidx.appcompat:appcompat:1.7.1"
 material = "com.google.android.material:material:1.13.0"
 
@@ -346,7 +348,7 @@ navTesting = { module = "androidx.navigation:navigation-testing", version.ref = 
 reactiveNetwork = "ru.beryukhov:flowreactivenetwork:1.0.4"
 fragmentKtx = "androidx.fragment:fragment-ktx:1.8.9"
 
-iconicsCore = "com.mikepenz:iconics-core:5.5.0-compose01"
+iconicsCore = "com.mikepenz:iconics-core:5.5.0"
 
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
 
@@ -354,32 +356,32 @@ pagingCompose = { module = "androidx.paging:paging-compose", version.ref = "pagi
 
 fileChooser = "com.github.hedzr:android-file-chooser:1.2.0"
 
-androidxWindow = "androidx.window:window:1.5.0"
-androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.6.2"
-androidxBrowser = "androidx.browser:browser:1.9.0"
+androidxWindow = "androidx.window:window:1.5.1"
+androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.0"
+androidxBrowser = "androidx.browser:browser:1.10.0"
 
 showMoreLess = "com.github.noowenz:ShowMoreLess:1.0.3"
 
 toolbarCompose = "me.onebone:toolbar-compose:2.3.5"
 lazyColumnScrollbar = "com.github.nanihadesuka:LazyColumnScrollbar:2.2.0"
-sonner = { module = "io.github.dokar3:sonner", version = "0.3.8" }
+sonner = { module = "io.github.dokar3:sonner", version = "0.3.9" }
 
 datastore = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
 datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 datastoreOkio = { module = "androidx.datastore:datastore-core-okio", version.ref = "datastore" }
 
-jsoup = "org.jsoup:jsoup:1.21.1"
+jsoup = "org.jsoup:jsoup:1.22.2"
 
 preference = "androidx.preference:preference-ktx:1.2.1"
 
 recyclerview = "androidx.recyclerview:recyclerview:1.4.0"
 constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.1"
-swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0"
 
 telephoto-zoomable-image-glide = { module = "me.saket.telephoto:zoomable-image-glide", version.ref = "telephoto" }
 xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
 zoomable-peek-overlay = { module = "me.saket.telephoto:zoomable-peek-overlay", version.ref = "telephoto" }
-zoomableModifier = "net.engawapg.lib:zoomable:2.8.2"
+zoomableModifier = "net.engawapg.lib:zoomable:2.11.1"
 
 ### MangaWorld
 coilGif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
@@ -392,7 +394,7 @@ progressPieIndicator = { module = "com.github.piasy:ProgressPieIndicator", versi
 slideToAct = "com.ncorti:slidetoact:0.11.0"
 mediaRouter = "androidx.mediarouter:mediarouter:1.8.1"
 torrentStream = "com.github.TorrentStream:TorrentStream-Android:3.0.0"
-castFramework = "com.google.android.gms:play-services-cast-framework:22.2.0"
+castFramework = "com.google.android.gms:play-services-cast-framework:22.3.1"
 localCast = "com.github.KaustubhPatange:Android-Cast-Local-Sample:0.01"
 superForwardView = "com.github.ertugrulkaragoz:SuperForwardView:0.2"
 
@@ -440,19 +442,19 @@ exoplayerdatasource = { module = "androidx.media3:media3-datasource", version.re
 exoplayercommon = { module = "androidx.media3:media3-common", version.ref = "media3Version" }
 exoplayerleanback = { module = "androidx.media3:media3-ui-leanback", version.ref = "media3Version" }
 
-leanback = "androidx.leanback:leanback:1.2.0-alpha02"
-leanbackPreference = "androidx.leanback:leanback-preference:1.2.0-alpha02"
+leanback = "androidx.leanback:leanback:1.2.0"
+leanbackPreference = "androidx.leanback:leanback-preference:1.2.0"
 
 duktape = "com.squareup.duktape:duktape-android:1.4.0"
-rhino = "org.mozilla:rhino:1.7.14"
+rhino = "org.mozilla:rhino:1.9.1"
 kotson = "com.github.salomonbrys.kotson:kotson:2.5.0"
 karnKhttp = "io.karn:khttp-android:0.1.2"
 ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "ziplineVersion" }
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
-retrofit = "com.squareup.retrofit2:retrofit:2.12.0"
-retrofitGson = "com.squareup.retrofit2:converter-gson:2.12.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
-androidxWebkit = "androidx.webkit:webkit:1.14.0"
+retrofit = "com.squareup.retrofit2:retrofit:3.0.0"
+retrofitGson = "com.squareup.retrofit2:converter-gson:3.0.0"
+kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
+androidxWebkit = "androidx.webkit:webkit:1.15.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
 mlkitLanguage = "com.google.mlkit:language-id:17.0.6"
@@ -464,7 +466,7 @@ crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
 firebaseUiAuth = "com.firebaseui:firebase-ui-auth:9.1.1"
-playServices = "com.google.android.gms:play-services-auth:21.4.0"
+playServices = "com.google.android.gms:play-services-auth:21.5.1"
 
 protobufJava = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufVersion" }
 protobufKotlin = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "protobufVersion" }
@@ -485,7 +487,7 @@ workinspector = { module = "com.github.koitharu:workinspector", version.ref = "w
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }
 androidx-compose-xr = { module = "androidx.xr.compose:compose", version.ref = "composeXr" }
 androidx-scenecore = { module = "androidx.xr.scenecore:scenecore", version.ref = "scenecore" }
-androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha07" }
+androidx-xr-material3 = { module = "androidx.xr.compose.material3:material3", version = "1.0.0-alpha16" }
 
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 

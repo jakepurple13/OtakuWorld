@@ -13,7 +13,7 @@ buildscript {
         classpath(libs.google.services)
         classpath(libs.firebase.crashlytics.gradle)
         classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${libs.versions.latestAboutLibsRelease.get()}")
-        classpath("org.jetbrains.kotlin:kotlin-serialization:${libs.versions.kotlin.get()}")
+        classpath("org.jetbrains.kotlin:kotlin-serialization:2.3.20")
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
         classpath(libs.navigation.safe.args.gradle.plugin)
@@ -70,22 +70,23 @@ tasks.register("clean").configure {
 }
 
 plugins {
-    id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
+    //id("io.github.jakepurple13.ProjectInfo") version "1.1.1"
     //id("org.jetbrains.compose") version libs.versions.jetbrainsCompiler apply false
     alias(libs.plugins.compose.compiler) apply false
     //alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin) apply false
     alias(libs.plugins.google.firebase.performance) apply false
     alias(libs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
-    id("com.squareup.wire") version "5.4.0" apply false
-    id("org.jetbrains.compose.hot-reload") version "1.0.0-rc03" apply false
+    id("com.squareup.wire") version "6.2.0" apply false
+    id("org.jetbrains.compose.hot-reload") version "1.0.0" apply false
     alias(libs.plugins.buildKonfig) apply false
 }
 
+/*
 projectInfo {
     filter {
         exclude("otakumanager/**")
         excludeFileTypes("png", "webp", "ttf", "json")
     }
     showTopCount = 3
-}
+}*/

@@ -67,7 +67,15 @@ class SettingsSerializer : GenericSerializer<Settings> {
             mediaCheckerSettings = defaultMediaCheckerSettings,
             aiSettings = defaultAiSettings,
             colorBlindnessType = ColorBlindnessType.None,
-            detailsChapterSwipeBehavior = defaultDetailsChapterSwipeBehavior
+            detailsChapterSwipeBehavior = defaultDetailsChapterSwipeBehavior,
+            useProgressive = true,
+            blurType = BlurType.Regular,
+            liquidGlassBlurAmount = 10f,
+            liquidGlassRefractionHeight = 10f,
+            liquidGlassRefractionAmount = 10f,
+            liquidGlassDepthEffect = true,
+            liquidGlassChromaticAberration = true,
+            blurKind = BlurKind.Haze
         )
 
     override val parseFrom: (input: BufferedSource) -> Settings get() = Settings.ADAPTER::decode
@@ -272,6 +280,62 @@ class NewSettingsHandling(
         key = { it.detailsChapterSwipeBehavior ?: SettingsSerializer.defaultDetailsChapterSwipeBehavior },
         update = { copy(detailsChapterSwipeBehavior = it) },
         defaultValue = SettingsSerializer.defaultDetailsChapterSwipeBehavior
+    )
+
+    @Composable
+    fun rememberUseProgressive() = preferences.rememberPreference(
+        key = { it.useProgressive ?: true },
+        update = { copy(useProgressive = it) },
+        defaultValue = true
+    )
+
+    @Composable
+    fun rememberBlurType() = preferences.rememberPreference(
+        key = { it.blurType ?: BlurType.Regular },
+        update = { copy(blurType = it) },
+        defaultValue = BlurType.Regular
+    )
+
+    @Composable
+    fun rememberLiquidGlassBlurAmount() = preferences.rememberPreference(
+        key = { it.liquidGlassBlurAmount ?: 10f },
+        update = { copy(liquidGlassBlurAmount = it) },
+        defaultValue = 10f
+    )
+
+    @Composable
+    fun rememberLiquidGlassRefractionHeight() = preferences.rememberPreference(
+        key = { it.liquidGlassRefractionHeight ?: 10f },
+        update = { copy(liquidGlassRefractionHeight = it) },
+        defaultValue = 10f
+    )
+
+    @Composable
+    fun rememberLiquidGlassRefractionAmount() = preferences.rememberPreference(
+        key = { it.liquidGlassRefractionAmount ?: 10f },
+        update = { copy(liquidGlassRefractionAmount = it) },
+        defaultValue = 10f
+    )
+
+    @Composable
+    fun rememberLiquidGlassDepthEffect() = preferences.rememberPreference(
+        key = { it.liquidGlassDepthEffect ?: true },
+        update = { copy(liquidGlassDepthEffect = it) },
+        defaultValue = true
+    )
+
+    @Composable
+    fun rememberLiquidGlassChromaticAberration() = preferences.rememberPreference(
+        key = { it.liquidGlassChromaticAberration ?: true },
+        update = { copy(liquidGlassChromaticAberration = it) },
+        defaultValue = true
+    )
+
+    @Composable
+    fun rememberBlurKind() = preferences.rememberPreference(
+        key = { it.blurKind ?: BlurKind.Haze },
+        update = { copy(blurKind = it) },
+        defaultValue = BlurKind.Haze
     )
 }
 

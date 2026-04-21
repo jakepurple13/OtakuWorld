@@ -14,9 +14,11 @@ otakuDependencies {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.programmersbox.kmpuiviews"
-        experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true
+        androidResources {
+            enable = true
+        }
     }
 
     applyDefaultHierarchyTemplate {
@@ -55,6 +57,7 @@ kotlin {
                 implementation(libs.material3.window.size)
                 api(libs.haze)
                 api(libs.hazeMaterials)
+                api(libs.backdrop)
                 implementation(libs.material.kolor)
                 api(libs.kamel.image)
                 api(libs.kamel.decoder.animated.image)
@@ -110,6 +113,8 @@ kotlin {
 
                 implementation(libs.roomPaging)
 
+                implementation(libs.backdrop)
+
                 implementation(libs.constraintlayout.compose.multiplatform)
                 implementation(libs.compose.constraintlayout.compose.multiplatform)
 
@@ -137,7 +142,7 @@ kotlin {
                 implementation(libs.anthropic.sdk.kotlin)
                 implementation(libs.xemantic.ai.tool.schema)
 
-                implementation(libs.heatmap)
+                //implementation(libs.heatmap)
 
                 implementation(libs.cmp.navigation3.ui)
                 implementation(libs.cmp.lifecycle.viewmodel.navigation3)
@@ -154,6 +159,7 @@ kotlin {
 
         androidMain {
             dependencies {
+                implementation(libs.heatmap)
                 implementation(libs.kamel.decoder.image.bitmap.resizing)
                 implementation(libs.kamel.decoder.svg.batik)
                 implementation(libs.ktorAndroid)
@@ -191,6 +197,7 @@ kotlin {
 
         jvmMain {
             dependencies {
+                implementation(libs.heatmap)
                 implementation(libs.core)
                 implementation(libs.javase)
                 implementation(libs.knotify)

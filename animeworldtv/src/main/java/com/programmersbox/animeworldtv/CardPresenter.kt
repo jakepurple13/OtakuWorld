@@ -44,7 +44,7 @@ class CardPresenter : Presenter() {
         )
     }
 
-    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any?) {
         val movie = item as ItemModel
         val cardView = viewHolder.view as ImageCardView
 
@@ -57,7 +57,7 @@ class CardPresenter : Presenter() {
             .centerCrop()
             .placeholder(mDefaultCardImage)
             .error(mDefaultCardImage)
-            .into(cardView.mainImageView)
+            .into(cardView.mainImageView!!)
     }
 
     override fun onUnbindViewHolder(viewHolder: Presenter.ViewHolder) {
@@ -98,7 +98,7 @@ class EpisodePresenter(val watched: MutableList<ChapterWatched> = mutableListOf(
         )
     }
 
-    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+    override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any?) {
         val movie = item as ChapterModel
         val cardView = viewHolder.view.findViewById<CardView>(R.id.episode_background)
         val textView = viewHolder.view.findViewById<TextView>(R.id.episode_name)
@@ -112,7 +112,7 @@ class EpisodePresenter(val watched: MutableList<ChapterWatched> = mutableListOf(
         )
     }
 
-    override fun onUnbindViewHolder(viewHolder: ViewHolder?) {
+    override fun onUnbindViewHolder(viewHolder: ViewHolder) {
 
     }
 }

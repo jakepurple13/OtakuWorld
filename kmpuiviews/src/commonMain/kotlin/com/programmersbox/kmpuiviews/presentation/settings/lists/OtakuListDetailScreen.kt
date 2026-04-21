@@ -131,6 +131,7 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.HazeMaterials
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -228,7 +229,9 @@ fun OtakuCustomListScreen(
 
     HideScreen(customItem.item.useBiometric)
 
-    val pickDocumentLauncher = rememberFileSaverLauncher { document -> document?.let { writeToFile(it) } }
+    val pickDocumentLauncher = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { document -> document?.let { writeToFile(it) } }
 
     val qrCodeRepository = koinInject<QrCodeRepository>()
 

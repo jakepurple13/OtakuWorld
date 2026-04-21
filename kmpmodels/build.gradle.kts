@@ -8,7 +8,7 @@ otakuDependencies {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.programmersbox.kmpmodels"
     }
 
