@@ -113,7 +113,7 @@ core = "1.7.0"
 
 androidx-lifecycle = "2.10.0"
 
-compose-multiplatform = "1.11.0-beta03"
+compose-multiplatform = "1.11.0-SNAPSHOT+release-1-11"
 
 kotlinx-coroutines = "1.10.2"
 
