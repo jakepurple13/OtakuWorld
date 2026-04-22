@@ -1,10 +1,10 @@
 package com.programmersbox.kmpuiviews.presentation.settings.moreinfo
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AccountCircle
@@ -20,10 +20,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,11 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.BuildKonfig
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
@@ -43,10 +41,7 @@ import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
@@ -84,8 +79,35 @@ fun MoreInfoScreen(
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
-    val dataStoreHandling = koinInject<DataStoreHandling>()
     val appUpdateCheck: AppUpdateCheck = koinInject()
+
+    val appUpdate by appUpdateCheck.updateAppCheck.collectAsStateWithLifecycle(null)
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    val appVersion = appVersion()
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(Res.string.updateTo, appUpdate?.updateRealVersion.orEmpty())) },
+            text = { Text(stringResource(Res.string.please_update_for_latest_features)) },
+            confirmButton = {
+                TextButton(
+                    onClick = { showDialog = false }
+                ) { Text(stringResource(Res.string.update)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text(stringResource(Res.string.notNow)) }
+                TextButton(
+                    onClick = {
+                        uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                        showDialog = false
+                    }
+                ) { Text(stringResource(Res.string.gotoBrowser)) }
+            }
+        )
+    }
 
     SettingsScaffold(
         stringResource(Res.string.more_info_category),
@@ -127,129 +149,62 @@ fun MoreInfoScreen(
 
         DebugPrereleaseOptions()
 
-        CategoryGroup {
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(Res.string.view_on_github)) },
-                    settingIcon = { Icon(Icons.Github, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") }
-                )
-            }
+        CategoryGroupListItem {
+            segmentedListItem(
+                content = { Text(stringResource(Res.string.view_on_github)) },
+                leadingContent = { Icon(Icons.Github, null) },
+                onClick = { uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest") },
+            )
 
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(Res.string.join_discord)) },
-                    settingIcon = { Icon(Icons.Discord, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { uriHandler.openUri("https://discord.gg/MhhHMWqryg") }
-                )
-            }
+            segmentedListItem(
+                content = { Text(stringResource(Res.string.join_discord)) },
+                leadingContent = { Icon(Icons.Discord, null) },
+                onClick = { uriHandler.openUri("https://discord.gg/MhhHMWqryg") },
+            )
 
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(Res.string.support)) },
-                    summaryValue = { Text(stringResource(Res.string.support_summary)) },
-                    settingIcon = { Icon(Icons.Default.AttachMoney, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { uriHandler.openUri("https://ko-fi.com/V7V3D3JI") }
-                )
-            }
+            segmentedListItem(
+                content = { Text(stringResource(Res.string.support)) },
+                supportingContent = { Text(stringResource(Res.string.support_summary)) },
+                leadingContent = { Icon(Icons.Default.AttachMoney, null) },
+                onClick = { uriHandler.openUri("https://ko-fi.com/V7V3D3JI") }
+            )
 
-            item {
-                val appUpdate by appUpdateCheck.updateAppCheck.collectAsStateWithLifecycle(null)
-                PreferenceSetting(
-                    settingIcon = {
-                        Image(
-                            painterLogo(),
+            segmentedListItem(
+                leadingContent = {
+                    Image(
+                        painterLogo(),
+                        null,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                    )
+                },
+                overlineContent = { Text(platform()) },
+                content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
+                supportingContent = { Text("Version code: ${versionCode()}") },
+                onClick = { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker() } }
+            )
+
+            if (AppUpdate.checkForUpdate(appVersion, appUpdate?.updateRealVersion.orEmpty())) {
+                segmentedListItem(
+                    content = { Text(stringResource(Res.string.update_available)) },
+                    supportingContent = { Text(stringResource(Res.string.updateTo, appUpdate?.updateRealVersion.orEmpty())) },
+                    onClick = { showDialog = true },
+                    leadingContent = {
+                        Icon(
+                            Icons.Default.SystemUpdateAlt,
                             null,
+                            tint = Color(0xFF00E676),
                             modifier = Modifier.fillMaxSize()
                         )
-                    },
-                    settingTitle = {
-                        Column {
-                            Text(
-                                platform(),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                            Text(stringResource(Res.string.currentVersion, appVersion()))
-                            Text(
-                                "Version code: ${versionCode()}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    },
-                    modifier = Modifier.clickable { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker() } }
-                )
-
-                ShowWhen(
-                    visibility = AppUpdate.checkForUpdate(appVersion(), appUpdate?.updateRealVersion.orEmpty())
-                ) {
-                    var showDialog by remember { mutableStateOf(false) }
-
-                    if (showDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showDialog = false },
-                            title = { Text(stringResource(Res.string.updateTo, appUpdate?.updateRealVersion.orEmpty())) },
-                            text = { Text(stringResource(Res.string.please_update_for_latest_features)) },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        /*(activity as? FragmentActivity)?.requestPermissions(
-                                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                            Manifest.permission.READ_EXTERNAL_STORAGE
-                                        ) {
-                                            if (it.isGranted) {
-                                                appUpdateCheck
-                                                    .updateAppCheck
-                                                    .value
-                                                    ?.let { a -> infoViewModel.update(a) }
-                                            }
-                                        }*/
-                                        showDialog = false
-                                    }
-                                ) { Text(stringResource(Res.string.update)) }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showDialog = false }) { Text(stringResource(Res.string.notNow)) }
-                                TextButton(
-                                    onClick = {
-                                        uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                                        showDialog = false
-                                    }
-                                ) { Text(stringResource(Res.string.gotoBrowser)) }
-                            }
-                        )
                     }
-
-                    PreferenceSetting(
-                        settingTitle = { Text(stringResource(Res.string.update_available)) },
-                        summaryValue = { Text(stringResource(Res.string.updateTo, appUpdate?.updateRealVersion.orEmpty())) },
-                        modifier = Modifier.clickable(
-                            indication = ripple(),
-                            interactionSource = null
-                        ) { showDialog = true },
-                        settingIcon = {
-                            Icon(
-                                Icons.Default.SystemUpdateAlt,
-                                null,
-                                tint = Color(0xFF00E676),
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    )
-                }
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DebugPrereleaseOptions() {
     val appConfig = koinInject<AppConfig>()
@@ -257,44 +212,26 @@ private fun DebugPrereleaseOptions() {
     if (BuildKonfig.IS_PRERELEASE || appConfig.isDebug) {
         val navActions = LocalNavActions.current
 
-        CategoryGroup {
+        CategoryGroupListItem {
             if (appConfig.isDebug) {
-                item {
-                    PreferenceSetting(
-                        settingTitle = { Text("Debug Menu") },
-                        settingIcon = { Icon(Icons.Default.Android, null, modifier = Modifier.fillMaxSize()) },
-                        modifier = Modifier.clickable(
-                            indication = ripple(),
-                            interactionSource = null,
-                            onClick = navActions::debug
-                        )
-                    )
-                }
-            }
-
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("Update to latest pre release") },
-                    settingIcon = { Icon(Icons.Default.Bento, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null,
-                        onClick = navActions::prerelease
-                    )
+                segmentedListItem(
+                    content = { Text("Debug Menu") },
+                    leadingContent = { Icon(Icons.Default.Android, null) },
+                    onClick = navActions::debug
                 )
             }
 
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("Color Helper") },
-                    settingIcon = { Icon(Icons.Default.Colorize, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null,
-                        onClick = { navActions.navigate(Screen.ColorHelper) }
-                    )
-                )
-            }
+            segmentedListItem(
+                content = { Text("Update to latest pre-release") },
+                leadingContent = { Icon(Icons.Default.Bento, null) },
+                onClick = navActions::prerelease
+            )
+
+            segmentedListItem(
+                content = { Text("Color Helper") },
+                leadingContent = { Icon(Icons.Default.Colorize, null) },
+                onClick = { navActions.navigate(Screen.ColorHelper) }
+            )
         }
     }
 }
