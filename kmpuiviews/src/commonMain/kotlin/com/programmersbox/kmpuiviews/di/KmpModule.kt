@@ -8,6 +8,7 @@ val kmpModule = module {
         databases,
         repositories,
         viewModels,
-        aiModule
+        aiModule,
+        navigationModule
     )
 }

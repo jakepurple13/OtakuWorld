@@ -153,7 +153,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
     private fun setupDetailsOverviewRow(movie: InfoModel?) {
         Log.d(TAG, "doInBackground: " + mSelectedMovie?.toString())
-        val row = DetailsOverviewRow(mSelectedMovie)
+        val row = DetailsOverviewRow(mSelectedMovie!!)
         row.imageDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.default_background)
         val width = convertDpToPixel(requireContext(), DETAIL_THUMB_WIDTH)
         val height = convertDpToPixel(requireContext(), DETAIL_THUMB_HEIGHT)

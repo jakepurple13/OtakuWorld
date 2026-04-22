@@ -9,15 +9,27 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.leanback.app.VideoSupportFragment
 import androidx.leanback.app.VideoSupportFragmentGlueHost
 import androidx.leanback.media.PlaybackTransportControlGlue
-import androidx.leanback.widget.*
-import androidx.leanback.widget.PlaybackControlsRow.*
+import androidx.leanback.widget.Action
+import androidx.leanback.widget.ArrayObjectAdapter
+import androidx.leanback.widget.PlaybackControlsRow.FastForwardAction
+import androidx.leanback.widget.PlaybackControlsRow.MoreActions
+import androidx.leanback.widget.PlaybackControlsRow.MultiAction
+import androidx.leanback.widget.PlaybackControlsRow.RepeatAction
+import androidx.leanback.widget.PlaybackControlsRow.RewindAction
+import androidx.leanback.widget.PlaybackControlsRow.SkipNextAction
+import androidx.leanback.widget.PlaybackControlsRow.SkipPreviousAction
+import androidx.leanback.widget.PlaybackControlsRow.ThumbsDownAction
+import androidx.leanback.widget.PlaybackControlsRow.ThumbsUpAction
+import androidx.leanback.widget.Presenter
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSourceFactory
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -32,10 +44,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /** Handles video playback with media controls. */
+@UnstableApi
 class PlaybackVideoFragment : VideoSupportFragment() {
 
     private lateinit var mTransportControlGlue: VideoPlayerGlue//PlaybackTransportControlGlue<MediaPlayerAdapter>
@@ -142,6 +155,8 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         setupStatsForNerds(exoPlayer)
     }
 
+    @OptIn(UnstableApi::class)
+    @UnstableApi
     private fun setupStatsForNerds(exoPlayer: SimpleExoPlayer) {
 
         /*val bandwidthSubject = BehaviorSubject.create<Int>()
@@ -242,7 +257,7 @@ class PlaybackVideoFragment : VideoSupportFragment() {
             return Presenter.ViewHolder(view)
         }
 
-        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any?) {
             //(viewHolder.view as TextView).text = item as String
 
             val textView = viewHolder.view as? TextView
@@ -266,10 +281,12 @@ class PlaybackVideoFragment : VideoSupportFragment() {
     }
 }
 
+@OptIn(UnstableApi::class)
+@androidx.media3.common.util.UnstableApi
 class VideoPlayerGlue(
     context: Context?,
     playerAdapter: LeanbackPlayerAdapter?,
-    private val mActionListener: OnActionClickedListener?
+    private val mActionListener: OnActionClickedListener?,
 ) : PlaybackTransportControlGlue<LeanbackPlayerAdapter?>(context, playerAdapter) {
     /** Listens for when skip to next and previous actions have been dispatched.  */
     interface OnActionClickedListener {
@@ -345,14 +362,14 @@ class VideoPlayerGlue(
                 // and repeat.
                 notifyActionChanged(
                     multiAction,
-                    controlsRow.secondaryActionsAdapter as ArrayObjectAdapter
+                    controlsRow?.secondaryActionsAdapter as ArrayObjectAdapter
                 )
             }
         }
     }
 
     private fun notifyActionChanged(
-        action: MultiAction, adapter: ArrayObjectAdapter?
+        action: MultiAction, adapter: ArrayObjectAdapter?,
     ) {
         if (adapter != null) {
             val index = adapter.indexOf(action)

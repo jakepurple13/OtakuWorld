@@ -24,6 +24,6 @@ class CustomImageCardView : ImageCardView {
         // Both background colors should be set because the view"s background is temporarily visible
         // during animations.
         setBackgroundColor(color)
-        view.setInfoAreaBackgroundColor(color)
+        setInfoAreaBackgroundColor(color)
     }
 }

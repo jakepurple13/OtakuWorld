@@ -11,7 +11,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.AddBreadcrumbLogging
 import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
@@ -44,7 +43,6 @@ fun NavigationGraph(
 ) {
     if (USE_NAV3) {
         Nav3(
-            navigation3Actions = navigationActions as Navigation3Actions,
             genericInfo = genericInfo,
             windowSize = windowSize,
             customPreferences = customPreferences,

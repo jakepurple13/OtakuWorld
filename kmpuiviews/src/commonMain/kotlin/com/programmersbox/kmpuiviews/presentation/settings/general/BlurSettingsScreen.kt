@@ -246,6 +246,7 @@ fun BlurSettings(
                             }
 
                             BottomAppBar(
+                                containerColor = Color.Transparent,
                                 modifier = Modifier.setBlurKind(blurKindState) {
                                     progressive = if (blurKindState.hazeState.useProgressive)
                                         HazeProgressive.verticalGradient(

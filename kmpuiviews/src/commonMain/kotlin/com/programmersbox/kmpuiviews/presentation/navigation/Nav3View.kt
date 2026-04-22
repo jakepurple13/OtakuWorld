@@ -28,14 +28,15 @@ import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun Nav3(
-    navigation3Actions: Navigation3Actions,
     genericInfo: KmpGenericInfo,
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
+    navigation3Actions: Navigation3Actions = koinInject(),
 ) {
     val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {

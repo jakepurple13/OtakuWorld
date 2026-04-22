@@ -74,7 +74,6 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -89,7 +88,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
-import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.MiddleMultipleActions
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
@@ -107,7 +105,6 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBl
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.rememberMultipleBarState
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
@@ -155,14 +152,11 @@ fun HomeNav(
 
     //val backStack = rememberNavBackStack(startDestination)
 
-    val backStack = remember { TopLevelBackStack<NavKey>(startDestination) }
-
     CompositionLocalProvider(
         LocalWindowSizeClass provides windowSize
     ) {
         OtakuMaterialTheme(
             navController = navController,
-            navBackStack = backStack,
             settingsHandling = settingsHandling,
         ) {
             InitialSetup()
@@ -208,9 +202,11 @@ fun HomeNav(
                                     middleNavItem = middleNavItem,
                                     multipleActions = multipleActions,
                                     bottomBarAdditions = bottomBarAdditions,
+                                    modifier = Modifier.setBlurKind(blurKindState = blurKindState)
                                     //modifier = Modifier.renderInSharedTransitionScopeOverlay()
                                 )
                             } else {
+                                val shape = MaterialTheme.shapes.extraLarge
                                 HomeNavigationBar(
                                     showNavBar = showNavBar,
                                     navType = navType,
@@ -223,8 +219,11 @@ fun HomeNav(
                                     modifier = Modifier
                                         .padding(horizontal = 24.dp)
                                         .windowInsetsPadding(WindowInsets.navigationBars)
-                                        .clip(MaterialTheme.shapes.extraLarge)
-                                        .setBlurKind(blurKindState)
+                                        .clip(shape)
+                                        .setBlurKind(
+                                            blurKindState = blurKindState,
+                                            liquidGlassShape = { shape }
+                                        )
                                         .fillMaxWidth()
                                     //.renderInSharedTransitionScopeOverlay()
                                 )

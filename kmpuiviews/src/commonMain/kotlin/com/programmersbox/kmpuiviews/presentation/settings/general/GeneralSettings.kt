@@ -56,8 +56,8 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.item
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
@@ -77,7 +77,7 @@ import otakuworld.kmpuiviews.generated.resources.show_all_screen
 import otakuworld.kmpuiviews.generated.resources.show_download_button
 import otakuworld.kmpuiviews.generated.resources.show_list_detail_pane_for_lists
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
 @ExperimentalComposeUiApi
 @Composable
@@ -92,31 +92,24 @@ fun GeneralSettings(
         title = stringResource(Res.string.general_menu_title),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        CategoryGroupListItem {
+            segmentedListItem(
+                onClick = { navActions.navigate(Screen.ThemeSettings) },
+                leadingContent = { Icon(Icons.Default.Palette, null) },
+                content = { Text("Theme Settings") },
+            )
 
-        CategoryGroup {
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("Theme Settings") },
-                    settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
-                    onClick = { navActions.navigate(Screen.ThemeSettings) }
-                )
-            }
+            segmentedListItem(
+                onClick = { navActions.navigate(Screen.DetailsSettings) },
+                leadingContent = { Icon(Icons.Default.Animation, null) },
+                content = { Text("Details Settings") },
+            )
 
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("Details Settings") },
-                    settingIcon = { Icon(Icons.Default.Animation, null, modifier = Modifier.fillMaxSize()) },
-                    onClick = { navActions.navigate(Screen.DetailsSettings) }
-                )
-            }
-
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("Blur Settings") },
-                    settingIcon = { Icon(Icons.Default.BlurOn, null, modifier = Modifier.fillMaxSize()) },
-                    onClick = { navActions.navigate(Screen.Settings.Blur) }
-                )
-            }
+            segmentedListItem(
+                onClick = { navActions.navigate(Screen.Settings.Blur) },
+                leadingContent = { Icon(Icons.Default.BlurOn, null) },
+                content = { Text("Blur Settings") },
+            )
         }
 
         CategoryGroup {
