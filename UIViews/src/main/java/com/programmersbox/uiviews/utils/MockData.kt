@@ -52,11 +52,9 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.di.databases
 import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -243,7 +241,6 @@ fun PreviewTheme(
             ) {
                 KmpLocalCompositionSetup(
                     navController,
-                    remember { TopLevelBackStack(Screen.RecentScreen) }
                 ) {
                     Surface { content() }
                 }

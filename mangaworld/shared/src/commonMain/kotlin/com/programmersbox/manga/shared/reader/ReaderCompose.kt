@@ -62,6 +62,9 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
 import com.programmersbox.datastore.mangasettings.ReaderType
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
@@ -74,9 +77,6 @@ import com.programmersbox.manga.shared.reader.curl.rememberPageCurlState
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
@@ -99,6 +99,7 @@ fun ReadView(
     HideNavBarWhileOnScreen()
     RecordTimeSpentDoing()
 
+    val blurKind = rememberBlurKindState()
     val includeInsets by mangaSettingsHandling.rememberIncludeInsetsForReader()
     var insetsController by insetsController(includeInsets)
 
@@ -110,7 +111,6 @@ fun ReadView(
 
     val settings = LocalSettingsHandling.current
 
-    val showBlur by settings.rememberShowBlur()
     val isAmoledMode by settings.rememberIsAmoledMode()
 
     var readerType by mangaSettingsHandling.rememberReaderType()
@@ -302,13 +302,16 @@ fun ReadView(
                             ?.name
                             ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
-                        showBlur = showBlur,
+                        showBlur = blurKind.showBlur,
                         windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
-                        modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                            blurEnabled = showBlur
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                            alpha = scrollAlpha
-                        }
+                        modifier = Modifier.setBlurKind(
+                            blurKindState = blurKind,
+                            hazeScope = {
+                                blurEnabled = blurKind.showBlur
+                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                                alpha = scrollAlpha
+                            }
+                        )
                     )
                 }
             },
@@ -330,7 +333,7 @@ fun ReadView(
                             onNextChapter = { viewModel.addChapterToWatched(--viewModel.currentChapter, ::showToast) },
                             onPreviousChapter = { viewModel.addChapterToWatched(++viewModel.currentChapter, ::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
-                            showBlur = showBlur,
+                            showBlur = blurKind.showBlur,
                             isAmoledMode = isAmoledMode,
                             chapterNumber = (viewModel.list.size - viewModel.currentChapter).toString(),
                             chapterCount = viewModel.list.size.toString(),
@@ -342,11 +345,7 @@ fun ReadView(
                                 .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
                                 .padding(16.dp)
                                 .clip(MaterialTheme.shapes.extraLarge)
-                                .hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                    //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
-                                    blurEnabled = showBlur
-                                    //alpha = scrollAlpha
-                                }
+                                .setBlurKind(blurKindState = blurKind)
                         )
                         //}
                     }
@@ -378,10 +377,7 @@ fun ReadView(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
         ) { p ->
             Box(
-                modifier = if (showBlur)
-                    Modifier.hazeSource(state = hazeState)
-                else
-                    Modifier,
+                modifier = Modifier.setBlurKindSource(blurKind),
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = viewModel.isLoadingPages,

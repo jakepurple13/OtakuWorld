@@ -53,7 +53,7 @@ class ExampleUnitTest {
         println(f)
     }
 
-    private fun socketFactory(): SSLSocketFactory? {
+    private fun socketFactory(): SSLSocketFactory {
         val trustAllCerts: Array<TrustManager> = arrayOf<TrustManager>(object : X509TrustManager {
             override fun getAcceptedIssuers(): Array<X509Certificate?> = arrayOfNulls(0)
 

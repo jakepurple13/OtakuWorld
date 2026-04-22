@@ -35,7 +35,6 @@ import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.dialogs.compose.util.encodeToByteArray
-import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -47,6 +46,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.io.encoding.Base64
 
 class DetailsViewModel(
     //handle: SavedStateHandle,
@@ -128,7 +128,7 @@ class DetailsViewModel(
             blurHashDao
                 .getHash(itemModel?.imageUrl)
                 .onEach { blurHashItem = it }
-                .map { it?.blurHash?.decodeBase64Bytes()?.decodeToImageBitmap() }
+                .map { runCatching { it?.blurHash?.let { Base64.decode(it) }?.decodeToImageBitmap() }.getOrNull() }
                 .onEach { blurHash = runCatching { BitmapPainter(it!!) }.getOrNull() },
             snapshotFlow { imageBitmap }
         ) { hash, image -> hash to image }

@@ -27,6 +27,27 @@ message Settings {
   AiSettings aiSettings = 23;
   ColorBlindnessType colorBlindnessType = 24;
   DetailsChapterSwipeBehaviorHandle detailsChapterSwipeBehavior = 27;
+
+  bool useProgressive = 28;
+  BlurType blurType = 29;
+  float liquidGlassBlurAmount = 30;
+  float liquidGlassRefractionHeight = 31;
+  float liquidGlassRefractionAmount = 32;
+  bool liquidGlassDepthEffect = 33;
+  bool liquidGlassChromaticAberration = 34;
+  BlurKind blurKind = 35;
+}
+
+enum BlurKind {
+  Haze = 0;
+  LiquidGlass = 1;
+}
+
+enum BlurType {
+  Regular = 0;
+  Thin = 1;
+  Thick = 2;
+  UltraThin = 3;
 }
 
 enum SystemThemeMode {

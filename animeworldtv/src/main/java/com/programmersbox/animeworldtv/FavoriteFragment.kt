@@ -209,7 +209,7 @@ class FavoriteFragment : BrowseSupportFragment() {
 
                 val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
                     activity!!,
-                    (itemViewHolder.view as CustomImageCardView).mainImageView,
+                    (itemViewHolder.view as CustomImageCardView).mainImageView!!,
                     DetailsActivity.SHARED_ELEMENT_NAME
                 )
                     .toBundle()
@@ -274,7 +274,7 @@ class FavoriteFragment : BrowseSupportFragment() {
             return Presenter.ViewHolder(view)
         }
 
-        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any?) {
             (viewHolder.view as TextView).text = item as String
         }
 

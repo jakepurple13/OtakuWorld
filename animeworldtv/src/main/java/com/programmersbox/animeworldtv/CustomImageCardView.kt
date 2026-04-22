@@ -7,9 +7,9 @@ import androidx.leanback.widget.ImageCardView
 
 class CustomImageCardView : ImageCardView {
 
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context?) : super(context!!)
+    constructor(context: Context?, attrs: AttributeSet?) : super(context!!, attrs)
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context!!, attrs, defStyleAttr)
 
     private val sDefaultBackgroundColor by lazy { ContextCompat.getColor(context, R.color.default_background) }
     private val sSelectedBackgroundColor by lazy { ContextCompat.getColor(context, R.color.selected_background) }

@@ -296,6 +296,7 @@ fun ScanQrCode(
                         false
                     },
                     types = listOf(CodeType.QR),
+                    enableTorch = false,
                     cameraPosition = CameraPosition.BACK,
                     permissionDeniedContent = { permissionState ->
                         Column(

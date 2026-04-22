@@ -68,6 +68,7 @@ import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -321,7 +322,9 @@ fun OtakuListView(
                                 .onFailure { it.printStackTrace() }
                         }
 
-                        val pickDocumentLauncher = rememberFileSaverLauncher { document -> document?.let { writeToFile(it) } }
+                        val pickDocumentLauncher = rememberFileSaverLauncher(
+                            dialogSettings = FileKitDialogSettings.createDefault()
+                        ) { document -> document?.let { writeToFile(it) } }
 
                         OptionsItem(
                             "Export List",

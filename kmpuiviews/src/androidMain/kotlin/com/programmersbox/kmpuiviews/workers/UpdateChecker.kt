@@ -6,21 +6,18 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.google.firebase.perf.trace
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.KmpApiService
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
-import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
-import com.programmersbox.kmpuiviews.workers.UpdateNotification
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.programmersbox.kmpuiviews.utils.printLogs
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -172,7 +169,17 @@ class UpdateFlowWorker(
             max = max,
             progress = progress,
             contextText = contextText
-        )
+        ) {
+            addAction {
+                actionTitle = applicationContext.getString(android.R.string.cancel)
+                pendingActionIntent(
+                    WorkManager.getInstance(applicationContext)
+                        .createCancelPendingIntent(id)
+                )
+            }
+        }
+
+
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ForegroundInfo(

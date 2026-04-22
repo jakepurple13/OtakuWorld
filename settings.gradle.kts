@@ -14,6 +14,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://storage.googleapis.com/r8-releases/raw") }
+        maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots") }
         maven("https://www.jitpack.io")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
@@ -22,7 +24,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2025.11.01")
+            from("androidx.gradle:gradle-version-catalog:2026.04.00")
         }
     }
 }

@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -32,22 +31,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import com.fleeys.heatmap.HeatMap
-import com.fleeys.heatmap.model.Heat
-import com.fleeys.heatmap.style.DaysLabelColor
-import com.fleeys.heatmap.style.DaysLabelStyle
-import com.fleeys.heatmap.style.HeatColor
-import com.fleeys.heatmap.style.HeatMapStyle
-import com.fleeys.heatmap.style.HeatStyle
-import com.fleeys.heatmap.style.LabelStyle
-import com.fleeys.heatmap.style.MonthsLabelColor
-import com.fleeys.heatmap.style.MonthsLabelStyle
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DateFormatItem
+import com.programmersbox.kmpuiviews.utils.HeatMapWrapper
+import com.programmersbox.kmpuiviews.utils.KmpHeat
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -61,6 +52,8 @@ fun AccountInfoScreen(
 ) {
     val state = viewModel.accountInfo
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    //TODO: Make this look better!
 
     OtakuScaffold(
         topBar = {
@@ -91,7 +84,7 @@ fun AccountInfoScreen(
 
             if(state.heatMaps.isNotEmpty()) {
                 item {
-                    var heatItem by remember { mutableStateOf<Heat<Int>?>(null) }
+                    var heatItem by remember { mutableStateOf<KmpHeat<Int>?>(null) }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -101,32 +94,9 @@ fun AccountInfoScreen(
                             .padding(bottom = 16.dp)
                     ) {
                         Text("Heat Map")
-                        HeatMap(
+                        HeatMapWrapper(
                             data = state.heatMaps,
                             onHeatClick = { heatItem = it },
-                            style = HeatMapStyle().copy(
-                                heatStyle = HeatStyle().copy(
-                                    heatColor = HeatColor().copy(
-                                        activeLowestColor = Color(0xff212f57),
-                                        activeHighestColor = MaterialTheme.colorScheme.primary,
-                                    ),
-                                    heatShape = CircleShape,
-                                ),
-                                labelStyle = LabelStyle().copy(
-                                    daysLabelStyle = DaysLabelStyle(
-                                        color = DaysLabelColor(
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                                        )
-                                    ),
-                                    monthsLabelStyle = MonthsLabelStyle(
-                                        color = MonthsLabelColor(
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                                        )
-                                    )
-                                )
-                            ),
                         )
                         heatItem?.let {
                             Text("Read/Watched ${it.data} on ${DateFormatItem.format(it.date)}")

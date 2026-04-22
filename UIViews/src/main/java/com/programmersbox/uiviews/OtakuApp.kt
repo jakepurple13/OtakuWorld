@@ -13,7 +13,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.compose.runtime.tooling.ComposeStackTraceMode
-import androidx.compose.ui.ComposeUiFlags
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.work.Configuration
 import com.google.android.material.color.DynamicColors
@@ -72,7 +71,6 @@ abstract class OtakuApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
-        ComposeUiFlags.isSemanticAutofillEnabled = true
         ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = true
         Composer.setDiagnosticStackTraceMode(if (BuildConfig.DEBUG) ComposeStackTraceMode.SourceInformation else ComposeStackTraceMode.None)
 

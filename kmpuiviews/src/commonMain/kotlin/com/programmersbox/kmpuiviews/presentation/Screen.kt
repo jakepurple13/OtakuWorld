@@ -17,7 +17,10 @@ sealed class Screen(val route: String) : NavKey {
     data object AllScreen : Screen("all")
 
     @Serializable
-    data object Settings : Screen("settings")
+    data object Settings : Screen("settings") {
+        @Serializable
+        data object Blur : Screen("home")
+    }
 
     @Serializable
     data object SettingsScreen : Screen("settings_screen")

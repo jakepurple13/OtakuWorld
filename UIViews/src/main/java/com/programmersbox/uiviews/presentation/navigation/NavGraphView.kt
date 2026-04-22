@@ -11,7 +11,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.AddBreadcrumbLogging
 import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
@@ -39,19 +38,16 @@ fun NavigationGraph(
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
     notificationLogo: NotificationLogo,
-    startDestination: Screen,
     navController: NavHostController,
 ) {
     if (USE_NAV3) {
         Nav3(
-            navigation3Actions = navigationActions as Navigation3Actions,
             genericInfo = genericInfo,
             windowSize = windowSize,
             customPreferences = customPreferences,
         )
     } else {
         Nav2(
-            startDestination = startDestination,
             windowSize = windowSize,
             genericInfo = genericInfo,
             navigationActions = navigationActions,
@@ -65,7 +61,6 @@ fun NavigationGraph(
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun Nav2(
-    startDestination: Screen,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
     navigationActions: NavigationActions,
@@ -76,7 +71,7 @@ private fun Nav2(
     AddBreadcrumbLogging(navController)
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screen.RecentScreen,
         modifier = Modifier.fillMaxSize()
     ) {
         //navGraph(customPreferences, windowSize, genericInfo, navigationActions, notificationLogo)

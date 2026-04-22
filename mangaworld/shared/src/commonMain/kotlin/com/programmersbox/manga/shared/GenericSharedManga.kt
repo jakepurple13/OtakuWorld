@@ -5,7 +5,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +18,10 @@ import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -46,11 +45,10 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
-import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.manga.shared.downloads.DownloadRoute
 import com.programmersbox.manga.shared.downloads.DownloadScreen
@@ -71,6 +69,7 @@ abstract class GenericSharedManga(
     val mangaSettingsHandling: MangaNewSettingsHandling,
     val settingsHandling: NewSettingsHandling,
     val appConfig: AppConfig,
+    private val navigationActions: NavigationActions,
 ) : KmpGenericInfo {
 
     override val sourceType: String get() = "manga"
@@ -155,32 +154,20 @@ abstract class GenericSharedManga(
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
-            item {
-                val navController = LocalNavActions.current
-                PreferenceSetting(
-                    settingTitle = { Text("Downloads") },
-                    settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { navController.navigate(DownloadRoute) }
-                )
-            }
+            segmentedListItem(
+                content = { Text("Downloads") },
+                leadingContent = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null) },
+                onClick = { navigationActions.navigate(DownloadRoute) }
+            )
 
-            item {
-                val navController = LocalNavActions.current
-                PreferenceSetting(
-                    settingTitle = { Text("Manga Reader Settings") },
-                    settingIcon = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { navController.navigate(ReaderSettingsScreen) }
-                )
-            }
+            segmentedListItem(
+                content = { Text("Manga Reader Settings") },
+                leadingContent = { Icon(Icons.AutoMirrored.Filled.ChromeReaderMode, null) },
+                onClick = { navigationActions.navigate(ReaderSettingsScreen) }
+            )
         }
 
         generalSettings {

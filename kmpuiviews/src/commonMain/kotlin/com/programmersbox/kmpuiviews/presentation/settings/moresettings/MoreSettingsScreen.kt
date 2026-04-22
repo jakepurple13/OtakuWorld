@@ -61,6 +61,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.ToasterSetup
 import com.programmersbox.kmpuiviews.utils.ToasterUtils
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -118,7 +119,10 @@ fun MoreSettingsScreen(
 
     val appConfig = koinInject<AppConfig>()
     val appName = appConfig.appName
-    val exportLauncher = rememberFileSaverLauncher { document ->
+    //TODO: For these two, make a screen similar to how civit is set up
+    val exportLauncher = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { document ->
         document?.let { viewModel.writeToFile(it) }
     }
 
@@ -227,7 +231,9 @@ fun MoreSettingsScreen(
             }
         }
 
-        val exportListLauncher = rememberFileSaverLauncher { document ->
+        val exportListLauncher = rememberFileSaverLauncher(
+            dialogSettings = FileKitDialogSettings.createDefault()
+        ) { document ->
             document?.let { viewModel.writeListsToFile(it) }
         }
 
@@ -306,7 +312,9 @@ fun MoreSettingsScreen(
             ) { Text("Backup") }
 
             item {
-                val createBackupLauncher = rememberFileSaverLauncher { document ->
+                val createBackupLauncher = rememberFileSaverLauncher(
+                    dialogSettings = FileKitDialogSettings.createDefault()
+                ) { document ->
                     document?.let { viewModel.exportFullBackup(it) }
                 }
 
@@ -363,7 +371,9 @@ private fun ExportListSelection(
         )
     }
 
-    val exportListSelectionLauncher = rememberFileSaverLauncher { document ->
+    val exportListSelectionLauncher = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { document ->
         document?.let {
             onExport(it, selection.filterValues { b -> b }.keys.toList())
             scope.launch { sheetState.hide() }

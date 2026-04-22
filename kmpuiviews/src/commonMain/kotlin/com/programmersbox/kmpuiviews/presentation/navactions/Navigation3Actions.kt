@@ -13,7 +13,9 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
-class Navigation3Actions(private val navBackStack: TopLevelBackStack<NavKey>) : NavigationActions {
+class Navigation3Actions : NavigationActions {
+
+    val navBackStack = TopLevelBackStack<NavKey>(Screen.RecentScreen)
 
     val backStack by derivedStateOf { navBackStack.backStack }
 

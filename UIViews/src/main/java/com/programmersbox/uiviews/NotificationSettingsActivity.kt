@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -23,7 +21,6 @@ class NotificationSettingsActivity : ComponentActivity() {
         setContent {
             OtakuMaterialTheme(
                 navController = rememberNavController(),
-                navBackStack = TopLevelBackStack(Screen.NotificationsSettings),
                 settingsHandling = settingsHandling,
             ) {
                 CompositionLocalProvider(

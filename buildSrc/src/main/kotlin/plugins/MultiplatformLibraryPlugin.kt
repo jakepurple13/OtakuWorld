@@ -1,7 +1,6 @@
 package plugins
 
 import AppInfo
-import com.android.build.api.dsl.androidLibrary
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -21,51 +20,34 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
             target
         )
 
-        /*target.extensions.findByType(LibraryExtension::class.java)?.apply {
-            compileSdk = AppInfo.compileVersion
-            defaultConfig {
-                minSdk = AppInfo.minimumSdk
-            }
-        }*/
-
         target.setupKotlinCompileOptions()
 
-        //target.afterEvaluate {
         target.extensions
             .findByType(KotlinMultiplatformExtension::class.java)
             ?.apply { setup(dependency) }
-        //}
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
     ) {
-        /*androidTarget {
-            compilations.all {
-                this@androidTarget.compilerOptions {
-                    freeCompilerArgs.add("-Xcontext-receivers")
-                    jvmTarget.set(JvmTarget.JVM_11)
-                }
-            }
-        }*/
-
         jvmToolchain(11)
 
-        androidLibrary {
-            namespace = dependencyHandling.androidPackageName
-            compileSdk = AppInfo.compileVersion
-            minSdk = AppInfo.minimumSdk
+        (this as org.gradle.api.plugins.ExtensionAware)
+            .extensions
+            .configure(com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension::class.java) {
+                namespace = dependencyHandling.androidPackageName
+                compileSdk = AppInfo.compileVersion
+                minSdk = AppInfo.minimumSdk
 
-            lint {
-                checkReleaseBuilds = false
+                lint {
+                    checkReleaseBuilds = false
+                }
             }
-        }
 
         val xcfName = "sharedKit"
 
         listOf(
-            iosX64(),
             iosArm64(),
             iosSimulatorArm64()
         ).forEach { iosTarget ->
@@ -78,18 +60,6 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
         jvm()
 
         applyDefaultHierarchyTemplate()
-
-        /*sourceSets.getByName("commonMain") {
-            dependencies {
-                dependencyHandling.commonDependencyBlock(this)
-            }
-        }
-
-        sourceSets.getByName("androidMain") {
-            dependencies {
-                dependencyHandling.androidDependencyBlock(this)
-            }
-        }*/
     }
 }
 

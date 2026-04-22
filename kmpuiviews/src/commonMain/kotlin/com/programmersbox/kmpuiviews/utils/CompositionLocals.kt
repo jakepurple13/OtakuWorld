@@ -8,7 +8,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
-import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
@@ -20,7 +19,6 @@ import com.programmersbox.kmpuiviews.customKamelConfig
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.rememberCustomUriHandler
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import io.kamel.image.config.LocalKamelConfig
@@ -42,9 +40,8 @@ val LocalSystemDateTimeFormat = staticCompositionLocalOf<DateTimeFormat<LocalDat
 @Composable
 fun KmpLocalCompositionSetup(
     navController: NavHostController,
-    navBackStack: TopLevelBackStack<NavKey>,
     actions: NavigationActions = if (USE_NAV3)
-        Navigation3Actions(navBackStack)
+        koinInject<Navigation3Actions>()
     else
         Navigation2Actions(navController),
     content: @Composable () -> Unit,

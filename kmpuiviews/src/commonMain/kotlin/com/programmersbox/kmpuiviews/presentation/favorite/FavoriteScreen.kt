@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReadMore
@@ -333,31 +335,35 @@ fun FavoriteScreen(
                             contentWindowInsets = { WindowInsets.systemBars.only(WindowInsetsSides.Top) },
                         ) {
                             CenterAlignedTopAppBar(title = { Text("Filter by Source") })
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                            Column(
+                                modifier = Modifier.verticalScroll(rememberScrollState())
                             ) {
-                                FilterChip(
-                                    selected = true,
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = { viewModel.resetSources() },
-                                        onLongClick = { viewModel.selectedSources.clear() }
-                                    ),
-                                    label = { Text("ALL") },
-                                    onClick = { viewModel.allClick() }
-                                )
-
-                                viewModel.allSources.forEach {
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                                ) {
                                     FilterChip(
-                                        selected = it.first in viewModel.selectedSources,
-                                        onClick = { viewModel.newSource(it.first) },
-                                        label = { Text(it.first) },
-                                        leadingIcon = { Text("${it.second.size - 1}") },
+                                        selected = true,
                                         modifier = Modifier.combinedClickable(
-                                            onClick = { viewModel.newSource(it.first) },
-                                            onLongClick = { viewModel.singleSource(it.first) }
-                                        )
+                                            onClick = { viewModel.resetSources() },
+                                            onLongClick = { viewModel.selectedSources.clear() }
+                                        ),
+                                        label = { Text("ALL") },
+                                        onClick = { viewModel.allClick() }
                                     )
+
+                                    viewModel.allSources.forEach {
+                                        FilterChip(
+                                            selected = it.first in viewModel.selectedSources,
+                                            onClick = { viewModel.newSource(it.first) },
+                                            label = { Text(it.first) },
+                                            leadingIcon = { Text("${it.second.size - 1}") },
+                                            modifier = Modifier.combinedClickable(
+                                                onClick = { viewModel.newSource(it.first) },
+                                                onLongClick = { viewModel.singleSource(it.first) }
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -392,11 +398,11 @@ fun FavoriteScreen(
                     .padding(p)
             ) {
                 Surface(
+                    tonalElevation = 4.dp,
+                    shape = RoundedCornerShape(4.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp),
-                    tonalElevation = 4.dp,
-                    shape = RoundedCornerShape(4.dp)
+                        .padding(4.dp)
                 ) {
                     Column(modifier = Modifier) {
                         Text(

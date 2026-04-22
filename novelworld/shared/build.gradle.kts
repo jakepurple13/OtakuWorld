@@ -6,9 +6,11 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.programmersbox.novel.shared"
-        experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true
+        androidResources {
+            enable = true
+        }
     }
 
     sourceSets {

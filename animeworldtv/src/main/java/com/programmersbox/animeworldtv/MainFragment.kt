@@ -225,12 +225,13 @@ class MainFragment : BrowseSupportFragment() {
                 val intent = Intent(context!!, DetailsActivity::class.java)
                 intent.putExtra(DetailsActivity.MOVIE, item)
 
-                val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                    activity!!,
-                    (itemViewHolder.view as CustomImageCardView).mainImageView,
-                    DetailsActivity.SHARED_ELEMENT_NAME
-                )
-                    .toBundle()
+                val bundle = (itemViewHolder.view as CustomImageCardView).mainImageView?.let {
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(
+                        activity!!,
+                        it,
+                        DetailsActivity.SHARED_ELEMENT_NAME
+                    )
+                }?.toBundle()
                 startActivity(intent, bundle)
             } else if (item is String) {
                 when {
@@ -318,7 +319,7 @@ class MainFragment : BrowseSupportFragment() {
             return Presenter.ViewHolder(view)
         }
 
-        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any) {
+        override fun onBindViewHolder(viewHolder: Presenter.ViewHolder, item: Any?) {
             (viewHolder.view as TextView).text = item as String
         }
 

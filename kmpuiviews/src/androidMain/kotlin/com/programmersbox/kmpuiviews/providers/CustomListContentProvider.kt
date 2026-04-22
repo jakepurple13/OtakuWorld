@@ -4,8 +4,6 @@ import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
-import androidx.core.net.toUri
-import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.programmersbox.favoritesdatabase.ListDatabase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -87,21 +85,22 @@ abstract class CustomListContentProvider : BaseContentProvider(), KoinComponent 
             else -> throw IllegalArgumentException("Unknown URI: $uri")
         }
 
-        return listDatabase.query(
+        return null/*listDatabase.query(
             SupportSQLiteQueryBuilder
                 .builder(table)
                 .selection(sel, args)
                 .columns(projection?.filterNotNull()?.toTypedArray())
                 .orderBy(sortOrder)
                 .create()
-        )
+        )*/
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
         logWhoseCalling()
         if (values == null) return null
         val ctx = context ?: return null
-        val db = listDatabase.openHelper.writableDatabase
+        return null
+        /*val db = listDatabase.openHelper.writableDatabase
 
         return when (uriMatcher.match(uri)) {
             LISTS_ID -> {
@@ -125,13 +124,14 @@ abstract class CustomListContentProvider : BaseContentProvider(), KoinComponent 
             }
 
             else -> throw IllegalArgumentException("Unknown URI: $uri")
-        }
+        }*/
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String?>?): Int {
         logWhoseCalling()
         val ctx = context ?: return 0
-        val db = listDatabase.openHelper.writableDatabase
+        return 0
+        /*val db = listDatabase.openHelper.writableDatabase
 
         val (table, sel, args) = when (uriMatcher.match(uri)) {
             LISTS_ID -> Triple("CustomListItem", selection, selectionArgs)
@@ -159,7 +159,7 @@ abstract class CustomListContentProvider : BaseContentProvider(), KoinComponent 
 
         val count = db.delete(table, sel, args)
         if (count > 0) ctx.contentResolver.notifyChange(uri, null)
-        return count
+        return count*/
     }
 
     override fun update(
@@ -171,7 +171,8 @@ abstract class CustomListContentProvider : BaseContentProvider(), KoinComponent 
         logWhoseCalling()
         if (values == null) return 0
         val ctx = context ?: return 0
-        val db = listDatabase.openHelper.writableDatabase
+        return 0
+        /*val db = listDatabase.openHelper.writableDatabase
 
         val (table, sel, args) = when (uriMatcher.match(uri)) {
             LISTS_ID -> Triple("CustomListItem", selection, selectionArgs)
@@ -199,6 +200,6 @@ abstract class CustomListContentProvider : BaseContentProvider(), KoinComponent 
 
         val count = db.update(table, 0, values, sel, args)
         if (count > 0) ctx.contentResolver.notifyChange(uri, null)
-        return count
+        return count*/
     }
 }

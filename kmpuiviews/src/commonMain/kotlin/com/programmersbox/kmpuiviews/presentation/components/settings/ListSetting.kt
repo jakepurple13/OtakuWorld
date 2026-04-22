@@ -53,7 +53,6 @@ fun <T> ListSetting(
     val dialogPopup = remember { mutableStateOf(false) }
 
     if (dialogPopup.value) {
-
         AlertDialog(
             properties = DialogProperties(usePlatformDefaultWidth = false),
             onDismissRequest = { dialogPopup.value = false },
@@ -89,7 +88,6 @@ fun <T> ListSetting(
             confirmButton = { confirmText(dialogPopup) },
             dismissButton = cancelText?.let { { it(dialogPopup) } }
         )
-
     }
 
     PreferenceSetting(
@@ -104,6 +102,61 @@ fun <T> ListSetting(
             ) { dialogPopup.value = true }
             .then(modifier)
     )
+}
+
+@Composable
+fun <T> settingsDialog(
+    value: T,
+    options: List<T>,
+    updateValue: (T, MutableState<Boolean>) -> Unit,
+    dialogTitle: @Composable () -> Unit,
+    confirmText: @Composable (MutableState<Boolean>) -> Unit,
+    dialogIcon: (@Composable () -> Unit)? = null,
+    cancelText: (@Composable (MutableState<Boolean>) -> Unit)? = null,
+    radioButtonColors: RadioButtonColors = RadioButtonDefaults.colors(),
+    viewText: (T) -> String = { it.toString() },
+): MutableState<Boolean> {
+    val dialogPopup = remember { mutableStateOf(false) }
+
+    if (dialogPopup.value) {
+        AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = { dialogPopup.value = false },
+            title = dialogTitle,
+            icon = dialogIcon,
+            text = {
+                LazyColumn {
+                    items(options) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    indication = ripple(),
+                                    interactionSource = null
+                                ) { updateValue(it, dialogPopup) }
+                                .border(0.dp, Color.Transparent, RoundedCornerShape(20.dp))
+                        ) {
+                            RadioButton(
+                                selected = it == value,
+                                onClick = { updateValue(it, dialogPopup) },
+                                modifier = Modifier.padding(8.dp),
+                                colors = radioButtonColors
+                            )
+                            Text(
+                                viewText(it),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = { confirmText(dialogPopup) },
+            dismissButton = cancelText?.let { { it(dialogPopup) } }
+        )
+    }
+
+    return dialogPopup
 }
 
 @ExperimentalMaterial3Api

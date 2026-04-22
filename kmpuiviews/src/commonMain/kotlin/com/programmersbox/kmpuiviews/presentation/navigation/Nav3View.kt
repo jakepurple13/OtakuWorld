@@ -11,7 +11,6 @@ import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneSt
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -29,14 +28,15 @@ import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.BottomSheetSceneStrategy
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun Nav3(
-    navigation3Actions: Navigation3Actions,
     genericInfo: KmpGenericInfo,
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
+    navigation3Actions: Navigation3Actions = koinInject(),
 ) {
     val backStack = navigation3Actions.backStack
     LaunchedEffect(Unit) {
@@ -51,7 +51,7 @@ fun Nav3(
     val sharedEntryInSceneNavEntryDecorator = SharedElementNavDecorator<NavKey>(
         onPop = {},
         decorate = { entry ->
-            val animatedScope = runCatching { LocalNavAnimatedContentScope.current }.getOrNull()
+            val animatedScope = LocalNavAnimatedContentScope.current
             if (animatedScope == null) {
                 entry.Content()
                 return@SharedElementNavDecorator
@@ -72,9 +72,11 @@ fun Nav3(
     NavDisplay(
         backStack = backStack,
         //onBack = { backStack.removeLastOrNull() },
-        sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
-                then remember { DialogSceneStrategy() }
-                then remember { BottomSheetSceneStrategy() },
+        sceneStrategies = listOf(
+            rememberListDetailSceneStrategy<NavKey>(),
+            DialogSceneStrategy(),
+            BottomSheetSceneStrategy()
+        ),
         onBack = { navigation3Actions.popBackStack() },
         entryDecorators = listOf(
             sharedEntryInSceneNavEntryDecorator,

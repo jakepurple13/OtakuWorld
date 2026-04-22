@@ -43,7 +43,6 @@ import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
-import com.programmersbox.kmpuiviews.presentation.navactions.TopLevelBackStack
 import com.programmersbox.kmpuiviews.presentation.navigation.navGraph
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
@@ -124,7 +123,6 @@ fun ApplicationScope.BaseDesktopUi(
                     Column(modifier = Modifier.fillMaxSize()) {
                         KmpLocalCompositionSetup(
                             navController,
-                            remember { TopLevelBackStack(Screen.RecentScreen) }
                         ) {
                             CompositionLocalProvider(
                                 LocalNavHostPadding provides PaddingValues()
@@ -168,8 +166,6 @@ fun ApplicationScope.BaseDesktopUi(
                                     navController = navController,
                                     genericInfo = genericInfo,
                                     windowSize = windowSize,
-                                    customPreferences = customSettings,
-                                    startDestination = Screen.Settings,
                                     bottomBarAdditions = {}
                                 ) {
                                     NavHost(

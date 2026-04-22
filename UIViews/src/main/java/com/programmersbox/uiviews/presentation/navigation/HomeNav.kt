@@ -11,13 +11,12 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.programmersbox.kmpuiviews.presentation.HomeNav
-import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
-import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.uiviews.GenericInfo
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import org.koin.compose.koinInject
 
@@ -28,7 +27,6 @@ import org.koin.compose.koinInject
 @Composable
 fun HomeNav(
     activity: Activity,
-    startDestination: Screen,
     customPreferences: ComposeSettingsDsl,
     bottomBarAdditions: @Composable () -> Unit,
     navController: NavHostController = rememberNavController(
@@ -43,8 +41,6 @@ fun HomeNav(
         LocalWindowSizeClass provides windowSize,
     ) {
         HomeNav(
-            startDestination = startDestination,
-            customPreferences = customPreferences,
             navController = navController,
             bottomBarAdditions = bottomBarAdditions,
             windowSize = windowSize,
@@ -55,7 +51,6 @@ fun HomeNav(
                 windowSize = windowSize,
                 customPreferences = customPreferences,
                 notificationLogo = notificationLogo,
-                startDestination = startDestination,
                 navController = navController
             )
         }

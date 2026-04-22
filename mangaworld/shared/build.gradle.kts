@@ -6,9 +6,11 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.programmersbox.manga.shared"
-        experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true
+        androidResources {
+            enable = true
+        }
     }
 
     sourceSets {
@@ -36,6 +38,7 @@ kotlin {
             implementation(libs.bundles.datastoreLibs)
 
             implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.multiplatform.lifecycle.runtime.compose)
 
             implementation(libs.zoomableModifier)
             implementation(libs.panpf.zoomimage.compose.glide)
