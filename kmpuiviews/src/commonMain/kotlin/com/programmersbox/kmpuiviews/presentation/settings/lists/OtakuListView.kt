@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.presentation.settings.lists
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,9 +20,8 @@ import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -119,7 +117,7 @@ fun OtakuListView(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalUuidApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun OtakuListView(
     customLists: List<CustomList>,
@@ -344,13 +342,58 @@ fun OtakuListView(
                     }
                 }
 
-                ElevatedCard(
+                val time = remember { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
+                //TODO: Also, add a way to allow user to choose the cover
+                // defaults to first item in the list cover
+                // but we could allow user to:
+                // choose a cover from items in list
+                // enter a url themselves
+                // choose an image from device
+                // if the choice is an image from device, exporting will be a problem.
+                // Might use the image loaders ability to show an error image
+                ListItem(
+                    overlineContent = { Text(stringResource(Res.string.custom_list_updated_at, time)) },
+                    trailingContent = { Text("(${it.list.size})") },
+                    content = { Text(it.item.name) },
+                    onClick = { navigateDetail(it) },
+                    selected = customItem == it,
+                    onLongClick = { optionsSheet = true },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    leadingContent = if (it.item.uuid == AppConfig.forLaterUuid) {
+                        { Icon(Icons.Default.WatchLater, null) }
+                    } else {
+                        it
+                            .list
+                            .firstOrNull()
+                            ?.let { image ->
+                                {
+                                    ImageLoaderChoice(
+                                        imageUrl = image.imageUrl,
+                                        name = it.item.name,
+                                        placeHolder = { painterLogo() },
+                                        modifier = Modifier
+                                            .size(
+                                                width = ComposableUtils.IMAGE_WIDTH,
+                                                height = ComposableUtils.IMAGE_HEIGHT
+                                            )
+                                            .clip(MaterialTheme.shapes.medium)
+                                    )
+                                }
+                            }
+                    },
+                    supportingContent = {
+                        if (!it.item.useBiometric) {
+                            Column {
+                                it.list.take(3).forEach { info ->
+                                    Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .animateItem()
-                        .combinedClickable(
-                            onClick = { navigateDetail(it) },
-                            onLongClick = { optionsSheet = true }
-                        )
                         .padding(horizontal = 4.dp)
                         .thenIf(customItem == it) {
                             border(
@@ -359,54 +402,7 @@ fun OtakuListView(
                                 shape = CardDefaults.elevatedShape
                             )
                         }
-                ) {
-                    val time = remember { dateTimeFormatter.format(it.item.time.toLocalDateTime()) }
-                    //TODO: Also, add a way to allow user to choose the cover
-                    // defaults to first item in the list cover
-                    // but we could allow user to:
-                    // choose a cover from items in list
-                    // enter a url themselves
-                    // choose an image from device
-                    // if the choice is an image from device, exporting will be a problem.
-                    // Might use the image loaders ability to show an error image
-                    ListItem(
-                        overlineContent = { Text(stringResource(Res.string.custom_list_updated_at, time)) },
-                        trailingContent = { Text("(${it.list.size})") },
-                        headlineContent = { Text(it.item.name) },
-                        leadingContent = if (it.item.uuid == AppConfig.forLaterUuid) {
-                            { Icon(Icons.Default.WatchLater, null) }
-                        } else {
-                            it
-                                .list
-                                .firstOrNull()
-                                ?.let { image ->
-                                    {
-                                        ImageLoaderChoice(
-                                            imageUrl = image.imageUrl,
-                                            name = it.item.name,
-                                            placeHolder = { painterLogo() },
-                                            modifier = Modifier
-                                                .size(
-                                                    width = ComposableUtils.IMAGE_WIDTH,
-                                                    height = ComposableUtils.IMAGE_HEIGHT
-                                                )
-                                                .clip(MaterialTheme.shapes.medium)
-                                        )
-                                    }
-                                }
-                        },
-                        supportingContent = {
-                            if (!it.item.useBiometric) {
-                                Column {
-                                    it.list.take(3).forEach { info ->
-                                        Text(info.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-                HorizontalDivider(Modifier.padding(top = 4.dp))
+                )
             }
         }
     }

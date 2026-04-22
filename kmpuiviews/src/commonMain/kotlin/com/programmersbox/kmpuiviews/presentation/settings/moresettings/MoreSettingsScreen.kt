@@ -414,7 +414,7 @@ private fun ExportListSelection(
                             ListItem(
                                 headlineContent = { Text(it.key.item.name) },
                                 trailingContent = { Text(it.key.list.size.toString()) },
-                                overlineContent = { Text(it.key.item.uuid.toString()) },
+                                overlineContent = { Text(it.key.item.uuid) },
                                 leadingContent = {
                                     Checkbox(
                                         checked = it.value,
