@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,7 +36,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.datastore.asState
 import com.programmersbox.kmpuiviews.BuildKonfig
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
@@ -44,6 +44,7 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
+import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
@@ -73,7 +74,7 @@ import otakuworld.kmpuiviews.generated.resources.update_available
 import otakuworld.kmpuiviews.generated.resources.view_libraries_used
 import otakuworld.kmpuiviews.generated.resources.view_on_github
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MoreInfoScreen(
     infoViewModel: MoreInfoViewModel = koinViewModel(),
@@ -90,70 +91,38 @@ fun MoreInfoScreen(
         stringResource(Res.string.more_info_category),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        CategoryGroup {
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text(stringResource(Res.string.view_libraries_used)) },
-                    settingIcon = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null,
-                        onClick = usedLibraryClick
-                    )
-                )
-            }
+        CategoryGroupListItem {
+            segmentedListItem(
+                content = { Text(stringResource(Res.string.view_libraries_used)) },
+                leadingContent = { Icon(Icons.AutoMirrored.Filled.LibraryBooks, null) },
+                onClick = usedLibraryClick
+            )
         }
 
-        CategoryGroup {
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("View Account Info") },
-                    settingIcon = { Icon(Icons.Default.AccountCircle, null, modifier = Modifier.fillMaxSize()) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null,
-                        onClick = onViewAccountInfoClick
-                    )
-                )
-            }
+        CategoryGroupListItem {
+            segmentedListItem(
+                content = { Text("View Account Info") },
+                leadingContent = { Icon(Icons.Default.AccountCircle, null) },
+                onClick = onViewAccountInfoClick
+            )
 
-            item {
-                var onboarding by dataStoreHandling.hasGoneThroughOnboarding.asState()
-                PreferenceSetting(
-                    settingTitle = { Text("View Onboarding Again") },
-                    settingIcon = { Icon(Icons.Default.CatchingPokemon, null) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) {
-                        //navController.clearBackStack(Screen.RecentScreen)
-                        onboarding = false
-                        navController.toOnboarding()
-                    }
-                )
-            }
+            segmentedListItem(
+                content = { Text("View Onboarding Again") },
+                leadingContent = { Icon(Icons.Default.CatchingPokemon, null) },
+                onClick = { navController.toOnboarding() },
+            )
 
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("View Background Worker Info") },
-                    settingIcon = { Icon(Icons.Default.Engineering, null) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { navController.workerInfo() }
-                )
-            }
+            segmentedListItem(
+                content = { Text("View Background Worker Info") },
+                leadingContent = { Icon(Icons.Default.Engineering, null) },
+                onClick = { navController.workerInfo() },
+            )
 
-            item {
-                PreferenceSetting(
-                    settingTitle = { Text("View Exceptions") },
-                    settingIcon = { Icon(Icons.Default.Error, null) },
-                    modifier = Modifier.clickable(
-                        indication = ripple(),
-                        interactionSource = null
-                    ) { navController.navigate(Screen.ExceptionScreen) }
-                )
-            }
+            segmentedListItem(
+                content = { Text("View Exceptions") },
+                leadingContent = { Icon(Icons.Default.Error, null) },
+                onClick = { navController.navigate(Screen.ExceptionScreen) },
+            )
         }
 
         DebugPrereleaseOptions()
@@ -289,7 +258,7 @@ private fun DebugPrereleaseOptions() {
         val navActions = LocalNavActions.current
 
         CategoryGroup {
-            if(appConfig.isDebug) {
+            if (appConfig.isDebug) {
                 item {
                     PreferenceSetting(
                         settingTitle = { Text("Debug Menu") },

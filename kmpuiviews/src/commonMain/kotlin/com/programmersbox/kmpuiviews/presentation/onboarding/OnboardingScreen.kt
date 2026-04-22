@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,12 +74,6 @@ fun OnboardingScreen(
         .hasGoneThroughOnboarding
         .asState()
 
-    LaunchedEffect(hasSeenOnboarding) {
-        if (hasSeenOnboarding) {
-            navController.onboardingToRecent()
-        }
-    }
-
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { onboardingScope.size }
 
@@ -101,6 +94,7 @@ fun OnboardingScreen(
                                         onClick = {
                                             hasSeenOnboarding = true
                                             skipOnboarding = false
+                                            navController.popBackStack()
                                         }
                                     ) { Text("Confirm") }
                                 },
@@ -144,6 +138,7 @@ fun OnboardingScreen(
                                 scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                             } else {
                                 hasSeenOnboarding = true
+                                navController.popBackStack()
                             }
                         }
                     ) {

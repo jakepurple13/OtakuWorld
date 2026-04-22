@@ -38,7 +38,6 @@ fun NavigationGraph(
     windowSize: WindowSizeClass,
     customPreferences: ComposeSettingsDsl,
     notificationLogo: NotificationLogo,
-    startDestination: Screen,
     navController: NavHostController,
 ) {
     if (USE_NAV3) {
@@ -49,7 +48,6 @@ fun NavigationGraph(
         )
     } else {
         Nav2(
-            startDestination = startDestination,
             windowSize = windowSize,
             genericInfo = genericInfo,
             navigationActions = navigationActions,
@@ -63,7 +61,6 @@ fun NavigationGraph(
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun Nav2(
-    startDestination: Screen,
     windowSize: WindowSizeClass,
     genericInfo: GenericInfo,
     navigationActions: NavigationActions,
@@ -74,7 +71,7 @@ private fun Nav2(
     AddBreadcrumbLogging(navController)
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screen.RecentScreen,
         modifier = Modifier.fillMaxSize()
     ) {
         //navGraph(customPreferences, windowSize, genericInfo, navigationActions, notificationLogo)

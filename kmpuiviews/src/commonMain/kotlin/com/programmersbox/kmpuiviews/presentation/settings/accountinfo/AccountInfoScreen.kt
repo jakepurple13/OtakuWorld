@@ -53,6 +53,8 @@ fun AccountInfoScreen(
     val state = viewModel.accountInfo
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
+    //TODO: Make this look better!
+
     OtakuScaffold(
         topBar = {
             TopAppBar(

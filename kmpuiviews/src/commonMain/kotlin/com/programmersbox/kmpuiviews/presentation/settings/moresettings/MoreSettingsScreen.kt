@@ -119,6 +119,7 @@ fun MoreSettingsScreen(
 
     val appConfig = koinInject<AppConfig>()
     val appName = appConfig.appName
+    //TODO: For these two, make a screen similar to how civit is set up
     val exportLauncher = rememberFileSaverLauncher(
         dialogSettings = FileKitDialogSettings.createDefault()
     ) { document ->

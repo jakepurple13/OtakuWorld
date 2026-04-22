@@ -107,7 +107,6 @@ import com.programmersbox.kmpuiviews.presentation.components.rememberMultipleBar
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
-import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
@@ -135,8 +134,6 @@ import kotlin.math.roundToInt
 )
 @Composable
 fun HomeNav(
-    startDestination: Screen,
-    customPreferences: ComposeSettingsDsl,
     navController: NavHostController,
     bottomBarAdditions: @Composable () -> Unit,
     windowSize: WindowSizeClass,

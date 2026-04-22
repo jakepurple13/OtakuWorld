@@ -398,11 +398,11 @@ fun FavoriteScreen(
                     .padding(p)
             ) {
                 Surface(
+                    tonalElevation = 4.dp,
+                    shape = RoundedCornerShape(4.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp),
-                    tonalElevation = 4.dp,
-                    shape = RoundedCornerShape(4.dp)
+                        .padding(4.dp)
                 ) {
                     Column(modifier = Modifier) {
                         Text(

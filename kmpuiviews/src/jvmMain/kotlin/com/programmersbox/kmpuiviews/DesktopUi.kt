@@ -166,8 +166,6 @@ fun ApplicationScope.BaseDesktopUi(
                                     navController = navController,
                                     genericInfo = genericInfo,
                                     windowSize = windowSize,
-                                    customPreferences = customSettings,
-                                    startDestination = Screen.Settings,
                                     bottomBarAdditions = {}
                                 ) {
                                     NavHost(
