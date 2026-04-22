@@ -30,11 +30,12 @@ import kotlin.uuid.Uuid
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 10,
+    version = 11,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 7),
         AutoMigration(from = 7, to = 8),
+        AutoMigration(from = 10, to = 11),
     ]
 )
 abstract class ListDatabase : RoomDatabase() {
@@ -196,6 +197,8 @@ data class CustomListItem(
     val time: Long = Clock.System.now().toEpochMilliseconds(),
     @ColumnInfo(defaultValue = "0")
     val useBiometric: Boolean = false,
+    @ColumnInfo(name = "description", defaultValue = "")
+    val description: String = "",
 )
 
 @OptIn(ExperimentalUuidApi::class)
