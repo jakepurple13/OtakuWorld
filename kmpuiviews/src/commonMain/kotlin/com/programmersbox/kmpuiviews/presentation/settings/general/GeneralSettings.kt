@@ -3,10 +3,8 @@ package com.programmersbox.kmpuiviews.presentation.settings.general
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -27,6 +25,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -34,9 +33,12 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,17 +56,15 @@ import com.programmersbox.datastore.asState
 import com.programmersbox.datastore.rememberFloatingNavigation
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.item
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
-import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
+import com.programmersbox.kmpuiviews.presentation.components.settings.settingsDialog
 import com.programmersbox.kmpuiviews.presentation.components.visibleName
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -73,7 +73,6 @@ import otakuworld.kmpuiviews.generated.resources.general_menu_title
 import otakuworld.kmpuiviews.generated.resources.history_save_summary
 import otakuworld.kmpuiviews.generated.resources.history_save_title
 import otakuworld.kmpuiviews.generated.resources.share_chapters
-import otakuworld.kmpuiviews.generated.resources.show_all_screen
 import otakuworld.kmpuiviews.generated.resources.show_download_button
 import otakuworld.kmpuiviews.generated.resources.show_list_detail_pane_for_lists
 
@@ -112,20 +111,16 @@ fun GeneralSettings(
             )
         }
 
-        CategoryGroup {
+        CategoryGroupListItem {
             item {
                 NavigationBarSettings(handling = handling)
             }
         }
 
-        CategoryGroup {
-            item {
-                Spacer(Modifier.height(16.dp))
-                GridTypeSettings(handling = handling)
-            }
-
-            item { DetailPaneSettings(handling = handling) }
-            item { HistorySettings(dataStoreHandling = dataStoreHandling) }
+        CategoryGroupListItem {
+            item(false) { GridTypeSettings(handling = handling) }
+            item(false) { DetailPaneSettings(handling = handling) }
+            item(false) { HistorySettings(dataStoreHandling = dataStoreHandling) }
         }
 
         customSettings()
@@ -151,14 +146,12 @@ fun BlurSetting(handling: NewSettingsHandling) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun GridTypeSettings(handling: NewSettingsHandling) {
+private fun GridTypeSettings(handling: NewSettingsHandling) {
     var gridChoice by handling.rememberGridChoice()
 
-    ListSetting(
-        settingTitle = { Text("Grid Type") },
-        settingIcon = { Icon(Icons.Default.GridView, null, modifier = Modifier.fillMaxSize()) },
+    var settingsDialog by settingsDialog(
         value = gridChoice,
         updateValue = { it, d ->
             d.value = false
@@ -169,7 +162,20 @@ fun GridTypeSettings(handling: NewSettingsHandling) {
             GridChoice.Adaptive,
             GridChoice.Fixed
         ),
-        summaryValue = {
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+        dialogTitle = { Text("Grid Type") },
+        dialogIcon = { Icon(Icons.Default.GridView, null) },
+    )
+
+    SegmentedListItem(
+        onClick = { settingsDialog = true },
+        content = { Text("Grid Type") },
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        leadingContent = { Icon(Icons.Default.GridView, null) },
+        shapes = ListItemDefaults.segmentedShapes(0, 3),
+        supportingContent = {
             Text(
                 when (gridChoice) {
                     GridChoice.FullAdaptive -> "Full Adaptive: This will have a dynamic number of columns."
@@ -177,10 +183,7 @@ fun GridTypeSettings(handling: NewSettingsHandling) {
                     GridChoice.Fixed -> "Fixed: Have a fixed amount of columns. This will be 3 for compact, 5 for medium, and 6 for large."
                 }
             )
-        },
-        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-        dialogTitle = { Text("Grid Type") },
-        dialogIcon = { Icon(Icons.Default.GridView, null) },
+        }
     )
 }
 
@@ -226,21 +229,25 @@ fun ShareChapterSettings(handling: NewSettingsHandling) {
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DetailPaneSettings(handling: NewSettingsHandling) {
     var showListDetail by handling.rememberShowListDetail()
 
-    SwitchSetting(
-        value = showListDetail,
-        settingTitle = { Text(stringResource(Res.string.show_list_detail_pane_for_lists)) },
-        settingIcon = {
+    SegmentedListItem(
+        checked = showListDetail,
+        onCheckedChange = { showListDetail = it },
+        shapes = ListItemDefaults.segmentedShapes(1, 3),
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        content = { Text(stringResource(Res.string.show_list_detail_pane_for_lists)) },
+        leadingContent = {
             Icon(
                 if (showListDetail) Icons.AutoMirrored.Filled.List else Icons.AutoMirrored.Filled.ListAlt,
                 null,
-                modifier = Modifier.fillMaxSize()
             )
-        },
-        updateValue = { showListDetail = it }
+        }
     )
 }
 
@@ -256,66 +263,76 @@ fun ShowDownloadSettings(handling: NewSettingsHandling) {
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HistorySettings(dataStoreHandling: DataStoreHandling) {
     var sliderValue by dataStoreHandling.historySave.asState()
 
-    SliderSetting(
-        sliderValue = sliderValue.toFloat(),
-        settingTitle = { Text(stringResource(Res.string.history_save_title)) },
-        settingSummary = { Text(stringResource(Res.string.history_save_summary)) },
-        settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
-        range = -1f..100f,
-        updateValue = { sliderValue = it.toInt() }
-    )
+    ElevatedCard(
+        shape = ListItemDefaults.segmentedShapes(2, 3).shape,
+    ) {
+        SliderSetting(
+            sliderValue = sliderValue.toFloat(),
+            settingTitle = { Text(stringResource(Res.string.history_save_title)) },
+            settingSummary = { Text(stringResource(Res.string.history_save_summary)) },
+            settingIcon = { Icon(Icons.Default.ChangeHistory, null) },
+            range = -1f..100f,
+            updateValue = { sliderValue = it.toInt() }
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NavigationBarSettings(handling: NewSettingsHandling) {
     var floatingNavigation by rememberFloatingNavigation()
 
-    SwitchSetting(
-        settingTitle = { Text("Floating Navigation") },
-        settingIcon = { Icon(Icons.Default.Navigation, null, modifier = Modifier.fillMaxSize()) },
-        value = floatingNavigation,
-        updateValue = { floatingNavigation = it }
+    var middleNavigationAction by handling.rememberMiddleNavigationAction()
+
+    SegmentedListItem(
+        checked = floatingNavigation,
+        onCheckedChange = { floatingNavigation = it },
+        content = { Text("Floating Navigation") },
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        leadingContent = { Icon(Icons.Default.Navigation, null) },
+        trailingContent = { Switch(checked = floatingNavigation, onCheckedChange = null) },
+        shapes = ListItemDefaults.segmentedShapes(
+            index = 0,
+            if (middleNavigationAction == MiddleNavigationAction.Multiple) 3 else 2
+        )
     )
 
-    CategoryGroupDefaults.Divider()
+    var listSettings by settingsDialog(
+        dialogIcon = { Icon(Icons.Default.LocationOn, null) },
+        dialogTitle = { Text("Choose a middle navigation destination") },
+        confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
+        value = middleNavigationAction,
+        options = MiddleNavigationAction.entries,
+        updateValue = { it, d ->
+            d.value = false
+            middleNavigationAction = it
+        }
+    )
 
-    if (LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Expanded) {
-        var showAllScreen by handling.rememberShowAll()
-
-        SwitchSetting(
-            settingTitle = { Text(stringResource(Res.string.show_all_screen)) },
-            settingIcon = { Icon(Icons.Default.Menu, null, modifier = Modifier.fillMaxSize()) },
-            value = showAllScreen,
-            updateValue = { showAllScreen = it }
+    SegmentedListItem(
+        onClick = { listSettings = true },
+        content = { Text(middleNavigationAction.visibleName) },
+        colors = ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        leadingContent = { Icon(Icons.Default.LocationOn, null) },
+        shapes = ListItemDefaults.segmentedShapes(
+            index = 1,
+            if (middleNavigationAction == MiddleNavigationAction.Multiple) 3 else 2
         )
-    } else {
+    )
 
-        var middleNavigationAction by handling.rememberMiddleNavigationAction()
-        ListSetting(
-            settingTitle = { Text("Middle Navigation Destination") },
-            dialogIcon = { Icon(Icons.Default.LocationOn, null) },
-            settingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.fillMaxSize()) },
-            dialogTitle = { Text("Choose a middle navigation destination") },
-            summaryValue = { Text(middleNavigationAction.visibleName) },
-            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-            value = middleNavigationAction,
-            options = MiddleNavigationAction.entries,
-            updateValue = { it, d ->
-                d.value = false
-                middleNavigationAction = it
-            }
-        )
-
-        MultipleActionsSetting(
-            handling = handling,
-            middleNavigationAction = middleNavigationAction
-        )
-    }
+    MultipleActionsSetting(
+        handling = handling,
+        middleNavigationAction = middleNavigationAction
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -331,100 +348,103 @@ private fun MultipleActionsSetting(
         .filter { it != MiddleNavigationAction.Multiple }
 
     ShowWhen(middleNavigationAction == MiddleNavigationAction.Multiple) {
-        CategoryGroupDefaults.Divider()
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+        ElevatedCard(
+            shape = ListItemDefaults.segmentedShapes(2, 3).shape,
         ) {
-            HorizontalFloatingToolbar(
-                expanded = true,
-                colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
-                leadingContent = {
-                    var showMenu by remember { mutableStateOf(false) }
-                    DropdownMenu(
-                        showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        multipleActionOptions.forEach {
-                            DropdownMenuItem(
-                                text = { Text(it.name) },
-                                leadingIcon = {
-                                    Icon(
-                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
-                                        null,
-                                    )
-                                },
-                                onClick = {
-                                    multipleActions = multipleActions?.copy(
-                                        startAction = it,
-                                    )
-                                    showMenu = false
-                                }
-                            )
-                        }
-                    }
-
-                    IconButton(
-                        onClick = { showMenu = true }
-                    ) {
-                        Icon(
-                            multipleActions
-                                ?.startAction
-                                ?.item
-                                ?.icon
-                                ?.invoke(true)
-                                ?: Icons.Default.Add,
-                            null
-                        )
-                    }
-                },
-                trailingContent = {
-                    var showMenu by remember { mutableStateOf(false) }
-                    DropdownMenu(
-                        showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        multipleActionOptions.forEach {
-                            DropdownMenuItem(
-                                text = { Text(it.visibleName) },
-                                leadingIcon = {
-                                    Icon(
-                                        it.item?.icon?.invoke(true) ?: Icons.Default.Add,
-                                        null,
-                                    )
-                                },
-                                onClick = {
-                                    multipleActions = multipleActions?.copy(endAction = it)
-                                    showMenu = false
-                                }
-                            )
-                        }
-                    }
-                    IconButton(
-                        onClick = { showMenu = true }
-                    ) {
-                        Icon(
-                            multipleActions
-                                ?.endAction
-                                ?.item
-                                ?.icon
-                                ?.invoke(true)
-                                ?: Icons.Default.Add,
-                            null
-                        )
-                    }
-                },
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
             ) {
-                FilledIconButton(
-                    modifier = Modifier.width(64.dp),
-                    onClick = {}
+                HorizontalFloatingToolbar(
+                    expanded = true,
+                    colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+                    leadingContent = {
+                        var showMenu by remember { mutableStateOf(false) }
+                        DropdownMenu(
+                            showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            multipleActionOptions.forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.name) },
+                                    leadingIcon = {
+                                        Icon(
+                                            it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                            null,
+                                        )
+                                    },
+                                    onClick = {
+                                        multipleActions = multipleActions?.copy(
+                                            startAction = it,
+                                        )
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = { showMenu = true }
+                        ) {
+                            Icon(
+                                multipleActions
+                                    ?.startAction
+                                    ?.item
+                                    ?.icon
+                                    ?.invoke(true)
+                                    ?: Icons.Default.Add,
+                                null
+                            )
+                        }
+                    },
+                    trailingContent = {
+                        var showMenu by remember { mutableStateOf(false) }
+                        DropdownMenu(
+                            showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            multipleActionOptions.forEach {
+                                DropdownMenuItem(
+                                    text = { Text(it.visibleName) },
+                                    leadingIcon = {
+                                        Icon(
+                                            it.item?.icon?.invoke(true) ?: Icons.Default.Add,
+                                            null,
+                                        )
+                                    },
+                                    onClick = {
+                                        multipleActions = multipleActions?.copy(endAction = it)
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = { showMenu = true }
+                        ) {
+                            Icon(
+                                multipleActions
+                                    ?.endAction
+                                    ?.item
+                                    ?.icon
+                                    ?.invoke(true)
+                                    ?: Icons.Default.Add,
+                                null
+                            )
+                        }
+                    },
                 ) {
-                    Icon(
-                        Icons.Filled.UnfoldLess,
-                        contentDescription = "Localized description"
-                    )
+                    FilledIconButton(
+                        modifier = Modifier.width(64.dp),
+                        onClick = {}
+                    ) {
+                        Icon(
+                            Icons.Filled.UnfoldLess,
+                            contentDescription = "Localized description"
+                        )
+                    }
                 }
             }
         }
