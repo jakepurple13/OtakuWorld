@@ -74,7 +74,7 @@ jobs:
         name: Sign app APK
         id: manga_sign_minified
         with:
-          releaseDirectory: mangaworld/build/outputs/apk/fullReleaseMinified/release
+          releaseDirectory: mangaworld/build/outputs/apk/full/releaseMinified
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
