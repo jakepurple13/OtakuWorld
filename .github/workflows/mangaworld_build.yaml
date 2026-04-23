@@ -101,3 +101,8 @@ jobs:
         with:
           name: Signed Manga No Cloud Firebase App
           path: mangaworld-no-cloud-firebase-release.apk
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Signed Manga Minified App
+          path: mangaworld-minified-release.apk
