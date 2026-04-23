@@ -39,6 +39,8 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
                 namespace = dependencyHandling.androidPackageName
                 compileSdk = AppInfo.compileVersion
                 minSdk = AppInfo.minimumSdk
+                // consumerProguardFiles not available on KotlinMultiplatformAndroidLibraryExtension in AGP 9.1.1;
+                // KMP library consumer rules must be covered by the consuming app's own proguard-rules.pro.
 
                 lint {
                     checkReleaseBuilds = false
