@@ -46,10 +46,10 @@ jobs:
     if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
 
-  animeworldtv:
-    uses: ./.github/workflows/animeworldtv_build.yaml
-    if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
-    secrets: inherit # pass all secrets
+  #  animeworldtv:
+  #    uses: ./.github/workflows/animeworldtv_build.yaml
+  #    if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'pull_request'
+  #    secrets: inherit # pass all secrets
 
   novelworld:
     uses: ./.github/workflows/novelworld_build.yaml

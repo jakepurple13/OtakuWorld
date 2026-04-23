@@ -47,13 +47,13 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -728,6 +728,7 @@ fun ChapterItem(
     }
 }
 
+@ExperimentalMaterial3ExpressiveApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun chapterItemOptions(
@@ -738,48 +739,70 @@ private fun chapterItemOptions(
     downloadChapter: () -> Unit,
     markAsRead: () -> Unit,
     shareChapter: () -> Unit,
-) = optionsSheet {
+) = optionsSheet(
+    verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+) {
+
+    val colors = ListItemDefaults.segmentedColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    )
+
+    val canDownload = chapter.source.canDownload && showDownload()
 
     ListItem(
         headlineContent = { Text(chapter.name) },
     )
 
-    HorizontalDivider()
-
-    OptionsItem(
-        title = "Read",
+    SegmentedListItem(
         onClick = {
             dismiss()
             onOpen()
-        }
+        },
+        content = { Text("Read") },
+        colors = colors,
+        shapes = ListItemDefaults.segmentedShapes(
+            index = 0,
+            count = if (canDownload) 4 else 3
+        )
     )
 
-    if (chapter.source.canDownload && showDownload()) {
-        OptionsItem(
-            title = "Download",
+    if (canDownload) {
+        SegmentedListItem(
             onClick = {
                 dismiss()
                 downloadChapter()
-            }
+            },
+            content = { Text("Download") },
+            colors = colors,
+            shapes = ListItemDefaults.segmentedShapes(
+                index = 1,
+                count = 4
+            )
         )
     }
 
-    OptionsItem(
-        title = "Mark as read",
-        onClick = markAsRead,
-        trailingContent = {
-            Checkbox(
-                checked = hasBeenRead,
-                onCheckedChange = { markAsRead() }
-            )
-        }
+    SegmentedListItem(
+        content = { Text("Mark as read") },
+        colors = colors,
+        trailingContent = { Checkbox(checked = hasBeenRead, onCheckedChange = null) },
+        checked = hasBeenRead,
+        onCheckedChange = { markAsRead() },
+        shapes = ListItemDefaults.segmentedShapes(
+            index = if (canDownload) 2 else 1,
+            count = if (canDownload) 4 else 3
+        )
     )
 
-    OptionsItem(
-        title = "Share",
+    SegmentedListItem(
         onClick = {
             dismiss()
             shareChapter()
-        }
+        },
+        content = { Text("Share") },
+        colors = colors,
+        shapes = ListItemDefaults.segmentedShapes(
+            index = if (canDownload) 3 else 2,
+            count = if (canDownload) 4 else 3
+        )
     )
 }

@@ -18,9 +18,9 @@ jobs:
     uses: ./.github/workflows/animeworld_build.yaml
     secrets: inherit # pass all secrets
 
-  animeworldtv:
-    uses: ./.github/workflows/animeworldtv_build.yaml
-    secrets: inherit # pass all secrets
+  #  animeworldtv:
+  #    uses: ./.github/workflows/animeworldtv_build.yaml
+  #    secrets: inherit # pass all secrets
 
   novelworld:
     uses: ./.github/workflows/novelworld_build.yaml
@@ -256,7 +256,7 @@ jobs:
 
   release:
     name: Release APK
-    needs: [ mangaworld, animeworld, novelworld, animeworldtv ]
+    needs: [ mangaworld, animeworld, novelworld ]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:

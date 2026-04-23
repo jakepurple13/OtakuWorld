@@ -108,6 +108,7 @@ interface OptionsSheetScope {
 fun optionsSheet(
     scope: CoroutineScope = rememberCoroutineScope(),
     sheet: SheetState = rememberModalBottomSheetState(true),
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     moreContent: @Composable OptionsSheetScope.() -> Unit = {},
 ): MutableState<Boolean> {
     val show = remember { mutableStateOf(false) }
@@ -127,6 +128,7 @@ fun optionsSheet(
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
             Column(
+                verticalArrangement = verticalArrangement,
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .animateContentSize(),

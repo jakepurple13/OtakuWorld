@@ -55,13 +55,13 @@ jobs:
     with:
       IS_PRERELEASE: true
 
-  animeworldtv:
-    needs: checkNightly
-    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
-    uses: ./.github/workflows/animeworldtv_build.yaml
-    secrets: inherit # pass all secrets
-    with:
-      IS_PRERELEASE: true
+  #  animeworldtv:
+  #    needs: checkNightly
+  #    if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
+  #    uses: ./.github/workflows/animeworldtv_build.yaml
+  #    secrets: inherit # pass all secrets
+  #    with:
+  #      IS_PRERELEASE: true
 
   novelworld:
     needs: checkNightly
@@ -81,7 +81,7 @@ jobs:
 
   release:
     name: Release APK
-    needs: [ mangaworld, animeworld, novelworld, animeworldtv, otakuworld ]
+    needs: [ mangaworld, animeworld, novelworld, otakuworld ]
     if: ${{ needs.checkNightly.outputs.shouldRun == 'true' }}
     runs-on: ubuntu-latest
     steps:
