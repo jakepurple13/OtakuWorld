@@ -35,6 +35,12 @@ class OtakuManagerPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModu
             }
             ApplicationBuildTypes.Debug.setup(this)
             ApplicationBuildTypes.Beta.setup(this)
+            ApplicationBuildTypes.ReleaseMinified.setup(this) {
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                )
+            }
         }
 
         flavorDimensions.add(ProductFlavorTypes.dimension)
