@@ -10,6 +10,9 @@ class AndroidLibraryPlugin : AndroidPluginBase<LibraryExtension>(LibraryExtensio
     }
 
     override fun LibraryExtension.androidConfig(project: Project) {
+        defaultConfig {
+            consumerProguardFiles("proguard-rules.pro")
+        }
         lint {
             checkReleaseBuilds = false
         }
