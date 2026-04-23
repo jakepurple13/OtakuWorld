@@ -121,7 +121,7 @@ material3WindowSizeClassVersion = "1.10.0-alpha05"
 connectivity = "2.4.1"
 
 cmpLifecycle = "2.10.0"
-navigationCmp = "2.9.10-alpha01"
+navigationCmp = "2.9.10-SNAPSHOT+release-1-8-data-source-prototype"
 
 buildKonfig = "0.18.0"
 
