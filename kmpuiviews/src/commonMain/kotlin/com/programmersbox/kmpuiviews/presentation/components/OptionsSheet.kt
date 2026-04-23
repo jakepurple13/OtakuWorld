@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.programmersbox.kmpuiviews.presentation.components
 
 import androidx.compose.animation.Crossfade
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -466,21 +469,20 @@ private fun <T : OptionsSheetValues> OptionsSheetScope.OptionsItems(
         OptionsItem(
             title = "Open",
             onClick = {
-                scope.launch {
-                    sheet.hide()
-                }.invokeOnCompletion {
-                    onDismiss()
-                    if (isIncognito != null) {
-                        biometric.authenticate(
-                            onAuthenticationSucceeded = { onOpen() },
-                            title = "Authentication required",
-                            subtitle = "In order to open ${title}, please authenticate",
-                            negativeButtonText = "Never Mind"
-                        )
-                    } else {
-                        onOpen()
+                scope.launch { sheet.hide() }
+                    .invokeOnCompletion {
+                        onDismiss()
+                        if (isIncognito != null) {
+                            biometric.authenticate(
+                                onAuthenticationSucceeded = { onOpen() },
+                                title = "Authentication required",
+                                subtitle = "In order to open ${title}, please authenticate",
+                                negativeButtonText = "Never Mind"
+                            )
+                        } else {
+                            onOpen()
+                        }
                     }
-                }
             }
         )
 

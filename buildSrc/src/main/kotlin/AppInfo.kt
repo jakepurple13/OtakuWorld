@@ -14,5 +14,5 @@ object AppInfo {
     }
     const val compileVersion = 37
     const val minimumSdk = 28
-    const val targetSdk = 36
+    const val targetSdk = 37
 }

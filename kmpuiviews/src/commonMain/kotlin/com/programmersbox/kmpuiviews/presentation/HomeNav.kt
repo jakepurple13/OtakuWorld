@@ -103,9 +103,12 @@ import com.programmersbox.kmpuiviews.presentation.components.ScreenBottomItem
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.rememberMultipleBarState
+import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
@@ -138,7 +141,7 @@ fun HomeNav(
     settingsHandling: NewSettingsHandling = koinInject(),
     changingSettingsRepository: ChangingSettingsRepository = koinInject(),
     genericInfo: KmpGenericInfo = koinInject(),
-    navGraph: @Composable () -> Unit,
+    customPreferences: ComposeSettingsDsl,
 ) {
 
     val isAmoledMode by settingsHandling.rememberIsAmoledMode()
@@ -233,16 +236,12 @@ fun HomeNav(
                             //For later maybe
                             //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                         ) {
-                            navGraph()
-                            /*NavigationGraph(
-                                navigationActions = navigationActions,
+                            Nav3(
                                 genericInfo = genericInfo,
+                                navigation3Actions = navigationActions as Navigation3Actions,
                                 windowSize = windowSize,
                                 customPreferences = customPreferences,
-                                notificationLogo = notificationLogo,
-                                startDestination = startDestination,
-                                navController = navController
-                            )*/
+                            )
                         }
                     }
                 }

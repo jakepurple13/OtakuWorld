@@ -39,7 +39,6 @@ import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
-import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -156,14 +155,9 @@ fun ApplicationScope.BaseDesktopUi(
                                 HomeNav(
                                     genericInfo = genericInfo,
                                     windowSize = windowSize,
-                                    bottomBarAdditions = {}
-                                ) {
-                                    Nav3(
-                                        genericInfo = genericInfo,
-                                        windowSize = windowSize,
-                                        customPreferences = customSettings,
-                                    )
-                                }
+                                    bottomBarAdditions = {},
+                                    customPreferences = customSettings,
+                                )
                             }
                         }
                     }

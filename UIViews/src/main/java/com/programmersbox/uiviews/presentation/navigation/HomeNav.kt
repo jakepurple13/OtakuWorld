@@ -33,12 +33,8 @@ fun HomeNav(
         HomeNav(
             bottomBarAdditions = bottomBarAdditions,
             windowSize = windowSize,
-        ) {
-            NavigationGraph(
-                genericInfo = genericInfo,
-                windowSize = windowSize,
-                customPreferences = customPreferences
-            )
-        }
+            customPreferences = customPreferences,
+            genericInfo = genericInfo
+        )
     }
 }
