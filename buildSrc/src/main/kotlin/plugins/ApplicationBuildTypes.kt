@@ -43,7 +43,7 @@ enum class ApplicationBuildTypes(
     ReleaseMinified("releaseMinified") {
         override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
             create(buildTypeName) {
-                initWith(getByName(Release.buildTypeName))
+                initWith(getByName(Release.buildTypeName)) // intentionally overrides Release's minify=false below
                 matchingFallbacks.add(Release.buildTypeName)
                 if (this is ApplicationBuildType) {
                     isDebuggable = false
