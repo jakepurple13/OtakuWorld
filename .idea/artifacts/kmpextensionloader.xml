@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kmpextensionloader">
+    <output-path>$PROJECT_DIR$/sharedutils/kmpextensionloader/build/libs</output-path>
+    <root id="archive" name="kmpextensionloader.jar">
+      <element id="module-output" name="OtakuWorld.sharedutils.kmpextensionloader.androidMain" />
+    </root>
+  </artifact>
+</component>
