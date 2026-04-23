@@ -30,8 +30,8 @@ enum class ApplicationBuildTypes(
         override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
             create(buildTypeName) {
                 initWith(getByName(Debug.buildTypeName))
-                matchingFallbacks.addAll(values().filter { it != Beta }.map(ApplicationBuildTypes::buildTypeName))
-                if(this is ApplicationBuildType) {
+                matchingFallbacks.addAll(listOf(Release.buildTypeName, Debug.buildTypeName))
+                if (this is ApplicationBuildType) {
                     isDebuggable = false
                     isShrinkResources = false
                     isMinifyEnabled = false
@@ -39,8 +39,22 @@ enum class ApplicationBuildTypes(
                 block()
             }
         }
+    },
+    ReleaseMinified("releaseMinified") {
+        override fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit) {
+            create(buildTypeName) {
+                initWith(getByName(Release.buildTypeName))
+                matchingFallbacks.add(Release.buildTypeName)
+                if (this is ApplicationBuildType) {
+                    isDebuggable = false
+                    isMinifyEnabled = true
+                    isShrinkResources = true
+                }
+                block()
+            }
+        }
     };
 
-    protected abstract fun <T: BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit)
-    fun <T: BuildType> setup(container: NamedDomainObjectContainer<T>, block: T.() -> Unit = {}) = container.setupBuildType(block)
+    protected abstract fun <T : BuildType> NamedDomainObjectContainer<T>.setupBuildType(block: T.() -> Unit)
+    fun <T : BuildType> setup(container: NamedDomainObjectContainer<T>, block: T.() -> Unit = {}) = container.setupBuildType(block)
 }
