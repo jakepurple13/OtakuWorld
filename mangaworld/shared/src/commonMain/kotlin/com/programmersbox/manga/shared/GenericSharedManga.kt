@@ -1,9 +1,6 @@
 package com.programmersbox.manga.shared
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,9 +28,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.ColorBlindnessType
@@ -305,51 +299,6 @@ abstract class GenericSharedManga(
         }
 
         navGraph.entry<ReaderSettingsScreen> {
-            ReaderSettings(
-                mangaSettingsHandling = mangaSettingsHandling,
-                settingsHandling = settingsHandling
-            )
-        }
-    }
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalComposeUiApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
-    )
-    context(navGraph: NavGraphBuilder)
-    override fun globalNavSetup() {
-        navGraph.composable<ReadViewModel.MangaReader>(
-            enterTransition = { fadeIn() },
-            exitTransition = { fadeOut() },
-        ) {
-            ReadView(
-                viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.MangaReader>()) }
-            )
-        }
-    }
-
-    context(navGraph: NavGraphBuilder)
-    override fun settingsNavSetup() {
-        navGraph.composable<DownloadRoute>(
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) {
-            DownloadScreen()
-        }
-
-        navGraph.composable<ImageLoaderSettingsRoute>(
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) {
-            ImageLoaderSettings(mangaSettingsHandling)
-        }
-
-        navGraph.composable<ReaderSettingsScreen>(
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) {
             ReaderSettings(
                 mangaSettingsHandling = mangaSettingsHandling,
                 settingsHandling = settingsHandling

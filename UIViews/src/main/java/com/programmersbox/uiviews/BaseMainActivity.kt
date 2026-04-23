@@ -13,6 +13,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.repository.SetupRepository
@@ -21,7 +23,7 @@ import com.programmersbox.uiviews.presentation.navigation.HomeNav
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 abstract class BaseMainActivity : FragmentActivity() {
@@ -33,6 +35,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     private val changingSettingsRepository: ChangingSettingsRepository by inject()
     private val dataStoreHandling: DataStoreHandling by inject()
     private val setupRepository by inject<SetupRepository>()
+    private val sourceRepository by inject<SourceRepository>()
 
     protected abstract fun onCreate()
 
@@ -45,6 +48,10 @@ abstract class BaseMainActivity : FragmentActivity() {
         onCreate()
 
         enableEdgeToEdge()
+
+        if (BuildConfig.DEBUG) {
+            sourceRepository.addSource(ExampleService.getSourceInformation())
+        }
 
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -59,8 +66,10 @@ abstract class BaseMainActivity : FragmentActivity() {
             }
             .launchIn(lifecycleScope)
 
-        if (runBlocking { dataStoreHandling.hasGoneThroughOnboarding.getOrNull() } == false) {
-            navigationActions.toOnboarding()
+        lifecycleScope.launch {
+            if (dataStoreHandling.hasGoneThroughOnboarding.getOrNull() == false) {
+                navigationActions.toOnboarding()
+            }
         }
 
         setContent {

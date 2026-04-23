@@ -4,8 +4,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,9 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.core.app.TaskStackBuilder
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.DbModel
@@ -214,31 +209,6 @@ class GenericNovel(
         navGraph.entry<ReadViewModel.NovelReader> {
             NovelReadView(
                 viewModel = koinViewModel { parametersOf(it) }
-            )
-        }
-    }
-
-    @OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-    context(navGraph: NavGraphBuilder)
-    override fun globalNavSetup() {
-        /*composable(
-            ReadViewModel.NovelReaderRoute,
-            arguments = listOf(
-                navArgument("currentChapter") { },
-                navArgument("novelTitle") { },
-                navArgument("novelUrl") { },
-                navArgument("novelInfoUrl") { },
-            )
-        ) {
-            NovelReader()
-        }*/
-
-        navGraph.composable<ReadViewModel.NovelReader>(
-            enterTransition = { fadeIn() },
-            exitTransition = { fadeOut() },
-        ) {
-            NovelReadView(
-                viewModel = koinViewModel { parametersOf(it.toRoute<ReadViewModel.NovelReader>()) }
             )
         }
     }

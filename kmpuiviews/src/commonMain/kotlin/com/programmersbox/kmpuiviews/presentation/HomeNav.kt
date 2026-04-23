@@ -87,7 +87,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavHostController
 import com.programmersbox.datastore.MiddleMultipleActions
 import com.programmersbox.datastore.MiddleNavigationAction
 import com.programmersbox.datastore.NewSettingsHandling
@@ -134,7 +133,6 @@ import kotlin.math.roundToInt
 )
 @Composable
 fun HomeNav(
-    navController: NavHostController,
     bottomBarAdditions: @Composable () -> Unit,
     windowSize: WindowSizeClass,
     settingsHandling: NewSettingsHandling = koinInject(),
@@ -153,7 +151,6 @@ fun HomeNav(
         LocalWindowSizeClass provides windowSize
     ) {
         OtakuMaterialTheme(
-            navController = navController,
             settingsHandling = settingsHandling,
         ) {
             InitialSetup()

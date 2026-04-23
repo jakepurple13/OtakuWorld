@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.DbModel
@@ -84,13 +83,6 @@ interface KmpGenericInfo {
     ) = ItemListView(list, favorites, listState, onLongPress, modifier, paddingValues, onClick)
 
     fun debugMenuItem(): List<@Composable LazyItemScope.() -> Unit> = emptyList()
-
-    //TODO: Remove Nav2 completely!!!
-    context(navGraph: NavGraphBuilder)
-    fun globalNavSetup() = Unit
-
-    context(navGraph: NavGraphBuilder)
-    fun settingsNavSetup(): Unit = Unit
 
     context(navGraph: EntryProviderScope<NavKey>)
     fun globalNav3Setup() {

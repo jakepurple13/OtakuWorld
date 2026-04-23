@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
@@ -20,7 +19,6 @@ class NotificationSettingsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             OtakuMaterialTheme(
-                navController = rememberNavController(),
                 settingsHandling = settingsHandling,
             ) {
                 CompositionLocalProvider(

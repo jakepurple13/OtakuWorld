@@ -9,7 +9,6 @@ import android.net.Uri
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandHorizontally
@@ -67,9 +66,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.mediarouter.app.MediaRouteButton
 import androidx.mediarouter.app.MediaRouteDialogFactory
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import androidx.navigation.navDeepLink
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.google.android.gms.cast.framework.CastContext
@@ -80,7 +76,6 @@ import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoScreen
-import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.datastore.asState
@@ -581,36 +576,6 @@ class GenericAnime(
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
         navGraph.entry<VideoViewerRoute> {
-            ViewVideoScreen()
-        }
-    }
-
-    context(navGraph: NavGraphBuilder)
-    override fun globalNavSetup() {
-        navGraph.composable(
-            VideoViewModel.VideoPlayerRoute,
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-        ) {
-            VideoPlayerUi(
-                VideoScreen(
-                    showPath = it.arguments?.getString("showPath") ?: "",
-                    showName = it.arguments?.getString("showName") ?: "",
-                    downloadOrStream = it.arguments?.getBoolean("downloadOrStream") ?: false,
-                    referer = it.arguments?.getString("referer") ?: ""
-                )
-            )
-        }
-    }
-
-    context(navGraph: NavGraphBuilder)
-    override fun settingsNavSetup() {
-        navGraph.composable(
-            VideoViewerRoute.toString(),
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) },
-            deepLinks = listOf(navDeepLink { uriPattern = "animeworld://$VideoViewerRoute" })
-        ) {
             ViewVideoScreen()
         }
     }

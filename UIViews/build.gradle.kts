@@ -2,7 +2,6 @@ import plugins.ProductFlavorTypes
 
 plugins {
     `otaku-library`
-    id("androidx.navigation.safeargs.kotlin")
     id("kotlinx-serialization")
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
@@ -92,9 +91,6 @@ dependencies {
     api(libs.workRuntime)
 
     implementation(libs.kotlinxSerialization)
-
-    // Testing Navigation
-    androidTestImplementation(libs.navTesting)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)

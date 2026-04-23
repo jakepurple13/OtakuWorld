@@ -14,6 +14,12 @@ class SourceRepository {
         sourcesList.value = sourceList
     }
 
+    fun addSource(sourceInformation: KmpSourceInformation) {
+        sourcesList.update {
+            sourcesList.value.toMutableList().apply { add(sourceInformation) }
+        }
+    }
+
     fun removeSource(sourceInformation: KmpSourceInformation) {
         sourcesList.update {
             sourcesList.value.toMutableList().apply { remove(sourceInformation) }

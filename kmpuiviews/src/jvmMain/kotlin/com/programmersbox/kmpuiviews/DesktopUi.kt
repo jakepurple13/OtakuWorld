@@ -33,19 +33,13 @@ import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
-import com.programmersbox.kmpuiviews.presentation.Screen
-import com.programmersbox.kmpuiviews.presentation.navactions.Navigation2Actions
-import com.programmersbox.kmpuiviews.presentation.navigation.navGraph
-import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
-import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
+import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
@@ -104,8 +98,6 @@ fun ApplicationScope.BaseDesktopUi(
             undecorated = true,
             transparent = true,
         ) {
-            val navController = rememberNavController()
-            val navigationActions = Navigation2Actions(navController)
             MaterialTheme(
                 createColorScheme(
                     isSystemInDarkTheme(),
@@ -122,7 +114,6 @@ fun ApplicationScope.BaseDesktopUi(
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         KmpLocalCompositionSetup(
-                            navController,
                         ) {
                             CompositionLocalProvider(
                                 LocalNavHostPadding provides PaddingValues()
@@ -163,40 +154,15 @@ fun ApplicationScope.BaseDesktopUi(
                                 }
                                 val windowSize = calculateWindowSizeClass()
                                 HomeNav(
-                                    navController = navController,
                                     genericInfo = genericInfo,
                                     windowSize = windowSize,
                                     bottomBarAdditions = {}
                                 ) {
-                                    NavHost(
-                                        navController = navController,
-                                        startDestination = Screen.Settings
-                                    ) {
-                                        navGraph(
-                                            customPreferences = customSettings,
-                                            genericInfo = genericInfo,
-                                            navController = Navigation2Actions(navController),
-                                            isDebug = false,
-                                            deepLink = "",
-                                            settingsScreen = {
-                                                SettingScreen(
-                                                    composeSettingsDsl = customSettings,
-                                                    navigationActions = navigationActions,
-                                                    accountSettings = {}
-                                                )
-                                            },
-                                            onboarding = {
-                                                OnboardingScreen(
-                                                    navController = navigationActions,
-                                                    customPreferences = customSettings,
-                                                    accountContent = {},
-                                                )
-                                            },
-                                            settingsNavSetup = {},
-                                            profileIcon = { "" },
-                                            windowSize = windowSize
-                                        )
-                                    }
+                                    Nav3(
+                                        genericInfo = genericInfo,
+                                        windowSize = windowSize,
+                                        customPreferences = customSettings,
+                                    )
                                 }
                             }
                         }

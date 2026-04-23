@@ -7,15 +7,9 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.programmersbox.kmpuiviews.presentation.HomeNav
-import com.programmersbox.kmpuiviews.utils.ChromeCustomTabsNavigator
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
-import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.GenericInfo
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import org.koin.compose.koinInject
@@ -29,11 +23,7 @@ fun HomeNav(
     activity: Activity,
     customPreferences: ComposeSettingsDsl,
     bottomBarAdditions: @Composable () -> Unit,
-    navController: NavHostController = rememberNavController(
-        remember { ChromeCustomTabsNavigator(activity) }
-    ),
     genericInfo: GenericInfo = koinInject(),
-    notificationLogo: NotificationLogo = koinInject(),
 ) {
     val windowSize = calculateWindowSizeClass(activity = activity)
 
@@ -41,17 +31,13 @@ fun HomeNav(
         LocalWindowSizeClass provides windowSize,
     ) {
         HomeNav(
-            navController = navController,
             bottomBarAdditions = bottomBarAdditions,
             windowSize = windowSize,
         ) {
             NavigationGraph(
-                navigationActions = LocalNavActions.current,
                 genericInfo = genericInfo,
                 windowSize = windowSize,
-                customPreferences = customPreferences,
-                notificationLogo = notificationLogo,
-                navController = navController
+                customPreferences = customPreferences
             )
         }
     }

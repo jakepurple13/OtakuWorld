@@ -39,8 +39,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
@@ -174,7 +172,6 @@ class AmoledProvider : PreviewParameterProvider<Boolean> {
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun PreviewTheme(
-    navController: NavHostController = rememberNavController(),
     genericInfo: GenericInfo = MockInfo(LocalContext.current),
     isAmoledMode: Boolean = false,
     content: @Composable () -> Unit,
@@ -240,7 +237,6 @@ fun PreviewTheme(
                 //LocalSystemDateTimeFormat provides DateTimeFormatItem(isUsing24HourTime = DateTimeFormatHandler(LocalContext.current).is24Time())
             ) {
                 KmpLocalCompositionSetup(
-                    navController,
                 ) {
                     Surface { content() }
                 }
