@@ -5,15 +5,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Environment
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.navigation3.runtime.EntryProviderScope
-import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.gsonutils.toJson
@@ -30,16 +24,9 @@ import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
-import com.programmersbox.manga.shared.downloads.DownloadRoute
-import com.programmersbox.manga.shared.downloads.DownloadScreen
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
-import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
-import com.programmersbox.manga.shared.settings.ImageLoaderSettings
-import com.programmersbox.manga.shared.settings.ImageLoaderSettingsRoute
-import com.programmersbox.manga.shared.settings.ReaderSettings
-import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.reader.ReadActivity
@@ -54,11 +41,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.koin.androidx.compose.koinViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.io.File
@@ -179,39 +164,6 @@ class GenericManga(
         ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }*/
 
         downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
-    }
-
-    @OptIn(
-        ExperimentalMaterial3Api::class,
-        ExperimentalComposeUiApi::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalFoundationApi::class
-    )
-    context(navGraph: EntryProviderScope<NavKey>)
-    override fun globalNav3Setup() {
-        navGraph.entry<ReadViewModel.MangaReader> {
-            ReadView(
-                viewModel = koinViewModel { parametersOf(it) }
-            )
-        }
-    }
-
-    context(navGraph: EntryProviderScope<NavKey>)
-    override fun settingsNav3Setup() {
-        navGraph.entry<DownloadRoute> {
-            DownloadScreen()
-        }
-
-        navGraph.entry<ImageLoaderSettingsRoute> {
-            ImageLoaderSettings(mangaSettingsHandling)
-        }
-
-        navGraph.entry<ReaderSettingsScreen> {
-            ReaderSettings(
-                mangaSettingsHandling = mangaSettingsHandling,
-                settingsHandling = settingsHandling
-            )
-        }
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {

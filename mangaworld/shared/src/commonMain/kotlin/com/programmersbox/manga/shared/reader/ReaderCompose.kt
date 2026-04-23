@@ -76,7 +76,6 @@ import com.programmersbox.manga.shared.reader.curl.rememberPageCurlConfig
 import com.programmersbox.manga.shared.reader.curl.rememberPageCurlState
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
@@ -247,8 +246,6 @@ fun ReadView(
             )
         }
     }
-
-    val hazeState = remember { HazeState() }
 
     ModalNavigationDrawer(
         drawerState = drawerState,

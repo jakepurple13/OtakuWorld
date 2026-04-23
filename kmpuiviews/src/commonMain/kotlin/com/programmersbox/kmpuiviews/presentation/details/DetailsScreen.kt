@@ -6,7 +6,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -18,12 +17,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -45,7 +43,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,7 +53,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -79,8 +75,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
@@ -663,9 +658,8 @@ fun ChapterItem(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .background(
                             color = MaterialTheme.colorScheme.primaryContainer,
@@ -677,233 +671,60 @@ fun ChapterItem(
                     Icon(
                         icon,
                         contentDescription = null,
-                        modifier = Modifier.scale(scale)
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }
                     )
                 }
             }
         },
         modifier = modifier.fillMaxWidth()
     ) {
-        val body: @Composable ColumnScope.() -> Unit = {
-            Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                ListItem(
-                    leadingContent = {
-                        updatedAnimated.AnimatedVisibility(
-                            { !it },
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                            )
-                        }
-                    },
-                    headlineContent = {
-                        Text(
-                            c.name,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    },
-                    overlineContent = c
-                        .uploaded
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { { Text(it) } },
-                    trailingContent = {
-                        IconButton(
-                            onClick = { detailsActions.shareChapter(c) }
-                        ) {
-                            Icon(
-                                Icons.Default.Share,
-                                null,
-                            )
-                        }
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
+        ListItem(
+            onClick = { detailsActions.onClick(c) },
+            onLongClick = { options = true },
+            leadingContent = {
+                updatedAnimated.AnimatedVisibility(
+                    { !it },
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    )
+                }
+            },
+            content = {
+                Text(
+                    c.name,
+                    style = MaterialTheme.typography.bodyLarge
                 )
-            }
-        }
-
-        val elevatedCardColors = CardDefaults.elevatedCardColors()
-        val outlinedColors = CardDefaults.outlinedCardColors()
-
-        OutlinedCard(
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = updatedAnimated.animateColor {
-                    if (it)
-                        outlinedColors.containerColor
-                    else
-                        elevatedCardColors.containerColor
-                }.value,
-                contentColor = updatedAnimated.animateColor {
-                    if (it)
-                        outlinedColors.contentColor
-                    else
-                        elevatedCardColors.contentColor
-                }.value,
+            },
+            overlineContent = c
+                .uploaded
+                .takeIf { it.isNotEmpty() }
+                ?.let { { Text(it) } },
+            trailingContent = {
+                IconButton(
+                    onClick = { detailsActions.shareChapter(c) }
+                ) {
+                    Icon(
+                        Icons.Default.Share,
+                        null,
+                    )
+                }
+            },
+            selected = !updatedIsRead,
+            colors = ListItemDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
             ),
             modifier = Modifier
+                .wrapContentHeight()
                 .fillMaxWidth()
-                .combinedClickable(
-                    indication = ripple(),
-                    interactionSource = null,
-                    onLongClick = { options = true },
-                    onClick = { detailsActions.onClick(c) }
-                ),
-            content = body
         )
-        /*ElevatedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(
-                    indication = ripple(),
-                    interactionSource = null,
-                    onLongClick = { options = true },
-                    onClick = {
-                        //markAs(c, !updatedIsRead)
-                        chapterClick()
-                    }
-                ),
-        ) {
-            Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                //if (shareChapter) {
-                ListItem(
-                    leadingContent = {
-                        AnimatedVisibility(
-                            !updatedIsRead,
-                            enter = fadeIn() + expandHorizontally(),
-                            exit = fadeOut() + shrinkHorizontally()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                            )
-                        }
-                    },
-                    headlineContent = {
-                        Text(
-                            c.name,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    },
-                    overlineContent = c
-                        .uploaded
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { { Text(it) } },
-                    trailingContent = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    qrCodeRepository.shareUrl(
-                                        url = c.url,
-                                        title = c.name
-                                    )
-                                }
-                            }
-                        ) {
-                            Icon(
-                                Icons.Default.Share,
-                                null,
-                            )
-                        }
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                )
-                *//*} else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = updatedIsRead,
-                            onCheckedChange = { b -> markAs(c, b) },
-                        )
-
-                        Text(
-                            c.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
-                }*//*
-
-                *//*Text(
-                    c.uploaded,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(horizontal = 16.dp)
-                        .padding(4.dp)
-                )*//*
-
-                *//*Row(
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(horizontal = 16.dp)
-                ) {
-                    if (infoModel.source.canPlay) {
-                        OutlinedButton(
-                            onClick = ::chapterClick,
-                            shapes = ButtonDefaults.shapes(),
-                            border = BorderStroke(1.dp, LocalContentColor.current),
-                            modifier = Modifier
-                                .weight(1f, true)
-                                .padding(horizontal = 4.dp)
-                        ) {
-                            Column {
-                                Icon(
-                                    Icons.Default.PlayArrow,
-                                    "Play",
-                                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                                )
-                                Text(
-                                    stringResource(Res.string.read),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-                            }
-                        }
-                    }
-
-                    if (infoModel.source.canDownload && showDownload()) {
-                        OutlinedButton(
-                            onClick = {
-                                genericInfo.downloadChapter(c, chapters, infoModel, navController)
-                                insertRecent()
-                                if (!updatedIsRead) markAs(c, true)
-                            },
-                            border = BorderStroke(1.dp, LocalContentColor.current),
-                            shapes = ButtonDefaults.shapes(),
-                            modifier = Modifier
-                                .weight(1f, true)
-                                .padding(horizontal = 4.dp)
-                        ) {
-                            Column {
-                                Icon(
-                                    Icons.Default.Download,
-                                    "Download",
-                                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                                )
-                                Text(
-                                    stringResource(Res.string.download_chapter),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-                            }
-                        }
-                    }
-                }*//*
-            }
-        }*/
     }
 }
 

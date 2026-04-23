@@ -71,6 +71,7 @@ abstract class OtakuApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         //If firebase is giving issues, comment these lines out
+        //ComposeRuntimeFlags.isLinkBufferComposerEnabled = true
         ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = true
         Composer.setDiagnosticStackTraceMode(if (BuildConfig.DEBUG) ComposeStackTraceMode.SourceInformation else ComposeStackTraceMode.None)
 

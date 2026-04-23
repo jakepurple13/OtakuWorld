@@ -85,6 +85,7 @@ interface KmpGenericInfo {
 
     fun debugMenuItem(): List<@Composable LazyItemScope.() -> Unit> = emptyList()
 
+    //TODO: Remove Nav2 completely!!!
     context(navGraph: NavGraphBuilder)
     fun globalNavSetup() = Unit
 

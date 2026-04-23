@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
@@ -274,6 +276,39 @@ abstract class GenericSharedManga(
                     mangaSettingsHandling = mangaSettingsHandling,
                 )
             }
+        }
+    }
+
+    @OptIn(
+        ExperimentalMaterial3Api::class,
+        ExperimentalComposeUiApi::class,
+        ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
+    context(navGraph: EntryProviderScope<NavKey>)
+    override fun globalNav3Setup() {
+        navGraph.entry<ReadViewModel.MangaReader> {
+            ReadView(
+                viewModel = koinViewModel { parametersOf(it) }
+            )
+        }
+    }
+
+    context(navGraph: EntryProviderScope<NavKey>)
+    override fun settingsNav3Setup() {
+        navGraph.entry<DownloadRoute> {
+            DownloadScreen()
+        }
+
+        navGraph.entry<ImageLoaderSettingsRoute> {
+            ImageLoaderSettings(mangaSettingsHandling)
+        }
+
+        navGraph.entry<ReaderSettingsScreen> {
+            ReaderSettings(
+                mangaSettingsHandling = mangaSettingsHandling,
+                settingsHandling = settingsHandling
+            )
         }
     }
 
