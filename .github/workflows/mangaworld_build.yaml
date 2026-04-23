@@ -40,6 +40,9 @@ jobs:
         id: buildMangaApks
         run: ./gradlew mangaworld:assembleRelease
 
+      - name: Find APKs
+        run: find . -type f -name "*.apk"
+
       - uses: kevin-david/zipalign-sign-android-release@v2.0.2
         name: Sign app APK
         id: manga_sign
