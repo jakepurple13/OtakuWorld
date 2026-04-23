@@ -38,7 +38,7 @@ jobs:
 
       - name: Build MangaWorld artifacts
         id: buildMangaApks
-        run: ./gradlew mangaworld:assembleRelease mangaworld:assembleReleaseMinified
+        run: ./gradlew mangaworld:assembleRelease
 
       - name: Find APKs
         run: find . -type f -name "*.apk"
