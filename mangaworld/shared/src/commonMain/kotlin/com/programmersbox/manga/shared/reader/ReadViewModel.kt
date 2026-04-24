@@ -222,10 +222,11 @@ class ReadViewModel(
     fun appendChapter(chapterListIndex: Int) {
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return
         if (chapterListIndex in loadedChapterWindow) return
+        loadedChapterWindow.addLast(chapterListIndex)
 
         viewModelScope.launch {
-            // Evict oldest loaded chapter if window is full
-            if (loadedChapterWindow.size >= WINDOW_SIZE) {
+            // Evict oldest loaded chapter if window is exceeded
+            if (loadedChapterWindow.size > WINDOW_SIZE) {
                 val dropped = loadedChapterWindow.removeFirst()
                 val firstKeptIdx = pageItems.indexOfFirst { item ->
                     when (item) {
@@ -236,8 +237,7 @@ class ReadViewModel(
                 if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
             }
 
-            val fromChapterListIndex = loadedChapterWindow.last()
-            loadedChapterWindow.addLast(chapterListIndex)
+            val fromChapterListIndex = loadedChapterWindow[loadedChapterWindow.size - 2]
             loadingChapters = loadingChapters + chapterListIndex
 
             pageItems.add(PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex))

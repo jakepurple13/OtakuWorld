@@ -137,8 +137,8 @@ fun ReadView(
     val currentPage by remember {
         derivedStateOf {
             val globalIndex = when (readerType) {
-                ReaderType.List, ReaderType.FlipPager -> listState.firstVisibleItemIndex
-                ReaderType.Pager -> pagerState.currentPage
+                ReaderType.List -> listState.firstVisibleItemIndex
+                ReaderType.FlipPager, ReaderType.Pager -> pagerState.currentPage
                 ReaderType.CurlPager -> curlState.current
             }
             (globalIndex - currentChapterPageOffset).coerceAtLeast(0)
@@ -183,9 +183,20 @@ fun ReadView(
     }
 
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect {
-            listState.scrollToItem(it)
-            runCatching { curlState.snapTo(it) }
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            listState.scrollToItem(page)
+            runCatching { curlState.snapTo(page) }
+            val item = viewModel.pageItems.getOrNull(page)
+            if (item is PageItem.ChapterTransition) {
+                when {
+                    item.toChapterListIndex < item.fromChapterListIndex ->
+                        viewModel.appendChapter(item.toChapterListIndex)
+                    item.toChapterListIndex > item.fromChapterListIndex -> {
+                        val inserted = viewModel.prependChapter(item.toChapterListIndex)
+                        if (inserted > 0) pagerState.scrollToPage(page + inserted)
+                    }
+                }
+            }
         }
     }
 
@@ -220,25 +231,6 @@ fun ReadView(
                                         scrollOffset = listState.firstVisibleItemScrollOffset
                                     )
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-    }
-
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }
-            .collect { page ->
-                val item = viewModel.pageItems.getOrNull(page)
-                if (item is PageItem.ChapterTransition) {
-                    when {
-                        item.toChapterListIndex < item.fromChapterListIndex ->
-                            viewModel.appendChapter(item.toChapterListIndex)
-                        item.toChapterListIndex > item.fromChapterListIndex -> {
-                            val inserted = viewModel.prependChapter(item.toChapterListIndex)
-                            if (inserted > 0) {
-                                pagerState.scrollToPage(pagerState.currentPage + inserted)
                             }
                         }
                     }
@@ -596,6 +588,7 @@ fun PagerView(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FlipPagerView(
     pagerState: PagerState,
@@ -631,7 +624,7 @@ fun FlipPagerView(
     }
 }
 
-@OptIn(ExperimentalPageCurlApi::class)
+@OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CurlPagerView(
     pagerState: PageCurlState,
