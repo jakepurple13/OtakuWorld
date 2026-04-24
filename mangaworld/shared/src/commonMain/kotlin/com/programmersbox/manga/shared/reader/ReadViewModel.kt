@@ -124,7 +124,7 @@ class ReadViewModel(
     var loadingChapters by mutableStateOf(emptySet<Int>())
     val isLoadingPages: Boolean get() = loadingChapters.isNotEmpty()
 
-    val loadedChapterWindow = ArrayDeque<Int>()
+    private val loadedChapterWindow = ArrayDeque<Int>()
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
@@ -227,7 +227,7 @@ class ReadViewModel(
 
         viewModelScope.launch {
             // Evict oldest loaded chapter if window is exceeded
-            if (loadedChapterWindow.size > WINDOW_SIZE) {
+            while (loadedChapterWindow.size > WINDOW_SIZE) {
                 val dropped = loadedChapterWindow.removeFirst()
                 val firstKeptIdx = pageItems.indexOfFirst { item ->
                     when (item) {
