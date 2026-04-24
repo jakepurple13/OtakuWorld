@@ -223,6 +223,7 @@ class ReadViewModel(
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return
         if (chapterListIndex in loadedChapterWindow) return
         loadedChapterWindow.addLast(chapterListIndex)
+        val fromChapterListIndex = loadedChapterWindow[loadedChapterWindow.size - 2]
 
         viewModelScope.launch {
             // Evict oldest loaded chapter if window is exceeded
@@ -237,7 +238,6 @@ class ReadViewModel(
                 if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
             }
 
-            val fromChapterListIndex = loadedChapterWindow[loadedChapterWindow.size - 2]
             loadingChapters = loadingChapters + chapterListIndex
 
             pageItems.add(PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex))
