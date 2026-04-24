@@ -156,7 +156,10 @@ class ReadViewModel(
 
     var firstScroll by mutableStateOf(true)
 
-    fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
+    fun addChapterToWatched(
+        newChapter: Int,
+        chapter: () -> Unit,
+    ) {
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
@@ -180,7 +183,9 @@ class ReadViewModel(
                 }
                 .catch { exceptionDao.insertException(it) }
                 .onEach { urls ->
+                    pageItems.add(PageItem.ChapterTransition(newChapter + 1, newChapter))
                     pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, newChapter, i) })
+                    pageItems.add(PageItem.ChapterTransition(newChapter, newChapter - 1))
                     heatMapDao.upsertHeatMap()
                 }
                 .onCompletion { loadingChapters = loadingChapters - newChapter }
@@ -212,7 +217,9 @@ class ReadViewModel(
             }
             .catch { exceptionDao.insertException(it) }
             .onEach { urls ->
+                pageItems.add(PageItem.ChapterTransition(chapterIndex + 1, chapterIndex))
                 pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i) })
+                pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
                 heatMapDao.upsertHeatMap()
             }
             .onCompletion { loadingChapters = loadingChapters - chapterIndex }
@@ -240,7 +247,8 @@ class ReadViewModel(
 
             loadingChapters = loadingChapters + chapterListIndex
 
-            pageItems.add(PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex))
+            val newPageTransition = PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex)
+            if (newPageTransition !in pageItems) pageItems.add(newPageTransition)
 
             list.getOrNull(chapterListIndex)
                 ?.getChapterInfo()
@@ -251,6 +259,7 @@ class ReadViewModel(
                 ?.catch { exceptionDao.insertException(it) }
                 ?.onEach { urls ->
                     pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i) })
+                    pageItems.add(PageItem.ChapterTransition(chapterListIndex, chapterListIndex - 1))
                     heatMapDao.upsertHeatMap()
                 }
                 ?.onCompletion {
@@ -269,6 +278,8 @@ class ReadViewModel(
     }
 
     suspend fun prependChapter(chapterListIndex: Int): Int {
+        println("prependChapter: $chapterListIndex")
+        println("loadedChapterWindow: $loadedChapterWindow")
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return 0
         if (chapterListIndex in loadedChapterWindow) return 0
 
@@ -297,7 +308,8 @@ class ReadViewModel(
                 storages.mapNotNull(KmpStorage::link)
             }
             ?.catch { exceptionDao.insertException(it) }
-            ?.collect { urls ->
+            ?.firstOrNull()
+            ?.let { urls ->
                 newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i) })
                 heatMapDao.upsertHeatMap()
             }
@@ -340,6 +352,7 @@ class ReadViewModel(
             ?.catch { exceptionDao.insertException(it) }
             ?.onEach { urls ->
                 pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i) })
+                pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
                 heatMapDao.upsertHeatMap()
             }
             ?.onCompletion { loadingChapters = loadingChapters - chapterIndex }

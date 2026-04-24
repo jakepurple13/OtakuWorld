@@ -20,15 +20,19 @@ class ExampleService : KmpApiService {
             description = "Example",
             url = "https://example.com/",
             imageUrl = "https://picsum.photos/200/300",
-            chapters = listOf(
-                KmpChapterModel(
-                    name = "Example",
-                    url = "https://example.com/",
-                    uploaded = "Example",
-                    sourceUrl = "https://example.com/",
-                    source = this
-                )
-            ),
+            chapters = buildList {
+                repeat(10) {
+                    add(
+                        KmpChapterModel(
+                            name = "Example $it",
+                            url = "https://example$it.com/",
+                            uploaded = "Example",
+                            sourceUrl = "https://example.com/",
+                            source = this@ExampleService
+                        )
+                    )
+                }
+            }.reversed(),
             source = this,
             genres = listOf("Example"),
             alternativeNames = listOf("Example"),
@@ -40,7 +44,21 @@ class ExampleService : KmpApiService {
             KmpStorage(
                 source = chapterModel.url,
                 link = "https://picsum.photos/200/300",
-                filename = chapterModel.name,
+                filename = "Page 1",
+                sub = "Example",
+                quality = "Example",
+            ),
+            KmpStorage(
+                source = chapterModel.url,
+                link = "https://picsum.photos/200/300",
+                filename = "Page 2",
+                sub = "Example",
+                quality = "Example",
+            ),
+            KmpStorage(
+                source = chapterModel.url,
+                link = "https://picsum.photos/200/300",
+                filename = "Page 3",
                 sub = "Example",
                 quality = "Example",
             )

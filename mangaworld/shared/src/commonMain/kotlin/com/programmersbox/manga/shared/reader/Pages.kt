@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeightIn
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -35,39 +34,49 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ChapterTransitionItem(
-    fromChapterName: String,
+    fromChapterName: String?,
     toChapterName: String?,
-    isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Box(
+        contentAlignment = Alignment.Center,
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 300.dp)
-            .padding(horizontal = 24.dp, vertical = 32.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 24.dp, vertical = 32.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    "Finished",
-                    style = MaterialTheme.typography.labelMedium,
+            when {
+                fromChapterName == null -> Text(
+                    "No more chapters",
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                Text(
-                    fromChapterName,
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+
+                else -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            "Finished",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                        Text(
+                            fromChapterName,
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
 
             HorizontalDivider()
@@ -96,9 +105,6 @@ internal fun ChapterTransitionItem(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
-                    }
-                    if (isLoading) {
-                        CircularWavyProgressIndicator()
                     }
                 }
             }

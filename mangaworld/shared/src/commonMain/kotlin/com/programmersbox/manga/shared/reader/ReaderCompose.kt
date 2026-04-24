@@ -170,7 +170,7 @@ fun ReadView(
     val pagerShowItems by remember {
         derivedStateOf {
             readerType != ReaderType.List &&
-            viewModel.pageItems.getOrNull(pagerState.currentPage) is PageItem.ChapterTransition
+                    viewModel.pageItems.getOrNull(pagerState.currentPage) is PageItem.ChapterTransition
         }
     }
 
@@ -191,10 +191,9 @@ fun ReadView(
                 when {
                     item.toChapterListIndex < item.fromChapterListIndex ->
                         viewModel.appendChapter(item.toChapterListIndex)
-                    item.toChapterListIndex > item.fromChapterListIndex -> {
-                        val inserted = viewModel.prependChapter(item.toChapterListIndex)
-                        if (inserted > 0) pagerState.scrollToPage(page + inserted)
-                    }
+
+                    item.toChapterListIndex > item.fromChapterListIndex ->
+                        viewModel.prependChapter(item.toChapterListIndex)
                 }
             }
         }
@@ -223,15 +222,9 @@ fun ReadView(
                         when {
                             item.toChapterListIndex < item.fromChapterListIndex ->
                                 viewModel.appendChapter(item.toChapterListIndex)
-                            item.toChapterListIndex > item.fromChapterListIndex -> {
-                                val inserted = viewModel.prependChapter(item.toChapterListIndex)
-                                if (inserted > 0) {
-                                    listState.requestScrollToItem(
-                                        index = listState.firstVisibleItemIndex + inserted,
-                                        scrollOffset = listState.firstVisibleItemScrollOffset
-                                    )
-                                }
-                            }
+
+                            item.toChapterListIndex > item.fromChapterListIndex ->
+                                viewModel.prependChapter(item.toChapterListIndex)
                         }
                     }
                 }
@@ -374,6 +367,7 @@ fun ReadView(
                             ?.name
                             ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
+                        onRefreshClick = viewModel::refresh,
                         showBlur = blurKind.showBlur,
                         windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
                         modifier = Modifier.setBlurKind(
@@ -453,7 +447,7 @@ fun ReadView(
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = viewModel.isLoadingPages,
-                    onRefresh = viewModel::refresh,
+                    onRefresh = {}/*viewModel::refresh*/,
                     paddingValues = p
                 ) {
                     val spacing = dpToPx(paddingPage).dp
@@ -575,14 +569,15 @@ fun PagerView(
                 imageLoaderType = imageLoaderType,
                 colorFilter = colorFilter
             )
+
             is PageItem.ChapterTransition -> Box(modifier = Modifier.fillMaxSize()) {
                 ChapterTransitionItem(
-                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name.orEmpty(),
+                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name,
                     toChapterName = vm.list.getOrNull(item.toChapterListIndex)?.name,
-                    isLoading = vm.loadingChapters.contains(item.toChapterListIndex),
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
+
             null -> Box(modifier = Modifier.fillMaxSize())
         }
     }
@@ -690,14 +685,14 @@ private fun LazyListScope.reader(
                     colorFilter = colorFilter
                 )
             }
+
             is PageItem.ChapterTransition -> item(
-                key = "transition_${item.fromChapterListIndex}_${item.toChapterListIndex}",
+                key = "transition_${item.fromChapterListIndex}_${item.toChapterListIndex}$index",
                 contentType = "transition"
             ) {
                 ChapterTransitionItem(
-                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name.orEmpty(),
+                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name,
                     toChapterName = vm.list.getOrNull(item.toChapterListIndex)?.name,
-                    isLoading = vm.loadingChapters.contains(item.toChapterListIndex),
                 )
             }
         }
