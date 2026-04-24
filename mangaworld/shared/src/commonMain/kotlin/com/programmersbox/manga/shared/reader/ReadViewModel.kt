@@ -81,7 +81,7 @@ class ReadViewModel(
     }
 
     companion object {
-        const val WINDOW_SIZE = 3
+        private const val WINDOW_SIZE = 3
 
         fun navigateToMangaReader(
             navController: NavigationActions,
@@ -227,10 +227,13 @@ class ReadViewModel(
             // Evict oldest loaded chapter if window is full
             if (loadedChapterWindow.size >= WINDOW_SIZE) {
                 val dropped = loadedChapterWindow.removeFirst()
-                val firstKeptIdx = pageItems.indexOfFirst {
-                    it is PageItem.Page && it.chapterListIndex != dropped
+                val firstKeptIdx = pageItems.indexOfFirst { item ->
+                    when (item) {
+                        is PageItem.Page -> item.chapterListIndex != dropped
+                        is PageItem.ChapterTransition -> item.fromChapterListIndex != dropped
+                    }
                 }
-                if (firstKeptIdx > 0) repeat(firstKeptIdx) { pageItems.removeAt(0) }
+                if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
             }
 
             val fromChapterListIndex = loadedChapterWindow.last()
@@ -249,6 +252,9 @@ class ReadViewModel(
                 ?.onEach { urls ->
                     pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i) })
                     heatMapDao.upsertHeatMap()
+                }
+                ?.onCompletion {
+                    loadingChapters = loadingChapters - chapterListIndex
                     list.getOrNull(chapterListIndex)?.let { item ->
                         if (!favoritesRepository.isIncognito(item.source.serviceName)) {
                             favoritesRepository.addWatched(
@@ -256,11 +262,9 @@ class ReadViewModel(
                             )
                         }
                     }
+                    addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
                 }
-                ?.onCompletion { loadingChapters = loadingChapters - chapterListIndex }
                 ?.launchIn(viewModelScope)
-
-            addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         }
     }
 
@@ -296,16 +300,16 @@ class ReadViewModel(
             ?.collect { urls ->
                 newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i) })
                 heatMapDao.upsertHeatMap()
-                list.getOrNull(chapterListIndex)?.let { item ->
-                    if (!favoritesRepository.isIncognito(item.source.serviceName)) {
-                        favoritesRepository.addWatched(
-                            ChapterWatched(item.url, item.name, mangaUrl)
-                        )
-                    }
-                }
             }
 
         loadingChapters = loadingChapters - chapterListIndex
+        list.getOrNull(chapterListIndex)?.let { item ->
+            if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                favoritesRepository.addWatched(
+                    ChapterWatched(item.url, item.name, mangaUrl)
+                )
+            }
+        }
 
         val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
         pageItems.addAll(0, insertedItems)
