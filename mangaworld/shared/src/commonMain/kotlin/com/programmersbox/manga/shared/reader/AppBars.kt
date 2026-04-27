@@ -282,7 +282,7 @@ private fun NextButton(
     nextChapter: () -> Unit,
 ) {
     Button(
-        onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
+        onClick = { vm.loadNextChapter(nextChapter) },
         modifier = modifier
     ) { Text("Next") }
 }
@@ -294,7 +294,7 @@ private fun PreviousButton(
     previousChapter: () -> Unit,
 ) {
     TextButton(
-        onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
+        onClick = { vm.loadPreviousChapter(previousChapter) },
         modifier = modifier
     ) { Text("Previous") }
 }
@@ -306,7 +306,7 @@ private fun PreviousIconButton(
     previousChapter: () -> Unit,
 ) {
     IconButton(
-        onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
+        onClick = { vm.loadPreviousChapter(previousChapter) },
         modifier = modifier
     ) { Icon(Icons.Default.ArrowBack, null) }
 }
@@ -328,7 +328,7 @@ private fun NextIconButton(
     nextChapter: () -> Unit,
 ) {
     FilledIconButton(
-        onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
+        onClick = { vm.loadNextChapter(nextChapter) },
         modifier = modifier
     ) { Icon(Icons.Default.ArrowForward, null) }
 }

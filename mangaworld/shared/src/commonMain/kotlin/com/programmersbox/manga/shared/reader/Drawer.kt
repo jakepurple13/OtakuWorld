@@ -97,8 +97,7 @@ internal fun DrawerView(
                             TextButton(
                                 onClick = {
                                     showChangeChapter = false
-                                    readVm.currentChapter = i
-                                    readVm.addChapterToWatched(readVm.currentChapter, showToast)
+                                    readVm.addChapterToWatched(i, showToast)
                                 }
                             ) { Text("Yes") }
                         },

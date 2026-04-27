@@ -156,10 +156,15 @@ class ReadViewModel(
 
     var firstScroll by mutableStateOf(true)
 
-    fun addChapterToWatched(
-        newChapter: Int,
-        chapter: () -> Unit,
-    ) {
+    fun loadPreviousChapter(chapter: () -> Unit) {
+        loadChapter(++currentChapter, chapter)
+    }
+
+    fun loadNextChapter(chapter: () -> Unit) {
+        loadChapter(--currentChapter, chapter)
+    }
+
+    private fun loadChapter(newChapter: Int, chapter: () -> Unit) {
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
@@ -191,6 +196,13 @@ class ReadViewModel(
                 .onCompletion { loadingChapters = loadingChapters - newChapter }
                 .launchIn(viewModelScope)
         }
+    }
+
+    fun addChapterToWatched(
+        newChapter: Int,
+        chapter: () -> Unit,
+    ) {
+        loadChapter(newChapter, chapter)
     }
 
     fun addToFavorites() {
@@ -250,6 +262,12 @@ class ReadViewModel(
             val newPageTransition = PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex)
             if (newPageTransition !in pageItems) pageItems.add(newPageTransition)
 
+            list.getOrNull(fromChapterListIndex)?.let { item ->
+                if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                    favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
+                }
+            }
+
             list.getOrNull(chapterListIndex)
                 ?.getChapterInfo()
                 ?.map { storages ->
@@ -264,13 +282,13 @@ class ReadViewModel(
                 }
                 ?.onCompletion {
                     loadingChapters = loadingChapters - chapterListIndex
-                    list.getOrNull(chapterListIndex)?.let { item ->
+                    /*list.getOrNull(chapterListIndex)?.let { item ->
                         if (!favoritesRepository.isIncognito(item.source.serviceName)) {
                             favoritesRepository.addWatched(
                                 ChapterWatched(item.url, item.name, mangaUrl)
                             )
                         }
-                    }
+                    }*/
                     addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
                 }
                 ?.launchIn(viewModelScope)
@@ -316,11 +334,11 @@ class ReadViewModel(
 
         loadingChapters = loadingChapters - chapterListIndex
         list.getOrNull(chapterListIndex)?.let { item ->
-            if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+            /*if (!favoritesRepository.isIncognito(item.source.serviceName)) {
                 favoritesRepository.addWatched(
                     ChapterWatched(item.url, item.name, mangaUrl)
                 )
-            }
+            }*/
         }
 
         val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)

@@ -396,8 +396,8 @@ fun ReadView(
                         //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onNextChapter = { viewModel.addChapterToWatched(--viewModel.currentChapter, ::showToast) },
-                            onPreviousChapter = { viewModel.addChapterToWatched(++viewModel.currentChapter, ::showToast) },
+                            onNextChapter = { viewModel.loadNextChapter(::showToast) },
+                            onPreviousChapter = { viewModel.loadPreviousChapter(::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = blurKind.showBlur,
                             isAmoledMode = isAmoledMode,
