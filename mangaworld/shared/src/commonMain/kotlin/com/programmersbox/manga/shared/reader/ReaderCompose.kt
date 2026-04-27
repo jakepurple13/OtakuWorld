@@ -189,6 +189,7 @@ fun ReadView(
             val item = viewModel.pageItems.getOrNull(page)
             if (item is PageItem.ChapterTransition) {
                 when {
+                    item.fromChapterListIndex == 0 -> viewModel.chapterRead(item)
                     item.toChapterListIndex < item.fromChapterListIndex ->
                         viewModel.appendChapter(item.toChapterListIndex)
 
@@ -220,6 +221,7 @@ fun ReadView(
                     val item = viewModel.pageItems.getOrNull(itemInfo.index) ?: return@forEach
                     if (item is PageItem.ChapterTransition) {
                         when {
+                            item.fromChapterListIndex == 0 -> viewModel.chapterRead(item)
                             item.toChapterListIndex < item.fromChapterListIndex ->
                                 viewModel.appendChapter(item.toChapterListIndex)
 

@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -243,6 +244,17 @@ class ReadViewModel(
             }
             .onCompletion { loadingChapters = loadingChapters - chapterIndex }
             .launchIn(viewModelScope)
+    }
+
+    fun chapterRead(item: PageItem.ChapterTransition) {
+        viewModelScope.launch {
+            list.getOrNull(item.fromChapterListIndex)?.let { item ->
+                if (chapters.fastAny { it.url == item.url }) return@let
+                if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                    favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
+                }
+            }
+        }
     }
 
     fun appendChapter(chapterListIndex: Int) {
