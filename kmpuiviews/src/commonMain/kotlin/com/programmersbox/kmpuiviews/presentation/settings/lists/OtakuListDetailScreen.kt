@@ -106,6 +106,9 @@ import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItem
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
@@ -126,10 +129,6 @@ import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
 import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -215,7 +214,7 @@ fun OtakuCustomListScreen(
     removeSecurityItem: (String) -> Unit,
     dao: ListRepository = koinInject(),
 ) {
-    val hazeState = remember { HazeState() }
+    val blurKindState = rememberBlurKindState()
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -453,15 +452,12 @@ fun OtakuCustomListScreen(
                             SearchBarDefaults.inputFieldColors()
                     )
                 ),
-                modifier = Modifier.let {
-                    if (showBlur)
-                        it.hazeEffect(
-                            hazeState,
-                            HazeMaterials.regular(MaterialTheme.colorScheme.surface)
-                        ) {
-                            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                        } else it
-                },
+                modifier = Modifier.setBlurKind(
+                    blurKindState = blurKindState,
+                    hazeScope = {
+                        progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                    }
+                ),
             ) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(1),
@@ -498,7 +494,7 @@ fun OtakuCustomListScreen(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .padding(vertical = 4.dp)
-                .hazeSource(state = hazeState)
+                .setBlurKindSource(blurKindState)
         ) {
             when (val state = viewModel.items) {
                 is OtakuListState.BySource if state.items.isNotEmpty() -> {
