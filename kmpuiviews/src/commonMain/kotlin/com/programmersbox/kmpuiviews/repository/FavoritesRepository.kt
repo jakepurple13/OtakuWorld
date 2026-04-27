@@ -119,6 +119,10 @@ class FavoritesRepository(
         dao.getAllChapters(url)
     ) { f, d -> (f + d).distinctBy { it.url } }
 
+    fun getChaptersLocal(
+        url: String,
+    ) = dao.getAllChapters(url)
+
     fun getModel(
         url: String,
         fireListenerClosable: FireListenerClosable,

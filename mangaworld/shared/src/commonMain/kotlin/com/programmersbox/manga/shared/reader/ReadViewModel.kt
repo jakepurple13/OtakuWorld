@@ -135,6 +135,8 @@ class ReadViewModel(
         val shouldShow: Boolean = !hasShown && count > FAVORITE_CHECK && !isFavorite
     }
 
+    var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+
     init {
         val url = chapterHolder.chapterModel?.url ?: mangaReader.mangaUrl
         list = chapterHolder.chapters.orEmpty()
@@ -149,6 +151,11 @@ class ReadViewModel(
             )
             .dispatchIo()
             .onEach { addToFavorites = addToFavorites.copy(isFavorite = it) }
+            .launchIn(viewModelScope)
+
+        favoritesRepository
+            .getChaptersLocal(mangaUrl)
+            .onEach { chapters = it }
             .launchIn(viewModelScope)
     }
 
