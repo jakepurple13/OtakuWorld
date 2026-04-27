@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
@@ -70,6 +71,7 @@ fun ReaderTopBar(
     onSettingsClick: () -> Unit,
     showBlur: Boolean,
     modifier: Modifier = Modifier,
+    onRefreshClick: () -> Unit = {},
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
     TopAppBar(
@@ -84,6 +86,9 @@ fun ReaderTopBar(
             )
         },
         actions = {
+            IconButton(
+                onClick = onRefreshClick,
+            ) { Icon(Icons.Default.Refresh, null) }
             IconButton(
                 onClick = onSettingsClick,
             ) { Icon(Icons.Default.Settings, null) }
@@ -277,7 +282,7 @@ private fun NextButton(
     nextChapter: () -> Unit,
 ) {
     Button(
-        onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
+        onClick = { vm.loadNextChapter(nextChapter) },
         modifier = modifier
     ) { Text("Next") }
 }
@@ -289,7 +294,7 @@ private fun PreviousButton(
     previousChapter: () -> Unit,
 ) {
     TextButton(
-        onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
+        onClick = { vm.loadPreviousChapter(previousChapter) },
         modifier = modifier
     ) { Text("Previous") }
 }
@@ -301,7 +306,7 @@ private fun PreviousIconButton(
     previousChapter: () -> Unit,
 ) {
     IconButton(
-        onClick = { vm.addChapterToWatched(++vm.currentChapter, previousChapter) },
+        onClick = { vm.loadPreviousChapter(previousChapter) },
         modifier = modifier
     ) { Icon(Icons.Default.ArrowBack, null) }
 }
@@ -323,7 +328,7 @@ private fun NextIconButton(
     nextChapter: () -> Unit,
 ) {
     FilledIconButton(
-        onClick = { vm.addChapterToWatched(--vm.currentChapter, nextChapter) },
+        onClick = { vm.loadNextChapter(nextChapter) },
         modifier = modifier
     ) { Icon(Icons.Default.ArrowForward, null) }
 }

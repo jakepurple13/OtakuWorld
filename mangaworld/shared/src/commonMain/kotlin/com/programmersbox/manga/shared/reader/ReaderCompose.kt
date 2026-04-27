@@ -19,11 +19,11 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -35,6 +35,7 @@ import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -106,8 +107,6 @@ fun ReadView(
 
     val scope = rememberCoroutineScope()
 
-    val pages = viewModel.pageList
-
     val settings = LocalSettingsHandling.current
 
     val isAmoledMode by settings.rememberIsAmoledMode()
@@ -122,17 +121,35 @@ fun ReadView(
     val pagerState = rememberPagerState(
         initialPage = 0,
         initialPageOffsetFraction = 0f
-    ) { pages.size + 1 }
+    ) { viewModel.pageItems.size.coerceAtLeast(1) }
 
     val listState = rememberLazyListState()
     val curlState = rememberPageCurlState(initialCurrent = 0)
+
+    val currentChapterPageOffset by remember {
+        derivedStateOf {
+            viewModel.pageItems.indexOfFirst {
+                it is PageItem.Page && it.chapterListIndex == viewModel.currentChapter
+            }.coerceAtLeast(0)
+        }
+    }
+
     val currentPage by remember {
         derivedStateOf {
-            when (readerType) {
-                ReaderType.List, ReaderType.FlipPager -> listState.firstVisibleItemIndex
-                ReaderType.Pager -> pagerState.currentPage
+            val globalIndex = when (readerType) {
+                ReaderType.List -> listState.firstVisibleItemIndex
+                ReaderType.FlipPager, ReaderType.Pager -> pagerState.currentPage
                 ReaderType.CurlPager -> curlState.current
             }
+            (globalIndex - currentChapterPageOffset).coerceAtLeast(0)
+        }
+    }
+
+    val pagesInCurrentChapter by remember {
+        derivedStateOf {
+            viewModel.pageItems.count {
+                it is PageItem.Page && it.chapterListIndex == viewModel.currentChapter
+            }.coerceAtLeast(1)
         }
     }
 
@@ -150,7 +167,12 @@ fun ReadView(
     }
 
     val listShowItems by remember { derivedStateOf { listState.isScrolledToTheEnd() && readerType == ReaderType.List } }
-    val pagerShowItems by remember { derivedStateOf { pagerState.currentPage >= pages.size && readerType != ReaderType.List } }
+    val pagerShowItems by remember {
+        derivedStateOf {
+            readerType != ReaderType.List &&
+                    viewModel.pageItems.getOrNull(pagerState.currentPage) is PageItem.ChapterTransition
+        }
+    }
 
     val listIndex by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0 } }
     LaunchedEffect(listIndex, pagerState.currentPage, viewModel.showInfo) {
@@ -161,9 +183,19 @@ fun ReadView(
     }
 
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect {
-            listState.scrollToItem(it)
-            runCatching { curlState.snapTo(it) }
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            listState.scrollToItem(page)
+            runCatching { curlState.snapTo(page) }
+            val item = viewModel.pageItems.getOrNull(page)
+            if (item is PageItem.ChapterTransition) {
+                when {
+                    item.toChapterListIndex < item.fromChapterListIndex ->
+                        viewModel.appendChapter(item.toChapterListIndex)
+
+                    item.toChapterListIndex > item.fromChapterListIndex ->
+                        viewModel.prependChapter(item.toChapterListIndex)
+                }
+            }
         }
     }
 
@@ -179,6 +211,33 @@ fun ReadView(
             pagerState.scrollToPage(it)
             listState.scrollToItem(it)
         }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+            .collect { visibleItems ->
+                visibleItems.forEach { itemInfo ->
+                    val item = viewModel.pageItems.getOrNull(itemInfo.index) ?: return@forEach
+                    if (item is PageItem.ChapterTransition) {
+                        when {
+                            item.toChapterListIndex < item.fromChapterListIndex ->
+                                viewModel.appendChapter(item.toChapterListIndex)
+
+                            item.toChapterListIndex > item.fromChapterListIndex ->
+                                viewModel.prependChapter(item.toChapterListIndex)
+                        }
+                    }
+                }
+            }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index }
+            .collect { index ->
+                (viewModel.pageItems.getOrNull(index ?: return@collect) as? PageItem.Page)
+                    ?.chapterListIndex
+                    ?.let { viewModel.updateCurrentChapter(it) }
+            }
     }
 
     val showItems by remember { derivedStateOf { viewModel.showInfo || listShowItems || pagerShowItems } }
@@ -231,16 +290,25 @@ fun ReadView(
             onDismissRequest = { showBottomSheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
+            val currentChapterPageUrls by remember {
+                derivedStateOf {
+                    viewModel.pageItems
+                        .filterIsInstance<PageItem.Page>()
+                        .filter { it.chapterListIndex == viewModel.currentChapter }
+                        .map { it.url }
+                }
+            }
             SheetView(
                 readVm = viewModel,
                 onSheetHide = { showBottomSheet = false },
                 currentPage = currentPage,
-                pages = pages,
-                onPageChange = {
+                pages = currentChapterPageUrls,
+                onPageChange = { localIndex ->
+                    val globalIndex = currentChapterPageOffset + localIndex
                     when (readerType) {
-                        ReaderType.List, ReaderType.FlipPager -> listState.animateScrollToItem(it)
-                        ReaderType.Pager -> pagerState.animateScrollToPage(it)
-                        ReaderType.CurlPager -> curlState.snapTo(it)
+                        ReaderType.List, ReaderType.FlipPager -> scope.launch { listState.animateScrollToItem(globalIndex) }
+                        ReaderType.Pager -> scope.launch { pagerState.animateScrollToPage(globalIndex) }
+                        ReaderType.CurlPager -> scope.launch { curlState.snapTo(globalIndex) }
                     }
                 },
             )
@@ -299,6 +367,7 @@ fun ReadView(
                             ?.name
                             ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
+                        onRefreshClick = viewModel::refresh,
                         showBlur = blurKind.showBlur,
                         windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
                         modifier = Modifier.setBlurKind(
@@ -327,15 +396,15 @@ fun ReadView(
                         //key(scrollAlpha) {
                         FloatingBottomBar(
                             onPageSelectClick = { showBottomSheet = true },
-                            onNextChapter = { viewModel.addChapterToWatched(--viewModel.currentChapter, ::showToast) },
-                            onPreviousChapter = { viewModel.addChapterToWatched(++viewModel.currentChapter, ::showToast) },
+                            onNextChapter = { viewModel.loadNextChapter(::showToast) },
+                            onPreviousChapter = { viewModel.loadPreviousChapter(::showToast) },
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = blurKind.showBlur,
                             isAmoledMode = isAmoledMode,
                             chapterNumber = (viewModel.list.size - viewModel.currentChapter).toString(),
                             chapterCount = viewModel.list.size.toString(),
                             currentPage = currentPage,
-                            pages = animateIntAsState(pages.size).value,
+                            pages = animateIntAsState(pagesInCurrentChapter).value,
                             previousButtonEnabled = viewModel.currentChapter < viewModel.list.lastIndex && viewModel.list.size > 1,
                             nextButtonEnabled = viewModel.currentChapter > 0 && viewModel.list.size > 1,
                             modifier = Modifier
@@ -378,10 +447,18 @@ fun ReadView(
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = viewModel.isLoadingPages,
-                    onRefresh = viewModel::refresh,
+                    onRefresh = {}/*viewModel::refresh*/,
                     paddingValues = p
                 ) {
                     val spacing = dpToPx(paddingPage).dp
+                    val pages by remember {
+                        derivedStateOf {
+                            viewModel.pageItems
+                                .filterIsInstance<PageItem.Page>()
+                                .filter { it.chapterListIndex == viewModel.currentChapter }
+                                .map { it.url }
+                        }
+                    }
                     Crossfade(
                         targetState = readerType,
                         label = "",
@@ -399,12 +476,12 @@ fun ReadView(
                             ReaderType.List -> {
                                 ListView(
                                     listState = listState,
-                                    pages = pages,
+                                    pageItems = viewModel.pageItems,
                                     readVm = viewModel,
                                     itemSpacing = spacing,
                                     colorFilter = colorFilter,
                                     paddingValues = PaddingValues(
-                                        top = if (pages.isNotEmpty()) 0.dp else p.calculateTopPadding(),
+                                        top = if (viewModel.pageItems.isNotEmpty()) 0.dp else p.calculateTopPadding(),
                                         bottom = p.calculateBottomPadding()
                                     ).animate(),
                                     imageLoaderType = imageLoaderType,
@@ -414,7 +491,7 @@ fun ReadView(
                             ReaderType.Pager -> {
                                 PagerView(
                                     pagerState = pagerState,
-                                    pages = pages,
+                                    pageItems = viewModel.pageItems,
                                     vm = viewModel,
                                     colorFilter = colorFilter,
                                     itemSpacing = spacing,
@@ -450,7 +527,7 @@ fun ReadView(
 @Composable
 fun ListView(
     listState: LazyListState,
-    pages: List<String>,
+    pageItems: List<PageItem>,
     readVm: ReadViewModel,
     itemSpacing: Dp,
     paddingValues: PaddingValues,
@@ -463,13 +540,13 @@ fun ListView(
         state = listState,
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
         contentPadding = paddingValues,
-    ) { reader(pages, readVm, imageLoaderType, colorFilter) }
+    ) { reader(pageItems, readVm, imageLoaderType, colorFilter) }
 }
 
 @Composable
 fun PagerView(
     pagerState: PagerState,
-    pages: List<String>,
+    pageItems: List<PageItem>,
     vm: ReadViewModel,
     itemSpacing: Dp,
     imageLoaderType: ImageLoaderType,
@@ -483,29 +560,30 @@ fun PagerView(
         beyondViewportPageCount = 1,
         key = { it }
     ) { page ->
-        pages.getOrNull(page)?.let {
-            ChapterPage(
-                chapterLink = { it },
+        when (val item = pageItems.getOrNull(page)) {
+            is PageItem.Page -> ChapterPage(
+                chapterLink = { item.url },
                 isDownloaded = vm.isDownloaded,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType,
                 colorFilter = colorFilter
             )
-        } ?: Box(modifier = Modifier.fillMaxSize()) {
-            LastPageReached(
-                isLoading = vm.isLoadingPages,
-                currentChapter = vm.currentChapter,
-                lastChapter = vm.list.lastIndex,
-                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
-                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
-                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-                modifier = Modifier.align(Alignment.Center)
-            )
+
+            is PageItem.ChapterTransition -> Box(modifier = Modifier.fillMaxSize()) {
+                ChapterTransitionItem(
+                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name,
+                    toChapterName = vm.list.getOrNull(item.toChapterListIndex)?.name,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            null -> Box(modifier = Modifier.fillMaxSize())
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FlipPagerView(
     pagerState: PagerState,
@@ -528,21 +606,20 @@ fun FlipPagerView(
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
             )
-        } ?: Box(modifier = Modifier.fillMaxSize()) {
-            LastPageReached(
-                isLoading = vm.isLoadingPages,
-                currentChapter = vm.currentChapter,
-                lastChapter = vm.list.lastIndex,
-                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
-                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
-                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-                modifier = Modifier.align(Alignment.Center)
-            )
+        } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (vm.isLoadingPages) {
+                CircularWavyProgressIndicator()
+            } else {
+                Text(
+                    "End of chapter",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
     }
 }
 
-@OptIn(ExperimentalPageCurlApi::class)
+@OptIn(ExperimentalPageCurlApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CurlPagerView(
     pagerState: PageCurlState,
@@ -574,49 +651,51 @@ fun CurlPagerView(
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
             )
-        } ?: Box(modifier = Modifier.fillMaxSize()) {
-            LastPageReached(
-                isLoading = vm.isLoadingPages,
-                currentChapter = vm.currentChapter,
-                lastChapter = vm.list.lastIndex,
-                chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
-                nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
-                previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-                modifier = Modifier.align(Alignment.Center)
-            )
+        } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (vm.isLoadingPages) {
+                CircularWavyProgressIndicator()
+            } else {
+                Text(
+                    "End of chapter",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
     }
 }
 
 private fun LazyListScope.reader(
-    pages: List<String>,
+    pageItems: List<PageItem>,
     vm: ReadViewModel,
     imageLoaderType: ImageLoaderType,
     colorFilter: ColorFilter? = null,
 ) {
-    itemsIndexed(
-        pages,
-        key = { index, it -> "$it$index" },
-        contentType = { index, it -> it }
-    ) { _, it ->
-        ChapterPage(
-            chapterLink = { it },
-            isDownloaded = vm.isDownloaded,
-            headers = vm.headers,
-            contentScale = ContentScale.FillWidth,
-            imageLoaderType = imageLoaderType,
-            colorFilter = colorFilter
-        )
-    }
-    item {
-        LastPageReached(
-            isLoading = vm.isLoadingPages,
-            currentChapter = vm.currentChapter,
-            lastChapter = vm.list.lastIndex,
-            chapterName = vm.list.getOrNull(vm.currentChapter)?.name.orEmpty(),
-            nextChapter = { vm.addChapterToWatched(++vm.currentChapter) {} },
-            previousChapter = { vm.addChapterToWatched(--vm.currentChapter) {} },
-        )
+    pageItems.forEachIndexed { index, item ->
+        when (item) {
+            is PageItem.Page -> item(
+                key = "${item.url}${item.chapterListIndex}$index",
+                contentType = "page"
+            ) {
+                ChapterPage(
+                    chapterLink = { item.url },
+                    isDownloaded = vm.isDownloaded,
+                    headers = vm.headers,
+                    contentScale = ContentScale.FillWidth,
+                    imageLoaderType = imageLoaderType,
+                    colorFilter = colorFilter
+                )
+            }
+
+            is PageItem.ChapterTransition -> item(
+                key = "transition_${item.fromChapterListIndex}_${item.toChapterListIndex}$index",
+                contentType = "transition"
+            ) {
+                ChapterTransitionItem(
+                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name,
+                    toChapterName = vm.list.getOrNull(item.toChapterListIndex)?.name,
+                )
+            }
+        }
     }
 }
 

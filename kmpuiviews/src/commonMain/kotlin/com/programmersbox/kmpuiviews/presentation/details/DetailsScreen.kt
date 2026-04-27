@@ -266,7 +266,6 @@ private fun DetailsScreenInternal(
                             onClick = { model ->
                                 genericInfo.chapterOnClick(model, state.info.chapters, infoModel, navActions)
                                 insertRecent()
-                                if (!details.chapters.fastAny { it.url == model.url }) details.markAs(model, true)
                                 scope.launch(Dispatchers.IO) { heatMapDao.upsertHeatMap() }
                             },
                             onDownload = { model ->

@@ -1,6 +1,12 @@
 package com.programmersbox.manga.shared.reader
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItemColors
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Surface
@@ -42,6 +50,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -97,8 +106,7 @@ internal fun DrawerView(
                             TextButton(
                                 onClick = {
                                     showChangeChapter = false
-                                    readVm.currentChapter = i
-                                    readVm.addChapterToWatched(readVm.currentChapter, showToast)
+                                    readVm.addChapterToWatched(i, showToast)
                                 }
                             ) { Text("Yes") }
                         },
@@ -109,13 +117,26 @@ internal fun DrawerView(
                 }
 
                 WrapHeightNavigationDrawerItem(
-                    modifier = Modifier
-                        .padding(bottom = 4.dp)
-                        .padding(horizontal = 4.dp),
                     label = { Text(c.name) },
                     selected = readVm.currentChapter == i,
                     onClick = { showChangeChapter = true },
-                    shape = RoundedCornerShape(8.0.dp)
+                    icon = {
+                        AnimatedVisibility(
+                            !readVm.chapters.fastAny { it.url == c.url },
+                            enter = fadeIn() + expandHorizontally(),
+                            exit = fadeOut() + shrinkHorizontally()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(8.0.dp),
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .padding(horizontal = 4.dp)
                 )
 
                 if (i < readVm.list.lastIndex) HorizontalDivider()

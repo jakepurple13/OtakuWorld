@@ -81,6 +81,8 @@ class ReadViewModel(
     }
 
     companion object {
+        private const val WINDOW_SIZE = 3
+
         fun navigateToMangaReader(
             navController: NavigationActions,
             mangaTitle: String? = null,
@@ -118,8 +120,11 @@ class ReadViewModel(
 
     var currentChapter: Int by mutableIntStateOf(0)
 
-    val pageList = mutableStateListOf<String>()
-    var isLoadingPages by mutableStateOf(false)
+    val pageItems = mutableStateListOf<PageItem>()
+    var loadingChapters by mutableStateOf(emptySet<Int>())
+    val isLoadingPages: Boolean get() = loadingChapters.isNotEmpty()
+
+    private val loadedChapterWindow = ArrayDeque<Int>()
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
@@ -130,12 +135,14 @@ class ReadViewModel(
         val shouldShow: Boolean = !hasShown && count > FAVORITE_CHECK && !isFavorite
     }
 
+    var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+
     init {
         val url = chapterHolder.chapterModel?.url ?: mangaReader.mangaUrl
         list = chapterHolder.chapters.orEmpty()
         currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
 
-        loadPages(modelPath)
+        loadInitialChapter()
 
         favoritesRepository
             .isFavorite(
@@ -145,31 +152,64 @@ class ReadViewModel(
             .dispatchIo()
             .onEach { addToFavorites = addToFavorites.copy(isFavorite = it) }
             .launchIn(viewModelScope)
+
+        favoritesRepository
+            .getChaptersLocal(mangaUrl)
+            .onEach { chapters = it }
+            .launchIn(viewModelScope)
     }
 
     var showInfo by mutableStateOf(true)
 
     var firstScroll by mutableStateOf(true)
 
-    fun addChapterToWatched(newChapter: Int, chapter: () -> Unit) {
+    fun loadPreviousChapter(chapter: () -> Unit) {
+        loadChapter(++currentChapter, chapter)
+    }
+
+    fun loadNextChapter(chapter: () -> Unit) {
+        loadChapter(--currentChapter, chapter)
+    }
+
+    private fun loadChapter(newChapter: Int, chapter: () -> Unit) {
         currentChapter = newChapter
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
         list.getOrNull(newChapter)?.let { item ->
-            ChapterWatched(item.url, item.name, mangaUrl)
-                .let {
-                    viewModelScope.launch {
-                        if (!favoritesRepository.isIncognito(item.source.serviceName)) {
-                            favoritesRepository.addWatched(it)
-                        }
-                        withContext(Dispatchers.Main) { chapter() }
-                    }
+            viewModelScope.launch {
+                if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                    favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
                 }
+                withContext(Dispatchers.Main) { chapter() }
+            }
 
-            item
-                .getChapterInfo()
-                .map { it.mapNotNull(KmpStorage::link) }
-                .let { loadPages(it) }
+            loadedChapterWindow.clear()
+            loadedChapterWindow.addLast(newChapter)
+            item.getChapterInfo()
+                .map { storages ->
+                    headers.putAll(storages.flatMap { h -> h.headers.toList() })
+                    storages.mapNotNull(KmpStorage::link)
+                }
+                .onStart {
+                    loadingChapters = loadingChapters + newChapter
+                    pageItems.clear()
+                }
+                .catch { exceptionDao.insertException(it) }
+                .onEach { urls ->
+                    pageItems.add(PageItem.ChapterTransition(newChapter + 1, newChapter))
+                    pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, newChapter, i) })
+                    pageItems.add(PageItem.ChapterTransition(newChapter, newChapter - 1))
+                    heatMapDao.upsertHeatMap()
+                }
+                .onCompletion { loadingChapters = loadingChapters - newChapter }
+                .launchIn(viewModelScope)
         }
+    }
+
+    fun addChapterToWatched(
+        newChapter: Int,
+        chapter: () -> Unit,
+    ) {
+        loadChapter(newChapter, chapter)
     }
 
     fun addToFavorites() {
@@ -184,29 +224,164 @@ class ReadViewModel(
         }
     }
 
-    private fun loadPages(modelPath: Flow<List<String>>?) {
-        modelPath
-            ?.onStart {
-                isLoadingPages = true
-                pageList.clear()
+    private fun loadInitialChapter() {
+        val flow = modelPath ?: return
+        val chapterIndex = currentChapter
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(chapterIndex)
+        flow
+            .onStart {
+                loadingChapters = loadingChapters + chapterIndex
+                pageItems.clear()
+            }
+            .catch { exceptionDao.insertException(it) }
+            .onEach { urls ->
+                pageItems.add(PageItem.ChapterTransition(chapterIndex + 1, chapterIndex))
+                pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i) })
+                pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
+                heatMapDao.upsertHeatMap()
+            }
+            .onCompletion { loadingChapters = loadingChapters - chapterIndex }
+            .launchIn(viewModelScope)
+    }
+
+    fun appendChapter(chapterListIndex: Int) {
+        if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return
+        if (chapterListIndex in loadedChapterWindow) return
+        loadedChapterWindow.addLast(chapterListIndex)
+        val fromChapterListIndex = loadedChapterWindow[loadedChapterWindow.size - 2]
+
+        viewModelScope.launch {
+            // Evict oldest loaded chapter if window is exceeded
+            while (loadedChapterWindow.size > WINDOW_SIZE) {
+                val dropped = loadedChapterWindow.removeFirst()
+                val firstKeptIdx = pageItems.indexOfFirst { item ->
+                    when (item) {
+                        is PageItem.Page -> item.chapterListIndex != dropped
+                        is PageItem.ChapterTransition -> item.fromChapterListIndex != dropped
+                    }
+                }
+                if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
+            }
+
+            loadingChapters = loadingChapters + chapterListIndex
+
+            val newPageTransition = PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex)
+            if (newPageTransition !in pageItems) pageItems.add(newPageTransition)
+
+            list.getOrNull(fromChapterListIndex)?.let { item ->
+                if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                    favoritesRepository.addWatched(ChapterWatched(item.url, item.name, mangaUrl))
+                }
+            }
+
+            list.getOrNull(chapterListIndex)
+                ?.getChapterInfo()
+                ?.map { storages ->
+                    headers.putAll(storages.flatMap { h -> h.headers.toList() })
+                    storages.mapNotNull(KmpStorage::link)
+                }
+                ?.catch { exceptionDao.insertException(it) }
+                ?.onEach { urls ->
+                    pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i) })
+                    pageItems.add(PageItem.ChapterTransition(chapterListIndex, chapterListIndex - 1))
+                    heatMapDao.upsertHeatMap()
+                }
+                ?.onCompletion {
+                    loadingChapters = loadingChapters - chapterListIndex
+                    /*list.getOrNull(chapterListIndex)?.let { item ->
+                        if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                            favoritesRepository.addWatched(
+                                ChapterWatched(item.url, item.name, mangaUrl)
+                            )
+                        }
+                    }*/
+                    addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+                }
+                ?.launchIn(viewModelScope)
+        }
+    }
+
+    suspend fun prependChapter(chapterListIndex: Int): Int {
+        println("prependChapter: $chapterListIndex")
+        println("loadedChapterWindow: $loadedChapterWindow")
+        if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return 0
+        if (chapterListIndex in loadedChapterWindow) return 0
+
+        // Evict newest loaded chapter if window is full
+        if (loadedChapterWindow.size >= WINDOW_SIZE) {
+            val dropped = loadedChapterWindow.removeLast()
+            val removeFrom = pageItems.indexOfFirst {
+                it is PageItem.ChapterTransition && it.toChapterListIndex == dropped
+            }.takeIf { it >= 0 } ?: pageItems.indexOfFirst {
+                it is PageItem.Page && it.chapterListIndex == dropped
+            }
+            if (removeFrom >= 0) {
+                while (pageItems.size > removeFrom) pageItems.removeAt(removeFrom)
+            }
+        }
+
+        val toChapterListIndex = loadedChapterWindow.first()
+        loadedChapterWindow.addFirst(chapterListIndex)
+        loadingChapters = loadingChapters + chapterListIndex
+
+        val newPages = mutableListOf<PageItem>()
+        list.getOrNull(chapterListIndex)
+            ?.getChapterInfo()
+            ?.map { storages ->
+                headers.putAll(storages.flatMap { h -> h.headers.toList() })
+                storages.mapNotNull(KmpStorage::link)
             }
             ?.catch { exceptionDao.insertException(it) }
-            ?.onEach { pageList.addAll(it) }
-            ?.onEach { heatMapDao.upsertHeatMap() }
-            ?.onCompletion { isLoadingPages = false }
-            ?.launchIn(viewModelScope)
+            ?.firstOrNull()
+            ?.let { urls ->
+                newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i) })
+                heatMapDao.upsertHeatMap()
+            }
+
+        loadingChapters = loadingChapters - chapterListIndex
+        list.getOrNull(chapterListIndex)?.let { item ->
+            /*if (!favoritesRepository.isIncognito(item.source.serviceName)) {
+                favoritesRepository.addWatched(
+                    ChapterWatched(item.url, item.name, mangaUrl)
+                )
+            }*/
+        }
+
+        val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
+        pageItems.addAll(0, insertedItems)
+        addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+        return insertedItems.size
+    }
+
+    fun updateCurrentChapter(chapterListIndex: Int) {
+        if (chapterListIndex == currentChapter) return
+        currentChapter = chapterListIndex
     }
 
     fun refresh() {
         headers.clear()
-        loadPages(
-            list.getOrNull(currentChapter)
-                ?.getChapterInfo()
-                ?.map {
-                    headers.putAll(it.flatMap { h -> h.headers.toList() })
-                    it.mapNotNull(KmpStorage::link)
-                }
-        )
+        val chapterIndex = currentChapter
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(chapterIndex)
+        list.getOrNull(chapterIndex)
+            ?.getChapterInfo()
+            ?.map { storages ->
+                headers.putAll(storages.flatMap { h -> h.headers.toList() })
+                storages.mapNotNull(KmpStorage::link)
+            }
+            ?.onStart {
+                loadingChapters = loadingChapters + chapterIndex
+                pageItems.clear()
+            }
+            ?.catch { exceptionDao.insertException(it) }
+            ?.onEach { urls ->
+                pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i) })
+                pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
+                heatMapDao.upsertHeatMap()
+            }
+            ?.onCompletion { loadingChapters = loadingChapters - chapterIndex }
+            ?.launchIn(viewModelScope)
     }
 
     override fun onCleared() {
