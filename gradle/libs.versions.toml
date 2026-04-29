@@ -281,6 +281,7 @@ drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter
 adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 okhttpLib = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
 okhttpDns = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpVersion" }
+okhttpBrotli = { module = "com.squareup.okhttp3:okhttp-brotli", version.ref = "okhttpVersion" }
 
 coroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
 coroutinesAndroid = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutinesVersion" }
@@ -534,7 +535,7 @@ media3 = [
 ]
 leanbackLibs = ["leanback", "leanbackPreference"]
 
-okHttpLibs = ["okhttpLib", "okhttpDns"]
+okHttpLibs = ["okhttpLib", "okhttpDns", "okhttpBrotli"]
 firebaseCrashLibs = ["crashlytics", "analytics", "firebase-perf"]
 datastoreLibs = ["datastore", "datastorePref"]
 

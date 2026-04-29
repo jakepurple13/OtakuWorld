@@ -3,13 +3,40 @@ package com.programmersbox.models
 import android.app.Application
 import android.content.pm.PackageInfo
 import android.graphics.drawable.Drawable
+import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.io.Serializable
+
+private const val TAG = "ApiService"
+
+suspend fun <T> retryWithBackoff(
+    times: Int = 3,
+    initialDelayMs: Long = 1_000L,
+    maxDelayMs: Long = 20_000L,
+    factor: Double = 2.0,
+    block: suspend () -> T,
+): T {
+    var delayMs = initialDelayMs
+    repeat(times - 1) {
+        try {
+            return block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Request failed (attempt ${it + 1}/$times), retrying in ${delayMs}ms", e)
+            delay(delayMs)
+            delayMs = (delayMs * factor).toLong().coerceAtMost(maxDelayMs)
+        }
+    }
+    return block()
+}
 
 interface ApiService : Serializable {
     val baseUrl: String
@@ -19,23 +46,29 @@ interface ApiService : Serializable {
     val canPlay: Boolean get() = true
     val canDownload: Boolean get() = true
     val notWorking: Boolean get() = false
-    fun getRecentFlow(page: Int = 1): Flow<List<ItemModel>> = flow { emit(recent(page)) }.dispatchIo()
+
+    fun getRecentFlow(page: Int = 1): Flow<List<ItemModel>> = flow {
+        emit(retryWithBackoff { recent(page) })
+    }.dispatchIo()
+
     suspend fun recent(page: Int = 1): List<ItemModel> = emptyList()
 
-    fun getListFlow(page: Int = 1): Flow<List<ItemModel>> = flow { emit(allList(page)) }.dispatchIo()
+    fun getListFlow(page: Int = 1): Flow<List<ItemModel>> = flow {
+        emit(retryWithBackoff { allList(page) })
+    }.dispatchIo()
+
     suspend fun allList(page: Int = 1): List<ItemModel> = emptyList()
 
     fun getItemInfoFlow(model: ItemModel): Flow<Result<InfoModel>> = flow {
         emit(
             try {
-                Result.success(itemInfo(model))
+                Result.success(retryWithBackoff { itemInfo(model) })
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "itemInfo failed for ${model.title}", e)
                 Result.failure(e)
             }
         )
-    }
-        .dispatchIo()
+    }.dispatchIo()
 
     suspend fun itemInfo(model: ItemModel): InfoModel = error("Need to create an itemInfo")
 
@@ -51,13 +84,15 @@ interface ApiService : Serializable {
     }
         .dispatchIo()
         .catch {
-            it.printStackTrace()
+            Log.w(TAG, "searchSourceList error, falling back to local filter", it)
             emitAll(flow { emit(list.filter { s -> s.title.contains(searchText, true) }) })
         }
 
-    fun getChapterInfoFlow(chapterModel: ChapterModel): Flow<List<Storage>> = flow { emit(chapterInfo(chapterModel)) }
+    fun getChapterInfoFlow(chapterModel: ChapterModel): Flow<List<Storage>> = flow {
+        emit(retryWithBackoff { chapterInfo(chapterModel) })
+    }
         .catch {
-            it.printStackTrace()
+            Log.e(TAG, "chapterInfo failed", it)
             emit(emptyList())
         }
         .dispatchIo()
@@ -67,7 +102,7 @@ interface ApiService : Serializable {
     fun getSourceByUrlFlow(url: String): Flow<ItemModel> = flow { emit(sourceByUrl(url)) }
         .dispatchIo()
         .catch {
-            it.printStackTrace()
+            Log.e(TAG, "sourceByUrl failed for $url", it)
             emit(ItemModel("", "", url, "", this@ApiService))
         }
 
@@ -78,7 +113,7 @@ interface ApiService : Serializable {
     fun <T> Flow<List<T>>.dispatchIoAndCatchList() = this
         .dispatchIo()
         .catch {
-            it.printStackTrace()
+            Log.e(TAG, "list flow error", it)
             emit(emptyList())
         }
 
@@ -128,7 +163,7 @@ data class RemoteSources(
 data class Sources(
     val name: String,
     val baseUrl: String,
-    val version: String
+    val version: String,
 )
 
 data class SourceInformation(
@@ -136,5 +171,5 @@ data class SourceInformation(
     val name: String,
     val icon: Drawable?,
     val packageName: String,
-    val catalog: ApiServicesCatalog? = null
+    val catalog: ApiServicesCatalog? = null,
 )

@@ -9,9 +9,30 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import com.bumptech.glide.load.model.GlideUrl
+import com.bumptech.glide.load.model.Headers
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.glide.GlideImageState
+
+// Includes Referer and Origin in the cache key so that header-gated images (e.g., hotlink-protected
+// CDNs) are cached per-key rather than all sharing the same URL-only cache entry.
+private class HeaderAwareGlideUrl(url: String, headers: Map<String, String>) :
+    GlideUrl(url, Headers { headers }) {
+
+    private val cacheKey = buildString {
+        append(url)
+        headers.entries
+            .filter { (k, _) -> k.lowercase() in CACHE_KEY_HEADERS }
+            .sortedBy { it.key }
+            .forEach { (k, v) -> append("|$k=$v") }
+    }
+
+    override fun getCacheKey(): String = cacheKey
+
+    companion object {
+        private val CACHE_KEY_HEADERS = setOf("referer", "origin")
+    }
+}
 
 @Composable
 actual fun CustomImageChoice(
@@ -25,11 +46,11 @@ actual fun CustomImageChoice(
     colorFilter: ColorFilter?,
     onImageSet: (ImageBitmap) -> Unit,
 ) {
-    val url = remember(imageUrl) {
+    val url = remember(imageUrl, headers) {
         try {
-            GlideUrl(imageUrl) { headers.mapValues { it.value.toString() } }
+            HeaderAwareGlideUrl(imageUrl, headers.mapValues { it.value.toString() })
         } catch (_: IllegalArgumentException) {
-            ""
+            null
         }
     }
 
@@ -38,7 +59,7 @@ actual fun CustomImageChoice(
         imageOptions = ImageOptions(
             contentScale = contentScale,
             contentDescription = name,
-            colorFilter = colorFilter
+            colorFilter = colorFilter,
         ),
         onImageStateChanged = {
             if (it is GlideImageState.Success) {
@@ -47,6 +68,6 @@ actual fun CustomImageChoice(
         },
         loading = { Image(painter = placeHolder(), contentDescription = name) },
         failure = { Image(painter = onError(), contentDescription = name) },
-        modifier = modifier
+        modifier = modifier,
     )
 }

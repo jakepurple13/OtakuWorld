@@ -6,12 +6,14 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 
+private const val TAG = "ExtensionLoader"
 private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or PackageManager.GET_SIGNING_CERTIFICATES
 
 /**
@@ -47,9 +49,9 @@ class ExtensionLoader<T, R>(
         val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
         } else {
+            @Suppress("DEPRECATION")
             packageManager.getInstalledPackages(PACKAGE_FLAGS)
-        }
-            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
+        }.filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
 
         return runBlocking {
             packages
@@ -64,9 +66,9 @@ class ExtensionLoader<T, R>(
         val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(PACKAGE_FLAGS.toLong()))
         } else {
+            @Suppress("DEPRECATION")
             packageManager.getInstalledPackages(PACKAGE_FLAGS)
-        }
-            .filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
+        }.filter { it.reqFeatures.orEmpty().any { f -> f.name == extensionFeature } }
 
         packages
             .map { async(limitedDispatcher) { loadExtension(it, mapped) } }
@@ -74,22 +76,31 @@ class ExtensionLoader<T, R>(
     }
 
     private fun loadExtension(packageInfo: PackageInfo, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {
-        val appInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.packageManager.getApplicationInfo(
-                packageInfo.packageName,
-                PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong())
-            )
-        } else {
-            context.packageManager.getApplicationInfo(
-                packageInfo.packageName,
-                PackageManager.GET_META_DATA
-            )
+        val appInfo = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getApplicationInfo(
+                    packageInfo.packageName,
+                    PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong()),
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getApplicationInfo(packageInfo.packageName, PackageManager.GET_META_DATA)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get application info for ${packageInfo.packageName}", e)
+            return emptyList()
         }
 
+        // Child-first classloader: extension-bundled library versions take priority over host app's.
         val classLoader = PathClassLoader(appInfo.sourceDir, null, this::class.java.classLoader)
 
-        return appInfo.metaData.getString(metadataClass)
-            .orEmpty()
+        val classNames = appInfo.metaData.getString(metadataClass).orEmpty()
+        if (classNames.isBlank()) {
+            Log.w(TAG, "Extension ${packageInfo.packageName} has no class metadata for key '$metadataClass'")
+            return emptyList()
+        }
+
+        return classNames
             .split(";")
             .map {
                 val sourceClass = it.trim()
