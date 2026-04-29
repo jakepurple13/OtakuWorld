@@ -113,7 +113,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -132,7 +131,6 @@ import kotlin.math.roundToInt
 
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalHazeMaterialsApi::class
 )
 @Composable
 fun HomeNav(
@@ -232,7 +230,6 @@ fun HomeNav(
                         CompositionLocalProvider(
                             LocalNavHostPadding provides innerPadding,
                             LocalSharedElementScope provides this@SharedTransitionLayout,
-                            //LocalHazeState provides hazeState,
                             //For later maybe
                             //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
                         ) {

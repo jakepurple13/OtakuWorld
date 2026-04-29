@@ -1,9 +1,7 @@
 package com.programmersbox.novel.shared.reader
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -13,22 +11,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -39,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarDefaults
@@ -59,32 +46,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.blur.HazeProgressive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
@@ -97,6 +76,8 @@ fun NovelReadView(
 ) {
     HideNavBarWhileOnScreen()
     RecordTimeSpentDoing()
+
+    val blurKindState = rememberBlurKindState()
 
     var insetsController by insetsController(true)
 
@@ -148,8 +129,6 @@ fun NovelReadView(
         onAddToFavorites = viewModel::addToFavorites
     )
 
-    val hazeState = remember { HazeState() }
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -183,8 +162,9 @@ fun NovelReadView(
                         onSettingsClick = { },
                         showBlur = showBlur,
                         windowInsets = TopAppBarDefaults.windowInsets,
-                        modifier = Modifier.hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                            blurEnabled = showBlur
+                        modifier = Modifier.setBlurKind(
+                            blurKindState = blurKindState,
+                        ) {
                             progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
                             alpha = 1f
                         }
@@ -220,11 +200,7 @@ fun NovelReadView(
                             .windowInsetsPadding(NavigationBarDefaults.windowInsets)
                             .padding(16.dp)
                             .clip(MaterialTheme.shapes.extraLarge)
-                            .hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                                //progressive = HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f, preferPerformance = true)
-                                blurEnabled = showBlur
-                                //alpha = scrollAlpha
-                            }
+                            .setBlurKind(blurKindState)
                     )
                     //}
                 }
@@ -232,10 +208,7 @@ fun NovelReadView(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
         ) { p ->
             Box(
-                modifier = if (showBlur)
-                    Modifier.hazeSource(state = hazeState)
-                else
-                    Modifier,
+                modifier = Modifier.setBlurKindSource(blurKindState),
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = viewModel.isLoadingPages,

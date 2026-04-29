@@ -118,11 +118,6 @@ import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -392,8 +387,6 @@ private fun DateSort(
     itemDao: ItemDao,
     colorFilter: ColorFilter?,
 ) {
-    val hazeState = remember { HazeState() }
-
     val scope = rememberCoroutineScope()
 
     LazyVerticalGrid(
@@ -416,13 +409,6 @@ private fun DateSort(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(if (expanded) RectangleShape else MaterialTheme.shapes.medium)
-                        .hazeEffect(hazeState, style = HazeMaterials.thin()) {
-                            progressive = HazeProgressive.verticalGradient(
-                                startIntensity = 1f,
-                                endIntensity = 0f,
-                                preferPerformance = true
-                            )
-                        }
                         .animateItem()
                 ) {
                     ListItem(
@@ -456,7 +442,6 @@ private fun DateSort(
                         cancelNotification = cancelNotification,
                         itemDao = itemDao,
                         colorFilter = colorFilter,
-                        modifier = Modifier.hazeSource(hazeState)
                     )
                 }
             }
@@ -704,9 +689,6 @@ private fun GroupedSort(
     onError: (NotificationItem) -> Unit,
     sourceRepository: SourceRepository = LocalSourcesRepository.current,
 ) {
-    val scope = rememberCoroutineScope()
-    val hazeState = remember { HazeState() }
-
     LazyColumn(
         contentPadding = p + LocalNavHostPadding.current,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -724,7 +706,6 @@ private fun GroupedSort(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.medium)
-                        .hazeEffect(hazeState, style = HazeMaterials.thin())
                         .animateItem()
                 ) {
                     ListItem(
@@ -753,7 +734,6 @@ private fun GroupedSort(
                 ) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.hazeSource(hazeState)
                     ) {
                         item.second.forEach {
                             NotificationItem(

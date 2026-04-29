@@ -31,7 +31,7 @@ dragselect = "3.3.0"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.7"
 googleServices = "4.4.4"
-haze = "1.7.2"
+haze = "2.0.0-alpha01"
 kamelImage = "1.0.9"
 latestAboutLibsRelease = "14.0.1"
 coroutinesVersion = "1.10.2"
@@ -52,7 +52,7 @@ jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
 okhttpVersion = "5.3.2"
-ktorVersion = "3.4.2"
+ktorVersion = "3.4.3"
 scanner = "0.7.1"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
@@ -97,7 +97,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.2.1"
-ackpineVersion = "0.22.5"
+ackpineVersion = "0.22.7"
 
 arcore = "1.0.0-alpha12"
 composeXr = "1.0.0-alpha12"
@@ -106,7 +106,7 @@ scenecore = "1.0.0-alpha13"
 lottieCompose = "6.7.1"
 
 sqlite = "2.6.2"
-kotlinTest = "2.3.20"
+kotlinTest = "2.3.21"
 runner = "1.7.0"
 core = "1.7.0"
 
@@ -209,7 +209,8 @@ generativeai = { module = "com.google.ai.client.generativeai:generativeai", vers
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
-hazeMaterials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
+haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
+haze-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
 kamel-decoder-animated-image = { module = "media.kamel:kamel-decoder-animated-image", version.ref = "kamelImage" }
 kamel-decoder-svg-std = { module = "media.kamel:kamel-decoder-svg-std", version.ref = "kamelImage" }
 kamel-decoder-svg-batik = { module = "media.kamel:kamel-decoder-svg-batik", version.ref = "kamelImage" }

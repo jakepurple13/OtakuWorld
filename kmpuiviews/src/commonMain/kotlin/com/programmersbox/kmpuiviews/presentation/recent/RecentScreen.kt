@@ -63,7 +63,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.blur.HazeProgressive
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject

@@ -76,7 +76,7 @@ import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.printLogs
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
-import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.blur.HazeProgressive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

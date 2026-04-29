@@ -67,9 +67,9 @@ import com.programmersbox.kmpuiviews.presentation.components.WipeDirection
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
-import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.HazeProgressive
 import dev.chrisbanes.haze.hazeEffect
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -310,7 +310,7 @@ private fun ColumnScope.HazeOptions(
 private fun MaterialsCard(
     name: String,
     state: HazeState,
-    style: HazeStyle,
+    style: HazeBlurStyle,
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.medium,
 ) {

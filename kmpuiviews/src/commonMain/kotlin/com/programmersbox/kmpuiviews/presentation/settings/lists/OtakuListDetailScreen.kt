@@ -128,7 +128,7 @@ import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
-import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.blur.HazeProgressive
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher

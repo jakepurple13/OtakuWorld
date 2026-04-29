@@ -100,7 +100,7 @@ import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.LocalSourcesRepository
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.blur.HazeProgressive
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource

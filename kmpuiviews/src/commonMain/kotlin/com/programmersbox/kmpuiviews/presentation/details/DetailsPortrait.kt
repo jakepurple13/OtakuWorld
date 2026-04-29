@@ -69,6 +69,9 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
 import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.rememberCollapsableTopBehavior
 import com.programmersbox.kmpuiviews.presentation.components.minus
@@ -80,10 +83,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.isScrollingUp
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
@@ -118,7 +117,7 @@ fun DetailsView(
     detailsActions: DetailsActions,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
-    val hazeState = remember { HazeState() }
+    val blurKindState = rememberBlurKindState()
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
@@ -210,7 +209,7 @@ fun DetailsView(
                     TopAppBar(
                         modifier = Modifier
                             .zIndex(2f)
-                            .let { if (showBlur) it.hazeEffect(hazeState, HazeMaterials.thin()) else it },
+                            .setBlurKind(blurKindState),
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = if (showBlur)
                                 Color.Transparent
@@ -381,12 +380,7 @@ fun DetailsView(
                     .fillMaxHeight()
                     .padding(modifiedPaddingValues - LocalNavHostPadding.current)
                     .padding(vertical = 4.dp)
-                    .let {
-                        if (showBlur)
-                            it.hazeSource(hazeState)
-                        else
-                            it
-                    }
+                    .setBlurKindSource(blurKindState)
                     .then(fabBlur),
             ) {
                 if (info.description.isNotEmpty()) {

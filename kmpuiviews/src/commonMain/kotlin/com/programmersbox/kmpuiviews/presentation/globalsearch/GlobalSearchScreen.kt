@@ -84,28 +84,26 @@ import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetS
 import com.programmersbox.kmpuiviews.presentation.components.LimitedBottomSheetScaffoldDefaults
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.M3PlaceHolderCoverCard
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.plus
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.blur.HazeProgressive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -130,9 +128,8 @@ fun GlobalSearchScreen(
     dao: HistoryDao = LocalHistoryDao.current,
     viewModel: GlobalSearchViewModel = koinViewModel { parametersOf(screen) },
 ) {
-    val hazeState = remember { HazeState() }
-    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
     val navController = LocalNavActions.current
+    val blurKindState = rememberBlurKindState()
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -199,12 +196,12 @@ fun GlobalSearchScreen(
                     }
                 },
                 colors = SearchBarDefaults.appBarWithSearchColors(
-                    appBarContainerColor = if (showBlur)
+                    appBarContainerColor = if (blurKindState.showBlur)
                         Color.Transparent
                     else
                         MaterialTheme.colorScheme.surface,
                     searchBarColors = SearchBarDefaults.colors(
-                        inputFieldColors = if (showBlur)
+                        inputFieldColors = if (blurKindState.showBlur)
                             SearchBarDefaults.inputFieldColors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
@@ -213,19 +210,12 @@ fun GlobalSearchScreen(
                             SearchBarDefaults.inputFieldColors()
                     )
                 ),
-                modifier = Modifier.let {
-                    if (showBlur) {
-                        val surface = MaterialTheme.colorScheme.surface
-                        it.hazeEffect(
-                            hazeState,
-                            HazeMaterials.thin(surface)
-                        ) {
-                            backgroundColor = surface
-                            progressive =
-                                HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                        }
-                    } else it
-                }
+                modifier = Modifier.setBlurKind(
+                    blurKindState = blurKindState,
+                    hazeScope = {
+                        progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
+                    }
+                )
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
@@ -313,10 +303,8 @@ fun GlobalSearchScreen(
                     pullRefreshState = pullRefreshState,
                     padding = padding,
                     listState = listState,
-                    hazeState = hazeState,
-                    showBlur = showBlur,
+                    blurKindState = blurKindState,
                     scope = scope,
-                    navController = navController,
                     onSearchModel = { searchModelBottom = it },
                     bottomScaffold = bottomScaffold,
                     onLongPress = { optionsSheet = it }
@@ -335,10 +323,8 @@ private fun Content(
     pullRefreshState: PullToRefreshState,
     padding: PaddingValues,
     listState: LazyListState,
-    hazeState: HazeState,
-    showBlur: Boolean,
+    blurKindState: BlurKindState,
     scope: CoroutineScope,
-    navController: NavigationActions,
     onSearchModel: (SearchModel) -> Unit,
     onLongPress: (KmpItemModel) -> Unit,
     bottomScaffold: BottomSheetScaffoldState,
@@ -357,12 +343,7 @@ private fun Content(
             verticalArrangement = Arrangement.spacedBy(2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .let {
-                    if (showBlur)
-                        it.hazeSource(hazeState)
-                    else
-                        it
-                }
+                .setBlurKindSource(blurKindState = blurKindState)
                 .fillMaxSize()
                 .padding(top = 8.dp)
         ) {

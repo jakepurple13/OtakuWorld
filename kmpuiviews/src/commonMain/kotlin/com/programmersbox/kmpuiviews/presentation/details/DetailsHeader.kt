@@ -6,6 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.CloudOff
@@ -39,6 +39,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -52,7 +53,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +69,6 @@ import com.programmersbox.kmpuiviews.presentation.components.placeholder.Placeho
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.fadeInAnimation
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.scaleRotateOffsetReset
@@ -74,6 +76,7 @@ import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuImage
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.OtakuTitleElement
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.customSharedElement
 import com.programmersbox.kmpuiviews.zoomOverlay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -96,9 +99,7 @@ internal fun DetailsHeader(
     blurHash: BitmapPainter? = null,
     onBitmapSet: (ImageBitmap) -> Unit = {},
 ) {
-    val settings = LocalSettingsHandling.current
-
-    val blurEnabled by settings.rememberShowBlur()
+    val scope = rememberCoroutineScope()
 
     val colorBlindness: ColorBlindnessType by koinInject<NewSettingsHandling>().rememberColorBlindType()
     val colorFilter by remember { derivedStateOf { colorFilterBlind(colorBlindness) } }
@@ -135,9 +136,6 @@ internal fun DetailsHeader(
             .fillMaxWidth()
             .animateContentSize()
     ) {
-
-        //val haze = rememberHazeState()
-
         ImageLoaderChoice(
             imageUrl = imageUrl,
             name = "",
@@ -253,26 +251,36 @@ internal fun DetailsHeader(
                     )
 
                     var descriptionVisibility by remember { mutableStateOf(false) }
-                    SelectionContainer {
-                        Text(
-                            model.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier
-                                .customSharedElement(
-                                    OtakuTitleElement(
-                                        origin = model.title,
-                                        source = model.title
-                                    )
+                    val clipboard = LocalClipboardManager.current
+                    Text(
+                        model.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .customSharedElement(
+                                OtakuTitleElement(
+                                    origin = model.title,
+                                    source = model.title
                                 )
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = ripple()
-                                ) { descriptionVisibility = !descriptionVisibility }
-                                .fillMaxWidth(),
-                            overflow = TextOverflow.Ellipsis,
-                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                        )
-                    }
+                            )
+                            .combinedClickable(
+                                interactionSource = null,
+                                indication = ripple(),
+                                onClick = { descriptionVisibility = !descriptionVisibility },
+                                onLongClick = {
+                                    scope.launch {
+                                        clipboard.setText(
+                                            buildAnnotatedString {
+                                                append(model.title)
+                                            }
+                                        )
+                                    }
+                                }
+                            )
+                            .fillMaxWidth(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                    )
+
                     Crossfade(targetState = isFavorite, label = "") { target ->
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),

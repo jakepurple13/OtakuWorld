@@ -18,7 +18,6 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,14 +29,9 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.BlurKindSt
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
-import dev.chrisbanes.haze.HazeEffectScope
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.blur.BlurVisualEffect
 
 private val LocalScaffoldContentPadding = staticCompositionLocalOf { PaddingValues(0.dp) }
-val LocalHazeState = staticCompositionLocalOf { HazeState() }
 
 /**
  * A lot of the Haze stuff has been adapted from ChrisBanes Tivi app with some modifications
@@ -45,7 +39,6 @@ val LocalHazeState = staticCompositionLocalOf { HazeState() }
  * Taken from https://github.com/chrisbanes/tivi/blob/main/common/ui/compose/src/commonMain/kotlin/app/tivi/common/compose/TiviScaffold.kt
  * Until Haze gets a GlassScaffold, I'll be using that
  */
-@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun HazeScaffold(
     modifier: Modifier = Modifier,
@@ -60,11 +53,8 @@ fun HazeScaffold(
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     blurTopBar: Boolean = false,
     blurBottomBar: Boolean = false,
-    hazeState: HazeState = remember { HazeState() },
-    topBarStyle: HazeStyle = HazeMaterials.thin(containerColor),
-    bottomBarStyle: HazeStyle = topBarStyle,
-    topBarBlur: (HazeEffectScope.() -> Unit)? = null,
-    bottomBarBlur: (HazeEffectScope.() -> Unit)? = null,
+    topBarBlur: (BlurVisualEffect.() -> Unit)? = null,
+    bottomBarBlur: (BlurVisualEffect.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     NestedScaffold(

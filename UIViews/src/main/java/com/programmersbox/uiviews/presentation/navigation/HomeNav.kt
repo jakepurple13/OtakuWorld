@@ -11,12 +11,10 @@ import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.uiviews.GenericInfo
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import org.koin.compose.koinInject
 
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalHazeMaterialsApi::class
 )
 @Composable
 fun HomeNav(

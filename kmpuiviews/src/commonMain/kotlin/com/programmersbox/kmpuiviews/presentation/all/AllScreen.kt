@@ -58,17 +58,15 @@ import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshDefaults
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
+import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
-import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -101,8 +99,7 @@ fun AllScreen(
     val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
 
     val focusManager = LocalFocusManager.current
-    val showBlur by LocalSettingsHandling.current.rememberShowBlur()
-    val hazeState = remember { HazeState() }
+    val blurKindState = rememberBlurKindState()
 
     val biometric = rememberBiometricOpening()
 
@@ -174,12 +171,12 @@ fun AllScreen(
                             alpha = if (active) {
                                 1f
                             } else {
-                                if (showBlur) 0f else 1f
+                                if (blurKindState.showBlur) 0f else 1f
                             }
                         ),
                         label = ""
                     ).value,
-                    inputFieldColors = if (showBlur)
+                    inputFieldColors = if (blurKindState.showBlur)
                         SearchBarDefaults.inputFieldColors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -189,15 +186,7 @@ fun AllScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .let {
-                        if (showBlur) {
-                            val surface = MaterialTheme.colorScheme.surface
-                            it.hazeEffect(hazeState) {
-                                backgroundColor = surface
-                                progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f, preferPerformance = true)
-                            }
-                        } else it
-                    }
+                    .setBlurKind(blurKindState)
             ) {
                 OtakuPullToRefreshBox(
                     isRefreshing = allVm.isSearching,
@@ -243,10 +232,7 @@ fun AllScreen(
                     onLoadMore = allVm::loadMore,
                     onReset = allVm::reset,
                     paddingValues = p1,
-                    modifier = if (showBlur)
-                        Modifier.hazeSource(hazeState)
-                    else
-                        Modifier
+                    modifier = Modifier.setBlurKindSource(blurKindState)
                 )
             }
         }

@@ -87,6 +87,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.PermissionRequest
 import com.programmersbox.uiviews.presentation.components.CoilGradientImage
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
@@ -167,7 +168,9 @@ private fun VideoLoad(viewModel: ViewVideoViewModel) {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                     modifier = Modifier.hazeEffect(hazeState) {
-                        backgroundColor = surface
+                        blurEffect {
+                            backgroundColor = surface
+                        }
                     }
                 )
             },

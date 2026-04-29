@@ -13,7 +13,8 @@ import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.programmersbox.datastore.BlurKind
 import com.programmersbox.datastore.NewSettingsHandling
-import dev.chrisbanes.haze.HazeEffectScope
+import dev.chrisbanes.haze.blur.BlurVisualEffect
+import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import org.koin.compose.koinInject
@@ -39,7 +40,6 @@ fun rememberBlurKindState(
     val blurKind by dataStore.rememberBlurKind()
     val blurKindHazeState = rememberBlurKindHazeState(
         dataStore = dataStore,
-        showBlur = showBlur,
     )
     val blurKindLiquidState = rememberBlurKindLiquidState(
         dataStore = dataStore,
@@ -95,14 +95,19 @@ class BlurKindState(
 fun Modifier.setBlurKind(
     blurKindState: BlurKindState,
     liquidGlassShape: () -> Shape = { RoundedCornerShape(1.dp) },
-    hazeScope: HazeEffectScope.() -> Unit = {},
+    hazeScope: BlurVisualEffect.() -> Unit = {},
 ) = if (blurKindState.showBlur) {
     when (blurKindState.blurKind) {
-        BlurKind.Haze -> hazeEffect(
-            state = blurKindState.hazeState.hazeState,
-            style = blurKindState.hazeState.hazeStyle,
-            block = hazeScope
-        )
+        BlurKind.Haze -> hazeEffect(state = blurKindState.hazeState.hazeState) {
+            blurEffect {
+                style = blurKindState.hazeState.hazeStyle
+                blurEnabled = blurKindState.showBlur
+                hazeScope()
+                if (!blurKindState.hazeState.useProgressive) {
+                    progressive = null
+                }
+            }
+        }
 
         BlurKind.LiquidGlass -> liquidGlassBlur(
             blurKindState = blurKindState,

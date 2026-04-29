@@ -110,7 +110,8 @@ dependencies {
     api(libs.bundles.kamel)
 
     api(libs.haze)
-    api(libs.hazeMaterials)
+    api(libs.haze.blur)
+    api(libs.haze.materials)
 
     implementation(libs.compose.collapsable)
 
