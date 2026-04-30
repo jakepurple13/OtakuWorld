@@ -97,7 +97,6 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.favoritesdatabase.toItemModel
-import com.programmersbox.kmpuiviews.HideScreen
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.DynamicSearchBar
@@ -106,6 +105,7 @@ import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItem
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.presentation.components.OptionsSheetValues
+import com.programmersbox.kmpuiviews.presentation.components.SecureScreenWrapper
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
@@ -177,23 +177,25 @@ fun OtakuCustomListScreenStandAlone(
         label = "",
     ) { target ->
         if (target != null) {
-            OtakuCustomListScreen(
-                viewModel = viewModel,
-                customItem = target,
-                writeToFile = viewModel::writeToFile,
-                isHorizontal = isHorizontal,
-                deleteAll = viewModel::deleteAll,
-                rename = viewModel::rename,
-                searchQuery = viewModel.searchQuery,
-                setQuery = viewModel::setQuery,
-                navigateBack = { navController.popBackStack() },
-                addSecurityItem = {
-                    scope.launch { dao.updateBiometric(it, true) }
-                },
-                removeSecurityItem = {
-                    scope.launch { dao.updateBiometric(it, false) }
-                },
-            )
+            SecureScreenWrapper(target.item.useBiometric) {
+                OtakuCustomListScreen(
+                    viewModel = viewModel,
+                    customItem = target,
+                    writeToFile = viewModel::writeToFile,
+                    isHorizontal = isHorizontal,
+                    deleteAll = viewModel::deleteAll,
+                    rename = viewModel::rename,
+                    searchQuery = viewModel.searchQuery,
+                    setQuery = viewModel::setQuery,
+                    navigateBack = { navController.popBackStack() },
+                    addSecurityItem = {
+                        scope.launch { dao.updateBiometric(it, true) }
+                    },
+                    removeSecurityItem = {
+                        scope.launch { dao.updateBiometric(it, false) }
+                    },
+                )
+            }
         }
     }
 }
@@ -225,8 +227,6 @@ fun OtakuCustomListScreen(
     val sourceRepository = LocalSourcesRepository.current
 
     val showBlur by LocalSettingsHandling.current.rememberShowBlur()
-
-    HideScreen(customItem.item.useBiometric)
 
     val pickDocumentLauncher = rememberFileSaverLauncher(
         dialogSettings = FileKitDialogSettings.createDefault()

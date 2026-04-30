@@ -35,8 +35,10 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
@@ -250,13 +252,23 @@ actual fun Modifier.zoomOverlay(): Modifier = zoomablePeekOverlay(state = rememb
 
 @Composable
 actual fun HideScreen(shouldHide: Boolean) {
-    val window = LocalActivity.current
+    val activity = LocalActivity.current
+    val view = LocalView.current
 
     DisposableEffect(shouldHide) {
+        val window = (view.parent as? DialogWindowProvider)?.window ?: activity?.window
         if (shouldHide) {
-            window?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                activity?.setRecentsScreenshotEnabled(false)
+            }
+            window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
-        onDispose { window?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+        onDispose {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                activity?.setRecentsScreenshotEnabled(true)
+            }
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 }
 
