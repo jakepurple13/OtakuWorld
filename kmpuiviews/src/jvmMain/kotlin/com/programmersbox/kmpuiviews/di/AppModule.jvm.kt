@@ -9,11 +9,14 @@ import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.utils.Zipper
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -28,6 +31,7 @@ actual fun platformModule(): Module = module {
     factoryOf(::ImageModifier)
     singleOf(::SystemAlerter)
     singleOf(::DownloadAndInstaller)
+    singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
 
     single {
         AppDirs {

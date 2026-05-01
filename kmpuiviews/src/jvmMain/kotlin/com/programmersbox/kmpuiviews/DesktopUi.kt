@@ -22,6 +22,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -123,6 +125,15 @@ fun ApplicationScope.BaseDesktopUi(
             }
         ),
         content = {
+
+            val navigationActions = koinInject<NavigationActions>()
+            val dataStoreHandling = koinInject<DataStoreHandling>()
+            LaunchedEffect(Unit) {
+                if (dataStoreHandling.hasGoneThroughOnboarding.getOrNull() == false) {
+                    navigationActions.toOnboarding()
+                }
+            }
+
             val windowState = rememberWindowState()
 
             Window(
