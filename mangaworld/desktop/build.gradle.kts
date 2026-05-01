@@ -9,6 +9,10 @@ plugins {
     id("org.jetbrains.compose.hot-reload")
 }
 
+configurations.all {
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-android")
+}
+
 kotlin {
     jvm()
 

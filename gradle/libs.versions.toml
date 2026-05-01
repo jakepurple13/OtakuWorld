@@ -104,6 +104,7 @@ composeXr = "1.0.0-alpha12"
 scenecore = "1.0.0-alpha13"
 
 lottieCompose = "6.7.1"
+kotlinMultiplatformAppdirsVersion = "2.0.0"
 
 sqlite = "2.6.2"
 kotlinTest = "2.3.21"
@@ -496,6 +497,7 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
 material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClassVersion" }
+kotlin-multiplatform-appdirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "kotlinMultiplatformAppdirsVersion" }
 
 [bundles]
 compose = [
