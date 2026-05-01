@@ -84,7 +84,10 @@ class ExtensionLoader<T, R>(
                         .getDeclaredConstructor()
                         .newInstance() as? T
                 }
-                    .onFailure { println("ExtensionLoader: failed to load $className: ${it.message}") }
+                    .onFailure { e ->
+                        val cause = e.cause?.let { " caused by: ${it.message}" } ?: ""
+                        println("ExtensionLoader: failed to load $className: ${e.message}$cause")
+                    }
                     .getOrNull()
             }.map { mapped(it, appInfo, packageInfo) }
         }

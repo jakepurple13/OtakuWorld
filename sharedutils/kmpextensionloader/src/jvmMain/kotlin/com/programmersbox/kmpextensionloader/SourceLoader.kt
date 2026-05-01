@@ -49,12 +49,12 @@ actual class SourceLoader(
             )
 
             is ExternalCustomApiServicesCatalog -> {
-                runBlocking { t.initialize(pluginApp) }
+                kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) { t.initialize(pluginApp) }
                 t.getSources().map { it.copy(catalog = t) }
             }
 
             is ExternalApiServicesCatalog -> {
-                runBlocking { t.initialize(pluginApp) }
+                kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) { t.initialize(pluginApp) }
                 t.getSources().map { it.copy(catalog = t) }
             }
 
