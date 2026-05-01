@@ -90,12 +90,9 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(libs.kotlinStLib)
-                implementation(libs.coroutinesCore)
-                implementation(projects.kmpmodels)
                 implementation("net.dongliu:apk-parser:2.6.10")
-                implementation("com.github.ThexXTURBOXx.dex2jar:dex-tools:v2.4")
-                implementation(libs.kotlinMultiplatformAppdirs)
+                implementation("com.github.ThexXTURBOXx.dex2jar:dex-tools:v76")
+                implementation(libs.kotlin.multiplatform.appdirs)
             }
         }
 
@@ -1225,7 +1222,7 @@ git commit -m "feat: add ApkManifestParser for binary APK manifest extraction"
 // src/jvmMain/kotlin/com/programmersbox/kmpextensionloader/DexConverter.kt
 package com.programmersbox.kmpextensionloader
 
-import com.googlecode.dex2jar.tools.Dex2jarCmd
+import com.googlecode.dex2jar.tools.Dex2jarCmd  // from com.github.ThexXTURBOXx.dex2jar:dex-tools:v76
 import java.io.File
 import java.security.MessageDigest
 

@@ -10,6 +10,10 @@ import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.TranslationItemHandler
+import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
+import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
@@ -34,6 +38,8 @@ actual fun platformModule(): Module = module {
     singleOf(::SystemAlerter)
     singleOf(::DownloadAndInstaller)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
+    factory<TranslationHandler> { TranslationItemHandler() }
+    factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
 
     single {
         AppDirs {

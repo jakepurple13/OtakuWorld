@@ -11,19 +11,15 @@ class SourceRepository {
     val apiServiceList get() = sourcesList.value.map { it.apiService }
 
     fun setSources(sourceList: List<KmpSourceInformation>) {
-        sourcesList.value = sourceList
+        sourcesList.update { sourceList }
     }
 
     fun addSource(sourceInformation: KmpSourceInformation) {
-        sourcesList.update {
-            sourcesList.value.toMutableList().apply { add(sourceInformation) }
-        }
+        sourcesList.update { it + sourceInformation }
     }
 
     fun removeSource(sourceInformation: KmpSourceInformation) {
-        sourcesList.update {
-            sourcesList.value.toMutableList().apply { remove(sourceInformation) }
-        }
+        sourcesList.update { it - sourceInformation }
     }
 
     fun toSource(name: String) = sourcesList.value.find { it.name == name }

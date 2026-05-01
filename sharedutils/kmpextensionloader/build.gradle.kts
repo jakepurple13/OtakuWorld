@@ -28,9 +28,6 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(libs.kotlinStLib)
-                implementation(libs.coroutinesCore)
-                implementation(projects.kmpmodels)
                 implementation("net.dongliu:apk-parser:2.6.10")
                 implementation("com.github.ThexXTURBOXx.dex2jar:dex-tools:v76")
                 implementation(libs.kotlin.multiplatform.appdirs)

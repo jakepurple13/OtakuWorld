@@ -41,9 +41,12 @@ import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -135,9 +138,16 @@ fun ApplicationScope.BaseDesktopUi(
             }
 
             val sourceLoader = koinInject<SourceLoader>()
+            val sourceRepository = koinInject<SourceRepository>()
+            val setupRepository = koinInject<SetupRepository>()
 
             LaunchedEffect(Unit) {
                 sourceLoader.blockingLoad()
+                sourceRepository.addSource(ExampleService.getSourceInformation())
+            }
+
+            LaunchedEffect(Unit) {
+                setupRepository.setup(this)
             }
 
             val windowState = rememberWindowState()

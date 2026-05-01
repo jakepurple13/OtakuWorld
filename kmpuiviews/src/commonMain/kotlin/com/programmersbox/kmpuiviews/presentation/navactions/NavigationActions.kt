@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.navactions
 
 import androidx.compose.runtime.Composable
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
@@ -48,6 +49,7 @@ interface NavigationActions {
     fun importList(uri: String)
     fun importFullList(uri: String)
     fun popBackStack()
+    fun remove(route: NavKey)
     fun popBackStack(route: Any, inclusive: Boolean)
     fun <T : Any> navigate(nav: T)
     fun <T : Any> clearBackStack(nav: T)

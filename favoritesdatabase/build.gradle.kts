@@ -26,6 +26,7 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(libs.androidx.room.sqlite)
+            implementation(libs.kotlin.multiplatform.appdirs)
         }
 
         androidMain.dependencies {
