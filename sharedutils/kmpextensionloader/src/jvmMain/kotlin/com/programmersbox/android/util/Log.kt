@@ -18,4 +18,5 @@ object Log {
     @JvmStatic fun e(tag: String, msg: String): Int { System.err.println("E/$tag: $msg"); return 0 }
     @JvmStatic fun e(tag: String, msg: String, tr: Throwable): Int { System.err.println("E/$tag: $msg"); tr.printStackTrace(); return 0 }
     @JvmStatic fun wtf(tag: String, msg: String): Int { System.err.println("WTF/$tag: $msg"); return 0 }
+    @JvmStatic fun wtf(tag: String, msg: String, tr: Throwable): Int { System.err.println("WTF/$tag: $msg"); tr.printStackTrace(); return 0 }
 }
