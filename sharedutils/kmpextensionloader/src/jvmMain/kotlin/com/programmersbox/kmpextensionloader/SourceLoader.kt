@@ -1,78 +1,86 @@
 package com.programmersbox.kmpextensionloader
 
+import android.app.Application
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
+import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.models.ApiService
+import com.programmersbox.models.ApiServicesCatalog
+import com.programmersbox.models.ExternalApiServicesCatalog
+import com.programmersbox.models.ExternalCustomApiServicesCatalog
+import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
-/**
- * JVM implementation of SourceLoader that can read Android APKs.
- * This implementation mocks the Android APIs to read the data.
- *
- * @param extensionsDir Directory where extension APK files are located
- * @param sourceType Type of source to load
- * @param sourceRepository Repository to store loaded sources
- */
+private const val METADATA_NAME = "programmersbox.otaku.name"
+private const val METADATA_CLASS = "programmersbox.otaku.class"
+private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
+
 actual class SourceLoader(
     private val extensionsDir: File,
     sourceType: String,
     private val sourceRepository: SourceRepository,
+    private val appDirs: AppDirs,
 ) {
-    private val METADATA_NAME = "programmersbox.otaku.name"
-    private val METADATA_CLASS = "programmersbox.otaku.class"
-    private val EXTENSION_FEATURE = "programmersbox.otaku.extension"
+    private val cacheDir = File(appDirs.getUserCacheDir(), "otaku-plugin-cache")
+    private val dataDir = File(appDirs.getUserDataDir())
 
     private val extensionLoader = ExtensionLoader<Any, List<KmpSourceInformation>>(
-        extensionsDir,
-        "$EXTENSION_FEATURE.$sourceType",
-        METADATA_CLASS
-    ) { t, a, p ->
-        // Map the loaded class to KmpSourceInformation
-        // This is a simplified version of the Android implementation
-        listOf(
-            KmpSourceInformation(
-                apiService = when (t) {
-                    is com.programmersbox.kmpmodels.KmpApiService -> t
-                    else -> createMockApiService(t.toString())
-                },
-                name = a.metaData.getString(METADATA_NAME) ?: "Unknown",
-                icon = null, // No icon support in JVM
-                packageName = p.packageName
+        extensionsDir = extensionsDir,
+        cacheDir = cacheDir,
+        extensionFeature = "$EXTENSION_FEATURE.$sourceType",
+        metadataClass = METADATA_CLASS,
+    ) { t, appInfo, packageInfo ->
+        val metaName = appInfo.metaData?.getString(METADATA_NAME) ?: "Unknown"
+        val pkgName = packageInfo.packageName
+        val pluginApp = Application(pkgName, dataDir, appInfo.sourceDir)
+        val mapper = JvmModelMapper(pluginApp)
+
+        when (t) {
+            is ApiService -> listOf(
+                SourceInformation(
+                    apiService = t,
+                    name = metaName,
+                    icon = null,
+                    packageName = pkgName,
+                )
             )
-        )
+
+            is ExternalCustomApiServicesCatalog -> {
+                runBlocking { t.initialize(pluginApp) }
+                t.getSources().map { it.copy(catalog = t) }
+            }
+
+            is ExternalApiServicesCatalog -> {
+                runBlocking { t.initialize(pluginApp) }
+                t.getSources().map { it.copy(catalog = t) }
+            }
+
+            is ApiServicesCatalog -> t.createSources().map { service ->
+                SourceInformation(
+                    apiService = service,
+                    name = metaName,
+                    icon = null,
+                    packageName = pkgName,
+                    catalog = t,
+                )
+            }
+
+            else -> emptyList()
+        }.map { mapper.mapSourceInformation(it) }
     }
 
-    /**
-     * Create a mock KmpApiService for testing
-     */
-    private fun createMockApiService(name: String): com.programmersbox.kmpmodels.KmpApiService {
-        return object : com.programmersbox.kmpmodels.KmpApiService {
-            override val baseUrl: String = "https://example.com"
-            override val serviceName: String = name
-            // Other properties and methods have default implementations in the interface
-        }
-    }
-
-    /**
-     * Load sources synchronously
-     */
     actual fun load() {
         sourceRepository.setSources(
-            extensionLoader
-                .loadExtensions()
-                .flatten()
-                .sortedBy { it.apiService.serviceName }
+            extensionLoader.loadExtensions().flatten().sortedBy { it.apiService.serviceName }
         )
     }
 
-    /**
-     * Load sources asynchronously
-     */
     actual suspend fun blockingLoad() {
         sourceRepository.setSources(
-            extensionLoader
-                .loadExtensionsBlocking()
-                .flatten()
-                .sortedBy { it.apiService.serviceName }
+            extensionLoader.loadExtensionsBlocking().flatten().sortedBy { it.apiService.serviceName }
         )
     }
 }

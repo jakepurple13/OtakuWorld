@@ -52,7 +52,8 @@ actual fun platformModule(): Module = module {
         SourceLoader(
             extensionsDir = File("~/Downloads"),
             sourceType = get<KmpGenericInfo>().sourceType,
-            sourceRepository = get()
+            sourceRepository = get(),
+            appDirs = get(),
         )
     }
 
