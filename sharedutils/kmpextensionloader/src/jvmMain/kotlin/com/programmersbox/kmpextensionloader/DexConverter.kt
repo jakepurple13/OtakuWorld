@@ -18,13 +18,19 @@ object DexConverter {
                 *arrayOf(apkFile.absolutePath, "-o", tmp.absolutePath, "--force")
             )
             if (tmp.exists() && tmp.length() > 0) {
-                tmp.renameTo(cachedJar)
+                java.nio.file.Files.move(
+                    tmp.toPath(),
+                    cachedJar.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                )
                 cachedJar
             } else {
                 tmp.delete()
                 null
             }
         }.onFailure {
+            val tmp = File(cacheDir, "$hash.tmp.jar")
+            tmp.delete()
             println("DexConverter: failed to convert ${apkFile.name}: ${it.message}")
             it.printStackTrace()
         }.getOrNull()
