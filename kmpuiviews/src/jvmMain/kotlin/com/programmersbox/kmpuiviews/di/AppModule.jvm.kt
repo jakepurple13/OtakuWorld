@@ -5,8 +5,10 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
@@ -38,6 +40,14 @@ actual fun platformModule(): Module = module {
             appName = get<AppConfig>().appName
             appAuthor = "jakepurple13"
         }
+    }
+
+    single {
+        SourceLoader(
+            extensionsDir = File("~/Downloads"),
+            sourceType = get<KmpGenericInfo>().sourceType,
+            sourceRepository = get()
+        )
     }
 
     single {

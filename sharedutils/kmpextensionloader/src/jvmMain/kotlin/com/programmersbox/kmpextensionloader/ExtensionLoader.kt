@@ -1,6 +1,8 @@
 package com.programmersbox.kmpextensionloader
 
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.net.URLClassLoader
@@ -39,10 +41,11 @@ class ExtensionLoader<T, R>(
     suspend fun loadExtensionsBlocking(mapped: (T, MockApplicationInfo, MockPackageInfo) -> R = mapping): List<R> {
         val extensions = findExtensionApks()
 
-        return runBlocking {
+        return coroutineScope {
             extensions
                 .map { async { loadExtension(it, mapped) } }
-                .flatMap { it.await() }
+                .awaitAll()
+                .flatten()
         }
     }
 
@@ -64,6 +67,7 @@ class ExtensionLoader<T, R>(
      */
     private fun loadExtension(apkFile: File, mapped: (T, MockApplicationInfo, MockPackageInfo) -> R): List<R> {
         try {
+            println("Loading ${apkFile.name}")
             // Create mock package info
             val packageInfo = MockPackageInfo(apkFile.nameWithoutExtension)
 

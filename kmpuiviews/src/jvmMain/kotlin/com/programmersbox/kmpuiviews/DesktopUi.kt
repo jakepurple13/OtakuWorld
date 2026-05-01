@@ -40,6 +40,7 @@ import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -125,13 +126,18 @@ fun ApplicationScope.BaseDesktopUi(
             }
         ),
         content = {
-
             val navigationActions = koinInject<NavigationActions>()
             val dataStoreHandling = koinInject<DataStoreHandling>()
             LaunchedEffect(Unit) {
                 if (dataStoreHandling.hasGoneThroughOnboarding.getOrNull() == false) {
                     navigationActions.toOnboarding()
                 }
+            }
+
+            val sourceLoader = koinInject<SourceLoader>()
+
+            LaunchedEffect(Unit) {
+                sourceLoader.blockingLoad()
             }
 
             val windowState = rememberWindowState()
