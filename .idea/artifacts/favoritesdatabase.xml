@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="favoritesdatabase">
+    <output-path>$PROJECT_DIR$/favoritesdatabase/build/libs</output-path>
+    <root id="archive" name="favoritesdatabase.jar">
+      <element id="module-output" name="OtakuWorld.favoritesdatabase.androidMain" />
+    </root>
+  </artifact>
+</component>

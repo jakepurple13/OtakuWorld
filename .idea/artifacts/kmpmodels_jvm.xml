@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kmpmodels-jvm">
+    <output-path>$PROJECT_DIR$/kmpmodels/build/libs</output-path>
+    <root id="archive" name="kmpmodels-jvm.jar">
+      <element id="module-output" name="OtakuWorld.kmpmodels.jvmMain" />
+    </root>
+  </artifact>
+</component>
