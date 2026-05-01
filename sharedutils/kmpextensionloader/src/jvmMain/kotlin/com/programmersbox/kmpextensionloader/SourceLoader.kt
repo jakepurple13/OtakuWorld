@@ -11,7 +11,6 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
-import kotlinx.coroutines.runBlocking
 import java.io.File
 
 private const val METADATA_NAME = "programmersbox.otaku.name"
@@ -32,7 +31,7 @@ actual class SourceLoader(
         cacheDir = cacheDir,
         extensionFeature = "$EXTENSION_FEATURE.$sourceType",
         metadataClass = METADATA_CLASS,
-    ) { t, appInfo, packageInfo ->
+        mapping = suspend { t, appInfo, packageInfo ->
         val metaName = appInfo.metaData?.getString(METADATA_NAME) ?: "Unknown"
         val pkgName = packageInfo.packageName
         val pluginApp = Application(pkgName, dataDir, appInfo.sourceDir)
@@ -49,12 +48,12 @@ actual class SourceLoader(
             )
 
             is ExternalCustomApiServicesCatalog -> {
-                kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) { t.initialize(pluginApp) }
+                t.initialize(pluginApp)
                 t.getSources().map { it.copy(catalog = t) }
             }
 
             is ExternalApiServicesCatalog -> {
-                kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) { t.initialize(pluginApp) }
+                t.initialize(pluginApp)
                 t.getSources().map { it.copy(catalog = t) }
             }
 
@@ -70,7 +69,7 @@ actual class SourceLoader(
 
             else -> emptyList()
         }.map { mapper.mapSourceInformation(it) }
-    }
+    })
 
     actual fun load() {
         sourceRepository.setSources(

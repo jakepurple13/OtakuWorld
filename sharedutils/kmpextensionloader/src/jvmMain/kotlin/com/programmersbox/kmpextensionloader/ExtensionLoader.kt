@@ -16,16 +16,16 @@ class ExtensionLoader<T, R>(
     private val cacheDir: File,
     private val extensionFeature: String,
     private val metadataClass: String,
-    private val mapping: (T, ApplicationInfo, PackageInfo) -> R,
+    private val mapping: suspend (T, ApplicationInfo, PackageInfo) -> R,
 ) {
-    fun loadExtensions(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> =
+    fun loadExtensions(mapped: suspend (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> =
         runBlocking {
             findExtensionApks()
                 .map { async { loadExtension(it, mapped) } }
                 .flatMap { it.await() }
         }
 
-    suspend fun loadExtensionsBlocking(mapped: (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> =
+    suspend fun loadExtensionsBlocking(mapped: suspend (T, ApplicationInfo, PackageInfo) -> R = mapping): List<R> =
         coroutineScope {
             findExtensionApks()
                 .map { async { loadExtension(it, mapped) } }
@@ -39,7 +39,7 @@ class ExtensionLoader<T, R>(
             ?.toList() ?: emptyList()
     }
 
-    private fun loadExtension(apkFile: File, mapped: (T, ApplicationInfo, PackageInfo) -> R): List<R> {
+    private suspend fun loadExtension(apkFile: File, mapped: suspend (T, ApplicationInfo, PackageInfo) -> R): List<R> {
         return runCatching {
             val manifest = ApkManifestParser.parse(apkFile)
 
