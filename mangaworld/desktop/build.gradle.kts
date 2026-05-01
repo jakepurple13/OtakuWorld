@@ -2,13 +2,21 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 
 plugins {
-    `otaku-multiplatform-application`
+    //`otaku-multiplatform-application`
+    id("kotlin-multiplatform")
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
     id("org.jetbrains.compose.hot-reload")
 }
 
 kotlin {
+    jvm()
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xwhen-guards")
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinStLib)
@@ -33,6 +41,8 @@ kotlin {
             implementation(projects.kmpmodels)
             implementation(projects.mangaworld.shared)
             implementation(libs.bundles.datastoreLibs)
+            implementation(libs.coroutinesCore)
+            implementation(libs.kotlinx.coroutines.swing)
         }
 
         jvmMain.dependencies {

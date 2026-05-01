@@ -6,6 +6,7 @@ plugins {
     id("kotlinx-serialization")
     //id("androidx.baselineprofile")
     alias(libs.plugins.google.firebase.performance)
+    alias(libs.plugins.hotswan.compiler)
 }
 
 android {

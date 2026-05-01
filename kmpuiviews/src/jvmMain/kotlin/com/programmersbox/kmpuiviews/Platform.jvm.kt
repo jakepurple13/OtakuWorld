@@ -154,3 +154,20 @@ actual fun HideScreen(shouldHide: Boolean) {
 
 actual fun analyticsScreen(screenName: String) {
 }
+
+actual class SystemAlerter {
+    actual fun alertFavoritesChange() {
+    }
+
+    actual fun alertChapterChange() {
+    }
+
+    actual fun alertListChange() {
+    }
+
+    actual fun alertListItemChange() {
+    }
+
+    actual fun alertIncognitoChange() {
+    }
+}

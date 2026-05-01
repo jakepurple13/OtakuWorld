@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.buildKonfig)
+    alias(libs.plugins.koin.compiler)
 }
 
 otakuDependencies {
@@ -73,6 +74,7 @@ kotlin {
                 implementation(libs.ktorSerialization)
                 implementation(libs.ktorJson)
                 implementation(libs.ktorContentNegotiation)
+                implementation(libs.coroutinesCore)
 
                 implementation(project.dependencies.platform(libs.koin.bom))
                 implementation(libs.bundles.koinKmp)
@@ -113,8 +115,6 @@ kotlin {
 
                 implementation(libs.roomPaging)
 
-                implementation(libs.backdrop)
-
                 implementation(libs.constraintlayout.compose.multiplatform)
                 implementation(libs.compose.constraintlayout.compose.multiplatform)
 
@@ -154,6 +154,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
+                implementation(libs.coroutinesTest)
             }
         }
 
@@ -201,6 +202,7 @@ kotlin {
                 implementation(libs.core)
                 implementation(libs.javase)
                 implementation(libs.knotify)
+                implementation(libs.kotlinx.coroutines.swing)
                 //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
             }
         }

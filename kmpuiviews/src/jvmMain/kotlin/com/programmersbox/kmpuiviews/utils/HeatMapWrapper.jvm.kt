@@ -27,7 +27,7 @@ actual fun HeatMapWrapper(
 ) {
     HeatMap(
         data = data.map { Heat(it.date, it.value, it.data) },
-        onHeatClick = { onHeatClick(KmpHeat(it.date, it.value, it.data)) },
+        onHeatClick = { onHeatClick(KmpHeat(it.date, it.value, it.data!!)) },
         modifier = modifier.fillMaxWidth().padding(bottom = 16.dp),
         style = HeatMapStyle().copy(
             heatStyle = HeatStyle().copy(

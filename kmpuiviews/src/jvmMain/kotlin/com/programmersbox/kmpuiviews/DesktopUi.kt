@@ -47,6 +47,7 @@ import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
 import org.koin.core.logger.Level
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
 import java.awt.Cursor
 import java.io.File
@@ -63,116 +64,114 @@ fun ApplicationScope.BaseDesktopUi(
     /*LaunchedEffect(Unit) {
         DataStoreSettings { File(System.getProperty("user.home"), it).absolutePath }
     }*/
-    KoinApplication(
-        application = {
-            printLogger(Level.DEBUG)
-            modules(
-                module {
-                    includes(kmpModule)
+    //TODO: UI Goes here!
+    //UrlOpenerScreen()
+    //ScanQrCode()
+    /*
+    val backStack = rememberNavBackStack(Screen.SettingsScreen)
 
-                    singleOf(::DataStoreHandling)
-                    single {
-                        NewSettingsHandling(
-                            createProtobuf(
-                                serializer = SettingsSerializer(),
-                                fileName = File(
-                                    System.getProperty("user.home"),
-                                    "Settings.preferences_pb"
-                                ).absolutePath,
-                            ),
-                        )
-                    }
-
-                    moduleBlock()
-                }
-            )
-        }
-    ) {
-        val windowState = rememberWindowState()
-
-        Window(
-            onCloseRequest = ::exitApplication,
-            title = title,
-            state = windowState,
-            undecorated = true,
-            transparent = true,
-        ) {
-            MaterialTheme(
-                createColorScheme(
-                    isSystemInDarkTheme(),
-                    isExpressive = true
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSceneSetupNavEntryDecorator(),
+            rememberSavedStateNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<Screen.SettingsScreen> {
+                SettingScreen(
+                    composeSettingsDsl = ComposeSettingsDsl(),
+                    accountSettings = {},
+                    onDebugBuild = {},
+                    scanQrCode = {}
                 )
+            }
+        }
+    )*/
+    KoinApplication(
+        configuration = koinConfiguration(
+            declaration = {
+                printLogger(Level.DEBUG)
+                modules(
+                    module {
+                        includes(kmpModule)
+
+                        singleOf(::DataStoreHandling)
+                        single {
+                            NewSettingsHandling(
+                                createProtobuf(
+                                    serializer = SettingsSerializer(),
+                                    fileName = File(
+                                        System.getProperty("user.home"),
+                                        "Settings.preferences_pb"
+                                    ).absolutePath,
+                                ),
+                            )
+                        }
+
+                        moduleBlock()
+                    }
+                )
+            }
+        ),
+        content = {
+            val windowState = rememberWindowState()
+
+            Window(
+                onCloseRequest = ::exitApplication,
+                title = title,
+                state = windowState,
+                undecorated = true,
+                transparent = true,
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = MaterialTheme.shapes.medium,
-                    border = BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant
+                MaterialTheme(
+                    createColorScheme(
+                        isSystemInDarkTheme(),
+                        isExpressive = true
                     )
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        KmpLocalCompositionSetup(
-                        ) {
-                            CompositionLocalProvider(
-                                LocalNavHostPadding provides PaddingValues()
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant
+                        )
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            KmpLocalCompositionSetup(
                             ) {
-                                CustomTitleBar(
-                                    title = title,
-                                    onMinimizeClick = { windowState.isMinimized = true },
-                                    onCloseClick = ::exitApplication
-                                )
-                                HorizontalDivider()
-                                //TODO: UI Goes here!
-                                //UrlOpenerScreen()
-                                //ScanQrCode()
-                                /*
-                                val backStack = rememberNavBackStack(Screen.SettingsScreen)
-
-                                NavDisplay(
-                                    backStack = backStack,
-                                    onBack = { backStack.removeLastOrNull() },
-                                    entryDecorators = listOf(
-                                        rememberSceneSetupNavEntryDecorator(),
-                                        rememberSavedStateNavEntryDecorator(),
-                                    ),
-                                    entryProvider = entryProvider {
-                                        entry<Screen.SettingsScreen> {
-                                            SettingScreen(
-                                                composeSettingsDsl = ComposeSettingsDsl(),
-                                                accountSettings = {},
-                                                onDebugBuild = {},
-                                                scanQrCode = {}
-                                            )
-                                        }
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides PaddingValues()
+                                ) {
+                                    CustomTitleBar(
+                                        title = title,
+                                        onMinimizeClick = { windowState.isMinimized = true },
+                                        onCloseClick = ::exitApplication
+                                    )
+                                    HorizontalDivider()
+                                    //UrlOpenerScreen()
+                                    //ScanQrCode()
+                                    val genericInfo = koinInject<KmpGenericInfo>()
+                                    val customSettings = remember {
+                                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
                                     }
-                                )*/
-                                val genericInfo = koinInject<KmpGenericInfo>()
-                                val customSettings = remember {
-                                    ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                                    val windowSize = calculateWindowSizeClass()
+                                    HomeNav(
+                                        genericInfo = genericInfo,
+                                        windowSize = windowSize,
+                                        bottomBarAdditions = {},
+                                        customPreferences = customSettings,
+                                    )
                                 }
-                                val windowSize = calculateWindowSizeClass()
-                                HomeNav(
-                                    genericInfo = genericInfo,
-                                    windowSize = windowSize,
-                                    bottomBarAdditions = {},
-                                    customPreferences = customSettings,
-                                )
                             }
                         }
                     }
                 }
             }
         }
-    }
+    )
 }
-
-/*@Composable
-fun <T : NavKey> rememberNavBackStack(vararg elements: T): SnapshotStateList<NavKey> {
-    return rememberSaveable {
-        elements.toList().toMutableStateList()
-    }
-}*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

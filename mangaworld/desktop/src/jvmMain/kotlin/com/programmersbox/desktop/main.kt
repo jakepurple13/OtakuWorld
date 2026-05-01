@@ -4,6 +4,8 @@ import androidx.compose.ui.window.application
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BaseDesktopUi
+import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
@@ -20,6 +22,13 @@ fun main() {
             moduleBlock = {
                 modules(
                     module {
+                        single {
+                            AppConfig(
+                                "MangaWorld",
+                                BuildType.NoFirebase,
+                                false
+                            )
+                        }
                         singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
                         singleOf(::ChapterHolder)
                         single {
