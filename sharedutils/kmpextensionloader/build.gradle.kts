@@ -25,5 +25,23 @@ kotlin {
                 implementation(projects.models)
             }
         }
+
+        jvmMain {
+            dependencies {
+                implementation(libs.kotlinStLib)
+                implementation(libs.coroutinesCore)
+                implementation(projects.kmpmodels)
+                implementation("net.dongliu:apk-parser:2.6.10")
+                implementation("com.github.ThexXTURBOXx:dex2jar:v2.4")
+                implementation(libs.kotlin.multiplatform.appdirs)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(kotlin("test-junit"))
+            }
+        }
     }
 }
