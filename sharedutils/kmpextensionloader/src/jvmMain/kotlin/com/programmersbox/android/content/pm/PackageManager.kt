@@ -2,7 +2,7 @@ package android.content.pm
 
 abstract class PackageManager {
     companion object {
-        const val GET_META_DATA = 0x00000128
+        const val GET_META_DATA = 0x00000080
         const val GET_CONFIGURATIONS = 0x00004000
         const val GET_SIGNING_CERTIFICATES = 0x08000000
     }

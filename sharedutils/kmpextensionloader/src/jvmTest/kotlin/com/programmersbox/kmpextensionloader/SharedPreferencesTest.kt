@@ -64,4 +64,9 @@ class SharedPreferencesTest {
         prefs.edit().putString("k", "v").commit()
         assertTrue(SharedPreferences(File(tmpDir, "test.properties")).contains("k"))
     }
+
+    @Test fun `in-memory read reflects committed write without reload`() {
+        prefs.edit().putString("x", "hello").commit()
+        assertEquals("hello", prefs.getString("x", null))
+    }
 }

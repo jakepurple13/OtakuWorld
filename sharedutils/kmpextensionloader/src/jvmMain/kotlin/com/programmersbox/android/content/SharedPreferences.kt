@@ -18,7 +18,8 @@ class SharedPreferences(private val file: File) {
         props.getProperty(key)?.toBooleanStrictOrNull() ?: defValue
     fun getStringSet(key: String, defValues: Set<String>?): Set<String>? {
         val v = props.getProperty(key) ?: return defValues
-        return if (v.isEmpty()) emptySet() else v.split(",").toSet()
+        return if (v.isEmpty()) emptySet()
+        else v.split(",").map { java.net.URLDecoder.decode(it, "UTF-8") }.toSet()
     }
     fun contains(key: String): Boolean = props.containsKey(key)
     fun getAll(): Map<String, *> = props.entries.associate { it.key.toString() to it.value }
@@ -31,14 +32,16 @@ class SharedPreferences(private val file: File) {
         private var clearAll = false
 
         fun putString(key: String, value: String?): Editor {
-            if (value == null) removals.add(key) else pending.setProperty(key, value); return this
+            if (value == null) removals.add(key) else pending.setProperty(key, value)
+            return this
         }
         fun putInt(key: String, value: Int): Editor { pending.setProperty(key, value.toString()); return this }
         fun putLong(key: String, value: Long): Editor { pending.setProperty(key, value.toString()); return this }
         fun putFloat(key: String, value: Float): Editor { pending.setProperty(key, value.toString()); return this }
         fun putBoolean(key: String, value: Boolean): Editor { pending.setProperty(key, value.toString()); return this }
         fun putStringSet(key: String, values: Set<String>?): Editor {
-            if (values == null) removals.add(key) else pending.setProperty(key, values.joinToString(","))
+            if (values == null) removals.add(key)
+            else pending.setProperty(key, values.joinToString(",") { java.net.URLEncoder.encode(it, "UTF-8") })
             return this
         }
         fun remove(key: String): Editor { removals.add(key); return this }
