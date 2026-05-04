@@ -23,6 +23,9 @@ import androidx.navigation.NavHostController
 import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpmodels.KmpSourceInformation
+import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
+import com.programmersbox.kmpuiviews.domain.TranslationHandler
+import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
@@ -30,6 +33,7 @@ import io.kamel.core.config.takeFrom
 import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -41,21 +45,23 @@ actual fun platform(): String = "Desktop"
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorScheme {
-    return when {
-        darkTheme -> darkColorScheme(
-            primary = Color(0xff90CAF9),
-            secondary = Color(0xff90CAF9)
-        )
+    return remember(darkTheme, isExpressive) {
+        when {
+            darkTheme -> darkColorScheme(
+                primary = Color(0xff90CAF9),
+                secondary = Color(0xff90CAF9)
+            )
 
-        isExpressive -> expressiveLightColorScheme()
+            isExpressive -> expressiveLightColorScheme()
 
-        else -> lightColorScheme()
+            else -> lightColorScheme()
+        }
     }
 }
 
 actual class CustomUriHandler : UriHandler {
     actual override fun openUri(uri: String) {
-        TODO("Not yet implemented")
+
     }
 }
 
@@ -66,7 +72,7 @@ actual fun customUriHandler(navController: NavHostController): UriHandler = obje
 }
 
 actual val databaseBuilder: Module = module {
-    single { DatabaseBuilder() }
+    singleOf(::DatabaseBuilder)
 }
 
 @OptIn(ExperimentalKamelApi::class)
@@ -153,4 +159,52 @@ actual fun HideScreen(shouldHide: Boolean) {
 }
 
 actual fun analyticsScreen(screenName: String) {
+}
+
+actual class SystemAlerter {
+    actual fun alertFavoritesChange() {
+    }
+
+    actual fun alertChapterChange() {
+    }
+
+    actual fun alertListChange() {
+    }
+
+    actual fun alertListItemChange() {
+    }
+
+    actual fun alertIncognitoChange() {
+    }
+}
+
+class TranslationItemHandler : TranslationHandler {
+    override fun translateDescription(
+        textToTranslate: String,
+        progress: (Boolean) -> Unit,
+        translatedText: (String) -> Unit,
+    ) {
+        translatedText(textToTranslate)
+    }
+
+    override suspend fun translate(textToTranslate: String): String = textToTranslate
+
+    override fun clear() {
+    }
+}
+
+class TranslationModelHandlerImpl : TranslationModelHandler {
+    override fun getModels(onSuccess: (List<KmpCustomRemoteModel>) -> Unit) {
+        onSuccess(emptyList())
+    }
+
+    override suspend fun deleteModel(model: KmpCustomRemoteModel) {
+
+    }
+
+    override suspend fun modelList(): List<KmpCustomRemoteModel> = emptyList()
+
+    override suspend fun delete(model: KmpCustomRemoteModel) {
+
+    }
 }

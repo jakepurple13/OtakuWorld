@@ -22,6 +22,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -37,16 +38,27 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
 import org.koin.core.logger.Level
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
 import java.awt.Cursor
 import java.io.File
@@ -63,116 +75,138 @@ fun ApplicationScope.BaseDesktopUi(
     /*LaunchedEffect(Unit) {
         DataStoreSettings { File(System.getProperty("user.home"), it).absolutePath }
     }*/
-    KoinApplication(
-        application = {
-            printLogger(Level.DEBUG)
-            modules(
-                module {
-                    includes(kmpModule)
+    //TODO: UI Goes here!
+    //UrlOpenerScreen()
+    //ScanQrCode()
+    /*
+    val backStack = rememberNavBackStack(Screen.SettingsScreen)
 
-                    singleOf(::DataStoreHandling)
-                    single {
-                        NewSettingsHandling(
-                            createProtobuf(
-                                serializer = SettingsSerializer(),
-                                fileName = File(
-                                    System.getProperty("user.home"),
-                                    "Settings.preferences_pb"
-                                ).absolutePath,
-                            ),
-                        )
-                    }
-
-                    moduleBlock()
-                }
-            )
-        }
-    ) {
-        val windowState = rememberWindowState()
-
-        Window(
-            onCloseRequest = ::exitApplication,
-            title = title,
-            state = windowState,
-            undecorated = true,
-            transparent = true,
-        ) {
-            MaterialTheme(
-                createColorScheme(
-                    isSystemInDarkTheme(),
-                    isExpressive = true
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSceneSetupNavEntryDecorator(),
+            rememberSavedStateNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<Screen.SettingsScreen> {
+                SettingScreen(
+                    composeSettingsDsl = ComposeSettingsDsl(),
+                    accountSettings = {},
+                    onDebugBuild = {},
+                    scanQrCode = {}
                 )
+            }
+        }
+    )*/
+    KoinApplication(
+        configuration = koinConfiguration(
+            declaration = {
+                printLogger(Level.DEBUG)
+                modules(
+                    module {
+                        includes(kmpModule)
+
+                        singleOf<KmpFirebaseConnection>(::KmpFirebaseConnectionImpl)
+                        factory<KmpFirebaseConnection.KmpFirebaseListener> { KmpFirebaseConnectionImpl.KmpFirebaseListenerImpl() }
+
+                        singleOf(::DataStoreHandling)
+                        single {
+                            NewSettingsHandling(
+                                createProtobuf(
+                                    serializer = SettingsSerializer(),
+                                    fileName = File(
+                                        System.getProperty("user.home"),
+                                        "Settings.preferences_pb"
+                                    ).absolutePath,
+                                ),
+                            )
+                        }
+
+                    }
+                )
+                moduleBlock()
+            }
+        ),
+        content = {
+            val navigationActions = koinInject<NavigationActions>()
+            val dataStoreHandling = koinInject<DataStoreHandling>()
+            LaunchedEffect(Unit) {
+                if (dataStoreHandling.hasGoneThroughOnboarding.getOrNull() == false) {
+                    navigationActions.toOnboarding()
+                }
+            }
+
+            val sourceLoader = koinInject<SourceLoader>()
+            val sourceRepository = koinInject<SourceRepository>()
+            val setupRepository = koinInject<SetupRepository>()
+
+            LaunchedEffect(Unit) {
+                sourceLoader.blockingLoad()
+                sourceRepository.addSource(ExampleService.getSourceInformation())
+            }
+
+            LaunchedEffect(Unit) {
+                setupRepository.setup(this)
+            }
+
+            val windowState = rememberWindowState()
+
+            Window(
+                onCloseRequest = ::exitApplication,
+                title = title,
+                state = windowState,
+                undecorated = true,
+                transparent = true,
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = MaterialTheme.shapes.medium,
-                    border = BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant
+                MaterialTheme(
+                    createColorScheme(
+                        isSystemInDarkTheme(),
+                        isExpressive = true
                     )
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        KmpLocalCompositionSetup(
-                        ) {
-                            CompositionLocalProvider(
-                                LocalNavHostPadding provides PaddingValues()
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant
+                        )
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            KmpLocalCompositionSetup(
                             ) {
-                                CustomTitleBar(
-                                    title = title,
-                                    onMinimizeClick = { windowState.isMinimized = true },
-                                    onCloseClick = ::exitApplication
-                                )
-                                HorizontalDivider()
-                                //TODO: UI Goes here!
-                                //UrlOpenerScreen()
-                                //ScanQrCode()
-                                /*
-                                val backStack = rememberNavBackStack(Screen.SettingsScreen)
-
-                                NavDisplay(
-                                    backStack = backStack,
-                                    onBack = { backStack.removeLastOrNull() },
-                                    entryDecorators = listOf(
-                                        rememberSceneSetupNavEntryDecorator(),
-                                        rememberSavedStateNavEntryDecorator(),
-                                    ),
-                                    entryProvider = entryProvider {
-                                        entry<Screen.SettingsScreen> {
-                                            SettingScreen(
-                                                composeSettingsDsl = ComposeSettingsDsl(),
-                                                accountSettings = {},
-                                                onDebugBuild = {},
-                                                scanQrCode = {}
-                                            )
-                                        }
+                                CompositionLocalProvider(
+                                    LocalNavHostPadding provides PaddingValues()
+                                ) {
+                                    CustomTitleBar(
+                                        title = title,
+                                        onMinimizeClick = { windowState.isMinimized = true },
+                                        onCloseClick = ::exitApplication
+                                    )
+                                    HorizontalDivider()
+                                    //UrlOpenerScreen()
+                                    //ScanQrCode()
+                                    val genericInfo = koinInject<KmpGenericInfo>()
+                                    val customSettings = remember {
+                                        ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
                                     }
-                                )*/
-                                val genericInfo = koinInject<KmpGenericInfo>()
-                                val customSettings = remember {
-                                    ComposeSettingsDsl().apply(genericInfo.composeCustomPreferences())
+                                    val windowSize = calculateWindowSizeClass()
+                                    HomeNav(
+                                        genericInfo = genericInfo,
+                                        windowSize = windowSize,
+                                        bottomBarAdditions = {},
+                                        customPreferences = customSettings,
+                                    )
                                 }
-                                val windowSize = calculateWindowSizeClass()
-                                HomeNav(
-                                    genericInfo = genericInfo,
-                                    windowSize = windowSize,
-                                    bottomBarAdditions = {},
-                                    customPreferences = customSettings,
-                                )
                             }
                         }
                     }
                 }
             }
         }
-    }
+    )
 }
-
-/*@Composable
-fun <T : NavKey> rememberNavBackStack(vararg elements: T): SnapshotStateList<NavKey> {
-    return rememberSaveable {
-        elements.toList().toMutableStateList()
-    }
-}*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,5 +243,29 @@ fun FrameWindowScope.CustomTitleBar(
                 containerColor = Color.Transparent,
             )
         )
+    }
+}
+
+class KmpFirebaseConnectionImpl : KmpFirebaseConnection {
+    override fun getAllShows(): List<DbModel> = emptyList()
+    override fun insertShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
+    override fun removeShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
+    override fun updateShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
+    override fun toggleUpdateCheckShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
+    override fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched): Flow<Unit> = flowOf(Unit)
+    override fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched): Flow<Unit> = flowOf(Unit)
+
+    class KmpFirebaseListenerImpl : KmpFirebaseConnection.KmpFirebaseListener {
+        override fun getAllShowsFlow(): Flow<List<DbModel>> = flowOf(emptyList())
+
+        override fun getShowFlow(url: String?): Flow<DbModel?> = flowOf(null)
+
+        override fun findItemByUrlFlow(url: String?): Flow<Boolean> = flowOf(false)
+
+        override fun getAllEpisodesByShowFlow(showUrl: String): Flow<List<ChapterWatched>> = flowOf(emptyList())
+
+        override fun unregister() {
+
+        }
     }
 }

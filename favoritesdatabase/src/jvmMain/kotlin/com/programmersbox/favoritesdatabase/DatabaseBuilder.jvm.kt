@@ -3,18 +3,24 @@ package com.programmersbox.favoritesdatabase
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import ca.gosyer.appdirs.AppDirs
 import java.io.File
 
-actual class DatabaseBuilder {
+actual class DatabaseBuilder(
+    val appDirs: AppDirs,
+) {
     actual inline fun <reified T : RoomDatabase> build(name: String): RoomDatabase.Builder<T> {
-        return getRoomDatabase(getDatabaseBuilder(name))
+        return getRoomDatabase(
+            getDatabaseBuilder(
+                File(appDirs.getUserDataDir(), name)
+            )
+        )
     }
 }
 
 inline fun <reified T : RoomDatabase> getDatabaseBuilder(
-    name: String,
+    dbFile: File,
 ): RoomDatabase.Builder<T> {
-    val dbFile = File(System.getProperty("java.io.tmpdir"), name)
     return Room.databaseBuilder<T>(
         name = dbFile.absolutePath,
     ).setDriver(BundledSQLiteDriver())

@@ -216,6 +216,10 @@ class Navigation3Actions : NavigationActions {
         //return navBackStack.lastOrNull() == screen
         return navBackStack.contains(screen)
     }
+
+    override fun remove(route: NavKey) {
+        navBackStack.removeFromAll(route)
+    }
 }
 
 class TopLevelBackStack<T : Any>(startKey: T) {
@@ -273,5 +277,9 @@ class TopLevelBackStack<T : Any>(startKey: T) {
         topLevelStacks.remove(removedKey)
         topLevelKey = topLevelStacks.keys.last()
         updateBackStack()
+    }
+
+    fun removeFromAll(navKey: NavKey) = topLevelStacks.forEach {
+        it.value.removeAll { it == navKey }
     }
 }

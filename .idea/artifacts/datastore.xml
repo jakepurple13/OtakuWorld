@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="datastore">
+    <output-path>$PROJECT_DIR$/datastore/build/libs</output-path>
+    <root id="archive" name="datastore.jar">
+      <element id="module-output" name="OtakuWorld.datastore.androidMain" />
+    </root>
+  </artifact>
+</component>

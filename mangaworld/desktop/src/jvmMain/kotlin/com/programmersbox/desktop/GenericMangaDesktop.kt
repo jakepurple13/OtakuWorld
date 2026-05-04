@@ -1,5 +1,6 @@
 package com.programmersbox.desktop
 
+import androidx.compose.runtime.Composable
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -17,10 +18,12 @@ class GenericMangaDesktop(
     settingsHandling: NewSettingsHandling,
     mangaSettingsHandling: MangaNewSettingsHandling,
     appConfig: AppConfig,
+    navigationActions: NavigationActions,
 ) : GenericSharedManga(
     settingsHandling = settingsHandling,
     mangaSettingsHandling = mangaSettingsHandling,
     appConfig = appConfig,
+    navigationActions = navigationActions,
 ), PlatformGenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
@@ -51,4 +54,7 @@ class GenericMangaDesktop(
     ) {
 
     }
+
+    @Composable
+    override fun ProfileIcon(): String = ""
 }

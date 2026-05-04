@@ -24,7 +24,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("androidx") {
-            from("androidx.gradle:gradle-version-catalog:2026.04.00")
+            from("androidx.gradle:gradle-version-catalog:2026.04.01")
         }
     }
 }
@@ -47,7 +47,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(
     ":favoritesdatabase",
-    ":anime_sources",
+    //":anime_sources",
     //":manga_sources",
     //":novel_sources",
     ":app",
@@ -56,7 +56,7 @@ include(
     ":animeworld",
     ":mangaworld",
     ":novelworld",
-    ":animeworldtv",
+    //":animeworldtv",
     ":sharedutils",
     ":source_utilities",
     //":imageloader",

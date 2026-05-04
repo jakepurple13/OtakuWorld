@@ -54,6 +54,7 @@ import com.programmersbox.datastore.rememberUseLogoInQrCode
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.LoadingDialog
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
@@ -249,7 +250,7 @@ fun ScanQrCode(
     val sheetState = rememberModalBottomSheetState()
     val onDismiss: () -> Unit = {
         scope.launch { sheetState.hide() }
-            .invokeOnCompletion { navController.popBackStack() }
+            .invokeOnCompletion { navController.remove(Screen.ScanQrCodeScreen) }
     }
 
     val qrCodeInfo = viewModel.qrCodeInfo
@@ -284,6 +285,7 @@ fun ScanQrCode(
                     .padding(padding)
                     .fillMaxWidth()
             ) {
+                //TODO: Take from civit to get this working on desktop
                 ScannerWithPermissions(
                     onScanned = { scan ->
                         runCatching { Json.decodeFromString<QrCodeInfo>(scan) }
@@ -403,11 +405,10 @@ fun ScanQrCode(
                                     ?.getSourceByUrlFlow(it.url)
                                     ?.dispatchIo()
                                     ?.onStart { showLoadingDialog = true }
-                                    ?.catch {
-                                        showLoadingDialog = false
-                                    }
+                                    ?.catch { showLoadingDialog = false }
                                     ?.onEach { m ->
                                         showLoadingDialog = false
+                                        navController.remove(Screen.ScanQrCodeScreen)
                                         navController.details(m)
                                     }
                                     ?.collect()

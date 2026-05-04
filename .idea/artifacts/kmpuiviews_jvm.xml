@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kmpuiviews-jvm">
+    <output-path>$PROJECT_DIR$/kmpuiviews/build/libs</output-path>
+    <root id="archive" name="kmpuiviews-jvm.jar">
+      <element id="module-output" name="OtakuWorld.kmpuiviews.jvmMain" />
+    </root>
+  </artifact>
+</component>

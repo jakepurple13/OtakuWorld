@@ -104,6 +104,7 @@ composeXr = "1.0.0-alpha12"
 scenecore = "1.0.0-alpha13"
 
 lottieCompose = "6.7.1"
+kotlinMultiplatformAppdirsVersion = "2.0.0"
 
 sqlite = "2.6.2"
 kotlinTest = "2.3.21"
@@ -149,6 +150,8 @@ android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
+koin-compiler = { id = "io.insert-koin.compiler.plugin", version = "0.6.2" }
+hotswan-compiler = { id = "com.github.skydoves.compose.hotswan.compiler", version = "1.2.9" }
 
 [libraries]
 androidx-activity = { module = "androidx.activity:activity", version.ref = "activity" }
@@ -445,7 +448,7 @@ ziplineLoader = { module = "app.cash.zipline:zipline-loader", version.ref = "zip
 ziplineProfiler = { module = "app.cash.zipline:zipline-profiler", version.ref = "ziplineVersion" }
 retrofit = "com.squareup.retrofit2:retrofit:3.0.0"
 retrofitGson = "com.squareup.retrofit2:converter-gson:3.0.0"
-kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
+kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
 androidxWebkit = "androidx.webkit:webkit:1.15.0"
 
 mlkitTranslate = "com.google.mlkit:translate:17.0.3"
@@ -491,8 +494,10 @@ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 kmpalette-core = { module = "com.kmpalette:kmpalette-core", version.ref = "kmpalette" }
 
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
 material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClassVersion" }
+kotlin-multiplatform-appdirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "kotlinMultiplatformAppdirsVersion" }
 
 [bundles]
 compose = [

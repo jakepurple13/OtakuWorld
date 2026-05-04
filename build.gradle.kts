@@ -13,13 +13,20 @@ buildscript {
         classpath(libs.google.services)
         classpath(libs.firebase.crashlytics.gradle)
         classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:${libs.versions.latestAboutLibsRelease.get()}")
-        classpath("org.jetbrains.kotlin:kotlin-serialization:2.3.20")
+        classpath("org.jetbrains.kotlin:kotlin-serialization:${libs.versions.kotlin.get()}")
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
 subprojects {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-coroutines")) {
+                useVersion("1.10.2")
+            }
+        }
+    }
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
         compilerOptions {
             freeCompilerArgs.addAll(
@@ -77,8 +84,10 @@ plugins {
     alias(libs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
     id("com.squareup.wire") version "6.2.0" apply false
-    id("org.jetbrains.compose.hot-reload") version "1.0.0" apply false
+    id("org.jetbrains.compose.hot-reload") version "1.1.0" apply false
     alias(libs.plugins.buildKonfig) apply false
+    alias(libs.plugins.koin.compiler) apply false
+    alias(libs.plugins.hotswan.compiler) apply false
 }
 
 /*

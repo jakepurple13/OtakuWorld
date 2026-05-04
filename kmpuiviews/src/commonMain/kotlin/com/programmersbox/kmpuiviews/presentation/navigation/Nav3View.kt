@@ -79,7 +79,7 @@ fun Nav3(
         ),
         onBack = { navigation3Actions.popBackStack() },
         entryDecorators = listOf(
-            sharedEntryInSceneNavEntryDecorator,
+            //sharedEntryInSceneNavEntryDecorator,
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
