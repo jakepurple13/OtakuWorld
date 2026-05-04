@@ -35,8 +35,10 @@ class ExtensionLoader<T, R>(
 
     private fun findExtensionApks(): List<File> {
         if (!extensionsDir.exists() || !extensionsDir.isDirectory) return emptyList()
-        return extensionsDir.listFiles { f -> f.isFile && f.extension.equals("apk", ignoreCase = true) }
-            ?.toList() ?: emptyList()
+        return extensionsDir
+            .listFiles { f -> f.isFile && f.extension.equals("apk", ignoreCase = true) }
+            ?.toList()
+            ?: emptyList()
     }
 
     private suspend fun loadExtension(apkFile: File, mapped: suspend (T, ApplicationInfo, PackageInfo) -> R): List<R> {
@@ -44,6 +46,8 @@ class ExtensionLoader<T, R>(
             val manifest = ApkManifestParser.parse(apkFile)
 
             if (!manifest.features.contains(extensionFeature)) return emptyList()
+
+            //TODO: Need to only read jar files
 
             val jar = DexConverter.convert(apkFile, cacheDir) ?: return emptyList()
 

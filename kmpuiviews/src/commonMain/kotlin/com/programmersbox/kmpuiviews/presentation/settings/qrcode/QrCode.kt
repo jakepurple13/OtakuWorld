@@ -285,6 +285,7 @@ fun ScanQrCode(
                     .padding(padding)
                     .fillMaxWidth()
             ) {
+                //TODO: Take from civit to get this working on desktop
                 ScannerWithPermissions(
                     onScanned = { scan ->
                         runCatching { Json.decodeFromString<QrCodeInfo>(scan) }

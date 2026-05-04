@@ -9,9 +9,14 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.manga.shared.ChapterHolder
+import com.programmersbox.manga.shared.downloads.DownloadViewModel
+import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
+import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import java.io.File
 
@@ -32,6 +37,9 @@ fun main() {
                         }
                         singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
                         singleOf(::ChapterHolder)
+                        factoryOf(::DownloadedMediaHandler)
+                        viewModelOf(::ReadViewModel)
+                        viewModelOf(::DownloadViewModel)
                         single {
                             MangaNewSettingsHandling(
                                 createProtobuf(
