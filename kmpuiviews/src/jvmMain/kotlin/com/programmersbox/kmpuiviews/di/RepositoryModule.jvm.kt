@@ -5,6 +5,7 @@ import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.repository.DownloadStateRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.NotificationScreenRepository
+import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.repository.WorkRepository
@@ -21,4 +22,5 @@ actual fun platformRepositories(): Module = module {
     singleOf(::DownloadStateRepository) { bind<DownloadStateInterface>() }
     singleOf(::NotificationScreenRepository) { bind<NotificationScreenInterface>() }
     singleOf(::SourceInfoRepository)
+    singleOf(::PlatformRepository)
 }

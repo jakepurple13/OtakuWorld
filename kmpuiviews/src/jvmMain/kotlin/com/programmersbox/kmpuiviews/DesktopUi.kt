@@ -53,6 +53,8 @@ import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
@@ -140,10 +142,14 @@ fun ApplicationScope.BaseDesktopUi(
             val sourceLoader = koinInject<SourceLoader>()
             val sourceRepository = koinInject<SourceRepository>()
             val setupRepository = koinInject<SetupRepository>()
-
+            val extensionWatcher = koinInject<ExtensionWatcher>()
             LaunchedEffect(Unit) {
-                sourceLoader.blockingLoad()
-                sourceRepository.addSource(ExampleService.getSourceInformation())
+                extensionWatcher.observeExtensionsDir()
+                    .onEach {
+                        sourceLoader.blockingLoad()
+                        sourceRepository.addSource(ExampleService.getSourceInformation())
+                    }
+                    .launchIn(this)
             }
 
             LaunchedEffect(Unit) {

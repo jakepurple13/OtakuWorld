@@ -6,6 +6,8 @@ import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.ExtensionWatcher
+import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.manga.shared.ChapterHolder
@@ -14,6 +16,7 @@ import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
+import kotlinx.coroutines.flow.map
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -38,6 +41,14 @@ fun main() {
                         singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
                         singleOf(::ChapterHolder)
                         factoryOf(::DownloadedMediaHandler)
+                        single {
+                            ExtensionWatcher(
+                                get<MangaDesktopSettings>()
+                                    .extensionDirectory
+                                    .asFlow()
+                                    .map { File(it) }
+                            )
+                        }
                         viewModelOf(::ReadViewModel)
                         viewModelOf(::DownloadViewModel)
                         single {
