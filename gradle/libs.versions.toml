@@ -10,7 +10,7 @@ mokoBiometry = "0.4.0"
 blurhash = "0.4.0-SNAPSHOT"
 composeWebviewMultiplatform = "2.0.3"
 corePerformance = "1.0.0"
-filekitCore = "0.13.0"
+filekitCore = "0.14.0"
 generativeai = "0.9.0"
 generativeaiGoogle = "0.9.0-1.1.0"
 genericAi = "0.6.6"
@@ -113,7 +113,7 @@ core = "1.7.0"
 
 androidx-lifecycle = "2.10.0"
 
-compose-multiplatform = "1.11.0-beta03"
+compose-multiplatform = "1.11.0-rc01"
 
 kotlinx-coroutines = "1.10.2"
 
@@ -133,8 +133,8 @@ navigationevent = "1.1.0"
 navigation3 = "1.1.1"
 nav3Material = "1.3.0-alpha10"
 
-cmp-nav3 = "1.1.0"
-cmp-navevent = "1.0.1"
+cmp-nav3 = "1.1.1"
+cmp-navevent = "1.1.0-rc01"
 cmp-nav3-material3 = "1.3.0-alpha07"
 
 [plugins]
