@@ -19,8 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.UriHandler
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavHostController
+import ca.gosyer.appdirs.AppDirs
 import com.mikepenz.aboutlibraries.Libs
+import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
 import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
@@ -35,6 +38,7 @@ import io.kamel.image.config.animatedImageDecoder
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import java.io.File
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -207,4 +211,13 @@ class TranslationModelHandlerImpl : TranslationModelHandler {
     override suspend fun delete(model: KmpCustomRemoteModel) {
 
     }
+}
+
+class MangaDesktopSettings(
+    appDirs: AppDirs,
+) {
+    val extensionDirectory = DataStoreHandler(
+        key = stringPreferencesKey("extensionDirectory"),
+        defaultValue = File(appDirs.getUserDataDir(), "extensions").absolutePath
+    )
 }

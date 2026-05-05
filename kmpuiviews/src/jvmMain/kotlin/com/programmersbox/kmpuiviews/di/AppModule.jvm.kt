@@ -9,6 +9,7 @@ import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.TranslationItemHandler
 import com.programmersbox.kmpuiviews.TranslationModelHandlerImpl
@@ -48,9 +49,11 @@ actual fun platformModule(): Module = module {
         }
     }
 
+    singleOf(::MangaDesktopSettings)
+
     single {
         SourceLoader(
-            extensionsDir = File(get<AppDirs>().getUserDataDir(), "extensions"),
+            extensionsDir = { File(get<MangaDesktopSettings>().extensionDirectory.get()) },
             sourceType = get<KmpGenericInfo>().sourceType,
             sourceRepository = get(),
             appDirs = get(),

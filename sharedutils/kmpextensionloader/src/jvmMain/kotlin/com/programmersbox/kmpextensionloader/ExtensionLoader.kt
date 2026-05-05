@@ -12,7 +12,7 @@ import java.io.File
 import java.net.URLClassLoader
 
 class ExtensionLoader<T, R>(
-    private val extensionsDir: File,
+    private val extensionsDir: suspend () -> File,
     private val cacheDir: File,
     private val extensionFeature: String,
     private val metadataClass: String,
@@ -33,7 +33,8 @@ class ExtensionLoader<T, R>(
                 .flatten()
         }
 
-    private fun findExtensionJars(): List<File> {
+    private suspend fun findExtensionJars(): List<File> {
+        val extensionsDir = extensionsDir()
         if (!extensionsDir.exists() || !extensionsDir.isDirectory) return emptyList()
         return extensionsDir
             .listFiles { f -> f.isFile && f.extension.equals("jar", ignoreCase = true) }

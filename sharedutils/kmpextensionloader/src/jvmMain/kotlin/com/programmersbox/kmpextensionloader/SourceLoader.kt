@@ -20,7 +20,7 @@ private const val METADATA_CLASS = "programmersbox-otaku-class"
 private const val EXTENSION_FEATURE = "programmersbox.otaku.extension"
 
 actual class SourceLoader(
-    private val extensionsDir: File,
+    private val extensionsDir: suspend () -> File,
     sourceType: String,
     private val sourceRepository: SourceRepository,
     private val appDirs: AppDirs,

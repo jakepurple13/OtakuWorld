@@ -65,7 +65,7 @@ abstract class GenericSharedManga(
     val mangaSettingsHandling: MangaNewSettingsHandling,
     val settingsHandling: NewSettingsHandling,
     val appConfig: AppConfig,
-    private val navigationActions: NavigationActions,
+    protected val navigationActions: NavigationActions,
 ) : KmpGenericInfo {
 
     override val sourceType: String get() = "manga"

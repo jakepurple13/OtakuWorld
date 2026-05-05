@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
     id("org.jetbrains.compose.hot-reload")
+    id("kotlinx-serialization")
 }
 
 configurations.all {
@@ -47,6 +48,9 @@ kotlin {
             implementation(libs.bundles.datastoreLibs)
             implementation(libs.coroutinesCore)
             implementation(libs.kotlinx.coroutines.swing)
+            api(libs.androidx.navigation3.runtime)
+            api(libs.filekit.core)
+            api(libs.filekit.dialogs.compose)
         }
 
         jvmMain.dependencies {
