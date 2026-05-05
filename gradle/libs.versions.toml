@@ -3,6 +3,7 @@ anthropicSdkKotlin = "0.29.0"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha07"
 foundation = "1.10.3"
+kfswatch = "1.4.0"
 material3 = "1.10.0-alpha01"
 material3AdaptiveNavigationSuite = "1.10.0-alpha05"
 materialIconsExtended = "1.7.3"
@@ -171,6 +172,7 @@ barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref =
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.11.0-alpha07" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
+kfswatch = { module = "io.github.irgaly.kfswatch:kfswatch", version.ref = "kfswatch" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
 moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }

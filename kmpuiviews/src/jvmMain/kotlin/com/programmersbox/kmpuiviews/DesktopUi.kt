@@ -144,10 +144,12 @@ fun ApplicationScope.BaseDesktopUi(
             val setupRepository = koinInject<SetupRepository>()
             val extensionWatcher = koinInject<ExtensionWatcher>()
             LaunchedEffect(Unit) {
-                extensionWatcher.observeExtensionsDir()
+                val exampleService = ExampleService.getSourceInformation()
+                extensionWatcher
+                    .observeExtensionsDir()
                     .onEach {
                         sourceLoader.blockingLoad()
-                        sourceRepository.addSource(ExampleService.getSourceInformation())
+                        sourceRepository.addSource(exampleService)
                     }
                     .launchIn(this)
             }
