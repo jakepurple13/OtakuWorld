@@ -16,7 +16,6 @@ import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
-import kotlinx.coroutines.flow.map
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -43,10 +42,9 @@ fun main() {
                         factoryOf(::DownloadedMediaHandler)
                         single {
                             ExtensionWatcher(
-                                get<MangaDesktopSettings>()
+                                extensionsDir = get<MangaDesktopSettings>()
                                     .extensionDirectory
                                     .asFlow()
-                                    .map { File(it) }
                             )
                         }
                         viewModelOf(::ReadViewModel)

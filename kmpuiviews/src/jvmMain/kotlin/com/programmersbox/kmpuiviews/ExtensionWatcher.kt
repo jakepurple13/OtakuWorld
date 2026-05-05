@@ -10,14 +10,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import java.io.File
 
 /**
  * Watches the extensions directory for changes and emits events when extensions are added or removed.
  * Desktop-only implementation using Java WatchService.
  */
 class ExtensionWatcher(
-    private val extensionsDir: Flow<File>,
+    private val extensionsDir: Flow<String>,
     scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) {
     private val watcher = KfsDirectoryWatcher(scope)
@@ -25,7 +24,7 @@ class ExtensionWatcher(
     fun observeExtensionsDir() = extensionsDir
         .onEach {
             watcher.removeAll()
-            watcher.add(it.absolutePath)
+            watcher.add(it)
         }
         .flatMapLatest { watcher.onEventFlow }
         .onStart { emit(KfsDirectoryWatcherEvent("", "", KfsEvent.Create)) }
