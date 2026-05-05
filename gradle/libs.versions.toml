@@ -123,7 +123,7 @@ connectivity = "2.4.1"
 cmpLifecycle = "2.10.0"
 navigationCmp = "2.9.10-alpha01"
 
-buildKonfig = "0.18.0"
+buildKonfig = "0.20.0"
 
 compottie = "2.1.0"
 
