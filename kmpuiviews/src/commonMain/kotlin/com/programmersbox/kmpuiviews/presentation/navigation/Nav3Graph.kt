@@ -239,7 +239,9 @@ private fun EntryProviderScope<NavKey>.listSettings() {
         OtakuListView()
     }
 
-    twoPaneEntry<Screen.CustomListScreen.CustomListItem> {
+    entry<Screen.CustomListScreen.CustomListItem>(
+        metadata = ListDetailSceneStrategy.detailPane()
+    ) {
         OtakuCustomListScreenStandAlone(it)
     }
 
