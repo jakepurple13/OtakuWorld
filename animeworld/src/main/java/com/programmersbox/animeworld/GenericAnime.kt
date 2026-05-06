@@ -155,7 +155,7 @@ class GenericAnime(
 
     override val sourceType: String get() = "anime"
 
-    override fun chapterOnClick(
+    override suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,

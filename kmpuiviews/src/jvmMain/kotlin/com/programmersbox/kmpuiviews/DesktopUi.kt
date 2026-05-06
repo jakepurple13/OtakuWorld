@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +46,7 @@ import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.SetupRepository
+import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -167,23 +167,19 @@ fun ApplicationScope.BaseDesktopUi(
                 undecorated = true,
                 transparent = true,
             ) {
-                MaterialTheme(
-                    createColorScheme(
-                        isSystemInDarkTheme(),
-                        isExpressive = true
-                    )
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        shape = MaterialTheme.shapes.medium,
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outlineVariant
-                        )
+                KmpLocalCompositionSetup {
+                    OtakuMaterialTheme(
+                        settingsHandling = koinInject(),
                     ) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            KmpLocalCompositionSetup(
-                            ) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = MaterialTheme.shapes.medium,
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant
+                            )
+                        ) {
+                            Column(modifier = Modifier.fillMaxSize()) {
                                 CompositionLocalProvider(
                                     LocalNavHostPadding provides PaddingValues()
                                 ) {

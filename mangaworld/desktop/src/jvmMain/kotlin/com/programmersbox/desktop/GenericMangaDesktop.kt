@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -27,6 +28,7 @@ class GenericMangaDesktop(
     mangaSettingsHandling: MangaNewSettingsHandling,
     appConfig: AppConfig,
     navigationActions: NavigationActions,
+    private val desktopSettings: MangaDesktopSettings,
 ) : GenericSharedManga(
     settingsHandling = settingsHandling,
     mangaSettingsHandling = mangaSettingsHandling,
@@ -38,20 +40,24 @@ class GenericMangaDesktop(
 
     override val sourceType: String get() = "manga"
 
-    override fun chapterOnClick(
+    override suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        chapterHolder.chapters = allChapters
-        chapterHolder.chapterModel = model
-        ReadViewModel.navigateToMangaReader(
-            navController,
-            infoModel.title,
-            model.url,
-            model.sourceUrl
-        )
+        if (desktopSettings.useWebViewForReader.get()) {
+            navigationActions.webView(model.url)
+        } else {
+            chapterHolder.chapters = allChapters
+            chapterHolder.chapterModel = model
+            ReadViewModel.navigateToMangaReader(
+                navController,
+                infoModel.title,
+                model.url,
+                model.sourceUrl
+            )
+        }
     }
 
     override fun downloadChapter(

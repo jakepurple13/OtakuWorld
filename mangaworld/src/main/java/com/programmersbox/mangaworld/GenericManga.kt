@@ -40,7 +40,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -87,14 +86,14 @@ class GenericManga(
 
     override val deepLinkUri: String get() = "mangaworld://"
 
-    override fun chapterOnClick(
+    override suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
         chapterHolder.chapters = allChapters
-        if (runBlocking { mangaSettingsHandling.useNewReader.flow.first() }) {
+        if (mangaSettingsHandling.useNewReader.flow.first()) {
             chapterHolder.chapterModel = model
             ReadViewModel.navigateToMangaReader(
                 navController,

@@ -8,7 +8,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewState
@@ -21,17 +20,15 @@ fun WebViewScreen(
     url: String,
 ) {
     HideNavBarWhileOnScreen()
-    val state = rememberWebViewState(url = url)
-
-    DisposableEffect(Unit) {
-        state.webSettings.apply {
-            isJavaScriptEnabled = true
-            androidWebSettings.apply {
-                isAlgorithmicDarkeningAllowed = true
-                safeBrowsingEnabled = true
-            }
+    val state = rememberWebViewState(url = url) {
+        isJavaScriptEnabled = true
+        androidWebSettings.apply {
+            isAlgorithmicDarkeningAllowed = true
+            safeBrowsingEnabled = true
         }
-        onDispose { }
+        desktopWebSettings.apply {
+            offScreenRendering = true
+        }
     }
 
     Scaffold(

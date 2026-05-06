@@ -231,27 +231,25 @@ private fun DetailsScreenInternal(
                 is DetailState.Success -> {
                     val infoModel = state.info
 
-                    fun insertRecent() {
-                        scope.launch(Dispatchers.IO) {
-                            if (
-                                favoritesRepository.isIncognito(infoModel.source.serviceName) ||
-                                favoritesRepository.isIncognito(infoModel.url)
-                            ) return@launch
+                    suspend fun insertRecent() {
+                        if (
+                            favoritesRepository.isIncognito(infoModel.source.serviceName) ||
+                            favoritesRepository.isIncognito(infoModel.url)
+                        ) return
 
-                            historyDao.insertRecentlyViewed(
-                                RecentModel(
-                                    title = infoModel.title,
-                                    url = infoModel.url,
-                                    imageUrl = infoModel.imageUrl,
-                                    description = infoModel.description,
-                                    source = infoModel.source.serviceName,
-                                    timestamp = Clock.System.now().toEpochMilliseconds()
-                                )
+                        historyDao.insertRecentlyViewed(
+                            RecentModel(
+                                title = infoModel.title,
+                                url = infoModel.url,
+                                imageUrl = infoModel.imageUrl,
+                                description = infoModel.description,
+                                source = infoModel.source.serviceName,
+                                timestamp = Clock.System.now().toEpochMilliseconds()
                             )
+                        )
 
-                            val save = dataStoreHandling.historySave.get()
-                            if (save != -1) historyDao.removeOldData(save)
-                        }
+                        val save = dataStoreHandling.historySave.get()
+                        if (save != -1) historyDao.removeOldData(save)
                     }
 
                     DetailContent(
@@ -264,13 +262,15 @@ private fun DetailsScreenInternal(
                         showDownload = showDownload,
                         detailsActions = DetailsActions(
                             onClick = { model ->
-                                genericInfo.chapterOnClick(model, state.info.chapters, infoModel, navActions)
-                                insertRecent()
-                                scope.launch(Dispatchers.IO) { heatMapDao.upsertHeatMap() }
+                                scope.launch(Dispatchers.IO) {
+                                    genericInfo.chapterOnClick(model, state.info.chapters, infoModel, navActions)
+                                    insertRecent()
+                                    heatMapDao.upsertHeatMap()
+                                }
                             },
                             onDownload = { model ->
                                 genericInfo.downloadChapter(model, state.info.chapters, infoModel, navActions)
-                                insertRecent()
+                                scope.launch(Dispatchers.IO) { insertRecent() }
                                 if (!details.chapters.fastAny { it.url == model.url }) details.markAs(model, true)
                             },
                             shareChapter = {

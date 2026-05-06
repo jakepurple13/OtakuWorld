@@ -81,7 +81,7 @@ class GenericNovel(
 
     override val sourceType: String get() = "novel"
 
-    override fun chapterOnClick(
+    override suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,

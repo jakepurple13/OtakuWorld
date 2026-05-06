@@ -23,7 +23,11 @@ import org.koin.dsl.module
 import java.io.File
 
 fun main() {
-    DataStoreSettings { File(System.getProperty("user.home"), it).absolutePath }
+    val appDirs = AppDirs {
+        appName = "MangaWorld"
+        appAuthor = "jakepurple13"
+    }
+    DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
     application {
         BaseDesktopUi(
             title = "MangaWorld",

@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.UriHandler
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavHostController
 import ca.gosyer.appdirs.AppDirs
@@ -219,5 +220,10 @@ class MangaDesktopSettings(
     val extensionDirectory = DataStoreHandler(
         key = stringPreferencesKey("extensionDirectory"),
         defaultValue = File(appDirs.getUserDataDir(), "extensions").absolutePath
+    )
+
+    val useWebViewForReader = DataStoreHandler(
+        key = booleanPreferencesKey("useWebViewForReader"),
+        defaultValue = false
     )
 }

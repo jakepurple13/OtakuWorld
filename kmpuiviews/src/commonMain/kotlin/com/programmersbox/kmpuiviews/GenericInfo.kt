@@ -24,7 +24,7 @@ interface KmpGenericInfo {
 
     val apkString: AppUpdate.AppUpdates.() -> String?
 
-    fun chapterOnClick(
+    suspend fun chapterOnClick(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,

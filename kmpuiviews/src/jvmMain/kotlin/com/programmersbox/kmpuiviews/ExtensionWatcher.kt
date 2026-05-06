@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.onStart
 
 /**
  * Watches the extensions directory for changes and emits events when extensions are added or removed.
- * Desktop-only implementation using Java WatchService.
+ * Desktop-only implementation using KfsDirectoryWatcher.
  */
 class ExtensionWatcher(
     private val extensionsDir: Flow<String>,

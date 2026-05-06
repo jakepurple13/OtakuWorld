@@ -109,6 +109,7 @@ import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
@@ -151,94 +152,96 @@ fun HomeNav(
     CompositionLocalProvider(
         LocalWindowSizeClass provides windowSize
     ) {
-        OtakuMaterialTheme(
-            settingsHandling = settingsHandling,
-        ) {
-            InitialSetup()
+        KmpLocalCompositionSetup {
+            OtakuMaterialTheme(
+                settingsHandling = settingsHandling,
+            ) {
+                InitialSetup()
 
-            val showAllItem by settingsHandling.rememberShowAll()
-            val middleNavItem by settingsHandling.rememberMiddleNavigationAction()
-            val multipleActions by settingsHandling.rememberMiddleMultipleActions()
+                val showAllItem by settingsHandling.rememberShowAll()
+                val middleNavItem by settingsHandling.rememberMiddleNavigationAction()
+                val multipleActions by settingsHandling.rememberMiddleMultipleActions()
 
-            val navType = when (windowSize.widthSizeClass) {
-                WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
-                else -> NavigationBarType.Bottom
-            }
+                val navType = when (windowSize.widthSizeClass) {
+                    WindowWidthSizeClass.Expanded -> NavigationBarType.Rail
+                    else -> NavigationBarType.Bottom
+                }
 
-            val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
-            val floatingNavigation by rememberFloatingNavigation()
-            val blurKindState = rememberBlurKindState()
+                val showNavBar by changingSettingsRepository.showNavBar.collectAsStateWithLifecycle(true)
+                val floatingNavigation by rememberFloatingNavigation()
+                val blurKindState = rememberBlurKindState()
 
-            val navigationActions = LocalNavActions.current
+                val navigationActions = LocalNavActions.current
 
-            //val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+                //val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
-            genericInfo.DialogSetups()
+                genericInfo.DialogSetups()
 
-            SharedTransitionLayout {
-                Row(Modifier.fillMaxSize()) {
-                    Rail(
-                        navActions = navigationActions,
-                        showNavBar = showNavBar,
-                        navType = navType,
-                        showAllItem = showAllItem,
-                    )
+                SharedTransitionLayout {
+                    Row(Modifier.fillMaxSize()) {
+                        Rail(
+                            navActions = navigationActions,
+                            showNavBar = showNavBar,
+                            navType = navType,
+                            showAllItem = showAllItem,
+                        )
 
-                    HazeScaffold(
-                        blurKindState = blurKindState,
-                        bottomBar = {
-                            if (!floatingNavigation) {
-                                BottomNav(
-                                    navActions = navigationActions,
-                                    showNavBar = showNavBar,
-                                    navType = navType,
-                                    showBlur = showBlur,
-                                    isAmoledMode = isAmoledMode,
-                                    middleNavItem = middleNavItem,
-                                    multipleActions = multipleActions,
-                                    bottomBarAdditions = bottomBarAdditions,
-                                    modifier = Modifier.setBlurKind(blurKindState = blurKindState)
-                                    //modifier = Modifier.renderInSharedTransitionScopeOverlay()
-                                )
-                            } else {
-                                val shape = MaterialTheme.shapes.extraLarge
-                                HomeNavigationBar(
-                                    showNavBar = showNavBar,
-                                    navType = navType,
-                                    showBlur = showBlur,
-                                    isAmoledMode = isAmoledMode,
-                                    middleNavItem = middleNavItem,
-                                    //scrollBehavior = null,
-                                    multipleActions = multipleActions,
-                                    navActions = navigationActions,
-                                    modifier = Modifier
-                                        .padding(horizontal = 24.dp)
-                                        .windowInsetsPadding(WindowInsets.navigationBars)
-                                        .clip(shape)
-                                        .setBlurKind(
-                                            blurKindState = blurKindState,
-                                            liquidGlassShape = { shape }
-                                        )
-                                        .fillMaxWidth()
-                                    //.renderInSharedTransitionScopeOverlay()
+                        HazeScaffold(
+                            blurKindState = blurKindState,
+                            bottomBar = {
+                                if (!floatingNavigation) {
+                                    BottomNav(
+                                        navActions = navigationActions,
+                                        showNavBar = showNavBar,
+                                        navType = navType,
+                                        showBlur = showBlur,
+                                        isAmoledMode = isAmoledMode,
+                                        middleNavItem = middleNavItem,
+                                        multipleActions = multipleActions,
+                                        bottomBarAdditions = bottomBarAdditions,
+                                        modifier = Modifier.setBlurKind(blurKindState = blurKindState)
+                                        //modifier = Modifier.renderInSharedTransitionScopeOverlay()
+                                    )
+                                } else {
+                                    val shape = MaterialTheme.shapes.extraLarge
+                                    HomeNavigationBar(
+                                        showNavBar = showNavBar,
+                                        navType = navType,
+                                        showBlur = showBlur,
+                                        isAmoledMode = isAmoledMode,
+                                        middleNavItem = middleNavItem,
+                                        //scrollBehavior = null,
+                                        multipleActions = multipleActions,
+                                        navActions = navigationActions,
+                                        modifier = Modifier
+                                            .padding(horizontal = 24.dp)
+                                            .windowInsetsPadding(WindowInsets.navigationBars)
+                                            .clip(shape)
+                                            .setBlurKind(
+                                                blurKindState = blurKindState,
+                                                liquidGlassShape = { shape }
+                                            )
+                                            .fillMaxWidth()
+                                        //.renderInSharedTransitionScopeOverlay()
+                                    )
+                                }
+                            },
+                            contentWindowInsets = WindowInsets(0.dp),
+                            //blurBottomBar = showBlur && !floatingNavigation,
+                        ) { innerPadding ->
+                            CompositionLocalProvider(
+                                LocalNavHostPadding provides innerPadding,
+                                LocalSharedElementScope provides this@SharedTransitionLayout,
+                                //For later maybe
+                                //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
+                            ) {
+                                Nav3(
+                                    genericInfo = genericInfo,
+                                    navigation3Actions = navigationActions as Navigation3Actions,
+                                    windowSize = windowSize,
+                                    customPreferences = customPreferences,
                                 )
                             }
-                        },
-                        contentWindowInsets = WindowInsets(0.dp),
-                        //blurBottomBar = showBlur && !floatingNavigation,
-                    ) { innerPadding ->
-                        CompositionLocalProvider(
-                            LocalNavHostPadding provides innerPadding,
-                            LocalSharedElementScope provides this@SharedTransitionLayout,
-                            //For later maybe
-                            //LocalBottomAppBarScrollBehavior provides bottomAppBarScrollBehavior
-                        ) {
-                            Nav3(
-                                genericInfo = genericInfo,
-                                navigation3Actions = navigationActions as Navigation3Actions,
-                                windowSize = windowSize,
-                                customPreferences = customPreferences,
-                            )
                         }
                     }
                 }

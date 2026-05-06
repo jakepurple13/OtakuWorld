@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,16 +39,23 @@ data object PlatformSettings : NavKey
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun JvmSettingsScreen() {
-    var downloadPath by koinInject<MangaDesktopSettings>()
+    val settings = koinInject<MangaDesktopSettings>()
+    var downloadPath by settings
         .extensionDirectory
         .asState()
+
+    var useWebView by settings
+        .useWebViewForReader
+        .asState()
+
+    val colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         topBar = {
             LargeTopAppBar(
-                title = { Text("Jvm Settings") },
+                title = { Text("Desktop Settings") },
                 navigationIcon = { BackButton() },
                 scrollBehavior = scrollBehavior
             )
@@ -56,22 +64,35 @@ fun JvmSettingsScreen() {
     ) { padding ->
         LazyColumn(
             contentPadding = padding,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            item {
+            item(contentType = "downloadPath") {
                 val directoryPicker = rememberDirectoryPickerLauncher(
                     directory = PlatformFile(downloadPath)
                 ) { file -> file?.let { downloadPath = it.absolutePath() } }
 
-                ListItem(
+                SegmentedListItem(
                     content = { Text("Download Path") },
                     supportingContent = { Text(downloadPath) },
                     leadingContent = { Icon(Icons.Default.Download, null) },
                     onClick = { directoryPicker.launch() },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                    colors = colors,
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2)
+                )
+            }
+
+            item(contentType = "useWebView") {
+                SegmentedListItem(
+                    content = { Text("Use WebView") },
+                    supportingContent = { Text("Use a webview instead of the built in reader") },
+                    leadingContent = { Icon(Icons.Default.OpenInBrowser, null) },
+                    checked = useWebView,
+                    onCheckedChange = { useWebView = !useWebView },
+                    colors = colors,
+                    shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2)
                 )
             }
         }
