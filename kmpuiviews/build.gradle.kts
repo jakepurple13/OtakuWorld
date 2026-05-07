@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 
 plugins {
@@ -248,6 +249,20 @@ buildkonfig {
                 .getOrDefault(false)
                 .toString()
                 .also { println("IS_PRERELEASE: $it") }
+        )
+
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            const = true,
+            name = "VERSION_NAME_KMP",
+            value = AppInfo.otakuVersionName
+        )
+
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            const = true,
+            name = "VERSION_CODE_KMP",
+            value = AppInfo.versionCode.toString()
         )
     }
 }

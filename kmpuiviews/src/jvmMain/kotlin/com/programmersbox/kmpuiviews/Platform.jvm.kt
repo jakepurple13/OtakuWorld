@@ -99,8 +99,7 @@ actual class DateTimeFormatHandler {
     actual fun is24HourTime(): Boolean {
         val df = SimpleDateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault())
         return if (df is SimpleDateFormat) {
-            val sdf = df
-            val pattern = sdf.toPattern()
+            val pattern = df.toPattern()
             !pattern.contains("a")
         } else {
             true
@@ -124,10 +123,10 @@ actual fun logFirebaseMessage(message: String) {
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)
 
 @Composable
-actual fun appVersion(): String = "1.0.0"
+actual fun appVersion(): String = BuildKonfig.VERSION_NAME_KMP
 
 @Composable
-actual fun versionCode(): String = "1"
+actual fun versionCode(): String = BuildKonfig.VERSION_CODE_KMP
 
 @Composable
 actual fun Modifier.zoomOverlay(): Modifier = this

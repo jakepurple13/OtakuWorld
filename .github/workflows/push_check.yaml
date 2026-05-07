@@ -39,7 +39,7 @@ jobs:
 
   mangaworld_desktop:
     uses: ./.github/workflows/mangaworld_desktop_build.yaml
-    if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'pull_request'
+    if: github.event.inputs.build_mangaworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
 
   animeworld:
