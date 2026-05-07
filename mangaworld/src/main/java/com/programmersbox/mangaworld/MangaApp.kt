@@ -10,7 +10,8 @@ import org.koin.dsl.module
 class MangaApp : OtakuApp() {
     override val buildModules: Module = module { includes(appModule) }
 
-    override fun onCreated() {
+    override fun onCreate() {
+        super.onCreate()
         SubsamplingScaleImageView.setPreferredBitmapConfig(Bitmap.Config.ARGB_8888)
     }
 

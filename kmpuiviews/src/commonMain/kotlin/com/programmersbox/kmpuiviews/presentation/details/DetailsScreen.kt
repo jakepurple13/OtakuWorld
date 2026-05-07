@@ -74,6 +74,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.ExperimentalMediaQueryApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -347,7 +348,13 @@ data class DetailsActions(
     val rereadClick: () -> Unit,
 )
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalAnimationApi::class,
+    ExperimentalComposeUiApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMediaQueryApi::class
+)
 @Composable
 private fun DetailContent(
     dao: ItemDao,
@@ -363,36 +370,40 @@ private fun DetailContent(
         .doesNotificationExistFlow(state.info.url)
         .collectAsStateWithLifecycle(false)
 
-    if (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded) {
-        DetailsViewLandscape(
-            info = state.info,
-            isSaved = isSaved,
-            shareChapter = shareChapter,
-            isFavorite = state.action is DetailFavoriteAction.Remove,
-            chapters = details.chapters,
-            description = details.description,
-            onTranslateDescription = details::translateDescription,
-            showDownloadButton = { showDownload },
-            canNotify = details.dbModel?.shouldCheckForUpdate == true,
-            onPaletteSet = { details.palette = it },
-            detailsActions = detailsActions
-        )
-    } else {
-        DetailsView(
-            info = state.info,
-            isSaved = isSaved,
-            shareChapter = shareChapter,
-            isFavorite = state.action is DetailFavoriteAction.Remove,
-            chapters = details.chapters,
-            description = details.description,
-            onTranslateDescription = details::translateDescription,
-            showDownloadButton = { showDownload },
-            canNotify = details.dbModel?.shouldCheckForUpdate == true,
-            onPaletteSet = { details.palette = it },
-            onBitmapSet = { details.imageBitmap = it },
-            blurHash = details.blurHash,
-            detailsActions = detailsActions
-        )
+    when (windowSize.widthSizeClass) {
+        WindowWidthSizeClass.Expanded -> {
+            DetailsViewLandscape(
+                info = state.info,
+                isSaved = isSaved,
+                shareChapter = shareChapter,
+                isFavorite = state.action is DetailFavoriteAction.Remove,
+                chapters = details.chapters,
+                description = details.description,
+                onTranslateDescription = details::translateDescription,
+                showDownloadButton = { showDownload },
+                canNotify = details.dbModel?.shouldCheckForUpdate == true,
+                onPaletteSet = { details.palette = it },
+                detailsActions = detailsActions
+            )
+        }
+
+        else -> {
+            DetailsView(
+                info = state.info,
+                isSaved = isSaved,
+                shareChapter = shareChapter,
+                isFavorite = state.action is DetailFavoriteAction.Remove,
+                chapters = details.chapters,
+                description = details.description,
+                onTranslateDescription = details::translateDescription,
+                showDownloadButton = { showDownload },
+                canNotify = details.dbModel?.shouldCheckForUpdate == true,
+                onPaletteSet = { details.palette = it },
+                onBitmapSet = { details.imageBitmap = it },
+                blurHash = details.blurHash,
+                detailsActions = detailsActions
+            )
+        }
     }
 }
 
