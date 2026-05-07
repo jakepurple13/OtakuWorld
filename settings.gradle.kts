@@ -29,6 +29,10 @@ dependencyResolutionManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 /*plugins {
     id("com.gradle.develocity") version ("3.18.1")
 }

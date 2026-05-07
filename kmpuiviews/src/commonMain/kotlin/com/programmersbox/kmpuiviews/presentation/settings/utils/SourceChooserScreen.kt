@@ -143,6 +143,11 @@ fun SourceChooserScreen(
 
     GroupBottomScreen(
         includeInsetPadding = false,
+        navigationIcon = {
+            IconButton(
+                onClick = onChosen
+            ) { Icon(Icons.Default.Close, null) }
+        },
         title = stringResource(Res.string.chooseASource),
         list = remember {
             combine(

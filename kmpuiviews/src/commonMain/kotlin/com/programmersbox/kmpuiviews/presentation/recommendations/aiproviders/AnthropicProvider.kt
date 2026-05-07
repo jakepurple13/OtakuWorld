@@ -18,10 +18,12 @@ class AnthropicProvider(
         val anthropicSettings = aiSettings.get().anthropicSettings
         anthropic = Anthropic {
             apiKey = anthropicSettings?.apiKey ?: ""
-            defaultModel = anthropicSettings
+            defaultModel(
+                anthropicSettings
                 ?.modelName
-                ?.let { Model.entries.find { model -> model.id == it } }
+                    ?.let { models.find { model -> model.id == it } }
                 ?: Model.DEFAULT
+            )
         }
     }
 
@@ -41,5 +43,26 @@ class AnthropicProvider(
             ?.removePrefix("```json")
             ?.removeSuffix("```")
             ?.trim()
+    }
+
+    companion object {
+        val models = listOf(
+            Model.DEFAULT,
+            Model.CLAUDE_OPUS_4_7,
+            Model.CLAUDE_SONNET_4_6,
+            Model.CLAUDE_SONNET_4_5_20250929,
+            Model.CLAUDE_OPUS_4_6,
+            Model.CLAUDE_OPUS_4_5_20251101,
+            Model.CLAUDE_OPUS_4_1_20250805,
+            Model.CLAUDE_OPUS_4_20250514,
+            Model.CLAUDE_SONNET_4_20250514,
+            Model.CLAUDE_3_7_SONNET_20250219,
+            Model.CLAUDE_HAIKU_4_5_20251001,
+            Model.CLAUDE_3_5_HAIKU_20241022,
+            Model.CLAUDE_3_5_SONNET_20241022,
+            Model.CLAUDE_3_5_SONNET_20240620,
+            Model.CLAUDE_3_OPUS_20240229,
+            Model.CLAUDE_3_HAIKU_20240307,
+        )
     }
 }
