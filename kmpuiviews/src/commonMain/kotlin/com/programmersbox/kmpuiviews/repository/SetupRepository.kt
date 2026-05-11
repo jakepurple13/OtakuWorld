@@ -9,6 +9,8 @@ import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.utils.dispatchIo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
@@ -37,9 +39,12 @@ class SetupRepository(
             }
             .launchIn(scope)
 
-        dataStoreHandling
-            .currentService
-            .asFlow()
+        combine(
+            dataStoreHandling
+                .currentService
+                .asFlow(),
+            sourceRepository.sources,
+        ) { service, _ -> service }
             .mapNotNull {
                 if (it == null) {
                     sourceRepository
@@ -50,6 +55,7 @@ class SetupRepository(
                     sourceRepository.toSourceByApiServiceName(it)
                 }
             }
+            .distinctUntilChanged()
             .onEach { currentSourceRepository.emit(it.apiService) }
             .launchIn(scope)
 
