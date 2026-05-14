@@ -16,15 +16,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,8 +39,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
@@ -80,9 +80,13 @@ fun AccountInfoScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            item {
+            item(
+                contentType = "profile",
+                key = "profile",
+            ) {
                 ProfileStripCard(
                     profileUrl = profileUrl.orEmpty(),
+                    appConfig = appConfig,
                     modifier = Modifier
                         .animateItem()
                         .fillMaxWidth()
@@ -90,7 +94,10 @@ fun AccountInfoScreen(
                 )
             }
 
-            item {
+            item(
+                contentType = "hero",
+                key = "hero",
+            ) {
                 HeroChipsRow(
                     favorites = state.totalFavorites,
                     chapters = state.chapters,
@@ -103,7 +110,10 @@ fun AccountInfoScreen(
             }
 
             if (state.heatMaps.isNotEmpty()) {
-                item {
+                item(
+                    contentType = "heatMap",
+                    key = "heatMap",
+                ) {
                     var heatItem by remember { mutableStateOf<KmpHeat<Int>?>(null) }
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -140,7 +150,10 @@ fun AccountInfoScreen(
                 }
             }
 
-            item {
+            item(
+                contentType = "collection",
+                key = "collection",
+            ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
@@ -183,7 +196,10 @@ fun AccountInfoScreen(
                 }
             }
 
-            item {
+            item(
+                contentType = "readingList",
+                key = "readingList",
+            ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
@@ -231,7 +247,10 @@ fun AccountInfoScreen(
                 }
             }
 
-            item {
+            item(
+                contentType = "system",
+                key = "system",
+            ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
@@ -324,6 +343,7 @@ private fun SectionHeader(
 @Composable
 private fun ProfileStripCard(
     profileUrl: String,
+    appConfig: AppConfig,
     modifier: Modifier = Modifier,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -349,19 +369,19 @@ private fun ProfileStripCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .border(2.dp, Color.White.copy(alpha = 0.25f), CircleShape),
+                        .border(2.dp, MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f), CircleShape),
                 )
                 Column {
                     Text(
-                        text = "OtakuWorld",
+                        text = appConfig.appName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                     Text(
-                        text = "OtakuWorld member",
+                        text = "${appConfig.appName} member",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.65f),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.65f),
                     )
                 }
             }

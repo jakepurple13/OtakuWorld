@@ -80,6 +80,11 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.programmersbox.desktop"
             packageVersion = "1.0.0"
+
+            //com.apple.security.local-authentication
+            macOS {
+                entitlementsFile.set(project.file("entitlements.plist"))
+            }
         }
     }
 }
