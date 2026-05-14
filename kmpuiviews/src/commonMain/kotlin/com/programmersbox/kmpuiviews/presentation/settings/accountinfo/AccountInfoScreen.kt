@@ -435,6 +435,8 @@ private fun HeroChipsRow(
     FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+        maxItemsInEachRow = 2,
     ) {
         HeroStatChip(
             label = "Favorites",
