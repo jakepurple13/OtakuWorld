@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDownCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +39,6 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,7 +49,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -68,12 +66,9 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
-import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.CollapsableColumn
-import com.programmersbox.kmpuiviews.presentation.components.collapsablecolumn.rememberCollapsableTopBehavior
 import com.programmersbox.kmpuiviews.presentation.components.minus
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
@@ -189,11 +184,6 @@ fun DetailsView(
         }
     ) {
 
-        val collapsableBehavior = rememberCollapsableTopBehavior(
-            enterAlways = false,
-            canScroll = { !fabMenuExpanded }
-        )
-
         val fabBlur = Modifier.blur(
             animateDpAsState(
                 if (fabMenuExpanded) 2.dp else 0.dp
@@ -202,106 +192,67 @@ fun DetailsView(
 
         OtakuScaffold(
             topBar = {
-                CollapsableColumn(
-                    behavior = collapsableBehavior,
-                    modifier = fabBlur
-                ) {
-                    TopAppBar(
-                        modifier = Modifier
-                            .zIndex(2f)
-                            .setBlurKind(blurKindState),
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = if (showBlur)
-                                Color.Transparent
-                            else
-                                Color.Unspecified,
-                        ),
-                        title = {
-                            Text(
-                                info.title,
-                                modifier = Modifier.basicMarquee()
-                            )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                            }
-                        },
-                        actions = {
-                            DetailActions(
-                                genericInfo = genericInfo,
-                                scaffoldState = scaffoldState,
-                                navController = navController,
-                                scope = scope,
-                                info = info,
-                                isSaved = isSaved,
-                                dao = dao,
-                                isFavorite = isFavorite,
-                                canNotify = canNotify,
-                                notifyAction = detailsActions.notifyChange,
-                                onReverseChaptersClick = { reverseChapters = !reverseChapters },
-                                onShowLists = { showLists = true },
-                                addToForLater = {
-                                    scope.launch {
-                                        val result = AppConfig.forLaterUuid?.let {
-                                            listDao.addToList(
-                                                it,
-                                                info.title,
-                                                info.description,
-                                                info.url,
-                                                info.imageUrl,
-                                                info.source.serviceName
-                                            )
-                                        } == true
-
-                                        hostState.showSnackbar(
-                                            getString(
-                                                if (result) {
-                                                    Res.string.added_to_list
-                                                } else {
-                                                    Res.string.already_in_list
-                                                },
-                                                getString(Res.string.for_later)
-                                            ),
-                                            withDismissAction = true
+                TopAppBar(
+                    modifier = Modifier
+                        .zIndex(2f)
+                        .setBlurKind(blurKindState)
+                        .then(fabBlur),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = if (showBlur)
+                            Color.Transparent
+                        else
+                            Color.Unspecified,
+                    ),
+                    title = {
+                        Text(
+                            info.title,
+                            modifier = Modifier.basicMarquee()
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                        }
+                    },
+                    actions = {
+                        DetailActions(
+                            genericInfo = genericInfo,
+                            scaffoldState = scaffoldState,
+                            navController = navController,
+                            scope = scope,
+                            info = info,
+                            isSaved = isSaved,
+                            dao = dao,
+                            isFavorite = isFavorite,
+                            canNotify = canNotify,
+                            notifyAction = detailsActions.notifyChange,
+                            onReverseChaptersClick = { reverseChapters = !reverseChapters },
+                            onShowLists = { showLists = true },
+                            addToForLater = {
+                                scope.launch {
+                                    val result = AppConfig.forLaterUuid?.let {
+                                        listDao.addToList(
+                                            it,
+                                            info.title,
+                                            info.description,
+                                            info.url,
+                                            info.imageUrl,
+                                            info.source.serviceName
                                         )
-                                    }
-                                }
-                            ) {
-                                val expanded by remember { derivedStateOf { collapsableBehavior.state.collapsedFraction >= 0.5f } }
-                                ToolTipWrapper(
-                                    info = { Text("${if (expanded) "Show" else "Hide"} Details") }
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            scope.launch {
-                                                if (expanded) collapsableBehavior.state.animateExpand()
-                                                else collapsableBehavior.state.animateCollapse()
-                                            }
-                                        }
-                                    ) {
-                                        Icon(
-                                            Icons.Default.ArrowDropDownCircle,
-                                            modifier = Modifier.rotate(180 * (1 - collapsableBehavior.state.collapsedFraction)),
-                                            contentDescription = if (expanded) "Expand" else "Collapse",
-                                        )
-                                    }
+                                    } == true
+                                    hostState.showSnackbar(
+                                        getString(
+                                            if (result) Res.string.added_to_list else Res.string.already_in_list,
+                                            getString(Res.string.for_later)
+                                        ),
+                                        withDismissAction = true
+                                    )
                                 }
                             }
-                        },
-                        scrollBehavior = scrollBehavior
-                    )
-
-                    DetailsHeader(
-                        model = info,
-                        isFavorite = isFavorite,
-                        favoriteClick = { detailsActions.favoriteAction() },
-                        onPaletteSet = onPaletteSet,
-                        onBitmapSet = onBitmapSet,
-                        blurHash = blurHash,
-                        modifier = Modifier.collapse(),
-                    )
-                }
+                        )
+                    },
+                    scrollBehavior = scrollBehavior
+                )
             },
             floatingActionButton = {
                 DetailFloatingActionButtonMenu(
@@ -358,9 +309,7 @@ fun DetailsView(
                     )
                 }
             },
-            modifier = Modifier
-                .nestedScroll(collapsableBehavior.nestedScrollConnection)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
             val bottomPadding = with(LocalDensity.current) {
                 LocalNavHostPadding.current.calculateBottomPadding().toPx().toInt()
@@ -383,6 +332,17 @@ fun DetailsView(
                     .setBlurKindSource(blurKindState)
                     .then(fabBlur),
             ) {
+                item(key = "header") {
+                    DetailsHeader(
+                        model = info,
+                        isFavorite = isFavorite,
+                        favoriteClick = { detailsActions.favoriteAction() },
+                        onPaletteSet = onPaletteSet,
+                        onBitmapSet = onBitmapSet,
+                        blurHash = blurHash,
+                    )
+                }
+
                 if (info.description.isNotEmpty()) {
                     item {
                         Box {
@@ -390,20 +350,21 @@ fun DetailsView(
 
                             Text(
                                 description,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
+                                    .clip(MaterialTheme.shapes.medium)
                                     .combinedClickable(
                                         interactionSource = null,
                                         indication = ripple(),
                                         onClick = { descriptionVisibility = !descriptionVisibility },
                                         onLongClick = { onTranslateDescription(progress) }
                                     )
-                                    .padding(horizontal = 4.dp)
+                                    .padding(horizontal = 16.dp)
                                     .fillMaxWidth()
-                                    .animateContentSize(),
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                    .animateContentSize()
                             )
 
                             if (progress.value) {

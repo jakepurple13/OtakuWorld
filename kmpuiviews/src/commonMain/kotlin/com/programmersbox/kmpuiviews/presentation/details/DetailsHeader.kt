@@ -85,6 +85,9 @@ import otakuworld.kmpuiviews.generated.resources.chapter_count
 import otakuworld.kmpuiviews.generated.resources.done
 import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 
+private val BannerHeight = 180.dp
+private val CoverOverlap = 70.dp
+
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -136,12 +139,12 @@ internal fun DetailsHeader(
             .fillMaxWidth()
             .animateContentSize()
     ) {
+        // Fixed-height blurred banner — BannerHeight gives a cinematic anchor
         ImageLoaderChoice(
             imageUrl = imageUrl,
             name = "",
             headers = model.extras.mapValues { it.value.toString() },
-            //placeHolder = { painterLogo() },
-            placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
+            placeHolder = { blurHash ?: rememberVectorPainter(Icons.Default.BrokenImage) },
             contentScale = ContentScale.Crop,
             colorFilter = colorFilter,
             modifier = Modifier
@@ -153,45 +156,30 @@ internal fun DetailsHeader(
                             MaterialTheme.colorScheme.surface
                         )
                     )
-
                     this
-                        .blur(4.dp)
+                        .blur(8.dp)
                         .drawWithContent {
                             drawContent()
                             drawRect(brush)
                         }
                 }
-            //TODO: Maaaaybe add this to settings to be a blur and the old one is legacy blur?
-            /*.let {
-                if (blurEnabled) {
-                    it.hazeSource(haze)
-                } else {
-                }
-            }*/
         )
 
+        // Content column — padding(top = BannerHeight - CoverOverlap)
+        // This makes the cover art visually "float" over the banner's lower edge
         Column(
             modifier = Modifier
-                /*.hazeEffect(
-                    haze,
-                    style = HazeStyle(
-                        blurRadius = 12.dp,
-                        backgroundColor = MaterialTheme.colorScheme.surface,
-                        tint = HazeTint(
-                            MaterialTheme.colorScheme.surface.copy(
-                                alpha = if (MaterialTheme.colorScheme.surface.luminance() >= 0.5) 0.35f else 0.55f
-                            ),
-                        )
-                    )
-                ) {
-                    this.blurEnabled = blurEnabled
-                }*/
-                .padding(4.dp)
+                .fillMaxWidth()
+                .padding(top = BannerHeight - CoverOverlap)
                 .animateContentSize()
         ) {
-            Row {
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
                 Surface(
                     shape = MaterialTheme.shapes.medium,
+                    shadowElevation = 8.dp,
                     modifier = Modifier
                         .padding(4.dp)
                         .customSharedElement(
@@ -202,48 +190,21 @@ internal fun DetailsHeader(
                         )
                         .zoomOverlay()
                 ) {
-                    //var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
-
                     ImageLoaderChoice(
                         imageUrl = imageUrl,
                         name = "",
                         headers = model.extras.mapValues { it.value.toString() },
                         contentScale = ContentScale.FillBounds,
-                        //placeHolder = { painterLogo() },
                         placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                         onImageSet = onBitmapSet,
                         colorFilter = colorFilter,
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            /*.combinedClickable(
-                                onClick = {},
-                                onDoubleClick = { imagePopup = true }
-                            )*/
-                            /*.magnifier(
-                                sourceCenter = { magnifierCenter },
-                                magnifierCenter = { magnifierCenter.copy(y = magnifierCenter.y - 100) },
-                                zoom = 3f,
-                                size = DpSize(100.dp, 100.dp),
-                                cornerRadius = 8.dp
-                            )
-                            .pointerInput(Unit) {
-                                detectDragGestures(
-                                    // Show the magnifier at the original pointer position.
-                                    onDragStart = { magnifierCenter = it },
-                                    // Make the magnifier follow the finger while dragging.
-                                    onDrag = { _, delta -> magnifierCenter += delta },
-                                    // Hide the magnifier when the finger lifts.
-                                    onDragEnd = { magnifierCenter = Offset.Unspecified },
-                                    onDragCancel = { magnifierCenter = Offset.Unspecified }
-                                )
-                            }*/
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     )
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(start = 12.dp)
                 ) {
                     Text(
                         model.source.serviceName,
@@ -255,7 +216,10 @@ internal fun DetailsHeader(
                     Text(
                         model.title,
                         style = MaterialTheme.typography.titleMedium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                         modifier = Modifier
+                            .clip(MaterialTheme.shapes.medium)
                             .customSharedElement(
                                 OtakuTitleElement(
                                     origin = model.title,
@@ -269,16 +233,12 @@ internal fun DetailsHeader(
                                 onLongClick = {
                                     scope.launch {
                                         clipboard.setText(
-                                            buildAnnotatedString {
-                                                append(model.title)
-                                            }
+                                            buildAnnotatedString { append(model.title) }
                                         )
                                     }
                                 }
                             )
                             .fillMaxWidth(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     )
 
                     Crossfade(targetState = isFavorite, label = "") { target ->
@@ -300,7 +260,6 @@ internal fun DetailsHeader(
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
-
                             Text(
                                 stringResource(if (target) Res.string.removeFromFavorites else Res.string.addToFavorites),
                                 style = MaterialTheme.typography.titleSmall,
@@ -313,34 +272,12 @@ internal fun DetailsHeader(
                         stringResource(Res.string.chapter_count, model.chapters.size),
                         style = MaterialTheme.typography.bodyMedium,
                     )
-
-                    /*if(model.alternativeNames.isNotEmpty()) {
-                        Text(
-                            stringResource(R.string.alternateNames, model.alternativeNames.joinToString(", ")),
-                            maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
-                            style = MaterialTheme.typography.body2,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { descriptionVisibility = !descriptionVisibility }
-                        )
-                    }*/
-
-                    /*
-                    var descriptionVisibility by remember { mutableStateOf(false) }
-                    Text(
-                        model.description,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { descriptionVisibility = !descriptionVisibility },
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 2,
-                        style = MaterialTheme.typography.body2,
-                    )*/
                 }
             }
 
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
                 model.genres.forEach {
                     AssistChip(

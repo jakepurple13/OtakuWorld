@@ -57,6 +57,7 @@ import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -71,7 +72,7 @@ fun entryGraph(
     entry<Screen.RecentScreen> { RecentView() }
     entry<Screen.DetailsScreen.Details> {
         DetailsScreen(
-            windowSize = windowSize,
+            windowSize = LocalWindowSizeClass.current,
             details = koinViewModel { parametersOf(it) }
         )
     }
