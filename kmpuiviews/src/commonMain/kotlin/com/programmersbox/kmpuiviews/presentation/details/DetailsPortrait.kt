@@ -49,6 +49,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -308,8 +309,7 @@ fun DetailsView(
                     )
                 }
             },
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { p ->
             val bottomPadding = with(LocalDensity.current) {
                 LocalNavHostPadding.current.calculateBottomPadding().toPx().toInt()
@@ -350,20 +350,21 @@ fun DetailsView(
 
                             Text(
                                 description,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
+                                    .clip(MaterialTheme.shapes.medium)
                                     .combinedClickable(
                                         interactionSource = null,
                                         indication = ripple(),
                                         onClick = { descriptionVisibility = !descriptionVisibility },
                                         onLongClick = { onTranslateDescription(progress) }
                                     )
-                                    .padding(horizontal = 4.dp)
+                                    .padding(horizontal = 16.dp)
                                     .fillMaxWidth()
-                                    .animateContentSize(),
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                    .animateContentSize()
                             )
 
                             if (progress.value) {

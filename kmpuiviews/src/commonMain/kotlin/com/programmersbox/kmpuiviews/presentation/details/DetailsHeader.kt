@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -149,12 +148,11 @@ internal fun DetailsHeader(
             contentScale = ContentScale.Crop,
             colorFilter = colorFilter,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(BannerHeight)
+                .matchParentSize()
                 .composed {
                     val brush = Brush.verticalGradient(
                         listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                             MaterialTheme.colorScheme.surface
                         )
                     )
@@ -200,14 +198,13 @@ internal fun DetailsHeader(
                         placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
                         onImageSet = onBitmapSet,
                         colorFilter = colorFilter,
-                        modifier = Modifier
-                            .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
+                        modifier = Modifier.size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT),
                     )
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(start = 12.dp)
                 ) {
                     Text(
                         model.source.serviceName,
@@ -219,7 +216,10 @@ internal fun DetailsHeader(
                     Text(
                         model.title,
                         style = MaterialTheme.typography.titleMedium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                         modifier = Modifier
+                            .clip(MaterialTheme.shapes.medium)
                             .customSharedElement(
                                 OtakuTitleElement(
                                     origin = model.title,
@@ -239,8 +239,6 @@ internal fun DetailsHeader(
                                 }
                             )
                             .fillMaxWidth(),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = if (descriptionVisibility) Int.MAX_VALUE else 3,
                     )
 
                     Crossfade(targetState = isFavorite, label = "") { target ->
