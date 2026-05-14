@@ -170,7 +170,6 @@ internal fun DetailsHeader(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = BannerHeight - CoverOverlap)
                 .animateContentSize()
         ) {
             Row(

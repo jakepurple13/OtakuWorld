@@ -300,7 +300,7 @@ fun DetailsView(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(modifiedPaddingValues - LocalNavHostPadding.current)
-                    .padding(vertical = 4.dp)
+                    .padding(bottom = 4.dp)
             ) {
                 item(key = "header") {
                     DetailsHeader(
