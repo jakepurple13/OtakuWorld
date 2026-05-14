@@ -383,6 +383,8 @@ private fun DetailContent(
                 showDownloadButton = { showDownload },
                 canNotify = details.dbModel?.shouldCheckForUpdate == true,
                 onPaletteSet = { details.palette = it },
+                blurHash = details.blurHash,
+                onBitmapSet = { details.imageBitmap = it },
                 detailsActions = detailsActions
             )
         }

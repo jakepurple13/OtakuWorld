@@ -64,6 +64,8 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -108,6 +110,8 @@ fun DetailsViewLandscape(
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
     onPaletteSet: (Palette) -> Unit,
+    blurHash: BitmapPainter? = null,
+    onBitmapSet: (ImageBitmap) -> Unit = {},
     detailsActions: DetailsActions,
 ) {
     val dao = LocalItemDao.current
@@ -235,6 +239,8 @@ fun DetailsViewLandscape(
                 showDownloadButton = showDownloadButton,
                 canNotify = canNotify,
                 onPaletteSet = onPaletteSet,
+                blurHash = blurHash,
+                onBitmapSet = onBitmapSet,
                 scaffoldState = scaffoldState,
                 detailsActions = detailsActions,
                 modifier = Modifier.padding(p)
@@ -263,6 +269,8 @@ private fun DetailsLandscapeContent(
     showDownloadButton: () -> Boolean,
     canNotify: Boolean,
     onPaletteSet: (Palette) -> Unit,
+    blurHash: BitmapPainter? = null,
+    onBitmapSet: (ImageBitmap) -> Unit = {},
     detailsActions: DetailsActions,
     modifier: Modifier = Modifier,
     notificationRepository: NotificationRepository = koinInject(),
@@ -342,7 +350,7 @@ private fun DetailsLandscapeContent(
                 },
                 contentWindowInsets = WindowInsets.navigationBars,
                 containerColor = Color.Transparent,
-                modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c, b))) }
+                modifier = Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(c.copy(alpha = 0.85f), b))) }
             ) {
                 Column(
                     modifier = Modifier
@@ -354,6 +362,8 @@ private fun DetailsLandscapeContent(
                         isFavorite = isFavorite,
                         favoriteClick = { detailsActions.favoriteAction() },
                         onPaletteSet = onPaletteSet,
+                        blurHash = blurHash,
+                        onBitmapSet = onBitmapSet,
                         possibleDescription = {
                             if (info.description.isNotEmpty()) {
                                 var descriptionVisibility by remember { mutableStateOf(false) }
