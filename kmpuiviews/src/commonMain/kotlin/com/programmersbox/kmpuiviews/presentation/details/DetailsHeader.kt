@@ -145,7 +145,7 @@ internal fun DetailsHeader(
             imageUrl = imageUrl,
             name = "",
             headers = model.extras.mapValues { it.value.toString() },
-            placeHolder = { rememberVectorPainter(Icons.Default.BrokenImage) },
+            placeHolder = { blurHash ?: rememberVectorPainter(Icons.Default.BrokenImage) },
             contentScale = ContentScale.Crop,
             colorFilter = colorFilter,
             modifier = Modifier
