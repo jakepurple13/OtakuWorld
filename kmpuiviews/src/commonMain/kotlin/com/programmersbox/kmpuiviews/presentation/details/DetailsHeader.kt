@@ -86,6 +86,9 @@ import otakuworld.kmpuiviews.generated.resources.chapter_count
 import otakuworld.kmpuiviews.generated.resources.done
 import otakuworld.kmpuiviews.generated.resources.removeFromFavorites
 
+private val BannerHeight = 180.dp
+private val CoverOverlap = 70.dp
+
 @OptIn(ExperimentalLayoutApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
@@ -137,7 +140,7 @@ internal fun DetailsHeader(
             .fillMaxWidth()
             .animateContentSize()
     ) {
-        // Fixed-height blurred banner — 180.dp gives a cinematic anchor
+        // Fixed-height blurred banner — BannerHeight gives a cinematic anchor
         ImageLoaderChoice(
             imageUrl = imageUrl,
             name = "",
@@ -147,7 +150,7 @@ internal fun DetailsHeader(
             colorFilter = colorFilter,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .height(BannerHeight)
                 .composed {
                     val brush = Brush.verticalGradient(
                         listOf(
@@ -164,12 +167,12 @@ internal fun DetailsHeader(
                 }
         )
 
-        // Content column — padding(top=110.dp) = 180.dp banner − 70.dp overlap
+        // Content column — padding(top = BannerHeight - CoverOverlap)
         // This makes the cover art visually "float" over the banner's lower edge
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 110.dp)
+                .padding(top = BannerHeight - CoverOverlap)
                 .animateContentSize()
         ) {
             Row(
