@@ -82,9 +82,9 @@ compose.desktop {
             packageVersion = "1.0.0"
 
             //com.apple.security.local-authentication
-            macOS {
+            /*macOS {
                 entitlementsFile.set(project.file("entitlements.plist"))
-            }
+            }*/
         }
     }
 }

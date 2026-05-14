@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.presentation.details
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
@@ -28,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scrim
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
@@ -48,16 +48,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
@@ -66,9 +63,6 @@ import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBlurKindState
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
-import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.minus
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
@@ -76,7 +70,6 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.isScrollingUp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -112,7 +105,6 @@ fun DetailsView(
     detailsActions: DetailsActions,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
-    val blurKindState = rememberBlurKindState()
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
@@ -120,9 +112,6 @@ fun DetailsView(
 
     val settingsHandling = koinInject<NewSettingsHandling>()
     val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
-
-    val settings = LocalSettingsHandling.current
-    val showBlur by settings.rememberShowBlur()
 
     val hostState = remember { SnackbarHostState() }
 
@@ -142,7 +131,7 @@ fun DetailsView(
             try {
                 if (scaffoldState.isOpen) scaffoldState.close()
                 else navController.popBackStack()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 navController.popBackStack()
             }
         }
@@ -183,26 +172,9 @@ fun DetailsView(
             }
         }
     ) {
-
-        val fabBlur = Modifier.blur(
-            animateDpAsState(
-                if (fabMenuExpanded) 2.dp else 0.dp
-            ).value
-        )
-
         OtakuScaffold(
             topBar = {
                 TopAppBar(
-                    modifier = Modifier
-                        .zIndex(2f)
-                        .setBlurKind(blurKindState)
-                        .then(fabBlur),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = if (showBlur)
-                            Color.Transparent
-                        else
-                            Color.Unspecified,
-                    ),
                     title = {
                         Text(
                             info.title,
@@ -251,7 +223,7 @@ fun DetailsView(
                             }
                         )
                     },
-                    scrollBehavior = scrollBehavior
+                    scrollBehavior = scrollBehavior,
                 )
             },
             floatingActionButton = {
@@ -329,8 +301,6 @@ fun DetailsView(
                     .fillMaxHeight()
                     .padding(modifiedPaddingValues - LocalNavHostPadding.current)
                     .padding(vertical = 4.dp)
-                    .setBlurKindSource(blurKindState)
-                    .then(fabBlur),
             ) {
                 item(key = "header") {
                     DetailsHeader(
@@ -406,6 +376,13 @@ fun DetailsView(
             }
             Box(Modifier.padding(modifiedPaddingValues)) {
                 ScrollBar(listState)
+            }
+
+            if (fabMenuExpanded) {
+                Scrim(
+                    contentDescription = null,
+                    onClick = { fabMenuExpanded = false },
+                )
             }
         }
     }

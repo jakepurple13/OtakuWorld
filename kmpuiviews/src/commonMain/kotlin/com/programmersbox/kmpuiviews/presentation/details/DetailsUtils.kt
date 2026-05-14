@@ -448,6 +448,8 @@ fun DetailFloatingActionButtonMenu(
         expanded = fabMenuExpanded,
         button = {
             ToggleFloatingActionButton(
+                checked = fabMenuExpanded,
+                onCheckedChange = { onFabMenuExpandedChange(!fabMenuExpanded) },
                 modifier = Modifier
                     .semantics {
                         traversalIndex = -1f
@@ -459,9 +461,7 @@ fun DetailFloatingActionButtonMenu(
                         alignment = Alignment.BottomEnd,
                         scaleAnimationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
                         alphaAnimationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                    ),
-                checked = fabMenuExpanded,
-                onCheckedChange = { onFabMenuExpandedChange(!fabMenuExpanded) }
+                    )
             ) {
                 val imageVector by remember {
                     derivedStateOf {
