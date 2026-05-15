@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.di
 
+import androidx.compose.ui.window.TrayState
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.PlatformDataStoreHandling
@@ -41,6 +42,7 @@ actual fun platformModule(): Module = module {
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
+    singleOf(::TrayState)
 
     single {
         AppDirs {

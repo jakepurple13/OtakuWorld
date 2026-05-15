@@ -31,6 +31,8 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
+import androidx.compose.ui.window.Tray
+import androidx.compose.ui.window.TrayState
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
 import com.programmersbox.datastore.DataStoreHandling
@@ -45,8 +47,10 @@ import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
+import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -124,7 +128,6 @@ fun ApplicationScope.BaseDesktopUi(
                                 ),
                             )
                         }
-
                     }
                 )
                 moduleBlock()
@@ -154,6 +157,18 @@ fun ApplicationScope.BaseDesktopUi(
                     }
                     .launchIn(this)
             }
+
+            val backgroundWorkHandler = koinInject<BackgroundWorkHandler>()
+            LaunchedEffect(Unit) {
+                backgroundWorkHandler.setupPeriodicCheckers()
+            }
+
+            Tray(
+                state = koinInject<TrayState>(),
+                icon = painterLogo(),
+                tooltip = koinInject<AppConfig>().appName,
+                menu = {}
+            )
 
             val windowState = rememberWindowState()
 

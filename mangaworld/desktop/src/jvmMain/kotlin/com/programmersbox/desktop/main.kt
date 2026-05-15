@@ -8,6 +8,7 @@ import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.manga.shared.ChapterHolder
@@ -22,12 +23,15 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import java.io.File
 
-fun main() {
+fun main(args: Array<String>) {
     val appDirs = AppDirs {
         appName = "MangaWorld"
         appAuthor = "jakepurple13"
     }
     DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
+
+    if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
+
     application {
         BaseDesktopUi(
             title = "MangaWorld",

@@ -173,6 +173,8 @@ barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref =
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.11.0-alpha07" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
+github-nucleus-scheduler-testing = { module = "io.github.kdroidfilter:nucleus.scheduler-testing", version.ref = "nucleusSystem" }
+github-nucleus-scheduler = { module = "io.github.kdroidfilter:nucleus.scheduler", version.ref = "nucleusSystem" }
 kfswatch = { module = "io.github.irgaly.kfswatch:kfswatch", version.ref = "kfswatch" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
