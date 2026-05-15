@@ -1,8 +1,8 @@
 [versions]
-anthropicSdkKotlin = "0.30.2"
+anthropicSdkKotlin = "0.31.1"
 barcodeScanning = "17.3.0"
 biometricVersion = "1.4.0-alpha07"
-foundation = "1.10.3"
+foundation = "1.11.0"
 kfswatch = "1.4.0"
 material3 = "1.10.0-alpha01"
 material3AdaptiveNavigationSuite = "1.10.0-alpha05"
@@ -20,7 +20,7 @@ backdrop = "2.0.0-alpha03"
 heatmap = "1.0.5"
 humanReadable = "1.12.3"
 knotify = "0.4.3"
-kotlinxDatetime = "0.7.1"
+kotlinxDatetime = "0.8.0"
 
 javase = "3.5.4"
 kotlin = "2.3.21"
@@ -35,7 +35,7 @@ googleServices = "4.4.4"
 haze = "2.0.0-alpha02"
 kamelImage = "1.0.9"
 latestAboutLibsRelease = "14.2.0"
-coroutinesVersion = "1.10.2"
+coroutinesVersion = "1.11.0"
 glideVersion = "5.0.7"
 nucleusSystem = "1.15.5"
 pagecurl = "1.5.1"
@@ -54,7 +54,7 @@ jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
 okhttpVersion = "5.3.2"
-ktorVersion = "3.4.3"
+ktorVersion = "3.5.0"
 scanner = "0.7.1"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
@@ -83,7 +83,7 @@ piasy = "1.8.1"
 
 ### AnimeWorld
 autoBinding = "1.1-beta04"
-media3Version = "1.10.0"
+media3Version = "1.10.1"
 
 junit = "1.3.0"
 espresso-core = "3.7.0"
@@ -99,7 +99,7 @@ workinspector = "1.2"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
 datastore = "1.3.0-alpha09"
-ackpineVersion = "0.22.8"
+ackpineVersion = "0.22.9"
 
 arcore = "1.0.0-alpha13"
 composeXr = "1.0.0-alpha13"
@@ -115,9 +115,9 @@ core = "1.7.0"
 
 androidx-lifecycle = "2.10.0"
 
-compose-multiplatform = "1.11.0-rc01"
+compose-multiplatform = "1.11.0"
 
-kotlinx-coroutines = "1.10.2"
+kotlinx-coroutines = "1.11.0"
 
 material3WindowSizeClassVersion = "1.10.0-alpha05"
 connectivity = "2.4.1"
@@ -125,7 +125,7 @@ connectivity = "2.4.1"
 cmpLifecycle = "2.10.0"
 navigationCmp = "2.9.10-alpha01"
 
-buildKonfig = "0.20.0"
+buildKonfig = "0.21.0"
 
 compottie = "2.1.0"
 
@@ -136,7 +136,7 @@ navigation3 = "1.1.1"
 nav3Material = "1.3.0-beta01"
 
 cmp-nav3 = "1.1.1"
-cmp-navevent = "1.1.0-rc01"
+cmp-navevent = "1.1.0"
 cmp-nav3-material3 = "1.3.0-alpha07"
 
 [plugins]
@@ -301,7 +301,7 @@ glideCompose = "com.github.bumptech.glide:compose:1.0.0-beta09"
 
 androidCore = "androidx.core:core-ktx:1.18.0"
 appCompat = "androidx.appcompat:appcompat:1.7.1"
-material = "com.google.android.material:material:1.13.0"
+material = "com.google.android.material:material:1.14.0"
 
 coreLibraryDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 
