@@ -23,6 +23,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavHostController
 import ca.gosyer.appdirs.AppDirs
+import com.materialkolor.Contrast
 import com.materialkolor.dynamicColorScheme
 import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.datastore.DataStoreHandler
@@ -31,6 +32,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
+import io.github.kdroidfilter.nucleus.systemcolor.isSystemInHighContrast
 import io.github.kdroidfilter.nucleus.systemcolor.systemAccentColor
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
@@ -65,12 +67,22 @@ actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorSc
        6: Pink
     */
     val accentColor = systemAccentColor()
-
-    return remember(darkTheme, isExpressive) {
+    val isSystemInHighContrast = isSystemInHighContrast()
+    return remember(
+        darkTheme,
+        isExpressive,
+        accentColor,
+        isSystemInHighContrast
+    ) {
         when {
             accentColor != null -> dynamicColorScheme(
                 primary = accentColor,
-                isDark = darkTheme
+                isDark = darkTheme,
+                contrastLevel = if (isSystemInHighContrast) {
+                    Contrast.High.value
+                } else {
+                    Contrast.Default.value
+                }
             )
 
             darkTheme -> darkColorScheme(
