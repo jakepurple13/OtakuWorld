@@ -37,6 +37,7 @@ kamelImage = "1.0.9"
 latestAboutLibsRelease = "14.2.0"
 coroutinesVersion = "1.10.2"
 glideVersion = "5.0.7"
+nucleusSystem = "1.15.5"
 pagecurl = "1.5.1"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 pagingVersion = "3.5.0"
@@ -226,6 +227,7 @@ kamel-image = { module = "media.kamel:kamel-image-default", version.ref = "kamel
 kotlinStLib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinGp = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+nucleus-system-color = { module = "io.github.kdroidfilter:nucleus.system-color", version.ref = "nucleusSystem" }
 pagecurl = { module = "io.github.oleksandrbalan:pagecurl", version.ref = "pagecurl" }
 paging-compose-common = { module = "app.cash.paging:paging-compose-common", version.ref = "pagingComposeCommon" }
 palette = "androidx.palette:palette-ktx:1.0.0"

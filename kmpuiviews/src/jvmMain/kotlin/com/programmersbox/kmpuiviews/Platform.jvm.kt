@@ -23,6 +23,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.navigation.NavHostController
 import ca.gosyer.appdirs.AppDirs
+import com.materialkolor.dynamicColorScheme
 import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
@@ -30,6 +31,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
+import io.github.kdroidfilter.nucleus.systemcolor.systemAccentColor
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
@@ -50,8 +52,27 @@ actual fun platform(): String = "Desktop"
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 actual fun createColorScheme(darkTheme: Boolean, isExpressive: Boolean): ColorScheme {
+    /*
+       Mapping the Integer Values (macOS 11+):
+       nil/Error: Multicolor/Default
+       -1: Graphite
+       0: Red
+       1: Orange
+       2: Yellow
+       3: Green
+       4: Blue
+       5: Purple
+       6: Pink
+    */
+    val accentColor = systemAccentColor()
+
     return remember(darkTheme, isExpressive) {
         when {
+            accentColor != null -> dynamicColorScheme(
+                primary = accentColor,
+                isDark = darkTheme
+            )
+
             darkTheme -> darkColorScheme(
                 primary = Color(0xff90CAF9),
                 secondary = Color(0xff90CAF9)

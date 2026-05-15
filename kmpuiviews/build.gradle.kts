@@ -206,6 +206,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.swing)
                 api(libs.kotlin.multiplatform.appdirs)
                 implementation(libs.kfswatch)
+                implementation(libs.nucleus.system.color)
                 //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
             }
         }
