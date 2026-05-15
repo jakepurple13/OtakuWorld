@@ -374,7 +374,7 @@ private fun ProfileStripCard(
                 )
                 Column {
                     Text(
-                        text = appConfig.appName,
+                        text = appConfig.userName ?: appConfig.appName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimary,

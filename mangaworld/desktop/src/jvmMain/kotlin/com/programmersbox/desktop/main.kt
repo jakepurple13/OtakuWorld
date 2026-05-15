@@ -17,6 +17,7 @@ import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
+import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -28,6 +29,7 @@ fun main(args: Array<String>) {
         appName = "MangaWorld"
         appAuthor = "jakepurple13"
     }
+
     DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
 
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
@@ -40,9 +42,10 @@ fun main(args: Array<String>) {
                     module {
                         single {
                             AppConfig(
-                                "MangaWorld",
-                                BuildType.NoFirebase,
-                                false
+                                appName = "MangaWorld",
+                                buildType = BuildType.NoFirebase,
+                                isDebug = false,
+                                userName = SystemInfo.users().firstOrNull()?.name
                             )
                         }
                         singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
