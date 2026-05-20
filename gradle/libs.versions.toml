@@ -24,7 +24,7 @@ kotlinxDatetime = "0.8.0"
 
 javase = "3.5.4"
 kotlin = "2.3.21"
-kspVersion = "2.3.7"
+kspVersion = "2.3.8"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
@@ -44,7 +44,7 @@ pagingVersion = "3.5.0"
 protobufGradlePlugin = "0.10.0"
 qrose = "1.1.2"
 reorderable = "3.1.0"
-roomVersion = "3.0.0-alpha04"
+roomVersion = "3.0.0-alpha05"
 koin-bom = "4.2.1"
 coil = "3.4.0"
 landscapist = "2.9.7"
@@ -65,11 +65,11 @@ ziplineVersion = "1.27.0"
 protobufVersion = "4.34.1"
 sketchVersion = "3.3.2"
 activity = "1.13.0"
-composeVersion = "1.11.0-beta03"
+composeVersion = "1.12.0-alpha01"
 compose3Version = "1.3.0"
 compose3CommonVersion = "1.0.0-alpha01"
 compose3AdaptiveVersion = "1.1.0-alpha02"
-composeBomVersion = "2026.05.00"
+composeBomVersion = "2026.05.01"
 materialKolor = "5.0.0-alpha07"
 
 googlePerformancePlugin = "2.0.2"
@@ -115,7 +115,7 @@ core = "1.7.0"
 
 androidx-lifecycle = "2.10.0"
 
-compose-multiplatform = "1.11.0"
+compose-multiplatform = "1.12.0-alpha01"
 
 kotlinx-coroutines = "1.11.0"
 
@@ -132,8 +132,8 @@ compottie = "2.1.0"
 lifecycleViewmodelNavigation3 = "2.10.0"
 navigationevent = "1.1.1"
 
-navigation3 = "1.1.1"
-nav3Material = "1.3.0-beta01"
+navigation3 = "1.1.2"
+nav3Material = "1.3.0-beta02"
 
 cmp-nav3 = "1.1.1"
 cmp-navevent = "1.1.0"
@@ -171,7 +171,7 @@ androidx-navigationevent-compose = { module = "androidx.navigationevent:navigati
 cmp-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "cmp-navevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.11.0-alpha07" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.12.0-alpha01" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
 github-nucleus-scheduler-testing = { module = "io.github.kdroidfilter:nucleus.scheduler-testing", version.ref = "nucleusSystem" }
 github-nucleus-scheduler = { module = "io.github.kdroidfilter:nucleus.scheduler", version.ref = "nucleusSystem" }

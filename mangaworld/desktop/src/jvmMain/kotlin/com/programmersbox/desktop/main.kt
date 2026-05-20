@@ -1,6 +1,10 @@
 package com.programmersbox.desktop
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.window.application
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.createProtobuf
@@ -33,47 +37,55 @@ fun main(args: Array<String>) {
     DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
 
     if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
-
+    val desktopViewModelStoreOwner = DesktopViewModelStoreOwner()
     application {
-        BaseDesktopUi(
-            title = "MangaWorld",
-            moduleBlock = {
-                modules(
-                    module {
-                        single {
-                            AppConfig(
-                                appName = "MangaWorld",
-                                buildType = BuildType.NoFirebase,
-                                isDebug = false,
-                                userName = SystemInfo.users().firstOrNull()?.name
-                            )
-                        }
-                        singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
-                        singleOf(::ChapterHolder)
-                        factoryOf(::DownloadedMediaHandler)
-                        single {
-                            ExtensionWatcher(
-                                extensionsDir = get<MangaDesktopSettings>()
-                                    .extensionDirectory
-                                    .asFlow()
-                            )
-                        }
-                        viewModelOf(::ReadViewModel)
-                        viewModelOf(::DownloadViewModel)
-                        single {
-                            MangaNewSettingsHandling(
-                                createProtobuf(
-                                    serializer = MangaNewSettingsSerializer,
-                                    fileName = File(
-                                        get<AppDirs>().getUserDataDir(),
-                                        "MangaSettings.preferences_pb"
-                                    ).absolutePath
+        CompositionLocalProvider(
+            LocalViewModelStoreOwner provides desktopViewModelStoreOwner
+        ) {
+            BaseDesktopUi(
+                title = "MangaWorld",
+                moduleBlock = {
+                    modules(
+                        module {
+                            single {
+                                AppConfig(
+                                    appName = "MangaWorld",
+                                    buildType = BuildType.NoFirebase,
+                                    isDebug = false,
+                                    userName = SystemInfo.users().firstOrNull()?.name
                                 )
-                            )
+                            }
+                            singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
+                            singleOf(::ChapterHolder)
+                            factoryOf(::DownloadedMediaHandler)
+                            single {
+                                ExtensionWatcher(
+                                    extensionsDir = get<MangaDesktopSettings>()
+                                        .extensionDirectory
+                                        .asFlow()
+                                )
+                            }
+                            viewModelOf(::ReadViewModel)
+                            viewModelOf(::DownloadViewModel)
+                            single {
+                                MangaNewSettingsHandling(
+                                    createProtobuf(
+                                        serializer = MangaNewSettingsSerializer,
+                                        fileName = File(
+                                            get<AppDirs>().getUserDataDir(),
+                                            "MangaSettings.preferences_pb"
+                                        ).absolutePath
+                                    )
+                                )
+                            }
                         }
-                    }
-                )
-            }
-        )
+                    )
+                }
+            )
+        }
     }
+}
+
+private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
+    override val viewModelStore: ViewModelStore = ViewModelStore()
 }

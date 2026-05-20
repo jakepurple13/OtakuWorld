@@ -179,8 +179,8 @@ data class CustomList(
     @Embedded
     val item: CustomListItem,
     @Relation(
-        parentColumn = "uuid",
-        entityColumn = "uuid"
+        parentColumns = ["uuid"],
+        entityColumns = ["uuid"]
     )
     val list: List<CustomListInfo>,
 )
