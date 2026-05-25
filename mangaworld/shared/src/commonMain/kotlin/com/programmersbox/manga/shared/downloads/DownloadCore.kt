@@ -50,7 +50,7 @@ internal suspend fun executeDownload(
                 throw e
             } catch (e: Exception) {
                 attempt++
-                if (attempt >= maxRetries) throw e
+                if (attempt > maxRetries) throw e
                 delay((1L shl (attempt - 1)) * 1000L) // 1s, 2s, 4s
             }
         }
