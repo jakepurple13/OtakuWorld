@@ -1,31 +1,26 @@
 package com.programmersbox.mangaworld
 
-import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Environment
-import androidx.compose.ui.util.fastForEach
 import androidx.core.app.TaskStackBuilder
-import androidx.core.net.toUri
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.gsonutils.toJson
-import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
-import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
-import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
+import com.programmersbox.manga.shared.downloads.DownloadChapterWorker
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
+import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
@@ -34,18 +29,13 @@ import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
 import com.programmersbox.uiviews.utils.bindsGenericInfo
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
+import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import java.io.File
 
 val appModule = module {
     singleOf(::GenericManga) { bindsGenericInfo() }
@@ -66,6 +56,8 @@ val appModule = module {
     factoryOf(::DownloadedMediaHandler)
     viewModelOf(::DownloadViewModel)
     factoryOf(::MangaWorldZipper) bind Zipper::class
+    singleOf(::MangaDownloadManager)
+    workerOf(::DownloadChapterWorker)
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides
@@ -77,6 +69,7 @@ class GenericManga(
     settingsHandling: NewSettingsHandling,
     appConfig: AppConfig,
     navigationActions: NavigationActions,
+    private val mangaDownloadManager: MangaDownloadManager,
 ) : GenericSharedManga(
     mangaSettingsHandling = mangaSettingsHandling,
     settingsHandling = settingsHandling,
@@ -114,55 +107,13 @@ class GenericManga(
         }
     }
 
-    private fun downloadFullChapter(model: KmpChapterModel, title: String) {
-        //val fileLocation = runBlocking { context.folderLocationFlow.first() }
-        val fileLocation = DOWNLOAD_FILE_PATH
-
-        val direct = File("$fileLocation$title/${model.name}/")
-        if (!direct.exists()) direct.mkdir()
-
-        GlobalScope.launch {
-            model.getChapterInfo()
-                .dispatchIo()
-                .map { it.mapNotNull(KmpStorage::link) }
-                .map {
-                    it.mapIndexed { index, s ->
-                        //val location = "/$fileLocation/$title/${model.name}"
-
-                        //val file = File(Environment.getExternalStorageDirectory().path + location, "${String.format("%03d", index)}.png")
-
-                        DownloadManager.Request(s.toUri())
-                            //.setDestinationUri(file.toUri())
-                            .setDestinationInExternalPublicDir(
-                                Environment.DIRECTORY_DOWNLOADS,
-                                "MangaWorld/$title/${model.name}/${String.format("%03d", index)}"
-                            )
-                            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                            .setAllowedOverRoaming(true)
-                            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-                            .setMimeType("image/*")
-                            .setTitle(model.name)
-                            .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) Gecko/20100101 Firefox/77")
-                            .addRequestHeader("Accept-Language", "en-US,en;q=0.5")
-                    }
-                }
-                .onEach { it.fastForEach(context.downloadManager::enqueue) }
-                .collect()
-        }
-    }
-
     override fun downloadChapter(
         model: KmpChapterModel,
         allChapters: List<KmpChapterModel>,
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-        /*activity.requestPermissions(
-            *if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
-            else arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        ) { p -> if (p.isGranted) downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url }) }*/
-
-        downloadFullChapter(model, infoModel.title.ifBlank { infoModel.url })
+        mangaDownloadManager.downloadChapter(model, infoModel.title.ifBlank { infoModel.url })
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
