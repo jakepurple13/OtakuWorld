@@ -30,6 +30,7 @@ actual class MangaDownloadManager(private val scope: CoroutineScope) {
         get() = "${System.getProperty("user.home")}/Downloads/MangaWorld"
 
     init {
+        scope.coroutineContext[Job]?.invokeOnCompletion { httpClient.close() }
         scope.launch {
             for (request in queue) {
                 val cancelled = mutex.withLock { cancelledUrls.remove(request.chapterUrl) }
