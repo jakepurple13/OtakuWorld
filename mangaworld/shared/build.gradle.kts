@@ -6,6 +6,8 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(17)
+
     android {
         namespace = "com.programmersbox.manga.shared"
         androidResources {
@@ -41,9 +43,12 @@ kotlin {
             implementation(libs.multiplatform.lifecycle.runtime.compose)
 
             implementation(libs.zoomableModifier)
+            implementation(libs.coilCompose)
+        }
+
+        androidMain.dependencies {
             implementation(libs.panpf.zoomimage.compose.glide)
             implementation(libs.telephoto.zoomable.image.glide)
-            implementation(libs.coilCompose)
         }
 
         jvmMain.dependencies {
