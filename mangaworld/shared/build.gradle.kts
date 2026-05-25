@@ -49,6 +49,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.panpf.zoomimage.compose.glide)
             implementation(libs.telephoto.zoomable.image.glide)
+            implementation(libs.workRuntime)
         }
 
         jvmMain.dependencies {
