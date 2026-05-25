@@ -20,7 +20,7 @@ internal suspend fun executeDownload(
     client: HttpClient,
     request: DownloadRequest,
     maxRetries: Int = 3,
-    onProgress: (imagesDownloaded: Int, totalImages: Int) -> Unit,
+    onProgress: suspend (imagesDownloaded: Int, totalImages: Int) -> Unit,
     writeBytes: suspend (index: Int, bytes: ByteArray) -> Unit,
 ) {
     val urls = request.imageUrls

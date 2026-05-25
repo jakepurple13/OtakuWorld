@@ -6,7 +6,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -14,8 +13,6 @@ class DownloadChapterWorker(
     context: Context,
     workerParams: WorkerParameters,
 ) : CoroutineWorker(context, workerParams) {
-
-    private val httpClient = HttpClient()
 
     override suspend fun doWork(): Result {
         val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure()
@@ -28,10 +25,11 @@ class DownloadChapterWorker(
             ?.let { Json.decodeFromString<Map<String, String>>(it) }
             ?: emptyMap()
 
-        val destDir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "MangaWorld/${mangaTitle.sanitize()}/${chapterName.sanitize()}"
-        ).also { it.mkdirs() }
+        val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            ?: return Result.failure(workDataOf(KEY_ERROR to "External storage unavailable"))
+
+        val destDir = File(externalDir, "MangaWorld/${mangaTitle.sanitize()}/${chapterName.sanitize()}")
+            .also { it.mkdirs() }
 
         val request = DownloadRequest(
             chapterUrl = chapterUrl,
@@ -41,12 +39,13 @@ class DownloadChapterWorker(
             headers = headers,
         )
 
+        val client = HttpClient()
         return try {
             executeDownload(
-                client = httpClient,
+                client = client,
                 request = request,
                 onProgress = { done, total ->
-                    runBlocking { setProgress(workDataOf(KEY_PROGRESS_DONE to done, KEY_PROGRESS_TOTAL to total)) }
+                    setProgress(workDataOf(KEY_PROGRESS_DONE to done, KEY_PROGRESS_TOTAL to total))
                 },
                 writeBytes = { index, bytes ->
                     File(destDir, "%03d.png".format(index)).writeBytes(bytes)
@@ -55,7 +54,12 @@ class DownloadChapterWorker(
             Result.success()
         } catch (e: Exception) {
             if (runAttemptCount < 3) Result.retry()
-            else Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
+            else {
+                destDir.deleteRecursively()
+                Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
+            }
+        } finally {
+            client.close()
         }
     }
 
