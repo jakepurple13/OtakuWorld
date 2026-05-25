@@ -91,7 +91,9 @@ class DownloadCoreTest {
 
     @Test
     fun `throws after exhausting retries`() = runTest {
+        var callCount = 0
         val client = HttpClient(MockEngine {
+            callCount++
             respond(byteArrayOf(), HttpStatusCode.InternalServerError)
         })
 
@@ -104,6 +106,8 @@ class DownloadCoreTest {
                 writeBytes = { _, _ -> },
             )
         }
+
+        assertEquals(3, callCount) // 1 initial attempt + 2 retries
     }
 
     @Test
