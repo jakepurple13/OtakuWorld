@@ -328,6 +328,7 @@ roomCompiler = { module = "androidx.room3:room3-compiler", version.ref = "roomVe
 roomRuntime = { module = "androidx.room3:room3-runtime", version.ref = "roomVersion" }
 
 ktorCore = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
+ktorMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorVersion" }
 ktorAuth = { module = "io.ktor:ktor-client-auth", version.ref = "ktorVersion" }
 ktorAndroid = { module = "io.ktor:ktor-client-android", version.ref = "ktorVersion" }
 ktorLogging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVersion" }
