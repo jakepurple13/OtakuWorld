@@ -45,13 +45,25 @@ class DownloadChapterWorker(
                 client = client,
                 request = request,
                 onProgress = { done, total ->
-                    setProgress(workDataOf(KEY_PROGRESS_DONE to done, KEY_PROGRESS_TOTAL to total))
+                    setProgress(
+                        workDataOf(
+                            KEY_PROGRESS_DONE to done,
+                            KEY_PROGRESS_TOTAL to total,
+                            KEY_CHAPTER_NAME to chapterName,
+                            KEY_MANGA_TITLE to mangaTitle,
+                        )
+                    )
                 },
                 writeBytes = { index, bytes ->
                     File(destDir, "%03d.png".format(index)).writeBytes(bytes)
                 },
             )
-            Result.success()
+            Result.success(
+                workDataOf(
+                    KEY_CHAPTER_NAME to chapterName,
+                    KEY_MANGA_TITLE to mangaTitle,
+                )
+            )
         } catch (e: Exception) {
             if (runAttemptCount < 3) Result.retry()
             else {
