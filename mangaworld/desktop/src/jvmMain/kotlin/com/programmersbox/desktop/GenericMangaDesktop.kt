@@ -19,6 +19,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
+import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 
@@ -29,6 +30,7 @@ class GenericMangaDesktop(
     appConfig: AppConfig,
     navigationActions: NavigationActions,
     private val desktopSettings: MangaDesktopSettings,
+    private val mangaDownloadManager: MangaDownloadManager,
 ) : GenericSharedManga(
     settingsHandling = settingsHandling,
     mangaSettingsHandling = mangaSettingsHandling,
@@ -66,7 +68,7 @@ class GenericMangaDesktop(
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     ) {
-
+        mangaDownloadManager.downloadChapter(model, infoModel.title.ifBlank { infoModel.url })
     }
 
     @Composable

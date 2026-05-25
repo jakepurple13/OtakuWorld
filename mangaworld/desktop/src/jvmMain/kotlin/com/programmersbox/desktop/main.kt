@@ -17,6 +17,10 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
+import com.programmersbox.manga.shared.downloads.MangaDownloadManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
@@ -67,6 +71,7 @@ fun main(args: Array<String>) {
                             }
                             viewModelOf(::ReadViewModel)
                             viewModelOf(::DownloadViewModel)
+                            single { MangaDownloadManager(CoroutineScope(Dispatchers.IO + SupervisorJob())) }
                             single {
                                 MangaNewSettingsHandling(
                                     createProtobuf(
