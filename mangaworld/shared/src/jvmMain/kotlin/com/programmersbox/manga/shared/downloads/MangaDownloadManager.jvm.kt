@@ -1,15 +1,108 @@
 package com.programmersbox.manga.shared.downloads
 
 import com.programmersbox.kmpmodels.KmpChapterModel
+import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 
-actual class MangaDownloadManager {
+actual class MangaDownloadManager(private val scope: CoroutineScope) {
+
+    private val httpClient = HttpClient()
+    private val queue = Channel<DownloadRequest>(Channel.UNLIMITED)
     private val _downloads = MutableStateFlow<List<ChapterDownloadProgress>>(emptyList())
+    private val cancelledUrls = mutableSetOf<String>()
+    private val mutex = Mutex()
+    private val activeJob = AtomicReference<Pair<String, Job>?>(null)
+
+    private val rootDir: String
+        get() = "${System.getProperty("user.home")}/Downloads/MangaWorld"
+
+    init {
+        scope.launch {
+            for (request in queue) {
+                val cancelled = mutex.withLock { cancelledUrls.remove(request.chapterUrl) }
+                if (cancelled) {
+                    updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
+                    continue
+                }
+
+                val job = scope.launch {
+                    val destDir = File(
+                        "$rootDir/${request.mangaTitle.sanitize()}/${request.chapterName.sanitize()}"
+                    ).also { it.mkdirs() }
+
+                    try {
+                        executeDownload(
+                            client = httpClient,
+                            request = request,
+                            onProgress = { done, total ->
+                                updateState(request.chapterUrl) {
+                                    it.copy(state = DownloadState.Downloading(done, total))
+                                }
+                            },
+                            writeBytes = { index, bytes ->
+                                File(destDir, "%03d.png".format(index)).writeBytes(bytes)
+                            },
+                        )
+                        updateState(request.chapterUrl) { it.copy(state = DownloadState.Completed) }
+                    } catch (e: CancellationException) {
+                        updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
+                        throw e
+                    } catch (e: Exception) {
+                        updateState(request.chapterUrl) {
+                            it.copy(state = DownloadState.Failed(e.message ?: "Unknown"))
+                        }
+                    }
+                }
+
+                activeJob.set(request.chapterUrl to job)
+                job.join()
+                activeJob.set(null)
+            }
+        }
+    }
 
     actual fun downloadChapter(chapter: KmpChapterModel, mangaTitle: String) {
-        // TODO: implement JVM download logic
+        scope.launch {
+            val storages = chapter.getChapterInfo().firstOrNull() ?: return@launch
+            val urls = storages.mapNotNull { it.link }
+            if (urls.isEmpty()) return@launch
+            val headers = storages
+                .flatMap { it.headers.entries }
+                .associate { it.key to it.value }
+
+            val request = DownloadRequest(
+                chapterUrl = chapter.url,
+                chapterName = chapter.name,
+                mangaTitle = mangaTitle,
+                imageUrls = urls,
+                headers = headers,
+            )
+
+            mutex.withLock {
+                _downloads.update { list ->
+                    list + ChapterDownloadProgress(
+                        chapterUrl = chapter.url,
+                        chapterName = chapter.name,
+                        mangaTitle = mangaTitle,
+                        state = DownloadState.Queued,
+                    )
+                }
+            }
+            queue.send(request)
+        }
     }
 
     actual fun downloadChapters(chapters: List<KmpChapterModel>, mangaTitle: String) {
@@ -17,18 +110,45 @@ actual class MangaDownloadManager {
     }
 
     actual fun cancelDownload(chapterUrl: String) {
-        // TODO: implement JVM cancel logic
+        scope.launch {
+            mutex.withLock { cancelledUrls.add(chapterUrl) }
+            val (url, job) = activeJob.get() ?: return@launch
+            if (url == chapterUrl) job.cancel()
+        }
     }
 
     actual fun cancelAll() {
-        // TODO: implement JVM cancel-all logic
+        val pending = _downloads.value
+            .filter { it.state is DownloadState.Queued || it.state is DownloadState.Downloading }
+            .map { it.chapterUrl }
+        scope.launch {
+            mutex.withLock { cancelledUrls.addAll(pending) }
+        }
+        activeJob.get()?.second?.cancel()
+        _downloads.update { list ->
+            list.map { p ->
+                if (p.state is DownloadState.Queued || p.state is DownloadState.Downloading)
+                    p.copy(state = DownloadState.Cancelled)
+                else p
+            }
+        }
     }
 
-    actual fun getDownloadedChapterPath(chapter: KmpChapterModel, mangaTitle: String): String? = null
+    actual fun getDownloadedChapterPath(chapter: KmpChapterModel, mangaTitle: String): String? {
+        val dir = File("$rootDir/${mangaTitle.sanitize()}/${chapter.name.sanitize()}")
+        return if (dir.exists() && dir.listFiles()?.isNotEmpty() == true) dir.absolutePath else null
+    }
 
     actual fun observeDownloads(): Flow<List<ChapterDownloadProgress>> = _downloads.asStateFlow()
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
-        // TODO: implement JVM delete logic
+        File("$rootDir/${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()
+    }
+
+    private fun updateState(
+        chapterUrl: String,
+        transform: (ChapterDownloadProgress) -> ChapterDownloadProgress,
+    ) {
+        _downloads.update { list -> list.map { if (it.chapterUrl == chapterUrl) transform(it) else it } }
     }
 }
