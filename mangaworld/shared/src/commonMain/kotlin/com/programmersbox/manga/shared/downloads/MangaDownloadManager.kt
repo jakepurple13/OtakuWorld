@@ -15,7 +15,7 @@ data class ChapterDownloadProgress(
     val chapterUrl: String,
     val chapterName: String,
     val mangaTitle: String,
-    val state: DownloadState, 
+    val state: DownloadState,
 )
 
 expect class MangaDownloadManager {

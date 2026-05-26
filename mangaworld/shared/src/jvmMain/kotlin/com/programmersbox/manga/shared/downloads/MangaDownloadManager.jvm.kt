@@ -17,7 +17,9 @@ import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
-actual class MangaDownloadManager(private val scope: CoroutineScope) {
+actual class MangaDownloadManager(
+    private val scope: CoroutineScope,
+) {
 
     private val httpClient = HttpClient()
     private val queue = Channel<DownloadRequest>(Channel.UNLIMITED)
@@ -43,6 +45,8 @@ actual class MangaDownloadManager(private val scope: CoroutineScope) {
                     val destDir = File(
                         "$rootDir/${request.mangaTitle.sanitize()}/${request.chapterName.sanitize()}"
                     ).also { it.mkdirs() }
+
+                    println(destDir.absolutePath)
 
                     try {
                         executeDownload(
@@ -144,6 +148,7 @@ actual class MangaDownloadManager(private val scope: CoroutineScope) {
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
         File("$rootDir/${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()
+        _downloads.update { list -> list.filter { it.chapterUrl != chapter.url } }
     }
 
     private fun updateState(

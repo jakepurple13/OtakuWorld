@@ -69,12 +69,13 @@ class GenericManga(
     settingsHandling: NewSettingsHandling,
     appConfig: AppConfig,
     navigationActions: NavigationActions,
-    private val mangaDownloadManager: MangaDownloadManager,
+    mangaDownloadManager: MangaDownloadManager,
 ) : GenericSharedManga(
     mangaSettingsHandling = mangaSettingsHandling,
     settingsHandling = settingsHandling,
     appConfig = appConfig,
-    navigationActions = navigationActions
+    navigationActions = navigationActions,
+    mangaDownloadManager = mangaDownloadManager,
 ), GenericInfo {
 
     override val deepLinkUri: String get() = "mangaworld://"

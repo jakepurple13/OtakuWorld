@@ -258,4 +258,6 @@ class MangaDesktopSettings(
         key = booleanPreferencesKey("useWebViewForReader"),
         defaultValue = false
     )
+
+    //TODO: Add downloads directory
 }

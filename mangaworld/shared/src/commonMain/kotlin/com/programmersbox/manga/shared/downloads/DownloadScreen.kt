@@ -11,19 +11,24 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -107,7 +112,15 @@ private fun DownloadViewer(
         .fileList
         .collectAsStateWithLifecycle(emptyMap())
 
-    if (fileList.isEmpty()) {
+    val activeDownloads by viewModel
+        .activeDownloads
+        .collectAsStateWithLifecycle(emptyList())
+
+    val inProgressDownloads = activeDownloads.filter {
+        it.state is DownloadState.Queued || it.state is DownloadState.Downloading
+    }
+
+    if (fileList.isEmpty() && inProgressDownloads.isEmpty()) {
         EmptyState(p1)
     } else {
         LazyColumn(
@@ -117,16 +130,100 @@ private fun DownloadViewer(
                 .fillMaxSize()
                 .padding(4.dp)
         ) {
-            items(
-                items = fileList.entries.toList()
-            ) { file ->
-                ChapterItem(
-                    file = file,
-                    useNewReader = useNewReader,
-                    onDeleted = viewModel::delete
-                )
+            if (inProgressDownloads.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Active Downloads",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+                items(
+                    items = inProgressDownloads,
+                    key = { it.chapterUrl }
+                ) { download ->
+                    ActiveDownloadItem(
+                        download = download,
+                        onCancel = { viewModel.cancelDownload(it) }
+                    )
+                }
+            }
+
+            if (fileList.isNotEmpty()) {
+                if (inProgressDownloads.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Downloaded",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                items(
+                    items = fileList.entries.toList()
+                ) { file ->
+                    ChapterItem(
+                        file = file,
+                        useNewReader = useNewReader,
+                        onDeleted = viewModel::delete
+                    )
+                }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActiveDownloadItem(
+    download: ChapterDownloadProgress,
+    onCancel: (String) -> Unit,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 4.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        ListItem(
+            modifier = Modifier.padding(4.dp),
+            headlineContent = { Text(download.chapterName) },
+            supportingContent = { Text(download.mangaTitle) },
+            leadingContent = {
+                when (val state = download.state) {
+                    is DownloadState.Downloading -> {
+                        val fraction = if (state.totalImages > 0)
+                            state.imagesDownloaded.toFloat() / state.totalImages
+                        else 0f
+                        CircularProgressIndicator(
+                            progress = { fraction },
+                            modifier = Modifier.size(32.dp),
+                            strokeWidth = 3.dp
+                        )
+                    }
+
+                    else -> CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        strokeWidth = 3.dp
+                    )
+                }
+            },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (download.state is DownloadState.Downloading) {
+                        val state = download.state as DownloadState.Downloading
+                        if (state.totalImages > 0) {
+                            Text(
+                                text = "${state.imagesDownloaded}/${state.totalImages}",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                    IconButton(onClick = { onCancel(download.chapterUrl) }) {
+                        Icon(Icons.Default.Cancel, contentDescription = "Cancel download")
+                    }
+                }
+            }
+        )
     }
 }
 

@@ -30,12 +30,13 @@ class GenericMangaDesktop(
     appConfig: AppConfig,
     navigationActions: NavigationActions,
     private val desktopSettings: MangaDesktopSettings,
-    private val mangaDownloadManager: MangaDownloadManager,
+    mangaDownloadManager: MangaDownloadManager,
 ) : GenericSharedManga(
     settingsHandling = settingsHandling,
     mangaSettingsHandling = mangaSettingsHandling,
     appConfig = appConfig,
     navigationActions = navigationActions,
+    mangaDownloadManager = mangaDownloadManager,
 ), PlatformGenericInfo {
 
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }

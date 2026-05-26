@@ -8,7 +8,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
     id("org.jetbrains.compose.hot-reload")
     id("kotlinx-serialization")
+    //alias(libs.plugins.kotzilla)
 }
+
+/*kotzilla {
+    versionName = "1.0.0" // Your app version
+}*/
 
 configurations.all {
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-android")

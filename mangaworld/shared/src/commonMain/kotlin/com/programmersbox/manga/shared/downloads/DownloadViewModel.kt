@@ -13,6 +13,7 @@ data object DownloadRoute : NavKey
 
 class DownloadViewModel(
     private val downloadedMediaHandler: DownloadedMediaHandler,
+    private val mangaDownloadManager: MangaDownloadManager,
 ) : ViewModel() {
 
     val fileList = downloadedMediaHandler.listenToUpdates()
@@ -25,8 +26,14 @@ class DownloadViewModel(
                 .toMap()
         }
 
+    val activeDownloads = mangaDownloadManager.observeDownloads()
+
     init {
         downloadedMediaHandler.init("")
+    }
+
+    fun cancelDownload(chapterUrl: String) {
+        mangaDownloadManager.cancelDownload(chapterUrl)
     }
 
     fun delete(downloadedChapters: DownloadedChapters) {

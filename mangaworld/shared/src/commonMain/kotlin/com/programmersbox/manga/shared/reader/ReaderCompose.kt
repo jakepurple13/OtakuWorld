@@ -564,7 +564,7 @@ fun PagerView(
         when (val item = pageItems.getOrNull(page)) {
             is PageItem.Page -> ChapterPage(
                 chapterLink = { item.url },
-                isDownloaded = vm.isDownloaded,
+                isDownloaded = item.isDownloaded,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType,
@@ -602,7 +602,7 @@ fun FlipPagerView(
         pages.getOrNull(page)?.let {
             ChapterPage(
                 chapterLink = { it },
-                isDownloaded = vm.isDownloaded,
+                isDownloaded = vm.currentChapterIsDownloaded,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -647,7 +647,7 @@ fun CurlPagerView(
         pages.getOrNull(page)?.let {
             ChapterPage(
                 chapterLink = { it },
-                isDownloaded = vm.isDownloaded,
+                isDownloaded = vm.currentChapterIsDownloaded,
                 headers = vm.headers,
                 contentScale = ContentScale.Fit,
                 imageLoaderType = imageLoaderType
@@ -679,7 +679,7 @@ private fun LazyListScope.reader(
             ) {
                 ChapterPage(
                     chapterLink = { item.url },
-                    isDownloaded = vm.isDownloaded,
+                    isDownloaded = item.isDownloaded,
                     headers = vm.headers,
                     contentScale = ContentScale.FillWidth,
                     imageLoaderType = imageLoaderType,

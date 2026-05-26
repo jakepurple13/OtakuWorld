@@ -55,11 +55,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
@@ -108,6 +110,9 @@ fun DetailsView(
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
+    val downloadStates by genericInfo
+        .observeChapterDownloadStates(info.chapters, info.title)
+        .collectAsStateWithLifecycle(emptyMap())
     var reverseChapters by remember { mutableStateOf(false) }
 
     val settingsHandling = koinInject<NewSettingsHandling>()
@@ -370,6 +375,7 @@ fun DetailsView(
                         detailsActions = detailsActions,
                         showDownload = showDownloadButton,
                         swipeBehavior = swipeBehavior,
+                        downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
                         modifier = Modifier.animateItem()
                     )
                 }

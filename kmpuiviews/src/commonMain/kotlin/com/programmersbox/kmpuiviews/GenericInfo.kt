@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation3.runtime.EntryProviderScope
@@ -17,6 +18,23 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+
+@Stable
+sealed interface ChapterDownloadUiState {
+    @Stable
+    data object None : ChapterDownloadUiState
+
+    @Stable
+    data object Queued : ChapterDownloadUiState
+
+    @Stable
+    data class Downloading(val fraction: Float) : ChapterDownloadUiState
+
+    @Stable
+    data object Downloaded : ChapterDownloadUiState
+}
 
 interface KmpGenericInfo {
     val scrollBuffer: Int get() = 2
@@ -39,6 +57,16 @@ interface KmpGenericInfo {
         infoModel: KmpInfoModel,
         navController: NavigationActions,
     )
+
+    fun deleteDownloadedChapter(
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+    ) = Unit
+
+    fun observeChapterDownloadStates(
+        chapters: List<KmpChapterModel>,
+        mangaTitle: String,
+    ): Flow<Map<String, ChapterDownloadUiState>> = flowOf(emptyMap())
 
     @Composable
     fun DetailActions(infoModel: KmpInfoModel, tint: Color) = Unit

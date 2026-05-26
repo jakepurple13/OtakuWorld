@@ -17,15 +17,15 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
-import com.programmersbox.manga.shared.downloads.MangaDownloadManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
+import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -49,6 +49,7 @@ fun main(args: Array<String>) {
             BaseDesktopUi(
                 title = "MangaWorld",
                 moduleBlock = {
+                    //monitoring()
                     modules(
                         module {
                             single {
