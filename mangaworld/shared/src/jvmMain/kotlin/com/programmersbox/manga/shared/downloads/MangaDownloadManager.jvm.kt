@@ -38,7 +38,29 @@ actual class MangaDownloadManager(
         mangaDesktopSettings
             .downloadsDirectory
             .asFlow()
-            .onEach { rootDir = it }
+            .onEach { root ->
+                rootDir = root
+                _downloads.update {
+                    File(root)
+                        .listFiles()
+                        ?.flatMap { file ->
+                            val title = file.name
+                            file
+                                .listFiles()
+                                ?.map {
+                                    val path = it.absolutePath
+                                    ChapterDownloadProgress(
+                                        chapterUrl = path,
+                                        chapterName = it.name,
+                                        mangaTitle = title ?: "",
+                                        state = DownloadState.Completed
+                                    )
+                                }
+                                ?: emptyList()
+                        }
+                        ?: emptyList()
+                }
+            }
             .launchIn(scope)
     }
 
