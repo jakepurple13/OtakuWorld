@@ -147,7 +147,9 @@ class ReadViewModel(
     init {
         val url = chapterHolder.chapterModel?.url ?: mangaReader.mangaUrl
         list = chapterHolder.chapters.orEmpty()
-        currentChapter = list.indexOfFirst { l -> l.url == url }.coerceIn(0, list.lastIndex)
+        currentChapter = list
+            .indexOfFirst { l -> l.url == url }
+            .coerceIn(0, list.lastIndex)
 
         loadInitialChapter()
 
