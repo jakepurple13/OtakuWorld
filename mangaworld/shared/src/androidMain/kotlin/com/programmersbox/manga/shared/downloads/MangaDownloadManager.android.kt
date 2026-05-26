@@ -2,6 +2,7 @@ package com.programmersbox.manga.shared.downloads
 
 import android.content.Context
 import android.os.Environment
+import android.os.FileObserver
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -11,14 +12,21 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
 
-actual class MangaDownloadManager(private val context: Context) {
+actual class MangaDownloadManager(context: Context) {
 
     private val workManager = WorkManager.getInstance(context)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -28,6 +36,77 @@ actual class MangaDownloadManager(private val context: Context) {
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             "MangaWorld"
         )
+
+    // Progress from workers — only Queued/Downloading entries
+    private val _activeDownloads = MutableStateFlow<List<ChapterDownloadProgress>>(emptyList())
+
+    // Signals filesystem mutations; replay=1 so new subscribers get the latest tick immediately
+    private val _dirTick = MutableSharedFlow<Unit>(replay = 1)
+
+    init {
+        // Forward FileObserver events into _dirTick so observeDownloads re-evaluates filesystem
+        rootDirObserverFlow()
+            .onEach { _dirTick.emit(Unit) }
+            .launchIn(scope)
+
+        workManager
+            .getWorkInfosByTagFlow(DownloadChapterWorker.DOWNLOAD_TAG)
+            .onEach { infos ->
+                _activeDownloads.value = infos
+                    .filter {
+                        it.state == WorkInfo.State.ENQUEUED ||
+                                it.state == WorkInfo.State.BLOCKED ||
+                                it.state == WorkInfo.State.RUNNING
+                    }
+                    .map { info ->
+                        val chapterUrl = info.tags
+                            .firstOrNull { it != DownloadChapterWorker.DOWNLOAD_TAG } ?: ""
+                        val chapterName = info.progress.getString(DownloadChapterWorker.KEY_CHAPTER_NAME) ?: ""
+                        val mangaTitle = info.progress.getString(DownloadChapterWorker.KEY_MANGA_TITLE) ?: ""
+                        ChapterDownloadProgress(
+                            chapterUrl = chapterUrl,
+                            chapterName = chapterName,
+                            mangaTitle = mangaTitle,
+                            state = when (info.state) {
+                                WorkInfo.State.ENQUEUED,
+                                WorkInfo.State.BLOCKED,
+                                    -> DownloadState.Queued
+
+                                WorkInfo.State.RUNNING -> DownloadState.Downloading(
+                                    imagesDownloaded = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_DONE, 0),
+                                    totalImages = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_TOTAL, 0),
+                                )
+
+                                else -> DownloadState.Queued
+                            },
+                        )
+                    }
+                // When a worker reaches a terminal state, tick so the filesystem check re-runs
+                if (infos.any {
+                        it.state == WorkInfo.State.SUCCEEDED ||
+                                it.state == WorkInfo.State.FAILED ||
+                                it.state == WorkInfo.State.CANCELLED
+                    }
+                ) _dirTick.emit(Unit)
+            }
+            .launchIn(scope)
+    }
+
+    // Watches rootDir for directory-level events (title dirs created or removed)
+    @Suppress("DEPRECATION")
+    private fun rootDirObserverFlow(): Flow<Unit> = callbackFlow {
+        if (!rootDir.exists()) rootDir.mkdirs()
+        val observer = object : FileObserver(
+            rootDir.absolutePath,
+            CREATE or DELETE or MOVED_TO or MOVED_FROM,
+        ) {
+            override fun onEvent(event: Int, path: String?) {
+                trySend(Unit)
+            }
+        }
+        observer.startWatching()
+        awaitClose { observer.stopWatching() }
+    }.onStart { emit(Unit) }
 
     actual fun downloadChapter(chapter: KmpChapterModel, mangaTitle: String) {
         scope.launch {
@@ -80,42 +159,10 @@ actual class MangaDownloadManager(private val context: Context) {
     }
 
     actual fun observeDownloads(): Flow<List<ChapterDownloadProgress>> =
-        workManager.getWorkInfosByTagFlow(DownloadChapterWorker.DOWNLOAD_TAG).map { infos ->
-            infos.map { info ->
-                // WorkManager 2.11+ does not expose inputData on WorkInfo.
-                // The chapter URL is stored as a tag; name and title come from outputData
-                // (set by DownloadChapterWorker on completion/failure) or are empty strings
-                // when the work is still queued/running.
-                val chapterUrl = info.tags
-                    .firstOrNull { it != DownloadChapterWorker.DOWNLOAD_TAG } ?: ""
-                val chapterName = info.outputData.getString(DownloadChapterWorker.KEY_CHAPTER_NAME)
-                    ?: info.progress.getString(DownloadChapterWorker.KEY_CHAPTER_NAME)
-                    ?: ""
-                val mangaTitle = info.outputData.getString(DownloadChapterWorker.KEY_MANGA_TITLE)
-                    ?: info.progress.getString(DownloadChapterWorker.KEY_MANGA_TITLE)
-                    ?: ""
-                ChapterDownloadProgress(
-                    chapterUrl = chapterUrl,
-                    chapterName = chapterName,
-                    mangaTitle = mangaTitle,
-                    state = when (info.state) {
-                        WorkInfo.State.ENQUEUED,
-                        WorkInfo.State.BLOCKED -> DownloadState.Queued
-                        WorkInfo.State.RUNNING -> DownloadState.Downloading(
-                            imagesDownloaded = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_DONE, 0),
-                            totalImages = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_TOTAL, 0),
-                        )
-                        WorkInfo.State.SUCCEEDED -> DownloadState.Completed
-                        WorkInfo.State.FAILED -> DownloadState.Failed(
-                            info.outputData.getString(DownloadChapterWorker.KEY_ERROR) ?: "Unknown"
-                        )
-                        WorkInfo.State.CANCELLED -> DownloadState.Cancelled
-                    },
-                )
-            }
-        }
+        _activeDownloads.combine(_dirTick.onStart { emit(Unit) }) { downloads, _ -> downloads }
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
         File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()
+        scope.launch { _dirTick.emit(Unit) }
     }
 }

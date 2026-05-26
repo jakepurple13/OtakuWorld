@@ -39,6 +39,8 @@ class DownloadChapterWorker(
             headers = headers,
         )
 
+        println(request)
+
         val client = HttpClient()
         return try {
             executeDownload(
