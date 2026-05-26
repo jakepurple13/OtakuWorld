@@ -18,7 +18,6 @@ class DownloadChapterWorker(
     override suspend fun doWork(): Result {
         println(tags)
         val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure()
-        //TODO: Chapter name isn't being passed correctly???
         val chapterName = inputData.getString(KEY_CHAPTER_NAME) ?: return Result.failure()
         val chapterUrl = inputData.getString(KEY_CHAPTER_URL) ?: return Result.failure()
         val imageUrls = inputData.getString(KEY_IMAGE_URLS)
@@ -70,12 +69,7 @@ class DownloadChapterWorker(
                 null,
                 null,
             )
-            Result.success(
-                workDataOf(
-                    KEY_CHAPTER_NAME to chapterName,
-                    KEY_MANGA_TITLE to mangaTitle,
-                )
-            )
+            Result.success()
         } catch (e: Exception) {
             e.printStackTrace()
             if (runAttemptCount < 3) Result.retry()
