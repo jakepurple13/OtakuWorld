@@ -3,11 +3,15 @@ package com.programmersbox.manga.shared.downloads
 import android.content.Context
 import android.os.Environment
 import android.os.FileObserver
+import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.programmersbox.datastore.MediaCheckerNetworkType
+import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpChapterModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +30,10 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
 
-actual class MangaDownloadManager(context: Context) {
+actual class MangaDownloadManager(
+    context: Context,
+    private val settingsHandling: NewSettingsHandling,
+) {
 
     private val workManager = WorkManager.getInstance(context)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -125,10 +132,27 @@ actual class MangaDownloadManager(context: Context) {
                 DownloadChapterWorker.KEY_HEADERS to Json.encodeToString<Map<String, String>>(headers),
             )
 
+            val mediaCheckerSettings = settingsHandling
+                .mediaCheckerSettings
+                .get()
+
             val workRequest = OneTimeWorkRequestBuilder<DownloadChapterWorker>()
                 .setInputData(inputData)
                 .addTag(DownloadChapterWorker.DOWNLOAD_TAG)
                 .addTag(chapter.url)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(
+                            when (mediaCheckerSettings.networkType) {
+                                MediaCheckerNetworkType.Connected -> NetworkType.CONNECTED
+                                MediaCheckerNetworkType.Metered -> NetworkType.METERED
+                                MediaCheckerNetworkType.Unmetered -> NetworkType.UNMETERED
+                            }
+                        )
+                        .setRequiresCharging(mediaCheckerSettings.requiresCharging)
+                        .setRequiresBatteryNotLow(mediaCheckerSettings.requiresBatteryNotLow)
+                        .build()
+                )
                 .build()
 
             workManager
@@ -159,7 +183,34 @@ actual class MangaDownloadManager(context: Context) {
     }
 
     actual fun observeDownloads(): Flow<List<ChapterDownloadProgress>> =
-        _activeDownloads.combine(_dirTick.onStart { emit(Unit) }) { downloads, _ -> downloads }
+        _activeDownloads.combine(
+            _dirTick.onStart { emit(Unit) }
+        ) { downloads, _ ->
+            val activeUrls = downloads.mapTo(mutableSetOf()) { it.chapterUrl }
+            val completedFromDisk = rootDir
+                .listFiles()
+                ?.flatMap { titleDir ->
+                    titleDir
+                        .listFiles()
+                        ?.filter { it.isDirectory && it.listFiles()?.isNotEmpty() == true }
+                        ?.flatMap { chapterDir ->
+                            chapterDir
+                                .listFiles()
+                                ?.map {
+                                    ChapterDownloadProgress(
+                                        chapterUrl = it.absolutePath,
+                                        chapterName = chapterDir.name,
+                                        mangaTitle = titleDir.name,
+                                        state = DownloadState.Completed,
+                                    )
+                                }.orEmpty()
+                        }.orEmpty()
+                }.orEmpty()
+
+            println(completedFromDisk.joinToString("\n"))
+
+            downloads + completedFromDisk.filter { it.chapterUrl !in activeUrls }
+        }
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
         File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()

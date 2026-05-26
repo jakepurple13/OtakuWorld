@@ -62,7 +62,10 @@ import com.programmersbox.manga.shared.settings.PlayerSettings
 import com.programmersbox.manga.shared.settings.ReaderSettings
 import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -110,6 +113,7 @@ abstract class GenericSharedManga(
                     }
                 }
             }
+            .flowOn(Dispatchers.IO)
     }
 
     override fun deleteDownloadedChapter(

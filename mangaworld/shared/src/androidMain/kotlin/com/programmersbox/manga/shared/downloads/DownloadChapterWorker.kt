@@ -1,6 +1,7 @@
 package com.programmersbox.manga.shared.downloads
 
 import android.content.Context
+import android.media.MediaScannerConnection
 import android.os.Environment
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -15,12 +16,15 @@ class DownloadChapterWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        println(tags)
         val mangaTitle = inputData.getString(KEY_MANGA_TITLE) ?: return Result.failure()
+        //TODO: Chapter name isn't being passed correctly???
         val chapterName = inputData.getString(KEY_CHAPTER_NAME) ?: return Result.failure()
         val chapterUrl = inputData.getString(KEY_CHAPTER_URL) ?: return Result.failure()
         val imageUrls = inputData.getString(KEY_IMAGE_URLS)
             ?.let { Json.decodeFromString<List<String>>(it) }
             ?: return Result.failure()
+
         val headers = inputData.getString(KEY_HEADERS)
             ?.let { Json.decodeFromString<Map<String, String>>(it) }
             ?: emptyMap()
@@ -60,6 +64,12 @@ class DownloadChapterWorker(
                     File(destDir, "%03d.png".format(index)).writeBytes(bytes)
                 },
             )
+            MediaScannerConnection.scanFile(
+                applicationContext,
+                destDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),
+                null,
+                null,
+            )
             Result.success(
                 workDataOf(
                     KEY_CHAPTER_NAME to chapterName,
@@ -67,6 +77,7 @@ class DownloadChapterWorker(
                 )
             )
         } catch (e: Exception) {
+            e.printStackTrace()
             if (runAttemptCount < 3) Result.retry()
             else {
                 destDir.deleteRecursively()

@@ -111,7 +111,7 @@ fun DetailsView(
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
     val downloadStates by genericInfo
-        .observeChapterDownloadStates(info.chapters, info.title)
+        .observeChapterDownloadStates(info.chapters, info.title.ifBlank { info.url })
         .collectAsStateWithLifecycle(emptyMap())
     var reverseChapters by remember { mutableStateOf(false) }
 
