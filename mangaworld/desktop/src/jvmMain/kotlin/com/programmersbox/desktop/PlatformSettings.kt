@@ -88,6 +88,25 @@ fun JvmSettingsScreen() {
                 )
             }
 
+            item(contentType = "downloadChapterPath") {
+                var downloadPath by settings
+                    .downloadsDirectory
+                    .asState()
+
+                val directoryPicker = rememberDirectoryPickerLauncher(
+                    directory = PlatformFile(downloadPath)
+                ) { file -> file?.let { downloadPath = it.absolutePath() } }
+
+                SegmentedListItem(
+                    content = { Text("Download Chapter Path") },
+                    supportingContent = { Text(downloadPath) },
+                    leadingContent = { Icon(Icons.Default.Download, null) },
+                    onClick = { directoryPicker.launch() },
+                    colors = colors,
+                    shapes = ListItemDefaults.segmentedShapes(index = 0, count = PLATFORM_SETTINGS_COUNT)
+                )
+            }
+
             item(contentType = "useWebView") {
                 var useWebView by settings
                     .useWebViewForReader

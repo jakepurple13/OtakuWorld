@@ -44,3 +44,5 @@ internal fun PaddingValues.animate() = PaddingValues(
 
 @Composable
 internal fun Dp.animate() = animateDpAsState(targetValue = this, label = "")
+
+expect fun sanitizePath(path: String): String

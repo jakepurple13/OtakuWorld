@@ -72,7 +72,12 @@ fun main(args: Array<String>) {
                             }
                             viewModelOf(::ReadViewModel)
                             viewModelOf(::DownloadViewModel)
-                            single { MangaDownloadManager(CoroutineScope(Dispatchers.IO + SupervisorJob())) }
+                            single {
+                                MangaDownloadManager(
+                                    scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+                                    mangaDesktopSettings = get()
+                                )
+                            }
                             single {
                                 MangaNewSettingsHandling(
                                     createProtobuf(

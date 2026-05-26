@@ -1,6 +1,7 @@
 package com.programmersbox.manga.shared.downloads
 
 import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -19,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 actual class MangaDownloadManager(
     private val scope: CoroutineScope,
+    mangaDesktopSettings: MangaDesktopSettings,
 ) {
 
     private val httpClient = HttpClient()
@@ -28,8 +32,15 @@ actual class MangaDownloadManager(
     private val mutex = Mutex()
     private val activeJob = AtomicReference<Pair<String, Job>?>(null)
 
-    private val rootDir: String
-        get() = "${System.getProperty("user.home")}/Downloads/MangaWorld"
+    private var rootDir: String = "${System.getProperty("user.home")}/Downloads/MangaWorld"
+
+    init {
+        mangaDesktopSettings
+            .downloadsDirectory
+            .asFlow()
+            .onEach { rootDir = it }
+            .launchIn(scope)
+    }
 
     init {
         scope.coroutineContext[Job]?.invokeOnCompletion { httpClient.close() }

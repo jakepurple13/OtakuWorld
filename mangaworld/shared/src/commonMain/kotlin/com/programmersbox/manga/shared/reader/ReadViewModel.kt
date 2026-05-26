@@ -72,7 +72,7 @@ class ReadViewModel(
                 PlatformFile(localPath)
                     .list()
                     .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
-                    .fastMap { it.toKotlinxIoPath().toString() }
+                    .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
                     .let { emit(it) }
             }
                 .catch { emit(emptyList()) }
@@ -239,7 +239,6 @@ class ReadViewModel(
             }
             .catch { exceptionDao.insertException(it) }
             .onEach { urls ->
-                println(urls.joinToString("\n"))
                 pageItems.add(PageItem.ChapterTransition(chapterIndex + 1, chapterIndex))
                 pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterIndex, i, false) })
                 pageItems.add(PageItem.ChapterTransition(chapterIndex, chapterIndex - 1))
