@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import java.io.File
 import kotlin.math.abs
@@ -57,7 +58,7 @@ class DownloadChapterWorker(
 
         println(request)
 
-        val notifId = abs(chapterUrl.hashCode())
+        val notifId = abs(chapterUrl.hashCode()) % 100_000
         val notifCompleteId = notifId + 100_000
         val notifFailId = notifId + 200_000
 
@@ -115,6 +116,9 @@ class DownloadChapterWorker(
                 notification = buildCompleteNotification(mangaTitle, chapterName),
             )
             Result.success()
+        } catch (e: CancellationException) {
+            notificationManager.cancel(notifId)
+            throw e
         } catch (e: Exception) {
             e.printStackTrace()
             if (runAttemptCount < 3) {
