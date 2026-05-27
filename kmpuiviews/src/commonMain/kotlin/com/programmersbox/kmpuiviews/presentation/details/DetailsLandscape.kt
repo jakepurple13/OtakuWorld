@@ -70,10 +70,12 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
@@ -118,6 +120,9 @@ fun DetailsViewLandscape(
     val listDao = koinInject<ListRepository>()
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
+    val downloadStates by genericInfo
+        .observeChapterDownloadStates(info.chapters, info.title.ifBlank { info.url })
+        .collectAsStateWithLifecycle(emptyMap())
 
     var reverseChapters by remember { mutableStateOf(false) }
 
@@ -279,6 +284,11 @@ private fun DetailsLandscapeContent(
     val dao = LocalItemDao.current
     var showLists by remember { mutableStateOf(false) }
 
+    val genericInfo = koinInject<KmpGenericInfo>()
+    val downloadStates by genericInfo
+        .observeChapterDownloadStates(info.chapters, info.title.ifBlank { info.url })
+        .collectAsStateWithLifecycle(emptyMap())
+
     val settingsHandling = koinInject<NewSettingsHandling>()
     val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()
 
@@ -428,6 +438,7 @@ private fun DetailsLandscapeContent(
                         showDownload = showDownloadButton,
                         detailsActions = detailsActions,
                         swipeBehavior = swipeBehavior,
+                        downloadUiState = downloadStates[c.url] ?: ChapterDownloadUiState.None,
                         modifier = Modifier.animateItem()
                     )
                 }

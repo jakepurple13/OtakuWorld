@@ -258,4 +258,9 @@ class MangaDesktopSettings(
         key = booleanPreferencesKey("useWebViewForReader"),
         defaultValue = false
     )
+
+    val downloadsDirectory = DataStoreHandler(
+        key = stringPreferencesKey("downloadsDirectory"),
+        defaultValue = File("${System.getProperty("user.home")}/Downloads/MangaWorld").absolutePath
+    )
 }

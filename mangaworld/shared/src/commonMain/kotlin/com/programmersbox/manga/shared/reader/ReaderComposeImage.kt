@@ -3,20 +3,26 @@ package com.programmersbox.manga.shared.reader
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
@@ -26,7 +32,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
 import com.programmersbox.datastore.mangasettings.ImageLoaderType
-import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -77,10 +82,20 @@ internal fun Kamel(
             CircularProgressIndicator(progress = { progress })
         },
         onFailure = {
-            Text(
-                "Press to refresh",
-                modifier = Modifier.clickable { onRefresh() }
-            )
+            LaunchedEffect(Unit) { it.printStackTrace() }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clickable { onRefresh() }
+                    .clip(MaterialTheme.shapes.medium)
+                    .padding(16.dp)
+            ) {
+                Text("Press to refresh")
+                Text(
+                    it.message ?: "Unknown error",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
         },
         contentDescription = null,
         contentScale = contentScale,

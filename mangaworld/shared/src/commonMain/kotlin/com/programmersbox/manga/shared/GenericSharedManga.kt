@@ -33,8 +33,11 @@ import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.painterLogo
@@ -48,6 +51,8 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import com.programmersbox.manga.shared.downloads.DownloadRoute
 import com.programmersbox.manga.shared.downloads.DownloadScreen
+import com.programmersbox.manga.shared.downloads.DownloadState
+import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.onboarding.ReaderOnboarding
 import com.programmersbox.manga.shared.reader.ReadView
 import com.programmersbox.manga.shared.reader.ReadViewModel
@@ -57,6 +62,11 @@ import com.programmersbox.manga.shared.settings.PlayerSettings
 import com.programmersbox.manga.shared.settings.ReaderSettings
 import com.programmersbox.manga.shared.settings.ReaderSettingsScreen
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -66,6 +76,7 @@ abstract class GenericSharedManga(
     val settingsHandling: NewSettingsHandling,
     val appConfig: AppConfig,
     protected val navigationActions: NavigationActions,
+    protected val mangaDownloadManager: MangaDownloadManager,
 ) : KmpGenericInfo {
 
     override val sourceType: String get() = "manga"
@@ -80,6 +91,37 @@ abstract class GenericSharedManga(
         }
 
     override val scrollBuffer: Int = 4
+
+    override fun observeChapterDownloadStates(
+        chapters: List<KmpChapterModel>,
+        mangaTitle: String,
+    ): Flow<Map<String, ChapterDownloadUiState>> {
+        return mangaDownloadManager
+            .observeDownloads()
+            .map { activeDownloads ->
+                chapters.associate { chapter ->
+                    chapter.url to when (val s = activeDownloads.firstOrNull { it.chapterUrl == chapter.url }?.state) {
+                        is DownloadState.Queued -> ChapterDownloadUiState.Queued
+                        is DownloadState.Downloading -> ChapterDownloadUiState.Downloading(
+                            if (s.totalImages > 0) s.imagesDownloaded.toFloat() / s.totalImages else 0f
+                        )
+
+                        else -> if (mangaDownloadManager.getDownloadedChapterPath(chapter, mangaTitle) != null)
+                            ChapterDownloadUiState.Downloaded
+                        else
+                            ChapterDownloadUiState.None
+                    }
+                }
+            }
+            .flowOn(Dispatchers.IO)
+    }
+
+    override fun deleteDownloadedChapter(
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+    ) {
+        mangaDownloadManager.deleteChapter(model, infoModel.title.ifBlank { infoModel.url })
+    }
 
     @Composable
     override fun ComposeShimmerItem() {

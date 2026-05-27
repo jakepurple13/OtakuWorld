@@ -205,7 +205,7 @@ kotlin {
                 implementation(libs.knotify)
                 implementation(libs.kotlinx.coroutines.swing)
                 api(libs.kotlin.multiplatform.appdirs)
-                implementation(libs.kfswatch)
+                api(libs.kfswatch)
                 implementation(libs.nucleus.system.color)
                 implementation(libs.github.nucleus.scheduler)
                 implementation(libs.github.nucleus.scheduler.testing)

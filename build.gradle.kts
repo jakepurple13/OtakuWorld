@@ -88,6 +88,7 @@ plugins {
     alias(libs.plugins.buildKonfig) apply false
     alias(libs.plugins.koin.compiler) apply false
     alias(libs.plugins.hotswan.compiler) apply false
+    alias(libs.plugins.kotzilla) apply false
 }
 
 /*

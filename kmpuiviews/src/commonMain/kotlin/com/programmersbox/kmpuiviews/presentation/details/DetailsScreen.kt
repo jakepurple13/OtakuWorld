@@ -37,6 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -76,6 +78,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.ExperimentalMediaQueryApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
@@ -101,6 +104,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.favoritesdatabase.RecentModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
@@ -274,6 +278,9 @@ private fun DetailsScreenInternal(
                                 scope.launch(Dispatchers.IO) { insertRecent() }
                                 if (!details.chapters.fastAny { it.url == model.url }) details.markAs(model, true)
                             },
+                            onDeleteDownload = { model ->
+                                genericInfo.deleteDownloadedChapter(model, infoModel)
+                            },
                             shareChapter = {
                                 scope.launch {
                                     qrCodeRepository.shareUrl(
@@ -337,6 +344,7 @@ private fun DetailsScreenInternal(
 data class DetailsActions(
     val onClick: (KmpChapterModel) -> Unit,
     val onDownload: (KmpChapterModel) -> Unit,
+    val onDeleteDownload: (KmpChapterModel) -> Unit,
     val shareChapter: (KmpChapterModel) -> Unit,
     val markAsRead: (KmpChapterModel, Boolean) -> Unit,
     val favoriteAction: () -> Unit,
@@ -584,6 +592,7 @@ fun ChapterItem(
     showDownload: () -> Boolean,
     swipeBehavior: DetailsChapterSwipeBehaviorHandle,
     detailsActions: DetailsActions,
+    downloadUiState: ChapterDownloadUiState = ChapterDownloadUiState.None,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -595,8 +604,10 @@ fun ChapterItem(
         chapter = c,
         hasBeenRead = updatedIsRead,
         showDownload = showDownload,
+        downloadUiState = downloadUiState,
         onOpen = { detailsActions.onClick(c) },
         downloadChapter = { detailsActions.onDownload(c) },
+        deleteDownload = { detailsActions.onDeleteDownload(c) },
         markAsRead = { detailsActions.markAsRead(c, !updatedIsRead) },
         shareChapter = { detailsActions.shareChapter(c) }
     )
@@ -720,13 +731,31 @@ fun ChapterItem(
                 .takeIf { it.isNotEmpty() }
                 ?.let { { Text(it) } },
             trailingContent = {
-                IconButton(
-                    onClick = { detailsActions.shareChapter(c) }
-                ) {
-                    Icon(
-                        Icons.Default.Share,
-                        null,
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    when (downloadUiState) {
+                        is ChapterDownloadUiState.Downloading -> CircularWavyProgressIndicator(
+                            progress = { downloadUiState.fraction },
+                            stroke = Stroke(width = 2f),
+                            modifier = Modifier.size(24.dp),
+                        )
+
+                        ChapterDownloadUiState.Queued -> CircularWavyProgressIndicator(
+                            stroke = Stroke(width = 2f),
+                            modifier = Modifier.size(24.dp),
+                        )
+
+                        ChapterDownloadUiState.Downloaded -> Icon(
+                            Icons.Default.DownloadDone,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+
+                        ChapterDownloadUiState.None -> {}
+                    }
+                    IconButton(onClick = { detailsActions.shareChapter(c) }) {
+                        Icon(Icons.Default.Share, null)
+                    }
                 }
             },
             selected = !updatedIsRead,
@@ -747,8 +776,10 @@ private fun chapterItemOptions(
     chapter: KmpChapterModel,
     hasBeenRead: Boolean,
     showDownload: () -> Boolean,
+    downloadUiState: ChapterDownloadUiState,
     onOpen: () -> Unit,
     downloadChapter: () -> Unit,
+    deleteDownload: () -> Unit,
     markAsRead: () -> Unit,
     shareChapter: () -> Unit,
 ) = optionsSheet(
@@ -760,6 +791,7 @@ private fun chapterItemOptions(
     )
 
     val canDownload = chapter.source.canDownload && showDownload()
+    val isDownloaded = downloadUiState == ChapterDownloadUiState.Downloaded
 
     ListItem(
         headlineContent = { Text(chapter.name) },
@@ -782,9 +814,9 @@ private fun chapterItemOptions(
         SegmentedListItem(
             onClick = {
                 dismiss()
-                downloadChapter()
+                if (isDownloaded) deleteDownload() else downloadChapter()
             },
-            content = { Text("Download") },
+            content = { Text(if (isDownloaded) "Delete" else "Download") },
             colors = colors,
             shapes = ListItemDefaults.segmentedShapes(
                 index = 1,
