@@ -6,6 +6,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
@@ -127,36 +129,42 @@ actual class MangaDownloadManager(
                 list.forEach { progress ->
                     val prev = previousStates[progress.chapterUrl]
                     when {
-                        // New entry that isn't already complete (excludes disk-loaded items)
-                        prev == null && progress.state !is DownloadState.Completed ->
-                            trayState.sendNotification(
-                                Notification(
-                                    title = "Downloading",
-                                    message = "${progress.mangaTitle} — ${progress.chapterName}",
+                        // Transition from Queued to Downloading (chapter actually started)
+                        prev is DownloadState.Queued && progress.state is DownloadState.Downloading ->
+                            withContext(Dispatchers.Main) {
+                                trayState.sendNotification(
+                                    Notification(
+                                        title = "Downloading",
+                                        message = "${progress.mangaTitle} — ${progress.chapterName}",
+                                    )
                                 )
-                            )
+                            }
 
                         // Transition to complete
                         prev != null &&
                                 prev !is DownloadState.Completed &&
                                 progress.state is DownloadState.Completed ->
-                            trayState.sendNotification(
-                                Notification(
-                                    title = "Downloaded",
-                                    message = "${progress.mangaTitle} — ${progress.chapterName}",
+                            withContext(Dispatchers.Main) {
+                                trayState.sendNotification(
+                                    Notification(
+                                        title = "Downloaded",
+                                        message = "${progress.mangaTitle} — ${progress.chapterName}",
+                                    )
                                 )
-                            )
+                            }
 
                         // Transition to failed
                         prev != null &&
                                 prev !is DownloadState.Failed &&
                                 progress.state is DownloadState.Failed ->
-                            trayState.sendNotification(
-                                Notification(
-                                    title = "Download Failed",
-                                    message = "${progress.chapterName}: ${progress.state.reason}",
+                            withContext(Dispatchers.Main) {
+                                trayState.sendNotification(
+                                    Notification(
+                                        title = "Download Failed",
+                                        message = "${progress.chapterName}: ${(progress.state as? DownloadState.Failed)?.reason}",
+                                    )
                                 )
-                            )
+                            }
                     }
                 }
                 previousStates = currentStates
