@@ -1,5 +1,7 @@
 package com.programmersbox.manga.shared.downloads
 
+import androidx.compose.ui.window.Notification
+import androidx.compose.ui.window.TrayState
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import io.ktor.client.HttpClient
@@ -23,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference
 actual class MangaDownloadManager(
     private val scope: CoroutineScope,
     mangaDesktopSettings: MangaDesktopSettings,
+    private val trayState: TrayState,
 ) {
 
     private val httpClient = HttpClient()
@@ -110,6 +113,55 @@ actual class MangaDownloadManager(
                 activeJob.set(null)
             }
         }
+    }
+
+    // Observes _downloads and fires tray notifications on key state transitions.
+    //
+    // "New entry with non-Completed state" triggers a "Downloading" balloon — this
+    // intentionally excludes items loaded from disk at startup (which arrive as Completed).
+    init {
+        var previousStates = emptyMap<String, DownloadState>()
+        _downloads
+            .onEach { list ->
+                val currentStates = list.associateBy({ it.chapterUrl }, { it.state })
+                list.forEach { progress ->
+                    val prev = previousStates[progress.chapterUrl]
+                    when {
+                        // New entry that isn't already complete (excludes disk-loaded items)
+                        prev == null && progress.state !is DownloadState.Completed ->
+                            trayState.sendNotification(
+                                Notification(
+                                    title = "Downloading",
+                                    message = "${progress.mangaTitle} — ${progress.chapterName}",
+                                )
+                            )
+
+                        // Transition to complete
+                        prev != null &&
+                                prev !is DownloadState.Completed &&
+                                progress.state is DownloadState.Completed ->
+                            trayState.sendNotification(
+                                Notification(
+                                    title = "Downloaded",
+                                    message = "${progress.mangaTitle} — ${progress.chapterName}",
+                                )
+                            )
+
+                        // Transition to failed
+                        prev != null &&
+                                prev !is DownloadState.Failed &&
+                                progress.state is DownloadState.Failed ->
+                            trayState.sendNotification(
+                                Notification(
+                                    title = "Download Failed",
+                                    message = "${progress.chapterName}: ${progress.state.reason}",
+                                )
+                            )
+                    }
+                }
+                previousStates = currentStates
+            }
+            .launchIn(scope)
     }
 
     actual fun downloadChapter(chapter: KmpChapterModel, mangaTitle: String) {

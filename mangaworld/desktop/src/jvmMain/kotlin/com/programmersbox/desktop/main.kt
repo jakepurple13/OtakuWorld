@@ -75,7 +75,8 @@ fun main(args: Array<String>) {
                             single {
                                 MangaDownloadManager(
                                     scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-                                    mangaDesktopSettings = get()
+                                    mangaDesktopSettings = get(),
+                                    trayState = get(),
                                 )
                             }
                             single {
