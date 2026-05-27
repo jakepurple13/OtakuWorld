@@ -1,10 +1,13 @@
 package com.programmersbox.manga.shared.downloads
 
+import androidx.compose.ui.window.Notification
+import androidx.compose.ui.window.TrayState
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -17,12 +20,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 actual class MangaDownloadManager(
     private val scope: CoroutineScope,
     mangaDesktopSettings: MangaDesktopSettings,
+    private val trayState: TrayState,
 ) {
 
     private val httpClient = HttpClient()
@@ -110,6 +115,65 @@ actual class MangaDownloadManager(
                 activeJob.set(null)
             }
         }
+    }
+
+    // Observes _downloads and fires tray notifications on state transitions.
+    // Queued→Downloading fires "Downloading"; →Completed fires "Downloaded";
+    // →Failed fires "Download Failed". Cancelled is silent.
+    // Startup-loaded items (prev == null, state == Completed) are skipped
+    // because the Completed/Failed guards require prev != null.
+    init {
+        var previousStates = emptyMap<String, DownloadState>()
+        _downloads
+            .onEach { list ->
+                val currentStates = list.associateBy({ it.chapterUrl }, { it.state })
+                list.forEach { progress ->
+                    val prev = previousStates[progress.chapterUrl]
+                    when {
+                        // Transition from Queued to Downloading (chapter actually started)
+                        prev is DownloadState.Queued && progress.state is DownloadState.Downloading ->
+                            withContext(Dispatchers.Main) {
+                                trayState.sendNotification(
+                                    Notification(
+                                        title = "Downloading",
+                                        message = "${progress.mangaTitle} — ${progress.chapterName}",
+                                        type = Notification.Type.Info
+                                    )
+                                )
+                            }
+
+                        // Transition to complete
+                        prev != null &&
+                                prev !is DownloadState.Completed &&
+                                progress.state is DownloadState.Completed ->
+                            withContext(Dispatchers.Main) {
+                                trayState.sendNotification(
+                                    Notification(
+                                        title = "Downloaded",
+                                        message = "${progress.mangaTitle} — ${progress.chapterName}",
+                                        type = Notification.Type.Info
+                                    )
+                                )
+                            }
+
+                        // Transition to failed
+                        prev != null &&
+                                prev !is DownloadState.Failed &&
+                                progress.state is DownloadState.Failed ->
+                            withContext(Dispatchers.Main) {
+                                trayState.sendNotification(
+                                    Notification(
+                                        title = "Download Failed",
+                                        message = "${progress.chapterName}: ${progress.state.reason}",
+                                        type = Notification.Type.Error
+                                    )
+                                )
+                            }
+                    }
+                }
+                previousStates = currentStates
+            }
+            .launchIn(scope)
     }
 
     actual fun downloadChapter(chapter: KmpChapterModel, mangaTitle: String) {

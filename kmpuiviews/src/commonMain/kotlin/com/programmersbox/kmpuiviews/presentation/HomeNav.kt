@@ -186,6 +186,8 @@ fun HomeNav(
                             showAllItem = showAllItem,
                         )
 
+                        //TODO: Look into the global states again for the navigation stuff
+                        // Use the metadata to know whether to show it or not
                         HazeScaffold(
                             blurKindState = blurKindState,
                             bottomBar = {

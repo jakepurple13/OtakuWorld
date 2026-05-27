@@ -207,8 +207,10 @@ kotlin {
                 api(libs.kotlin.multiplatform.appdirs)
                 api(libs.kfswatch)
                 implementation(libs.nucleus.system.color)
-                implementation(libs.github.nucleus.scheduler)
-                implementation(libs.github.nucleus.scheduler.testing)
+                api(libs.github.nucleus.scheduler)
+                api(libs.github.nucleus.scheduler.testing)
+                api(libs.github.nucleus.taskbar.progress)
+                api(libs.github.nucleus.notifications.common)
                 api(libs.nucleus.system.info)
                 //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
             }
