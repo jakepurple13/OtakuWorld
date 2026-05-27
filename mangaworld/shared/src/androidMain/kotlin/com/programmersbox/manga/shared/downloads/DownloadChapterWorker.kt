@@ -18,7 +18,6 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import java.io.File
-import kotlin.math.abs
 
 class DownloadChapterWorker(
     context: Context,
@@ -58,24 +57,24 @@ class DownloadChapterWorker(
 
         println(request)
 
-        val notifId = abs(chapterUrl.hashCode()) % 100_000
+        val notifId = (chapterUrl.hashCode() and Int.MAX_VALUE) % 100_000
         val notifCompleteId = notifId + 100_000
         val notifFailId = notifId + 200_000
 
-        // Show indeterminate progress while the first image hasn't loaded yet
-        postNotification(
-            id = notifId,
-            notification = buildProgressNotification(
-                mangaTitle = mangaTitle,
-                chapterName = chapterName,
-                done = 0,
-                total = 0,
-                indeterminate = true,
-            ),
-        )
-
         val client = HttpClient()
         return try {
+            // Show indeterminate progress while the first image hasn't loaded yet
+            postNotification(
+                id = notifId,
+                notification = buildProgressNotification(
+                    mangaTitle = mangaTitle,
+                    chapterName = chapterName,
+                    done = 0,
+                    total = 0,
+                    indeterminate = true,
+                ),
+            )
+
             executeDownload(
                 client = client,
                 request = request,
