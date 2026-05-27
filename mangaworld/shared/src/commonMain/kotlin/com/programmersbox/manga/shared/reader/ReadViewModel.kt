@@ -255,6 +255,8 @@ class ReadViewModel(
     }
 
     private fun loadDirectFromPath(filePath: String) {
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(0)
         flow {
             PlatformFile(filePath)
                 .list()
@@ -264,7 +266,10 @@ class ReadViewModel(
         }
             .catch { exceptionDao.insertException(it) }
             .flowOn(Dispatchers.IO)
-            .onStart { loadingChapters = loadingChapters + 0 }
+            .onStart {
+                loadingChapters = loadingChapters + 0
+                pageItems.clear()
+            }
             .onEach { urls ->
                 pageItems.add(PageItem.ChapterTransition(1, 0))
                 pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, 0, i, true) })
