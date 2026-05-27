@@ -149,9 +149,13 @@ class ReadViewModel(
         list = chapterHolder.chapters.orEmpty()
         currentChapter = list
             .indexOfFirst { l -> l.url == url }
-            .coerceIn(0, list.lastIndex)
+            .coerceIn(0, list.lastIndex.coerceAtLeast(1))
 
-        loadInitialChapter()
+        if (list.isEmpty() && mangaReader.downloaded && !mangaReader.filePath.isNullOrEmpty()) {
+            loadDirectFromPath(mangaReader.filePath)
+        } else {
+            loadInitialChapter()
+        }
 
         favoritesRepository
             .isFavorite(
@@ -247,6 +251,32 @@ class ReadViewModel(
                 heatMapDao.upsertHeatMap()
             }
             .onCompletion { loadingChapters = loadingChapters - chapterIndex }
+            .launchIn(viewModelScope)
+    }
+
+    private fun loadDirectFromPath(filePath: String) {
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(0)
+        flow {
+            PlatformFile(filePath)
+                .list()
+                .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
+                .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
+                .let { emit(it) }
+        }
+            .catch { exceptionDao.insertException(it) }
+            .flowOn(Dispatchers.IO)
+            .onStart {
+                loadingChapters = loadingChapters + 0
+                pageItems.clear()
+            }
+            .onEach { urls ->
+                pageItems.add(PageItem.ChapterTransition(1, 0))
+                pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, 0, i, true) })
+                pageItems.add(PageItem.ChapterTransition(0, -1))
+                heatMapDao.upsertHeatMap()
+            }
+            .onCompletion { loadingChapters = loadingChapters - 0 }
             .launchIn(viewModelScope)
     }
 

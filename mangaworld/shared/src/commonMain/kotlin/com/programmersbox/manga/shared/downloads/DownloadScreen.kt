@@ -380,6 +380,7 @@ private fun ChapterItem(
                                     if (useNewReader) {
                                         ReadViewModel.navigateToMangaReader(
                                             navController,
+                                            mangaTitle = c?.folderName,
                                             filePath = c?.chapterFolder,
                                             downloaded = true
                                         )
