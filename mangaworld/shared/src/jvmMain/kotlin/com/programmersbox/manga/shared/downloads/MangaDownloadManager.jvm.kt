@@ -117,10 +117,11 @@ actual class MangaDownloadManager(
         }
     }
 
-    // Observes _downloads and fires tray notifications on key state transitions.
-    //
-    // "New entry with non-Completed state" triggers a "Downloading" balloon — this
-    // intentionally excludes items loaded from disk at startup (which arrive as Completed).
+    // Observes _downloads and fires tray notifications on state transitions.
+    // Queued→Downloading fires "Downloading"; →Completed fires "Downloaded";
+    // →Failed fires "Download Failed". Cancelled is silent.
+    // Startup-loaded items (prev == null, state == Completed) are skipped
+    // because the Completed/Failed guards require prev != null.
     init {
         var previousStates = emptyMap<String, DownloadState>()
         _downloads
