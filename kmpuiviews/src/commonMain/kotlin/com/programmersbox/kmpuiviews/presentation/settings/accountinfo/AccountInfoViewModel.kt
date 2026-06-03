@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
+import com.programmersbox.favoritesdatabase.BookmarkDao
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
@@ -44,6 +45,7 @@ class AccountInfoViewModel(
     dataStoreHandling: DataStoreHandling,
     recommendationDao: RecommendationDao,
     exceptionDao: ExceptionDao,
+    bookmarksDao: BookmarkDao,
 ) : ViewModel() {
 
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
@@ -75,7 +77,8 @@ class AccountInfoViewModel(
                 },
             historyDao.getAllHistoryCount(),
             recommendationDao.getRecommendationCount(),
-            exceptionDao.getExceptionCount()
+            exceptionDao.getExceptionCount(),
+            bookmarksDao.getAllBookmarksCount()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
                 a.copy(timeSpentDoing = b.seconds.toString())
@@ -124,6 +127,7 @@ data class AccountInfoCount(
     val timeSpentDoing: String,
     val heatMaps: List<KmpHeat<Int>>,
     val exceptionCount: Int,
+    val bookmarkCount: Int,
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
@@ -142,7 +146,8 @@ data class AccountInfoCount(
         savedRecommendations = array[12],
         timeSpentDoing = "0 seconds",
         heatMaps = listOf(),
-        exceptionCount = array[13]
+        exceptionCount = array[13],
+        bookmarkCount = array[14]
     )
 
     val totalFavorites: Int
@@ -166,7 +171,8 @@ data class AccountInfoCount(
             savedRecommendations = 0,
             timeSpentDoing = "0 seconds",
             heatMaps = listOf(),
-            exceptionCount = 0
+            exceptionCount = 0,
+            bookmarkCount = 0
         )
     }
 }

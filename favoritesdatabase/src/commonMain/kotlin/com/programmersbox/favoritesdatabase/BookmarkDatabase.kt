@@ -75,6 +75,9 @@ interface BookmarkDao {
 
     @Query("SELECT * FROM bookmarked_chapters")
     suspend fun getAllBookmarksSync(): List<BookmarkedChapter>
+
+    @Query("SELECT COUNT(chapterUrl) FROM bookmarked_chapters")
+    fun getAllBookmarksCount(): Flow<Int>
 }
 
 @Database(

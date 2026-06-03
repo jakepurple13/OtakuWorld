@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.presentation.bookmarks
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +23,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.CustomKamelImage
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Clock
@@ -59,6 +60,7 @@ fun BookmarkScreen(
     vm: BookmarkChaptersViewModel = koinViewModel(),
 ) {
     val bookmarks by vm.bookmarks.collectAsStateWithLifecycle()
+    val navActions = LocalNavActions.current
 
     Scaffold(
         topBar = {
@@ -123,6 +125,15 @@ fun BookmarkScreen(
                                 mangaTitle = mangaTitle,
                                 chapters = chapters,
                                 onRemove = { vm.removeBookmark(it.chapterUrl) },
+                                onClick = {
+                                    navActions.details(
+                                        title = mangaTitle,
+                                        url = it.parentUrl,
+                                        source = it.source,
+                                        imageUrl = it.parentImageUrl,
+                                        description = ""
+                                    )
+                                }
                             )
                         }
                     }
@@ -159,11 +170,13 @@ private fun BookmarksEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MangaBookmarkGroup(
     mangaTitle: String,
     chapters: List<BookmarkedChapter>,
     onRemove: (BookmarkedChapter) -> Unit,
+    onClick: (BookmarkedChapter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(true) }
@@ -171,7 +184,7 @@ private fun MangaBookmarkGroup(
 
     Column(modifier = modifier.fillMaxWidth()) {
         ListItem(
-            headlineContent = {
+            content = {
                 Text(
                     mangaTitle,
                     maxLines = 1,
@@ -190,12 +203,12 @@ private fun MangaBookmarkGroup(
                 CustomKamelImage(
                     imageUrl = coverUrl,
                     name = mangaTitle,
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(56.dp),
                     placeHolder = { rememberVectorPainter(Icons.Filled.Bookmark) },
                     onError = { rememberVectorPainter(Icons.Filled.Bookmark) },
                     contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(56.dp),
                 )
             },
             trailingContent = {
@@ -204,7 +217,7 @@ private fun MangaBookmarkGroup(
                     contentDescription = if (expanded) "Collapse" else "Expand",
                 )
             },
-            modifier = Modifier.clickable { expanded = !expanded },
+            onClick = { expanded = !expanded },
         )
         HorizontalDivider()
         AnimatedVisibility(
@@ -216,6 +229,7 @@ private fun MangaBookmarkGroup(
                 chapters.forEach { bookmark ->
                     BookmarkedChapterRow(
                         bookmark = bookmark,
+                        onClick = { onClick(bookmark) },
                         onRemove = { onRemove(bookmark) },
                     )
                 }
@@ -224,14 +238,16 @@ private fun MangaBookmarkGroup(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BookmarkedChapterRow(
     bookmark: BookmarkedChapter,
+    onClick: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ListItem(
-        headlineContent = {
+        content = {
             Text(bookmark.chapterName, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
@@ -257,6 +273,7 @@ private fun BookmarkedChapterRow(
                 )
             }
         },
+        onClick = onClick,
         modifier = modifier.padding(start = 16.dp),
     )
     HorizontalDivider(modifier = Modifier.padding(start = 72.dp))

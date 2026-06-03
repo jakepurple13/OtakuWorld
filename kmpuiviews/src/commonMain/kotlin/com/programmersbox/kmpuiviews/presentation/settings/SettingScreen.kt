@@ -232,7 +232,6 @@ private fun SettingsScreen(
         segmentedListItem(
             content = { Text("Bookmarks") },
             leadingContent = { Icon(Icons.Default.Bookmark, contentDescription = null) },
-            supportingContent = { Text("View and manage bookmarked chapters") },
             onClick = bookmarksClick,
         )
 

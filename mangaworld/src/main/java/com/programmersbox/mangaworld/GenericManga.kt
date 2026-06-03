@@ -11,10 +11,12 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.di.backupProcessor
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
+import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
 import com.programmersbox.manga.shared.downloads.DownloadChapterWorker
@@ -34,7 +36,6 @@ import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
-import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
@@ -55,7 +56,8 @@ val appModule = module {
     viewModelOf(::ReadViewModel)
     factoryOf(::DownloadedMediaHandler)
     viewModelOf(::DownloadViewModel)
-    factoryOf(::MangaWorldZipper) bind Zipper::class
+    backupProcessor("manga_settings", ::MangaNewSettingsBackupProcessor)
+    factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     singleOf(::MangaDownloadManager)
     workerOf(::DownloadChapterWorker)
 }

@@ -193,6 +193,13 @@ fun AccountInfoScreen(
                                 amount = state.incognitoSources,
                             )
                         }
+                        item {
+                            AccountInfoItem(
+                                title = "Bookmarks",
+                                description = "Chapters or Episodes bookmarked",
+                                amount = state.bookmarkCount,
+                            )
+                        }
                     }
                 }
             }
