@@ -53,6 +53,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrd
 import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
+import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -116,6 +117,11 @@ fun entryGraph(
         BookmarkScreen(
             onBackPress = { navActions.popBackStack() },
         )
+    }
+
+    entry<Screen.NotesScreen> {
+        val navActions = LocalNavActions.current
+        NotesScreen(onBackPress = { navActions.popBackStack() })
     }
 
     genericInfo.globalNav3Setup()
