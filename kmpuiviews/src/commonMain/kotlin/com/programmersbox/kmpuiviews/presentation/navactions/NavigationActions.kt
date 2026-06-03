@@ -58,6 +58,7 @@ interface NavigationActions {
     fun onboardingToRecent()
     fun toOnboarding()
     fun bookmarks()
+    fun notes()
 
     @Composable
     fun currentDestination(screen: Screen): Boolean

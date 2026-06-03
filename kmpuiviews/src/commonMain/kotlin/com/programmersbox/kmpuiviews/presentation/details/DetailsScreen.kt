@@ -108,6 +108,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
@@ -128,6 +129,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
 import otakuworld.kmpuiviews.generated.resources.markAs
@@ -379,6 +381,7 @@ private fun DetailContent(
     shareChapter: Boolean,
     showDownload: Boolean,
     detailsActions: DetailsActions,
+    notesVm: DetailsNotesViewModel = koinViewModel { parametersOf(state.info.url, state.info.title) },
 ) {
     val isSaved by dao
         .doesNotificationExistFlow(state.info.url)
@@ -399,7 +402,8 @@ private fun DetailContent(
                 onPaletteSet = { details.palette = it },
                 blurHash = details.blurHash,
                 onBitmapSet = { details.imageBitmap = it },
-                detailsActions = detailsActions
+                detailsActions = detailsActions,
+                notesVm = notesVm,
             )
         }
 
@@ -417,7 +421,8 @@ private fun DetailContent(
                 onPaletteSet = { details.palette = it },
                 onBitmapSet = { details.imageBitmap = it },
                 blurHash = details.blurHash,
-                detailsActions = detailsActions
+                detailsActions = detailsActions,
+                notesVm = notesVm,
             )
         }
     }

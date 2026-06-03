@@ -77,6 +77,8 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.NoteBottomSheet
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.repository.ListRepository
@@ -115,6 +117,7 @@ fun DetailsViewLandscape(
     blurHash: BitmapPainter? = null,
     onBitmapSet: (ImageBitmap) -> Unit = {},
     detailsActions: DetailsActions,
+    notesVm: DetailsNotesViewModel,
 ) {
     val dao = LocalItemDao.current
     val listDao = koinInject<ListRepository>()
@@ -145,6 +148,7 @@ fun DetailsViewLandscape(
     }
 
     var showLists by remember { mutableStateOf(false) }
+    var showNoteSheet by remember { mutableStateOf(false) }
 
     AddToList(
         showLists = showLists,
@@ -218,7 +222,8 @@ fun DetailsViewLandscape(
                                         withDismissAction = true
                                     )
                                 }
-                            }
+                            },
+                            onNoteClick = { showNoteSheet = true },
                         )
                     }
                 )
@@ -248,6 +253,9 @@ fun DetailsViewLandscape(
                 onBitmapSet = onBitmapSet,
                 scaffoldState = scaffoldState,
                 detailsActions = detailsActions,
+                notesVm = notesVm,
+                showNoteSheet = showNoteSheet,
+                onNoteSheetDismiss = { showNoteSheet = false },
                 modifier = Modifier.padding(p)
             )
         }
@@ -277,6 +285,9 @@ private fun DetailsLandscapeContent(
     blurHash: BitmapPainter? = null,
     onBitmapSet: (ImageBitmap) -> Unit = {},
     detailsActions: DetailsActions,
+    notesVm: DetailsNotesViewModel,
+    showNoteSheet: Boolean,
+    onNoteSheetDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
@@ -300,6 +311,23 @@ private fun DetailsLandscapeContent(
         hostState = null,
         scope = scope,
     )
+
+    val currentNote by notesVm.note.collectAsStateWithLifecycle()
+
+    if (showNoteSheet) {
+        NoteBottomSheet(
+            note = currentNote,
+            itemTitle = info.title,
+            onDismiss = { content ->
+                notesVm.saveNote(content = content)
+                onNoteSheetDismiss()
+            },
+            onDelete = {
+                notesVm.deleteNote()
+                onNoteSheetDismiss()
+            }
+        )
+    }
 
     val state = rememberListDetailPaneScaffoldNavigator<Int>()
 

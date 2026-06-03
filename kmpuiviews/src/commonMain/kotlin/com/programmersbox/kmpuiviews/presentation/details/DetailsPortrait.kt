@@ -63,6 +63,8 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.NoteBottomSheet
 import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.minus
@@ -106,6 +108,7 @@ fun DetailsView(
     onBitmapSet: (ImageBitmap) -> Unit,
     detailsActions: DetailsActions,
     notificationRepository: NotificationRepository = koinInject(),
+    notesVm: DetailsNotesViewModel,
 ) {
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
@@ -139,6 +142,7 @@ fun DetailsView(
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
 
     var fabMenuExpanded by remember { mutableStateOf(false) }
+    var showNoteSheet by remember { mutableStateOf(false) }
 
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
@@ -164,6 +168,23 @@ fun DetailsView(
         hostState = hostState,
         scope = scope,
     )
+
+    val currentNote by notesVm.note.collectAsStateWithLifecycle()
+
+    if (showNoteSheet) {
+        NoteBottomSheet(
+            note = currentNote,
+            itemTitle = info.title,
+            onDismiss = { content ->
+                notesVm.saveNote(content = content)
+                showNoteSheet = false
+            },
+            onDelete = {
+                notesVm.deleteNote()
+                showNoteSheet = false
+            }
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = scaffoldState,
@@ -234,7 +255,8 @@ fun DetailsView(
                                         withDismissAction = true
                                     )
                                 }
-                            }
+                            },
+                            onNoteClick = { showNoteSheet = true },
                         )
                     },
                     scrollBehavior = scrollBehavior,

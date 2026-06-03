@@ -251,6 +251,13 @@ fun AccountInfoScreen(
                                 amount = state.lists,
                             )
                         }
+                        item {
+                            AccountInfoItem(
+                                title = "Notes",
+                                description = "Notes saved",
+                                amount = state.notesCount,
+                            )
+                        }
                     }
                 }
             }

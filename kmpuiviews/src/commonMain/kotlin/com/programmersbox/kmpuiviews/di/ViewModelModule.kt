@@ -26,6 +26,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.qrcode.QrCodeScannerV
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -59,6 +61,8 @@ val viewModels: Module = module {
     viewModelOf(::OtakuCustomListViewModel)
     viewModelOf(::ExceptionViewModel)
     viewModelOf(::BookmarkChaptersViewModel)
+    viewModelOf(::DetailsNotesViewModel)
+    viewModelOf(::AllNotesViewModel)
 
     includes(platformViewModels())
 }

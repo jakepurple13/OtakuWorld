@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Markunread
@@ -176,6 +177,7 @@ internal fun DetailActions(
     onReverseChaptersClick: () -> Unit,
     onShowLists: () -> Unit,
     addToForLater: () -> Unit,
+    onNoteClick: () -> Unit,
     customActions: @Composable () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
@@ -301,6 +303,15 @@ internal fun DetailActions(
             },
             text = { Text(stringResource(Res.string.reverseOrder)) },
             leadingIcon = { Icon(Icons.AutoMirrored.Filled.Sort, null) }
+        )
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                onNoteClick()
+            },
+            text = { Text("Note") },
+            leadingIcon = { Icon(Icons.Default.Edit, null) }
         )
     }
 

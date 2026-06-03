@@ -14,6 +14,7 @@ import com.programmersbox.favoritesdatabase.HeatMapItem
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
@@ -46,6 +47,7 @@ class AccountInfoViewModel(
     recommendationDao: RecommendationDao,
     exceptionDao: ExceptionDao,
     bookmarksDao: BookmarkDao,
+    notesDao: NotesDao,
 ) : ViewModel() {
 
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
@@ -78,7 +80,8 @@ class AccountInfoViewModel(
             historyDao.getAllHistoryCount(),
             recommendationDao.getRecommendationCount(),
             exceptionDao.getExceptionCount(),
-            bookmarksDao.getAllBookmarksCount()
+            bookmarksDao.getAllBookmarksCount(),
+            notesDao.getAllNotesCount()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
                 a.copy(timeSpentDoing = b.seconds.toString())
@@ -128,6 +131,7 @@ data class AccountInfoCount(
     val heatMaps: List<KmpHeat<Int>>,
     val exceptionCount: Int,
     val bookmarkCount: Int,
+    val notesCount: Int,
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
@@ -147,7 +151,8 @@ data class AccountInfoCount(
         timeSpentDoing = "0 seconds",
         heatMaps = listOf(),
         exceptionCount = array[13],
-        bookmarkCount = array[14]
+        bookmarkCount = array[14],
+        notesCount = array[15],
     )
 
     val totalFavorites: Int
@@ -172,7 +177,8 @@ data class AccountInfoCount(
             timeSpentDoing = "0 seconds",
             heatMaps = listOf(),
             exceptionCount = 0,
-            bookmarkCount = 0
+            bookmarkCount = 0,
+            notesCount = 0
         )
     }
 }
