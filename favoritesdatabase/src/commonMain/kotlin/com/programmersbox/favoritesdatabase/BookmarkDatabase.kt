@@ -1,5 +1,6 @@
 package com.programmersbox.favoritesdatabase
 
+import androidx.room3.ColumnInfo
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -16,13 +17,21 @@ import kotlinx.serialization.Serializable
 @Entity(tableName = "bookmarked_chapters")
 @Serializable
 data class BookmarkedChapter(
-    @PrimaryKey val chapterUrl: String,
+    @PrimaryKey
+    @ColumnInfo(name = "chapterUrl")
+    val chapterUrl: String,
+    @ColumnInfo(name = "chapterName")
     val chapterName: String,
+    @ColumnInfo(name = "parentUrl")
     val parentUrl: String,
+    @ColumnInfo(name = "parentTitle")
     val parentTitle: String,
+    @ColumnInfo(name = "parentImageUrl")
     val parentImageUrl: String,
+    @ColumnInfo(name = "source")
     val source: String,
-    val timestamp: Long, // epoch millis
+    @ColumnInfo(name = "timestamp")
+    val timestamp: Long = System.currentTimeMillis(),
 )
 
 @Entity(tableName = "bookmarked_chapters_fts")
