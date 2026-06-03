@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDateTime
 
@@ -28,4 +29,6 @@ interface BackgroundWorkHandler {
     fun workerInfoFlow(): Flow<List<WorkerInfoModel>>
     fun sourceUpdate()
     fun cancel(uuid: String)
+    fun startBackup(file: PlatformFile)
+    fun startRestore(file: PlatformFile)
 }

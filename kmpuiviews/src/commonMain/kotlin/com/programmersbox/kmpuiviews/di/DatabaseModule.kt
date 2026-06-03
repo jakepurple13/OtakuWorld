@@ -2,6 +2,8 @@ package com.programmersbox.kmpuiviews.di
 
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashDatabase
+import com.programmersbox.favoritesdatabase.BookmarkDao
+import com.programmersbox.favoritesdatabase.BookmarkDatabase
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ExceptionDatabase
 import com.programmersbox.favoritesdatabase.HeatMapDao
@@ -29,4 +31,6 @@ val databases: Module = module {
     single<RecommendationDao> { RecommendationDatabase.getInstance(get()).recommendationDao() }
     single<HeatMapDao> { HeatMapDatabase.getInstance(get()).heatMapDao() }
     single<ExceptionDao> { ExceptionDatabase.getInstance(get()).exceptionDao() }
+    single<BookmarkDatabase> { BookmarkDatabase.getInstance(get()) }
+    single<BookmarkDao> { get<BookmarkDatabase>().bookmarkDao() }
 }

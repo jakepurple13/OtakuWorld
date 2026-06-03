@@ -157,6 +157,10 @@ class Navigation3Actions : NavigationActions {
         navBackStack.add(Screen.AboutScreen)
     }
 
+    override fun bookmarks() {
+        navBackStack.add(Screen.BookmarkScreen)
+    }
+
     override fun deleteFromList(uuid: String) {
         navBackStack.add(Screen.CustomListScreen.DeleteFromList(uuid = uuid))
     }

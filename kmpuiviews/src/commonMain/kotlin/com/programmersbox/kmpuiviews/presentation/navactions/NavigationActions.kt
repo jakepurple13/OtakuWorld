@@ -57,6 +57,7 @@ interface NavigationActions {
     fun <T : Any> homeScreenNavigate(nav: T)
     fun onboardingToRecent()
     fun toOnboarding()
+    fun bookmarks()
 
     @Composable
     fun currentDestination(screen: Screen): Boolean

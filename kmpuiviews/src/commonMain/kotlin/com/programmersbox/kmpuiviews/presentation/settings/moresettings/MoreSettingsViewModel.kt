@@ -10,7 +10,6 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
-import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
@@ -29,7 +28,6 @@ class MoreSettingsViewModel(
     private val backgroundWorkHandler: BackgroundWorkHandler,
     private val favoritesRepository: FavoritesRepository,
     private val listDao: ListDao,
-    private val backup: Backup,
 ) : ViewModel() {
 
     val lists = listDao.getAllLists()
@@ -122,17 +120,11 @@ class MoreSettingsViewModel(
     }
 
     fun exportFullBackup(document: PlatformFile) {
-        viewModelScope.launch {
-            runCatching { println(backup.createBackup(document)) }
-                .onFailure { it.printStackTrace() }
-        }
+        backgroundWorkHandler.startBackup(document)
     }
 
     fun importFullBackup(document: PlatformFile) {
-        viewModelScope.launch {
-            runCatching { println(backup.restoreBackup(document)) }
-                .onFailure { it.printStackTrace() }
-        }
+        backgroundWorkHandler.startRestore(document)
     }
 
     var cloudToLocalSync: CloudLocalSync by mutableStateOf(CloudLocalSync.Idle)

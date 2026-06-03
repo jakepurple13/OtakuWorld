@@ -1,44 +1,38 @@
 package com.programmersbox.mangaworld
 
 import android.content.Context
-import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.mangasettings.MangaSettings
 import com.programmersbox.favoritesdatabase.ExceptionDao
-import com.programmersbox.favoritesdatabase.HeatMapDao
-import com.programmersbox.favoritesdatabase.HistoryDao
-import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.kmpuiviews.repository.FavoritesRepository
-import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.Zipper
+import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import kotlinx.coroutines.flow.firstOrNull
+import okio.BufferedSink
+import okio.BufferedSource
 
 class MangaWorldZipper(
     context: Context,
-    favoritesRepository: FavoritesRepository,
-    listDao: ListDao,
-    listRepository: ListRepository,
-    itemDao: ItemDao,
-    heatMapDao: HeatMapDao,
-    historyDao: HistoryDao,
-    newSettingsHandling: NewSettingsHandling,
-    private val mangaNewSettingsHandling: MangaNewSettingsHandling, exceptionDao: ExceptionDao,
-) : Zipper(context, favoritesRepository, listDao, listRepository, itemDao, heatMapDao, historyDao, newSettingsHandling, exceptionDao) {
-    override fun additionalHandlers(): Map<String, ZipHandler> = mapOf(
-        "manga_settings" to ZipHandler(
-            input = { inputStream ->
-                mangaNewSettingsHandling
-                    .preferences
-                    .updateData { MangaSettings.ADAPTER.decode(inputStream) }
-            },
-            output = { outputStream ->
-                mangaNewSettingsHandling
-                    .preferences
-                    .data
-                    .firstOrNull()
-                    ?.encode(outputStream)
-            }
-        )
-    )
+    backupProcessors: List<BackupProcessor>,
+    exceptionDao: ExceptionDao,
+) : Zipper(context, backupProcessors, exceptionDao)
+
+class MangaNewSettingsBackupProcessor(
+    private val mangaNewSettingsHandling: MangaNewSettingsHandling,
+) : BackupProcessor() {
+    override val fileName: String
+        get() = "manga_settings"
+
+    override suspend fun backup(sink: BufferedSink) {
+        mangaNewSettingsHandling
+            .preferences
+            .data
+            .firstOrNull()
+            ?.encode(sink)
+    }
+
+    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
+        mangaNewSettingsHandling
+            .preferences
+            .updateData { MangaSettings.ADAPTER.decode(bufferedSource) }
+    }
 }
