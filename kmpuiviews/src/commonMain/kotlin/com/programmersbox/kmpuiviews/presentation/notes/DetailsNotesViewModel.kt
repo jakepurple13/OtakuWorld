@@ -18,38 +18,34 @@ class DetailsNotesViewModel(
     private val notesDao: NotesDao,
 ) : ViewModel() {
 
-    val notes: StateFlow<List<NoteItem>> = notesDao
-        .getNotesForItem(itemUrl)
+    val note: StateFlow<NoteItem?> = notesDao
+        .getNote(itemUrl)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList(),
+            initialValue = null,
         )
 
-    fun saveNote(note: NoteItem?, content: String) {
+    fun saveNote(content: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            when {
-                note != null && content.isBlank() -> notesDao.deleteNoteById(note.id)
-                note != null -> notesDao.updateNote(
-                    note.copy(
-                        content = content,
-                        timestamp = Clock.System.now().toEpochMilliseconds()
-                    )
-                )
-                content.isNotBlank() -> notesDao.insertNote(
+            if (content.isBlank()) {
+                notesDao.deleteNote(itemUrl)
+            } else {
+                notesDao.upsertNote(
                     NoteItem(
                         itemUrl = itemUrl,
                         itemTitle = itemTitle,
                         content = content,
+                        timestamp = Clock.System.now().toEpochMilliseconds(),
                     )
                 )
             }
         }
     }
 
-    fun deleteNote(id: Long) {
+    fun deleteNote() {
         viewModelScope.launch(Dispatchers.IO) {
-            notesDao.deleteNoteById(id)
+            notesDao.deleteNote(itemUrl)
         }
     }
 }

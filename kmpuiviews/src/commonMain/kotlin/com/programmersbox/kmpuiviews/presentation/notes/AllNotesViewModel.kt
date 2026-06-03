@@ -48,7 +48,7 @@ class AllNotesViewModel(
             if (content.isBlank()) {
                 notesDao.deleteNoteById(note.id)
             } else {
-                notesDao.updateNote(
+                notesDao.upsertNote(
                     note.copy(
                         content = content,
                         timestamp = Clock.System.now().toEpochMilliseconds()
@@ -58,9 +58,9 @@ class AllNotesViewModel(
         }
     }
 
-    fun deleteNote(id: Long) {
+    fun deleteNote(itemUrl: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            notesDao.deleteNoteById(id)
+            notesDao.deleteNote(itemUrl)
         }
     }
 }
