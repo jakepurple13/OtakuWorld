@@ -49,6 +49,12 @@ interface NotesDao {
     @Query("SELECT * FROM notes ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<NoteItem>>
 
+    @Query("SELECT * FROM notes")
+    suspend fun getAllNotesSync(): List<NoteItem>
+
+    @Query("SELECT COUNT(itemUrl) FROM notes")
+    fun getAllNotesCount(): Flow<Int>
+
     @Query("""
         SELECT * FROM notes WHERE rowid IN (
             SELECT rowid FROM notes_fts

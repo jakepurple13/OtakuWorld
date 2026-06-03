@@ -234,6 +234,7 @@ private fun MangaBookmarkGroup(
                         onClick = { onClick(bookmark) },
                         onRemove = { onRemove(bookmark) },
                     )
+                    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
                 }
             }
         }
@@ -278,7 +279,6 @@ private fun BookmarkedChapterRow(
         onClick = onClick,
         modifier = modifier.padding(start = 16.dp),
     )
-    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
 }
 
 @OptIn(ExperimentalTime::class)
