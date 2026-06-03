@@ -42,7 +42,11 @@ actual open class Zipper(
                     val duration = measureTime {
                         zip.putNextEntry(ZipEntry(backup.fileName))
                         runCatching {
-                            measureTime { backup.backup(zip.sink().buffer()) }
+                            measureTime {
+                                val sink = zip.sink().buffer()
+                                backup.backup(sink)
+                                sink.flush()
+                            }
                         }
                             .onSuccess { println("Wrote ${backup.fileName} in $it") }
                             .logFailureToDatabase()

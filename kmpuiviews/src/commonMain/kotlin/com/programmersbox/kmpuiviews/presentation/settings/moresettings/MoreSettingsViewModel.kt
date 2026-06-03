@@ -129,6 +129,7 @@ class MoreSettingsViewModel(
     }
 
     fun importFullBackup(document: PlatformFile) {
+        //TODO: Kick off in worker
         viewModelScope.launch {
             runCatching { println(backup.restoreBackup(document)) }
                 .onFailure { it.printStackTrace() }
