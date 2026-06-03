@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.GetApp
 import androidx.compose.material.icons.filled.History
@@ -103,6 +104,7 @@ fun SettingScreen(
     scanQrCode: () -> Unit = navigationActions::scanQrCode,
     securityClick: () -> Unit = navigationActions::security,
     bookmarksClick: () -> Unit = navigationActions::bookmarks,
+    notesClick: () -> Unit = navigationActions::notes,
     accountSettings: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -143,6 +145,7 @@ fun SettingScreen(
                 scanQrCode = scanQrCode,
                 securityClick = securityClick,
                 bookmarksClick = bookmarksClick,
+                notesClick = notesClick,
             )
         }
     }
@@ -170,6 +173,7 @@ private fun SettingsScreen(
     scanQrCode: () -> Unit,
     securityClick: () -> Unit,
     bookmarksClick: () -> Unit,
+    notesClick: () -> Unit,
 ) {
     val navController = LocalNavActions.current
     val uriHandler = LocalUriHandler.current
@@ -233,6 +237,12 @@ private fun SettingsScreen(
             content = { Text("Bookmarks") },
             leadingContent = { Icon(Icons.Default.Bookmark, contentDescription = null) },
             onClick = bookmarksClick,
+        )
+
+        segmentedListItem(
+            content = { Text("Notes") },
+            leadingContent = { Icon(Icons.Default.Edit, contentDescription = null) },
+            onClick = notesClick,
         )
 
         apply(composeSettingsDsl.viewSettings)
