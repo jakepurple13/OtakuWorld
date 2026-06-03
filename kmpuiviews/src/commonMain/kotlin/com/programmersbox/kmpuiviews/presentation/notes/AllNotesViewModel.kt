@@ -46,7 +46,7 @@ class AllNotesViewModel(
     fun saveNote(note: NoteItem, content: String) {
         viewModelScope.launch(Dispatchers.IO) {
             if (content.isBlank()) {
-                notesDao.deleteNoteById(note.id)
+                notesDao.deleteNote(note.itemUrl)
             } else {
                 notesDao.upsertNote(
                     note.copy(
