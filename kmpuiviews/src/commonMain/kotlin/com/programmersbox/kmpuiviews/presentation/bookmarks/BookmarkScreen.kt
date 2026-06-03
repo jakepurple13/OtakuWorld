@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -162,7 +163,7 @@ private fun BookmarksEmptyState(modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "Bookmark chapters from the manga details screen",
+                "Bookmark chapters from the details screen",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -208,7 +209,8 @@ private fun MangaBookmarkGroup(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .width(40.dp)
-                        .height(56.dp),
+                        .height(56.dp)
+                        .clip(MaterialTheme.shapes.medium),
                 )
             },
             trailingContent = {
