@@ -10,7 +10,6 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
-import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -18,9 +17,7 @@ import kotlin.time.Clock
 @Entity(tableName = "notes")
 @Serializable
 data class NoteItem(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")
-    val id: Long = 0,
+    @PrimaryKey
     @ColumnInfo(name = "itemUrl")
     val itemUrl: String,
     @ColumnInfo(name = "itemTitle")
@@ -41,16 +38,13 @@ data class NoteItemFts(
 @Dao
 interface NotesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNote(note: NoteItem): Long
+    suspend fun upsertNote(note: NoteItem)
 
-    @Update
-    suspend fun updateNote(note: NoteItem)
+    @Query("DELETE FROM notes WHERE itemUrl = :itemUrl")
+    suspend fun deleteNote(itemUrl: String)
 
-    @Query("DELETE FROM notes WHERE id = :id")
-    suspend fun deleteNoteById(id: Long)
-
-    @Query("SELECT * FROM notes WHERE itemUrl = :itemUrl ORDER BY timestamp DESC")
-    fun getNotesForItem(itemUrl: String): Flow<List<NoteItem>>
+    @Query("SELECT * FROM notes WHERE itemUrl = :itemUrl")
+    fun getNote(itemUrl: String): Flow<NoteItem?>
 
     @Query("SELECT * FROM notes ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<NoteItem>>
