@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.presentation.notes
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,55 +76,59 @@ fun NotesScreen(
     ) { paddingValues ->
         var searchQuery by remember { mutableStateOf("") }
 
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { q ->
-                searchQuery = q
-                vm.updateQuery(q)
-            },
-            placeholder = { Text("Search notes…") },
-            singleLine = true,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Adaptive(160.dp),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = paddingValues.calculateTopPadding() + 72.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp,
-            ),
-            verticalItemSpacing = 8.dp,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize()
         ) {
-            items(notes, key = { it.id }) { note ->
-                ElevatedCard(
-                    onClick = {
-                        selectedNote = note
-                        showNoteSheet = true
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = note.itemTitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp)
-                    )
-                    Text(
-                        text = note.content,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 5,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { q ->
+                    searchQuery = q
+                    vm.updateQuery(q)
+                },
+                placeholder = { Text("Search notes…") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Adaptive(160.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
+                verticalItemSpacing = 8.dp,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(notes, key = { it.id }) { note ->
+                    ElevatedCard(
+                        onClick = {
+                            selectedNote = note
+                            showNoteSheet = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = note.itemTitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp)
+                        )
+                        Text(
+                            text = note.content,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 5,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
         }
