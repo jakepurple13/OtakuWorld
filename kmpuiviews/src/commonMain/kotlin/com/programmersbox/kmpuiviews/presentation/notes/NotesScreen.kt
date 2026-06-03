@@ -54,7 +54,7 @@ fun NotesScreen(
                     selectedNote = null
                 },
                 onDelete = {
-                    vm.deleteNote(note.id)
+                    vm.deleteNote(note.itemUrl)
                     showNoteSheet = false
                     selectedNote = null
                 }
@@ -105,7 +105,7 @@ fun NotesScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(notes, key = { it.id }) { note ->
+                items(notes, key = { it.itemUrl }) { note ->
                     ElevatedCard(
                         onClick = {
                             selectedNote = note
