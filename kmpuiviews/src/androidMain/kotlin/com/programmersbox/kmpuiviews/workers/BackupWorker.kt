@@ -25,8 +25,8 @@ class BackupWorker(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        setForeground(getForegroundInfo())
         val uri = inputData.getString("uri") ?: return Result.failure()
+        setForeground(getForegroundInfo())
         return runCatching {
             backup.createBackup(readPlatformFile(uri))
         }.fold(
