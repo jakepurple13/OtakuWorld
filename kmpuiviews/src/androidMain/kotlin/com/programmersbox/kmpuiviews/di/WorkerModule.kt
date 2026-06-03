@@ -2,12 +2,14 @@ package com.programmersbox.kmpuiviews.di
 
 import com.programmersbox.kmpuiviews.workers.AppCheckWorker
 import com.programmersbox.kmpuiviews.workers.AppCleanupWorker
+import com.programmersbox.kmpuiviews.workers.BackupWorker
 import com.programmersbox.kmpuiviews.workers.CloudToLocalSyncWorker
 import com.programmersbox.kmpuiviews.workers.DownloadAndInstallWorker
 import com.programmersbox.kmpuiviews.workers.DownloadWorker
 import com.programmersbox.kmpuiviews.workers.InstallWorker
 import com.programmersbox.kmpuiviews.workers.LocalToCloudSyncWorker
 import com.programmersbox.kmpuiviews.workers.NotifySingleWorker
+import com.programmersbox.kmpuiviews.workers.RestoreWorker
 import com.programmersbox.kmpuiviews.workers.SourceUpdateChecker
 import com.programmersbox.kmpuiviews.workers.UpdateFlowWorker
 import org.koin.androidx.workmanager.dsl.workerOf
@@ -24,4 +26,6 @@ fun Module.kmpWorkers() {
     workerOf(::DownloadAndInstallWorker)
     workerOf(::DownloadWorker)
     workerOf(::InstallWorker)
+    workerOf(::BackupWorker)
+    workerOf(::RestoreWorker)
 }
