@@ -16,10 +16,14 @@ import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfo
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
 import com.programmersbox.kmpuiviews.workers.AppCheckWorker
 import com.programmersbox.kmpuiviews.workers.AppCleanupWorker
+import com.programmersbox.kmpuiviews.workers.BackupWorker
 import com.programmersbox.kmpuiviews.workers.CloudToLocalSyncWorker
 import com.programmersbox.kmpuiviews.workers.LocalToCloudSyncWorker
+import com.programmersbox.kmpuiviews.workers.RestoreWorker
 import com.programmersbox.kmpuiviews.workers.SourceUpdateChecker
 import com.programmersbox.kmpuiviews.workers.UpdateFlowWorker
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.toAndroidUri
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
@@ -283,5 +287,25 @@ class BackgroundWorkHandlerImpl(
 
     override fun cancel(uuid: String) {
         workManager.cancelWorkById(UUID.fromString(uuid))
+    }
+
+    override fun startBackup(file: PlatformFile) {
+        workManager.enqueueUniqueWork(
+            "backup",
+            ExistingWorkPolicy.KEEP,
+            OneTimeWorkRequestBuilder<BackupWorker>()
+                .setInputData(workDataOf("uri" to file.toAndroidUri("").toString()))
+                .build()
+        )
+    }
+
+    override fun startRestore(file: PlatformFile) {
+        workManager.enqueueUniqueWork(
+            "restore",
+            ExistingWorkPolicy.KEEP,
+            OneTimeWorkRequestBuilder<RestoreWorker>()
+                .setInputData(workDataOf("uri" to file.toAndroidUri("").toString()))
+                .build()
+        )
     }
 }
