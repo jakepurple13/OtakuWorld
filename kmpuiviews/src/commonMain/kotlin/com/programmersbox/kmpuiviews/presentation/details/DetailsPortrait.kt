@@ -381,6 +381,7 @@ fun DetailsView(
                     ChapterItem(
                         c = c,
                         read = chapters,
+                        isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
                         detailsActions = detailsActions,
                         showDownload = showDownloadButton,
                         swipeBehavior = swipeBehavior,

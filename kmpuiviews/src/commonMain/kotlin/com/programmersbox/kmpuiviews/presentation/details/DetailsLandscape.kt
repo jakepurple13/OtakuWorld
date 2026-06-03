@@ -435,6 +435,7 @@ private fun DetailsLandscapeContent(
                     ChapterItem(
                         c = c,
                         read = chapters,
+                        isBookmarked = c.url in detailsActions.bookmarkedChapterUrls,
                         showDownload = showDownloadButton,
                         detailsActions = detailsActions,
                         swipeBehavior = swipeBehavior,

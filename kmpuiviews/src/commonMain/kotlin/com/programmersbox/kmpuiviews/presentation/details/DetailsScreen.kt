@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -43,6 +44,7 @@ import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -332,7 +334,9 @@ private fun DetailsScreenInternal(
                                         }
                                 }
                             },
-                            rereadClick = details::reread
+                            rereadClick = details::reread,
+                            bookmarkChapter = { details.toggleBookmark(it) },
+                            bookmarkedChapterUrls = details.bookmarkedChapterUrls
                         )
                     )
                 }
@@ -354,6 +358,8 @@ data class DetailsActions(
     val addToSaved: suspend () -> Unit,
     val removeFromSaved: suspend () -> Unit,
     val rereadClick: () -> Unit,
+    val bookmarkChapter: (KmpChapterModel) -> Unit = {},
+    val bookmarkedChapterUrls: Set<String> = emptySet(),
 )
 
 @OptIn(
@@ -589,6 +595,7 @@ private fun DetailError(
 fun ChapterItem(
     c: KmpChapterModel,
     read: List<ChapterWatched>,
+    isBookmarked: Boolean,
     showDownload: () -> Boolean,
     swipeBehavior: DetailsChapterSwipeBehaviorHandle,
     detailsActions: DetailsActions,
@@ -603,13 +610,15 @@ fun ChapterItem(
     var options by chapterItemOptions(
         chapter = c,
         hasBeenRead = updatedIsRead,
+        isBookmarked = isBookmarked,
         showDownload = showDownload,
         downloadUiState = downloadUiState,
         onOpen = { detailsActions.onClick(c) },
         downloadChapter = { detailsActions.onDownload(c) },
         deleteDownload = { detailsActions.onDeleteDownload(c) },
         markAsRead = { detailsActions.markAsRead(c, !updatedIsRead) },
-        shareChapter = { detailsActions.shareChapter(c) }
+        shareChapter = { detailsActions.shareChapter(c) },
+        bookmarkChapter = { detailsActions.bookmarkChapter(c) }
     )
 
     fun swipeBehavior(behavior: DetailsChapterSwipeBehavior) {
@@ -753,6 +762,14 @@ fun ChapterItem(
 
                         ChapterDownloadUiState.None -> {}
                     }
+                    IconButton(onClick = { detailsActions.bookmarkChapter(c) }) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark chapter",
+                            tint = if (isBookmarked) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     IconButton(onClick = { detailsActions.shareChapter(c) }) {
                         Icon(Icons.Default.Share, null)
                     }
@@ -775,6 +792,7 @@ fun ChapterItem(
 private fun chapterItemOptions(
     chapter: KmpChapterModel,
     hasBeenRead: Boolean,
+    isBookmarked: Boolean,
     showDownload: () -> Boolean,
     downloadUiState: ChapterDownloadUiState,
     onOpen: () -> Unit,
@@ -782,6 +800,7 @@ private fun chapterItemOptions(
     deleteDownload: () -> Unit,
     markAsRead: () -> Unit,
     shareChapter: () -> Unit,
+    bookmarkChapter: () -> Unit,
 ) = optionsSheet(
     verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
 ) {
@@ -792,6 +811,7 @@ private fun chapterItemOptions(
 
     val canDownload = chapter.source.canDownload && showDownload()
     val isDownloaded = downloadUiState == ChapterDownloadUiState.Downloaded
+    val totalCount = if (canDownload) 5 else 4
 
     ListItem(
         headlineContent = { Text(chapter.name) },
@@ -806,7 +826,7 @@ private fun chapterItemOptions(
         colors = colors,
         shapes = ListItemDefaults.segmentedShapes(
             index = 0,
-            count = if (canDownload) 4 else 3
+            count = totalCount
         )
     )
 
@@ -820,7 +840,7 @@ private fun chapterItemOptions(
             colors = colors,
             shapes = ListItemDefaults.segmentedShapes(
                 index = 1,
-                count = 4
+                count = totalCount
             )
         )
     }
@@ -833,7 +853,26 @@ private fun chapterItemOptions(
         onCheckedChange = { markAsRead() },
         shapes = ListItemDefaults.segmentedShapes(
             index = if (canDownload) 2 else 1,
-            count = if (canDownload) 4 else 3
+            count = totalCount
+        )
+    )
+
+    SegmentedListItem(
+        onClick = {
+            dismiss()
+            bookmarkChapter()
+        },
+        content = { Text(if (isBookmarked) "Remove bookmark" else "Bookmark") },
+        leadingContent = {
+            Icon(
+                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                contentDescription = null,
+            )
+        },
+        colors = colors,
+        shapes = ListItemDefaults.segmentedShapes(
+            index = if (canDownload) 3 else 2,
+            count = totalCount
         )
     )
 
@@ -845,8 +884,8 @@ private fun chapterItemOptions(
         content = { Text("Share") },
         colors = colors,
         shapes = ListItemDefaults.segmentedShapes(
-            index = if (canDownload) 3 else 2,
-            count = if (canDownload) 4 else 3
+            index = if (canDownload) 4 else 3,
+            count = totalCount
         )
     )
 }
