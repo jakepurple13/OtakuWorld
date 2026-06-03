@@ -8,21 +8,17 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -37,7 +33,6 @@ import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -64,7 +59,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
@@ -148,9 +142,7 @@ fun DetailsView(
     val scaffoldState = rememberDrawerState(DrawerValue.Closed)
 
     var fabMenuExpanded by remember { mutableStateOf(false) }
-    val notes by notesVm.notes.collectAsStateWithLifecycle()
     var showNoteSheet by remember { mutableStateOf(false) }
-    var selectedNote by remember { mutableStateOf<NoteItem?>(null) }
 
     BackHandler(scaffoldState.isOpen) {
         scope.launch {
@@ -177,19 +169,19 @@ fun DetailsView(
         scope = scope,
     )
 
+    val currentNote by notesVm.note.collectAsStateWithLifecycle()
+
     if (showNoteSheet) {
         NoteBottomSheet(
-            note = selectedNote,
+            note = currentNote,
             itemTitle = info.title,
             onDismiss = { content ->
-                notesVm.saveNote(note = selectedNote, content = content)
+                notesVm.saveNote(content = content)
                 showNoteSheet = false
-                selectedNote = null
             },
             onDelete = {
-                selectedNote?.let { notesVm.deleteNote(it.id) }
+                notesVm.deleteNote()
                 showNoteSheet = false
-                selectedNote = null
             }
         )
     }
@@ -263,7 +255,8 @@ fun DetailsView(
                                         withDismissAction = true
                                     )
                                 }
-                            }
+                            },
+                            onNoteClick = { showNoteSheet = true },
                         )
                     },
                     scrollBehavior = scrollBehavior,
@@ -386,56 +379,6 @@ fun DetailsView(
                                 )
                             }
                         }
-                    }
-                }
-
-                item(key = "notes_header") {
-                    Text(
-                        text = "Notes",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-
-                items(notes, key = { "note_${it.id}" }) { note ->
-                    ElevatedCard(
-                        onClick = {
-                            selectedNote = note
-                            showNoteSheet = true
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        Text(
-                            text = note.itemTitle,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp)
-                        )
-                        Text(
-                            text = note.content,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-
-                item(key = "add_note") {
-                    TextButton(
-                        onClick = {
-                            selectedNote = null
-                            showNoteSheet = true
-                        },
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Add Note")
                     }
                 }
 
