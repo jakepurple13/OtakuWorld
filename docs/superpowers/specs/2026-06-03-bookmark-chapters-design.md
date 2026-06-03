@@ -56,9 +56,9 @@ All new code follows existing conventions in the project. No existing files are 
 data class BookmarkedChapter(
     @PrimaryKey val chapterUrl: String,
     val chapterName: String,
-    val mangaUrl: String,
-    val mangaTitle: String,
-    val mangaImageUrl: String,
+    val parentUrl: String,
+    val parentTitle: String,
+    val parentImageUrl: String,
     val source: String,
     val timestamp: Long,  // epoch millis
 )
@@ -67,7 +67,7 @@ data class BookmarkedChapter(
 @Fts4(contentEntity = BookmarkedChapter::class)
 data class BookmarkedChapterFts(
     val chapterName: String,
-    val mangaTitle: String,
+    val parentTitle: String,
 )
 ```
 
@@ -88,8 +88,8 @@ interface BookmarkDao {
     @Query("SELECT * FROM bookmarked_chapters ORDER BY timestamp DESC")
     fun getAllBookmarks(): Flow<List<BookmarkedChapter>>
 
-    @Query("SELECT * FROM bookmarked_chapters WHERE mangaUrl = :mangaUrl")
-    fun getBookmarksForManga(mangaUrl: String): Flow<List<BookmarkedChapter>>
+    @Query("SELECT * FROM bookmarked_chapters WHERE parentUrl = :parentUrl")
+    fun getBookmarksForDetail(parentUrl: String): Flow<List<BookmarkedChapter>>
 
     @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
     fun getBookmark(chapterUrl: String): Flow<BookmarkedChapter?>
@@ -153,7 +153,7 @@ var bookmarkedChapterUrls: Set<String> by mutableStateOf(emptySet())
     private set
 
 // Collected in init alongside existing chapter state
-bookmarkRepository.getBookmarksForManga(details.url)
+bookmarkRepository.getBookmarksForDetail(details.url)
     .collect { bookmarkedChapterUrls = it.map { b -> b.chapterUrl }.toHashSet() }
 
 fun toggleBookmark(chapter: KmpChapterModel) {
@@ -165,9 +165,9 @@ fun toggleBookmark(chapter: KmpChapterModel) {
                 BookmarkedChapter(
                     chapterUrl = chapter.url,
                     chapterName = chapter.name,
-                    mangaUrl = details.url,
-                    mangaTitle = details.title,
-                    mangaImageUrl = details.imageUrl,
+                    parentUrl = details.url,
+                    parentTitle = details.title,
+                    parentImageUrl = details.imageUrl,
                     source = details.source,
                     timestamp = System.currentTimeMillis(),
                 )
@@ -227,7 +227,7 @@ class BookmarkChaptersViewModel(
                     else bookmarkRepository.searchBookmarks(q.toFtsQuery())
                 },
             snapshotFlow { sortOrder },
-        ) { list, sort -> list.sortedBy(sort).groupByManga() }
+        ) { list, sort -> list.sortedBy(sort).groupByparent() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     fun setSort(sort: BookmarkSortOrder) { sortOrder = sort }
@@ -242,7 +242,7 @@ class BookmarkChaptersViewModel(
 ```
 
 `toFtsQuery()` is a simple extension that appends `*` for prefix matching.
-`groupByManga()` groups the sorted list by `mangaUrl`, keyed by `mangaTitle`.
+`groupByParent()` groups the sorted list by `parentUrl`, keyed by `parentTitle`.
 
 ### `BookmarkScreen` Composable
 
@@ -289,19 +289,17 @@ fun bookmarks() { navBackStack.add(Screen.BookmarkScreen) }
 
 `Zipper.kt` (Android `androidMain`) has `additionalHandlers(): Map<String, ZipHandler>` returning `emptyMap()` by default. Each app subclass overrides it.
 
-MangaWorld's Zipper subclass adds:
+kmpuiviews Zipper adds to handlers:
 
 ```kotlin
-override fun additionalHandlers(): Map<String, ZipHandler> = mapOf(
-    "bookmarked_chapters.json" to ZipHandler(
-        output = { stream ->
-            dataToOutputStream(bookmarkDao.getAllBookmarksSync(), stream)
-        },
-        input = { stream ->
-            Json.decodeFromString<List<BookmarkedChapter>>(stream.reader().readText())
-                .forEach { bookmarkDao.insertBookmark(it) }
-        }
-    )
+"bookmarked_chapters.json" to ZipHandler(
+    output = { stream ->
+        dataToOutputStream(bookmarkDao.getAllBookmarksSync(), stream)
+    },
+    input = { stream ->
+        Json.decodeFromString<List<BookmarkedChapter>>(stream.reader().readText())
+            .forEach { bookmarkDao.insertBookmark(it) }
+    }
 )
 ```
 

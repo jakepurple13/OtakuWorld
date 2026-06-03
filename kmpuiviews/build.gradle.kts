@@ -235,6 +235,12 @@ kotlin {
             }
         }
 
+        val usesJvmMain by creating {
+            dependsOn(commonMain.get())
+            androidMain.get().dependsOn(this)
+            jvmMain.get().dependsOn(this)
+        }
+
         all {
             languageSettings.enableLanguageFeature("WhenGuards")
         }
