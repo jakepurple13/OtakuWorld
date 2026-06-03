@@ -13,6 +13,7 @@ class Backup(
         val time = measureTime {
             runCatching { zipper.zipFile(document) }
                 .logFailureToDatabase()
+                .getOrThrow()
         }
 
         println("Took $time to zip file")
@@ -21,6 +22,7 @@ class Backup(
     suspend fun restoreBackup(document: PlatformFile) {
         runCatching { zipper.readZip(document) }
             .logFailureToDatabase()
+            .getOrThrow()
     }
 
     private suspend fun <T> Result<T>.logFailureToDatabase() = onFailure {

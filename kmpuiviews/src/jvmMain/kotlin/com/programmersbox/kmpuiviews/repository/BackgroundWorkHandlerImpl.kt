@@ -27,6 +27,7 @@ import io.github.kdroidfilter.nucleus.scheduler.TaskRegistry
 import io.github.kdroidfilter.nucleus.scheduler.TaskRequest
 import io.github.kdroidfilter.nucleus.scheduler.TaskResult
 import io.github.kdroidfilter.nucleus.scheduler.inputData
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -95,6 +96,10 @@ class BackgroundWorkHandlerImpl(
     override fun cancel(uuid: String) {
 
     }
+
+    override fun startBackup(file: PlatformFile) {}
+
+    override fun startRestore(file: PlatformFile) {}
 
     companion object {
         val SyncId = TaskId("sync")

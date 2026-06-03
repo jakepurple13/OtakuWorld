@@ -13,7 +13,8 @@ enum class NotificationChannels(
     UpdateCheck("updateCheckChannel", NotificationManagerCompat.IMPORTANCE_MIN),
     AppUpdate("appUpdate", NotificationManagerCompat.IMPORTANCE_HIGH),
     SourceUpdate("sourceUpdate", NotificationManagerCompat.IMPORTANCE_DEFAULT),
-    Download("download_channel", NotificationManagerCompat.IMPORTANCE_DEFAULT);
+    Download("download_channel", NotificationManagerCompat.IMPORTANCE_DEFAULT),
+    Backup("backup_channel", NotificationManagerCompat.IMPORTANCE_LOW);
 
     companion object {
         fun setupNotificationChannels(context: Context) {
