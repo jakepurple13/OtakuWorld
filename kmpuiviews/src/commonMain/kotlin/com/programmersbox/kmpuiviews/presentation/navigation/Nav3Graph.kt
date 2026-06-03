@@ -52,6 +52,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.security.SecurityScre
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
+import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -110,7 +111,12 @@ fun entryGraph(
         navigationActions = navigationActions,
     )
 
-    // TODO Task 8: add entry<Screen.BookmarkScreen> once BookmarkScreen composable exists
+    entry<Screen.BookmarkScreen> {
+        val navActions = LocalNavActions.current
+        BookmarkScreen(
+            onBackPress = { navActions.popBackStack() },
+        )
+    }
 
     genericInfo.globalNav3Setup()
 }
