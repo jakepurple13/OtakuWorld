@@ -25,6 +25,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.prerelease.Prerelease
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.QrCodeScannerViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
+import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -57,6 +58,7 @@ val viewModels: Module = module {
     viewModelOf(::UrlOpenerViewModel)
     viewModelOf(::OtakuCustomListViewModel)
     viewModelOf(::ExceptionViewModel)
+    viewModelOf(::BookmarkChaptersViewModel)
 
     includes(platformViewModels())
 }
