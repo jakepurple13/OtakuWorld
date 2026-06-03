@@ -27,6 +27,8 @@ import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.toItemModel
 import com.programmersbox.kmpuiviews.recordFirebaseException
+import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ImageModifier
@@ -60,6 +62,7 @@ class DetailsViewModel(
     private val translationHandler: TranslationHandler,
     private val exceptionDao: ExceptionDao,
     private val imageModifier: ImageModifier,
+    private val bookmarkRepository: BookmarkRepository,
 ) : ViewModel() {
 
     //private val details: Screen.DetailsScreen.Details? = handle.toRoute()
@@ -83,6 +86,8 @@ class DetailsViewModel(
 
     var favoriteListener by mutableStateOf(false)
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+    var bookmarkedChapterUrls: Set<String> by mutableStateOf(emptySet())
+        private set
 
     var description: String by mutableStateOf("")
 
@@ -181,6 +186,14 @@ class DetailsViewModel(
             }
             .dispatchIo()
             .launchIn(viewModelScope)
+
+        itemModel?.url?.let { mangaUrl ->
+            bookmarkRepository.getBookmarksForDetail(mangaUrl)
+                .onEach { bookmarks ->
+                    bookmarkedChapterUrls = bookmarks.map { it.chapterUrl }.toHashSet()
+                }
+                .launchIn(viewModelScope)
+        }
     }
 
     class BlurAdd(
@@ -189,6 +202,26 @@ class DetailsViewModel(
         val blurHashItem: BlurHashItem?,
         val imageUrl: String?,
     )
+
+    fun toggleBookmark(chapter: KmpChapterModel) {
+        val mangaUrl = itemModel?.url ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            if (chapter.url in bookmarkedChapterUrls) {
+                bookmarkRepository.deleteBookmark(chapter.url)
+            } else {
+                bookmarkRepository.insertBookmark(
+                    BookmarkedChapter(
+                        chapterUrl = chapter.url,
+                        chapterName = chapter.name,
+                        parentUrl = mangaUrl,
+                        parentTitle = itemModel?.title ?: "",
+                        parentImageUrl = itemModel?.imageUrl ?: "",
+                        source = itemModel?.source?.serviceName ?: "",
+                    )
+                )
+            }
+        }
+    }
 
     fun toggleNotify() {
         viewModelScope.launch(Dispatchers.IO) {
