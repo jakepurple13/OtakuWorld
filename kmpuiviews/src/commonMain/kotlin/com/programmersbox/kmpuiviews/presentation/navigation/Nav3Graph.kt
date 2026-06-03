@@ -110,6 +110,8 @@ fun entryGraph(
         navigationActions = navigationActions,
     )
 
+    // TODO Task 8: add entry<Screen.BookmarkScreen> once BookmarkScreen composable exists
+
     genericInfo.globalNav3Setup()
 }
 

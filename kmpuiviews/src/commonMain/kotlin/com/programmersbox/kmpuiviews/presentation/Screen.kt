@@ -152,6 +152,9 @@ sealed class Screen(val route: String) : NavKey {
 
     @Serializable
     data object ExceptionScreen : Screen("exception")
+
+    @Serializable
+    data object BookmarkScreen : Screen("bookmarks")
 }
 
 fun NavController.navigateToDetails(model: KmpItemModel) = navigate(
