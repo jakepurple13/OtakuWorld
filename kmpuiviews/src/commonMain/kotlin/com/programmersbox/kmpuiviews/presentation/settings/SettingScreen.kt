@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.GetApp
 import androidx.compose.material.icons.filled.History
@@ -101,6 +102,7 @@ fun SettingScreen(
     appDownloadsClick: () -> Unit = navigationActions::downloadInstall,
     scanQrCode: () -> Unit = navigationActions::scanQrCode,
     securityClick: () -> Unit = navigationActions::security,
+    bookmarksClick: () -> Unit = navigationActions::bookmarks,
     accountSettings: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -139,7 +141,8 @@ fun SettingScreen(
                 sourcesOrderClick = sourcesOrderClick,
                 appDownloadsClick = appDownloadsClick,
                 scanQrCode = scanQrCode,
-                securityClick = securityClick
+                securityClick = securityClick,
+                bookmarksClick = bookmarksClick,
             )
         }
     }
@@ -166,6 +169,7 @@ private fun SettingsScreen(
     appDownloadsClick: () -> Unit,
     scanQrCode: () -> Unit,
     securityClick: () -> Unit,
+    bookmarksClick: () -> Unit,
 ) {
     val navController = LocalNavActions.current
     val uriHandler = LocalUriHandler.current
@@ -223,6 +227,13 @@ private fun SettingsScreen(
             content = { Text("App Downloads") },
             leadingContent = { Icon(Icons.Default.GetApp, null) },
             onClick = appDownloadsClick
+        )
+
+        segmentedListItem(
+            content = { Text("Bookmarks") },
+            leadingContent = { Icon(Icons.Default.Bookmark, contentDescription = null) },
+            supportingContent = { Text("View and manage bookmarked chapters") },
+            onClick = bookmarksClick,
         )
 
         apply(composeSettingsDsl.viewSettings)

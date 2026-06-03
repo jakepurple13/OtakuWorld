@@ -13,6 +13,7 @@ import androidx.room3.Query
 import androidx.room3.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 @Entity(tableName = "bookmarked_chapters")
 @Serializable
@@ -31,7 +32,7 @@ data class BookmarkedChapter(
     @ColumnInfo(name = "source")
     val source: String,
     @ColumnInfo(name = "timestamp")
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 )
 
 @Entity(tableName = "bookmarked_chapters_fts")
