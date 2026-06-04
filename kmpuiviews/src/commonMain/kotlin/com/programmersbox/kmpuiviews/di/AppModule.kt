@@ -18,6 +18,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.ListBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NewSettingsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
+import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -56,6 +57,7 @@ private fun Module.backupProcessors() {
     backupProcessor("notifications", ::NotificationsBackupProcessor)
     backupProcessor("sourceOrder", ::SourceOrderBackupProcessor)
     backupProcessor("notes", ::NotesBackupProcessor)
+    backupProcessor("recommendations", ::RecommendationsBackupProcessor)
 }
 
 inline fun <reified T : BackupProcessor> Module.backupProcessor(

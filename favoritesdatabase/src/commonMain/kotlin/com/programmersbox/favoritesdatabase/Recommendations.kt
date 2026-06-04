@@ -36,6 +36,9 @@ interface RecommendationDao {
     @Query("SELECT * FROM Recommendation")
     fun getAllRecommendations(): Flow<List<Recommendation>>
 
+    @Query("SELECT * FROM Recommendation")
+    suspend fun getAllRecommendationsSync(): List<Recommendation>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecommendation(recommendation: Recommendation)
 
