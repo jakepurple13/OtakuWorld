@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.buildKonfig)
-    alias(libs.plugins.koin.compiler)
+    //alias(libs.plugins.koin.compiler)
 }
 
 otakuDependencies {
@@ -242,7 +242,7 @@ kotlin {
         }
 
         all {
-            languageSettings.enableLanguageFeature("WhenGuards")
+
         }
     }
 }

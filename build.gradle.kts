@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
-import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
@@ -67,7 +66,7 @@ fun Project.configureAndroidBasePlugin() {
 
 fun Project.composeFeatureFlags() {
     extensions.findByType(ComposeCompilerGradlePluginExtension::class.java)?.apply {
-        featureFlags.add(ComposeFeatureFlag.StrongSkipping)
+
     }
 }
 
@@ -83,11 +82,11 @@ plugins {
     alias(libs.plugins.google.firebase.performance) apply false
     alias(libs.plugins.room) apply false
     alias(libs.plugins.composeMultiplatform) apply false
-    id("com.squareup.wire") version "6.2.0" apply false
+    id("com.squareup.wire") version "6.4.0" apply false
     id("org.jetbrains.compose.hot-reload") version "1.1.1" apply false
     alias(libs.plugins.buildKonfig) apply false
     alias(libs.plugins.koin.compiler) apply false
-    alias(libs.plugins.hotswan.compiler) apply false
+    //alias(libs.plugins.hotswan.compiler) apply false
     alias(libs.plugins.kotzilla) apply false
 }
 

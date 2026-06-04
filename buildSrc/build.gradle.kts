@@ -81,7 +81,5 @@ dependencies {
 }
 
 kotlin {
-    abiValidation {
-        enabled.set(true)
-    }
+    abiValidation()
 }

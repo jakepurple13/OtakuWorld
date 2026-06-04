@@ -38,47 +38,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter android:label="View Manga">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data
-                    android:host="manga4life.com"
-                    android:pathPrefix="/manga" />
-                <data
-                    android:host="www.manga4life.com"
-                    android:pathPrefix="/manga" />
-
-                <data
-                    android:host="api.mangamutiny.org"
-                    android:pathPrefix="/v1" />
-
-                <data
-                    android:host="nineanime.com"
-                    android:pathPrefix="/manga" />
-                <data
-                    android:host="www.nineanime.com"
-                    android:pathPrefix="/manga" />
-
-                <data
-                    android:host="mangapark.net"
-                    android:pathPrefix="/manga" />
-                <data
-                    android:host="v2.mangapark.net"
-                    android:pathPrefix="/manga" />
-
-                <data
-                    android:host="mangahere.cc"
-                    android:pathPrefix="/manga" />
-                <data
-                    android:host="www.mangahere.cc"
-                    android:pathPrefix="/manga" />
-
-            </intent-filter>
         </activity>
 
         <provider
