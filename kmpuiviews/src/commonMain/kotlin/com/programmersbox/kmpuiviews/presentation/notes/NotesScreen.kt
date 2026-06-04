@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -105,7 +106,10 @@ fun NotesScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(notes, key = { it.itemUrl }) { note ->
+                items(
+                    items = notes,
+                    key = { it.itemUrl }
+                ) { note ->
                     ElevatedCard(
                         onClick = {
                             selectedNote = note
@@ -113,21 +117,26 @@ fun NotesScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = note.itemTitle,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp)
-                        )
-                        Text(
-                            text = note.content,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 5,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = note.itemTitle,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+
+                            HorizontalDivider()
+
+                            Text(
+                                text = note.content,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 5,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
             }
