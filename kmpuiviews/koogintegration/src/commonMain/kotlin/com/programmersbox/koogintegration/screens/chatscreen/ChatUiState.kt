@@ -3,6 +3,7 @@ package com.programmersbox.koogintegration.screens.chatscreen
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
+import androidx.compose.runtime.Stable
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
 
 data class ChatUiState(
@@ -173,3 +174,9 @@ fun List<ToolDescriptor>.toToolData(): List<LlmCallToolData> =
             optionalParameters = tool.optionalParameters.map { it.name }
         )
     }
+
+@Stable
+data class EmptyStateItem(
+    val title: String,
+    val action: () -> Unit,
+)

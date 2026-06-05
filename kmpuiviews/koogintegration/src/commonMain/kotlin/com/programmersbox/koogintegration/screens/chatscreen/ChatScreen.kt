@@ -257,17 +257,40 @@ private fun ChatScreenContent(
                         contentType = "empty-state",
                     ) {
                         EmptyState(
-                            onAnalyzeFavoritesClick = {
-                                onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
-                                onEvent(ChatUiEvents.SendMessage)
-                            },
-                            onAnalyzeReadingHabitsClick = {
-                                onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
-                                onEvent(ChatUiEvents.SendMessage)
-                            },
-                            onRecommendationClick = {
-                                onEvent(ChatUiEvents.UpdateInputText("I want something similar to "))
-                            }
+                            emptyStateItems = listOf(
+                                EmptyStateItem(
+                                    title = "Analyze my favorites",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my reading habits",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my collections (lists)",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my lists"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my bookmarks",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my bookmarks"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Recommend me something",
+                                    action = { onEvent(ChatUiEvents.UpdateInputText("I want something similar to ")) }
+                                )
+                            ),
                         )
                     }
                 }
@@ -1001,9 +1024,7 @@ fun RecommendationItem(
 
 @Composable
 private fun EmptyState(
-    onAnalyzeFavoritesClick: () -> Unit,
-    onAnalyzeReadingHabitsClick: () -> Unit,
-    onRecommendationClick: () -> Unit,
+    emptyStateItems: List<EmptyStateItem>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -1011,39 +1032,24 @@ private fun EmptyState(
     ) {
         Text(
             "Start chatting or choose an option below to get started!!",
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.displaySmall,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         ) {
-            HeroChip(
-                label = "Analyze Favorites",
-                color = MaterialTheme.colorScheme.primary,
-                onClick = onAnalyzeFavoritesClick,
-                modifier = Modifier
-                    .height(48.dp)
-                    .weight(1f)
-            )
-
-            HeroChip(
-                label = "Analyze Reading Habits",
-                color = MaterialTheme.colorScheme.secondary,
-                onClick = onAnalyzeReadingHabitsClick,
-                modifier = Modifier
-                    .height(48.dp)
-                    .weight(1f)
-            )
-
-            HeroChip(
-                label = "Recommend Reading Materials",
-                color = MaterialTheme.colorScheme.tertiary,
-                onClick = onRecommendationClick,
-                modifier = Modifier
-                    .height(48.dp)
-                    .weight(1f)
-            )
+            emptyStateItems.forEach { item ->
+                HeroChip(
+                    label = item.title,
+                    color = MaterialTheme.colorScheme.primary,
+                    onClick = item.action,
+                    modifier = Modifier
+                        .height(64.dp)
+                        .weight(1f)
+                )
+            }
         }
     }
 }

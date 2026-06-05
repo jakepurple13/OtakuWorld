@@ -1,9 +1,11 @@
 package com.programmersbox.koogintegration
 
 import androidx.compose.ui.unit.dp
+import com.programmersbox.koogintegration.integrator.BookmarksIntegrator
 import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
 import com.programmersbox.koogintegration.integrator.HeatMapIntegrator
 import com.programmersbox.koogintegration.integrator.KoogIntegrator
+import com.programmersbox.koogintegration.integrator.ListIntegrator
 import com.programmersbox.koogintegration.provider.AgentProvider
 import com.programmersbox.koogintegration.provider.OtakuAgentProvider
 import com.programmersbox.koogintegration.provider.otakutools.LocalExplainTools
@@ -28,10 +30,14 @@ fun buildKoogModule() = module {
     factoryOf(::MathTools)
     single(named("favorites")) { FavoritesIntegrator(get()) } bind KoogIntegrator::class
     single(named("heatMap")) { HeatMapIntegrator(get()) } bind KoogIntegrator::class
+    single(named("bookmarks")) { BookmarksIntegrator(get()) } bind KoogIntegrator::class
+    single(named("list")) { ListIntegrator(get()) } bind KoogIntegrator::class
     factory {
         LocalExplainTools(
             favoritesAnalyzer = get(qualifier = named("favorites")),
-            heatmapAnalyzer = get(qualifier = named("heatMap"))
+            heatmapAnalyzer = get(qualifier = named("heatMap")),
+            bookmarksAnalyzer = get(qualifier = named("bookmarks")),
+            listAnalyzer = get(qualifier = named("list"))
         )
     }
 }
