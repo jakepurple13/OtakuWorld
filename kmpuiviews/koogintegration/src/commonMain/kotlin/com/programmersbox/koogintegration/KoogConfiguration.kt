@@ -1,6 +1,8 @@
 package com.programmersbox.koogintegration
 
 import androidx.compose.ui.unit.dp
+import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
+import com.programmersbox.koogintegration.integrator.HeatMapIntegrator
 import com.programmersbox.koogintegration.integrator.KoogIntegrator
 import com.programmersbox.koogintegration.provider.AgentProvider
 import com.programmersbox.koogintegration.provider.OtakuAgentProvider
@@ -14,6 +16,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 fun buildKoogModule() = module {
@@ -23,9 +26,12 @@ fun buildKoogModule() = module {
     viewModelOf(::KoogSettingsViewModel)
     factoryOf(::RecommendationTools)
     factoryOf(::MathTools)
+    single(named("favorites")) { FavoritesIntegrator(get()) } bind KoogIntegrator::class
+    single(named("heatMap")) { HeatMapIntegrator(get()) } bind KoogIntegrator::class
     factory {
         LocalExplainTools(
-            get(named<KoogIntegrator.Companion.FavoritesAnalyzer>())
+            favoritesAnalyzer = get(qualifier = named("favorites")),
+            heatmapAnalyzer = get(qualifier = named("heatMap"))
         )
     }
 }

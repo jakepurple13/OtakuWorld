@@ -87,6 +87,7 @@ class ChatViewModel(
                     isLoading = true,
                     userResponseRequested = false,
                     currentUserResponse = userInput,
+                    hideEmptyState = true
                 )
             }
         } else {
@@ -97,6 +98,7 @@ class ChatViewModel(
                     inputText = "",
                     isInputEnabled = false,
                     isLoading = true,
+                    hideEmptyState = true
                 )
             }
 

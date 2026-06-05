@@ -1,5 +1,7 @@
 package com.programmersbox.koogintegration.screens.chatscreen
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -32,16 +34,22 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CopyAll
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -64,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isShiftPressed
@@ -86,6 +95,7 @@ import com.mikepenz.markdown.m3.markdownTypography
 import com.programmersbox.koogintegration.AppDimension
 import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
+import com.programmersbox.koogintegration.agentresponse.Recommendation
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -94,6 +104,7 @@ fun ChatScreen(
     viewModel: ChatViewModel = koinViewModel(),
     onBack: () -> Unit,
     onKoogSettingsClick: () -> Unit,
+    onSearchClick: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -104,9 +115,11 @@ fun ChatScreen(
         inputText = uiState.inputText,
         isInputEnabled = uiState.isInputEnabled,
         isLoading = uiState.isLoading,
+        hideEmptyState = uiState.hideEmptyState,
         onEvent = viewModel::onEvent,
         onBack = onBack,
-        onKoogSettingsClick = onKoogSettingsClick
+        onKoogSettingsClick = onKoogSettingsClick,
+        onSearchClick = onSearchClick,
     )
 }
 
@@ -119,9 +132,11 @@ private fun ChatScreenContent(
     inputText: String,
     isInputEnabled: Boolean,
     isLoading: Boolean,
+    hideEmptyState: Boolean,
     onEvent: (ChatUiEvents) -> Unit,
     onBack: () -> Unit,
     onKoogSettingsClick: () -> Unit,
+    onSearchClick: (String) -> Unit,
 ) {
     val listState = rememberLazyListState()
     val focusRequester = remember { FocusRequester() }
@@ -205,12 +220,14 @@ private fun ChatScreenContent(
                             is ChatMessage.UserMessage -> UserMessageBubble(message.text)
                             is ChatMessage.AgentMessage -> AgentMessageBubble(
                                 text = message.response,
-                                onCopyEvent = onCopyEvent
+                                onCopyEvent = onCopyEvent,
+                                onSearchClick = onSearchClick
                             )
 
                             is ChatMessage.ResultMessage -> AgentMessageBubble(
                                 text = message.response,
-                                onCopyEvent = onCopyEvent
+                                onCopyEvent = onCopyEvent,
+                                onSearchClick = onSearchClick
                             )
 
                             is ChatMessage.SystemMessage -> SystemMessageItem(message.text)
@@ -232,6 +249,26 @@ private fun ChatScreenContent(
 
                             is ChatMessage.LLMTokenUsageMessage -> LLMTokenUsageMessageItem(message)
                         }
+                    }
+                }
+
+                if (!hideEmptyState) {
+                    item(
+                        contentType = "empty-state",
+                    ) {
+                        EmptyState(
+                            onAnalyzeFavoritesClick = {
+                                onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
+                                onEvent(ChatUiEvents.SendMessage)
+                            },
+                            onAnalyzeReadingHabitsClick = {
+                                onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
+                                onEvent(ChatUiEvents.SendMessage)
+                            },
+                            onRecommendationClick = {
+                                onEvent(ChatUiEvents.UpdateInputText("I want something similar to "))
+                            }
+                        )
                     }
                 }
 
@@ -366,6 +403,7 @@ private fun UserMessageBubble(text: String) {
 private fun AgentMessageBubble(
     text: AgentResponse,
     onCopyEvent: (String) -> Unit,
+    onSearchClick: (String) -> Unit,
 ) {
     Column {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -392,15 +430,9 @@ private fun AgentMessageBubble(
                                     typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
                                 )
                                 text.recommendations.forEach { recommendation ->
-                                    Text(recommendation.reason)
-                                    ListItem(
-                                        headlineContent = { Text(recommendation.title) },
-                                        supportingContent = { Text(recommendation.description) },
-                                        overlineContent = {
-                                            FlowRow {
-                                                recommendation.genre.forEach { genre -> Text(genre) }
-                                            }
-                                        }
+                                    RecommendationItem(
+                                        recommendation = recommendation,
+                                        onSearchClick = { onSearchClick(recommendation.title) }
                                     )
                                 }
                             }
@@ -894,6 +926,152 @@ private fun InputArea(
                     )
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun RecommendationItem(
+    recommendation: Recommendation,
+    modifier: Modifier = Modifier,
+    onSearchClick: () -> Unit,
+) {
+    var showRecs by remember { mutableStateOf(false) }
+    OutlinedCard(
+        onClick = { showRecs = !showRecs },
+        modifier = modifier
+    ) {
+        AnimatedContent(showRecs, label = "") { target ->
+            if (target) {
+                SelectionContainer {
+                    ListItem(
+                        headlineContent = { Text(recommendation.title) },
+                        supportingContent = {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(recommendation.description)
+                                HorizontalDivider(
+                                    modifier = Modifier.fillMaxWidth(0.5f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text("Reason: " + recommendation.reason)
+                            }
+                        },
+                        overlineContent = {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                recommendation.genre.forEach {
+                                    Text(it)
+                                }
+                            }
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
+            } else {
+                ListItem(
+                    trailingContent = { Icon(Icons.Default.KeyboardArrowDown, null) },
+                    headlineContent = { Text(recommendation.title) },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            }
+        }
+
+        HorizontalDivider()
+
+        Row(
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier
+                .padding(4.dp)
+                .fillMaxWidth()
+        ) {
+            FilledTonalIconButton(
+                onClick = onSearchClick
+            ) { Icon(Icons.Default.Search, null) }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(
+    onAnalyzeFavoritesClick: () -> Unit,
+    onAnalyzeReadingHabitsClick: () -> Unit,
+    onRecommendationClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+    ) {
+        Text(
+            "Start chatting or choose an option below to get started!!",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+        ) {
+            HeroChip(
+                label = "Analyze Favorites",
+                color = MaterialTheme.colorScheme.primary,
+                onClick = onAnalyzeFavoritesClick,
+                modifier = Modifier
+                    .height(48.dp)
+                    .weight(1f)
+            )
+
+            HeroChip(
+                label = "Analyze Reading Habits",
+                color = MaterialTheme.colorScheme.secondary,
+                onClick = onAnalyzeReadingHabitsClick,
+                modifier = Modifier
+                    .height(48.dp)
+                    .weight(1f)
+            )
+
+            HeroChip(
+                label = "Recommend Reading Materials",
+                color = MaterialTheme.colorScheme.tertiary,
+                onClick = onRecommendationClick,
+                modifier = Modifier
+                    .height(48.dp)
+                    .weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeroChip(
+    label: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        color = color.copy(alpha = 0.12f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.25f)),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

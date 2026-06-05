@@ -47,7 +47,8 @@ kotlin {
                 implementation(libs.markdown.renderer)
                 implementation(project.dependencies.platform(libs.koin.bom))
                 implementation(libs.bundles.koinKmp)
-                // Add KMP dependencies here
+                implementation(projects.favoritesdatabase)
+                implementation(libs.kotlinx.datetime)
             }
         }
 

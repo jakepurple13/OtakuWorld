@@ -16,6 +16,7 @@ data class ChatUiState(
     val userResponseRequested: Boolean = false,
     val currentUserResponse: String? = null,
     val mermaidGraphString: String? = null,
+    val hideEmptyState: Boolean = false,
 )
 
 enum class DebugOption(val title: String) {

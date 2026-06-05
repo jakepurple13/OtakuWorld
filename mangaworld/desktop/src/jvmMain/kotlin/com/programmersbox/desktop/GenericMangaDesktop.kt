@@ -96,7 +96,8 @@ class GenericMangaDesktop(
             ChatScreen(
                 viewModel = koinViewModel { parametersOf("otaku_agent") },
                 onBack = { navigationActions.popBackStack() },
-                onKoogSettingsClick = { navigationActions.navigate(KoogSettings) }
+                onKoogSettingsClick = { navigationActions.navigate(KoogSettings) },
+                onSearchClick = { navigationActions.globalSearch(it) }
             )
         }
     }
