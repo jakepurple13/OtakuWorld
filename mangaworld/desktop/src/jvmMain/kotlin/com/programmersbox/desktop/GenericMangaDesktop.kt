@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.koogintegration.screens.chatscreen.ChatScreen
+import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
@@ -95,9 +96,12 @@ class GenericMangaDesktop(
             HideNavBarWhileOnScreen()
             ChatScreen(
                 viewModel = koinViewModel { parametersOf("otaku_agent") },
-                onBack = { navigationActions.popBackStack() },
-                onKoogSettingsClick = { navigationActions.navigate(KoogSettings) },
-                onSearchClick = { navigationActions.globalSearch(it) }
+                koogNavigation = KoogNavigation(
+                    onBack = { navigationActions.popBackStack() },
+                    onKoogSettingsClick = { navigationActions.navigate(KoogSettings) },
+                    onSearchClick = { navigationActions.globalSearch(it) },
+                    onListClick = { navigationActions.customList() }
+                )
             )
         }
     }

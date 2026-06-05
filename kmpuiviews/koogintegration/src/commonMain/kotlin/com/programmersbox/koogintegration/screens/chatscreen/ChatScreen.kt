@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -96,6 +97,7 @@ import com.mikepenz.markdown.m3.markdownTypography
 import com.programmersbox.koogintegration.AppDimension
 import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
+import com.programmersbox.koogintegration.agentresponse.ListResponse
 import com.programmersbox.koogintegration.agentresponse.Recommendation
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -103,9 +105,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = koinViewModel(),
-    onBack: () -> Unit,
-    onKoogSettingsClick: () -> Unit,
-    onSearchClick: (String) -> Unit,
+    koogNavigation: KoogNavigation,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -118,9 +118,7 @@ fun ChatScreen(
         isLoading = uiState.isLoading,
         hideEmptyState = uiState.hideEmptyState,
         onEvent = viewModel::onEvent,
-        onBack = onBack,
-        onKoogSettingsClick = onKoogSettingsClick,
-        onSearchClick = onSearchClick,
+        koogNavigation = koogNavigation
     )
 }
 
@@ -135,9 +133,7 @@ private fun ChatScreenContent(
     isLoading: Boolean,
     hideEmptyState: Boolean,
     onEvent: (ChatUiEvents) -> Unit,
-    onBack: () -> Unit,
-    onKoogSettingsClick: () -> Unit,
-    onSearchClick: (String) -> Unit,
+    koogNavigation: KoogNavigation,
 ) {
     val listState = rememberLazyListState()
     val focusRequester = remember { FocusRequester() }
@@ -176,12 +172,12 @@ private fun ChatScreenContent(
                 title = { Text(title) },
                 navigationIcon = {
                     IconButton(
-                        onClick = onBack
+                        onClick = koogNavigation.onBack
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
                 },
                 actions = {
                     IconButton(
-                        onClick = onKoogSettingsClick
+                        onClick = koogNavigation.onKoogSettingsClick
                     ) { Icon(Icons.Default.Settings, contentDescription = "Settings") }
 
                     DebugViewSelector(
@@ -222,13 +218,13 @@ private fun ChatScreenContent(
                             is ChatMessage.AgentMessage -> AgentMessageBubble(
                                 text = message.response,
                                 onCopyEvent = onCopyEvent,
-                                onSearchClick = onSearchClick
+                                koogNavigation = koogNavigation
                             )
 
                             is ChatMessage.ResultMessage -> AgentMessageBubble(
                                 text = message.response,
                                 onCopyEvent = onCopyEvent,
-                                onSearchClick = onSearchClick
+                                koogNavigation = koogNavigation
                             )
 
                             is ChatMessage.SystemMessage -> SystemMessageItem(message.text)
@@ -427,7 +423,7 @@ private fun UserMessageBubble(text: String) {
 private fun AgentMessageBubble(
     text: AgentResponse,
     onCopyEvent: (String) -> Unit,
-    onSearchClick: (String) -> Unit,
+    koogNavigation: KoogNavigation,
 ) {
     Column {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -445,6 +441,7 @@ private fun AgentMessageBubble(
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .padding(AppDimension.spacingMedium)
                 ) {
+                    //TODO: Put each thing in its own composable
                     when (text) {
                         is AgentRecommendations -> {
                             Column {
@@ -456,7 +453,7 @@ private fun AgentMessageBubble(
                                 text.recommendations.forEach { recommendation ->
                                     RecommendationItem(
                                         recommendation = recommendation,
-                                        onSearchClick = { onSearchClick(recommendation.title) }
+                                        onSearchClick = { koogNavigation.onSearchClick(recommendation.title) }
                                     )
                                 }
                             }
@@ -469,8 +466,24 @@ private fun AgentMessageBubble(
                                 typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
                             )
                         }
-                    }
 
+                        is ListResponse -> {
+                            Column {
+                                Markdown(
+                                    content = text.text,
+                                    colors = markdownColor(text = MaterialTheme.colorScheme.onPrimaryContainer),
+                                    typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
+                                )
+
+                                HorizontalDivider()
+
+                                Button(
+                                    onClick = koogNavigation.onListClick,
+                                    modifier = Modifier.align(Alignment.End)
+                                ) { Text("View Lists") }
+                            }
+                        }
+                    }
                 }
             }
         }
