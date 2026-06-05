@@ -54,7 +54,7 @@ jetpackCompiler = "1.5.11"
 jetbrainsCompiler = "1.5.1"
 accompanist = "0.37.3"
 okhttpVersion = "5.3.2"
-ktorVersion = "3.5.0"
+ktorVersion = "3.3.3"
 scanner = "0.7.1"
 textflowMaterial3 = "1.2.1"
 uiBackhandler = "1.8.0"
@@ -140,6 +140,10 @@ cmp-navevent = "1.1.0"
 cmp-nav3-material3 = "1.3.0-beta01"
 kotzilla = "2.2.0"
 
+koog = "1.0.0"
+koog-beta = "1.0.0-beta"
+markdown-renderer = "0.41.0"
+
 [plugins]
 kotlinGradle = { id = "org.jetbrains.kotlin:kotlin.gradle.plugin", version.ref = "kotlin" }
 kotlinSerializationGradle = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -158,6 +162,12 @@ hotswan-compiler = { id = "com.github.skydoves.compose.hotswan.compiler", versio
 kotzilla = { id = "io.kotzilla.kotzilla-plugin", version.ref = "kotzilla" }
 
 [libraries]
+
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref = "koog-beta" }
+koog-memory = { module = "ai.koog:agents-features-memory", version.ref = "koog" }
+markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
+
 kotzilla-sdk-compose = { group = "io.kotzilla", name = "kotzilla-sdk-compose", version.ref = "kotzilla" }
 androidx-activity = { module = "androidx.activity:activity", version.ref = "activity" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNavigation3" }
