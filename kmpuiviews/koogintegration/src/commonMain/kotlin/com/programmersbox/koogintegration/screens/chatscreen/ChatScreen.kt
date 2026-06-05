@@ -87,6 +87,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikepenz.markdown.m3.Markdown
@@ -1028,11 +1029,13 @@ private fun EmptyState(
     modifier: Modifier = Modifier,
 ) {
     Column(
+        verticalArrangement = Arrangement.spacedBy(AppDimension.spacingMedium),
         modifier = modifier,
     ) {
         Text(
-            "Start chatting or choose an option below to get started!!",
+            "Start chatting or choose an option below to get started!",
             style = MaterialTheme.typography.displaySmall,
+            textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 

@@ -38,7 +38,6 @@ data class DebugView(
         if (type in alwaysVisible) return true
         if (!enabled) return false
         return when (type) {
-            ChatMessageType.Error -> true
             ChatMessageType.ToolCall -> DebugOption.Tools in options
             ChatMessageType.LlmCall -> DebugOption.LlmCalls in options
             ChatMessageType.Node -> DebugOption.Nodes in options
@@ -54,6 +53,7 @@ data class DebugView(
             ChatMessageType.Agent,
             ChatMessageType.System,
             ChatMessageType.Result,
+            ChatMessageType.Error,
         )
     }
 }
