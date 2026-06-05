@@ -1,8 +1,10 @@
 package com.programmersbox.koogintegration
 
 import androidx.compose.ui.unit.dp
+import com.programmersbox.koogintegration.integrator.KoogIntegrator
 import com.programmersbox.koogintegration.provider.AgentProvider
 import com.programmersbox.koogintegration.provider.OtakuAgentProvider
+import com.programmersbox.koogintegration.provider.otakutools.LocalExplainTools
 import com.programmersbox.koogintegration.provider.otakutools.RecommendationTools
 import com.programmersbox.koogintegration.screens.chatscreen.ChatViewModel
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
@@ -21,6 +23,11 @@ fun buildKoogModule() = module {
     viewModelOf(::KoogSettingsViewModel)
     factoryOf(::RecommendationTools)
     factoryOf(::MathTools)
+    factory {
+        LocalExplainTools(
+            get(named<KoogIntegrator.Companion.FavoritesAnalyzer>())
+        )
+    }
 }
 
 object AppDimension {

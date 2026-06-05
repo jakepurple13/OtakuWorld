@@ -10,6 +10,7 @@ import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.ExtensionWatcher
@@ -19,6 +20,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.koogintegration.KoogDataStore
 import com.programmersbox.koogintegration.buildKoogModule
+import com.programmersbox.koogintegration.integrator.KoogIntegrator
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
@@ -33,6 +35,8 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.io.File
 
@@ -98,6 +102,8 @@ fun main(args: Array<String>) {
                             //TODO: Until Koog has support for a better minSdk, this is jvm only
                             includes(buildKoogModule())
 
+                            single(named<KoogIntegrator.Companion.FavoritesAnalyzer>()) { FavoritesIntegrator(get()) } bind KoogIntegrator::class
+
                             single {
                                 val koogApiKey = DataStoreHandler(
                                     key = stringPreferencesKey("koogApiKey"),
@@ -130,6 +136,21 @@ fun main(args: Array<String>) {
                     )
                 }
             )
+        }
+    }
+}
+
+class FavoritesIntegrator(
+    private val itemDao: ItemDao,
+) : KoogIntegrator() {
+    override suspend fun map(): String {
+        return buildString {
+            appendLine("Favorites")
+            itemDao.getAllFavoritesSync().forEach { item ->
+                appendLine(item.source)
+                appendLine(item.title)
+                appendLine(item.description)
+            }
         }
     }
 }

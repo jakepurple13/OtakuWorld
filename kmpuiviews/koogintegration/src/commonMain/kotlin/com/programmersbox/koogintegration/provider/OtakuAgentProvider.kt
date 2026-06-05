@@ -22,6 +22,7 @@ import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
 import com.programmersbox.koogintegration.agentresponse.Recommendation
 import com.programmersbox.koogintegration.generateAiConfig
+import com.programmersbox.koogintegration.provider.otakutools.LocalExplainTools
 import com.programmersbox.koogintegration.provider.otakutools.RecommendationTools
 import com.programmersbox.koogintegration.trackEvents
 
@@ -29,6 +30,7 @@ class OtakuAgentProvider(
     private val agentMaker: AgentMaker,
     private val mathTools: MathTools,
     private val recommendationTools: RecommendationTools,
+    private val explainTools: LocalExplainTools,
 ) : ChatAgentProvider {
     override val title: String
         get() = "Otaku Agent"
@@ -85,6 +87,7 @@ class OtakuAgentProvider(
             toolRegistry = ToolRegistry {
                 tools(recommendationTools.asTools())
                 tools(mathTools.asTools())
+                tools(explainTools.asTools())
             }
         ) {
             install(EventHandler) {
