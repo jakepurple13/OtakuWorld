@@ -53,7 +53,7 @@ class LocalExplainTools(
         - Show the top 3 genres with the most bookmarks
         - Show the number of total bookmarks
         - Show the item with the most bookmarks
-    """
+    """.trimIndent()
 
     @Tool
     @LLMDescription("Analyze the user's list")
@@ -66,5 +66,5 @@ class LocalExplainTools(
         - Show the number of items in the list
         - Show last updated time in a human readable format
         - Include anything else that could be useful to the user
-    """
+    """.trimIndent()
 }
