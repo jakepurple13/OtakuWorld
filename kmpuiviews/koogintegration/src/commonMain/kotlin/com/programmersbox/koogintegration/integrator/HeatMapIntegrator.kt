@@ -15,7 +15,10 @@ class HeatMapIntegrator(
                 .getAllHeatMapsSync()
                 .let { map ->
                     input
-                        ?.let { range -> map.filter { it.time in range.start..range.end } }
+                        ?.let { range ->
+                            val dateRange = range.start..range.end
+                            map.filter { it.time in dateRange }
+                        }
                         ?: map
                 }
                 .forEach {
