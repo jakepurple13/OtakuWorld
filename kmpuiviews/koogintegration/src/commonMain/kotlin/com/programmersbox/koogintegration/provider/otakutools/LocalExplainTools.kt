@@ -15,7 +15,7 @@ class LocalExplainTools(
 
     @Tool
     @LLMDescription("Analyze favorites to see what the user is interested in")
-    suspend fun explain() = """
+    suspend fun explainFavorites() = """
         Analyze the user's favorites to see what they are interested in.
         
         ${favoritesAnalyzer.map("")}
