@@ -26,14 +26,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.TrayState
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.rememberWindowState
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
@@ -198,6 +202,13 @@ fun ApplicationScope.BaseDesktopUi(
                                     CustomTitleBar(
                                         title = title,
                                         onMinimizeClick = { windowState.isMinimized = true },
+                                        onMaximizeToggle = {
+                                            windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
+                                                WindowPlacement.Floating
+                                            } else {
+                                                WindowPlacement.Maximized
+                                            }
+                                        },
                                         onCloseClick = ::exitApplication
                                     )
                                     HorizontalDivider()
@@ -229,6 +240,7 @@ fun ApplicationScope.BaseDesktopUi(
 fun FrameWindowScope.CustomTitleBar(
     title: String,
     onMinimizeClick: () -> Unit,
+    onMaximizeToggle: () -> Unit,
     onCloseClick: () -> Unit,
 ) {
     WindowDraggableArea {
@@ -257,7 +269,29 @@ fun FrameWindowScope.CustomTitleBar(
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
-            )
+            ),
+            modifier = Modifier.pointerInput(Unit) {
+                awaitPointerEventScope {
+                    var lastClickTime = 0L
+                    while (true) {
+                        // Observe the pointer events without consuming them
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+
+                        // Check for standard mouse/touch presses
+                        if (event.type == PointerEventType.Press) {
+                            val currentTime = System.currentTimeMillis()
+
+                            // 300ms is a standard threshold for a double-click
+                            if (currentTime - lastClickTime < 300) {
+                                onMaximizeToggle()
+                                lastClickTime = 0L // Reset to prevent triple-clicks from triggering twice
+                            } else {
+                                lastClickTime = currentTime
+                            }
+                        }
+                    }
+                }
+            },
         )
     }
 }

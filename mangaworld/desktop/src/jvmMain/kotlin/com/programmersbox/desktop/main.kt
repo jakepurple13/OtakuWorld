@@ -2,10 +2,12 @@ package com.programmersbox.desktop
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.window.application
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ca.gosyer.appdirs.AppDirs
+import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BaseDesktopUi
@@ -15,6 +17,8 @@ import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
+import com.programmersbox.koogintegration.KoogDataStore
+import com.programmersbox.koogintegration.buildKoogModule
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
@@ -88,6 +92,38 @@ fun main(args: Array<String>) {
                                             "MangaSettings.preferences_pb"
                                         ).absolutePath
                                     )
+                                )
+                            }
+
+                            //TODO: Until Koog has support for a better minSdk, this is jvm only
+                            includes(buildKoogModule())
+
+                            single {
+                                val koogApiKey = DataStoreHandler(
+                                    key = stringPreferencesKey("koogApiKey"),
+                                    defaultValue = ""
+                                )
+
+                                val koogCompany = DataStoreHandler(
+                                    key = stringPreferencesKey("koogCompany"),
+                                    defaultValue = ""
+                                )
+
+                                val koogModel = DataStoreHandler(
+                                    key = stringPreferencesKey("koogModel"),
+                                    defaultValue = ""
+                                )
+
+                                KoogDataStore(
+                                    getApiKey = { koogApiKey.get() },
+                                    getModelCompany = { koogCompany.get() },
+                                    getModelName = { koogModel.get() },
+                                    storeApiKey = { koogApiKey.set(it) },
+                                    storeModelCompany = { koogCompany.set(it) },
+                                    storeModelName = { koogModel.set(it) },
+                                    apiKeyFlow = koogApiKey.asFlow(),
+                                    modelCompanyFlow = koogCompany.asFlow(),
+                                    modelNameFlow = koogModel.asFlow()
                                 )
                             }
                         }

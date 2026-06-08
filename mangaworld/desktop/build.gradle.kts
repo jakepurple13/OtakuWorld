@@ -56,6 +56,7 @@ kotlin {
             api(libs.androidx.navigation3.runtime)
             api(libs.filekit.core)
             api(libs.filekit.dialogs.compose)
+            implementation(projects.kmpuiviews.koogintegration)
         }
 
         jvmMain.dependencies {

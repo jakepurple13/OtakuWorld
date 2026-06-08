@@ -56,6 +56,11 @@ gradlePlugin {
             implementationClass = "plugins.MultiplatformLibraryPlugin"
         }
 
+        register("otaku-multiplatform-no-ios") {
+            id = "otaku-multiplatform-no-ios"
+            implementationClass = "plugins.MultiplatformLibraryNoIosPlugin"
+        }
+
         register("otaku-multiplatform-application") {
             id = "otaku-multiplatform-application"
             implementationClass = "plugins.MultiplatformApplicationPlugin"
