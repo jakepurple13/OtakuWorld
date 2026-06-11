@@ -11,6 +11,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.CustomListItem
+import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
 import com.programmersbox.koogintegration.provider.AgentExecutionTraceEvent
 import com.programmersbox.koogintegration.provider.AgentProvider
@@ -25,9 +27,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import kotlin.uuid.Uuid
 
 class ChatViewModel(
     private val agentProvider: AgentProvider,
+    private val listDao: ListDao,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         ChatUiState(
@@ -50,6 +54,7 @@ class ChatViewModel(
                 ChatUiEvents.SendMessage -> sendMessage()
                 ChatUiEvents.RestartChat -> restartChat()
                 ChatUiEvents.ShowMermaidGraph -> showMermaidGraph()
+                is ChatUiEvents.SaveGeneratedList -> saveList(event)
             }
         }
     }
@@ -274,6 +279,28 @@ class ChatViewModel(
                     chatMessages = it.chatMessages + ChatMessage.MermaidGraphMessage(
                         it.mermaidGraphString ?: "Graph has not been created yet"
                     ),
+                )
+            }
+        }
+    }
+
+    private fun saveList(
+        event: ChatUiEvents.SaveGeneratedList,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val parentUuid = Uuid.random().toString()
+            listDao.createList(
+                CustomListItem(
+                    uuid = parentUuid,
+                    name = event.chosenName,
+                    useBiometric = event.useBiometrics,
+                    description = event.generatedCustomListResponse.listDescription
+                )
+            )
+
+            event.itemsToSave.forEach {
+                listDao.addItem(
+                    it.copy(uuid = parentUuid)
                 )
             }
         }

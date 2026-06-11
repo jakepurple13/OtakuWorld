@@ -33,6 +33,9 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem")
     suspend fun getAllFavoritesSync(): List<DbModel>
 
+    @Query("SELECT * FROM FavoriteItem WHERE url IN (:urls)")
+    suspend fun getFavoritesByUrls(urls: List<String>): List<DbModel>
+
     @Query("SELECT * FROM FavoriteItem where shouldCheckForUpdate = 1")
     suspend fun getAllNotifyingFavoritesSync(): List<DbModel>
 

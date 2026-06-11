@@ -1,9 +1,11 @@
 package com.programmersbox.koogintegration.agentresponse
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Stable
 data class AgentRecommendations(
     @property:LLMDescription("Text explaining the recommendations")
     val text: String,
@@ -13,6 +15,7 @@ data class AgentRecommendations(
 
 @Serializable
 @LLMDescription("A recommendation for the user based on their query")
+@Stable
 data class Recommendation(
     @property:LLMDescription("The title of the recommendation")
     val title: String,

@@ -17,4 +17,7 @@ class FavoritesIntegrator(
                 }
         }
     }
+
+    suspend fun fetchFavorites() = itemDao.getAllFavoritesSync()
+    suspend fun getFavoritesByUrls(urls: List<String>) = itemDao.getFavoritesByUrls(urls)
 }

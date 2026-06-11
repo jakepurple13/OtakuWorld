@@ -13,18 +13,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.ColorMatrixColorFilter
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
@@ -66,6 +64,8 @@ fun M3CoverCard(
         )
     }
     CustomSurface(
+        tonalElevation = 4.dp,
+        shape = MaterialTheme.shapes.medium,
         modifier = modifier
             .size(
                 ComposableUtils.IMAGE_WIDTH,
@@ -78,9 +78,8 @@ fun M3CoverCard(
                     source = name
                 )
             )
+            .clip(MaterialTheme.shapes.medium)
             .zoomOverlay(),
-        tonalElevation = 4.dp,
-        shape = MaterialTheme.shapes.medium,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
