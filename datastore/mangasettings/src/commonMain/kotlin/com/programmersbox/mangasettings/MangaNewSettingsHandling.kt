@@ -96,6 +96,13 @@ class MangaNewSettingsHandling(
         defaultValue = false
     )
 
+    val downloadPath = ProtoStoreHandler(
+        preferences = preferences,
+        key = { it.downloadPath },
+        update = { copy(downloadPath = it) },
+        defaultValue = ""
+    )
+
     @Composable
     fun rememberIncludeInsetsForReader() = preferences.rememberPreference(
         key = { it.includeInsetsForReader },
