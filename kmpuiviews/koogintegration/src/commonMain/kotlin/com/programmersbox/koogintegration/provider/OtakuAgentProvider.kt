@@ -56,41 +56,7 @@ class OtakuAgentProvider(
 
         val genericStructure = JsonStructure.create<AgentResponse>(
             schemaGenerator = StandardJsonSchemaGenerator,
-            examples = listOf(
-                AgentResponse.Text("This is some sample text"),
-                AgentRecommendations(
-                    text = "This is some sample recommendations",
-                    recommendations = listOf(
-                        Recommendation(
-                            title = "Recommendation 1",
-                            description = "Description 1",
-                            reason = "This is an example reason",
-                            genre = listOf("fantasy")
-                        ),
-                        Recommendation(
-                            title = "Recommendation 2",
-                            description = "Description 2",
-                            reason = "This is an example reason",
-                            genre = listOf("fantasy", "isekai")
-                        )
-                    )
-                ),
-                GeneratedCustomListResponse(
-                    response = "This is your new generated list!",
-                    listName = "Awesome List!",
-                    listDescription = "This is filled with awesome items!",
-                    items = listOf(
-                        CustomListInfo(
-                            uuid = "EXAMPLE-UUID",
-                            title = "Example",
-                            description = "This is just an example",
-                            url = "https://example.com/",
-                            imageUrl = "https://example.com/2",
-                            source = "Example"
-                        )
-                    )
-                )
-            )
+            examples = generateExampleResponses()
         )
 
         return AIAgent(
@@ -128,4 +94,40 @@ class OtakuAgentProvider(
             }
         }
     }
+
+    private fun generateExampleResponses() = listOf(
+        AgentResponse.Text("This is some sample text"),
+        AgentRecommendations(
+            text = "This is some sample recommendations",
+            recommendations = listOf(
+                Recommendation(
+                    title = "Recommendation 1",
+                    description = "Description 1",
+                    reason = "This is an example reason",
+                    genre = listOf("fantasy")
+                ),
+                Recommendation(
+                    title = "Recommendation 2",
+                    description = "Description 2",
+                    reason = "This is an example reason",
+                    genre = listOf("fantasy", "isekai")
+                )
+            )
+        ),
+        GeneratedCustomListResponse(
+            response = "This is your new generated list!",
+            listName = "Awesome List!",
+            listDescription = "This is filled with awesome items!",
+            items = listOf(
+                CustomListInfo(
+                    uuid = "EXAMPLE-UUID",
+                    title = "Example",
+                    description = "This is just an example",
+                    url = "https://example.com/",
+                    imageUrl = "https://example.com/2",
+                    source = "Example"
+                )
+            )
+        )
+    )
 }
