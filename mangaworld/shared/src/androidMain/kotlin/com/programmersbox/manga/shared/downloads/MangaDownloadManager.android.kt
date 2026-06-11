@@ -22,7 +22,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -187,30 +189,27 @@ actual class MangaDownloadManager(
             _dirTick.onStart { emit(Unit) }
         ) { downloads, _ ->
             val activeUrls = downloads.mapTo(mutableSetOf()) { it.chapterUrl }
+            // One entry per chapter directory, not per image file
             val completedFromDisk = rootDir
                 .listFiles()
                 ?.flatMap { titleDir ->
                     titleDir
                         .listFiles()
                         ?.filter { it.isDirectory && it.listFiles()?.isNotEmpty() == true }
-                        ?.flatMap { chapterDir ->
-                            chapterDir
-                                .listFiles()
-                                ?.map {
-                                    ChapterDownloadProgress(
-                                        chapterUrl = it.absolutePath,
-                                        chapterName = chapterDir.name,
-                                        mangaTitle = titleDir.name,
-                                        state = DownloadState.Completed,
-                                    )
-                                }.orEmpty()
+                        ?.map { chapterDir ->
+                            ChapterDownloadProgress(
+                                chapterUrl = chapterDir.absolutePath,
+                                chapterName = chapterDir.name,
+                                mangaTitle = titleDir.name,
+                                state = DownloadState.Completed,
+                            )
                         }.orEmpty()
                 }.orEmpty()
 
-            println(completedFromDisk.joinToString("\n"))
-
             downloads + completedFromDisk.filter { it.chapterUrl !in activeUrls }
         }
+            .distinctUntilChanged()
+            .flowOn(Dispatchers.IO)
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
         File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()

@@ -109,11 +109,13 @@ private fun DownloadViewer(
         .flow
         .collectAsStateWithLifecycle(initialValue = true)
 
-    val fileList = viewModel.fileList
+    val fileList by viewModel.fileList.collectAsStateWithLifecycle()
+
+    val fileEntries = remember(fileList) { fileList.entries.toList() }
 
     val activeDownloads by viewModel
         .activeDownloads
-        .collectAsStateWithLifecycle(emptyList())
+        .collectAsStateWithLifecycle()
 
     val inProgressDownloads by remember {
         derivedStateOf {
@@ -162,7 +164,8 @@ private fun DownloadViewer(
                     }
                 }
                 items(
-                    items = fileList.entries.toList()
+                    items = fileEntries,
+                    key = { it.key },
                 ) { file ->
                     ChapterItem(
                         file = file,
@@ -294,7 +297,7 @@ private fun ChapterItem(
         ) {
             ListItem(
                 modifier = Modifier.padding(4.dp),
-                headlineContent = { Text(file.value.values.randomOrNull()?.randomOrNull()?.folderName.orEmpty()) },
+                headlineContent = { Text(file.value.values.firstOrNull()?.firstOrNull()?.folderName.orEmpty()) },
                 supportingContent = { Text("Chapter Count ${file.value.size}") },
                 trailingContent = {
                     Icon(
@@ -308,7 +311,7 @@ private fun ChapterItem(
 
         if (expanded) {
             file.value.values.forEach { chapter ->
-                val c = chapter.randomOrNull()
+                val c = chapter.firstOrNull()
 
                 var showPopup by remember { mutableStateOf(false) }
 

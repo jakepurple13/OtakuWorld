@@ -8,24 +8,56 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import androidx.core.net.toUri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.io.File
 
 actual class DownloadedMediaHandler(
     private val context: Context,
 ) {
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // ContentObserver fires once per MediaStore row change; coalesce bursts into one query
+    private val refresh = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    private val folder = Environment
+        .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        .toString() + "/MangaWorld/"
+
+    @OptIn(FlowPreview::class)
     actual fun init(folderLocation: String) {
-        //loadChapters(folderLocation)
-        loadChapters(
-            Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                .toString() + "/MangaWorld/"
-        )
+        scope.launch { chapters.update { getMangaFolders(context, folder) } }
+
+        refresh
+            .debounce(300)
+            .onEach { chapters.update { getMangaFolders(context, folder) } }
+            .launchIn(scope)
+
+        if (contentObserver == null) {
+            contentObserver = context.contentResolver.registerObserver(externalContentUri) {
+                refresh.tryEmit(Unit)
+            }
+        }
     }
 
     actual fun listenToUpdates(): Flow<List<DownloadedChapters>> = chapters.asStateFlow()
@@ -48,13 +80,14 @@ actual class DownloadedMediaHandler(
 
     actual fun clear() {
         unregister()
+        scope.cancel()
     }
 
     private fun ContentResolver.registerObserver(
         uri: Uri,
         observer: (selfChange: Boolean) -> Unit,
     ): ContentObserver {
-        val contentObserver = object : ContentObserver(Handler()) {
+        val contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
                 observer(selfChange)
             }
@@ -67,24 +100,12 @@ actual class DownloadedMediaHandler(
 
     fun unregister() {
         contentObserver?.let { context.contentResolver.unregisterContentObserver(it) }
+        contentObserver = null
     }
 
     val chapters = MutableStateFlow<List<DownloadedChapters>>(emptyList())
 
-    fun loadChapters(folderLocation: String) {
-        val imageList = getMangaFolders(context, folderLocation)
-        chapters.tryEmit(imageList)
-
-        if (contentObserver == null) {
-            contentObserver = context.contentResolver.registerObserver(externalContentUri) {
-                val imageList = getMangaFolders(context, folderLocation)
-                chapters.tryEmit(imageList)
-            }
-        }
-    }
-
     private val externalContentUri: Uri = MediaStore.Files.getContentUri("external")
-
 
     @SuppressLint("InlinedApi")
     private val projections = arrayOf(
