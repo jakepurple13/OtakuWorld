@@ -5,11 +5,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -64,7 +64,7 @@ class DownloadChapterWorker(
                     File(dir, "%03d.png".format(index)).writeBytes(bytes)
                 }
             } else {
-                val root = DocumentFile.fromTreeUri(applicationContext, Uri.parse(storedPath))
+                val root = DocumentFile.fromTreeUri(applicationContext, storedPath.toUri())
                     ?: return Result.failure(workDataOf(KEY_ERROR to "Invalid download directory"))
                 fun DocumentFile.sub(name: String) = findFile(name) ?: createDirectory(name)
                     ?: error("Cannot create directory: $name")

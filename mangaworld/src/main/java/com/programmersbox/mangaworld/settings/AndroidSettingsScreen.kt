@@ -34,8 +34,9 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun AndroidSettingsScreen() {
-    val viewModel = koinViewModel<AndroidSettingsViewModel>()
+fun AndroidSettingsScreen(
+    viewModel: AndroidSettingsViewModel = koinViewModel(),
+) {
     val downloadPath by viewModel.downloadPath.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -74,12 +75,7 @@ fun AndroidSettingsScreen() {
             item(contentType = "downloadLocation") {
                 SegmentedListItem(
                     content = { Text("Download Location") },
-                    supportingContent = {
-                        Text(
-                            if (downloadPath.isEmpty()) "Default (Internal Storage)"
-                            else downloadPath
-                        )
-                    },
+                    supportingContent = { Text(downloadPath.ifEmpty { "Default (Internal Storage)" }) },
                     leadingContent = { Icon(Icons.Default.Folder, contentDescription = null) },
                     trailingContent = {
                         if (downloadPath.isNotEmpty()) {
