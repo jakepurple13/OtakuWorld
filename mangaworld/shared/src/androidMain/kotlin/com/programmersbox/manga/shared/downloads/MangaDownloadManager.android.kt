@@ -1,8 +1,12 @@
 package com.programmersbox.manga.shared.downloads
 
 import android.content.Context
-import android.os.Environment
-import android.os.FileObserver
+import android.database.ContentObserver
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -13,6 +17,7 @@ import androidx.work.workDataOf
 import com.programmersbox.datastore.MediaCheckerNetworkType
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -33,16 +39,11 @@ import java.io.File
 actual class MangaDownloadManager(
     context: Context,
     private val settingsHandling: NewSettingsHandling,
+    mangaNewSettingsHandling: MangaNewSettingsHandling,
 ) {
 
     private val workManager = WorkManager.getInstance(context)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    private val rootDir: File
-        get() = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "MangaWorld"
-        )
 
     // Progress from workers — only Queued/Downloading entries
     private val _activeDownloads = MutableStateFlow<List<ChapterDownloadProgress>>(emptyList())
@@ -50,9 +51,24 @@ actual class MangaDownloadManager(
     // Signals filesystem mutations; replay=1 so new subscribers get the latest tick immediately
     private val _dirTick = MutableSharedFlow<Unit>(replay = 1)
 
+    private var rootDir: DocumentFile? = null
+
     init {
+        mangaNewSettingsHandling
+            .downloadPath
+            .asFlow()
+            .onEach {
+
+                rootDir = if (it.isEmpty()) {
+                    DocumentFile.fromFile(File(context.filesDir, it).also { it.mkdirs() })
+                } else {
+                    DocumentFile.fromTreeUri(context, it.toUri())
+                }
+            }
+            .launchIn(scope)
+
         // Forward FileObserver events into _dirTick so observeDownloads re-evaluates filesystem
-        rootDirObserverFlow()
+        rootDirObserverFlow(context)
             .onEach { _dirTick.emit(Unit) }
             .launchIn(scope)
 
@@ -96,24 +112,40 @@ actual class MangaDownloadManager(
                     }
                 ) _dirTick.emit(Unit)
             }
+            .flowOn(Dispatchers.IO)
             .launchIn(scope)
     }
 
     // Watches rootDir for directory-level events (title dirs created or removed)
-    @Suppress("DEPRECATION")
-    private fun rootDirObserverFlow(): Flow<Unit> = callbackFlow {
-        if (!rootDir.exists()) rootDir.mkdirs()
-        val observer = object : FileObserver(
-            rootDir.absolutePath,
-            CREATE or DELETE or MOVED_TO or MOVED_FROM,
-        ) {
-            override fun onEvent(event: Int, path: String?) {
+    private fun rootDirObserverFlow(context: Context): Flow<Unit> = callbackFlow {
+        // Note: DocumentFile does not have a self-creating mkdirs() method.
+        // You typically ensure the root directory exists when the user initially
+        // grants the SAF tree permission.
+
+        val contentResolver = context.contentResolver
+
+        // Create a ContentObserver. It requires a Handler to dispatch changes.
+        // Using the main looper is standard practice here.
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                super.onChange(selfChange, uri)
+                // A change occurred in the directory or its descendants
                 trySend(Unit)
             }
         }
-        observer.startWatching()
-        awaitClose { observer.stopWatching() }
-    }.onStart { emit(Unit) }
+
+        // Register the observer.
+        // The 'true' parameter means "notifyForDescendants",
+        // which effectively watches for files added/deleted inside the directory.
+        rootDir?.uri?.let { contentResolver.registerContentObserver(it, true, observer) }
+
+        // Clean up the observer when the Flow collection is cancelled
+        awaitClose {
+            contentResolver.unregisterContentObserver(observer)
+        }
+    }
+        .flowOn(Dispatchers.IO)
+        .onStart { emit(Unit) }
 
     actual fun downloadChapter(chapter: KmpChapterModel, mangaTitle: String) {
         scope.launch {
@@ -178,8 +210,15 @@ actual class MangaDownloadManager(
     }
 
     actual fun getDownloadedChapterPath(chapter: KmpChapterModel, mangaTitle: String): String? {
-        val dir = File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}")
-        return if (dir.exists() && dir.listFiles()?.isNotEmpty() == true) dir.absolutePath else null
+        val titleDir = rootDir?.findFile(mangaTitle.sanitize()) ?: return null
+        val chapterDir = titleDir.findFile(chapter.name.sanitize()) ?: return null
+
+        // DocumentFile.listFiles() returns an empty array if empty, never null
+        return if (chapterDir.exists() && chapterDir.listFiles().isNotEmpty()) {
+            chapterDir.uri.toString() // Use URI string instead of absolutePath
+        } else {
+            null
+        }
     }
 
     actual fun observeDownloads(): Flow<List<ChapterDownloadProgress>> =
@@ -188,32 +227,38 @@ actual class MangaDownloadManager(
         ) { downloads, _ ->
             val activeUrls = downloads.mapTo(mutableSetOf()) { it.chapterUrl }
             val completedFromDisk = rootDir
-                .listFiles()
+                ?.listFiles()
                 ?.flatMap { titleDir ->
                     titleDir
                         .listFiles()
-                        ?.filter { it.isDirectory && it.listFiles()?.isNotEmpty() == true }
-                        ?.flatMap { chapterDir ->
+                        .filter { it.isDirectory && it.listFiles().isNotEmpty() }
+                        .flatMap { chapterDir ->
                             chapterDir
                                 .listFiles()
-                                ?.map {
+                                .map { file ->
                                     ChapterDownloadProgress(
-                                        chapterUrl = it.absolutePath,
-                                        chapterName = chapterDir.name,
-                                        mangaTitle = titleDir.name,
+                                        // Map absolutePath to the file's URI
+                                        chapterUrl = file.uri.toString(),
+                                        // DocumentFile names are nullable, provide safe fallbacks
+                                        chapterName = chapterDir.name ?: "Unknown Chapter",
+                                        mangaTitle = titleDir.name ?: "Unknown Title",
                                         state = DownloadState.Completed,
                                     )
-                                }.orEmpty()
-                        }.orEmpty()
-                }.orEmpty()
+                                }
+                        }
+                }
+                ?: emptyList()
 
             println(completedFromDisk.joinToString("\n"))
 
             downloads + completedFromDisk.filter { it.chapterUrl !in activeUrls }
-        }
+        }.flowOn(Dispatchers.IO)
 
     actual fun deleteChapter(chapter: KmpChapterModel, mangaTitle: String) {
-        File(rootDir, "${mangaTitle.sanitize()}/${chapter.name.sanitize()}").deleteRecursively()
+        rootDir?.findFile(mangaTitle.sanitize())
+            ?.findFile(chapter.name.sanitize())
+            ?.delete() // Inherently deletes recursively if it's a TreeDocumentFile
+
         scope.launch { _dirTick.emit(Unit) }
     }
 }
