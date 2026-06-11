@@ -3,7 +3,14 @@ package com.programmersbox.mangaworld
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.core.app.TaskStackBuilder
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.gsonutils.toJson
@@ -14,6 +21,7 @@ import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.di.backupProcessor
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
@@ -27,7 +35,9 @@ import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mangaworld.settings.AndroidSettingsScreen
 import com.programmersbox.mangaworld.settings.AndroidSettingsViewModel
+import com.programmersbox.mangaworld.settings.PlatformSettings
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
@@ -146,6 +156,32 @@ class GenericManga(
         return TaskStackBuilder.create(context).run {
             addNextIntentWithParentStack(deepLinkIntent)
             getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+    }
+
+    context(navGraph: EntryProviderScope<NavKey>)
+    override fun settingsNav3Setup() {
+        super<GenericSharedManga>.settingsNav3Setup()
+        navGraph.entry<PlatformSettings> { AndroidSettingsScreen() }
+    }
+
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit {
+        val compose = ComposeSettingsDsl()
+            .apply(super<GenericSharedManga>.composeCustomPreferences())
+
+        return {
+            viewSettings {
+                compose.viewSettings(this)
+                segmentedListItem(
+                    content = { Text("Platform Settings") },
+                    leadingContent = { Icon(Icons.Default.PhoneAndroid, null) },
+                    onClick = { navigationActions.navigate(PlatformSettings) },
+                )
+            }
+            generalSettings = compose.generalSettings
+            onboardingSettings = compose.onboardingSettings
+            playerSettings = compose.playerSettings
         }
     }
 }
