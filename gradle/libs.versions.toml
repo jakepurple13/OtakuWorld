@@ -234,6 +234,7 @@ gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
+haze-liquidglass = { module = "dev.chrisbanes.haze:haze-liquidglass", version.ref = "haze" }
 kamel-decoder-animated-image = { module = "media.kamel:kamel-decoder-animated-image", version.ref = "kamelImage" }
 kamel-decoder-svg-std = { module = "media.kamel:kamel-decoder-svg-std", version.ref = "kamelImage" }
 kamel-decoder-svg-batik = { module = "media.kamel:kamel-decoder-svg-batik", version.ref = "kamelImage" }
@@ -356,6 +357,7 @@ ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.3.0"
 
 urlencoder-lib = { module = "net.thauvin.erik.urlencoder:urlencoder-lib", version.ref = "urlencoderLib" }
 workRuntime = { module = "androidx.work:work-runtime", version.ref = "workVersion" }
+documentFile = { module = "androidx.documentfile:documentfile", version = "1.0.1" }
 
 pagingRuntime = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingVersion" }
 roomPaging = { module = "androidx.room3:room3-paging", version.ref = "roomVersion" }

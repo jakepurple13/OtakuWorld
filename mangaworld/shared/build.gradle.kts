@@ -50,6 +50,7 @@ kotlin {
             implementation(libs.panpf.zoomimage.compose.glide)
             implementation(libs.telephoto.zoomable.image.glide)
             implementation(libs.workRuntime)
+            implementation(libs.documentFile)
         }
 
         jvmMain.dependencies {

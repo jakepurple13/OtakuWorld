@@ -5,15 +5,17 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.documentfile.provider.DocumentFile
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
+import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
@@ -22,6 +24,7 @@ import java.io.File
 class DownloadChapterWorker(
     context: Context,
     workerParams: WorkerParameters,
+    private val mangaSettings: MangaNewSettingsHandling,
 ) : CoroutineWorker(context, workerParams) {
 
     private val notificationManager by lazy {
@@ -36,34 +39,53 @@ class DownloadChapterWorker(
         val imageUrls = inputData.getString(KEY_IMAGE_URLS)
             ?.let { Json.decodeFromString<List<String>>(it) }
             ?: return Result.failure()
-
         val headers = inputData.getString(KEY_HEADERS)
             ?.let { Json.decodeFromString<Map<String, String>>(it) }
             ?: emptyMap()
-
-        val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            ?: return Result.failure(workDataOf(KEY_ERROR to "External storage unavailable"))
-
-        val destDir = File(externalDir, "MangaWorld/${mangaTitle.sanitize()}/${chapterName.sanitize()}")
-            .also { it.mkdirs() }
-
-        val request = DownloadRequest(
-            chapterUrl = chapterUrl,
-            chapterName = chapterName,
-            mangaTitle = mangaTitle,
-            imageUrls = imageUrls,
-            headers = headers,
-        )
-
-        println(request)
 
         val notifId = (chapterUrl.hashCode() and Int.MAX_VALUE) % 100_000
         val notifCompleteId = notifId + 100_000
         val notifFailId = notifId + 200_000
 
+        var destFile: File? = null
+        var destDoc: DocumentFile? = null
+
         val client = HttpClient()
         return try {
-            // Show indeterminate progress while the first image hasn't loaded yet
+            val storedPath = mangaSettings.downloadPath.get()
+            val subPath = "MangaWorld/${mangaTitle.sanitize()}/${chapterName.sanitize()}"
+
+            val writeBytes: suspend (Int, ByteArray) -> Unit
+
+            if (storedPath.isEmpty()) {
+                val dir = File(applicationContext.filesDir, subPath).also { it.mkdirs() }
+                destFile = dir
+                writeBytes = { index, bytes ->
+                    File(dir, "%03d.png".format(index)).writeBytes(bytes)
+                }
+            } else {
+                val root = DocumentFile.fromTreeUri(applicationContext, Uri.parse(storedPath))
+                    ?: return Result.failure(workDataOf(KEY_ERROR to "Invalid download directory"))
+                fun DocumentFile.sub(name: String) = findFile(name) ?: createDirectory(name)
+                    ?: error("Cannot create directory: $name")
+                val dir = root.sub("MangaWorld").sub(mangaTitle.sanitize()).sub(chapterName.sanitize())
+                destDoc = dir
+                writeBytes = { index, bytes ->
+                    val doc = dir.createFile("image/png", "%03d.png".format(index))
+                        ?: error("Cannot create image file")
+                    applicationContext.contentResolver.openOutputStream(doc.uri)!!.use { it.write(bytes) }
+                }
+            }
+
+            val request = DownloadRequest(
+                chapterUrl = chapterUrl,
+                chapterName = chapterName,
+                mangaTitle = mangaTitle,
+                imageUrls = imageUrls,
+                headers = headers,
+            )
+            println(request)
+
             postNotification(
                 id = notifId,
                 notification = buildProgressNotification(
@@ -98,17 +120,16 @@ class DownloadChapterWorker(
                         ),
                     )
                 },
-                writeBytes = { index, bytes ->
-                    File(destDir, "%03d.png".format(index)).writeBytes(bytes)
-                },
+                writeBytes = writeBytes,
             )
-            MediaScannerConnection.scanFile(
-                applicationContext,
-                destDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),
-                null,
-                null,
-            )
-            // Dismiss progress, show completion
+            if (destFile != null) {
+                MediaScannerConnection.scanFile(
+                    applicationContext,
+                    destFile.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),
+                    null,
+                    null,
+                )
+            }
             notificationManager.cancel(notifId)
             postNotification(
                 id = notifCompleteId,
@@ -121,16 +142,15 @@ class DownloadChapterWorker(
         } catch (e: Exception) {
             e.printStackTrace()
             if (runAttemptCount < 3) {
-                // Leave progress notification visible — next attempt will overwrite it
                 Result.retry()
             } else {
-                // All retries exhausted
                 notificationManager.cancel(notifId)
                 postNotification(
                     id = notifFailId,
                     notification = buildFailedNotification(chapterName, e.message ?: "Unknown error"),
                 )
-                destDir.deleteRecursively()
+                destFile?.deleteRecursively()
+                destDoc?.delete()
                 Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
             }
         } finally {
