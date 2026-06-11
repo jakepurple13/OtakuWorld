@@ -15,11 +15,13 @@ import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
+import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.koogintegration.AgentMaker
 import com.programmersbox.koogintegration.MathTools
 import com.programmersbox.koogintegration.SystemPrompts
 import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
+import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
 import com.programmersbox.koogintegration.agentresponse.Recommendation
 import com.programmersbox.koogintegration.generateAiConfig
 import com.programmersbox.koogintegration.provider.otakutools.LocalExplainTools
@@ -62,14 +64,29 @@ class OtakuAgentProvider(
                         Recommendation(
                             title = "Recommendation 1",
                             description = "Description 1",
-                            reason = "https://example.com/1",
+                            reason = "This is an example reason",
                             genre = listOf("fantasy")
                         ),
                         Recommendation(
                             title = "Recommendation 2",
                             description = "Description 2",
-                            reason = "https://example.com/2",
+                            reason = "This is an example reason",
                             genre = listOf("fantasy", "isekai")
+                        )
+                    )
+                ),
+                GeneratedCustomListResponse(
+                    response = "This is your new generated list!",
+                    listName = "Awesome List!",
+                    listDescription = "This is filled with awesome items!",
+                    items = listOf(
+                        CustomListInfo(
+                            uuid = "EXAMPLE-UUID",
+                            title = "Example",
+                            description = "This is just an example",
+                            url = "https://example.com/",
+                            imageUrl = "https://example.com/2",
+                            source = "Example"
                         )
                     )
                 )
