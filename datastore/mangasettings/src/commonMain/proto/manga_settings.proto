@@ -12,6 +12,7 @@ message MangaSettings {
   bool useFloatingReaderBottomBar = 9;
   bool hasMigrated = 10;
   bool includeInsetsForReader = 11;
+  string downloadPath = 12;
 }
 
 enum ImageLoaderType {
