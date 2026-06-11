@@ -132,6 +132,15 @@ bridge is installed.
 ### MangaWorld
 - Read Manga from various different manga sites
 
+#### Download Location
+MangaWorld lets you choose where downloaded chapters are saved.
+
+- **Default:** Chapters are stored in the app's internal storage (`filesDir/MangaWorld/`). No storage permissions required.
+- **Custom folder:** Go to **Settings → Platform Settings → Download Location** and tap the folder icon to pick any directory using the system file picker. The selected location persists across sessions.
+- **Reset:** Tap the ✕ icon next to the path to revert to the default internal storage location.
+
+> **Note:** When a custom location is set, the app requests persistent read/write access to that directory. Revoking this permission in system settings will cause downloads to fail until you reset or re-select a location.
+
 ### NovelWorld
 - Read Novels from various different novel sites
 
