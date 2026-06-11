@@ -42,6 +42,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,16 +109,18 @@ private fun DownloadViewer(
         .flow
         .collectAsStateWithLifecycle(initialValue = true)
 
-    val fileList by viewModel
-        .fileList
-        .collectAsStateWithLifecycle(emptyMap())
+    val fileList = viewModel.fileList
 
     val activeDownloads by viewModel
         .activeDownloads
         .collectAsStateWithLifecycle(emptyList())
 
-    val inProgressDownloads = activeDownloads.filter {
-        it.state is DownloadState.Queued || it.state is DownloadState.Downloading
+    val inProgressDownloads by remember {
+        derivedStateOf {
+            activeDownloads.filter {
+                it.state is DownloadState.Queued || it.state is DownloadState.Downloading
+            }
+        }
     }
 
     if (fileList.isEmpty() && inProgressDownloads.isEmpty()) {
@@ -140,7 +143,6 @@ private fun DownloadViewer(
                 }
                 items(
                     items = inProgressDownloads,
-                    key = { it.chapterUrl }
                 ) { download ->
                     ActiveDownloadItem(
                         download = download,
@@ -305,7 +307,7 @@ private fun ChapterItem(
         }
 
         if (expanded) {
-            file.value.values.toList().fastForEach { chapter ->
+            file.value.values.forEach { chapter ->
                 val c = chapter.randomOrNull()
 
                 var showPopup by remember { mutableStateOf(false) }
