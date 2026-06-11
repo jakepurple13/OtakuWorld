@@ -27,6 +27,7 @@ import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.mangaworld.settings.AndroidSettingsViewModel
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
@@ -60,6 +61,7 @@ val appModule = module {
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     singleOf(::MangaDownloadManager)
     workerOf(::DownloadChapterWorker)
+    viewModelOf(::AndroidSettingsViewModel)
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides
