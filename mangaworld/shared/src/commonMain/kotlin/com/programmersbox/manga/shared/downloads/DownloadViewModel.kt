@@ -1,16 +1,15 @@
 package com.programmersbox.manga.shared.downloads
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -22,29 +21,31 @@ class DownloadViewModel(
     private val mangaDownloadManager: MangaDownloadManager,
 ) : ViewModel() {
 
-    val fileList = mutableStateMapOf<String, Map<String, List<DownloadedChapters>>>()
+    val fileList = downloadedMediaHandler
+        .listenToUpdates()
+        .map { f ->
+            f
+                .groupBy { it.folder }
+                .mapValues { entry -> entry.value.groupBy { c -> c.chapterFolder } }
+        }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.IO)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyMap()
+        )
 
-    val activeDownloads = mangaDownloadManager.observeDownloads()
+    val activeDownloads = mangaDownloadManager
+        .observeDownloads()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
 
     init {
         downloadedMediaHandler.init("")
-
-        downloadedMediaHandler
-            .listenToUpdates()
-            .map { f ->
-                f
-                    .groupBy { it.folder }
-                    .entries
-                    .toList()
-                    .fastMap { it.key to it.value.groupBy { c -> c.chapterFolder } }
-                    .toMap()
-            }
-            .flowOn(Dispatchers.IO)
-            .onEach {
-                fileList.clear()
-                fileList.putAll(it)
-            }
-            .launchIn(viewModelScope)
     }
 
     fun cancelDownload(chapterUrl: String) {
@@ -52,7 +53,7 @@ class DownloadViewModel(
     }
 
     fun delete(downloadedChapters: DownloadedChapters) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             downloadedMediaHandler.delete(downloadedChapters)
         }
     }
