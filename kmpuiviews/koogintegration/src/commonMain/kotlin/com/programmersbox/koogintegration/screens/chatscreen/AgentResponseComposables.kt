@@ -71,7 +71,9 @@ internal fun RecommendationsResponse(
     isRecommendationSavedAlready: (Recommendation) -> Boolean,
     onEvent: (ChatUiEvents) -> Unit,
 ) {
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         Markdown(
             content = text.text,
             colors = markdownColor(text = MaterialTheme.colorScheme.onPrimaryContainer),
