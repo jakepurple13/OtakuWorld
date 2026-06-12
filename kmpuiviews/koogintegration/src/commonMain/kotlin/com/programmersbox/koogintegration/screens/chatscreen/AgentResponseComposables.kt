@@ -16,13 +16,16 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +68,8 @@ internal fun TextResponse(text: AgentResponse.Text) {
 internal fun RecommendationsResponse(
     text: AgentRecommendations,
     koogNavigation: KoogNavigation,
+    isRecommendationSavedAlready: (Recommendation) -> Boolean,
+    onEvent: (ChatUiEvents) -> Unit,
 ) {
     Column {
         Markdown(
@@ -75,7 +80,9 @@ internal fun RecommendationsResponse(
         text.recommendations.forEach { recommendation ->
             RecommendationItem(
                 recommendation = recommendation,
-                onSearchClick = { koogNavigation.onSearchClick(recommendation.title) }
+                onSearchClick = { koogNavigation.onSearchClick(recommendation.title) },
+                onEvent = onEvent,
+                isRecommendationSavedAlready = isRecommendationSavedAlready(recommendation)
             )
         }
     }
@@ -85,8 +92,10 @@ internal fun RecommendationsResponse(
 @Composable
 internal fun RecommendationItem(
     recommendation: Recommendation,
-    modifier: Modifier = Modifier,
+    isRecommendationSavedAlready: Boolean,
     onSearchClick: () -> Unit,
+    onEvent: (ChatUiEvents) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var showRecs by remember { mutableStateOf(false) }
     OutlinedCard(
@@ -143,8 +152,15 @@ internal fun RecommendationItem(
                 .padding(4.dp)
                 .fillMaxWidth()
         ) {
+            FilledTonalButton(
+                onClick = { onEvent(ChatUiEvents.SaveRecommendation(recommendation)) },
+                enabled = !isRecommendationSavedAlready,
+                shapes = ButtonDefaults.shapes()
+            ) { Text("Save") }
+
             FilledTonalIconButton(
-                onClick = onSearchClick
+                onClick = onSearchClick,
+                shapes = IconButtonDefaults.shapes()
             ) { Icon(Icons.Default.Search, null) }
         }
     }

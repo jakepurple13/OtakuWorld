@@ -3,6 +3,7 @@ package com.programmersbox.koogintegration.screens.chatscreen
 import androidx.compose.runtime.Stable
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
+import com.programmersbox.koogintegration.agentresponse.Recommendation
 
 // Define UI Events for the agent demo screen
 sealed interface ChatUiEvents {
@@ -18,6 +19,8 @@ sealed interface ChatUiEvents {
         val useBiometrics: Boolean,
         val itemsToSave: List<CustomListInfo>,
     ) : ChatUiEvents
+    data class SaveRecommendation(val recommendation: Recommendation) : ChatUiEvents
+    data class DeleteRecommendation(val recommendation: com.programmersbox.favoritesdatabase.Recommendation) : ChatUiEvents
 }
 
 @Stable

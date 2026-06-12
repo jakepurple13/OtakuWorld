@@ -9,10 +9,13 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.favoritesdatabase.Recommendation
+import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
 import com.programmersbox.koogintegration.provider.AgentExecutionTraceEvent
 import com.programmersbox.koogintegration.provider.AgentProvider
@@ -22,7 +25,6 @@ import com.programmersbox.koogintegration.provider.TaskAgentProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,14 +34,19 @@ import kotlin.uuid.Uuid
 class ChatViewModel(
     private val agentProvider: AgentProvider,
     private val listDao: ListDao,
+    private val recommendationDao: RecommendationDao,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(
-        ChatUiState(
-            title = agentProvider.title,
-            chatMessages = listOf(ChatMessage.SystemMessage(agentProvider.description))
+    val snackbarHostState = SnackbarHostState()
+
+    val uiState: StateFlow<ChatUiState>
+        field = MutableStateFlow(
+            ChatUiState(
+                title = agentProvider.title,
+                chatMessages = listOf(ChatMessage.SystemMessage(agentProvider.description))
+            )
         )
-    )
-    val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+
+    val savedRecommendations = recommendationDao.getAllRecommendations()
 
     private var chatHistoryProvider: ChatHistoryProvider = InMemoryChatHistoryProvider()
     private var sessionId: String = UUID.randomUUID().toString()
@@ -55,22 +62,24 @@ class ChatViewModel(
                 ChatUiEvents.RestartChat -> restartChat()
                 ChatUiEvents.ShowMermaidGraph -> showMermaidGraph()
                 is ChatUiEvents.SaveGeneratedList -> saveList(event)
+                is ChatUiEvents.SaveRecommendation -> saveRecommendation(event)
+                is ChatUiEvents.DeleteRecommendation -> deleteRecommendation(event.recommendation)
             }
         }
     }
 
     private fun updateInputText(text: String) {
-        _uiState.update { it.copy(inputText = text) }
+        uiState.update { it.copy(inputText = text) }
     }
 
     private fun toggleDebugEnabled() {
-        _uiState.update {
+        uiState.update {
             it.copy(debugView = it.debugView.copy(enabled = !it.debugView.enabled))
         }
     }
 
     private fun toggleDebugOption(option: DebugOption) {
-        _uiState.update {
+        uiState.update {
             val current = it.debugView
             val newOptions =
                 if (option in current.options) current.options - option else current.options + option
@@ -79,12 +88,12 @@ class ChatViewModel(
     }
 
     private fun sendMessage() {
-        val userInput = _uiState.value.inputText.trim()
+        val userInput = uiState.value.inputText.trim()
         if (userInput.isEmpty()) return
 
         // If the agent is waiting for a response to a question
-        if (_uiState.value.userResponseRequested) {
-            _uiState.update {
+        if (uiState.value.userResponseRequested) {
+            uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.UserMessage(userInput),
                     inputText = "",
@@ -97,7 +106,7 @@ class ChatViewModel(
             }
         } else {
             // Initial message flow - add user message and start the agent
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.UserMessage(userInput),
                     inputText = "",
@@ -119,7 +128,7 @@ class ChatViewModel(
                 val currentAgent = agent ?: createAgent().also { agent = it }
                 val result = currentAgent.run(userInput, sessionId)
 
-                _uiState.update {
+                uiState.update {
                     when (agentProvider) {
                         is SingleTaskAgentProvider -> it.copy(
                             chatMessages = it.chatMessages +
@@ -145,10 +154,10 @@ class ChatViewModel(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         chatMessages = it.chatMessages + ChatMessage.ErrorMessage("Error: ${e.message}"),
-                        isInputEnabled = !_uiState.value.isChatEnded,
+                        isInputEnabled = !uiState.value.isChatEnded,
                         isLoading = false,
                     )
                 }
@@ -158,7 +167,7 @@ class ChatViewModel(
 
     private suspend fun createAgent(): AIAgent<String, AgentResponse> {
         val onToolCallEvent: suspend (String, Map<String, String>) -> Unit = { toolName, args ->
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.ToolCallMessage(
                         toolName,
@@ -169,7 +178,7 @@ class ChatViewModel(
         }
         val onErrorEvent: suspend (String) -> Unit = { errorMessage ->
             println(errorMessage)
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.ErrorMessage(errorMessage),
                     isInputEnabled = true,
@@ -179,7 +188,7 @@ class ChatViewModel(
         }
         val onLLMCallEvent: suspend (List<Message>, List<ToolDescriptor>) -> Unit =
             { messages, tools ->
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         chatMessages = it.chatMessages + ChatMessage.LLMCallMessage(
                             LlmCallData(
@@ -202,13 +211,13 @@ class ChatViewModel(
                     event.result
                 )
             }
-            _uiState.update {
+            uiState.update {
                 it.copy(chatMessages = it.chatMessages + ChatMessage.ExecutionTraceMessage(item))
             }
         }
 
         val onLLMCallCompleted: suspend (ResponseMetaInfo) -> Unit = { metaInfo ->
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.LLMTokenUsageMessage(
                         inputTokens = metaInfo.inputTokensCount ?: 0,
@@ -239,7 +248,7 @@ class ChatViewModel(
                 onExecutionTraceEvent = onExecutionTraceEvent,
                 onLLMCallCompleted = onLLMCallCompleted,
                 onAssistantMessage = { message ->
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             chatMessages = it.chatMessages + ChatMessage.AgentMessage(message),
                             isInputEnabled = true,
@@ -248,12 +257,12 @@ class ChatViewModel(
                         )
                     }
 
-                    val userResponse = _uiState
+                    val userResponse = uiState
                         .first { it.currentUserResponse != null }
                         .currentUserResponse
                         ?: throw IllegalStateException("User response is null")
 
-                    _uiState.update {
+                    uiState.update {
                         it.copy(currentUserResponse = null)
                     }
 
@@ -266,7 +275,7 @@ class ChatViewModel(
                 ?.let { graph -> MermaidDiagramGenerator.generate(graph) }
                 ?.let { s ->
                     println(s)
-                    _uiState.update { it.copy(mermaidGraphString = s) }
+                    uiState.update { it.copy(mermaidGraphString = s) }
                 }
         }
     }
@@ -274,7 +283,7 @@ class ChatViewModel(
     private fun showMermaidGraph() {
         viewModelScope.launch(Dispatchers.IO) {
             agent ?: createAgent().also { agent = it }
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     chatMessages = it.chatMessages + ChatMessage.MermaidGraphMessage(
                         it.mermaidGraphString ?: "Graph has not been created yet"
@@ -306,11 +315,32 @@ class ChatViewModel(
         }
     }
 
+    private fun saveRecommendation(chatUiEvents: ChatUiEvents.SaveRecommendation) {
+        viewModelScope.launch(Dispatchers.IO) {
+            recommendationDao.insertRecommendation(
+                Recommendation(
+                    title = chatUiEvents.recommendation.title,
+                    description = chatUiEvents.recommendation.description,
+                    reason = chatUiEvents.recommendation.reason,
+                    genre = chatUiEvents.recommendation.genre,
+                )
+            )
+            snackbarHostState.showSnackbar("${chatUiEvents.recommendation.title} saved")
+        }
+    }
+
+    private fun deleteRecommendation(recommendation: Recommendation) {
+        viewModelScope.launch(Dispatchers.IO) {
+            recommendationDao.deleteRecommendation(recommendation)
+            snackbarHostState.showSnackbar("${recommendation.title} deleted")
+        }
+    }
+
     private fun restartChat() {
         chatHistoryProvider = InMemoryChatHistoryProvider()
         sessionId = UUID.randomUUID().toString()
         agent = null
-        _uiState.update {
+        uiState.update {
             ChatUiState(
                 title = agentProvider.title,
                 chatMessages = listOf(ChatMessage.SystemMessage(agentProvider.description))

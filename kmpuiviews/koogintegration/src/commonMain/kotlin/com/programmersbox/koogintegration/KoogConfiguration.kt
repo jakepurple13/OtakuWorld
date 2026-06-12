@@ -24,7 +24,7 @@ import org.koin.dsl.module
 fun buildKoogModule() = module {
     singleOf(::AgentMaker)
     single<AgentProvider>(named("otaku_agent")) { new(::OtakuAgentProvider) }
-    viewModel { ChatViewModel(get<AgentProvider>(named(it[0])), get()) }
+    viewModel { ChatViewModel(get<AgentProvider>(named(it[0])), get(), get()) }
     viewModelOf(::KoogSettingsViewModel)
     factoryOf(::RecommendationTools)
     factoryOf(::MathTools)

@@ -19,6 +19,6 @@ class RecommendationTools : ToolSet {
         
         ## Rules
         - Recommendations should be based on the user's query
-        - Show a minimum of 3 recommendations
+        - Show a minimum of 3 recommendations and a maximum of 5
     """.trimIndent()
 }

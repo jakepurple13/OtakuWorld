@@ -3,6 +3,7 @@ package com.programmersbox.favoritesdatabase
 import androidx.room3.ColumnInfo
 import androidx.room3.Dao
 import androidx.room3.Database
+import androidx.room3.Delete
 import androidx.room3.Entity
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
@@ -44,6 +45,9 @@ interface RecommendationDao {
 
     @Query("DELETE FROM Recommendation WHERE title = :id")
     suspend fun deleteRecommendation(id: String)
+
+    @Delete
+    suspend fun deleteRecommendation(id: Recommendation)
 
     @Query("SELECT COUNT(*) FROM Recommendation")
     fun getRecommendationCount(): Flow<Int>
