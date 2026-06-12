@@ -1,9 +1,11 @@
 package com.programmersbox.koogintegration.embedding
 
 import ai.koog.embeddings.base.Embedder
-import ai.koog.embeddings.local.LLMEmbedder
+import ai.koog.embeddings.base.Vector
+import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.llm.LLModel
 import com.programmersbox.koogintegration.KoogDataStore
 
 interface EmbedderProvider {
@@ -11,6 +13,22 @@ interface EmbedderProvider {
 
     /** Returns null when no API key is configured yet. */
     suspend fun provide(): Embedder?
+}
+
+/**
+ * Koog [Embedder] over any [LLMEmbeddingProviderAPI] client. Koog's own
+ * LLMEmbedder requires the LLMEmbeddingProvider abstract class, which the
+ * Android variant of GoogleLLMClient does not extend (it only implements
+ * LLMEmbeddingProviderAPI), so we adapt the API interface ourselves.
+ */
+private class ApiEmbedder(
+    private val client: LLMEmbeddingProviderAPI,
+    private val model: LLModel,
+) : Embedder {
+    override suspend fun embed(text: String): Vector = Vector(client.embed(text, model))
+
+    override fun diff(embedding1: Vector, embedding2: Vector): Double =
+        1.0 - embedding1.cosineSimilarity(embedding2)
 }
 
 /**
@@ -25,7 +43,7 @@ class GoogleEmbedderProvider(
 
     override suspend fun provide(): Embedder? {
         val apiKey = koogDataStore.getApiKey().takeUnless { it.isEmpty() } ?: return null
-        return LLMEmbedder(
+        return ApiEmbedder(
             client = GoogleLLMClient(apiKey = apiKey),
             model = GoogleModels.Embeddings.GeminiEmbedding001,
         )

@@ -1,6 +1,7 @@
 package com.programmersbox.koogintegration
 
 import androidx.compose.ui.unit.dp
+import com.programmersbox.koogintegration.embedding.embeddingPlatformModule
 import com.programmersbox.koogintegration.integrator.BookmarksIntegrator
 import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
 import com.programmersbox.koogintegration.integrator.HeatMapIntegrator
@@ -40,6 +41,8 @@ fun buildKoogModule() = module {
             listAnalyzer = get(qualifier = named("list"))
         )
     }
+
+    includes(embeddingPlatformModule)
 }
 
 object AppDimension {
