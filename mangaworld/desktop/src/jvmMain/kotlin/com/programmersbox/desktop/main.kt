@@ -1,6 +1,7 @@
 package com.programmersbox.desktop
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.application
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.ViewModelStore
@@ -19,6 +20,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.koogintegration.KoogDataStore
 import com.programmersbox.koogintegration.buildKoogModule
+import com.programmersbox.koogintegration.embedding.DesktopEmbeddingRefresher
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
@@ -30,6 +32,7 @@ import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.koin.compose.koinInject
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -129,7 +132,12 @@ fun main(args: Array<String>) {
                         }
                     )
                 }
-            )
+            ) {
+                val embeddings = koinInject<DesktopEmbeddingRefresher>()
+                LaunchedEffect(Unit) {
+                    embeddings.refreshOnStartup(this)
+                }
+            }
         }
     }
 }

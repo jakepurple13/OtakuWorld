@@ -7,13 +7,12 @@ import com.programmersbox.favoritesdatabase.DbModel
  * imageUrl is intentionally excluded; favorites with no description are skipped (null).
  */
 fun DbModel.toEmbeddingText(): String? {
-    if (description.isBlank()) return null
+    if (description.trim().isBlank()) return null
     return buildString {
         appendLine("Title: $title")
         appendLine("Description: ${description.trim()}")
         appendLine("Source: $source")
         appendLine("Url: $url")
         appendLine("Chapters: $numChapters")
-        append("Checks for updates: $shouldCheckForUpdate")
     }
 }

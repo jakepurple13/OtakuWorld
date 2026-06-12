@@ -3,8 +3,8 @@ package com.programmersbox.koogintegration.embedding
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
 import ai.koog.prompt.executor.clients.LLMEmbeddingProviderAPI
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import ai.koog.prompt.llm.LLModel
 import com.programmersbox.koogintegration.KoogDataStore
 
@@ -39,13 +39,13 @@ private class ApiEmbedder(
 class GoogleEmbedderProvider(
     private val koogDataStore: KoogDataStore,
 ) : EmbedderProvider {
-    override val modelId: String = GoogleModels.Embeddings.GeminiEmbedding001.id
+    override val modelId: String = OllamaModels.Embeddings.ALL_MINI_LM.id
 
     override suspend fun provide(): Embedder? {
-        val apiKey = koogDataStore.getApiKey().takeUnless { it.isEmpty() } ?: return null
+        //val apiKey = koogDataStore.getApiKey().takeUnless { it.isEmpty() } ?: return null
         return ApiEmbedder(
-            client = GoogleLLMClient(apiKey = apiKey),
-            model = GoogleModels.Embeddings.GeminiEmbedding001,
+            client = OllamaClient(),//GoogleLLMClient(apiKey = apiKey),
+            model = OllamaModels.Embeddings.ALL_MINI_LM//GoogleModels.Embeddings.GeminiEmbedding001,
         )
     }
 }

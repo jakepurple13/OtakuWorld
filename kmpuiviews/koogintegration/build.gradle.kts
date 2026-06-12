@@ -61,7 +61,9 @@ kotlin {
         }
 
         jvmMain {
-
+            dependencies {
+                implementation(libs.kotlin.multiplatform.appdirs)
+            }
         }
 
         androidMain {

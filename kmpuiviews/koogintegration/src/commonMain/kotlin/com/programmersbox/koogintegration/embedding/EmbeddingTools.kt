@@ -83,7 +83,7 @@ class EmbeddingTools(
         }
     }
 
-    @Tool
+    /*@Tool
     @LLMDescription(
         "Regenerate the favorites embedding cache now. Use when embeddings seem missing or stale. " +
             "Requires a configured API key; calls Google's embedding model only for new or changed favorites."
@@ -93,7 +93,7 @@ class EmbeddingTools(
         if (result.missingApiKey) return "Cannot refresh embeddings: no API key configured."
         return "Embedding refresh complete: ${result.embedded} embedded, ${result.reused} reused from cache, " +
             "${result.skippedNoDescription} skipped (no description), ${result.removed} removed, ${result.failed} failed."
-    }
+    }*/
 
     private suspend fun findSeedUrl(urlOrTitle: String): String? {
         val embeddings = embeddingService.getRecommendations(limit = Int.MAX_VALUE)

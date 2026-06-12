@@ -78,6 +78,7 @@ import java.io.File
 fun ApplicationScope.BaseDesktopUi(
     title: String,
     moduleBlock: KoinApplication.() -> Unit,
+    composeBlock: @Composable () -> Unit = {},
 ) {
     //TODO: add a screen where you paste a url and select a source that then opens the details screen
 
@@ -231,6 +232,8 @@ fun ApplicationScope.BaseDesktopUi(
                     }
                 }
             }
+
+            composeBlock()
         }
     )
 }

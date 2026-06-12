@@ -12,6 +12,9 @@ class DesktopEmbeddingRefresher(
     private val repository: FavoritesEmbeddingRepository,
 ) {
     fun refreshOnStartup(scope: CoroutineScope): Job = scope.launch {
+        println("Refreshing embeddings...")
         runCatching { repository.refreshEmbeddings() }
+            .onSuccess { println("Refresh complete: $it") }
+            .onFailure { it.printStackTrace() }
     }
 }
