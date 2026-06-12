@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettings
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
+import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import org.koin.android.ext.android.inject
 
@@ -21,10 +22,12 @@ class NotificationSettingsActivity : ComponentActivity() {
             OtakuMaterialTheme(
                 settingsHandling = settingsHandling,
             ) {
-                CompositionLocalProvider(
-                    LocalNavHostPadding provides PaddingValues(),
-                ) {
-                    NotificationSettings()
+                KmpLocalCompositionSetup {
+                    CompositionLocalProvider(
+                        LocalNavHostPadding provides PaddingValues(),
+                    ) {
+                        NotificationSettings()
+                    }
                 }
             }
         }
