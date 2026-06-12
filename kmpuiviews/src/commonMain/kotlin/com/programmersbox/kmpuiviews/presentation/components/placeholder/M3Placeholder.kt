@@ -4,13 +4,11 @@ import androidx.annotation.FloatRange
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.InfiniteRepeatableSpec
-import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.spring
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
@@ -92,23 +90,22 @@ public fun PlaceholderDefaults.shimmerHighlightColor(
  * @param contentFadeTransitionSpec The transition spec to use when fading the content
  * on/off screen. The boolean parameter defined for the transition is [visible].
  */
+@Composable
 public fun Modifier.m3placeholder(
     visible: Boolean,
     color: Color = Color.Unspecified,
     shape: Shape? = null,
     highlight: PlaceholderHighlight? = null,
-    placeholderFadeTransitionSpec: @Composable Transition.Segment<Boolean>.() -> FiniteAnimationSpec<Float> = { spring() },
-    contentFadeTransitionSpec: @Composable Transition.Segment<Boolean>.() -> FiniteAnimationSpec<Float> = { spring() },
-): Modifier = composed {
-    placeholder(
-        visible = visible,
-        color = if (color.isSpecified) color else PlaceholderDefaults.color(),
-        shape = shape ?: MaterialTheme.shapes.small,
-        highlight = highlight,
-        placeholderFadeTransitionSpec = placeholderFadeTransitionSpec,
-        contentFadeTransitionSpec = contentFadeTransitionSpec,
-    )
-}
+    placeholderFadeTransitionSpec: FiniteAnimationSpec<Float> = spring(),
+    contentFadeTransitionSpec: FiniteAnimationSpec<Float> = spring(),
+): Modifier = placeholder(
+    visible = visible,
+    color = if (color.isSpecified) color else PlaceholderDefaults.color(),
+    shape = shape ?: MaterialTheme.shapes.small,
+    highlight = highlight,
+    placeholderFadeTransitionSpec = placeholderFadeTransitionSpec,
+    contentFadeTransitionSpec = contentFadeTransitionSpec,
+)
 
 //Placeholder Highlight -------------------------------
 /**
