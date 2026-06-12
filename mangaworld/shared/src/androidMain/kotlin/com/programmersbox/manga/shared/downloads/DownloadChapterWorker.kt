@@ -203,6 +203,12 @@ class DownloadChapterWorker(
         const val KEY_PROGRESS_TOTAL = "total"
         const val KEY_ERROR = "error"
         const val DOWNLOAD_TAG = "manga_chapter_download"
+
+        // Tag prefix for the chapter url. WorkManager auto-tags requests with the worker's
+        // class name, so a bare url tag can't be told apart from other tags reliably.
+        const val CHAPTER_URL_TAG_PREFIX = "chapterUrl:"
+
+        fun chapterUrlTag(chapterUrl: String) = "$CHAPTER_URL_TAG_PREFIX$chapterUrl"
         const val DOWNLOAD_QUEUE = "manga_download_queue"
     }
 }

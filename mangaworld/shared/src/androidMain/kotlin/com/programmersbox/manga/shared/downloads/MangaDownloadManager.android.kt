@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -61,35 +62,39 @@ actual class MangaDownloadManager(
         workManager
             .getWorkInfosByTagFlow(DownloadChapterWorker.DOWNLOAD_TAG)
             .onEach { infos ->
-                _activeDownloads.value = infos
-                    .filter {
-                        it.state == WorkInfo.State.ENQUEUED ||
-                                it.state == WorkInfo.State.BLOCKED ||
-                                it.state == WorkInfo.State.RUNNING
-                    }
-                    .map { info ->
-                        val chapterUrl = info.tags
-                            .firstOrNull { it != DownloadChapterWorker.DOWNLOAD_TAG } ?: ""
-                        val chapterName = info.progress.getString(DownloadChapterWorker.KEY_CHAPTER_NAME) ?: ""
-                        val mangaTitle = info.progress.getString(DownloadChapterWorker.KEY_MANGA_TITLE) ?: ""
-                        ChapterDownloadProgress(
-                            chapterUrl = chapterUrl,
-                            chapterName = chapterName,
-                            mangaTitle = mangaTitle,
-                            state = when (info.state) {
-                                WorkInfo.State.ENQUEUED,
-                                WorkInfo.State.BLOCKED,
-                                    -> DownloadState.Queued
+                _activeDownloads.update {
+                    infos
+                        .filter {
+                            it.state == WorkInfo.State.ENQUEUED ||
+                                    it.state == WorkInfo.State.BLOCKED ||
+                                    it.state == WorkInfo.State.RUNNING
+                        }
+                        .map { info ->
+                            val chapterUrl = info.tags
+                                .firstOrNull { it.startsWith(DownloadChapterWorker.CHAPTER_URL_TAG_PREFIX) }
+                                ?.removePrefix(DownloadChapterWorker.CHAPTER_URL_TAG_PREFIX)
+                                ?: ""
+                            val chapterName = info.progress.getString(DownloadChapterWorker.KEY_CHAPTER_NAME) ?: ""
+                            val mangaTitle = info.progress.getString(DownloadChapterWorker.KEY_MANGA_TITLE) ?: ""
+                            ChapterDownloadProgress(
+                                chapterUrl = chapterUrl,
+                                chapterName = chapterName,
+                                mangaTitle = mangaTitle,
+                                state = when (info.state) {
+                                    WorkInfo.State.ENQUEUED,
+                                    WorkInfo.State.BLOCKED,
+                                        -> DownloadState.Queued
 
-                                WorkInfo.State.RUNNING -> DownloadState.Downloading(
-                                    imagesDownloaded = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_DONE, 0),
-                                    totalImages = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_TOTAL, 0),
-                                )
+                                    WorkInfo.State.RUNNING -> DownloadState.Downloading(
+                                        imagesDownloaded = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_DONE, 0),
+                                        totalImages = info.progress.getInt(DownloadChapterWorker.KEY_PROGRESS_TOTAL, 0),
+                                    )
 
-                                else -> DownloadState.Queued
-                            },
-                        )
-                    }
+                                    else -> DownloadState.Queued
+                                },
+                            )
+                        }
+                }
                 // When a worker reaches a terminal state, tick so the filesystem check re-runs
                 if (infos.any {
                         it.state == WorkInfo.State.SUCCEEDED ||
@@ -141,7 +146,7 @@ actual class MangaDownloadManager(
             val workRequest = OneTimeWorkRequestBuilder<DownloadChapterWorker>()
                 .setInputData(inputData)
                 .addTag(DownloadChapterWorker.DOWNLOAD_TAG)
-                .addTag(chapter.url)
+                .addTag(DownloadChapterWorker.chapterUrlTag(chapter.url))
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(
@@ -172,7 +177,7 @@ actual class MangaDownloadManager(
     }
 
     actual fun cancelDownload(chapterUrl: String) {
-        workManager.cancelAllWorkByTag(chapterUrl)
+        workManager.cancelAllWorkByTag(DownloadChapterWorker.chapterUrlTag(chapterUrl))
     }
 
     actual fun cancelAll() {
