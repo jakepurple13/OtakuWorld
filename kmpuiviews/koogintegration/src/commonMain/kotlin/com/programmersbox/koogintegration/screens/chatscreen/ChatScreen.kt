@@ -1,5 +1,12 @@
 package com.programmersbox.koogintegration.screens.chatscreen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,13 +41,20 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CopyAll
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Recommend
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.BottomAppBarScrollBehavior
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -73,6 +88,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
@@ -90,6 +106,7 @@ import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
 import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
 import com.programmersbox.koogintegration.agentresponse.ListResponse
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -165,6 +182,7 @@ private fun ChatScreenContent(
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
     RecommendationSideBar(
         drawerState = drawerState,
@@ -197,7 +215,8 @@ private fun ChatScreenContent(
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = MaterialTheme.colorScheme.background,
+            modifier = Modifier.nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection),
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -310,6 +329,14 @@ private fun ChatScreenContent(
                     }
                 }
 
+                ChatOptionsBar(
+                    showRecommendationDrawer = {
+                        scope.launch { drawerState.open() }
+                    },
+                    listState = listState,
+                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
+                )
+
                 // Input area
                 InputArea(
                     text = inputText,
@@ -322,6 +349,83 @@ private fun ChatScreenContent(
                     isLoading = isLoading,
                     focusRequester = focusRequester
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun ChatOptionsBar(
+    showRecommendationDrawer: () -> Unit,
+    listState: LazyListState,
+    bottomAppBarScrollBehavior: BottomAppBarScrollBehavior,
+) {
+    var showBottomAppBar by remember { mutableStateOf(true) }
+
+    // Handle the auto-return logic
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            if (bottomAppBarScrollBehavior.state.heightOffset < 0f) {
+                delay(2500)
+                showBottomAppBar = true
+            }
+        }
+    }
+
+    LaunchedEffect(bottomAppBarScrollBehavior.state.collapsedFraction) {
+        showBottomAppBar = bottomAppBarScrollBehavior.state.collapsedFraction == 0f
+    }
+
+    AnimatedVisibility(
+        showBottomAppBar,
+        // Expands smoothly upwards from the InputArea
+        enter = expandVertically()
+                + slideInVertically(initialOffsetY = { it })
+                + fadeIn(),
+        // Shrinks smoothly downwards into the InputArea
+        exit = shrinkVertically()
+                + slideOutVertically(targetOffsetY = { it })
+                + fadeOut(),
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = AppDimension.elevationMedium,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = AppDimension.spacingMedium,
+                        vertical = AppDimension.spacingSmall
+                    )
+            ) {
+                ButtonGroup(
+                    overflowIndicator = { menuState ->
+                        FilledIconButton(
+                            onClick = {
+                                if (menuState.isShowing) {
+                                    menuState.dismiss()
+                                } else {
+                                    menuState.show()
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = "Localized description",
+                            )
+                        }
+                    },
+                ) {
+                    clickableItem(
+                        onClick = showRecommendationDrawer,
+                        label = "Recommendations",
+                        icon = { Icon(Icons.Default.Recommend, null) }
+                    )
+                }
             }
         }
     }

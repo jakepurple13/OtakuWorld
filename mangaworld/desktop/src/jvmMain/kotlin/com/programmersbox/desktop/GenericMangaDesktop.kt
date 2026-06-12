@@ -122,7 +122,7 @@ class GenericMangaDesktop(
                 )
 
                 segmentedListItem(
-                    content = { Text("Koog Settings") },
+                    content = { Text("Koog") },
                     leadingContent = { Icon(Icons.Default.Bolt, null) },
                     onClick = { navigationActions.navigate(Koog) }
                 )
