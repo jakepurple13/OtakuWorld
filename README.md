@@ -139,6 +139,52 @@ bridge is installed.
 - View all favorites across all OtakuWorld applications. Requires you to login.
 - Made using pure Jetpack Compose. No Xml for any views.
 
+### AI Favorites Embeddings (Koog)
+
+The `koogintegration` module can embed your favorites with Google's embedding model
+(`gemini-embedding-001` via [Koog](https://koog.ai)'s embeddings API) to power fast,
+token-cheap AI features. All similarity math (cosine similarity) runs locally on
+device — no vector database, no extra server.
+
+#### What it does
+
+- **Recommend similar manga** — ranks your favorites by cosine similarity to a seed
+  favorite (or to your overall "taste centroid").
+- **Analyze your favorites** — source distribution, similarity/diversity scores,
+  most/least representative favorites, and theme cluster counts.
+- **Curated lists** — groups favorites into themed lists by embedding similarity
+  clusters; the agent can persist them as custom lists.
+
+Only favorites with a non-empty description are embedded (`imageUrl` is never sent).
+Embeddings are cached in a JSON file (`filesDir` on Android, `~/.otakuworld` on
+desktop) and only new or changed favorites trigger API calls.
+
+#### Refresh scheduling
+
+- **Android:** `FavoritesEmbeddingWorker` runs every 6 hours via WorkManager.
+  The worker is registered in Koin by the module; your app module must enqueue it once:
+
+  ```kotlin
+  // e.g. in Application.onCreate, after startKoin (workManagerFactory() is already installed)
+  EmbeddingWorkScheduler.schedule(WorkManager.getInstance(this))
+  ```
+
+- **Desktop (JVM):** refresh on every app launch:
+
+  ```kotlin
+  // e.g. in main(), after startKoin
+  koin.get<DesktopEmbeddingRefresher>().refreshOnStartup(applicationScope)
+  ```
+
+#### Setup
+
+1. Configure an AI provider API key in the in-app Koog settings (the same key store
+   the chat agent uses). Embeddings always call **Google**, so the key must be a
+   Google AI key.
+2. Android only: add the `EmbeddingWorkScheduler.schedule(...)` call above.
+3. That's it — the agent gains `recommendSimilarManga`, `analyzeFavoritesWithEmbeddings`,
+   `getCuratedEmbeddingLists`, and `refreshFavoriteEmbeddings` tools automatically.
+
 #### Instructions to Install/Update AnimeWorldTV
 1. Download animeworldtv-release.apk
 
