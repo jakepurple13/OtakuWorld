@@ -15,6 +15,7 @@ import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import io.github.kdroidfilter.nucleus.scheduler.DesktopBootReceiver
 import io.github.kdroidfilter.nucleus.scheduler.DesktopTask
@@ -22,17 +23,22 @@ import io.github.kdroidfilter.nucleus.scheduler.DesktopTaskScheduler
 import io.github.kdroidfilter.nucleus.scheduler.ExistingTaskPolicy
 import io.github.kdroidfilter.nucleus.scheduler.NetworkType
 import io.github.kdroidfilter.nucleus.scheduler.TaskContext
+import io.github.kdroidfilter.nucleus.scheduler.TaskData
 import io.github.kdroidfilter.nucleus.scheduler.TaskId
 import io.github.kdroidfilter.nucleus.scheduler.TaskRegistry
 import io.github.kdroidfilter.nucleus.scheduler.TaskRequest
 import io.github.kdroidfilter.nucleus.scheduler.TaskResult
 import io.github.kdroidfilter.nucleus.scheduler.inputData
+import io.github.kdroidfilter.nucleus.scheduler.testing.TestTaskRunner
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -41,6 +47,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import java.io.File
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.measureTimedValue
 
 class BackgroundWorkHandlerImpl(
     private val settingsHandling: NewSettingsHandling,
@@ -97,13 +104,33 @@ class BackgroundWorkHandlerImpl(
 
     }
 
-    override fun startBackup(file: PlatformFile) {}
+    private val scope = CoroutineScope(Dispatchers.IO)
 
-    override fun startRestore(file: PlatformFile) {}
+    override fun startBackup(file: PlatformFile) {
+        scope.launch {
+            TestTaskRunner.runTask(
+                BackupWorker(),
+                BackupId,
+                inputData = TaskData.of(BackupRestoreData(file))
+            )
+        }
+    }
+
+    override fun startRestore(file: PlatformFile) {
+        scope.launch {
+            TestTaskRunner.runTask(
+                RestoreWorker(),
+                RestoreId,
+                inputData = TaskData.of(BackupRestoreData(file))
+            )
+        }
+    }
 
     companion object {
         val SyncId = TaskId("sync")
         val ManualSyncId = TaskId("manualSync")
+        val BackupId = TaskId("backup")
+        val RestoreId = TaskId("restore")
 
         fun setupSyncCheckers(args: Array<String>): Boolean {
             if (DesktopBootReceiver.isSchedulerInvocation(args)) {
@@ -150,6 +177,8 @@ class BackgroundWorkHandlerImpl(
                 val registry = TaskRegistry.Builder()
                     .register(SyncId) { SyncCheckWorker() }
                     .register(ManualSyncId) { SyncCheckWorker() }
+                    .register(BackupId) { BackupWorker() }
+                    .register(RestoreId) { RestoreWorker() }
                     .build()
                 DesktopBootReceiver.handle(args = args, registry = registry)
                 return true// Don't open the UI
@@ -226,3 +255,48 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
         val cancel: Boolean,
     )
 }
+
+class BackupWorker : DesktopTask, KoinComponent {
+    private val backup: Backup by inject()
+    override suspend fun doWork(context: TaskContext): TaskResult {
+        val duration = measureTimedValue {
+            runCatching {
+                val file = context.inputData<BackupRestoreData>()?.file ?: return@runCatching
+                backup.createBackup(file)
+            }
+                .fold(
+                    onSuccess = { TaskResult.Success },
+                    onFailure = { TaskResult.Failure(it.message.orEmpty()) }
+                )
+        }
+
+        println("Took ${duration.duration} to backup")
+
+        return duration.value
+    }
+}
+
+class RestoreWorker : DesktopTask, KoinComponent {
+    private val backup: Backup by inject()
+    override suspend fun doWork(context: TaskContext): TaskResult {
+        val duration = measureTimedValue {
+            runCatching {
+                val file = context.inputData<BackupRestoreData>()?.file ?: return@runCatching
+                backup.restoreBackup(file)
+            }
+                .fold(
+                    onSuccess = { TaskResult.Success },
+                    onFailure = { TaskResult.Failure(it.message.orEmpty()) }
+                )
+        }
+
+        println("Took ${duration.duration} to backup")
+
+        return duration.value
+    }
+}
+
+@Serializable
+data class BackupRestoreData(
+    val file: PlatformFile,
+)

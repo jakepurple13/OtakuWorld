@@ -34,7 +34,7 @@ actual fun platformModule(): Module = module {
     singleOf(::DateTimeFormatHandler)
     singleOf(::IconLoader)
     singleOf(::PlatformDataStoreHandling)
-    singleOf(::Zipper)
+    single { Zipper(getAll()) }
     singleOf(::ExtensionShareHandler)
     factoryOf(::ImageModifier)
     singleOf(::SystemAlerter)

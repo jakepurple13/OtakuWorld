@@ -39,6 +39,7 @@ actual open class Zipper(
                 .openFileDescriptor(f, "w")!!
             ZipOutputStream(FileOutputStream(pfd.fileDescriptor)).use { zip ->
                 backupProcessors.forEach { backup ->
+                    logFirebaseMessage("Zipping ${backup.fileName}")
                     val duration = measureTime {
                         zip.putNextEntry(ZipEntry(backup.fileName))
                         runCatching {
@@ -74,6 +75,7 @@ actual open class Zipper(
                                 runCatching {
                                     backupProcessors
                                         .find { it.fileName == entry.name }
+                                        .also { logFirebaseMessage("Unzipping ${it?.fileName}") }
                                         ?.restore(
                                             json = zipIs.bufferedReader().readText(),
                                             bufferedSource = zipIs.source().buffer()
