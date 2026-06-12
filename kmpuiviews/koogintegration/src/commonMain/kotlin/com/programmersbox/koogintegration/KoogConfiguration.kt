@@ -1,6 +1,14 @@
 package com.programmersbox.koogintegration
 
 import androidx.compose.ui.unit.dp
+import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.koogintegration.embedding.EmbedderProvider
+import com.programmersbox.koogintegration.embedding.EmbeddingCache
+import com.programmersbox.koogintegration.embedding.EmbeddingService
+import com.programmersbox.koogintegration.embedding.EmbeddingTools
+import com.programmersbox.koogintegration.embedding.FavoritesEmbeddingRepository
+import com.programmersbox.koogintegration.embedding.FavoritesSource
+import com.programmersbox.koogintegration.embedding.GoogleEmbedderProvider
 import com.programmersbox.koogintegration.embedding.embeddingPlatformModule
 import com.programmersbox.koogintegration.integrator.BookmarksIntegrator
 import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
@@ -42,7 +50,17 @@ fun buildKoogModule() = module {
         )
     }
 
+    // Embeddings
     includes(embeddingPlatformModule)
+    single {
+        val itemDao = get<ItemDao>()
+        FavoritesSource { itemDao.getAllFavoritesSync() }
+    }
+    single<EmbedderProvider> { GoogleEmbedderProvider(get()) }
+    single { EmbeddingCache(get()) }
+    singleOf(::FavoritesEmbeddingRepository)
+    singleOf(::EmbeddingService)
+    factoryOf(::EmbeddingTools)
 }
 
 object AppDimension {
