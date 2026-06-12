@@ -49,12 +49,14 @@ kotlin {
                 implementation(libs.bundles.koinKmp)
                 implementation(projects.favoritesdatabase)
                 implementation(libs.kotlinx.datetime)
+                implementation(libs.kotlinxSerialization)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
+                implementation(libs.coroutinesTest)
             }
         }
 
@@ -64,9 +66,9 @@ kotlin {
 
         androidMain {
             dependencies {
-                // Add Android-specific dependencies here. Note that this source set depends on
-                // commonMain by default and will correctly pull the Android artifacts of any KMP
-                // dependencies declared in commonMain.
+                implementation(libs.workRuntime)
+                implementation(project.dependencies.platform(libs.koin.bom))
+                implementation(libs.koin.workmanager)
             }
         }
         iosMain {
