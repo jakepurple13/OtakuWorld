@@ -638,7 +638,6 @@ fun ChapterItem(
         chapter = c,
         hasBeenRead = updatedIsRead,
         isBookmarked = isBookmarked,
-        showDownload = showDownload,
         downloadUiState = downloadUiState,
         onOpen = { detailsActions.onClick(c) },
         downloadChapter = { detailsActions.onDownload(c) },
@@ -903,7 +902,6 @@ private fun chapterItemOptions(
     chapter: KmpChapterModel,
     hasBeenRead: Boolean,
     isBookmarked: Boolean,
-    showDownload: () -> Boolean,
     downloadUiState: ChapterDownloadUiState,
     onOpen: () -> Unit,
     downloadChapter: () -> Unit,
@@ -919,7 +917,7 @@ private fun chapterItemOptions(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     )
 
-    val canDownload = chapter.source.canDownload && showDownload()
+    val canDownload = chapter.source.canDownload
     val isDownloaded = downloadUiState == ChapterDownloadUiState.Downloaded
     val totalCount = if (canDownload) 5 else 4
 
