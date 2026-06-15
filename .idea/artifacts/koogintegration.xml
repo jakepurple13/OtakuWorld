@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="koogintegration">
+    <output-path>$PROJECT_DIR$/kmpuiviews/koogintegration/build/libs</output-path>
+    <root id="archive" name="koogintegration.jar">
+      <element id="module-output" name="OtakuWorld.kmpuiviews.koogintegration.androidMain" />
+    </root>
+  </artifact>
+</component>
