@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,6 +54,7 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -279,6 +281,7 @@ private fun DetailsScreenInternal(
                             },
                             onDismiss = { showBatchDownloads = false },
                             downloadStates = details.downloadStates,
+                            readList = details.chapters
                         )
                     }
 
@@ -718,6 +721,7 @@ fun ChapterItem(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier
                         .background(
                             color = MaterialTheme.colorScheme.primaryContainer,
@@ -816,6 +820,7 @@ fun ChapterItem(
 @Composable
 private fun BatchDownloads(
     chapters: List<KmpChapterModel>,
+    readList: List<ChapterWatched>,
     onSelection: (List<KmpChapterModel>) -> Unit,
     downloadStates: Map<String, ChapterDownloadUiState>,
     onDismiss: () -> Unit,
@@ -882,13 +887,32 @@ private fun BatchDownloads(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(chapters) { chapter ->
+                itemsIndexed(
+                    chapters,
+                    key = { i, c -> "${c.url}$i" },
+                    contentType = { _, _ -> "chapter" }
+                ) { index, chapter ->
                     ListItem(
                         checked = chapter in selected,
                         onCheckedChange = { if (chapter in selected) selected.remove(chapter) else selected.add(chapter) },
                         content = { Text(chapter.name) },
                         enabled = downloadStates[chapter.url]?.let { it == ChapterDownloadUiState.None } ?: true,
+                        leadingContent = if (!readList.fastAny { it.url == chapter.url }) {
+                            {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                )
+                            }
+                        } else null
                     )
+
+                    if (index != chapters.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         }
