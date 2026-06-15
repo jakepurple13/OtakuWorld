@@ -180,5 +180,66 @@ If you want to add a new source or have a change that might make the app better
 
 Disclaimer: I am not affiliated with Tachiyomi app or any fork hosted on GitHub.
 
+---
+
+## Custom Web Scraper
+
+### Overview
+
+The `:kmpuiviews:koogintegration:customscraper` module provides an on-demand HTML scraping pipeline that extracts manga image URLs and anime video stream URLs from any public webpage using an on-device LLM agent.
+
+### Architecture Flow
+
+    WebScraper.scrape(url)
+      └─ Ktor HTTP GET → raw HTML
+           └─ HtmlSanitizer → stripped HTML (≤ 8,000 chars)
+                └─ LlmMediaExtractor (Koog AIAgent)
+                     └─ CustomScrapeKmpChapterModel(urls=[...])
+
+### Supported Use Cases
+
+| Use Case | What it extracts |
+|---|---|
+| Manga chapter page | All `<img>` `src`, `data-src`, `data-lazy-src` URLs (page images) |
+| Anime episode page | All `<video>`, `<source>` URLs and `.mp4` / `.m3u8` JS variables |
+
+### Limitations
+
+- **No authentication** — login-gated pages are not supported.
+- **No CAPTCHA bypassing** — CAPTCHA-protected pages return an empty result.
+- **No JS rendering** — client-side SPA content (rendered after page load) is not visible to the scraper.
+- **No caching** — results are not persisted; each `scrape()` call is a fresh fetch.
+- **URL extraction only** — downloading or displaying media is handled elsewhere in the app.
+
+### Data Model
+
+```kotlin
+@Serializable
+data class CustomScrapeKmpChapterModel(
+    val urls: List<String>,  // extracted media URLs; empty on failure
+)
+```
+
+### Usage
+
+```kotlin
+// Obtain executor + model from your AgentMaker (or any Koog LLM setup):
+val executor = MultiLLMPromptExecutor(agentInfo.llmClient)
+val model = agentInfo.model
+
+val scraper = WebScraper(executor = executor, model = model)
+val result = scraper.scrape("https://example.com/manga/chapter-1")
+result.urls.forEach { println(it) }
+```
+
+### Technologies
+
+| Technology | Role |
+|---|---|
+| **Kotlin Multiplatform** | Android + JVM Desktop targets |
+| **Ktor** | HTTP client (OkHttp engine on both platforms) |
+| **Koog** | LLM agent framework for structured JSON extraction |
+| **kotlinx.serialization** | JSON deserialization of `CustomScrapeKmpChapterModel` |
+
 [//]: # (Reference Links)
   [aa]: <https://www.androidauthority.com/sideloading-apps-on-android-tv-1189896/>
