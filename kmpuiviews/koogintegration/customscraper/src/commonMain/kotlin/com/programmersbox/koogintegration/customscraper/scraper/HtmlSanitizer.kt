@@ -51,6 +51,6 @@ object HtmlSanitizer {
             .joinToString("\n")
 
         // If no media tags found, fall back to raw truncated HTML rather than returning empty.
-        return mediaTags.ifEmpty { result.take(maxLength) }
+        return mediaTags.take(maxLength).ifEmpty { result.take(maxLength) }
     }
 }

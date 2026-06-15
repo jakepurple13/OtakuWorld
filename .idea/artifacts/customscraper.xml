@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="customscraper">
+    <output-path>$PROJECT_DIR$/kmpuiviews/koogintegration/customscraper/build/libs</output-path>
+    <root id="archive" name="customscraper.jar" />
+  </artifact>
+</component>

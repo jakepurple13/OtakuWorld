@@ -115,6 +115,7 @@ class HtmlSanitizerTest {
         val html = "<html>$noise$mediaTag</html>"
         val result = HtmlSanitizer.sanitize(html, maxLength = 100)
         assertContains(result, "page1.jpg", message = "media tag should survive overflow fallback")
+        assertTrue(result.length <= 100, "overflow result must still respect maxLength")
     }
 
     @Test

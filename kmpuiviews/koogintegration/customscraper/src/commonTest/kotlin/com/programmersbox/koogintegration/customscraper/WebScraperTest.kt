@@ -28,11 +28,12 @@ class WebScraperTest {
             }
         }
         var extractorCallCount = 0
-        val scraper = WebScraper(
+        val result = WebScraper(
             httpClient = mockClient,
             extractor = { _ -> extractorCallCount++; stubResult },
-        )
-        val result = scraper.scrape("https://example.com/manga/chapter-1")
+        ).use {
+            it.scrape("https://example.com/manga/chapter-1")
+        }
         assertEquals(emptyList<String>(), result.urls)
         assertEquals(0, extractorCallCount, "extractor must not be called on non-200")
     }
@@ -44,11 +45,12 @@ class WebScraperTest {
                 addHandler { throw RuntimeException("Network failure") }
             }
         }
-        val scraper = WebScraper(
+        val result = WebScraper(
             httpClient = mockClient,
             extractor = { _ -> stubResult }
-        )
-        val result = scraper.scrape("https://example.com/manga/chapter-1")
+        ).use {
+            it.scrape("https://example.com/manga/chapter-1")
+        }
         assertEquals(emptyList<String>(), result.urls)
     }
 
@@ -63,14 +65,15 @@ class WebScraperTest {
             }
         }
         var capturedHtml: String? = null
-        val scraper = WebScraper(
+        val result = WebScraper(
             httpClient = mockClient,
             extractor = { html ->
                 capturedHtml = html
                 stubResult
             }
-        )
-        val result = scraper.scrape("https://example.com/manga/chapter-1")
+        ).use {
+            it.scrape("https://example.com/manga/chapter-1")
+        }
         assertEquals(stubResult.urls, result.urls)
         // Sanitizer should have stripped <style> before handing off to extractor
         val html = assertNotNull(capturedHtml)
@@ -86,11 +89,12 @@ class WebScraperTest {
                 }
             }
         }
-        val scraper = WebScraper(
+        val result = WebScraper(
             httpClient = mockClient,
             extractor = { _ -> throw RuntimeException("LLM failed") }
-        )
-        val result = scraper.scrape("https://example.com/manga/chapter-1")
+        ).use {
+            it.scrape("https://example.com/manga/chapter-1")
+        }
         assertEquals(emptyList<String>(), result.urls)
     }
 }

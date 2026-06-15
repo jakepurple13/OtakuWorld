@@ -46,7 +46,7 @@ internal class LlmMediaExtractor(
             toolRegistry = ToolRegistry { }
         )
 
-        return agent.run(sanitizedHtml, "scraper-session")
+        return agent.run(sanitizedHtml, "scraper-${sanitizedHtml.hashCode().toString(36)}")
     }
 
     companion object {

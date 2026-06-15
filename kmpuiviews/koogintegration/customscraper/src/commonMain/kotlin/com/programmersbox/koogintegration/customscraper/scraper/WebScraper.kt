@@ -12,6 +12,18 @@ import io.ktor.http.isSuccess
 /**
  * Public entry point for the custom web scraper.
  *
+ * Production callers use the three-parameter public constructor:
+ * ```kotlin
+ * WebScraper(executor = myExecutor, model = myModel)
+ * ```
+ *
+ * **Constructor convention note:** The internal primary constructor holds the fully resolved
+ * fields `(httpClient, extractor)`. The public production constructor is secondary and delegates
+ * to it. This is necessary in Kotlin because the public constructor needs to compute
+ * `LlmMediaExtractor(executor, model)::extract` before handing it to the primary — a computation
+ * that cannot be expressed in the primary position without exposing those parameters as fields.
+ * The internal primary is only accessible directly by tests.
+ *
  * **Lifecycle:** When [httpClient] is not provided the instance owns the default client.
  * Call [close] when the scraper is no longer needed to release the underlying connection pool.
  * If you supply your own [httpClient] you are responsible for closing it.
