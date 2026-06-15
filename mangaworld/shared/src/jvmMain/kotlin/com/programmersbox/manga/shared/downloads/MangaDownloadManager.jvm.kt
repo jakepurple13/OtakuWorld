@@ -208,6 +208,7 @@ actual class MangaDownloadManager(
     }
 
     actual fun downloadChapters(chapters: List<KmpChapterModel>, mangaTitle: String) {
+        println("Downloading chapters ${chapters.size} for manga $mangaTitle")
         chapters.forEach { downloadChapter(it, mangaTitle) }
     }
 

@@ -110,15 +110,6 @@ class GenericManga(
         }
     }
 
-    override fun downloadChapter(
-        model: KmpChapterModel,
-        allChapters: List<KmpChapterModel>,
-        infoModel: KmpInfoModel,
-        navController: NavigationActions,
-    ) {
-        mangaDownloadManager.downloadChapter(model, infoModel.title.ifBlank { infoModel.url })
-    }
-
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
         val deepLinkIntent = Intent(
             Intent.ACTION_VIEW,

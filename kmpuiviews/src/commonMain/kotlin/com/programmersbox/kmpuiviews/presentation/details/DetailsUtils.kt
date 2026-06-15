@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -178,6 +179,7 @@ internal fun DetailActions(
     onShowLists: () -> Unit,
     addToForLater: () -> Unit,
     onNoteClick: () -> Unit,
+    onBatchDownloadClick: () -> Unit,
     customActions: @Composable () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
@@ -312,6 +314,15 @@ internal fun DetailActions(
             },
             text = { Text("Note") },
             leadingIcon = { Icon(Icons.Default.Edit, null) }
+        )
+
+        DropdownMenuItem(
+            onClick = {
+                dropDownDismiss()
+                onBatchDownloadClick()
+            },
+            text = { Text("Batch Download") },
+            leadingIcon = { Icon(Icons.Default.Download, null) }
         )
     }
 
@@ -452,6 +463,7 @@ fun DetailFloatingActionButtonMenu(
     modifier: Modifier = Modifier,
     isFavorite: Boolean,
     onFavoriteClick: (Boolean) -> Unit,
+    onBatchDownloadClick: () -> Unit,
 ) {
     BackHandler(fabMenuExpanded) { onFabMenuExpandedChange(false) }
 
@@ -524,6 +536,15 @@ fun DetailFloatingActionButtonMenu(
             },
             icon = { Icon(Icons.Default.Search, contentDescription = null) },
             text = { Text(text = "Global Search by Name") },
+        )
+
+        FloatingActionButtonMenuItem(
+            onClick = {
+                onFabMenuExpandedChange(false)
+                onBatchDownloadClick()
+            },
+            icon = { Icon(Icons.Default.Download, contentDescription = null) },
+            text = { Text("Batch Download") },
         )
 
         FloatingActionButtonMenuItem(

@@ -63,11 +63,11 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
-import com.programmersbox.kmpuiviews.presentation.notes.NoteBottomSheet
 import com.programmersbox.kmpuiviews.ScrollBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.minus
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.NoteBottomSheet
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -109,21 +109,11 @@ fun DetailsView(
     detailsActions: DetailsActions,
     notificationRepository: NotificationRepository = koinInject(),
     notesVm: DetailsNotesViewModel,
+    downloadStates: Map<String, ChapterDownloadUiState>,
 ) {
     val dao = LocalItemDao.current
     val genericInfo = koinInject<KmpGenericInfo>()
     val navController = LocalNavActions.current
-
-    val downloadStates by remember(
-        info.chapters,
-        info.title,
-        info.url
-    ) {
-        genericInfo.observeChapterDownloadStates(
-            chapters = info.chapters,
-            mangaTitle = info.title.ifBlank { info.url }
-        )
-    }.collectAsStateWithLifecycle(emptyMap())
 
     var reverseChapters by remember { mutableStateOf(false) }
 
@@ -257,6 +247,7 @@ fun DetailsView(
                                 }
                             },
                             onNoteClick = { showNoteSheet = true },
+                            onBatchDownloadClick = detailsActions.batchDownload,
                         )
                     },
                     scrollBehavior = scrollBehavior,
@@ -304,6 +295,7 @@ fun DetailsView(
                     onFavoriteClick = { detailsActions.favoriteAction() },
                     fabMenuExpanded = fabMenuExpanded,
                     onFabMenuExpandedChange = { fabMenuExpanded = it },
+                    onBatchDownloadClick = detailsActions.batchDownload,
                     modifier = Modifier.padding(LocalNavHostPadding.current)
                 )
             },

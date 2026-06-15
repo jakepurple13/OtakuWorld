@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.details
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -15,6 +16,7 @@ import com.kmpalette.generatePalette
 import com.kmpalette.palette.graphics.Palette
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashItem
+import com.programmersbox.favoritesdatabase.BookmarkedChapter
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
@@ -23,11 +25,12 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
+import com.programmersbox.kmpuiviews.ChapterDownloadUiState
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.toItemModel
 import com.programmersbox.kmpuiviews.recordFirebaseException
-import com.programmersbox.favoritesdatabase.BookmarkedChapter
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -43,6 +46,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -53,6 +58,7 @@ import kotlin.io.encoding.Base64
 class DetailsViewModel(
     //handle: SavedStateHandle,
     details: Screen.DetailsScreen.Details?,
+    private val genericInfo: KmpGenericInfo,
     private val blurHashDao: BlurHashDao,
     sourceRepository: SourceRepository,
     private val favoritesRepository: FavoritesRepository,
@@ -97,6 +103,8 @@ class DetailsViewModel(
     var blurHash by mutableStateOf<BitmapPainter?>(null)
     private var blurHashItem: BlurHashItem? = null
 
+    val downloadStates = mutableStateMapOf<String, ChapterDownloadUiState>()
+
     val currentState by derivedStateOf {
         (detailState as? DetailState.Success)?.let {
             it.copy(action = if (favoriteListener) DetailFavoriteAction.Remove(it.info) else DetailFavoriteAction.Add(it.info))
@@ -128,6 +136,20 @@ class DetailsViewModel(
                 Cached.cache[item.url] = item
             }
             ?.launchIn(viewModelScope)
+
+        snapshotFlow { info }
+            .filterNotNull()
+            .flatMapLatest {
+                genericInfo.observeChapterDownloadStates(
+                    chapters = it.chapters,
+                    mangaTitle = it.title.ifBlank { it.url }
+                )
+            }
+            .onEach {
+                downloadStates.clear()
+                downloadStates.putAll(it)
+            }
+            .launchIn(viewModelScope)
 
         combine(
             blurHashDao

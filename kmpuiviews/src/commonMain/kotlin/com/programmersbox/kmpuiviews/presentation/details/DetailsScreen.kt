@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
@@ -51,11 +52,13 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
@@ -64,6 +67,8 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TriStateCheckbox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
@@ -72,6 +77,8 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -85,6 +92,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.zIndex
@@ -108,10 +116,10 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheet
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
@@ -120,7 +128,6 @@ import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull
@@ -223,11 +230,11 @@ private fun DetailsScreenInternal(
                 }
             }
         ) { target ->
-            when (val state = target) {
+            when (target) {
                 is DetailState.Error -> {
                     DetailError(
                         details = details,
-                        state = state
+                        state = target
                     )
                 }
 
@@ -238,7 +245,7 @@ private fun DetailsScreenInternal(
                 }
 
                 is DetailState.Success -> {
-                    val infoModel = state.info
+                    val infoModel = target.info
 
                     suspend fun insertRecent() {
                         if (
@@ -261,26 +268,38 @@ private fun DetailsScreenInternal(
                         if (save != -1) historyDao.removeOldData(save)
                     }
 
+                    var showBatchDownloads by remember { mutableStateOf(false) }
+
+                    if (showBatchDownloads) {
+                        BatchDownloads(
+                            chapters = infoModel.chapters,
+                            onSelection = {
+                                genericInfo.batchDownloadChapters(it, infoModel)
+                                showBatchDownloads = false
+                            },
+                            onDismiss = { showBatchDownloads = false },
+                            downloadStates = details.downloadStates,
+                        )
+                    }
+
                     DetailContent(
                         dao = dao,
                         details = details,
-                        scope = scope,
-                        state = state,
+                        state = target,
                         windowSize = windowSize,
                         shareChapter = shareChapter,
                         showDownload = showDownload,
                         detailsActions = DetailsActions(
                             onClick = { model ->
                                 scope.launch(Dispatchers.IO) {
-                                    genericInfo.chapterOnClick(model, state.info.chapters, infoModel, navActions)
+                                    genericInfo.chapterOnClick(model, target.info.chapters, infoModel, navActions)
                                     insertRecent()
                                     heatMapDao.upsertHeatMap()
                                 }
                             },
                             onDownload = { model ->
-                                genericInfo.downloadChapter(model, state.info.chapters, infoModel, navActions)
+                                genericInfo.downloadChapter(model, target.info.chapters, infoModel, navActions)
                                 scope.launch(Dispatchers.IO) { insertRecent() }
-                                if (!details.chapters.fastAny { it.url == model.url }) details.markAs(model, true)
                             },
                             onDeleteDownload = { model ->
                                 genericInfo.deleteDownloadedChapter(model, infoModel)
@@ -294,7 +313,7 @@ private fun DetailsScreenInternal(
                                 }
                             },
                             markAsRead = { model, read -> details.markAs(model, read) },
-                            favoriteAction = { details.favoriteAction(state.action) },
+                            favoriteAction = { details.favoriteAction(target.action) },
                             notifyChange = { details.toggleNotify() },
                             globalSearch = { navActions.globalSearch(infoModel.title) },
                             addToList = { item ->
@@ -338,7 +357,8 @@ private fun DetailsScreenInternal(
                             },
                             rereadClick = details::reread,
                             bookmarkChapter = { details.toggleBookmark(it) },
-                            bookmarkedChapterUrls = details.bookmarkedChapterUrls
+                            bookmarkedChapterUrls = details.bookmarkedChapterUrls,
+                            batchDownload = { showBatchDownloads = true }
                         )
                     )
                 }
@@ -362,6 +382,7 @@ data class DetailsActions(
     val rereadClick: () -> Unit,
     val bookmarkChapter: (KmpChapterModel) -> Unit = {},
     val bookmarkedChapterUrls: Set<String> = emptySet(),
+    val batchDownload: () -> Unit = {},
 )
 
 @OptIn(
@@ -375,7 +396,6 @@ data class DetailsActions(
 private fun DetailContent(
     dao: ItemDao,
     details: DetailsViewModel,
-    scope: CoroutineScope,
     state: DetailState.Success,
     windowSize: WindowSizeClass,
     shareChapter: Boolean,
@@ -404,6 +424,7 @@ private fun DetailContent(
                 onBitmapSet = { details.imageBitmap = it },
                 detailsActions = detailsActions,
                 notesVm = notesVm,
+                downloadStates = details.downloadStates
             )
         }
 
@@ -423,6 +444,7 @@ private fun DetailContent(
                 blurHash = details.blurHash,
                 detailsActions = detailsActions,
                 notesVm = notesVm,
+                downloadStates = details.downloadStates
             )
         }
     }
@@ -788,6 +810,89 @@ fun ChapterItem(
                 .wrapContentHeight()
                 .fillMaxWidth()
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun BatchDownloads(
+    chapters: List<KmpChapterModel>,
+    onSelection: (List<KmpChapterModel>) -> Unit,
+    downloadStates: Map<String, ChapterDownloadUiState>,
+    onDismiss: () -> Unit,
+) {
+    val selected = remember { mutableStateListOf<KmpChapterModel>() }
+
+    val checkMarkState by remember {
+        derivedStateOf {
+            val downloadStateCount = downloadStates.count { it.value == ChapterDownloadUiState.None }
+            when {
+                selected.isEmpty() -> ToggleableState.Off
+                selected.size == (chapters.size - downloadStateCount) -> ToggleableState.On
+                else -> ToggleableState.Indeterminate
+            }
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(true),
+        containerColor = MaterialTheme.colorScheme.background
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Choose chapters to download") },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onDismiss
+                        ) { Icon(Icons.Default.Cancel, null) }
+                    },
+                    actions = {
+                        TriStateCheckbox(
+                            state = checkMarkState,
+                            onClick = {
+                                when (checkMarkState) {
+                                    ToggleableState.On -> selected.clear()
+                                    ToggleableState.Off,
+                                    ToggleableState.Indeterminate,
+                                        -> {
+                                        selected.clear()
+                                        selected.addAll(
+                                            chapters.filter {
+                                                downloadStates[it.url]?.let { it == ChapterDownloadUiState.None } ?: true
+                                            }
+                                        )
+                                    }
+                                }
+                            },
+                        )
+                    }
+                )
+            },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = { onSelection(selected) },
+                    text = { Text("Download (${selected.size})") },
+                    icon = { Icon(Icons.Default.Download, null) }
+                )
+            }
+        ) { padding ->
+            LazyColumn(
+                contentPadding = padding,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(chapters) { chapter ->
+                    ListItem(
+                        checked = chapter in selected,
+                        onCheckedChange = { if (chapter in selected) selected.remove(chapter) else selected.add(chapter) },
+                        content = { Text(chapter.name) },
+                        enabled = downloadStates[chapter.url]?.let { it == ChapterDownloadUiState.None } ?: true,
+                    )
+                }
+            }
+        }
     }
 }
 

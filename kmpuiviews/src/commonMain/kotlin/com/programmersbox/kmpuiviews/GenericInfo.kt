@@ -58,6 +58,12 @@ interface KmpGenericInfo {
         navController: NavigationActions,
     )
 
+    fun batchDownloadChapters(
+        chapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+    ) {
+    }
+
     fun deleteDownloadedChapter(
         model: KmpChapterModel,
         infoModel: KmpInfoModel,

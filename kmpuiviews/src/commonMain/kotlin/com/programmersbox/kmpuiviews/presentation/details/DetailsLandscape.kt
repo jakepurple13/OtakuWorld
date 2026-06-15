@@ -77,10 +77,10 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpuiviews.ChapterDownloadUiState
 import com.programmersbox.kmpuiviews.KmpGenericInfo
-import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
-import com.programmersbox.kmpuiviews.presentation.notes.NoteBottomSheet
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.NoteBottomSheet
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -118,6 +118,7 @@ fun DetailsViewLandscape(
     onBitmapSet: (ImageBitmap) -> Unit = {},
     detailsActions: DetailsActions,
     notesVm: DetailsNotesViewModel,
+    downloadStates: Map<String, ChapterDownloadUiState>,
 ) {
     val dao = LocalItemDao.current
     val listDao = koinInject<ListRepository>()
@@ -224,6 +225,7 @@ fun DetailsViewLandscape(
                                 }
                             },
                             onNoteClick = { showNoteSheet = true },
+                            onBatchDownloadClick = detailsActions.batchDownload,
                         )
                     }
                 )
@@ -256,6 +258,7 @@ fun DetailsViewLandscape(
                 notesVm = notesVm,
                 showNoteSheet = showNoteSheet,
                 onNoteSheetDismiss = { showNoteSheet = false },
+                downloadStates = downloadStates,
                 modifier = Modifier.padding(p)
             )
         }
@@ -288,17 +291,13 @@ private fun DetailsLandscapeContent(
     notesVm: DetailsNotesViewModel,
     showNoteSheet: Boolean,
     onNoteSheetDismiss: () -> Unit,
+    downloadStates: Map<String, ChapterDownloadUiState>,
     modifier: Modifier = Modifier,
     notificationRepository: NotificationRepository = koinInject(),
 ) {
     val scope = rememberCoroutineScope()
     val dao = LocalItemDao.current
     var showLists by remember { mutableStateOf(false) }
-
-    val genericInfo = koinInject<KmpGenericInfo>()
-    val downloadStates by genericInfo
-        .observeChapterDownloadStates(info.chapters, info.title.ifBlank { info.url })
-        .collectAsStateWithLifecycle(emptyMap())
 
     val settingsHandling = koinInject<NewSettingsHandling>()
     val swipeBehavior by settingsHandling.detailsChapterSwipeBehavior.rememberPreference()

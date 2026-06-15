@@ -123,6 +123,22 @@ abstract class GenericSharedManga(
         mangaDownloadManager.deleteChapter(model, infoModel.title.ifBlank { infoModel.url })
     }
 
+    override fun downloadChapter(
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
+    ) {
+        mangaDownloadManager.downloadChapter(model, infoModel.title.ifBlank { infoModel.url })
+    }
+
+    override fun batchDownloadChapters(
+        chapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+    ) {
+        mangaDownloadManager.downloadChapters(chapters, infoModel.title.ifBlank { infoModel.url })
+    }
+
     @Composable
     override fun ComposeShimmerItem() {
         LazyVerticalGrid(
