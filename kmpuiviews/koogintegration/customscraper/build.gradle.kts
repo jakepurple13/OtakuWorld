@@ -26,6 +26,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.test)
                 implementation(libs.ktorMock)
+                implementation(libs.coroutinesTest)
             }
         }
 
