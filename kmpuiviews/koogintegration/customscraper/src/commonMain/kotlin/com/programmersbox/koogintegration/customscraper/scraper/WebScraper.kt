@@ -12,33 +12,39 @@ import io.ktor.http.isSuccess
 /**
  * Public entry point for the custom web scraper.
  *
- * @param executor  Koog PromptExecutor wrapping the caller's chosen LLM client.
- *                  Nullable — only required when no custom [extractor] is provided.
- * @param model     LLModel to use for media URL extraction.
- *                  Nullable — only required when no custom [extractor] is provided.
- * @param httpClient Optional — inject a custom HttpClient (useful for testing with MockEngine).
- *                   Defaults to the platform-specific client via createHttpClient().
- * @param extractor  Internal seam for testing — allows stubbing the LLM step without a live
- *                   executor. Defaults to [LlmMediaExtractor] backed by [executor] and [model].
+ * **Lifecycle:** When [httpClient] is not provided the instance owns the default client.
+ * Call [close] when the scraper is no longer needed to release the underlying connection pool.
+ * If you supply your own [httpClient] you are responsible for closing it.
+ *
+ * @param executor   Koog PromptExecutor wrapping the caller's chosen LLM client.
+ * @param model      LLModel to use for media URL extraction.
+ * @param httpClient Inject a custom HttpClient; defaults to the platform-specific client
+ *                   via [createHttpClient].
  */
-class WebScraper(
-    executor: PromptExecutor? = null,
-    model: LLModel? = null,
-    private val httpClient: HttpClient = createHttpClient(),
-    // When extractor is not overridden, we build LlmMediaExtractor lazily using the defaults.
-    // The error() calls inside the lambda are only evaluated at call time, so tests that
-    // supply their own extractor are never affected.
-    private val extractor: suspend (String) -> CustomScrapeKmpChapterModel =
-        LlmMediaExtractor(
-            executor ?: error("executor required when no custom extractor provided"),
-            model ?: error("model required when no custom extractor provided"),
-        )::extract,
-) {
+class WebScraper internal constructor(
+    private val httpClient: HttpClient,
+    private val extractor: suspend (String) -> CustomScrapeKmpChapterModel,
+) : AutoCloseable {
+
+    /**
+     * Production constructor. Compile-time guarantees that [executor] and [model] are non-null —
+     * there is no runtime `error()` fallback.
+     */
+    constructor(
+        executor: PromptExecutor,
+        model: LLModel,
+        httpClient: HttpClient = createHttpClient(),
+    ) : this(
+        httpClient = httpClient,
+        extractor = LlmMediaExtractor(executor, model)::extract,
+    )
 
     suspend fun scrape(url: String): CustomScrapeKmpChapterModel = runCatching {
         val response = httpClient.get(url)
 
-        // Non-2xx status — return empty rather than crashing so callers can show a graceful UI.
+        // Non-2xx — return empty rather than crashing so callers can show a graceful UI.
+        // Note: this is a non-local return from an `inline` runCatching lambda, which exits
+        // scrape() directly and bypasses getOrElse — this is intentional and correct.
         if (!response.status.isSuccess()) return CustomScrapeKmpChapterModel(urls = emptyList())
 
         val rawHtml = response.bodyAsText()
@@ -48,5 +54,10 @@ class WebScraper(
     }.getOrElse {
         // Network error, LLM parse failure, or any unexpected exception → empty result.
         CustomScrapeKmpChapterModel(urls = emptyList())
+    }
+
+    /** Releases the underlying [httpClient] connection pool. */
+    override fun close() {
+        httpClient.close()
     }
 }
