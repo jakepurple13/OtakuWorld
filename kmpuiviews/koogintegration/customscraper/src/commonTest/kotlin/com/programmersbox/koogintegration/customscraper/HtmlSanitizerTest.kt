@@ -123,4 +123,13 @@ class HtmlSanitizerTest {
         val result = HtmlSanitizer.sanitize(html, maxLength = 8_000)
         assertContains(result, "a.jpg")
     }
+
+    @Test
+    fun overflowFallbackReturnsRawHtmlWhenNoMediaTagsFound() {
+        // Overflow with no media tags → should return truncated raw HTML, not empty string
+        val html = "<html><p>" + "x".repeat(5_000) + "</p></html>"
+        val result = HtmlSanitizer.sanitize(html, maxLength = 100)
+        assertTrue(result.isNotEmpty(), "should return truncated raw HTML, not empty string")
+        assertTrue(result.length <= 100, "should still respect maxLength")
+    }
 }
