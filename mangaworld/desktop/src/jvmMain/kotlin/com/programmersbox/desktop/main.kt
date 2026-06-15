@@ -19,11 +19,9 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.koogintegration.KoogDataStore
 import com.programmersbox.koogintegration.buildKoogModule
-import com.programmersbox.manga.shared.ChapterHolder
-import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
-import com.programmersbox.manga.shared.reader.ReadViewModel
+import com.programmersbox.manga.shared.mangaSharedModule
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
@@ -32,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import java.io.File
 
@@ -65,7 +62,6 @@ fun main(args: Array<String>) {
                                 )
                             }
                             singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
-                            singleOf(::ChapterHolder)
                             factoryOf(::DownloadedMediaHandler)
                             single {
                                 ExtensionWatcher(
@@ -74,8 +70,6 @@ fun main(args: Array<String>) {
                                         .asFlow()
                                 )
                             }
-                            viewModelOf(::ReadViewModel)
-                            viewModelOf(::DownloadViewModel)
                             single {
                                 MangaDownloadManager(
                                     scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
@@ -96,7 +90,7 @@ fun main(args: Array<String>) {
                             }
 
                             //TODO: Until Koog has support for a better minSdk, this is jvm only
-                            includes(buildKoogModule())
+                            includes(buildKoogModule(), mangaSharedModule())
 
                             single {
                                 val koogApiKey = DataStoreHandler(

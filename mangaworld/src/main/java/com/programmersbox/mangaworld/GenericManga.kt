@@ -19,10 +19,12 @@ import com.programmersbox.kmpuiviews.utils.Zipper
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
+import com.programmersbox.manga.shared.MangaNewSettingsBackupProcessor
 import com.programmersbox.manga.shared.downloads.DownloadChapterWorker
 import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
+import com.programmersbox.manga.shared.mangaSharedModule
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
@@ -43,7 +45,6 @@ val appModule = module {
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
     singleOf(::NetworkHelper)
     single { NotificationLogo(R.drawable.manga_world_round_logo) }
-    singleOf(::ChapterHolder)
     single {
         MangaNewSettingsHandling(
             createProtobuf(
@@ -53,13 +54,12 @@ val appModule = module {
             )
         )
     }
-    viewModelOf(::ReadViewModel)
     factoryOf(::DownloadedMediaHandler)
-    viewModelOf(::DownloadViewModel)
-    backupProcessor("manga_settings", ::MangaNewSettingsBackupProcessor)
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     singleOf(::MangaDownloadManager)
     workerOf(::DownloadChapterWorker)
+
+    includes(mangaSharedModule())
 }
 
 //TODO: For multiplatform, maybe this becomes an open class that then the Android version overrides
