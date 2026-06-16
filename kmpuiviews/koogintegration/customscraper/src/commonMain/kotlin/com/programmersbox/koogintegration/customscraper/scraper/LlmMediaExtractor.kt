@@ -65,6 +65,7 @@ internal class LlmMediaExtractor(
             Your task is to extract ALL direct media URLs from the content:
             - For manga pages: extract all image URLs (from <img> src, data-src, data-lazy-src attributes, or JavaScript variables containing image URLs). And make sure they are in order as much as possible.
             - For anime/video pages: extract all video or streaming URLs (from <video>, <source> tags, or JavaScript variables containing .mp4, .m3u8, or similar video URLs).
+            - For light novels: extract the main content (text) from the page.
             Do not include thumbnails, icons, logos, or navigation images. Only include content media.
             
             Content: $sanitizedHtml
