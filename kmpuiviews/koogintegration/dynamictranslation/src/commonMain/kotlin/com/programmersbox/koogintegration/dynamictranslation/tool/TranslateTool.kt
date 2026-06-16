@@ -18,7 +18,7 @@ class TranslateTool(
         val ocrResult = try {
             ocr.extract(imageBytes, config)
         } catch (e: Exception) {
-            throw DynamicTranslationException("OCR failed: ${e.message}", e)
+            throw DynamicTranslationException("OCR failed: ${e.message ?: e::class.simpleName}", e)
         }
 
         if (ocrResult.blocks.isEmpty()) {
@@ -28,13 +28,13 @@ class TranslateTool(
         val translationResult = try {
             translation.translate(ocrResult, config)
         } catch (e: Exception) {
-            throw DynamicTranslationException("Translation failed: ${e.message}", e)
+            throw DynamicTranslationException("Translation failed: ${e.message ?: e::class.simpleName}", e)
         }
 
         val renderedImage = try {
             render.render(imageBytes, translationResult, config)
         } catch (e: Exception) {
-            throw DynamicTranslationException("Render failed: ${e.message}", e)
+            throw DynamicTranslationException("Render failed: ${e.message ?: e::class.simpleName}", e)
         }
 
         return DynamicTranslationOutput(
