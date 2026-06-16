@@ -22,7 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.ConcurrentHashMap
 
 actual class MangaDownloadManager(
     private val scope: CoroutineScope,
@@ -35,7 +35,8 @@ actual class MangaDownloadManager(
     private val _downloads = MutableStateFlow<List<ChapterDownloadProgress>>(emptyList())
     private val cancelledUrls = mutableSetOf<String>()
     private val mutex = Mutex()
-    private val activeJob = AtomicReference<Pair<String, Job>?>(null)
+
+    private val activeJobs = ConcurrentHashMap<String, Job>()
 
     private var rootDir: String = "${System.getProperty("user.home")}/Downloads/MangaWorld"
 
@@ -71,48 +72,55 @@ actual class MangaDownloadManager(
 
     init {
         scope.coroutineContext[Job]?.invokeOnCompletion { httpClient.close() }
-        scope.launch {
-            for (request in queue) {
-                val cancelled = mutex.withLock { cancelledUrls.remove(request.chapterUrl) }
-                if (cancelled) {
-                    updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
-                    continue
-                }
 
-                val job = scope.launch {
-                    val destDir = File(
-                        "$rootDir/${request.mangaTitle.sanitize()}/${request.chapterName.sanitize()}"
-                    ).also { it.mkdirs() }
-
-                    println(destDir.absolutePath)
-
-                    try {
-                        executeDownload(
-                            client = httpClient,
-                            request = request,
-                            onProgress = { done, total ->
-                                updateState(request.chapterUrl) {
-                                    it.copy(state = DownloadState.Downloading(done, total))
-                                }
-                            },
-                            writeBytes = { index, bytes ->
-                                File(destDir, "%03d.png".format(index)).writeBytes(bytes)
-                            },
-                        )
-                        updateState(request.chapterUrl) { it.copy(state = DownloadState.Completed) }
-                    } catch (e: CancellationException) {
+        // Start 3 concurrent worker loops reading from the same channel
+        repeat(3) {
+            scope.launch {
+                for (request in queue) {
+                    val cancelled = mutex.withLock { cancelledUrls.remove(request.chapterUrl) }
+                    if (cancelled) {
                         updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
-                        throw e
-                    } catch (e: Exception) {
-                        updateState(request.chapterUrl) {
-                            it.copy(state = DownloadState.Failed(e.message ?: "Unknown"))
+                        continue
+                    }
+
+                    // Launch the actual download in a child coroutine.
+                    // This allows us to cancel the specific download without killing the worker loop.
+                    val job = launch {
+                        val destDir = File(
+                            "$rootDir/${request.mangaTitle.sanitize()}/${request.chapterName.sanitize()}"
+                        ).also { it.mkdirs() }
+
+                        println(destDir.absolutePath)
+
+                        try {
+                            executeDownload(
+                                client = httpClient,
+                                request = request,
+                                onProgress = { done, total ->
+                                    updateState(request.chapterUrl) {
+                                        it.copy(state = DownloadState.Downloading(done, total))
+                                    }
+                                },
+                                writeBytes = { index, bytes ->
+                                    File(destDir, "%03d.png".format(index)).writeBytes(bytes)
+                                },
+                            )
+                            updateState(request.chapterUrl) { it.copy(state = DownloadState.Completed) }
+                        } catch (e: CancellationException) {
+                            updateState(request.chapterUrl) { it.copy(state = DownloadState.Cancelled) }
+                            throw e
+                        } catch (e: Exception) {
+                            updateState(request.chapterUrl) {
+                                it.copy(state = DownloadState.Failed(e.message ?: "Unknown"))
+                            }
                         }
                     }
-                }
 
-                activeJob.set(request.chapterUrl to job)
-                job.join()
-                activeJob.set(null)
+                    // Track the job, wait for it to finish, then clean it up
+                    activeJobs[request.chapterUrl] = job
+                    job.join()
+                    activeJobs.remove(request.chapterUrl)
+                }
             }
         }
     }
@@ -215,8 +223,8 @@ actual class MangaDownloadManager(
     actual fun cancelDownload(chapterUrl: String) {
         scope.launch {
             mutex.withLock { cancelledUrls.add(chapterUrl) }
-            val (url, job) = activeJob.get() ?: return@launch
-            if (url == chapterUrl) job.cancel()
+            // Find the specific job by URL and cancel it
+            activeJobs[chapterUrl]?.cancel()
         }
     }
 
@@ -224,10 +232,15 @@ actual class MangaDownloadManager(
         val pending = _downloads.value
             .filter { it.state is DownloadState.Queued || it.state is DownloadState.Downloading }
             .map { it.chapterUrl }
+
         scope.launch {
             mutex.withLock { cancelledUrls.addAll(pending) }
         }
-        activeJob.get()?.second?.cancel()
+
+        // Cancel all currently running jobs and clear the map
+        activeJobs.values.forEach { it.cancel() }
+        activeJobs.clear()
+
         _downloads.update { list ->
             list.map { p ->
                 if (p.state is DownloadState.Queued || p.state is DownloadState.Downloading)
