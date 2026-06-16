@@ -241,5 +241,73 @@ result.urls.forEach { println(it) }
 | **Koog** | LLM agent framework for structured JSON extraction |
 | **kotlinx.serialization** | JSON deserialization of `CustomScrapeKmpChapterModel` |
 
+---
+
+## Dynamic Translation
+
+### Overview
+
+The `:kmpuiviews:koogintegration:dynamictranslation` module provides a fully on-device pipeline that OCRs text from manga/comic images, translates it locally, inpaints the original text out of the image, and overlays the translated text — returning both the modified image and structured translation data with bounding boxes. No cloud APIs or Google Mobile Services required.
+
+### Pipeline
+
+    agent.translate(imageBytes, config)
+      └─ OCR (Tesseract / Tess4J)
+           └─ Local translation (Ollama/Koog on JVM | NLLB TFLite/LiteRT on Android)
+                └─ Inpainting (OpenCV — removes original text regions)
+                     └─ Text overlay (AWT on JVM | Canvas on Android)
+                          └─ TranslationOutput(imageBytes, List<TranslatedBlock>)
+
+### Supported Platforms
+
+| Platform | OCR | Translation | Rendering |
+|---|---|---|---|
+| **JVM / Desktop** | Tess4J | Ollama via Koog | OpenCV + AWT |
+| **Android** | Tesseract4Android | LiteRT / NLLB TFLite | OpenCV + Canvas |
+
+### Data Model
+
+```kotlin
+data class TranslatedBlock(
+    val originalText: String,
+    val translatedText: String,
+    val boundingBox: Rect,   // pixel coordinates in the output image
+)
+
+data class TranslationOutput(
+    val imageBytes: ByteArray,          // translated image (same format as input)
+    val translations: List<TranslatedBlock>,
+)
+```
+
+### Usage
+
+```kotlin
+val config = DynamicTranslationConfig(
+    sourceLanguage = "jpn",
+    targetLanguage = "eng",
+    tessDataPath = "/path/to/tessdata",
+    ollamaModel = "llama3.2",               // JVM only
+    nllbModelPath = "/path/to/nllb.tflite"  // Android only
+)
+val agent = buildDynamicTranslationAgent(config)
+agent.use { a ->
+    val output = a.translate(imageBytes, config)
+    // output.imageBytes — translated image (same format as input)
+    // output.translations — List<TranslatedBlock> with bounding boxes
+}
+```
+
+### Technologies
+
+| Technology | Role |
+|---|---|
+| **Kotlin Multiplatform** | Android + JVM Desktop targets |
+| **Tess4J / Tesseract4Android** | OCR — extracts text and bounding boxes from images |
+| **Ollama + Koog** | LLM-based translation on JVM/Desktop |
+| **LiteRT (TFLite) + NLLB** | On-device neural translation on Android |
+| **OpenCV** | Inpainting — erases original text regions from the image |
+| **AWT / Canvas** | Renders translated text back onto the cleaned image |
+
 [//]: # (Reference Links)
   [aa]: <https://www.androidauthority.com/sideloading-apps-on-android-tv-1189896/>
