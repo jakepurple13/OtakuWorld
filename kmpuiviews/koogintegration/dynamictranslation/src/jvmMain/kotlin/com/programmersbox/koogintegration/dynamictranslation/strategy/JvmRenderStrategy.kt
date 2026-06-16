@@ -33,19 +33,23 @@ class JvmRenderStrategy : RenderStrategy {
             ?: throw DynamicTranslationException("Failed to decode image for rendering")
 
         val mat = bufferedImageToMat(original)
-
         val mask = Mat.zeros(mat.size(), CvType.CV_8UC1)
-        for (block in translations.blocks) {
-            val b = block.bounds
-            if (b.x >= 0 && b.y >= 0 && b.x + b.width <= mat.width() && b.y + b.height <= mat.height()) {
-                mask.submat(Rect(b.x, b.y, b.width, b.height)).setTo(Scalar(255.0))
-            }
-        }
-
         val inpainted = Mat()
-        Photo.inpaint(mat, mask, inpainted, 3.0, Photo.INPAINT_TELEA)
-
-        val result = matToBufferedImage(inpainted)
+        val result: BufferedImage
+        try {
+            for (block in translations.blocks) {
+                val b = block.bounds
+                if (b.x >= 0 && b.y >= 0 && b.x + b.width <= mat.width() && b.y + b.height <= mat.height()) {
+                    mask.submat(Rect(b.x, b.y, b.width, b.height)).setTo(Scalar(255.0))
+                }
+            }
+            Photo.inpaint(mat, mask, inpainted, 3.0, Photo.INPAINT_TELEA)
+            result = matToBufferedImage(inpainted)
+        } finally {
+            mat.release()
+            mask.release()
+            inpainted.release()
+        }
 
         val g2d = result.createGraphics().apply {
             setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
@@ -77,8 +81,11 @@ class JvmRenderStrategy : RenderStrategy {
     private fun bufferedImageToMat(image: BufferedImage): Mat {
         val bgr = BufferedImage(image.width, image.height, BufferedImage.TYPE_3BYTE_BGR)
         val g = bgr.createGraphics()
-        g.drawImage(image, 0, 0, null)
-        g.dispose()
+        try {
+            g.drawImage(image, 0, 0, null)
+        } finally {
+            g.dispose()
+        }
         val mat = Mat(bgr.height, bgr.width, CvType.CV_8UC3)
         mat.put(0, 0, (bgr.raster.dataBuffer as DataBufferByte).data)
         return mat
