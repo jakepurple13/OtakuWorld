@@ -56,14 +56,17 @@ class JvmRenderStrategy : RenderStrategy {
             color = java.awt.Color.BLACK
             font = Font(Font.SANS_SERIF, Font.BOLD, 14)
         }
-        for (block in translations.blocks) {
-            val b = block.bounds
-            val fm = g2d.fontMetrics
-            val textX = b.x + (b.width - fm.stringWidth(block.translated)) / 2
-            val textY = b.y + (b.height + fm.ascent - fm.descent) / 2
-            g2d.drawString(block.translated, textX, textY)
+        try {
+            for (block in translations.blocks) {
+                val b = block.bounds
+                val fm = g2d.fontMetrics
+                val textX = b.x + (b.width - fm.stringWidth(block.translated)) / 2
+                val textY = b.y + (b.height + fm.ascent - fm.descent) / 2
+                g2d.drawString(block.translated, textX, textY)
+            }
+        } finally {
+            g2d.dispose()
         }
-        g2d.dispose()
 
         val out = ByteArrayOutputStream()
         ImageIO.write(result, format, out)

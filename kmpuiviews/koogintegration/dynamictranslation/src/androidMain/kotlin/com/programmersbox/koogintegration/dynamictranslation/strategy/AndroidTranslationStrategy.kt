@@ -25,8 +25,14 @@ class AndroidTranslationStrategy : TranslationStrategy {
             "NLLB SentencePiece vocab not found at '${vocabFile.absolutePath}'. " +
                 "Expected flores200_sacrebleu_tokenizer_spm.model renamed to nllb_vocab.spm."
         }
-        interpreter = Interpreter(modelFile, Interpreter.Options().apply { numThreads = 4 })
-        tokenizer = NllbTokenizer(vocabFile.absolutePath)
+        val interp = Interpreter(modelFile, Interpreter.Options().apply { numThreads = 4 })
+        try {
+            tokenizer = NllbTokenizer(vocabFile.absolutePath)
+            interpreter = interp
+        } catch (e: Exception) {
+            interp.close()
+            throw e
+        }
     }
 
     override suspend fun translate(ocr: OcrResult, config: DynamicTranslationConfig): TranslationResult {
