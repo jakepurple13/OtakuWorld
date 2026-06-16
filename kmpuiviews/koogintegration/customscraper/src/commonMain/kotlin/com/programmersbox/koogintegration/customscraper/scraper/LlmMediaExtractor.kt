@@ -17,13 +17,7 @@ internal class LlmMediaExtractor(
     private val executor: PromptExecutor,
     private val model: LLModel,
 ) {
-
-    // Structured schema built once — JsonStructure is thread-safe and reusable.
-    private val structure = JsonStructure.create<CustomScrapeKmpChapterModel>(
-        schemaGenerator = StandardJsonSchemaGenerator
-    )
-
-    suspend fun extract(sanitizedHtml: String): CustomScrapeKmpChapterModel {
+    private val agent by lazy {
         // Single-shot agent: no tools, no history, structured JSON output only.
         val agentConfig = AIAgentConfig(
             prompt = prompt("customscraper") {
@@ -31,21 +25,27 @@ internal class LlmMediaExtractor(
             },
             model = model,
             // Low iteration cap — we only need one LLM call for extraction.
-            maxAgentIterations = 5
+            maxAgentIterations = 10
         )
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = executor,
             agentConfig = agentConfig,
             strategy = structuredOutputWithToolsStrategy<CustomScrapeKmpChapterModel>(
                 config = StructuredRequestConfig(
-                    default = StructuredRequest.Manual(structure)
+                    default = StructuredRequest.Manual(
+                        JsonStructure.create<CustomScrapeKmpChapterModel>(
+                            schemaGenerator = StandardJsonSchemaGenerator
+                        )
+                    )
                 )
             ),
             // No tools needed — the LLM parses HTML directly and returns JSON.
             toolRegistry = ToolRegistry { }
         )
+    }
 
+    suspend fun extract(sanitizedHtml: String): CustomScrapeKmpChapterModel {
         return agent.run(sanitizedHtml, "scraper-${sanitizedHtml.hashCode().toString(36)}")
     }
 

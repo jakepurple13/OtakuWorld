@@ -57,16 +57,21 @@ class WebScraper internal constructor(
         // Non-2xx — return empty rather than crashing so callers can show a graceful UI.
         // Note: this is a non-local return from an `inline` runCatching lambda, which exits
         // scrape() directly and bypasses getOrElse — this is intentional and correct.
-        if (!response.status.isSuccess()) return CustomScrapeKmpChapterModel(urls = emptyList())
+        if (!response.status.isSuccess()) {
+            println(response.status.description)
+            return CustomScrapeKmpChapterModel(urls = emptyList())
+        }
 
         val rawHtml = response.bodyAsText()
         val sanitizedHtml = HtmlSanitizer.sanitize(rawHtml)
 
         extractor(sanitizedHtml)
-    }.getOrElse {
-        // Network error, LLM parse failure, or any unexpected exception → empty result.
-        CustomScrapeKmpChapterModel(urls = emptyList())
     }
+        .onFailure { it.printStackTrace() }
+        .getOrElse {
+            // Network error, LLM parse failure, or any unexpected exception → empty result.
+            CustomScrapeKmpChapterModel(urls = emptyList())
+        }
 
     /** Releases the underlying [httpClient] connection pool. */
     override fun close() {

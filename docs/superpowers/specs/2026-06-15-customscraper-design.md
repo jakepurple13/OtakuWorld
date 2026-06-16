@@ -1,7 +1,7 @@
 # Custom Web Scraper — Design Spec
 
 **Date:** 2026-06-15  
-**Module:** `:kmpmodels:customscraper`  
+**Module:** `:koogintegration:customscraper`  
 **Status:** Approved
 
 ---
@@ -64,15 +64,16 @@ data class CustomScrapeKmpChapterModel(
 `otaku-multiplatform-no-ios` — targets Android + JVM (Desktop). No iOS.
 
 ### Package
-`com.programmersbox.kmpmodels.customscraper`
+
+`com.programmersbox.koogintegration.customscraper`
 
 ### Source Set Layout
 
 ```
-kmpmodels/customscraper/
+koogintegration/customscraper/
 ├── build.gradle.kts
 └── src/
-    ├── commonMain/kotlin/com/programmersbox/kmpmodels/customscraper/
+    ├── commonMain/kotlin/com/programmersbox/koogintegration/customscraper/
     │   ├── model/
     │   │   └── CustomScrapeKmpChapterModel.kt
     │   ├── scraper/
@@ -197,7 +198,7 @@ Do not include thumbnails, icons, logos, or navigation images. Only include cont
 
 Add to `settings.gradle.kts`:
 ```kotlin
-include(":kmpmodels:customscraper")
+include(":koogintegration:customscraper")
 ```
 
 ---
