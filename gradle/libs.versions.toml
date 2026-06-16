@@ -20,7 +20,7 @@ backdrop = "2.0.0"
 heatmap = "1.0.5"
 humanReadable = "1.12.3"
 knotify = "0.4.3"
-kotlinxDatetime = "0.8.0"
+kotlinxDatetime = "0.8.0-0.6.x-compat"
 
 javase = "3.5.4"
 kotlin = "2.4.0"
