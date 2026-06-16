@@ -14,6 +14,7 @@ import com.programmersbox.koogintegration.dynamictranslation.model.DynamicTransl
 import com.programmersbox.koogintegration.dynamictranslation.model.OcrResult
 import com.programmersbox.koogintegration.dynamictranslation.model.TranslatedBlock
 import com.programmersbox.koogintegration.dynamictranslation.model.TranslationResult
+import java.util.UUID
 
 class JvmTranslationStrategy(
     private val client: OllamaClient,
@@ -44,9 +45,10 @@ class JvmTranslationStrategy(
     }
 
     override suspend fun translate(ocr: OcrResult, config: DynamicTranslationConfig): TranslationResult {
+        val runId = UUID.randomUUID().toString().take(8)
         val blocks = ocr.blocks.mapIndexed { idx, block ->
             val prompt = "Translate from ${config.sourceLanguage} to ${config.targetLanguage}:\n${block.text}"
-            val translated = translationAgent.run(prompt, "dt-translate-$idx-${block.text.hashCode()}")
+            val translated = translationAgent.run(prompt, "dt-translate-$runId-$idx")
             TranslatedBlock(
                 original = block.text,
                 translated = translated,
