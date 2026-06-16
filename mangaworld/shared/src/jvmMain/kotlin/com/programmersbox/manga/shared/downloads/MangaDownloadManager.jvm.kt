@@ -74,7 +74,7 @@ actual class MangaDownloadManager(
         scope.coroutineContext[Job]?.invokeOnCompletion { httpClient.close() }
 
         // Start 3 concurrent worker loops reading from the same channel
-        repeat(3) {
+        repeat(CONCURRENT_DOWNLOADS) {
             scope.launch {
                 for (request in queue) {
                     val cancelled = mutex.withLock { cancelledUrls.remove(request.chapterUrl) }

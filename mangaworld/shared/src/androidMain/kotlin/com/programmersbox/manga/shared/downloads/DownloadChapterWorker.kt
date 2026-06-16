@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
 
-private val downloadDispatcher = Dispatchers.IO.limitedParallelism(3)
+private val downloadDispatcher = Dispatchers.IO.limitedParallelism(CONCURRENT_DOWNLOADS)
 
 class DownloadChapterWorker(
     context: Context,

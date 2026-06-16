@@ -3,6 +3,8 @@ package com.programmersbox.manga.shared.downloads
 import com.programmersbox.kmpmodels.KmpChapterModel
 import kotlinx.coroutines.flow.Flow
 
+
+internal const val CONCURRENT_DOWNLOADS = 3
 sealed interface DownloadState {
     data object Queued : DownloadState
     data class Downloading(val imagesDownloaded: Int, val totalImages: Int) : DownloadState

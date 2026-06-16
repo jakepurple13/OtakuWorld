@@ -24,7 +24,7 @@ kotlinxDatetime = "0.8.0"
 
 javase = "3.5.4"
 kotlin = "2.4.0"
-kspVersion = "2.3.8"
+kspVersion = "2.3.9"
 
 androidxBaselineprofileGradlePlugin = "1.3.4"
 composeCollapsable = "0.4.0"
@@ -45,7 +45,7 @@ protobufGradlePlugin = "0.10.0"
 qrose = "1.1.2"
 reorderable = "3.1.0"
 roomVersion = "3.0.0-alpha06"
-koin-bom = "4.2.1"
+koin-bom = "4.2.2"
 coil = "3.4.0"
 landscapist = "2.9.8"
 lifecycle = "2.10.0"
@@ -74,7 +74,7 @@ materialKolor = "5.0.0-alpha07"
 
 googlePerformancePlugin = "2.0.2"
 
-firebaseBom = "34.14.0"
+firebaseBom = "34.14.1"
 
 kmpalette = "3.1.0"
 
@@ -109,36 +109,36 @@ lottieCompose = "6.7.1"
 kotlinMultiplatformAppdirsVersion = "2.0.0"
 
 sqlite = "2.6.2"
-kotlinTest = "2.3.21"
+kotlinTest = "2.4.0"
 runner = "1.7.0"
 core = "1.7.0"
 
 androidx-lifecycle = "2.10.0"
 
-compose-multiplatform = "1.12.0-alpha01"
+compose-multiplatform = "1.12.0-alpha02"
 
 kotlinx-coroutines = "1.11.0"
 
 material3WindowSizeClassVersion = "1.10.0-alpha05"
 connectivity = "2.4.1"
 
-cmpLifecycle = "2.10.0"
+cmpLifecycle = "2.11.0-beta02"
 navigationCmp = "2.9.10-alpha01"
 
 buildKonfig = "0.21.2"
 
-compottie = "2.2.1"
+compottie = "2.2.2"
 
 lifecycleViewmodelNavigation3 = "2.10.0"
 navigationevent = "1.1.1"
 
-navigation3 = "1.1.2"
+navigation3 = "1.2.0-alpha04"
 nav3Material = "1.3.0-beta02"
 
-cmp-nav3 = "1.1.1"
+cmp-nav3 = "1.2.0-alpha01"
 cmp-navevent = "1.1.0"
-cmp-nav3-material3 = "1.3.0-beta01"
-kotzilla = "2.2.0"
+cmp-nav3-material3 = "1.3.0-beta02"
+kotzilla = "2.2.2"
 
 koog = "1.0.0"
 koog-beta = "1.0.0-beta"
@@ -158,7 +158,7 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
 koin-compiler = { id = "io.insert-koin.compiler.plugin", version = "1.0.0" }
-hotswan-compiler = { id = "com.github.skydoves.compose.hotswan.compiler", version = "1.3.4" }
+hotswan-compiler = { id = "com.github.skydoves.compose.hotswan.compiler", version = "1.3.5" }
 kotzilla = { id = "io.kotzilla.kotzilla-plugin", version.ref = "kotzilla" }
 
 [libraries]
@@ -184,7 +184,7 @@ androidx-navigationevent-compose = { module = "androidx.navigationevent:navigati
 cmp-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "cmp-navevent" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.12.0-alpha01" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.12.0-alpha02" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
 github-nucleus-scheduler-testing = { module = "io.github.kdroidfilter:nucleus.scheduler-testing", version.ref = "nucleusSystem" }
 github-nucleus-scheduler = { module = "io.github.kdroidfilter:nucleus.scheduler", version.ref = "nucleusSystem" }
