@@ -1,5 +1,8 @@
 package com.programmersbox.koogintegration.customscraper
 
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.ollama.client.OllamaModels
 import com.programmersbox.koogintegration.customscraper.model.CustomScrapeKmpChapterModel
 import com.programmersbox.koogintegration.customscraper.scraper.WebScraper
 import io.ktor.client.HttpClient
@@ -19,6 +22,22 @@ class WebScraperTest {
     private val stubResult = CustomScrapeKmpChapterModel(urls = listOf("https://example.com/page1.jpg"))
 
     @Test
+    fun realTest() = runTest {
+        WebScraper(
+            executor = MultiLLMPromptExecutor(OllamaClient()),
+            model = OllamaModels.Meta.LLAMA_3_2
+        ).use {
+            runCatching { println(it.scrapeChapter("https://picsum.photos/")) }
+                .onFailure { it.printStackTrace() }
+
+            runCatching {
+                val info = it.scrapeDetails("details-url-here")
+                println(info)
+            }.onFailure { it.printStackTrace() }
+        }
+    }
+
+    @Test
     fun returnsEmptyModelOnNon200Response() = runTest {
         val mockClient = HttpClient(MockEngine) {
             engine {
@@ -29,10 +48,10 @@ class WebScraperTest {
         }
         var extractorCallCount = 0
         val result = WebScraper(
-            httpClient = mockClient,
-            extractor = { _ -> extractorCallCount++; stubResult },
+            executor = MultiLLMPromptExecutor(OllamaClient()),
+            model = OllamaModels.Meta.LLAMA_3_2
         ).use {
-            it.scrape("https://example.com/manga/chapter-1")
+            it.scrapeChapter("https://example.com/manga/chapter-1")
         }
         assertEquals(emptyList<String>(), result.urls)
         assertEquals(0, extractorCallCount, "extractor must not be called on non-200")
@@ -46,10 +65,10 @@ class WebScraperTest {
             }
         }
         val result = WebScraper(
-            httpClient = mockClient,
-            extractor = { _ -> stubResult }
+            executor = MultiLLMPromptExecutor(OllamaClient()),
+            model = OllamaModels.Meta.LLAMA_3_2
         ).use {
-            it.scrape("https://example.com/manga/chapter-1")
+            it.scrapeChapter("https://example.com/manga/chapter-1")
         }
         assertEquals(emptyList<String>(), result.urls)
     }
@@ -66,13 +85,10 @@ class WebScraperTest {
         }
         var capturedHtml: String? = null
         val result = WebScraper(
-            httpClient = mockClient,
-            extractor = { html ->
-                capturedHtml = html
-                stubResult
-            }
+            executor = MultiLLMPromptExecutor(OllamaClient()),
+            model = OllamaModels.Meta.LLAMA_3_2
         ).use {
-            it.scrape("https://example.com/manga/chapter-1")
+            it.scrapeChapter("https://example.com/manga/chapter-1")
         }
         assertEquals(stubResult.urls, result.urls)
         // Sanitizer should have stripped <style> before handing off to extractor
@@ -85,15 +101,19 @@ class WebScraperTest {
         val mockClient = HttpClient(MockEngine) {
             engine {
                 addHandler {
-                    respond("<img src='page1.jpg'>", HttpStatusCode.OK, headersOf("Content-Type", "text/html"))
+                    respond(
+                        "<img src='page1.jpg'>",
+                        HttpStatusCode.OK,
+                        headersOf("Content-Type", "text/html")
+                    )
                 }
             }
         }
         val result = WebScraper(
-            httpClient = mockClient,
-            extractor = { _ -> throw RuntimeException("LLM failed") }
+            executor = MultiLLMPromptExecutor(OllamaClient()),
+            model = OllamaModels.Meta.LLAMA_3_2
         ).use {
-            it.scrape("https://example.com/manga/chapter-1")
+            it.scrapeChapter("https://example.com/manga/chapter-1")
         }
         assertEquals(emptyList<String>(), result.urls)
     }

@@ -3,6 +3,7 @@ package com.programmersbox.koogintegration.customscraper.scraper
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import com.programmersbox.koogintegration.customscraper.model.CustomScrapeKmpChapterModel
+import com.programmersbox.koogintegration.customscraper.model.CustomScrapeKmpInfoModel
 import com.programmersbox.koogintegration.customscraper.platform.createHttpClient
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -35,7 +36,7 @@ import io.ktor.http.isSuccess
  */
 class WebScraper internal constructor(
     private val httpClient: HttpClient,
-    private val extractor: suspend (String) -> CustomScrapeKmpChapterModel,
+    private val llmMediaExtractor: LlmMediaExtractor,
 ) : AutoCloseable {
 
     /**
@@ -48,30 +49,52 @@ class WebScraper internal constructor(
         httpClient: HttpClient = createHttpClient(),
     ) : this(
         httpClient = httpClient,
-        extractor = LlmMediaExtractor(executor, model)::extract,
+        llmMediaExtractor = LlmMediaExtractor(executor, model),
     )
 
-    suspend fun scrape(url: String): CustomScrapeKmpChapterModel = runCatching {
+    suspend fun scrapeChapter(url: String): CustomScrapeKmpChapterModel {
+        return scrapeUrl(url)
+            .mapCatching { llmMediaExtractor.extractChapters(it) }
+            .fold(
+                onSuccess = {
+                    when (it) {
+                        is CustomScrapeKmpChapterModel -> it
+                        is CustomScrapeKmpInfoModel -> error("Expected CustomScrapeKmpChapterModel, got CustomScrapeKmpInfoModel")
+                    }
+                },
+                onFailure = { error(it) }
+            )
+    }
+
+    suspend fun scrapeDetails(url: String): CustomScrapeKmpInfoModel {
+        return scrapeUrl(url)
+            .mapCatching { llmMediaExtractor.extractDetails(it) }
+            .fold(
+                onSuccess = {
+                    when (it) {
+                        is CustomScrapeKmpInfoModel -> it
+                        is CustomScrapeKmpChapterModel -> error("Expected CustomScrapeKmpInfoModel, got CustomScrapeKmpChapterModel")
+                    }
+                },
+                onFailure = { error(it) }
+            )
+    }
+
+    private suspend fun scrapeUrl(url: String): Result<String> = runCatching {
         val response = httpClient.get(url)
 
         // Non-2xx — return empty rather than crashing so callers can show a graceful UI.
         // Note: this is a non-local return from an `inline` runCatching lambda, which exits
         // scrape() directly and bypasses getOrElse — this is intentional and correct.
         if (!response.status.isSuccess()) {
-            println(response.status.description)
-            return CustomScrapeKmpChapterModel(urls = emptyList())
+            error(response.status.description)
         }
 
         val rawHtml = response.bodyAsText()
         val sanitizedHtml = HtmlSanitizer.sanitize(rawHtml)
 
-        extractor(sanitizedHtml)
-    }
-        .onFailure { it.printStackTrace() }
-        .getOrElse {
-            // Network error, LLM parse failure, or any unexpected exception → empty result.
-            CustomScrapeKmpChapterModel(urls = emptyList())
-        }
+        sanitizedHtml
+    }.onFailure { it.printStackTrace() }
 
     /** Releases the underlying [httpClient] connection pool. */
     override fun close() {
