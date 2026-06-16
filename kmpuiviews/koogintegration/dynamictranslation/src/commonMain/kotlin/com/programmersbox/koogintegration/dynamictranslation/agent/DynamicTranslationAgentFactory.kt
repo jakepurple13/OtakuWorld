@@ -1,0 +1,5 @@
+package com.programmersbox.koogintegration.dynamictranslation.agent
+
+import com.programmersbox.koogintegration.dynamictranslation.model.DynamicTranslationConfig
+
+expect fun buildDynamicTranslationAgent(config: DynamicTranslationConfig): DynamicTranslationAgent
