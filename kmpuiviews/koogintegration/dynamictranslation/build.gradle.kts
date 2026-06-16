@@ -24,12 +24,11 @@ kotlin {
             implementation("org.openpnp:opencv:4.9.0-0")
         }
         androidMain.dependencies {
-            implementation("com.github.adaptech-cz:tesseract4android:4.8.0")
+            implementation("com.github.adaptech-cz:Tesseract4Android:4.8.0")
             implementation("org.tensorflow:tensorflow-lite:2.14.0")
             implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
             implementation("org.opencv:opencv:4.9.0")
-            // SentencePiece for NLLB tokenization — provides SentencePieceProcessor
-            implementation("com.github.google.sentencepiece:libsentencepiece-android:0.2.0")
+            // SentencePiece via TFLite Support — SentencePieceTokenizer is bundled in tensorflow-lite-support
         }
     }
 }
