@@ -8,6 +8,10 @@ otakuDependencies {
 }
 
 kotlin {
+    android {
+        namespace = "com.programmersbox.koogintegration.dynamictranslation"
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinStLib)
