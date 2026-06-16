@@ -164,7 +164,7 @@ actual class MangaDownloadManager(
 
             workManager
                 .beginUniqueWork(
-                    DownloadChapterWorker.DOWNLOAD_QUEUE,
+                    "${DownloadChapterWorker.DOWNLOAD_QUEUE}${chapter.url}",
                     ExistingWorkPolicy.APPEND_OR_REPLACE,
                     workRequest,
                 )

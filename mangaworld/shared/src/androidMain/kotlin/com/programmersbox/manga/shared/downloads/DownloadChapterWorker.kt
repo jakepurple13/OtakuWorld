@@ -16,8 +16,12 @@ import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
+
+private val downloadDispatcher = Dispatchers.IO.limitedParallelism(3)
 
 class DownloadChapterWorker(
     context: Context,
@@ -62,79 +66,81 @@ class DownloadChapterWorker(
         val notifFailId = notifId + 200_000
 
         val client = HttpClient()
-        return try {
-            // Show indeterminate progress while the first image hasn't loaded yet
-            postNotification(
-                id = notifId,
-                notification = buildProgressNotification(
-                    mangaTitle = mangaTitle,
-                    chapterName = chapterName,
-                    done = 0,
-                    total = 0,
-                    indeterminate = true,
-                ),
-            )
+        return withContext(downloadDispatcher) {
+            try {
+                // Show indeterminate progress while the first image hasn't loaded yet
+                postNotification(
+                    id = notifId,
+                    notification = buildProgressNotification(
+                        mangaTitle = mangaTitle,
+                        chapterName = chapterName,
+                        done = 0,
+                        total = 0,
+                        indeterminate = true,
+                    ),
+                )
 
-            executeDownload(
-                client = client,
-                request = request,
-                onProgress = { done, total ->
-                    setProgress(
-                        workDataOf(
-                            KEY_PROGRESS_DONE to done,
-                            KEY_PROGRESS_TOTAL to total,
-                            KEY_CHAPTER_NAME to chapterName,
-                            KEY_MANGA_TITLE to mangaTitle,
+                executeDownload(
+                    client = client,
+                    request = request,
+                    onProgress = { done, total ->
+                        setProgress(
+                            workDataOf(
+                                KEY_PROGRESS_DONE to done,
+                                KEY_PROGRESS_TOTAL to total,
+                                KEY_CHAPTER_NAME to chapterName,
+                                KEY_MANGA_TITLE to mangaTitle,
+                            )
                         )
-                    )
-                    postNotification(
-                        id = notifId,
-                        notification = buildProgressNotification(
-                            mangaTitle = mangaTitle,
-                            chapterName = chapterName,
-                            done = done,
-                            total = total,
-                            indeterminate = false,
-                        ),
-                    )
-                },
-                writeBytes = { index, bytes ->
-                    File(destDir, "%03d.png".format(index)).writeBytes(bytes)
-                },
-            )
-            MediaScannerConnection.scanFile(
-                applicationContext,
-                destDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),
-                null,
-                null,
-            )
-            // Dismiss progress, show completion
-            notificationManager.cancel(notifId)
-            postNotification(
-                id = notifCompleteId,
-                notification = buildCompleteNotification(mangaTitle, chapterName),
-            )
-            Result.success()
-        } catch (e: CancellationException) {
-            notificationManager.cancel(notifId)
-            throw e
-        } catch (e: Exception) {
-            e.printStackTrace()
-            if (runAttemptCount < 3) {
-                // Leave progress notification visible — next attempt will overwrite it
-                Result.retry()
-            } else {
-                // All retries exhausted
+                        postNotification(
+                            id = notifId,
+                            notification = buildProgressNotification(
+                                mangaTitle = mangaTitle,
+                                chapterName = chapterName,
+                                done = done,
+                                total = total,
+                                indeterminate = false,
+                            ),
+                        )
+                    },
+                    writeBytes = { index, bytes ->
+                        File(destDir, "%03d.png".format(index)).writeBytes(bytes)
+                    },
+                )
+                MediaScannerConnection.scanFile(
+                    applicationContext,
+                    destDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: emptyArray(),
+                    null,
+                    null,
+                )
+                // Dismiss progress, show completion
                 notificationManager.cancel(notifId)
                 postNotification(
-                    id = notifFailId,
-                    notification = buildFailedNotification(chapterName, e.message ?: "Unknown error"),
+                    id = notifCompleteId,
+                    notification = buildCompleteNotification(mangaTitle, chapterName),
                 )
-                destDir.deleteRecursively()
-                Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
+                Result.success()
+            } catch (e: CancellationException) {
+                notificationManager.cancel(notifId)
+                throw e
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (runAttemptCount < 3) {
+                    // Leave progress notification visible — next attempt will overwrite it
+                    Result.retry()
+                } else {
+                    // All retries exhausted
+                    notificationManager.cancel(notifId)
+                    postNotification(
+                        id = notifFailId,
+                        notification = buildFailedNotification(chapterName, e.message ?: "Unknown error"),
+                    )
+                    destDir.deleteRecursively()
+                    Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Unknown error")))
+                }
+            } finally {
+                client.close()
             }
-        } finally {
-            client.close()
         }
     }
 
