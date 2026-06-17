@@ -30,8 +30,6 @@ kotlin {
             implementation(projects.kmpmodels)
         }
         androidMain.dependencies {
-            // Re-declare BOM here so androidCompileClasspath resolves Supabase versions
-            implementation(project.dependencies.platform(commonLibs.supabase.bom))
             implementation(commonLibs.connectivity.device)
             implementation(commonLibs.ktorOkHttp)
             implementation(androidLibs.workRuntimeKtx)
@@ -43,6 +41,7 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(iosLibs.ktorDarwin)
+            implementation(commonLibs.connectivity.device)
         }
     }
 }
