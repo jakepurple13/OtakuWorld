@@ -7,6 +7,8 @@ import com.programmersbox.koogintegration.dynamictranslation.strategy.JvmOcrStra
 import com.programmersbox.koogintegration.dynamictranslation.strategy.JvmRenderStrategy
 import com.programmersbox.koogintegration.dynamictranslation.strategy.JvmTranslationStrategy
 import com.programmersbox.koogintegration.dynamictranslation.tool.TranslateTool
+import kotlinx.coroutines.runBlocking
+import java.io.File
 
 actual fun buildDynamicTranslationAgent(config: DynamicTranslationConfig): DynamicTranslationAgent {
     val client = OllamaClient()
@@ -19,4 +21,24 @@ actual fun buildDynamicTranslationAgent(config: DynamicTranslationConfig): Dynam
     val tool = TranslateTool(ocr, translation, render)
 
     return DynamicTranslationAgent(tool)
+}
+
+
+fun main() = runBlocking {
+    val config = DynamicTranslationConfig(
+        ollamaModel = "llama3.2",
+        tessDataPath = "/Users/jacobrein/Downloads/tessdata",
+        sourceLanguage = "eng",
+        targetLanguage = "eng",
+    )
+    val d = buildDynamicTranslationAgent(config).translate(
+        File("/Users/jacobrein/Downloads/ruri.jpeg").readBytes(),
+        config
+    )
+
+    println(d)
+
+    val f = File("/Users/jacobrein/Downloads/ruri1.jpeg")
+    f.createNewFile()
+    f.writeBytes(d.imageBytes)
 }
