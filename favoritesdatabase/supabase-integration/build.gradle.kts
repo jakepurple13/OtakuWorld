@@ -1,6 +1,8 @@
 plugins {
     `otaku-multiplatform`
     id("kotlinx-serialization")
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.compose.compiler)
 }
 
 otakuDependencies {
@@ -11,6 +13,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project.dependencies.platform(commonLibs.supabase.bom))
+            implementation(commonLibs.compose.material3)
             implementation(commonLibs.supabase.postgrest)
             implementation(commonLibs.supabase.auth)
             implementation(commonLibs.supabase.realtime)
@@ -26,6 +29,7 @@ kotlin {
             implementation(commonLibs.connectivity.core)
             implementation(commonLibs.cmp.navigation3.ui)
             implementation(commonLibs.lifecycle.viewmodel.compose)
+            implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
             implementation(projects.favoritesdatabase)
             implementation(projects.kmpmodels)
         }
