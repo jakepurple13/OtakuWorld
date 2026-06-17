@@ -35,7 +35,7 @@ class SupabaseConfigViewModel(
         viewModelScope.launch {
             connectionResult.value = null
             runCatching {
-                val testClient = com.programmersbox.supabaseintegration.credentials.SupabaseCredentials(
+                val testClient = SupabaseCredentials(
                     projectUrl.value.trim(), anonKey.value.trim()
                 )
                 credentialManager.saveCredentials(testClient)
