@@ -135,7 +135,7 @@ navigationevent = "1.1.1"
 navigation3 = "1.2.0-alpha04"
 nav3Material = "1.3.0-beta02"
 
-cmp-nav3 = "1.2.0-alpha01"
+cmp-nav3 = "1.2.0-alpha02+snapshot.default"
 cmp-navevent = "1.1.0"
 cmp-nav3-material3 = "1.3.0-beta02"
 kotzilla = "2.2.2"
