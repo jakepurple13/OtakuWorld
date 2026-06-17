@@ -37,7 +37,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.material)
+    implementation(androidLibs.material)
     implementation(androidx.legacy.legacySupportV4)
     implementation(androidx.preference.preferenceKtx)
     implementation(androidx.window.window)
@@ -72,7 +72,7 @@ dependencies {
     implementation(androidx.lifecycle.lifecycleLivedataKtx)
     implementation(androidx.lifecycle.lifecycleViewmodelKtx)
 
-    implementation(libs.iconicsCore)
+    implementation(androidLibs.iconicsCore)
     implementation(Deps.materialTypeface)
     implementation(Deps.fontawesomeTypeface)
 

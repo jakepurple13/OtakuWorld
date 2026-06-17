@@ -224,6 +224,4 @@ catalogs — update all affected catalogs when bumping a version.
 After all modules are updated:
 ```bash
 ./gradlew assembleNoFirebaseDebug        # Android apps
-./gradlew :mangaworld:desktop:run        # Desktop
-./gradlew test                           # All tests
 ```

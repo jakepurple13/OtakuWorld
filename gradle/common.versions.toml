@@ -52,6 +52,7 @@ sqlite = "2.6.2"
 urlencoderLib = "1.6.0"
 xemanticAiToolSchema = "1.2.0"
 kmpalette = "3.1.0"
+materialAdaptiveCmp = "1.2.0"
 
 [libraries]
 # About Libraries (KMP)
@@ -72,7 +73,7 @@ coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 
 # Compose Multiplatform
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version = "1.12.0-alpha02" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
 runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
@@ -81,9 +82,9 @@ ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.r
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
-materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version = "1.2.0" }
-materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version = "1.2.0" }
-materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version = "1.2.0" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version.ref = "materialAdaptiveCmp" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version.ref = "materialAdaptiveCmp" }
+materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version.ref = "materialAdaptiveCmp" }
 material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClassVersion" }
 
 # Connectivity
