@@ -9,7 +9,7 @@ import androidx.sqlite.execSQL
 
 @Database(
     entities = [DbModel::class, ChapterWatched::class, NotificationItem::class, SourceOrder::class, IncognitoSource::class],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(
@@ -44,10 +44,23 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                listOf("FavoriteItem", "ChapterWatched", "Notifications", "SourceOrder", "IncognitoSourceTable").forEach { table ->
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT DEFAULT NULL")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_dirty` INTEGER NOT NULL DEFAULT 1")
+                }
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): ItemDatabase = databaseBuilder
             .build<ItemDatabase>("favoriteItems.db")
             .addMigrations(MIGRATION_1_2)
             .addMigrations(MIGRATION_5_6)
+            .addMigrations(MIGRATION_6_7)
             .build()
     }
 }
