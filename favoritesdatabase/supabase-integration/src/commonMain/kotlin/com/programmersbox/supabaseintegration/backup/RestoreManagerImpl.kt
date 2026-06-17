@@ -20,7 +20,7 @@ class RestoreManagerImpl(
         val uid = (authManager.authState.value as? AuthState.Authenticated)?.user?.id
             ?: return emptyList()
         val client = clientProvider.getOrCreate() ?: return emptyList()
-        return client.storage["otakuworld-backups"]
+        return client.storage[BACKUP_BUCKET]
             .list("backups/$uid")
             .map { obj ->
                 BackupEntry(
@@ -35,7 +35,7 @@ class RestoreManagerImpl(
 
     override suspend fun downloadBackup(entry: BackupEntry, localPath: String): Result<String> = runCatching {
         val client = clientProvider.getOrCreate() ?: error("Client not initialized")
-        val bytes = client.storage["otakuworld-backups"].downloadAuthenticated(entry.remotePath)
+        val bytes = client.storage[BACKUP_BUCKET].downloadAuthenticated(entry.remotePath)
         writeFileBytes(localPath, bytes)
         localPath
     }

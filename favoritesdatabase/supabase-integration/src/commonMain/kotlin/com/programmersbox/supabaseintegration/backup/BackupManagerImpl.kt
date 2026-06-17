@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.programmersbox.supabaseintegration.backup
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
@@ -7,6 +9,9 @@ import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+
+internal const val BACKUP_BUCKET = "otakuworld-backups"
 
 class BackupManagerImpl(
     private val clientProvider: SupabaseClientProvider,
@@ -21,7 +26,7 @@ class BackupManagerImpl(
         val client = clientProvider.getOrCreate() ?: error("Client not initialized")
         val timestamp = Clock.System.now().toEpochMilliseconds()
         val remotePath = "backups/$uid/backup_$timestamp.db"
-        client.storage["otakuworld-backups"].upload(remotePath, readFileBytes(filePath)) {
+        client.storage[BACKUP_BUCKET].upload(remotePath, readFileBytes(filePath)) {
             upsert = false
         }
         remotePath

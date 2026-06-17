@@ -2,7 +2,6 @@ package com.programmersbox.supabaseintegration.backup
 
 import kotlinx.cinterop.refTo
 import platform.Foundation.NSData
-import platform.Foundation.NSURL
 import platform.Foundation.dataWithContentsOfFile
 import platform.Foundation.writeToFile
 

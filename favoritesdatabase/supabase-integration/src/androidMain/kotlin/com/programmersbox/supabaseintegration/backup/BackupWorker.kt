@@ -10,7 +10,7 @@ class BackupWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
     private val backupManager: BackupManager by inject()
 
     override suspend fun doWork(): Result {
-        val dbPath = applicationContext.getDatabasePath("item_database.db").absolutePath
+        val dbPath = applicationContext.getDatabasePath("favoriteItems.db").absolutePath
         return backupManager.uploadBackup(dbPath)
             .fold(onSuccess = { Result.success() }, onFailure = { Result.retry() })
     }
