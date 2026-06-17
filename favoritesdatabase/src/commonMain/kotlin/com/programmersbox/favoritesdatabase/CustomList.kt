@@ -85,7 +85,7 @@ abstract class ListDatabase : RoomDatabase() {
         private val MIGRATION_11_12 = object : Migration(11, 12) {
             override suspend fun migrate(connection: SQLiteConnection) {
                 listOf("CustomListItem", "CustomListInfo").forEach { table ->
-                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT NOT NULL DEFAULT ''")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT DEFAULT ''")
                     connection.execSQL("ALTER TABLE `$table` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
                     connection.execSQL("ALTER TABLE `$table` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
                     connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")

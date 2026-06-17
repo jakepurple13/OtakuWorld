@@ -38,7 +38,7 @@ abstract class HeatMapDatabase : RoomDatabase() {
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override suspend fun migrate(connection: SQLiteConnection) {
-                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `supabase_id` TEXT NOT NULL DEFAULT ''")
+                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `supabase_id` TEXT DEFAULT ''")
                 connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
                 connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
                 connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
