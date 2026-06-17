@@ -15,6 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.time.Duration.Companion.minutes
 
 class WebScraperTest {
 
@@ -22,17 +23,24 @@ class WebScraperTest {
     private val stubResult = CustomScrapeKmpChapterModel(urls = listOf("https://example.com/page1.jpg"))
 
     @Test
-    fun realTest() = runTest {
+    fun realTest() = runTest(
+        timeout = 5.minutes
+    ) {
         WebScraper(
             executor = MultiLLMPromptExecutor(OllamaClient()),
             model = OllamaModels.Meta.LLAMA_3_2
         ).use {
-            runCatching { println(it.scrapeChapter("https://picsum.photos/")) }
-                .onFailure { it.printStackTrace() }
+            /*runCatching { println(it.scrapeChapter("https://mangadex.org/chapter/6c83c5e7-461d-40e1-8375-7ee9d7e19618")) }
+                .onFailure { it.printStackTrace() }*/
 
             runCatching {
-                val info = it.scrapeDetails("details-url-here")
+                val info = it.scrapeDetails("https://mangadex.org/title/8572da1b-3b5d-44aa-a40c-8a92b512c336/dungeon-no-osananajimi")
                 println(info)
+
+                val chapterUrl = info.chapters.first().url
+                println(chapterUrl)
+                val chapter = it.scrapeChapter(chapterUrl)
+                println(chapter)
             }.onFailure { it.printStackTrace() }
         }
     }

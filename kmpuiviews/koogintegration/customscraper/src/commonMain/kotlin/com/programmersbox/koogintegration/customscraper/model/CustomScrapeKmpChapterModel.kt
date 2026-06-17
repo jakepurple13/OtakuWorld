@@ -30,8 +30,8 @@ data class CustomScrapeKmpInfoModel(
     val imageUrl: String,
     @property:LLMDescription("The list of chapters scraped from the website.")
     val chapters: List<CustomScrapeChapter>,
-    @property:LLMDescription("The list of genres scraped from the website.")
-    val genres: List<String>,
+    @property:LLMDescription("The list of genres scraped from the website. The default is an empty list")
+    val genres: List<String> = emptyList(),
 ) : ScraperResult()
 
 @Serializable

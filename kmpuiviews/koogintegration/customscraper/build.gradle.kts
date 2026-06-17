@@ -41,6 +41,7 @@ kotlin {
             dependencies {
                 // OkHttp engine — works cross-platform on JVM; no CIO in catalog
                 implementation(libs.ktorOkHttp)
+                //implementation("com.microsoft.playwright:playwright:1.60.0")
             }
         }
     }
