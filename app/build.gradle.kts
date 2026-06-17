@@ -60,59 +60,59 @@ android {
 
     configurations.all {
         resolutionStrategy {
-            force(libs.preference)
+            force(androidLibs.preference)
         }
     }
 }
 
 dependencies {
-    implementation(libs.material)
-    implementation(libs.constraintlayout)
-    implementation(libs.androidxWebkit)
+    implementation(androidLibs.material)
+    implementation(androidLibs.constraintlayout)
+    implementation(androidLibs.androidxWebkit)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(libs.recyclerview)
+    implementation(androidLibs.recyclerview)
 
     //implementation(projects.uiViews)
 
-    implementation(libs.bundles.roomLibs)
-    ksp(libs.roomCompiler)
+    implementation(commonLibs.bundles.roomLibs)
+    ksp(commonLibs.roomCompiler)
 
-    implementation(libs.kotlinxSerialization)
-    implementation(libs.jsoup)
-    implementation(libs.preference) {
+    implementation(commonLibs.kotlinxSerialization)
+    implementation(androidLibs.jsoup)
+    implementation(androidLibs.preference) {
         isTransitive = true
     }
-    implementation(platform(libs.koin.bom))
-    implementation(libs.bundles.koinLibs)
+    implementation(platform(commonLibs.koin.bom))
+    implementation(androidLibs.bundles.koinLibs)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    val composeBom = platform(libs.composePlatform)
+    val composeBom = platform(androidLibs.composePlatform)
     implementation(composeBom)
-    implementation(libs.bundles.compose)
+    implementation(androidLibs.bundles.compose)
 
-    implementation(libs.androidxWindow)
+    implementation(androidLibs.androidxWindow)
 
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.androidx.material3.navigation3)
-    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(commonLibs.androidx.navigation3.runtime)
+    implementation(commonLibs.androidx.navigation3.ui)
+    implementation(commonLibs.androidx.material3.navigation3)
+    implementation(commonLibs.androidx.lifecycle.viewmodel.navigation3)
 
-    implementation(libs.qrose)
+    implementation(commonLibs.qrose)
 
-    implementation(libs.ktorCore)
-    implementation(libs.ktorAndroid)
-    implementation(libs.ktorAuth)
-    implementation(libs.ktorLogging)
-    implementation(libs.ktorSerialization)
-    implementation(libs.ktorJson)
-    implementation(libs.ktorContentNegotiation)
+    implementation(commonLibs.ktorCore)
+    implementation(commonLibs.ktorAndroid)
+    implementation(commonLibs.ktorAuth)
+    implementation(commonLibs.ktorLogging)
+    implementation(commonLibs.ktorSerialization)
+    implementation(commonLibs.ktorJson)
+    implementation(commonLibs.ktorContentNegotiation)
 
-    implementation(libs.bundles.datastoreLibs)
-    implementation(libs.biometric)
+    implementation(commonLibs.bundles.datastoreLibs)
+    implementation(androidLibs.biometric)
 }
 
 enum class App {
