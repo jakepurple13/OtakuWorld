@@ -59,7 +59,7 @@ fun Project.configureAndroidBasePlugin() {
 
         dependencies {
             val coreLibraryDesugaring by configurations
-            coreLibraryDesugaring(libs.coreLibraryDesugaring)
+            coreLibraryDesugaring(androidLibs.coreLibraryDesugaring)
         }
     }
 }

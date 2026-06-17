@@ -17,16 +17,16 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             //implementation(projects.models)
-            implementation(libs.kotlinxSerialization)
-            implementation(libs.roomRuntime)
-            implementation(libs.roomPaging)
+            implementation(commonLibs.kotlinxSerialization)
+            implementation(commonLibs.roomRuntime)
+            implementation(commonLibs.roomPaging)
             implementation(projects.kmpmodels)
-            implementation(libs.kotlinx.datetime)
+            implementation(commonLibs.kotlinx.datetime)
         }
 
         jvmMain.dependencies {
-            implementation(libs.androidx.room.sqlite)
-            implementation(libs.kotlin.multiplatform.appdirs)
+            implementation(commonLibs.androidx.room.sqlite)
+            implementation(desktopLibs.kotlin.multiplatform.appdirs)
         }
 
         androidMain.dependencies {
@@ -36,7 +36,7 @@ kotlin {
 }
 
 dependencies {
-    add("ksp", libs.roomCompiler)
+    add("ksp", commonLibs.roomCompiler)
 }
 
 room3 {

@@ -21,27 +21,27 @@ android {
 }
 
 dependencies {
-    implementation(libs.material)
+    implementation(androidLibs.material)
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(androidx.preference.preferenceKtx)
-    implementation(platform(libs.firebasePlatform))
-    implementation(libs.bundles.firebaseCrashLibs)
+    implementation(platform(androidLibs.firebasePlatform))
+    implementation(androidLibs.bundles.firebaseCrashLibs)
     implementation(androidx.recyclerview.recyclerview)
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(libs.fileChooser)
-    implementation(libs.slideToAct)
+    implementation(androidLibs.fileChooser)
+    implementation(androidLibs.slideToAct)
 
     implementation(androidx.mediarouter.mediarouter)
 
     //Commenting out since it's no longer being worked on
     //implementation(libs.torrentStream)
 
-    implementation(libs.gson)
+    implementation(androidLibs.gson)
 
-    implementation(libs.iconicsCore)
+    implementation(androidLibs.iconicsCore)
     implementation(Deps.materialTypeface)
     implementation(Deps.fontawesomeTypeface)
 
@@ -50,33 +50,33 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
 
-    implementation(libs.bundles.roomLibs)
-    ksp(libs.roomCompiler)
+    implementation(commonLibs.bundles.roomLibs)
+    ksp(commonLibs.roomCompiler)
 
-    implementation(libs.autoBindings)
-    kapt(libs.autoBindingsCompiler)
+    implementation(androidLibs.autoBindings)
+    kapt(androidLibs.autoBindingsCompiler)
 
-    implementation(libs.castFramework)
-    implementation(libs.localCast)
+    implementation(androidLibs.castFramework)
+    implementation(androidLibs.localCast)
 
-    implementation(libs.glide)
-    ksp(libs.glideCompiler)
+    implementation(androidLibs.glide)
+    ksp(androidLibs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
-    implementation(libs.glideRecyclerview) { isTransitive = false }
+    implementation(androidLibs.glideRecyclerview) { isTransitive = false }
 
     //implementation(libs.superForwardView)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
-    val composeBom = platform(libs.composePlatform)
+    val composeBom = platform(androidLibs.composePlatform)
     implementation(composeBom)
-    implementation(libs.bundles.compose)
-    implementation(libs.coilVideo)
-    implementation(libs.composeViewBinding)
-    implementation(libs.bundles.datastoreLibs)
+    implementation(androidLibs.bundles.compose)
+    implementation(androidLibs.coilVideo)
+    implementation(androidLibs.composeViewBinding)
+    implementation(commonLibs.bundles.datastoreLibs)
 
-    implementation(libs.bundles.media3)
+    implementation(androidLibs.bundles.media3)
 
-    implementation(libs.ktorAndroid)
+    implementation(commonLibs.ktorAndroid)
 }

@@ -20,12 +20,12 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             //implementation(projects.models)
-            implementation(libs.kotlinxSerialization)
-            implementation(libs.bundles.datastoreLibs)
+            implementation(commonLibs.kotlinxSerialization)
+            implementation(commonLibs.bundles.datastoreLibs)
             //implementation(libs.composeRuntimeLivedata)
             implementation(compose.runtime)
-            implementation(libs.multiplatform.lifecycle.runtime.compose)
-            implementation("androidx.datastore:datastore-core-okio:${libs.versions.datastore.get()}")
+            implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
+            implementation(commonLibs.datastoreOkio)
             implementation(projects.datastore)
         }
     }

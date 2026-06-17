@@ -23,7 +23,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.material)
+    implementation(androidLibs.material)
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(androidx.swiperefreshlayout.swiperefreshlayout)
     implementation(androidx.recyclerview.recyclerview)
@@ -32,10 +32,10 @@ dependencies {
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-    implementation(platform(libs.firebasePlatform))
-    implementation(libs.bundles.firebaseCrashLibs)
+    implementation(platform(androidLibs.firebasePlatform))
+    implementation(androidLibs.bundles.firebaseCrashLibs)
 
-    implementation(libs.fileChooser)
+    implementation(androidLibs.fileChooser)
 
     implementation(projects.uiViews)
     implementation(projects.kmpmodels)
@@ -45,52 +45,52 @@ dependencies {
     implementation(projects.datastore.mangasettings)
     implementation(projects.mangaworld.shared)
 
-    implementation(libs.kamel.image)
-    implementation(libs.duktape)
-    implementation(libs.bundles.ziplineLibs)
-    implementation(libs.ktorAndroid)
+    implementation(commonLibs.kamel.image)
+    implementation(androidLibs.duktape)
+    implementation(androidLibs.bundles.ziplineLibs)
+    implementation(commonLibs.ktorAndroid)
 
-    implementation(libs.glide)
+    implementation(androidLibs.glide)
     //baselineProfile(projects.mangaWorldbaselineprofile)
-    ksp(libs.glideCompiler)
+    ksp(androidLibs.glideCompiler)
     // Excludes the support library because it"s already included by Glide.
-    implementation(libs.glideRecyclerview) { isTransitive = false }
+    implementation(androidLibs.glideRecyclerview) { isTransitive = false }
 
-    implementation(libs.bundles.piasyLibs)
-    implementation(libs.subsamplingImageView)
+    implementation(androidLibs.bundles.piasyLibs)
+    implementation(androidLibs.subsamplingImageView)
 
-    implementation(libs.iconicsCore)
+    implementation(androidLibs.iconicsCore)
     implementation(Deps.materialTypeface)
 
-    implementation(libs.coroutinesCore)
-    implementation(libs.coroutinesAndroid)
+    implementation(commonLibs.coroutinesCore)
+    implementation(androidLibs.coroutinesAndroid)
 
-    implementation(libs.bundles.roomLibs)
-    ksp(libs.roomCompiler)
+    implementation(commonLibs.bundles.roomLibs)
+    ksp(commonLibs.roomCompiler)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(platform(libs.composePlatform))
-    implementation(libs.bundles.compose)
-    implementation(libs.coilGif)
+    implementation(platform(androidLibs.composePlatform))
+    implementation(androidLibs.bundles.compose)
+    implementation(androidLibs.coilGif)
 
     implementation(androidx.datastore.datastore)
     implementation(androidx.datastore.datastorePreferences)
 
-    implementation(libs.glideCompose)
+    implementation(androidLibs.glideCompose)
 
-    implementation(libs.zoomableModifier)
+    implementation(commonLibs.zoomableModifier)
 
-    implementation(libs.pagecurl)
+    implementation(androidLibs.pagecurl)
 
-    implementation(libs.panpf.zoomimage.compose.glide)
+    implementation(androidLibs.panpf.zoomimage.compose.glide)
 
-    implementation(libs.telephoto.zoomable.image.glide)
+    implementation(androidLibs.telephoto.zoomable.image.glide)
 
-    implementation(libs.sonner)
+    implementation(commonLibs.sonner)
 
-    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(commonLibs.lifecycle.viewmodel.compose)
 
     //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }

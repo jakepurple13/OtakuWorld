@@ -39,27 +39,27 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinStLib)
-                implementation(libs.koog.agents)
-                implementation(libs.koog.agents.additions)
-                implementation(libs.koog.memory)
-                implementation(libs.compose.material3)
+                implementation(commonLibs.koog.agents)
+                implementation(commonLibs.koog.agents.additions)
+                implementation(commonLibs.koog.memory)
+                implementation(commonLibs.compose.material3)
                 //implementation(compose.material3)
-                implementation(libs.material.icons.extended)
-                implementation(libs.runtime)
-                implementation(libs.ui)
-                implementation(libs.cmp.ui.util)
-                implementation(libs.foundation)
-                implementation(libs.markdown.renderer)
-                implementation(project.dependencies.platform(libs.koin.bom))
-                implementation(libs.bundles.koinKmp)
+                implementation(commonLibs.material.icons.extended)
+                implementation(commonLibs.runtime)
+                implementation(commonLibs.ui)
+                implementation(commonLibs.cmp.ui.util)
+                implementation(commonLibs.foundation)
+                implementation(commonLibs.markdown.renderer)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.bundles.koinKmp)
                 implementation(projects.favoritesdatabase)
-                implementation(libs.kotlinx.datetime)
+                implementation(commonLibs.kotlinx.datetime)
             }
         }
 
         commonTest {
             dependencies {
-                implementation(libs.kotlin.test)
+                implementation(commonLibs.kotlin.test)
             }
         }
 

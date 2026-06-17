@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="dynamictranslation">
+    <output-path>$PROJECT_DIR$/kmpuiviews/koogintegration/dynamictranslation/build/libs</output-path>
+    <root id="archive" name="dynamictranslation.jar">
+      <element id="module-output" name="OtakuWorld.kmpuiviews.koogintegration.dynamictranslation.androidMain" />
+    </root>
+  </artifact>
+</component>

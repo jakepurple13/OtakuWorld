@@ -27,39 +27,39 @@ android {
 }
 
 dependencies {
-    implementation(libs.material)
+    implementation(androidLibs.material)
     testImplementation(TestDeps.junit)
     testImplementation("com.jakewharton.picnic:picnic:0.7.0")
     testImplementation("com.lordcodes.turtle:turtle:0.10.0")
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    noCloudFirebaseImplementation(libs.mlkitTranslate)
-    noCloudFirebaseImplementation(libs.mlkitLanguage)
-    noCloudFirebaseImplementation(libs.playServices)
-    noCloudFirebaseImplementation(libs.coroutinesPlayServices)
+    noCloudFirebaseImplementation(androidLibs.mlkitTranslate)
+    noCloudFirebaseImplementation(androidLibs.mlkitLanguage)
+    noCloudFirebaseImplementation(androidLibs.playServices)
+    noCloudFirebaseImplementation(androidLibs.coroutinesPlayServices)
 
-    fullImplementation(libs.mlkitTranslate)
-    fullImplementation(libs.mlkitLanguage)
-    fullImplementation(platform(libs.firebasePlatform))
-    fullImplementation(libs.firebaseDatabase)
-    fullImplementation(libs.firebaseFirestore)
-    fullImplementation(libs.firebaseAuth)
-    fullImplementation(libs.firebaseUiAuth)
-    fullImplementation(libs.playServices)
-    fullImplementation(libs.coroutinesPlayServices)
+    fullImplementation(androidLibs.mlkitTranslate)
+    fullImplementation(androidLibs.mlkitLanguage)
+    fullImplementation(platform(androidLibs.firebasePlatform))
+    fullImplementation(androidLibs.firebaseDatabase)
+    fullImplementation(androidLibs.firebaseFirestore)
+    fullImplementation(androidLibs.firebaseAuth)
+    fullImplementation(androidLibs.firebaseUiAuth)
+    fullImplementation(androidLibs.playServices)
+    fullImplementation(androidLibs.coroutinesPlayServices)
 
-    implementation(libs.coroutinesCore)
-    implementation(libs.coroutinesAndroid)
+    implementation(commonLibs.coroutinesCore)
+    implementation(androidLibs.coroutinesAndroid)
 
-    implementation(libs.bundles.ktorLibs)
+    implementation(commonLibs.bundles.ktorLibs)
 
     implementation(projects.models)
     implementation(projects.favoritesdatabase)
-    implementation(platform(libs.koin.bom))
-    implementation(libs.bundles.koinLibs)
+    implementation(platform(commonLibs.koin.bom))
+    implementation(androidLibs.bundles.koinLibs)
     implementation(Deps.jakepurple13Libs)
-    implementation(libs.uiUtil)
+    implementation(androidLibs.uiUtil)
 }
 
 fun DependencyHandlerScope.fullImplementation(item: Provider<MinimalExternalModuleDependency>) =

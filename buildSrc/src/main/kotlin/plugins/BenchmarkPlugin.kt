@@ -51,10 +51,10 @@ class BenchmarkPlugin : Plugin<Project> {
             }
 
             dependencies {
-                implementation(libs.junit.get())
-                implementation(libs.uiautomator.get())
-                implementation(libs.espresso.core.get())
-                implementation(libs.benchmark.macro.junit4.get())
+                implementation(androidLibs.findLibrary("junit").get())
+                implementation(androidLibs.findLibrary("uiautomator").get())
+                implementation(androidLibs.findLibrary("espresso-core").get())
+                implementation(androidLibs.findLibrary("benchmark-macro-junit4").get())
             }
         }
         extensions.findByType(BaselineProfileProducerExtension::class)?.apply {

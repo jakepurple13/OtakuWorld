@@ -1,0 +1,233 @@
+[versions]
+anthropicSdkKotlin = "0.32.5"
+androidx-lifecycle = "2.10.0"
+backdrop = "2.0.0"
+blurhash = "0.4.0-SNAPSHOT"
+cmpLifecycle = "2.11.0-beta02"
+cmp-nav3 = "1.2.0-alpha01"
+cmp-navevent = "1.1.0"
+cmp-nav3-material3 = "1.3.0-beta02"
+coil = "3.4.0"
+compose-multiplatform = "1.12.0-alpha02"
+composeWebviewMultiplatform = "2.0.3"
+compottie = "2.2.2"
+connectivity = "2.4.1"
+coroutinesVersion = "1.11.0"
+datastore = "1.3.0-alpha09"
+dragselect = "3.3.0"
+filekitCore = "0.14.1"
+foundation = "1.11.1"
+genericAi = "0.6.6"
+generativeaiGoogle = "0.9.0-1.1.0"
+haze = "2.0.0-alpha03"
+heatmap = "1.0.5"
+humanReadable = "1.12.3"
+kamelImage = "1.0.9"
+kfswatch = "1.4.0"
+koin-bom = "4.2.2"
+koog = "1.0.0"
+koog-beta = "1.0.0-beta"
+kotlinTest = "2.4.0"
+kotlinx-coroutines = "1.11.0"
+kotlinxDatetime = "0.8.0"
+kotzilla = "2.2.2"
+ktorVersion = "3.3.3"
+latestAboutLibsRelease = "14.2.1"
+lifecycleViewmodelNavigation3 = "2.10.0"
+markdown-renderer = "0.41.0"
+material3AdaptiveNavigationSuite = "1.10.0-alpha05"
+material3WindowSizeClassVersion = "1.10.0-alpha05"
+materialIconsExtended = "1.7.3"
+materialKolor = "5.0.0-alpha07"
+mokoBiometry = "0.4.0"
+nav3Material = "1.3.0-beta02"
+navigation3 = "1.2.0-alpha04"
+navigationevent = "1.1.1"
+pagingComposeCommon = "3.3.0-alpha02-0.5.1"
+qrose = "1.1.2"
+reorderable = "3.1.0"
+roomVersion = "3.0.0-alpha06"
+scanner = "0.7.1"
+sqlite = "2.6.2"
+urlencoderLib = "1.6.0"
+xemanticAiToolSchema = "1.2.0"
+kmpalette = "3.1.0"
+materialAdaptiveCmp = "1.2.0"
+
+[libraries]
+# About Libraries (KMP)
+aboutLibrariesCore = { module = "com.mikepenz:aboutlibraries-core", version.ref = "latestAboutLibsRelease" }
+aboutLibrariesCompose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "latestAboutLibsRelease" }
+
+# AI/LLM
+anthropic-sdk-kotlin = { module = "com.xemantic.ai:anthropic-sdk-kotlin", version.ref = "anthropicSdkKotlin" }
+generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" }
+generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
+koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref = "koog-beta" }
+koog-memory = { module = "ai.koog:agents-features-memory", version.ref = "koog" }
+xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
+
+# Coil (KMP)
+coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+
+# Compose Multiplatform
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
+foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
+runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+cmp-ui-util = { module = "org.jetbrains.compose.ui:ui-util", version.ref = "compose-multiplatform" }
+ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "compose-multiplatform" }
+material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+material3-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
+components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
+materialAdaptiveCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive", version.ref = "materialAdaptiveCmp" }
+materialAdaptiveLayoutCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-layout", version.ref = "materialAdaptiveCmp" }
+materialAdaptiveLayoutNavCmp = { group = "org.jetbrains.compose.material3.adaptive", name = "adaptive-navigation", version.ref = "materialAdaptiveCmp" }
+material3-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClassVersion" }
+
+# Connectivity
+connectivity-core = { module = "dev.jordond.connectivity:connectivity-core", version.ref = "connectivity" }
+connectivity-compose = { module = "dev.jordond.connectivity:connectivity-compose", version.ref = "connectivity" }
+connectivity-device = { module = "dev.jordond.connectivity:connectivity-device", version.ref = "connectivity" }
+connectivity-compose-device = { module = "dev.jordond.connectivity:connectivity-compose-device", version.ref = "connectivity" }
+connectivity-http = { module = "dev.jordond.connectivity:connectivity-http", version.ref = "connectivity" }
+connectivity-compose-http = { module = "dev.jordond.connectivity:connectivity-compose-http", version.ref = "connectivity" }
+
+# Coroutines
+coroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
+coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+
+# DataStore
+datastore = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
+datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+datastoreOkio = { module = "androidx.datastore:datastore-core-okio", version.ref = "datastore" }
+
+# FileKit
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekitCore" }
+
+# Haze
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
+haze-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
+
+# Kamel
+kamel-image = { module = "media.kamel:kamel-image-default", version.ref = "kamelImage" }
+kamel-decoder-animated-image = { module = "media.kamel:kamel-decoder-animated-image", version.ref = "kamelImage" }
+kamel-decoder-image-bitmap = { module = "media.kamel:kamel-decoder-image-bitmap", version.ref = "kamelImage" }
+kamel-decoder-image-bitmap-resizing = { module = "media.kamel:kamel-decoder-image-bitmap-resizing", version.ref = "kamelImage" }
+kamel-decoder-image-vector = { module = "media.kamel:kamel-decoder-image-vector", version.ref = "kamelImage" }
+kamel-decoder-svg-std = { module = "media.kamel:kamel-decoder-svg-std", version.ref = "kamelImage" }
+kamel-decoder-svg-batik = { module = "media.kamel:kamel-decoder-svg-batik", version.ref = "kamelImage" }
+
+# Kfswatch
+kfswatch = { module = "io.github.irgaly.kfswatch:kfswatch", version.ref = "kfswatch" }
+
+# Koin
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+koin-core = { module = "io.insert-koin:koin-core" }
+koinCores = { module = "io.insert-koin:koin-core" }
+koinComposeKmp = { module = "io.insert-koin:koin-compose" }
+koinViewModel = { module = "io.insert-koin:koin-compose-viewmodel" }
+koinViewModelNavigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation" }
+
+# Kotlinx
+kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+
+# Ktor
+ktorCore = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
+ktorMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorVersion" }
+ktorAuth = { module = "io.ktor:ktor-client-auth", version.ref = "ktorVersion" }
+ktorAndroid = { module = "io.ktor:ktor-client-android", version.ref = "ktorVersion" }
+ktorLogging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVersion" }
+ktorSerialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktorVersion" }
+ktorJson = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }
+ktorContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
+ktorOkHttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorVersion" }
+ktorGson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktorVersion" }
+ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.3.0"
+
+# Lifecycle KMP
+lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
+multiplatform-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+
+# Material
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+kmpalette-core = { module = "com.kmpalette:kmpalette-core", version.ref = "kmpalette" }
+
+# Moko
+moko-biometry = { module = "dev.icerock.moko:biometry", version.ref = "mokoBiometry" }
+moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }
+
+# Navigation KMP
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "nav3Material" }
+androidx-navigationevent = { module = "androidx.navigationevent:navigationevent", version.ref = "navigationevent" }
+androidx-navigationevent-compose = { module = "androidx.navigationevent:navigationevent-compose", version.ref = "navigationevent" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNavigation3" }
+cmp-navigation3-ui = { group = "org.jetbrains.androidx.navigation3", name = "navigation3-ui", version.ref = "cmp-nav3" }
+cmp-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "cmpLifecycle" }
+cmp-material3-adaptive-nav3 = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation3", version.ref = "cmp-nav3-material3" }
+cmp-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "cmp-navevent" }
+
+# Room KMP
+roomCompiler = { module = "androidx.room3:room3-compiler", version.ref = "roomVersion" }
+roomRuntime = { module = "androidx.room3:room3-runtime", version.ref = "roomVersion" }
+roomPaging = { module = "androidx.room3:room3-paging", version.ref = "roomVersion" }
+androidx-room-sqlite = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqlite" }
+
+# UI Polish
+backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
+blurhash = { module = "com.vanniktech:blurhash", version.ref = "blurhash" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
+compose-constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded-core" }
+constraintlayout-compose-multiplatform = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded" }
+compose-webview-multiplatform = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "composeWebviewMultiplatform" }
+dragselect = { module = "com.dragselectcompose:dragselect", version.ref = "dragselect" }
+heatmap = { module = "com.fleeys:heatmap", version.ref = "heatmap" }
+human-readable = { module = "nl.jacobras:Human-Readable", version.ref = "humanReadable" }
+kotzilla-sdk-compose = { group = "io.kotzilla", name = "kotzilla-sdk-compose", version.ref = "kotzilla" }
+markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
+paging-compose-common = { module = "app.cash.paging:paging-compose-common", version.ref = "pagingComposeCommon" }
+qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "scanner" }
+sonner = { module = "io.github.dokar3:sonner", version = "0.3.9" }
+urlencoder-lib = { module = "net.thauvin.erik.urlencoder:urlencoder-lib", version.ref = "urlencoderLib" }
+zoomableModifier = "net.engawapg.lib:zoomable:2.12.0"
+
+[bundles]
+datastoreLibs = ["datastore", "datastorePref"]
+kamel = [
+    "kamel-image",
+    "kamel-decoder-animated-image",
+    "kamel-decoder-image-bitmap",
+    "kamel-decoder-image-bitmap-resizing",
+    "kamel-decoder-image-vector",
+    "kamel-decoder-svg-batik",
+    "kamel-decoder-svg-std"
+]
+koinKmp = [
+    "koinCores",
+    "koinComposeKmp",
+    "koinViewModel",
+    "koinViewModelNavigation"
+]
+ktorLibs = [
+    "ktorCore",
+    "ktorAuth",
+    "ktorAndroid",
+    "ktorLogging",
+    "ktorSerialization",
+    "ktorJson",
+    "ktorContentNegotiation",
+    "ktorOkHttp",
+    "ktorGson",
+    "ktorJsoup"
+]
+roomLibs = ["roomRuntime"]

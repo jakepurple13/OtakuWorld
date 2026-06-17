@@ -46,172 +46,172 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinStLib)
-                implementation(libs.compose.material3)
+                implementation(commonLibs.compose.material3)
                 //implementation(compose.material3)
-                implementation(libs.material.icons.extended)
-                implementation(libs.runtime)
-                implementation(libs.ui)
-                implementation(libs.cmp.ui.util)
-                implementation(libs.foundation)
-                implementation(libs.material3.adaptive.navigation.suite)
-                implementation(libs.components.resources)
-                api(libs.ui.backhandler)
-                implementation(libs.material3.window.size)
-                api(libs.haze)
-                api(libs.haze.blur)
-                api(libs.haze.materials)
-                api(libs.backdrop)
-                implementation(libs.material.kolor)
-                api(libs.kamel.image)
-                api(libs.kamel.decoder.animated.image)
-                api(libs.kamel.decoder.image.bitmap)
-                api(libs.kamel.decoder.image.vector)
-                api(libs.kamel.decoder.svg.std)
-                api(libs.coilCompose)
-                api(libs.kotlinxSerialization)
-                api(libs.ktorCore)
-                implementation(libs.ktorAuth)
-                implementation(libs.ktorLogging)
-                implementation(libs.ktorSerialization)
-                implementation(libs.ktorJson)
-                implementation(libs.ktorContentNegotiation)
-                implementation(libs.coroutinesCore)
+                implementation(commonLibs.material.icons.extended)
+                implementation(commonLibs.runtime)
+                implementation(commonLibs.ui)
+                implementation(commonLibs.cmp.ui.util)
+                implementation(commonLibs.foundation)
+                implementation(commonLibs.material3.adaptive.navigation.suite)
+                implementation(commonLibs.components.resources)
+                api(commonLibs.ui.backhandler)
+                implementation(commonLibs.material3.window.size)
+                api(commonLibs.haze)
+                api(commonLibs.haze.blur)
+                api(commonLibs.haze.materials)
+                api(commonLibs.backdrop)
+                implementation(commonLibs.material.kolor)
+                api(commonLibs.kamel.image)
+                api(commonLibs.kamel.decoder.animated.image)
+                api(commonLibs.kamel.decoder.image.bitmap)
+                api(commonLibs.kamel.decoder.image.vector)
+                api(commonLibs.kamel.decoder.svg.std)
+                api(commonLibs.coilCompose)
+                api(commonLibs.kotlinxSerialization)
+                api(commonLibs.ktorCore)
+                implementation(commonLibs.ktorAuth)
+                implementation(commonLibs.ktorLogging)
+                implementation(commonLibs.ktorSerialization)
+                implementation(commonLibs.ktorJson)
+                implementation(commonLibs.ktorContentNegotiation)
+                implementation(commonLibs.coroutinesCore)
 
-                implementation(project.dependencies.platform(libs.koin.bom))
-                implementation(libs.bundles.koinKmp)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.bundles.koinKmp)
 
-                implementation(libs.kmpalette.core)
+                implementation(commonLibs.kmpalette.core)
 
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 api(projects.kmpmodels)
                 implementation(projects.sharedutils.kmpextensionloader)
-                implementation(libs.bundles.datastoreLibs)
+                implementation(commonLibs.bundles.datastoreLibs)
 
-                api(libs.kotlinx.datetime)
+                api(commonLibs.kotlinx.datetime)
 
-                implementation(libs.roomRuntime)
+                implementation(commonLibs.roomRuntime)
 
-                api(libs.compose.webview.multiplatform)
+                api(commonLibs.compose.webview.multiplatform)
 
-                implementation(libs.connectivity.core)
-                implementation(libs.connectivity.compose)
+                implementation(commonLibs.connectivity.core)
+                implementation(commonLibs.connectivity.compose)
 
-                api(libs.filekit.core)
-                implementation(libs.filekit.dialogs.compose)
+                api(commonLibs.filekit.core)
+                implementation(commonLibs.filekit.dialogs.compose)
 
-                implementation(libs.lifecycle.viewmodel.compose)
+                implementation(commonLibs.lifecycle.viewmodel.compose)
 
-                implementation(libs.aboutLibrariesCore)
-                implementation(libs.aboutLibrariesCompose)
+                implementation(commonLibs.aboutLibrariesCore)
+                implementation(commonLibs.aboutLibrariesCompose)
 
-                implementation(libs.sonner)
+                implementation(commonLibs.sonner)
 
-                implementation(libs.urlencoder.lib)
-                //implementation(libs.blurhash)
+                implementation(commonLibs.urlencoder.lib)
+                //implementation(commonLibs.blurhash)
 
-                implementation(libs.dragselect)
+                implementation(commonLibs.dragselect)
 
-                implementation(libs.compottie)
+                implementation(commonLibs.compottie)
 
-                implementation(libs.roomPaging)
+                implementation(commonLibs.roomPaging)
 
-                implementation(libs.constraintlayout.compose.multiplatform)
-                implementation(libs.compose.constraintlayout.compose.multiplatform)
+                implementation(commonLibs.constraintlayout.compose.multiplatform)
+                implementation(commonLibs.compose.constraintlayout.compose.multiplatform)
 
-                implementation(libs.qrose)
-                //implementation(libs.androidx.navigationevent)
-                //implementation(libs.androidx.navigationevent.compose)
-                implementation(libs.androidx.navigation3.runtime)
+                implementation(commonLibs.qrose)
+                //implementation(commonLibs.androidx.navigationevent)
+                //implementation(commonLibs.androidx.navigationevent.compose)
+                implementation(commonLibs.androidx.navigation3.runtime)
 
-                implementation(libs.scanner)
-                implementation(libs.multiplatform.lifecycle.runtime.compose)
+                implementation(commonLibs.scanner)
+                implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
 
-                implementation(libs.materialAdaptiveCmp)
-                implementation(libs.materialAdaptiveLayoutCmp)
-                implementation(libs.materialAdaptiveLayoutNavCmp)
+                implementation(commonLibs.materialAdaptiveCmp)
+                implementation(commonLibs.materialAdaptiveLayoutCmp)
+                implementation(commonLibs.materialAdaptiveLayoutNavCmp)
 
-                implementation(libs.reorderable)
+                implementation(commonLibs.reorderable)
 
-                implementation(libs.paging.compose.common)
+                implementation(commonLibs.paging.compose.common)
 
-                /*implementation(libs.androidx.navigation3.runtime)
-                implementation(libs.androidx.navigation3.ui)*/
+                /*implementation(commonLibs.androidx.navigation3.runtime)
+                implementation(commonLibs.androidx.navigation3.ui)*/
 
-                implementation(libs.generativeai.google)
-                implementation(libs.generic.ai)
-                implementation(libs.anthropic.sdk.kotlin)
-                implementation(libs.xemantic.ai.tool.schema)
+                implementation(commonLibs.generativeai.google)
+                implementation(commonLibs.generic.ai)
+                implementation(commonLibs.anthropic.sdk.kotlin)
+                implementation(commonLibs.xemantic.ai.tool.schema)
 
-                //implementation(libs.heatmap)
+                //implementation(commonLibs.heatmap)
 
-                implementation(libs.cmp.navigation3.ui)
-                implementation(libs.cmp.lifecycle.viewmodel.navigation3)
-                implementation(libs.cmp.navigationevent.compose)
-                implementation(libs.cmp.material3.adaptive.nav3)
+                implementation(commonLibs.cmp.navigation3.ui)
+                implementation(commonLibs.cmp.lifecycle.viewmodel.navigation3)
+                implementation(commonLibs.cmp.navigationevent.compose)
+                implementation(commonLibs.cmp.material3.adaptive.nav3)
             }
         }
 
         commonTest {
             dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.coroutinesTest)
+                implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
             }
         }
 
         androidMain {
             dependencies {
-                implementation(libs.heatmap)
-                implementation(libs.kamel.decoder.image.bitmap.resizing)
-                implementation(libs.kamel.decoder.svg.batik)
-                implementation(libs.ktorAndroid)
+                implementation(commonLibs.heatmap)
+                implementation(commonLibs.kamel.decoder.image.bitmap.resizing)
+                implementation(commonLibs.kamel.decoder.svg.batik)
+                implementation(commonLibs.ktorAndroid)
                 implementation(androidx.browser.browser)
-                implementation(libs.androidBrowserHelper)
-                implementation(project.dependencies.platform(libs.firebasePlatform))
-                implementation(libs.firebaseAuth)
-                implementation(libs.playServices)
-                implementation(libs.bundles.firebaseCrashLibs)
-                implementation(libs.drawablePainter)
-                implementation(libs.ackpine.core)
-                implementation(libs.ackpine.ktx)
-                implementation(libs.glideCompose)
-                implementation(libs.landscapist.bom)
-                implementation(libs.landscapistGlide)
-                implementation(libs.landscapistPalette)
-                implementation(libs.landscapistPlaceholder)
-                implementation(libs.zoomable.peek.overlay)
-                implementation(libs.barcode.scanning)
-                implementation(libs.biometric)
+                implementation(androidLibs.androidBrowserHelper)
+                implementation(project.dependencies.platform(androidLibs.firebasePlatform))
+                implementation(androidLibs.firebaseAuth)
+                implementation(androidLibs.playServices)
+                implementation(androidLibs.bundles.firebaseCrashLibs)
+                implementation(androidLibs.drawablePainter)
+                implementation(androidLibs.ackpine.core)
+                implementation(androidLibs.ackpine.ktx)
+                implementation(androidLibs.glideCompose)
+                implementation(androidLibs.landscapist.bom)
+                implementation(androidLibs.landscapistGlide)
+                implementation(androidLibs.landscapistPalette)
+                implementation(androidLibs.landscapistPlaceholder)
+                implementation(androidLibs.zoomable.peek.overlay)
+                implementation(androidLibs.barcode.scanning)
+                implementation(androidLibs.biometric)
                 implementation(androidx.activity.activityKtx)
-                implementation(libs.lazyColumnScrollbar)
-                implementation(libs.workRuntime)
-                implementation(libs.koin.workmanager)
+                implementation(androidLibs.lazyColumnScrollbar)
+                implementation(androidLibs.workRuntime)
+                implementation(androidLibs.koin.workmanager)
                 implementation(androidx.paging.pagingCompose)
             }
         }
 
         iosMain {
             dependencies {
-                implementation(libs.moko.biometry)
-                implementation(libs.moko.biometry.compose)
+                implementation(commonLibs.moko.biometry)
+                implementation(commonLibs.moko.biometry.compose)
             }
         }
 
         jvmMain {
             dependencies {
-                implementation(libs.heatmap)
-                implementation(libs.core)
-                implementation(libs.javase)
-                implementation(libs.knotify)
-                implementation(libs.kotlinx.coroutines.swing)
-                api(libs.kotlin.multiplatform.appdirs)
-                api(libs.kfswatch)
-                implementation(libs.nucleus.system.color)
-                api(libs.github.nucleus.scheduler)
-                api(libs.github.nucleus.scheduler.testing)
-                api(libs.github.nucleus.taskbar.progress)
-                api(libs.github.nucleus.notifications.common)
-                api(libs.nucleus.system.info)
+                implementation(commonLibs.heatmap)
+                implementation(desktopLibs.core)
+                implementation(desktopLibs.javase)
+                implementation(desktopLibs.knotify)
+                implementation(desktopLibs.kotlinx.coroutines.swing)
+                api(desktopLibs.kotlin.multiplatform.appdirs)
+                api(desktopLibs.kfswatch)
+                implementation(desktopLibs.nucleus.system.color)
+                api(desktopLibs.github.nucleus.scheduler)
+                api(desktopLibs.github.nucleus.scheduler.testing)
+                api(desktopLibs.github.nucleus.taskbar.progress)
+                api(desktopLibs.github.nucleus.notifications.common)
+                api(desktopLibs.nucleus.system.info)
                 //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
             }
         }
@@ -221,8 +221,8 @@ kotlin {
             androidMain.get().dependsOn(this)
             iosMain.get().dependsOn(this)
             dependencies {
-                implementation(libs.connectivity.device)
-                implementation(libs.connectivity.compose.device)
+                implementation(commonLibs.connectivity.device)
+                implementation(commonLibs.connectivity.compose.device)
             }
         }
 
@@ -230,8 +230,8 @@ kotlin {
             dependsOn(commonMain.get())
             jvmMain.get().dependsOn(this)
             dependencies {
-                implementation(libs.connectivity.http)
-                implementation(libs.connectivity.compose.http)
+                implementation(commonLibs.connectivity.http)
+                implementation(commonLibs.connectivity.compose.http)
             }
         }
 

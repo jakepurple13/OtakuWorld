@@ -5,11 +5,11 @@ plugins {
 otakuDependencies {
     commonDependencies {
         implementation(compose.dependencies.runtime)
-        api(libs.kamel.image)
+        api(commonLibs.kamel.image)
     }
 
     androidDependencies {
-        api(libs.ktorAndroid)
+        api(commonLibs.ktorAndroid)
     }
 }
 

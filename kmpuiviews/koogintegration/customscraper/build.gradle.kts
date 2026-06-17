@@ -20,41 +20,41 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinStLib)
-                implementation(libs.kotlinxSerialization)
-                implementation(libs.ktorCore)
-                implementation(libs.koog.agents)
-                implementation(libs.roomRuntime)
-                implementation(libs.roomPaging)
-                implementation(project.dependencies.platform(libs.koin.bom))
-                implementation(libs.bundles.koinKmp)
-                implementation(libs.compose.material3)
-                implementation(libs.material.icons.extended)
-                implementation(libs.runtime)
-                implementation(libs.ui)
-                implementation(libs.cmp.ui.util)
-                implementation(libs.foundation)
+                implementation(commonLibs.kotlinxSerialization)
+                implementation(commonLibs.ktorCore)
+                implementation(commonLibs.koog.agents)
+                implementation(commonLibs.roomRuntime)
+                implementation(commonLibs.roomPaging)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.bundles.koinKmp)
+                implementation(commonLibs.compose.material3)
+                implementation(commonLibs.material.icons.extended)
+                implementation(commonLibs.runtime)
+                implementation(commonLibs.ui)
+                implementation(commonLibs.cmp.ui.util)
+                implementation(commonLibs.foundation)
             }
         }
 
         commonTest {
             dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.ktorMock)
-                implementation(libs.coroutinesTest)
+                implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.ktorMock)
+                implementation(commonLibs.coroutinesTest)
             }
         }
 
         androidMain {
             dependencies {
                 // Android Ktor engine (OkHttp-based, optimized for Android)
-                implementation(libs.ktorAndroid)
+                implementation(commonLibs.ktorAndroid)
             }
         }
 
         jvmMain {
             dependencies {
                 // OkHttp engine — works cross-platform on JVM; no CIO in catalog
-                implementation(libs.ktorOkHttp)
+                implementation(commonLibs.ktorOkHttp)
                 //implementation("com.microsoft.playwright:playwright:1.60.0")
             }
         }
@@ -62,7 +62,7 @@ kotlin {
 }
 
 dependencies {
-    add("ksp", libs.roomCompiler)
+    add("ksp", commonLibs.roomCompiler)
 }
 
 room3 {

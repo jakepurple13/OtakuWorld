@@ -1,0 +1,11 @@
+[versions]
+# iOS-specific versions go here
+
+[libraries]
+# iOS-specific libraries go here
+
+[bundles]
+# iOS-specific bundles go here
+
+[plugins]
+# iOS-specific plugins go here

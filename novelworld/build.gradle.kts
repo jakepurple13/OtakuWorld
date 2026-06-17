@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.material)
+    implementation(androidLibs.material)
     implementation(androidx.preference.preference)
     implementation(androidx.recyclerview.recyclerview)
     implementation(androidx.constraintlayout.constraintlayout)
@@ -28,7 +28,7 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(libs.iconicsCore)
+    implementation(androidLibs.iconicsCore)
     implementation(Deps.materialTypeface)
 
     implementation(projects.uiViews)
@@ -36,14 +36,14 @@ dependencies {
     implementation(projects.favoritesdatabase)
     implementation(projects.sharedutils)
 
-    implementation(libs.bundles.roomLibs)
-    ksp(libs.roomCompiler)
+    implementation(commonLibs.bundles.roomLibs)
+    ksp(commonLibs.roomCompiler)
 
-    implementation(platform(libs.firebasePlatform))
-    implementation(libs.bundles.firebaseCrashLibs)
-    val composeBom = platform(libs.composePlatform)
+    implementation(platform(androidLibs.firebasePlatform))
+    implementation(androidLibs.bundles.firebaseCrashLibs)
+    val composeBom = platform(androidLibs.composePlatform)
     implementation(composeBom)
-    implementation(libs.bundles.compose)
+    implementation(androidLibs.bundles.compose)
 
     implementation(androidx.datastore.datastore)
     implementation(androidx.datastore.datastorePreferences)
@@ -51,7 +51,7 @@ dependencies {
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    implementation(libs.ktorAndroid)
+    implementation(commonLibs.ktorAndroid)
 
     implementation(projects.novelworld.shared)
 }
