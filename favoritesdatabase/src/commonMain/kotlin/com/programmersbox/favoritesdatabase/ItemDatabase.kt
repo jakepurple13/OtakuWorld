@@ -44,10 +44,10 @@ abstract class ItemDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATION_6_7 = object : Migration(6, 7) {
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
             override suspend fun migrate(connection: SQLiteConnection) {
                 listOf("FavoriteItem", "ChapterWatched", "Notifications", "SourceOrder", "IncognitoSourceTable").forEach { table ->
-                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT DEFAULT NULL")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT DEFAULT ''")
                     connection.execSQL("ALTER TABLE `$table` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
                     connection.execSQL("ALTER TABLE `$table` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
                     connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
