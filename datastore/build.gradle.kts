@@ -20,14 +20,14 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             //implementation(projects.models)
-            implementation(libs.kotlinxSerialization)
-            implementation(libs.bundles.datastoreLibs)
+            implementation(commonLibs.kotlinxSerialization)
+            implementation(commonLibs.bundles.datastoreLibs)
             //implementation(libs.composeRuntimeLivedata)
             implementation(compose.runtime)
-            implementation(libs.multiplatform.lifecycle.runtime.compose)
-            implementation(libs.datastoreOkio)
-            implementation(libs.material.kolor)
-            implementation(libs.kmpalette.core)
+            implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
+            implementation(commonLibs.datastoreOkio)
+            implementation(commonLibs.material.kolor)
+            implementation(commonLibs.kmpalette.core)
         }
     }
 }

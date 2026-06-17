@@ -16,17 +16,17 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlinStLib)
-                implementation(libs.coroutinesCore)
-                implementation(libs.kotlinxSerialization)
-                implementation(project.dependencies.platform(libs.koin.bom))
-                implementation(libs.koinCores)
+                implementation(commonLibs.coroutinesCore)
+                implementation(commonLibs.kotlinxSerialization)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.koinCores)
                 // Add KMP dependencies here
             }
         }
 
         commonTest {
             dependencies {
-                implementation(libs.kotlin.test)
+                implementation(commonLibs.kotlin.test)
             }
         }
 
