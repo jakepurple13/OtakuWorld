@@ -30,7 +30,7 @@ import kotlin.uuid.Uuid
 
 @Database(
     entities = [CustomListItem::class, CustomListInfo::class],
-    version = 11,
+    version = 12,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 7),
@@ -82,12 +82,25 @@ abstract class ListDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                listOf("CustomListItem", "CustomListInfo").forEach { table ->
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT NOT NULL DEFAULT ''")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_dirty` INTEGER NOT NULL DEFAULT 1")
+                }
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): ListDatabase = databaseBuilder
             .build<ListDatabase>("list.db")
             .fallbackToDestructiveMigration(true)
             .addMigrations(
                 MIGRATION_8_9,
-                MIGRATION_9_10
+                MIGRATION_9_10,
+                MIGRATION_11_12
             )
             .build()
     }
@@ -199,6 +212,11 @@ data class CustomListItem(
     val useBiometric: Boolean = false,
     @ColumnInfo(name = "description", defaultValue = "")
     val description: String = "",
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )
 
 @OptIn(ExperimentalUuidApi::class)
@@ -220,4 +238,9 @@ data class CustomListInfo(
     val imageUrl: String,
     @ColumnInfo(name = "sources")
     val source: String,
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )

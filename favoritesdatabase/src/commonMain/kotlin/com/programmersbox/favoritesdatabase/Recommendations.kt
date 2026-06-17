@@ -12,6 +12,9 @@ import androidx.room3.Query
 import androidx.room3.RoomDatabase
 import androidx.room3.TypeConverter
 import androidx.room3.TypeConverters
+import androidx.room3.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -19,15 +22,27 @@ import kotlinx.serialization.json.Json
 @TypeConverters(Converters::class)
 @Database(
     entities = [Recommendation::class],
-    version = 1,
+    version = 2,
 )
 abstract class RecommendationDatabase : RoomDatabase() {
 
     abstract fun recommendationDao(): RecommendationDao
 
     companion object {
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("ALTER TABLE `Recommendation` ADD COLUMN `supabase_id` TEXT NOT NULL DEFAULT ''")
+                connection.execSQL("ALTER TABLE `Recommendation` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `Recommendation` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `Recommendation` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `Recommendation` ADD COLUMN `is_dirty` INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): RecommendationDatabase = databaseBuilder
             .build<RecommendationDatabase>("recommendations.db")
+            .addMigrations(MIGRATION_1_2)
             .build()
     }
 }
@@ -73,4 +88,9 @@ data class Recommendation(
     val reason: String,
     @ColumnInfo("genre")
     val genre: List<String>,
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )
