@@ -13,9 +13,9 @@ dependencies {
     androidTestImplementation(TestDeps.androidEspresso)
 
     //Coroutines
-    implementation(libs.coroutinesCore)
-    implementation(libs.coroutinesAndroid)
+    implementation(commonLibs.coroutinesCore)
+    implementation(androidLibs.coroutinesAndroid)
 
-    implementation(libs.bundles.ktorLibs)
-    implementation(libs.kotlinxSerialization)
+    implementation(commonLibs.bundles.ktorLibs)
+    implementation(commonLibs.kotlinxSerialization)
 }

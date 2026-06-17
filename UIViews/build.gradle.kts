@@ -45,13 +45,13 @@ dependencies {
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
 
-    implementation(platform(libs.firebasePlatform))
-    implementation(libs.firebaseAuth)
-    implementation(libs.playServices)
-    implementation(libs.bundles.firebaseCrashLibs)
+    implementation(platform(androidLibs.firebasePlatform))
+    implementation(androidLibs.firebaseAuth)
+    implementation(androidLibs.playServices)
+    implementation(androidLibs.bundles.firebaseCrashLibs)
 
-    api(platform(libs.koin.bom))
-    api(libs.bundles.koinLibs)
+    api(platform(commonLibs.koin.bom))
+    api(androidLibs.bundles.koinLibs)
 
     implementation(projects.kmpmodels)
     implementation(projects.models)
@@ -64,8 +64,8 @@ dependencies {
     api(projects.sharedutils.kmpextensionloader)
 
     implementation(androidx.constraintlayout.constraintlayout)
-    implementation(libs.coroutinesCore)
-    implementation(libs.coroutinesAndroid)
+    implementation(commonLibs.coroutinesCore)
+    implementation(androidLibs.coroutinesAndroid)
     implementation(androidx.fragment.fragmentKtx)
     implementation(androidx.lifecycle.lifecycleExtensions)
     implementation(androidx.lifecycle.lifecycleRuntimeKtx)
@@ -76,77 +76,77 @@ dependencies {
     implementation(Deps.materialTypeface)
     implementation(Deps.fontawesomeTypeface)
 
-    implementation(libs.gson)
+    implementation(androidLibs.gson)
 
-    implementation(libs.recyclerview)
+    implementation(androidLibs.recyclerview)
     //implementation(libs.palette)
-    implementation(libs.bundles.roomLibs)
+    implementation(commonLibs.bundles.roomLibs)
 
-    implementation(libs.glide)
-    ksp(libs.glideCompiler)
+    implementation(androidLibs.glide)
+    ksp(androidLibs.glideCompiler)
 
     // Excludes the support library because it"s already included by Glide.
-    implementation(libs.glideRecyclerview) { isTransitive = false }
+    implementation(androidLibs.glideRecyclerview) { isTransitive = false }
 
-    api(libs.workRuntime)
+    api(androidLibs.workRuntime)
 
-    implementation(libs.kotlinxSerialization)
+    implementation(commonLibs.kotlinxSerialization)
 
     //Custom Libraries
     implementation(Deps.jakepurple13Libs)
 
-    val composeBom = platform(libs.composePlatform)
+    val composeBom = platform(androidLibs.composePlatform)
     implementation(composeBom)
-    implementation(libs.bundles.compose)
-    implementation(libs.adaptive)
-    implementation(libs.bundles.datastoreLibs)
+    implementation(androidLibs.bundles.compose)
+    implementation(androidLibs.adaptive)
+    implementation(commonLibs.bundles.datastoreLibs)
 
-    implementation(libs.bundles.ktorLibs)
+    implementation(commonLibs.bundles.ktorLibs)
 
     implementation(androidx.activity.activityKtx)
 
     //Multiplatform
     //implementation(projects.imageloader)
-    api(libs.bundles.kamel)
+    api(commonLibs.bundles.kamel)
 
-    api(libs.haze)
-    api(libs.haze.blur)
-    api(libs.haze.materials)
+    api(commonLibs.haze)
+    api(commonLibs.haze.blur)
+    api(commonLibs.haze.materials)
 
-    implementation(libs.compose.collapsable)
+    implementation(androidLibs.composeCollapsable)
 
     //implementation(libs.material.adaptive.navigation.suite)
-    implementation(libs.materialAdaptive)
-    implementation(libs.adaptive.layout.android)
-    implementation(libs.adaptive.navigation.android)
+    implementation(androidLibs.materialAdaptive)
+    implementation(androidLibs.adaptive.layout.android)
+    implementation(androidLibs.adaptive.navigation.android)
 
-    implementation(libs.glideCompose)
+    implementation(androidLibs.glideCompose)
 
-    implementation(libs.material.kolor)
+    implementation(commonLibs.material.kolor)
 
     //implementation(libs.blurhash)
 
     //implementation(projects.gemini)
 
-    debugImplementation(libs.workinspector)
+    debugImplementation(androidLibs.workinspector)
 
     //implementation(libs.bundles.xr)
 
     //TODO: Use this to check recomposition count on every screen
     //implementation("io.github.theapache64:rebugger:1.0.0-rc03")
 
-    implementation(libs.kotlinx.datetime)
+    implementation(commonLibs.kotlinx.datetime)
 
-    implementation(libs.androidx.core.performance)
+    implementation(androidLibs.androidx.core.performance)
 
-    implementation(libs.filekit.core)
-    implementation(libs.filekit.dialogs.compose)
+    implementation(commonLibs.filekit.core)
+    implementation(commonLibs.filekit.dialogs.compose)
 
-    api(libs.androidx.navigation3.runtime)
-    api(libs.androidx.navigation3.ui)
-    api(libs.androidx.material3.navigation3)
-    api(libs.androidx.lifecycle.viewmodel.navigation3)
-    implementation(libs.androidx.activity.ktx)
-    implementation(libs.composeActivity)
-    implementation(libs.androidx.activity)
+    api(commonLibs.androidx.navigation3.runtime)
+    api(commonLibs.androidx.navigation3.ui)
+    api(commonLibs.androidx.material3.navigation3)
+    api(commonLibs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(androidLibs.androidx.activity.ktx)
+    implementation(androidLibs.composeActivity)
+    implementation(androidLibs.androidx.activity)
 }
