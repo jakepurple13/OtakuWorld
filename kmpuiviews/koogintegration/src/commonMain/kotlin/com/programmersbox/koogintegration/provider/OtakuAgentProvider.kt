@@ -7,6 +7,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.structuredOutputWithToolsStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.message.Message
@@ -16,6 +17,7 @@ import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.kmpuiviews.koogintegration.BuildKonfig
 import com.programmersbox.koogintegration.AgentMaker
 import com.programmersbox.koogintegration.MathTools
 import com.programmersbox.koogintegration.SystemPrompts
@@ -81,6 +83,20 @@ class OtakuAgentProvider(
                     onExecutionTraceEvent = onExecutionTraceEvent,
                     onLLMCallCompleted = onLLMCallCompleted
                 )
+            }
+
+            val langfuseSecretKey = BuildKonfig.LANG_FUSE_SECRET_KEY
+            val langfusePublicKey = BuildKonfig.LANG_FUSE_PUBLIC_KEY
+            val langfuseUrl = BuildKonfig.LANG_FUSE_URL
+
+            if (langfuseUrl != null && langfuseSecretKey != null && langfusePublicKey != null) {
+                install(OpenTelemetry) {
+                    addLangfuseExporter(
+                        langfuseSecretKey = langfuseSecretKey,
+                        langfusePublicKey = langfusePublicKey,
+                        langfuseUrl = langfuseUrl,
+                    )
+                }
             }
 
             install(ChatMemory) {

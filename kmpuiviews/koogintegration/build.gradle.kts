@@ -1,9 +1,14 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     `otaku-multiplatform-no-ios`
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.buildKonfig)
 }
 
 otakuDependencies {
@@ -78,5 +83,40 @@ kotlin {
                 // KMP dependencies declared in commonMain.
             }
         }
+    }
+}
+
+buildkonfig {
+    packageName = "com.programmersbox.kmpuiviews.koogintegration"
+
+    // Initialize properties object
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    }
+
+    defaultConfigs {
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            name = "LANG_FUSE_SECRET_KEY",
+            value = localProperties.getProperty("langfuseSecretKey"),
+            nullable = true
+        )
+
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            name = "LANG_FUSE_PUBLIC_KEY",
+            value = localProperties.getProperty("langfusePublicKey"),
+            nullable = true
+        )
+
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            name = "LANG_FUSE_URL",
+            value = localProperties.getProperty("langfuseUrl"),
+            nullable = true
+        )
     }
 }
