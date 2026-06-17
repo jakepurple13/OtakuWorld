@@ -104,6 +104,12 @@ class GenericMangaDesktop(
                 )
             )
         }
+
+        /*navGraph.entry<CustomScraper> {
+            CustomScraperScreen(
+                onBack = { navigationActions.popBackStack() }
+            )
+        }*/
     }
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -126,6 +132,12 @@ class GenericMangaDesktop(
                     leadingContent = { Icon(Icons.Default.Bolt, null) },
                     onClick = { navigationActions.navigate(Koog) }
                 )
+
+                /*segmentedListItem(
+                    content = { Text("Custom Scraper") },
+                    leadingContent = { Icon(Icons.Default.Bolt, null) },
+                    onClick = { navigationActions.navigate(CustomScraper) }
+                )*/
             }
             generalSettings = compose.generalSettings
             onboardingSettings = compose.onboardingSettings
@@ -139,3 +151,6 @@ data object KoogSettings : NavKey
 
 @Serializable
 data object Koog : NavKey
+
+@Serializable
+data object CustomScraper : NavKey

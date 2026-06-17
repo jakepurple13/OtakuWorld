@@ -1,6 +1,10 @@
 plugins {
     `otaku-multiplatform-no-ios`
     id("kotlinx-serialization")
+    alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.compose.compiler)
 }
 
 otakuDependencies {
@@ -19,6 +23,16 @@ kotlin {
                 implementation(libs.kotlinxSerialization)
                 implementation(libs.ktorCore)
                 implementation(libs.koog.agents)
+                implementation(libs.roomRuntime)
+                implementation(libs.roomPaging)
+                implementation(project.dependencies.platform(libs.koin.bom))
+                implementation(libs.bundles.koinKmp)
+                implementation(libs.compose.material3)
+                implementation(libs.material.icons.extended)
+                implementation(libs.runtime)
+                implementation(libs.ui)
+                implementation(libs.cmp.ui.util)
+                implementation(libs.foundation)
             }
         }
 
@@ -45,4 +59,12 @@ kotlin {
             }
         }
     }
+}
+
+dependencies {
+    add("ksp", libs.roomCompiler)
+}
+
+room3 {
+    schemaDirectory("$projectDir/schemas")
 }

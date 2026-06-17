@@ -74,13 +74,6 @@ internal class LlmMediaExtractor(
         return chapterAgent.run(instructions, "scraper-chap-${sanitizedHtml.hashCode().toString(36)}")
     }
 
-    //TODO: Maybe database or new source of dynamically webscraped sources. We save the url, cover image, and name.
-    // If we go to see it, we must include refresh options since it could fail.
-    // Also refresh for cover image, chapter list, etc.
-    // MAYBE also look into a fine tuned model?
-    // Maybe a pure local model?
-    // Maybe give the user a choice on local or cloud.
-    // Might be a thing to not do the chapter extract? Maybe give the option?
     suspend fun extractDetails(sanitizedHtml: String): ScraperResult {
         val instructions = """
             Extract the title, description, cover image URL, chapters, and genres from the content below.

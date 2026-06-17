@@ -1,6 +1,6 @@
 package com.programmersbox.koogintegration.customscraper.scraper
 
-object HtmlSanitizer {
+internal object HtmlSanitizer {
 
     // Script blocks are kept only if they contain one of these media URL patterns.
     private val mediaUrlPatterns = listOf(".mp4", ".m3u8", ".jpg", ".jpeg", ".png", ".webp", ".gif")
