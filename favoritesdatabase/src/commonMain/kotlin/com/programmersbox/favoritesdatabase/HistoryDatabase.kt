@@ -13,7 +13,10 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
+import androidx.room3.migration.Migration
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -21,7 +24,7 @@ import kotlin.time.ExperimentalTime
 
 @Database(
     entities = [HistoryItem::class, RecentModel::class],
-    version = 2,
+    version = 3,
     autoMigrations = [
         AutoMigration(from = 1, to = 2)
     ]
@@ -31,8 +34,22 @@ abstract class HistoryDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
 
     companion object {
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                listOf("History", "RecentlyViewed").forEach { table ->
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `supabase_id` TEXT DEFAULT ''")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
+                    connection.execSQL("ALTER TABLE `$table` ADD COLUMN `is_dirty` INTEGER NOT NULL DEFAULT 1")
+                }
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): HistoryDatabase = databaseBuilder
             .build<HistoryDatabase>("history.db")
+            .addMigrations(MIGRATION_2_3)
             .build()
     }
 
@@ -90,7 +107,12 @@ data class HistoryItem(
     val time: Long,
     @PrimaryKey
     @ColumnInfo(name = "search_text")
-    val searchText: String
+    val searchText: String,
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )
 
 @Serializable
@@ -109,4 +131,9 @@ data class RecentModel @OptIn(ExperimentalTime::class) constructor(
     val source: String,
     @ColumnInfo(name = "timestamp")
     val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )
