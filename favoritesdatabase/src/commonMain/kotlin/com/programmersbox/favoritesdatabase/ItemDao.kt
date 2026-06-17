@@ -182,4 +182,24 @@ interface ItemDao {
 
     @Query("UPDATE IncognitoSourceTable SET isIncognito = :isIncognito WHERE source = :source")
     suspend fun updateIncognitoSource(source: String, isIncognito: Boolean)
+
+    // Supabase sync helpers
+
+    @Query("SELECT * FROM FavoriteItem WHERE is_dirty = 1")
+    suspend fun getDirtyFavorites(): List<DbModel>
+
+    @Query("SELECT * FROM FavoriteItem WHERE url = :url")
+    suspend fun getFavoriteByUrl(url: String): DbModel?
+
+    @Update
+    suspend fun updateFavorite(model: DbModel)
+
+    @Query("SELECT * FROM ChapterWatched WHERE is_dirty = 1")
+    suspend fun getDirtyChapters(): List<ChapterWatched>
+
+    @Query("SELECT * FROM ChapterWatched WHERE url = :url")
+    suspend fun getChapterByUrl(url: String): ChapterWatched?
+
+    @Update
+    suspend fun updateChapterWatched(model: ChapterWatched)
 }
