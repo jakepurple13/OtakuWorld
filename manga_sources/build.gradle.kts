@@ -16,20 +16,20 @@ dependencies {
     // required if you want to use Mockito for Android tests
     androidTestImplementation(TestDeps.mockitoAndroid)
 
-    implementation(libs.bundles.okHttpLibs)
-    implementation(libs.coroutinesCore)
-    implementation(libs.jsoup)
-    implementation(libs.duktape)
-    implementation(libs.bundles.ziplineLibs)
-    implementation(libs.gson)
-    implementation(libs.kotson)
+    implementation(androidLibs.bundles.okHttpLibs)
+    implementation(commonLibs.coroutinesCore)
+    implementation(androidLibs.jsoup)
+    implementation(androidLibs.duktape)
+    implementation(androidLibs.bundles.ziplineLibs)
+    implementation(androidLibs.gson)
+    implementation(androidLibs.kotson)
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
-    implementation(libs.kotlinxSerialization)
-    implementation(libs.androidxWebkit)
+    implementation(commonLibs.kotlinxSerialization)
+    implementation(androidLibs.androidxWebkit)
 
-    implementation(libs.uiUtil)
+    implementation(androidLibs.uiUtil)
 
     implementation(projects.models)
     api(projects.sourceUtilities)
@@ -38,6 +38,6 @@ dependencies {
         exclude("org.json", "json")
     }
 
-    implementation(libs.bundles.koinLibs)
-    implementation(libs.bundles.ktorLibs)
+    implementation(androidLibs.bundles.koinLibs)
+    implementation(commonLibs.bundles.ktorLibs)
 }

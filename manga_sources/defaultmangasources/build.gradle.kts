@@ -23,21 +23,21 @@ dependencies {
     testImplementation(TestDeps.junit)
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-    implementation(libs.bundles.okHttpLibs)
+    implementation(androidLibs.bundles.okHttpLibs)
 
-    implementation(libs.coroutinesCore)
+    implementation(commonLibs.coroutinesCore)
 
     implementation(Deps.gsonutils)
     implementation(Deps.helpfulutils)
     debugImplementation(Deps.loggingutils)
-    implementation(libs.gson)
+    implementation(androidLibs.gson)
 
-    implementation(libs.jsoup)
+    implementation(androidLibs.jsoup)
 
     implementation(projects.models)
     implementation(projects.mangaSources)
     api(projects.sourceUtilities)
-    implementation(libs.bundles.ktorLibs)
+    implementation(commonLibs.bundles.ktorLibs)
 
-    implementation(libs.bundles.koinLibs)
+    implementation(androidLibs.bundles.koinLibs)
 }
