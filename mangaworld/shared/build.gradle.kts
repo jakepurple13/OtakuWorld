@@ -19,7 +19,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinStLib)
             implementation(projects.kmpuiviews)
-            implementation(libs.compose.material3)
+            implementation(commonLibs.compose.material3)
             //implementation(compose.material3)
             implementation(compose.materialIconsExtended)
             implementation(compose.runtime)
@@ -28,39 +28,39 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3AdaptiveNavigationSuite)
             implementation(compose.components.resources)
-            implementation(libs.material.kolor)
+            implementation(commonLibs.material.kolor)
 
-            implementation(project.dependencies.platform(libs.koin.bom))
-            implementation(libs.bundles.koinKmp)
+            implementation(project.dependencies.platform(commonLibs.koin.bom))
+            implementation(commonLibs.bundles.koinKmp)
 
             implementation(projects.favoritesdatabase)
             implementation(projects.datastore)
             implementation(projects.datastore.mangasettings)
             implementation(projects.kmpmodels)
-            implementation(libs.bundles.datastoreLibs)
+            implementation(commonLibs.bundles.datastoreLibs)
 
-            implementation(libs.androidx.navigation3.runtime)
-            implementation(libs.multiplatform.lifecycle.runtime.compose)
+            implementation(commonLibs.androidx.navigation3.runtime)
+            implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
 
-            implementation(libs.zoomableModifier)
-            implementation(libs.coilCompose)
+            implementation(commonLibs.zoomableModifier)
+            implementation(commonLibs.coilCompose)
         }
 
         androidMain.dependencies {
-            implementation(libs.panpf.zoomimage.compose.glide)
-            implementation(libs.telephoto.zoomable.image.glide)
-            implementation(libs.workRuntime)
+            implementation(androidLibs.panpf.zoomimage.compose.glide)
+            implementation(androidLibs.telephoto.zoomable.image.glide)
+            implementation(androidLibs.workRuntime)
         }
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
+            implementation(desktopLibs.kotlinx.coroutines.swing)
         }
 
         jvmTest.dependencies {
             implementation(kotlin("test"))
-            implementation(libs.coroutinesTest)
-            implementation(libs.ktorMock)
+            implementation(commonLibs.coroutinesTest)
+            implementation(commonLibs.ktorMock)
         }
     }
 }
