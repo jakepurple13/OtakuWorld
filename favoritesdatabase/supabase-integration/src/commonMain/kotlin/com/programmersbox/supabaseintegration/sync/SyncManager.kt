@@ -45,10 +45,14 @@ class SyncManager(
     private fun startInitialSync() {
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
-            withRetry(config) {
-                _syncState.value = SyncState.Syncing()
-                syncEngine.fullSync()
-                _syncState.value = SyncState.Idle
+            try {
+                withRetry(config) {
+                    _syncState.value = SyncState.Syncing()
+                    syncEngine.fullSync()
+                    _syncState.value = SyncState.Idle
+                }
+            } catch (e: Exception) {
+                _syncState.value = SyncState.Error(e.message ?: "Sync failed")
             }
         }
     }
@@ -77,15 +81,15 @@ class SyncManager(
         withRetry(config) {
             _syncState.value = SyncState.Syncing()
             syncEngine.fullSync()
-            _syncState.value = SyncState.Idle
         }
+        _syncState.value = if (connectivityMonitor.isOnline.value) SyncState.Idle else SyncState.Offline
     }
 
     fun stop() { scope.cancel() }
 }
 
 private suspend fun withRetry(config: SyncConfig, block: suspend () -> Unit) {
-    var attempt = 0
+    var attempt = 1
     var backoff = config.initialBackoffMs
     while (attempt <= config.maxRetries) {
         runCatching { block() }
