@@ -18,15 +18,15 @@ class OtakuProtobufPlugin : Plugin<Project> {
     private fun Project.extensionSetup() {
         extensions.findByType(BaseExtension::class)?.apply {
             dependencies {
-                libs.bundles.protobuf.get().forEach { implementation(it.toString()) }
+                androidLibs.findBundle("protobuf").get().get().forEach { implementation(it.toString()) }
             }
         }
 
         extensions.findByType<ProtobufExtension>()?.apply {
-            protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobufVersion.get()}" }
+            protoc { artifact = "com.google.protobuf:protoc:${androidLibs.findVersion("protobufVersion").get()}" }
             plugins {
-                id("javalite") { artifact = libs.protobufJava.get().toString() }
-                id("kotlinlite") { artifact = libs.protobufKotlin.get().toString() }
+                id("javalite") { artifact = androidLibs.findLibrary("protobufJava").get().get().toString() }
+                id("kotlinlite") { artifact = androidLibs.findLibrary("protobufKotlin").get().get().toString() }
             }
             generateProtoTasks {
                 all().forEach { task ->
