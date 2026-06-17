@@ -12,6 +12,7 @@ class SyncEngineImpl(
     private val clientProvider: SupabaseClientProvider,
     private val authManager: AuthManager,
     private val itemDao: ItemDao,
+    private val connectivityMonitor: ConnectivityMonitor,
 ) : SyncEngine {
 
     private val client get() = clientProvider.getOrCreate() ?: error("Client not initialized")
@@ -19,34 +20,40 @@ class SyncEngineImpl(
         ?: error("Not authenticated")
 
     override suspend fun pushLocalChanges(): Unit = coroutineScope {
+        if (!connectivityMonitor.isOnline.value) return@coroutineScope
         val uid = userId
         launch {
             itemDao.getDirtyFavorites().forEach { model ->
-                if (model.isDeleted) {
-                    client.postgrest["favorite_items"].delete {
-                        filter { eq("user_id", uid); eq("url", model.url) }
+                runCatching {
+                    if (model.isDeleted) {
+                        client.postgrest["favorite_items"].delete {
+                            filter { eq("user_id", uid); eq("url", model.url) }
+                        }
+                    } else {
+                        client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid))
                     }
-                } else {
-                    client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid))
+                    itemDao.updateFavorite(model.copy(isDirty = false))
                 }
-                itemDao.updateFavorite(model.copy(isDirty = false))
             }
         }
         launch {
             itemDao.getDirtyChapters().forEach { model ->
-                if (model.isDeleted) {
-                    client.postgrest["chapters_watched"].delete {
-                        filter { eq("user_id", uid); eq("url", model.url) }
+                runCatching {
+                    if (model.isDeleted) {
+                        client.postgrest["chapters_watched"].delete {
+                            filter { eq("user_id", uid); eq("url", model.url) }
+                        }
+                    } else {
+                        client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid))
                     }
-                } else {
-                    client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid))
+                    itemDao.updateChapterWatched(model.copy(isDirty = false))
                 }
-                itemDao.updateChapterWatched(model.copy(isDirty = false))
             }
         }
     }
 
     override suspend fun pullRemoteChanges(since: Long) {
+        if (!connectivityMonitor.isOnline.value) return
         val uid = userId
         client.postgrest["favorite_items"]
             .select { filter { eq("user_id", uid); gt("updated_at", since) } }
@@ -63,13 +70,13 @@ class SyncEngineImpl(
             .forEach { row ->
                 val local = itemDao.getChapterByUrl(row.url)
                 if (local == null || row.updatedAt > local.updatedAt) {
-                    itemDao.updateChapterWatched(row.toChapterWatched())
+                    itemDao.insertChapterWatched(row.toChapterWatched())
                 }
             }
     }
 
     override suspend fun fullSync() {
-        pullRemoteChanges(since = 0L)
         pushLocalChanges()
+        pullRemoteChanges(since = 0L)
     }
 }

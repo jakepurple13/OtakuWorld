@@ -191,7 +191,7 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem WHERE url = :url")
     suspend fun getFavoriteByUrl(url: String): DbModel?
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateFavorite(model: DbModel)
 
     @Query("SELECT * FROM ChapterWatched WHERE is_dirty = 1")
@@ -200,6 +200,9 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched WHERE url = :url")
     suspend fun getChapterByUrl(url: String): ChapterWatched?
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateChapterWatched(model: ChapterWatched)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChapterWatched(model: ChapterWatched)
 }
