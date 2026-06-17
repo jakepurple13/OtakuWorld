@@ -12,7 +12,7 @@ class JvmConnectivityMonitor : ConnectivityMonitor {
     override fun observe(): Flow<Boolean> = _isOnline
 
     private fun checkConnection(): Boolean = runCatching {
-        Socket().use { it.connect(InetSocketAddress("8.8.8.8", 53), 1500) }
+        Socket().use { it.connect(InetSocketAddress("8.8.8.8", 80), 1500) }
         true
     }.getOrDefault(false)
 }
