@@ -14,9 +14,11 @@ CREATE TABLE IF NOT EXISTS favorite_items (
     source                  TEXT    NOT NULL DEFAULT '',
     num_chapters            INTEGER NOT NULL DEFAULT 0,
     should_check_for_update BOOLEAN NOT NULL DEFAULT true,
+    supabase_id             TEXT    NOT NULL DEFAULT '',
     created_at              BIGINT  NOT NULL DEFAULT 0,
     updated_at              BIGINT  NOT NULL DEFAULT 0,
     is_deleted              BOOLEAN NOT NULL DEFAULT false,
+    is_dirty                BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, url)
 );
 ALTER TABLE favorite_items ENABLE ROW LEVEL SECURITY;
@@ -30,9 +32,11 @@ CREATE TABLE IF NOT EXISTS chapters_watched (
     url          TEXT   NOT NULL,
     name         TEXT   NOT NULL DEFAULT '',
     favorite_url TEXT   NOT NULL DEFAULT '',
+    supabase_id  TEXT   NOT NULL DEFAULT '',
     created_at   BIGINT NOT NULL DEFAULT 0,
     updated_at   BIGINT NOT NULL DEFAULT 0,
     is_deleted   BOOLEAN NOT NULL DEFAULT false,
+    is_dirty     BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, url)
 );
 ALTER TABLE chapters_watched ENABLE ROW LEVEL SECURITY;
@@ -50,9 +54,11 @@ CREATE TABLE IF NOT EXISTS bookmarked_chapters (
     parent_image_url TEXT   NOT NULL DEFAULT '',
     source           TEXT   NOT NULL DEFAULT '',
     timestamp        BIGINT NOT NULL DEFAULT 0,
+    supabase_id      TEXT   NOT NULL DEFAULT '',
     created_at       BIGINT NOT NULL DEFAULT 0,
     updated_at       BIGINT NOT NULL DEFAULT 0,
     is_deleted       BOOLEAN NOT NULL DEFAULT false,
+    is_dirty         BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, chapter_url)
 );
 ALTER TABLE bookmarked_chapters ENABLE ROW LEVEL SECURITY;
@@ -61,15 +67,17 @@ CREATE INDEX idx_bookmarks_updated ON bookmarked_chapters(user_id, updated_at);
 
 -- ─── NOTES ────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS notes (
-    id         UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id    UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    item_url   TEXT   NOT NULL,
-    item_title TEXT   NOT NULL DEFAULT '',
-    content    TEXT   NOT NULL DEFAULT '',
-    timestamp  BIGINT NOT NULL DEFAULT 0,
-    created_at BIGINT NOT NULL DEFAULT 0,
-    updated_at BIGINT NOT NULL DEFAULT 0,
-    is_deleted BOOLEAN NOT NULL DEFAULT false,
+    id          UUID   DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id     UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    item_url    TEXT   NOT NULL,
+    item_title  TEXT   NOT NULL DEFAULT '',
+    content     TEXT   NOT NULL DEFAULT '',
+    timestamp   BIGINT NOT NULL DEFAULT 0,
+    supabase_id TEXT   NOT NULL DEFAULT '',
+    created_at  BIGINT NOT NULL DEFAULT 0,
+    updated_at  BIGINT NOT NULL DEFAULT 0,
+    is_deleted  BOOLEAN NOT NULL DEFAULT false,
+    is_dirty    BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, item_url)
 );
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
@@ -82,9 +90,11 @@ CREATE TABLE IF NOT EXISTS history (
     user_id     UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     search_text TEXT   NOT NULL,
     time        BIGINT NOT NULL DEFAULT 0,
+    supabase_id TEXT   NOT NULL DEFAULT '',
     created_at  BIGINT NOT NULL DEFAULT 0,
     updated_at  BIGINT NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
+    is_dirty    BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, search_text)
 );
 ALTER TABLE history ENABLE ROW LEVEL SECURITY;
@@ -93,16 +103,18 @@ CREATE INDEX idx_history_updated ON history(user_id, updated_at);
 
 -- ─── CUSTOM LIST ITEMS ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS custom_list_items (
-    id           UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id      UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    uuid         TEXT    NOT NULL,
-    name         TEXT    NOT NULL DEFAULT '',
-    time         BIGINT  NOT NULL DEFAULT 0,
+    id            UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id       UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    uuid          TEXT    NOT NULL,
+    name          TEXT    NOT NULL DEFAULT '',
+    time          BIGINT  NOT NULL DEFAULT 0,
     use_biometric BOOLEAN NOT NULL DEFAULT false,
-    description  TEXT    NOT NULL DEFAULT '',
-    created_at   BIGINT  NOT NULL DEFAULT 0,
-    updated_at   BIGINT  NOT NULL DEFAULT 0,
-    is_deleted   BOOLEAN NOT NULL DEFAULT false,
+    description   TEXT    NOT NULL DEFAULT '',
+    supabase_id   TEXT    NOT NULL DEFAULT '',
+    created_at    BIGINT  NOT NULL DEFAULT 0,
+    updated_at    BIGINT  NOT NULL DEFAULT 0,
+    is_deleted    BOOLEAN NOT NULL DEFAULT false,
+    is_dirty      BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, uuid)
 );
 ALTER TABLE custom_list_items ENABLE ROW LEVEL SECURITY;
@@ -120,9 +132,11 @@ CREATE TABLE IF NOT EXISTS custom_list_info (
     url         TEXT   NOT NULL DEFAULT '',
     image_url   TEXT   NOT NULL DEFAULT '',
     source      TEXT   NOT NULL DEFAULT '',
+    supabase_id TEXT   NOT NULL DEFAULT '',
     created_at  BIGINT NOT NULL DEFAULT 0,
     updated_at  BIGINT NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
+    is_dirty    BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, unique_id)
 );
 ALTER TABLE custom_list_info ENABLE ROW LEVEL SECURITY;
@@ -137,9 +151,11 @@ CREATE TABLE IF NOT EXISTS recommendations (
     description TEXT   NOT NULL DEFAULT '',
     reason      TEXT   NOT NULL DEFAULT '',
     genre       TEXT   NOT NULL DEFAULT '[]',  -- JSON array stored as TEXT
+    supabase_id TEXT   NOT NULL DEFAULT '',
     created_at  BIGINT NOT NULL DEFAULT 0,
     updated_at  BIGINT NOT NULL DEFAULT 0,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
+    is_dirty    BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, title)
 );
 ALTER TABLE recommendations ENABLE ROW LEVEL SECURITY;
@@ -149,13 +165,15 @@ CREATE INDEX idx_recommendations_updated ON recommendations(user_id, updated_at)
 -- ─── HEATMAP ──────────────────────────────────────────────────────────────────
 -- HeatMapItem.time is a LocalDate stored as JSON TEXT by Room's TypeConverter
 CREATE TABLE IF NOT EXISTS heatmap_items (
-    id         UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id    UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    time       TEXT    NOT NULL,  -- ISO-8601 date string e.g. "2026-06-17"
-    day_count  INTEGER NOT NULL DEFAULT 0,
-    created_at BIGINT  NOT NULL DEFAULT 0,
-    updated_at BIGINT  NOT NULL DEFAULT 0,
-    is_deleted BOOLEAN NOT NULL DEFAULT false,
+    id          UUID    DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id     UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    time        TEXT    NOT NULL,  -- ISO-8601 date string e.g. "2026-06-17"
+    day_count   INTEGER NOT NULL DEFAULT 0,
+    supabase_id TEXT    NOT NULL DEFAULT '',
+    created_at  BIGINT  NOT NULL DEFAULT 0,
+    updated_at  BIGINT  NOT NULL DEFAULT 0,
+    is_deleted  BOOLEAN NOT NULL DEFAULT false,
+    is_dirty    BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, time)
 );
 ALTER TABLE heatmap_items ENABLE ROW LEVEL SECURITY;
