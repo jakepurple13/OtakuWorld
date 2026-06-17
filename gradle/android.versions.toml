@@ -255,6 +255,7 @@ uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", versi
 
 # WorkManager
 workRuntime = { module = "androidx.work:work-runtime", version.ref = "workVersion" }
+workRuntimeKtx = { module = "androidx.work:work-runtime-ktx", version.ref = "workVersion" }
 
 # XR
 androidx-arcore = { module = "androidx.xr.arcore:arcore", version.ref = "arcore" }

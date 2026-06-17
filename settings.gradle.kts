@@ -63,6 +63,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(
     ":favoritesdatabase",
+    ":favoritesdatabase:supabase-integration",
     //":anime_sources",
     //":manga_sources",
     //":novel_sources",
