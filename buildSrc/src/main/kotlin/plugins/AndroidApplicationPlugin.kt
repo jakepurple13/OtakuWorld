@@ -49,10 +49,6 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
                     applicationIdSuffix = ".noFirebase"
                 isDefault = true
             }
-            ProductFlavorTypes.NoCloudFirebase(this) {
-                versionNameSuffix = "-noCloudFirebase"
-                applicationIdSuffix = ".noCloudFirebase"
-            }
             ProductFlavorTypes.Full(this)
         }
     }

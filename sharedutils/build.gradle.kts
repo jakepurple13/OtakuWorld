@@ -9,7 +9,6 @@ android {
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
     productFlavors {
         ProductFlavorTypes.NoFirebase(this)
-        ProductFlavorTypes.NoCloudFirebase(this)
         ProductFlavorTypes.Full(this)
     }
 
@@ -33,11 +32,6 @@ dependencies {
     testImplementation("com.lordcodes.turtle:turtle:0.10.0")
     androidTestImplementation(TestDeps.androidJunit)
     androidTestImplementation(TestDeps.androidEspresso)
-
-    noCloudFirebaseImplementation(androidLibs.mlkitTranslate)
-    noCloudFirebaseImplementation(androidLibs.mlkitLanguage)
-    noCloudFirebaseImplementation(androidLibs.playServices)
-    noCloudFirebaseImplementation(androidLibs.coroutinesPlayServices)
 
     fullImplementation(androidLibs.mlkitTranslate)
     fullImplementation(androidLibs.mlkitLanguage)
@@ -65,5 +59,3 @@ dependencies {
 fun DependencyHandlerScope.fullImplementation(item: Provider<MinimalExternalModuleDependency>) =
     add("fullImplementation", item)
 
-fun DependencyHandlerScope.noCloudFirebaseImplementation(item: Provider<MinimalExternalModuleDependency>) =
-    add("noCloudFirebaseImplementation", item)

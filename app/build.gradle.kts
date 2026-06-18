@@ -42,9 +42,6 @@ android {
             setupUris(".noFirebase", Provider.NoFirebase)
             isDefault = true
         }
-        ProductFlavorTypes.NoCloudFirebase.edit(this) {
-            setupUris(".noCloudFirebase", Provider.NoCloudFirebase)
-        }
         ProductFlavorTypes.Full.edit(this) {
             setupUris("", Provider.Full)
         }
@@ -122,7 +119,6 @@ enum class App {
 }
 
 enum class Provider {
-    NoCloudFirebase,
     NoFirebase,
     Full
 }
@@ -169,7 +165,6 @@ class OtakuBuilder {
     private val mangaWorldPackageName = "com.programmersbox.mangaworld"
     private val animeWorldPackageName = "com.programmersbox.animeworld"
     private val novelWorldPackageName = "com.programmersbox.novelworld"
-    private val noCloudFirebaseSuffix = ".noCloudFirebase"
     private val noFirebaseSuffix = ".noFirebase"
     private val fullSuffix = ""
 
@@ -198,7 +193,6 @@ class OtakuBuilder {
 
     fun setProvider(provider: Provider) = apply {
         suffix = when (provider) {
-            Provider.NoCloudFirebase -> noCloudFirebaseSuffix
             Provider.NoFirebase -> noFirebaseSuffix
             Provider.Full -> fullSuffix
         }

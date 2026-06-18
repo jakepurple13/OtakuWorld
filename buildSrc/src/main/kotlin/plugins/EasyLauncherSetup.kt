@@ -28,9 +28,6 @@ class EasyLauncherSetup : Plugin<Project> {
                 register(ProductFlavorTypes.NoFirebase.nameType) {
                     filters(chromeLike())
                 }
-                register(ProductFlavorTypes.NoCloudFirebase.nameType) {
-                    filters(chromeLike())
-                }
             }
 
             buildTypes.apply {

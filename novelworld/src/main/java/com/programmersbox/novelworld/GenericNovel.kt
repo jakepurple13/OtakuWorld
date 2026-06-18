@@ -108,7 +108,6 @@ class GenericNovel(
         get() = {
             when (appConfig.buildType) {
                 BuildType.NoFirebase -> novelNoFirebaseFile
-                BuildType.NoCloudFirebase -> novelNoCloudFile
                 BuildType.Full -> novelFile
             }
         }

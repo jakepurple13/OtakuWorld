@@ -147,7 +147,6 @@ class GenericAnime(
         get() = {
             when (appConfig.buildType) {
                 BuildType.NoFirebase -> animeNoFirebaseFile
-                BuildType.NoCloudFirebase -> animeNoCloudFile
                 BuildType.Full -> animeFile
             }
         }

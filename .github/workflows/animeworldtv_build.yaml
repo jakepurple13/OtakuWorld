@@ -57,21 +57,10 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
-        name: Sign app APK
-        id: anime_tv_sign_no_cloud_firebase
-        with:
-          releaseDirectory: animeworldtv/build/outputs/apk/noCloudFirebase/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
       - name: Clean up AnimeWorld artifacts
         run: |
           cp ${{ steps.anime_tv_sign.outputs.signedReleaseFile }} animeworldtv-release.apk
           cp ${{ steps.anime_tv_sign_no_firebase.outputs.signedReleaseFile }} animeworldtv-no-firebase-release.apk
-          cp ${{ steps.anime_tv_sign_no_cloud_firebase.outputs.signedReleaseFile }} animeworldtv-no-cloud-firebase-release.apk
 
       - uses: actions/upload-artifact@v7
         with:
@@ -82,8 +71,3 @@ jobs:
         with:
           name: Signed Anime Tv No Firebase App
           path: animeworldtv-no-firebase-release.apk
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: Signed Anime Tv No Cloud Firebase App
-          path: animeworldtv-no-cloud-firebase-release.apk

@@ -3,7 +3,6 @@ package com.programmersbox.uiviews.di
 import android.content.Context
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
@@ -31,7 +30,6 @@ val kmpInterop = module {
             isDebug = BuildConfig.DEBUG,
             buildType = when (BuildConfig.FLAVOR) {
                 "noFirebase" -> BuildType.NoFirebase
-                "noCloudFirebase" -> BuildType.NoCloudFirebase
                 else -> BuildType.Full
             }
         )

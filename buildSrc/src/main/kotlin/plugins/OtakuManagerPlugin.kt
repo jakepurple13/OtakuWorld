@@ -45,10 +45,6 @@ class OtakuManagerPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseAppModu
                     applicationIdSuffix = ".noFirebase"
                 isDefault = true
             }
-            ProductFlavorTypes.NoCloudFirebase(this) {
-                versionNameSuffix = "-noCloudFirebase"
-                applicationIdSuffix = ".noCloudFirebase"
-            }
             ProductFlavorTypes.Full(this)
         }
     }
