@@ -235,10 +235,74 @@ if (stagingFile.exists()) {
 | `initialBackoffMs` | 1 s | First retry delay |
 | `maxBackoffMs` | 30 s | Maximum retry delay (exponential cap) |
 
-Override by providing a custom `SyncConfig` in your Koin module:
+`SyncConfig` is live — changes take effect on the next poll cycle without restarting the app.
+
+To provide a live config backed by DataStore, implement `SyncConfigDataStore` and register it in Koin:
 
 ```kotlin
-single { SyncConfig(pollIntervalMs = 10 * 60 * 1000L) }
+// In your host app Koin module:
+single {
+    SyncConfigDataStore(
+        pollIntervalMs = dataStore.data.map { it.pollIntervalMs },
+        maxRetries = dataStore.data.map { it.maxRetries },
+        initialBackoffMs = dataStore.data.map { it.initialBackoffMs },
+        maxBackoffMs = dataStore.data.map { it.maxBackoffMs },
+        setPollIntervalMs = { dataStore.updateData { p -> p.copy(pollIntervalMs = it) } },
+        setMaxRetries = { dataStore.updateData { p -> p.copy(maxRetries = it) } },
+        setInitialBackoffMs = { dataStore.updateData { p -> p.copy(initialBackoffMs = it) } },
+        setMaxBackoffMs = { dataStore.updateData { p -> p.copy(maxBackoffMs = it) } },
+    )
+}
+```
+
+Without a registered `SyncConfigDataStore`, the module falls back to `SyncConfig()` defaults silently.
+
+---
+
+## Tombstone cleanup (Supabase cron job)
+
+Soft-deleted rows stay in Supabase as tombstones so that other devices can pull the deletion. Without cleanup, tombstones accumulate forever. Set up a nightly cron job via `pg_cron` to remove old tombstones.
+
+**Enable `pg_cron`:** Supabase Dashboard → Database → Extensions → enable `pg_cron`.
+
+**Schedule the cleanup** (run once in SQL Editor):
+
+```sql
+SELECT cron.schedule('cleanup-soft-deleted', '0 3 * * *', $$
+    DELETE FROM favorite_items
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM chapters_watched
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM bookmarked_chapters
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM notes
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM history
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM custom_list_items
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM custom_list_info
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+    DELETE FROM heatmap_items
+        WHERE is_deleted = true
+          AND updated_at < (extract(epoch from now() - interval '30 days') * 1000)::bigint;
+$$);
+```
+
+> `updated_at` is stored as **milliseconds** (BIGINT), hence the `* 1000` cast.
+
+**Tradeoff:** A device offline for more than 30 days will miss tombstones. On reconnect, items deleted on other devices re-appear. Increase the interval to 90 days if you expect infrequent users. To verify or remove the scheduled job:
+
+```sql
+SELECT * FROM cron.job;                          -- list all jobs
+SELECT cron.unschedule('cleanup-soft-deleted');  -- remove
 ```
 
 ---
