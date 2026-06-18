@@ -25,6 +25,7 @@ class AuthManagerImpl(
     private val scope = CoroutineScope(Dispatchers.Default)
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override val authState: StateFlow<AuthState> = _authState.asStateFlow()
+    override fun isLoggedIn(): Boolean = _authState.value is AuthState.Authenticated
 
     init {
         scope.launch {

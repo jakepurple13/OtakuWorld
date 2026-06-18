@@ -5,13 +5,21 @@ import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.supabaseintegration.auth.AuthManager
+import kotlinx.coroutines.flow.Flow
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class ListRepository(
     private val listDao: ListDao,
     private val systemAlerter: SystemAlerter,
+    private val authManager: AuthManager,
 ) {
+    fun getAllLists(): Flow<List<CustomList>> = listDao.getAllLists()
+
+    fun getCustomListItemFlow(uuid: String) = listDao.getCustomListItemFlow(uuid)
+
     @OptIn(ExperimentalUuidApi::class)
     suspend fun addList(name: String) {
         val item = CustomListItem(
@@ -37,7 +45,12 @@ class ListRepository(
     }
 
     suspend fun removeList(item: CustomList) {
-        listDao.removeList(item)
+        if (authManager.isLoggedIn()) {
+            listDao.softDeleteCustomListItem(item.item.uuid, Clock.System.now().toEpochMilliseconds())
+            item.list.forEach { listDao.softDeleteCustomListInfo(it.uuid, Clock.System.now().toEpochMilliseconds()) }
+        } else {
+            listDao.removeList(item)
+        }
         systemAlerter.alertListChange()
     }
 
@@ -52,7 +65,10 @@ class ListRepository(
     }
 
     suspend fun removeItem(customListItem: CustomListInfo) {
-        listDao.removeItem(customListItem)
+        if (authManager.isLoggedIn())
+            listDao.softDeleteCustomListInfo(customListItem.uuid, Clock.System.now().toEpochMilliseconds())
+        else
+            listDao.removeItem(customListItem)
         systemAlerter.alertListItemChange()
     }
 

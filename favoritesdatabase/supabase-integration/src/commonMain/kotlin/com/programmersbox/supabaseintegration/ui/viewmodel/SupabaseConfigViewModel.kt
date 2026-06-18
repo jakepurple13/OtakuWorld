@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
+import com.programmersbox.supabaseintegration.sync.SyncConfig
+import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
@@ -17,12 +19,18 @@ import kotlinx.coroutines.launch
 class SupabaseConfigViewModel(
     private val credentialManager: CredentialManager,
     private val clientProvider: SupabaseClientProvider,
+    private val syncConfigRepository: SyncConfigRepository,
 ) : ViewModel() {
     val projectUrl = MutableStateFlow("")
     val anonKey = MutableStateFlow("")
     val connectionResult = MutableStateFlow<String?>(null)
-    val hasCredentials: StateFlow<Boolean> = credentialManager.hasCredentials()
+    val hasCredentials: StateFlow<Boolean> = credentialManager
+        .hasCredentials()
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val syncConfig = syncConfigRepository
+        .listenForChanges()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SyncConfig())
 
     init {
         credentialManager.getCredentials()?.let {

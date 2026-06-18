@@ -10,8 +10,8 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
-import androidx.room3.Update
 import androidx.room3.RoomDatabase
+import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -62,7 +62,7 @@ interface BookmarkDao {
     @Query("DELETE FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
     suspend fun deleteBookmarkByUrl(chapterUrl: String)
 
-    @Query("SELECT * FROM bookmarked_chapters ORDER BY timestamp DESC")
+    @Query("SELECT * FROM bookmarked_chapters WHERE is_deleted = 0 ORDER BY timestamp DESC")
     fun getAllBookmarks(): Flow<List<BookmarkedChapter>>
 
     @Query("SELECT * FROM bookmarked_chapters WHERE parentUrl = :parentUrl")

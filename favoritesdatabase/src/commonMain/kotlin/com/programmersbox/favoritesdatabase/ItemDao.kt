@@ -24,10 +24,10 @@ interface ItemDao {
     @Delete
     suspend fun deleteFavorite(model: DbModel)
 
-    @Query("SELECT * FROM FavoriteItem")
+    @Query("SELECT * FROM FavoriteItem WHERE is_deleted = 0")
     fun getAllFavorites(): Flow<List<DbModel>>
 
-    @Query("SELECT COUNT(url) FROM FavoriteItem")
+    @Query("SELECT COUNT(url) FROM FavoriteItem  WHERE is_deleted = 0")
     fun getAllFavoritesCount(): Flow<Int>
 
     @Query("SELECT * FROM FavoriteItem")
@@ -63,13 +63,13 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched")
     suspend fun getAllChaptersSync(): List<ChapterWatched>
 
-    @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
+    @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url AND is_deleted = 0")
     fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     suspend fun getAllChaptersSync(url: String): List<ChapterWatched>
 
-    @Query("SELECT COUNT(url) FROM ChapterWatched")
+    @Query("SELECT COUNT(url) FROM ChapterWatched WHERE is_deleted = 0")
     fun getAllChaptersCount(): Flow<Int>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

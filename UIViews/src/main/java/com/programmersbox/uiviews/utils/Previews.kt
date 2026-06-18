@@ -49,7 +49,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportF
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.imports.ImportListViewModel
 import com.programmersbox.kmpuiviews.repository.ListRepository
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import org.koin.compose.koinInject
@@ -125,7 +124,7 @@ private fun GlobalSearchCoverPreview() {
 @Composable
 private fun CustomListScreenPreview() {
     PreviewTheme {
-        val listDao = LocalCustomListDao.current
+        val listDao = koinInject<ListDao>()
         val listRepository = koinInject<ListRepository>()
         val context = LocalContext.current
         val viewModel: OtakuCustomListViewModel = viewModel {
@@ -199,7 +198,7 @@ private fun ExtensionListPreview() {
 @Composable
 private fun ImportScreenPreview() {
     PreviewTheme {
-        val listDao: ListDao = LocalCustomListDao.current
+        val listDao: ListDao = koinInject()
         val listRepository = koinInject<ListRepository>()
         val context: Context = LocalContext.current
         val vm: ImportFullListViewModel = viewModel {
@@ -218,12 +217,12 @@ private fun ImportScreenPreview() {
 @Composable
 private fun ImportListScreenPreview() {
     PreviewTheme {
-        val listDao: ListDao = LocalCustomListDao.current
+        val listDao: ListDao = koinInject()
         val listRepository = koinInject<ListRepository>()
         val context: Context = LocalContext.current
         val vm: ImportListViewModel = viewModel { ImportListViewModel(listRepository, createSavedStateHandle()) }
         ImportListScreen(
-            listDao = listDao,
+            listDao = listRepository,
             vm = vm
         )
     }

@@ -41,6 +41,7 @@ class SyncEngineImpl(
         if (!connectivityMonitor.isOnline.value) return@coroutineScope
         val uid = userId
 
+        //TODO: Maybe make something similar to the backupprocessor for these?
         pushAndRecordTime("favorites") { pushFavorites(uid) }
         pushAndRecordTime("chapters") { pushChapters(uid) }
         pushAndRecordTime("bookmarks") { pushBookmarks(uid) }

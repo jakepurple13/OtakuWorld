@@ -22,9 +22,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -41,7 +42,6 @@ import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.M3CoverCard
 import com.programmersbox.kmpuiviews.repository.ListRepository
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.adaptiveGridCell
 import kotlinx.coroutines.launch
@@ -62,16 +62,15 @@ fun DeleteFromListScreen(
     deleteFromList: Screen.CustomListScreen.DeleteFromList,
 ) {
     val navController = LocalNavActions.current
-    val dao = LocalCustomListDao.current
     val listRepository = koinInject<ListRepository>()
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(SheetValue.Hidden)
     val onDismiss: () -> Unit = {
         scope.launch { sheetState.hide() }
         navController.popBackStack()
     }
 
-    val customList by dao
+    val customList by listRepository
         .getCustomListItemFlow(deleteFromList.uuid)
         .collectAsStateWithLifecycle(null)
 

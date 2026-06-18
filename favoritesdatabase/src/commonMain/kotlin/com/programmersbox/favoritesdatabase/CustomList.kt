@@ -110,17 +110,17 @@ abstract class ListDatabase : RoomDatabase() {
 interface ListDao {
 
     @Transaction
-    @Query("SELECT * FROM CustomListItem ORDER BY useBiometric ASC, time DESC")
+    @Query("SELECT * FROM CustomListItem WHERE is_deleted = 0 ORDER BY useBiometric ASC, time DESC ")
     fun getAllLists(): Flow<List<CustomList>>
 
-    @Query("SELECT COUNT(uuid) FROM CustomListItem")
+    @Query("SELECT COUNT(uuid) FROM CustomListItem WHERE is_deleted = 0")
     fun getAllListsCount(): Flow<Int>
 
-    @Query("SELECT COUNT(uuid) FROM CustomListInfo")
+    @Query("SELECT COUNT(uuid) FROM CustomListInfo WHERE is_deleted = 0")
     fun getAllListItemsCount(): Flow<Int>
 
     @Transaction
-    @Query("SELECT * FROM CustomListItem ORDER BY time DESC")
+    @Query("SELECT * FROM CustomListItem WHERE is_deleted = 0 ORDER BY time DESC")
     suspend fun getAllListsSync(): List<CustomList>
 
     @Transaction
@@ -128,7 +128,7 @@ interface ListDao {
     suspend fun getCustomListItem(uuid: String): CustomList
 
     @Transaction
-    @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid")
+    @Query("SELECT * FROM CustomListItem WHERE :uuid = uuid AND is_deleted = 0")
     fun getCustomListItemFlow(uuid: String): Flow<CustomList>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

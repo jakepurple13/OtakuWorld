@@ -12,8 +12,8 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
-import androidx.room3.Update
 import androidx.room3.RoomDatabase
+import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import androidx.sqlite.SQLiteConnection
@@ -60,16 +60,16 @@ abstract class HistoryDatabase : RoomDatabase() {
 @DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface HistoryDao {
 
-    @Query("SELECT * FROM History ORDER BY time DESC")
+    @Query("SELECT * FROM History WHERE is_deleted = 0 ORDER BY time DESC")
     fun getAllHistory(): Flow<List<HistoryItem>>
 
     @Query("SELECT * FROM History ORDER BY time DESC")
     suspend fun getAllHistorySync(): List<HistoryItem>
 
-    @Query("SELECT COUNT(search_text) FROM History")
+    @Query("SELECT COUNT(search_text) FROM History WHERE is_deleted = 0")
     fun getAllHistoryCount(): Flow<Int>
 
-    @Query("SELECT * FROM History WHERE search_text LIKE :searchText ORDER BY time DESC")
+    @Query("SELECT * FROM History WHERE search_text LIKE :searchText AND is_deleted = 0 ORDER BY time DESC")
     fun searchHistory(searchText: String): Flow<List<HistoryItem>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
