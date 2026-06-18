@@ -12,6 +12,7 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
+import androidx.room3.Update
 import androidx.room3.RoomDatabase
 import androidx.room3.migration.Migration
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
@@ -97,6 +98,41 @@ interface HistoryDao {
 
     @Query("DELETE FROM RecentlyViewed")
     suspend fun deleteAllRecentHistory(): Int
+
+    // Dirty queries for sync
+    @Query("SELECT * FROM History WHERE is_dirty = 1")
+    suspend fun getDirtyHistory(): List<HistoryItem>
+
+    @Query("SELECT * FROM RecentlyViewed WHERE is_dirty = 1")
+    suspend fun getDirtyRecentlyViewed(): List<RecentModel>
+
+    // By-key lookups for conflict resolution
+    @Query("SELECT * FROM History WHERE search_text = :searchText")
+    suspend fun getHistoryByKey(searchText: String): HistoryItem?
+
+    @Query("SELECT * FROM RecentlyViewed WHERE url = :url")
+    suspend fun getRecentByUrl(url: String): RecentModel?
+
+    // Update (for clearing is_dirty after push)
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateHistory(model: HistoryItem)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateRecentlyViewed(model: RecentModel)
+
+    // Soft-delete
+    @Query("UPDATE History SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE search_text = :searchText")
+    suspend fun softDeleteHistory(searchText: String, timestamp: Long)
+
+    @Query("UPDATE RecentlyViewed SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
+    suspend fun softDeleteRecentlyViewed(url: String, timestamp: Long)
+
+    // Mark synced
+    @Query("UPDATE History SET updated_at = :timestamp, is_dirty = 0 WHERE search_text = :key")
+    suspend fun markHistorySynced(key: String, timestamp: Long)
+
+    @Query("UPDATE RecentlyViewed SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
+    suspend fun markRecentSynced(url: String, timestamp: Long)
 
 }
 

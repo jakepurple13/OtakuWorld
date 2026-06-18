@@ -9,6 +9,7 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
+import androidx.room3.Update
 import androidx.room3.RoomDatabase
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
@@ -70,6 +71,21 @@ interface NotesDao {
         ) ORDER BY timestamp DESC
     """)
     fun searchNotes(query: String): Flow<List<NoteItem>>
+
+    @Query("SELECT * FROM notes WHERE is_dirty = 1")
+    suspend fun getDirtyNotes(): List<NoteItem>
+
+    @Query("SELECT * FROM notes WHERE itemUrl = :itemUrl")
+    suspend fun getNoteByUrl(itemUrl: String): NoteItem?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateNote(note: NoteItem)
+
+    @Query("UPDATE notes SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE itemUrl = :itemUrl")
+    suspend fun softDeleteNote(itemUrl: String, timestamp: Long)
+
+    @Query("UPDATE notes SET updated_at = :timestamp, is_dirty = 0 WHERE itemUrl = :itemUrl")
+    suspend fun markNoteSynced(itemUrl: String, timestamp: Long)
 }
 
 @Database(

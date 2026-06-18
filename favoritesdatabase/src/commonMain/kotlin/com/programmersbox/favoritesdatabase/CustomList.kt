@@ -185,6 +185,36 @@ interface ListDao {
 
     @Query("UPDATE CustomListItem SET useBiometric = :useBiometric WHERE uuid = :uuid")
     suspend fun updateBiometric(uuid: String, useBiometric: Boolean)
+
+    @Query("SELECT * FROM CustomListItem WHERE is_dirty = 1")
+    suspend fun getDirtyCustomListItems(): List<CustomListItem>
+
+    @Query("SELECT * FROM CustomListInfo WHERE is_dirty = 1")
+    suspend fun getDirtyCustomListInfo(): List<CustomListInfo>
+
+    @Query("SELECT * FROM CustomListItem WHERE uuid = :uuid")
+    suspend fun getCustomListItemByUuid(uuid: String): CustomListItem?
+
+    @Query("SELECT * FROM CustomListInfo WHERE uniqueId = :uniqueId")
+    suspend fun getCustomListInfoByUniqueId(uniqueId: String): CustomListInfo?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateCustomListItem(item: CustomListItem)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateCustomListInfo(info: CustomListInfo)
+
+    @Query("UPDATE CustomListItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE uuid = :uuid")
+    suspend fun softDeleteCustomListItem(uuid: String, timestamp: Long)
+
+    @Query("UPDATE CustomListInfo SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE uniqueId = :uniqueId")
+    suspend fun softDeleteCustomListInfo(uniqueId: String, timestamp: Long)
+
+    @Query("UPDATE CustomListItem SET updated_at = :timestamp, is_dirty = 0 WHERE uuid = :uuid")
+    suspend fun markCustomListItemSynced(uuid: String, timestamp: Long)
+
+    @Query("UPDATE CustomListInfo SET updated_at = :timestamp, is_dirty = 0 WHERE uniqueId = :uniqueId")
+    suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long)
 }
 
 @Serializable

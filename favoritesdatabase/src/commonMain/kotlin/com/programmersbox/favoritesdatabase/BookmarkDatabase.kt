@@ -10,6 +10,7 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
+import androidx.room3.Update
 import androidx.room3.RoomDatabase
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
@@ -86,6 +87,21 @@ interface BookmarkDao {
 
     @Query("SELECT COUNT(chapterUrl) FROM bookmarked_chapters")
     fun getAllBookmarksCount(): Flow<Int>
+
+    @Query("SELECT * FROM bookmarked_chapters WHERE is_dirty = 1")
+    suspend fun getDirtyBookmarks(): List<BookmarkedChapter>
+
+    @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
+    suspend fun getBookmarkByChapterUrl(chapterUrl: String): BookmarkedChapter?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateBookmark(bookmark: BookmarkedChapter)
+
+    @Query("UPDATE bookmarked_chapters SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE chapterUrl = :chapterUrl")
+    suspend fun softDeleteBookmark(chapterUrl: String, timestamp: Long)
+
+    @Query("UPDATE bookmarked_chapters SET updated_at = :timestamp, is_dirty = 0 WHERE chapterUrl = :chapterUrl")
+    suspend fun markBookmarkSynced(chapterUrl: String, timestamp: Long)
 }
 
 @Database(

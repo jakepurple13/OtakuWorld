@@ -9,6 +9,7 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
+import androidx.room3.Update
 import androidx.room3.RoomDatabase
 import androidx.room3.Transaction
 import androidx.room3.TypeConverter
@@ -86,6 +87,21 @@ interface HeatMapDao {
 
     @Query("SELECT * FROM HeatMapItem WHERE time = :date LIMIT 1")
     suspend fun getHeatMapByDate(date: LocalDate): HeatMapItem?
+
+    @Query("SELECT * FROM HeatMapItem WHERE is_dirty = 1")
+    suspend fun getDirtyHeatMapItems(): List<HeatMapItem>
+
+    @Query("SELECT * FROM HeatMapItem WHERE time = :time LIMIT 1")
+    suspend fun getHeatMapItemByTime(time: LocalDate): HeatMapItem?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateHeatMapItem(item: HeatMapItem)
+
+    @Query("UPDATE HeatMapItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE time = :time")
+    suspend fun softDeleteHeatMapItem(time: LocalDate, timestamp: Long)
+
+    @Query("UPDATE HeatMapItem SET updated_at = :timestamp, is_dirty = 0 WHERE time = :time")
+    suspend fun markHeatMapItemSynced(time: LocalDate, timestamp: Long)
 
 }
 

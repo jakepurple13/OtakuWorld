@@ -205,4 +205,18 @@ interface ItemDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChapterWatched(model: ChapterWatched)
+
+    // Soft-delete (sets is_deleted=1, is_dirty=1, updates timestamp)
+    @Query("UPDATE FavoriteItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
+    suspend fun softDeleteFavorite(url: String, timestamp: Long)
+
+    @Query("UPDATE ChapterWatched SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
+    suspend fun softDeleteChapter(url: String, timestamp: Long)
+
+    // Stamp updatedAt after a successful push
+    @Query("UPDATE FavoriteItem SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
+    suspend fun markFavoriteSynced(url: String, timestamp: Long)
+
+    @Query("UPDATE ChapterWatched SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
+    suspend fun markChapterSynced(url: String, timestamp: Long)
 }
