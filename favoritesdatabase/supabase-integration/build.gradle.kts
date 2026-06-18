@@ -36,13 +36,15 @@ kotlin {
             implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
             implementation(projects.favoritesdatabase)
             implementation(projects.kmpmodels)
+            implementation(commonLibs.qrose)
+            implementation(commonLibs.scanner)
         }
         androidMain.dependencies {
             implementation(commonLibs.connectivity.device)
             implementation(commonLibs.ktorOkHttp)
             implementation(androidLibs.workRuntimeKtx)
             implementation(androidLibs.koin.workmanager)
-            implementation("androidx.security:security-crypto:1.1.0")
+            implementation(androidLibs.androidx.security.crypto)
         }
         jvmMain.dependencies {
             implementation(commonLibs.ktorCio)
