@@ -19,25 +19,14 @@ import com.programmersbox.supabaseintegration.ui.viewmodel.SyncViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val supabaseModule = module {
     singleOf(::SupabaseClientProvider)
-    single<AuthManager> { AuthManagerImpl(get()) }
-    singleOf(::SyncConfig)
-    single<SyncEngine> {
-        SyncEngineImpl(
-            clientProvider = get(),
-            authManager = get(),
-            itemDao = get(),
-            connectivityMonitor = get(),
-            historyDao = getOrNull(),
-            bookmarkDao = getOrNull(),
-            notesDao = getOrNull(),
-            listDao = getOrNull(),
-            heatMapDao = getOrNull(),
-        )
-    }
+    single<AuthManager> { AuthManagerImpl(get(), get()) }
+    single { SyncConfig() }
+    singleOf(::SyncEngineImpl) bind SyncEngine::class
     singleOf(::SyncManager)
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }

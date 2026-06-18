@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
+import com.programmersbox.supabaseintegration.di.supabaseModule
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.new
@@ -42,8 +43,11 @@ val appModule = module {
     factoryOf(::Backup)
     backupProcessors()
     includes(platformModule())
+
+    includes(supabaseModule)
 }
 
+//TODO: Move BackupProcessor to a separate shared like module
 private fun Module.backupProcessors() {
     backupProcessor("backupSettings", ::BackupSettingsProcessor)
     backupProcessor("bookmarks", ::BookmarksBackupProcessor)

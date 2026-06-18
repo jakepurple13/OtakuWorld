@@ -61,6 +61,10 @@ import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.versionCode
+import com.programmersbox.supabaseintegration.ui.AuthRoute
+import com.programmersbox.supabaseintegration.ui.BackupRestoreRoute
+import com.programmersbox.supabaseintegration.ui.SupabaseConfigRoute
+import com.programmersbox.supabaseintegration.ui.SyncStatusRoute
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -294,6 +298,30 @@ private fun SettingsScreen(
             content = { Text(stringResource(Res.string.viewTranslationModels)) },
             leadingContent = { Icon(Icons.Default.Language, null) },
             onClick = { showTranslationScreen = true }
+        )
+
+        segmentedListItem(
+            onClick = { navController.navigate(SupabaseConfigRoute) },
+            content = { Text("Supabase Config") },
+            leadingContent = { Icon(Icons.Default.Settings, null) },
+        )
+
+        segmentedListItem(
+            onClick = { navController.navigate(AuthRoute) },
+            content = { Text("Supabase Auth") },
+            leadingContent = { Icon(Icons.Default.Settings, null) },
+        )
+
+        segmentedListItem(
+            onClick = { navController.navigate(SyncStatusRoute) },
+            content = { Text("Supabase Sync Status") },
+            leadingContent = { Icon(Icons.Default.Settings, null) },
+        )
+
+        segmentedListItem(
+            onClick = { navController.navigate(BackupRestoreRoute) },
+            content = { Text("Supabase Backup/Restore") },
+            leadingContent = { Icon(Icons.Default.Settings, null) },
         )
     }
 

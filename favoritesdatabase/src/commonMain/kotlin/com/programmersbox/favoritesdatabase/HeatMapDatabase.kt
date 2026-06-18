@@ -1,6 +1,8 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ColumnTypeConverter
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -9,11 +11,9 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
-import androidx.room3.Update
 import androidx.room3.RoomDatabase
 import androidx.room3.Transaction
-import androidx.room3.TypeConverter
-import androidx.room3.TypeConverters
+import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -30,7 +30,7 @@ import kotlin.time.ExperimentalTime
     entities = [HeatMapItem::class],
     version = 2,
 )
-@TypeConverters(HeatMapConverter::class)
+@ColumnTypeConverters(HeatMapConverter::class)
 abstract class HeatMapDatabase : RoomDatabase() {
 
     abstract fun heatMapDao(): HeatMapDao
@@ -121,9 +121,9 @@ data class HeatMapItem(
 )
 
 class HeatMapConverter {
-    @TypeConverter
+    @ColumnTypeConverter
     fun dateConverter(date: LocalDate) = Json.encodeToString(date)
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun stringConverter(string: String) = Json.decodeFromString<LocalDate>(string)
 }

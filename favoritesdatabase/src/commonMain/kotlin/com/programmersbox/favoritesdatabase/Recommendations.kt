@@ -1,6 +1,8 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ColumnTypeConverter
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -10,8 +12,6 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
-import androidx.room3.TypeConverter
-import androidx.room3.TypeConverters
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -19,11 +19,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-@TypeConverters(Converters::class)
 @Database(
     entities = [Recommendation::class],
     version = 2,
 )
+@ColumnTypeConverters(Converters::class)
 abstract class RecommendationDatabase : RoomDatabase() {
 
     abstract fun recommendationDao(): RecommendationDao
@@ -69,10 +69,10 @@ interface RecommendationDao {
 }
 
 class Converters {
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromList(value: List<String>) = Json.encodeToString(value)
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toList(value: String) = Json.decodeFromString<List<String>>(value)
 }
 

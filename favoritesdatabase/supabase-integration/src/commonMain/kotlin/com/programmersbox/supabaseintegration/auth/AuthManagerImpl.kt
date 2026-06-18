@@ -1,11 +1,11 @@
 package com.programmersbox.supabaseintegration.auth
 
+import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.OTP
-import io.github.jan.supabase.auth.providers.builtin.Phone
 import io.github.jan.supabase.auth.status.RefreshFailureCause
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +18,10 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
-class AuthManagerImpl(private val clientProvider: SupabaseClientProvider) : AuthManager {
+class AuthManagerImpl(
+    private val clientProvider: SupabaseClientProvider,
+    private val exceptionDao: ExceptionDao,
+) : AuthManager {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -46,14 +49,17 @@ class AuthManagerImpl(private val clientProvider: SupabaseClientProvider) : Auth
                                 )
                             )
                         }
+
                         is SessionStatus.NotAuthenticated -> AuthState.Unauthenticated
                         is SessionStatus.Initializing -> AuthState.Loading
                         is SessionStatus.RefreshFailure -> {
                             val message = when (val cause = status.cause) {
                                 is RefreshFailureCause.NetworkError ->
                                     cause.exception.message ?: "Network error during session refresh"
+
                                 is RefreshFailureCause.InternalServerError ->
                                     cause.exception.message ?: "Server error during session refresh"
+
                                 else -> "Session refresh failed"
                             }
                             AuthState.Error(message)
@@ -75,7 +81,11 @@ class AuthManagerImpl(private val clientProvider: SupabaseClientProvider) : Auth
                 this.email = email
                 this.password = password
             }
-        }.onFailure { _authState.value = AuthState.Error(it.message ?: "Sign in failed") }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+            _authState.value = AuthState.Error(it.message ?: "Sign in failed")
+        }
     }
 
     override suspend fun signUpWithEmail(email: String, password: String) {
@@ -85,32 +95,52 @@ class AuthManagerImpl(private val clientProvider: SupabaseClientProvider) : Auth
                 this.email = email
                 this.password = password
             }
-        }.onFailure { _authState.value = AuthState.Error(it.message ?: "Sign up failed") }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+            _authState.value = AuthState.Error(it.message ?: "Sign up failed")
+        }
     }
 
     override suspend fun signInWithOAuth(provider: OAuthProvider) {
         _authState.value = AuthState.Loading
         runCatching {
             auth.signInWith(provider)
-        }.onFailure { _authState.value = AuthState.Error(it.message ?: "OAuth failed") }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+            _authState.value = AuthState.Error(it.message ?: "OAuth failed")
+        }
     }
 
     override suspend fun signInWithMagicLink(email: String) {
         runCatching {
             auth.signInWith(OTP) { this.email = email }
-        }.onFailure { _authState.value = AuthState.Error(it.message ?: "Magic link failed") }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+            _authState.value = AuthState.Error(it.message ?: "Magic link failed")
+        }
     }
 
     override suspend fun signInWithPhone(phone: String, otp: String) {
         runCatching {
             auth.verifyPhoneOtp(type = io.github.jan.supabase.auth.OtpType.Phone.SMS, phone = phone, token = otp)
-        }.onFailure { _authState.value = AuthState.Error(it.message ?: "Phone auth failed") }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+            _authState.value = AuthState.Error(it.message ?: "Phone auth failed")
+        }
     }
 
     override suspend fun signInAnonymously() {
         runCatching {
             auth.signInAnonymously()
-        }.onFailure { _authState.value = AuthState.Error(it.message ?: "Anonymous auth failed") }
+        }.onFailure {
+            it.printStackTrace()
+            exceptionDao.insertException(it)
+            _authState.value = AuthState.Error(it.message ?: "Anonymous auth failed")
+        }
     }
 
     override suspend fun signOut() {
@@ -122,7 +152,7 @@ class AuthManagerImpl(private val clientProvider: SupabaseClientProvider) : Auth
         // Account deletion requires a server-side admin call or an Edge Function.
         throw UnsupportedOperationException(
             "Account deletion requires a server-side call. " +
-                "Use an Edge Function or Supabase Admin API with the service role key."
+                    "Use an Edge Function or Supabase Admin API with the service role key."
         )
     }
 

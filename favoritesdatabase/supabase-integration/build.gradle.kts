@@ -10,6 +10,10 @@ otakuDependencies {
 }
 
 kotlin {
+    android {
+        namespace = "com.programmersbox.supabaseintegration"
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(project.dependencies.platform(commonLibs.supabase.bom))
@@ -38,10 +42,11 @@ kotlin {
             implementation(commonLibs.ktorOkHttp)
             implementation(androidLibs.workRuntimeKtx)
             implementation(androidLibs.koin.workmanager)
-            implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            implementation("androidx.security:security-crypto:1.1.0")
         }
         jvmMain.dependencies {
             implementation(commonLibs.ktorCio)
+            implementation(desktopLibs.connectivity.http)
         }
         iosMain.dependencies {
             implementation(iosLibs.ktorDarwin)

@@ -2,8 +2,18 @@ package com.programmersbox.supabaseintegration.sync
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 class SyncManager(
     private val syncEngine: SyncEngine,
@@ -22,16 +32,18 @@ class SyncManager(
         scope.launch {
             combine(authManager.authState, connectivityMonitor.isOnline) { auth, online -> auth to online }
                 .collect { (auth, online) ->
-                    when {
-                        auth is AuthState.Authenticated && online -> {
+                    when (auth) {
+                        is AuthState.Authenticated if online -> {
                             stopPolling()
                             startInitialSync()
                         }
-                        auth is AuthState.Authenticated && !online -> {
+
+                        is AuthState.Authenticated if !online -> {
                             stopRealtime()
                             startPolling()
                             _syncState.value = SyncState.Offline
                         }
+
                         else -> {
                             stopRealtime()
                             stopPolling()
@@ -57,7 +69,9 @@ class SyncManager(
         }
     }
 
-    private fun stopRealtime() { realtimeJob?.cancel() }
+    private fun stopRealtime() {
+        realtimeJob?.cancel()
+    }
 
     private fun startPolling() {
         if (pollingJob?.isActive == true) return
@@ -75,7 +89,9 @@ class SyncManager(
         }
     }
 
-    private fun stopPolling() { pollingJob?.cancel() }
+    private fun stopPolling() {
+        pollingJob?.cancel()
+    }
 
     suspend fun triggerSync() {
         withRetry(config) {
@@ -85,20 +101,22 @@ class SyncManager(
         _syncState.value = if (connectivityMonitor.isOnline.value) SyncState.Idle else SyncState.Offline
     }
 
-    fun stop() { scope.cancel() }
-}
+    fun stop() {
+        scope.cancel()
+    }
 
-private suspend fun withRetry(config: SyncConfig, block: suspend () -> Unit) {
-    var attempt = 1
-    var backoff = config.initialBackoffMs
-    while (attempt <= config.maxRetries) {
-        runCatching { block() }
-            .onSuccess { return }
-            .onFailure { e ->
-                attempt++
-                if (attempt > config.maxRetries) throw e
-                delay(backoff)
-                backoff = minOf(backoff * 2, config.maxBackoffMs)
-            }
+    private suspend fun withRetry(config: SyncConfig, block: suspend () -> Unit) {
+        var attempt = 1
+        var backoff = config.initialBackoffMs
+        while (attempt <= config.maxRetries) {
+            runCatching { block() }
+                .onSuccess { return }
+                .onFailure { e ->
+                    attempt++
+                    if (attempt > config.maxRetries) throw e
+                    delay(backoff)
+                    backoff = minOf(backoff * 2, config.maxBackoffMs)
+                }
+        }
     }
 }
