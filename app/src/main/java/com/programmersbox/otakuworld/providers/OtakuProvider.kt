@@ -10,7 +10,6 @@ private const val mangaWorldPackageName = "com.programmersbox.mangaworld"
 private const val animeWorldPackageName = "com.programmersbox.animeworld"
 private const val novelWorldPackageName = "com.programmersbox.novelworld"
 
-private const val noCloudFirebaseSuffix = ".noCloudFirebase"
 private const val noFirebaseSuffix = ".noFirebase"
 private const val fullSuffix = ""
 
@@ -25,7 +24,6 @@ enum class App {
 }
 
 enum class Provider {
-    NoCloudFirebase,
     NoFirebase,
     Full
 }
@@ -97,7 +95,6 @@ class OtakuProvider {
 
         fun setProvider(provider: Provider) = apply {
             suffix = when (provider) {
-                Provider.NoCloudFirebase -> noCloudFirebaseSuffix
                 Provider.NoFirebase -> noFirebaseSuffix
                 Provider.Full -> fullSuffix
             }

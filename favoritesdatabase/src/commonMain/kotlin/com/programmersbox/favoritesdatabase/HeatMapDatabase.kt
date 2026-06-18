@@ -1,6 +1,8 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ColumnTypeConverter
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -11,8 +13,10 @@ import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
 import androidx.room3.Transaction
-import androidx.room3.TypeConverter
-import androidx.room3.TypeConverters
+import androidx.room3.Update
+import androidx.room3.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -24,16 +28,28 @@ import kotlin.time.ExperimentalTime
 
 @Database(
     entities = [HeatMapItem::class],
-    version = 1,
+    version = 2,
 )
-@TypeConverters(HeatMapConverter::class)
+@ColumnTypeConverters(HeatMapConverter::class)
 abstract class HeatMapDatabase : RoomDatabase() {
 
     abstract fun heatMapDao(): HeatMapDao
 
     companion object {
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `supabase_id` TEXT DEFAULT ''")
+                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `HeatMapItem` ADD COLUMN `is_dirty` INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): HeatMapDatabase = databaseBuilder
             .build<HeatMapDatabase>("heatmap.db")
+            .addMigrations(MIGRATION_1_2)
             .build()
     }
 
@@ -72,6 +88,21 @@ interface HeatMapDao {
     @Query("SELECT * FROM HeatMapItem WHERE time = :date LIMIT 1")
     suspend fun getHeatMapByDate(date: LocalDate): HeatMapItem?
 
+    @Query("SELECT * FROM HeatMapItem WHERE is_dirty = 1")
+    suspend fun getDirtyHeatMapItems(): List<HeatMapItem>
+
+    @Query("SELECT * FROM HeatMapItem WHERE time = :time LIMIT 1")
+    suspend fun getHeatMapItemByTime(time: LocalDate): HeatMapItem?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateHeatMapItem(item: HeatMapItem)
+
+    @Query("UPDATE HeatMapItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE time = :time")
+    suspend fun softDeleteHeatMapItem(time: LocalDate, timestamp: Long)
+
+    @Query("UPDATE HeatMapItem SET updated_at = :timestamp, is_dirty = 0 WHERE time = :time")
+    suspend fun markHeatMapItemSynced(time: LocalDate, timestamp: Long)
+
 }
 
 @Serializable
@@ -81,13 +112,18 @@ data class HeatMapItem(
     @ColumnInfo(name = "time")
     val time: LocalDate,
     @ColumnInfo(name = "day_count")
-    val count: Int
+    val count: Int,
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )
 
 class HeatMapConverter {
-    @TypeConverter
+    @ColumnTypeConverter
     fun dateConverter(date: LocalDate) = Json.encodeToString(date)
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun stringConverter(string: String) = Json.decodeFromString<LocalDate>(string)
 }

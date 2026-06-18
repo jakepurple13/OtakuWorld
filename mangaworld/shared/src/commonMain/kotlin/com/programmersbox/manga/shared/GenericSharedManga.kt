@@ -85,7 +85,6 @@ abstract class GenericSharedManga(
         get() = {
             when (appConfig.buildType) {
                 BuildType.NoFirebase -> mangaNoFirebaseFile
-                BuildType.NoCloudFirebase -> mangaNoCloudFile
                 BuildType.Full -> mangaFile
             }
         }

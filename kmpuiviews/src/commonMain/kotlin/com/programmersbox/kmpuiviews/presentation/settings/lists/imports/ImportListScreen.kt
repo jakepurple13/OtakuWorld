@@ -50,18 +50,18 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.CustomListInfo
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.NormalOtakuScaffold
+import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.import_import_list
@@ -74,7 +74,7 @@ import otakuworld.kmpuiviews.generated.resources.something_went_wrong
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ImportListScreen(
-    listDao: ListDao = LocalCustomListDao.current,
+    listDao: ListRepository = koinInject(),
     vm: ImportListViewModel = koinViewModel(),
 ) {
     HideNavBarWhileOnScreen()

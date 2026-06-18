@@ -33,7 +33,7 @@ kotlinxDatetime = "0.8.0"
 kotzilla = "2.2.2"
 ktorVersion = "3.3.3"
 latestAboutLibsRelease = "14.2.1"
-lifecycleViewmodelNavigation3 = "2.10.0"
+lifecycleViewmodelNavigation3 = "2.11.0"
 markdown-renderer = "0.41.0"
 material3AdaptiveNavigationSuite = "1.10.0-alpha05"
 material3WindowSizeClassVersion = "1.10.0-alpha05"
@@ -46,13 +46,14 @@ navigationevent = "1.1.1"
 pagingComposeCommon = "3.3.0-alpha02-0.5.1"
 qrose = "1.1.2"
 reorderable = "3.1.0"
-roomVersion = "3.0.0-alpha06"
+roomVersion = "3.0.0-rc01"
 scanner = "0.7.1"
 sqlite = "2.6.2"
 urlencoderLib = "1.6.0"
 xemanticAiToolSchema = "1.2.0"
 kmpalette = "3.1.0"
 materialAdaptiveCmp = "1.2.0"
+supabase = "3.6.0"
 
 [libraries]
 # About Libraries (KMP)
@@ -200,6 +201,15 @@ scanner = { module = "io.github.kalinjul.easyqrscan:scanner", version.ref = "sca
 sonner = { module = "io.github.dokar3:sonner", version = "0.3.9" }
 urlencoder-lib = { module = "net.thauvin.erik.urlencoder:urlencoder-lib", version.ref = "urlencoderLib" }
 zoomableModifier = "net.engawapg.lib:zoomable:2.12.0"
+
+# Supabase
+supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
+supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt" }
+supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt" }
+supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
+supabase-composeAuth = { module = "io.github.jan-tennert.supabase:compose-auth" }
+ktorCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVersion" }
 
 [bundles]
 datastoreLibs = ["datastore", "datastorePref"]

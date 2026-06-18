@@ -9,17 +9,20 @@ import com.programmersbox.kmpuiviews.domain.customserver.FavoriteHandler
 import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.utils.FireListenerClosable
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.supabaseintegration.auth.AuthManager
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class FavoritesRepository(
     private val dao: ItemDao,
     private val firebaseDb: KmpFirebaseConnection,
     private val serverRepository: ServerRepository,
     private val systemAlerter: SystemAlerter,
+    private val authManager: AuthManager,
 ) {
 
     private val customServerHandler: FavoriteHandler?
@@ -35,7 +38,6 @@ class FavoritesRepository(
     suspend fun addFavorite(db: DbModel) {
         if (isIncognito(db.source)) return
         coroutineScope {
-            launch { customServerHandler?.addFavorite(db) }
             launch {
                 dao.insertFavorite(db)
                 systemAlerter.alertFavoritesChange()
@@ -47,9 +49,12 @@ class FavoritesRepository(
     suspend fun removeFavorite(db: DbModel) {
         if (isIncognito(db.source)) return
         coroutineScope {
-            launch { customServerHandler?.removeFavorite(db) }
             launch {
-                dao.deleteFavorite(db)
+                if (authManager.isLoggedIn()) {
+                    dao.softDeleteFavorite(db.url, Clock.System.now().toEpochMilliseconds())
+                } else {
+                    dao.deleteFavorite(db)
+                }
                 systemAlerter.alertFavoritesChange()
             }
             launch { firebaseDb.removeShowFlow(db).collect() }
@@ -59,7 +64,6 @@ class FavoritesRepository(
     suspend fun addWatched(chapterWatched: ChapterWatched) {
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
-            launch { customServerHandler?.addChapter(chapterWatched) }
             launch {
                 dao.insertChapter(chapterWatched)
                 systemAlerter.alertChapterChange()
@@ -71,9 +75,12 @@ class FavoritesRepository(
     suspend fun removeWatched(chapterWatched: ChapterWatched) {
         if (isIncognito(chapterWatched.favoriteUrl)) return
         coroutineScope {
-            launch { customServerHandler?.removeChapter(chapterWatched) }
             launch {
-                dao.deleteChapter(chapterWatched)
+                if (authManager.isLoggedIn()) {
+                    dao.softDeleteChapter(chapterWatched.url, Clock.System.now().toEpochMilliseconds())
+                } else {
+                    dao.deleteChapter(chapterWatched)
+                }
                 systemAlerter.alertChapterChange()
             }
             launch { firebaseDb.removeEpisodeWatchedFlow(chapterWatched).collect() }
@@ -83,7 +90,7 @@ class FavoritesRepository(
     suspend fun toggleNotify(db: DbModel) {
         coroutineScope {
             launch {
-                dao.updateFavoriteItem(db)
+                dao.updateFavoriteItem(db.copy(isDirty = authManager.isLoggedIn()))
                 systemAlerter.alertFavoritesChange()
             }
             launch {
@@ -93,7 +100,6 @@ class FavoritesRepository(
     }
 
     suspend fun getAllFavorites() = listOf(
-        customServerHandler?.getFavorites() ?: emptyList(),
         dao.getAllFavoritesSync(),
         firebaseDb.getAllShows().requireNoNulls()
     )

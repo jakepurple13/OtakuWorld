@@ -73,6 +73,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -114,6 +115,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
+import com.programmersbox.supabaseintegration.sync.SyncManager
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -157,6 +159,11 @@ fun HomeNav(
                 settingsHandling = settingsHandling,
             ) {
                 InitialSetup()
+
+                val supabaseSync = koinInject<SyncManager>()
+                LaunchedEffect(Unit) {
+                    supabaseSync.start()
+                }
 
                 val showAllItem by settingsHandling.rememberShowAll()
                 val middleNavItem by settingsHandling.rememberMiddleNavigationAction()

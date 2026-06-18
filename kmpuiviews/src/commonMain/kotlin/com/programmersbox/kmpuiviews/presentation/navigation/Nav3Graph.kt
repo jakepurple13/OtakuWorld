@@ -18,11 +18,13 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
+import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
@@ -52,14 +54,14 @@ import com.programmersbox.kmpuiviews.presentation.settings.security.SecurityScre
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
-import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
-import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
+import com.programmersbox.supabaseintegration.ui.supabaseRoutes
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -123,6 +125,10 @@ fun entryGraph(
         val navActions = LocalNavActions.current
         NotesScreen(onBackPress = { navActions.popBackStack() })
     }
+
+    supabaseRoutes(
+        hideComposable = { HideNavBarWhileOnScreen() }
+    )
 
     genericInfo.globalNav3Setup()
 }

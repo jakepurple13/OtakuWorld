@@ -11,7 +11,6 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.customKamelConfig
@@ -29,7 +28,6 @@ val LocalNavActions = staticCompositionLocalOf<NavigationActions> { error("No Na
 val LocalItemDao = staticCompositionLocalOf<ItemDao> { error("nothing here") }
 val LocalBlurDao = staticCompositionLocalOf<BlurHashDao> { error("nothing here") }
 val LocalHistoryDao = staticCompositionLocalOf<HistoryDao> { error("nothing here") }
-val LocalCustomListDao = staticCompositionLocalOf<ListDao> { error("nothing here") }
 val LocalSettingsHandling = staticCompositionLocalOf<NewSettingsHandling> { error("Not Set") }
 val LocalCurrentSource = staticCompositionLocalOf<CurrentSourceRepository> { CurrentSourceRepository() }
 val LocalSourcesRepository = staticCompositionLocalOf<SourceRepository> { error("nothing here") }
@@ -49,7 +47,6 @@ fun KmpLocalCompositionSetup(
         LocalItemDao provides koinInject(),
         LocalBlurDao provides koinInject(),
         LocalHistoryDao provides koinInject(),
-        LocalCustomListDao provides koinInject(),
         LocalSettingsHandling provides koinInject(),
         LocalCurrentSource provides koinInject(),
         LocalSourcesRepository provides koinInject(),

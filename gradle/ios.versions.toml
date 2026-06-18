@@ -3,6 +3,7 @@
 
 [libraries]
 # iOS-specific libraries go here
+ktorDarwin = { module = "io.ktor:ktor-client-darwin", version = "3.3.3" }
 
 [bundles]
 # iOS-specific bundles go here

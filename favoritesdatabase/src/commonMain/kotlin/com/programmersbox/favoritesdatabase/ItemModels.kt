@@ -23,6 +23,16 @@ data class DbModel(
     var numChapters: Int = 0,
     @ColumnInfo(name = "shouldCheckForUpdate", defaultValue = "true")
     val shouldCheckForUpdate: Boolean = true,
+    @ColumnInfo(name = "supabase_id", defaultValue = "")
+    val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0")
+    val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0")
+    val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0")
+    val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1")
+    val isDirty: Boolean = true,
 )
 
 @Serializable
@@ -34,7 +44,17 @@ data class ChapterWatched(
     @ColumnInfo(name = "name")
     val name: String,
     @ColumnInfo(name = "favoriteUrl")
-    val favoriteUrl: String
+    val favoriteUrl: String,
+    @ColumnInfo(name = "supabase_id", defaultValue = "")
+    val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0")
+    val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0")
+    val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0")
+    val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1")
+    val isDirty: Boolean = true,
 )
 
 @Serializable
@@ -57,6 +77,16 @@ data class NotificationItem(
     val contentTitle: String,
     @ColumnInfo(name = "isShowing", defaultValue = "0")
     val isShowing: Boolean = false,
+    @ColumnInfo(name = "supabase_id", defaultValue = "")
+    val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0")
+    val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0")
+    val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0")
+    val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1")
+    val isDirty: Boolean = true,
 )
 
 @Serializable
@@ -69,6 +99,16 @@ data class SourceOrder(
     val name: String,
     @ColumnInfo(name = "order")
     val order: Int,
+    @ColumnInfo(name = "supabase_id", defaultValue = "")
+    val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0")
+    val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0")
+    val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0")
+    val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1")
+    val isDirty: Boolean = true,
 )
 
 @Serializable
@@ -81,4 +121,14 @@ data class IncognitoSource(
     val name: String,
     @ColumnInfo(name = "isIncognito", defaultValue = "0")
     val isIncognito: Boolean,
+    @ColumnInfo(name = "supabase_id", defaultValue = "")
+    val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0")
+    val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0")
+    val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0")
+    val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1")
+    val isDirty: Boolean = true,
 )

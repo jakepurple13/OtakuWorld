@@ -24,10 +24,10 @@ interface ItemDao {
     @Delete
     suspend fun deleteFavorite(model: DbModel)
 
-    @Query("SELECT * FROM FavoriteItem")
+    @Query("SELECT * FROM FavoriteItem WHERE is_deleted = 0")
     fun getAllFavorites(): Flow<List<DbModel>>
 
-    @Query("SELECT COUNT(url) FROM FavoriteItem")
+    @Query("SELECT COUNT(url) FROM FavoriteItem  WHERE is_deleted = 0")
     fun getAllFavoritesCount(): Flow<Int>
 
     @Query("SELECT * FROM FavoriteItem")
@@ -63,13 +63,13 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched")
     suspend fun getAllChaptersSync(): List<ChapterWatched>
 
-    @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
+    @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url AND is_deleted = 0")
     fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     suspend fun getAllChaptersSync(url: String): List<ChapterWatched>
 
-    @Query("SELECT COUNT(url) FROM ChapterWatched")
+    @Query("SELECT COUNT(url) FROM ChapterWatched WHERE is_deleted = 0")
     fun getAllChaptersCount(): Flow<Int>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -182,4 +182,41 @@ interface ItemDao {
 
     @Query("UPDATE IncognitoSourceTable SET isIncognito = :isIncognito WHERE source = :source")
     suspend fun updateIncognitoSource(source: String, isIncognito: Boolean)
+
+    // Supabase sync helpers
+
+    @Query("SELECT * FROM FavoriteItem WHERE is_dirty = 1")
+    suspend fun getDirtyFavorites(): List<DbModel>
+
+    @Query("SELECT * FROM FavoriteItem WHERE url = :url")
+    suspend fun getFavoriteByUrl(url: String): DbModel?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateFavorite(model: DbModel)
+
+    @Query("SELECT * FROM ChapterWatched WHERE is_dirty = 1")
+    suspend fun getDirtyChapters(): List<ChapterWatched>
+
+    @Query("SELECT * FROM ChapterWatched WHERE url = :url")
+    suspend fun getChapterByUrl(url: String): ChapterWatched?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateChapterWatched(model: ChapterWatched)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChapterWatched(model: ChapterWatched)
+
+    // Soft-delete (sets is_deleted=1, is_dirty=1, updates timestamp)
+    @Query("UPDATE FavoriteItem SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
+    suspend fun softDeleteFavorite(url: String, timestamp: Long)
+
+    @Query("UPDATE ChapterWatched SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE url = :url")
+    suspend fun softDeleteChapter(url: String, timestamp: Long)
+
+    // Stamp updatedAt after a successful push
+    @Query("UPDATE FavoriteItem SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
+    suspend fun markFavoriteSynced(url: String, timestamp: Long)
+
+    @Query("UPDATE ChapterWatched SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
+    suspend fun markChapterSynced(url: String, timestamp: Long)
 }

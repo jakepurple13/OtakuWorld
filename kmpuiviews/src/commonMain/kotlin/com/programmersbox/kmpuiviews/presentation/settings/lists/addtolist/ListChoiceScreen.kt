@@ -26,7 +26,6 @@ import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
 import com.programmersbox.kmpuiviews.repository.ListRepository
-import com.programmersbox.kmpuiviews.utils.LocalCustomListDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -51,7 +50,7 @@ fun ListChoiceScreen(
     onClick: (CustomList) -> Unit,
 ) {
     val listRepository = koinInject<ListRepository>()
-    val dao = LocalCustomListDao.current
+    val dao = koinInject<ListRepository>()
     val scope = rememberCoroutineScope()
     val list by dao
         .getAllLists()

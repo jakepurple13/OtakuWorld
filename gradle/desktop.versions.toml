@@ -5,6 +5,7 @@ kotlinMultiplatformAppdirsVersion = "2.0.0"
 kotlinx-coroutines = "1.11.0"
 nucleusSystem = "1.15.7"
 javase = "3.5.4"
+connectivity = "2.4.1"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }
@@ -19,5 +20,6 @@ kotlin-multiplatform-appdirs = { module = "ca.gosyer:kotlin-multiplatform-appdir
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 nucleus-system-color = { module = "io.github.kdroidfilter:nucleus.system-color", version.ref = "nucleusSystem" }
 nucleus-system-info = { module = "io.github.kdroidfilter:nucleus.system-info", version.ref = "nucleusSystem" }
+connectivity-http = { module = "dev.jordond.connectivity:connectivity-http", version.ref = "connectivity" }
 
 [bundles]

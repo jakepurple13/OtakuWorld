@@ -11,6 +11,10 @@ import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
+import androidx.room3.Update
+import androidx.room3.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -33,6 +37,11 @@ data class BookmarkedChapter(
     val source: String,
     @ColumnInfo(name = "timestamp")
     val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    @ColumnInfo(name = "supabase_id", defaultValue = "") val supabaseId: String? = null,
+    @ColumnInfo(name = "created_at", defaultValue = "0") val createdAt: Long = 0L,
+    @ColumnInfo(name = "updated_at", defaultValue = "0") val updatedAt: Long = 0L,
+    @ColumnInfo(name = "is_deleted", defaultValue = "0") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "is_dirty", defaultValue = "1") val isDirty: Boolean = true,
 )
 
 @Entity(tableName = "bookmarked_chapters_fts")
@@ -53,7 +62,7 @@ interface BookmarkDao {
     @Query("DELETE FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
     suspend fun deleteBookmarkByUrl(chapterUrl: String)
 
-    @Query("SELECT * FROM bookmarked_chapters ORDER BY timestamp DESC")
+    @Query("SELECT * FROM bookmarked_chapters WHERE is_deleted = 0 ORDER BY timestamp DESC")
     fun getAllBookmarks(): Flow<List<BookmarkedChapter>>
 
     @Query("SELECT * FROM bookmarked_chapters WHERE parentUrl = :parentUrl")
@@ -78,20 +87,47 @@ interface BookmarkDao {
 
     @Query("SELECT COUNT(chapterUrl) FROM bookmarked_chapters")
     fun getAllBookmarksCount(): Flow<Int>
+
+    @Query("SELECT * FROM bookmarked_chapters WHERE is_dirty = 1")
+    suspend fun getDirtyBookmarks(): List<BookmarkedChapter>
+
+    @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
+    suspend fun getBookmarkByChapterUrl(chapterUrl: String): BookmarkedChapter?
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateBookmark(bookmark: BookmarkedChapter)
+
+    @Query("UPDATE bookmarked_chapters SET is_deleted = 1, is_dirty = 1, updated_at = :timestamp WHERE chapterUrl = :chapterUrl")
+    suspend fun softDeleteBookmark(chapterUrl: String, timestamp: Long)
+
+    @Query("UPDATE bookmarked_chapters SET updated_at = :timestamp, is_dirty = 0 WHERE chapterUrl = :chapterUrl")
+    suspend fun markBookmarkSynced(chapterUrl: String, timestamp: Long)
 }
 
 @Database(
     entities = [BookmarkedChapter::class, BookmarkedChapterFts::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class BookmarkDatabase : RoomDatabase() {
     abstract fun bookmarkDao(): BookmarkDao
 
     companion object {
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override suspend fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("ALTER TABLE `bookmarked_chapters` ADD COLUMN `supabase_id` TEXT DEFAULT ''")
+                connection.execSQL("ALTER TABLE `bookmarked_chapters` ADD COLUMN `created_at` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `bookmarked_chapters` ADD COLUMN `updated_at` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `bookmarked_chapters` ADD COLUMN `is_deleted` INTEGER NOT NULL DEFAULT 0")
+                connection.execSQL("ALTER TABLE `bookmarked_chapters` ADD COLUMN `is_dirty` INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
         fun getInstance(databaseBuilder: DatabaseBuilder): BookmarkDatabase =
             databaseBuilder
                 .build<BookmarkDatabase>("bookmarks.db")
+                .addMigrations(MIGRATION_1_2)
                 .build()
     }
 }
