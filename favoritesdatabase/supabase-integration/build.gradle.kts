@@ -31,6 +31,7 @@ kotlin {
             implementation(commonLibs.kotlinxSerialization)
             implementation(commonLibs.kotlinx.datetime)
             implementation(commonLibs.connectivity.core)
+            implementation(commonLibs.material.icons.extended)
             implementation(commonLibs.cmp.navigation3.ui)
             implementation(commonLibs.lifecycle.viewmodel.compose)
             implementation(commonLibs.multiplatform.lifecycle.runtime.compose)

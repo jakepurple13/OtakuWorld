@@ -13,11 +13,12 @@ import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.sync.SyncEngine
 import com.programmersbox.supabaseintegration.sync.SyncEngineImpl
 import com.programmersbox.supabaseintegration.sync.SyncManager
-import kotlinx.coroutines.flow.flowOf
+import com.programmersbox.supabaseintegration.ui.SupabaseQrCodeScannerViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SyncViewModel
+import kotlinx.coroutines.flow.flowOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -38,6 +39,7 @@ val supabaseModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::SyncViewModel)
     viewModelOf(::BackupRestoreViewModel)
+    viewModelOf(::SupabaseQrCodeScannerViewModel)
 
     includes(platformModule())
 }

@@ -51,10 +51,25 @@ class SupabaseConfigViewModel(
         }
     }
 
-    fun onPollIntervalChange(v: String) { pollIntervalMinutes.value = v; syncConfigSaved.value = false }
-    fun onMaxRetriesChange(v: String) { maxRetries.value = v; syncConfigSaved.value = false }
-    fun onInitialBackoffChange(v: String) { initialBackoffSeconds.value = v; syncConfigSaved.value = false }
-    fun onMaxBackoffChange(v: String) { maxBackoffSeconds.value = v; syncConfigSaved.value = false }
+    fun onPollIntervalChange(v: String) {
+        pollIntervalMinutes.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun onMaxRetriesChange(v: String) {
+        maxRetries.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun onInitialBackoffChange(v: String) {
+        initialBackoffSeconds.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun onMaxBackoffChange(v: String) {
+        maxBackoffSeconds.value = v
+        syncConfigSaved.value = false
+    }
 
     fun saveSyncConfig() {
         viewModelScope.launch {
@@ -74,8 +89,13 @@ class SupabaseConfigViewModel(
         }
     }
 
-    fun onProjectUrlChange(value: String) { projectUrl.value = value }
-    fun onAnonKeyChange(value: String) { anonKey.value = value }
+    fun onProjectUrlChange(value: String) {
+        projectUrl.value = value
+    }
+
+    fun onAnonKeyChange(value: String) {
+        anonKey.value = value
+    }
 
     fun testConnection() {
         viewModelScope.launch {
