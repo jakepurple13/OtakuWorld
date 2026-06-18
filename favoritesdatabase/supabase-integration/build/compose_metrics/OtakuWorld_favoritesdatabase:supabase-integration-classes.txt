@@ -1,0 +1,316 @@
+unstable class com.programmersbox.supabaseintegration.credentials.JvmCredentialManager {
+  unstable val configDir: File
+  unstable val credFile: File
+  unstable val keyFile: File
+  runtime val _hasCredentials: MutableStateFlow<Boolean>
+  <runtime stability> = Unstable
+}
+unstable class com.programmersbox.supabaseintegration.migration.JvmMigrationPrefs {
+  unstable val file: File
+  <runtime stability> = Unstable
+}
+stable class com.programmersbox.supabaseintegration.sync.JvmConnectivityMonitor {
+  runtime val _isOnline: MutableStateFlow<Boolean>
+  runtime val isOnline: StateFlow<Boolean>
+  <runtime stability> = 
+}
+runtime class com.programmersbox.supabaseintegration.auth.AuthManagerImpl {
+  runtime val clientProvider: SupabaseClientProvider
+  runtime val scope: CoroutineScope
+  runtime val _authState: MutableStateFlow<AuthState>
+  runtime val authState: StateFlow<AuthState>
+  <runtime stability> = Runtime(SupabaseClientProvider)
+}
+stable class com.programmersbox.supabaseintegration.auth.AuthState.Unauthenticated {
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.auth.AuthState.Loading {
+  <runtime stability> = Stable
+}
+runtime class com.programmersbox.supabaseintegration.auth.AuthState.Authenticated {
+  runtime val user: SupabaseUser
+  <runtime stability> = Runtime(SupabaseUser)
+}
+stable class com.programmersbox.supabaseintegration.auth.AuthState.Error {
+  stable val message: String
+  <runtime stability> = Stable
+}
+runtime class com.programmersbox.supabaseintegration.auth.AuthState {
+  <runtime stability> = Uncertain(AuthState)
+}
+stable class com.programmersbox.supabaseintegration.auth.SupabaseUser {
+  stable val id: String
+  stable val email: String?
+  stable val phone: String?
+  stable val displayName: String?
+  <runtime stability> = Stable
+}
+runtime class com.programmersbox.supabaseintegration.backup.BackupManagerImpl {
+  runtime val clientProvider: SupabaseClientProvider
+  runtime val authManager: AuthManager
+  runtime val _progress: MutableStateFlow<Float>
+  <runtime stability> = Runtime(SupabaseClientProvider)
+}
+stable class com.programmersbox.supabaseintegration.backup.BackupEntry {
+  stable val remotePath: String
+  stable val name: String
+  stable val createdAt: Long
+  stable val sizeBytes: Long
+  <runtime stability> = Stable
+}
+runtime class com.programmersbox.supabaseintegration.backup.RestoreManagerImpl {
+  runtime val clientProvider: SupabaseClientProvider
+  runtime val authManager: AuthManager
+  runtime val _progress: MutableStateFlow<Float>
+  <runtime stability> = Runtime(SupabaseClientProvider)
+}
+unstable class com.programmersbox.supabaseintegration.client.SupabaseClientProvider {
+  runtime val credentialManager: CredentialManager
+  runtime val scope: CoroutineScope
+  runtime var _client: SupabaseClient?
+  runtime val clientState: StateFlow<SupabaseClient?>
+  <runtime stability> = Unstable
+}
+stable class com.programmersbox.supabaseintegration.credentials.SupabaseCredentials.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.credentials.SupabaseCredentials {
+  stable val projectUrl: String
+  stable val anonKey: String
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.migration.MigrationManager {
+  runtime val syncEngine: SyncEngine
+  runtime val prefs: MigrationPrefs
+  runtime val _migrationState: MutableStateFlow<MigrationState>
+  runtime val migrationState: Flow<MigrationState>
+  <runtime stability> = 
+}
+stable class com.programmersbox.supabaseintegration.sync.FavoriteItemRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.FavoriteItemRow {
+  stable val userId: String
+  stable val url: String
+  stable val title: String
+  stable val description: String
+  stable val imageUrl: String
+  stable val source: String
+  stable val numChapters: Int
+  stable val shouldCheckForUpdate: Boolean
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.ChapterWatchedRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.ChapterWatchedRow {
+  stable val userId: String
+  stable val url: String
+  stable val name: String
+  stable val favoriteUrl: String
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.BookmarkedChapterRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.BookmarkedChapterRow {
+  stable val userId: String
+  stable val chapterUrl: String
+  stable val chapterName: String
+  stable val parentUrl: String
+  stable val parentTitle: String
+  stable val parentImageUrl: String
+  stable val source: String
+  stable val timestamp: Long
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.NoteItemRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.NoteItemRow {
+  stable val userId: String
+  stable val itemUrl: String
+  stable val itemTitle: String
+  stable val content: String
+  stable val timestamp: Long
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.HistoryItemRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.HistoryItemRow {
+  stable val userId: String
+  stable val searchText: String
+  stable val time: Long
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.CustomListItemRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.CustomListItemRow {
+  stable val userId: String
+  stable val uuid: String
+  stable val name: String
+  stable val time: Long
+  stable val useBiometric: Boolean
+  stable val description: String
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.CustomListInfoRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.CustomListInfoRow {
+  stable val userId: String
+  stable val uniqueId: String
+  stable val uuid: String
+  stable val title: String
+  stable val description: String
+  stable val url: String
+  stable val imageUrl: String
+  stable val source: String
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.HeatMapItemRow.$serializer {
+  runtime val descriptor: SerialDescriptor
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.HeatMapItemRow {
+  stable val userId: String
+  stable val time: String
+  stable val dayCount: Int
+  stable val supabaseId: String?
+  stable val createdAt: Long
+  stable val updatedAt: Long
+  stable val isDeleted: Boolean
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.SyncConfig {
+  stable val pollIntervalMs: Long
+  stable val maxRetries: Int
+  stable val initialBackoffMs: Long
+  stable val maxBackoffMs: Long
+  <runtime stability> = Stable
+}
+runtime class com.programmersbox.supabaseintegration.sync.SyncEngineImpl {
+  runtime val clientProvider: SupabaseClientProvider
+  runtime val authManager: AuthManager
+  runtime val itemDao: ItemDao
+  runtime val connectivityMonitor: ConnectivityMonitor
+  runtime val historyDao: HistoryDao?
+  runtime val bookmarkDao: BookmarkDao?
+  runtime val notesDao: NotesDao?
+  runtime val listDao: ListDao?
+  runtime val heatMapDao: HeatMapDao?
+  <runtime stability> = Runtime(SupabaseClientProvider)
+}
+unstable class com.programmersbox.supabaseintegration.sync.SyncManager {
+  runtime val syncEngine: SyncEngine
+  runtime val authManager: AuthManager
+  runtime val connectivityMonitor: ConnectivityMonitor
+  runtime val config: SyncConfig
+  runtime val scope: CoroutineScope
+  runtime val _syncState: MutableStateFlow<SyncState>
+  runtime val syncState: StateFlow<SyncState>
+  runtime var realtimeJob: Job?
+  runtime var pollingJob: Job?
+  <runtime stability> = Unstable
+}
+stable class com.programmersbox.supabaseintegration.sync.SyncState.Idle {
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.SyncState.Syncing {
+  stable val entity: String?
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.SyncState.Error {
+  stable val message: String
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.sync.SyncState.Offline {
+  <runtime stability> = Stable
+}
+runtime class com.programmersbox.supabaseintegration.sync.SyncState {
+  <runtime stability> = Uncertain(SyncState)
+}
+stable class com.programmersbox.supabaseintegration.ui.SupabaseConfigRoute {
+  runtime val $cachedSerializer$delegate: Lazy<KSerializer<Any>>
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.ui.AuthRoute {
+  runtime val $cachedSerializer$delegate: Lazy<KSerializer<Any>>
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.ui.SyncStatusRoute {
+  runtime val $cachedSerializer$delegate: Lazy<KSerializer<Any>>
+  <runtime stability> = Stable
+}
+stable class com.programmersbox.supabaseintegration.ui.BackupRestoreRoute {
+  runtime val $cachedSerializer$delegate: Lazy<KSerializer<Any>>
+  <runtime stability> = Stable
+}
+unstable class com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel {
+  runtime val authManager: AuthManager
+  runtime val authState: StateFlow<AuthState>
+  <runtime stability> = Unstable
+}
+unstable class com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel {
+  runtime val backupManager: BackupManager
+  runtime val restoreManager: RestoreManager
+  runtime val _backups: MutableStateFlow<List<BackupEntry>>
+  runtime val backups: StateFlow<List<BackupEntry>>
+  runtime val _status: MutableStateFlow<String?>
+  runtime val status: StateFlow<String?>
+  runtime val uploadProgress: Flow<Float>
+  runtime val downloadProgress: Flow<Float>
+  <runtime stability> = Unstable
+}
+unstable class com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel {
+  runtime val credentialManager: CredentialManager
+  runtime val clientProvider: SupabaseClientProvider
+  runtime val projectUrl: MutableStateFlow<String>
+  runtime val anonKey: MutableStateFlow<String>
+  runtime val connectionResult: MutableStateFlow<String?>
+  runtime val hasCredentials: StateFlow<Boolean>
+  <runtime stability> = Unstable
+}
+unstable class com.programmersbox.supabaseintegration.ui.viewmodel.SyncViewModel {
+  runtime val syncManager: SyncManager
+  runtime val syncState: StateFlow<SyncState>
+  <runtime stability> = Unstable
+}

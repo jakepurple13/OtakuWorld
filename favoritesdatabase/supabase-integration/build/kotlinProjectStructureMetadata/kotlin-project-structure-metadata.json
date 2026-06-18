@@ -1,0 +1,167 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jvmApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jvmRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:bom",
+          "io.github.jan-tennert.supabase:postgrest-kt",
+          "io.github.jan-tennert.supabase:auth-kt",
+          "io.github.jan-tennert.supabase:realtime-kt",
+          "io.github.jan-tennert.supabase:storage-kt",
+          "io.github.jan-tennert.supabase:compose-auth",
+          "io.insert-koin:koin-bom",
+          "io.insert-koin:koin-core",
+          "io.insert-koin:koin-compose",
+          "io.insert-koin:koin-compose-viewmodel",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "dev.jordond.connectivity:connectivity-core",
+          "org.jetbrains.androidx.navigation3:navigation3-ui",
+          "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
+          "OtakuWorld:favoritesdatabase",
+          "OtakuWorld:kmpmodels"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "io.github.jan-tennert.supabase:bom",
+          "io.github.jan-tennert.supabase:postgrest-kt",
+          "io.github.jan-tennert.supabase:auth-kt",
+          "io.github.jan-tennert.supabase:realtime-kt",
+          "io.github.jan-tennert.supabase:storage-kt",
+          "io.github.jan-tennert.supabase:compose-auth",
+          "io.insert-koin:koin-bom",
+          "io.insert-koin:koin-core",
+          "io.insert-koin:koin-compose",
+          "io.insert-koin:koin-compose-viewmodel",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "dev.jordond.connectivity:connectivity-core",
+          "org.jetbrains.androidx.navigation3:navigation3-ui",
+          "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
+          "OtakuWorld:favoritesdatabase",
+          "OtakuWorld:kmpmodels"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:bom",
+          "io.github.jan-tennert.supabase:postgrest-kt",
+          "io.github.jan-tennert.supabase:auth-kt",
+          "io.github.jan-tennert.supabase:realtime-kt",
+          "io.github.jan-tennert.supabase:storage-kt",
+          "io.github.jan-tennert.supabase:compose-auth",
+          "io.insert-koin:koin-bom",
+          "io.insert-koin:koin-core",
+          "io.insert-koin:koin-compose",
+          "io.insert-koin:koin-compose-viewmodel",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "dev.jordond.connectivity:connectivity-core",
+          "org.jetbrains.androidx.navigation3:navigation3-ui",
+          "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
+          "OtakuWorld:favoritesdatabase",
+          "OtakuWorld:kmpmodels",
+          "io.ktor:ktor-client-darwin",
+          "dev.jordond.connectivity:connectivity-device"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:bom",
+          "io.github.jan-tennert.supabase:postgrest-kt",
+          "io.github.jan-tennert.supabase:auth-kt",
+          "io.github.jan-tennert.supabase:realtime-kt",
+          "io.github.jan-tennert.supabase:storage-kt",
+          "io.github.jan-tennert.supabase:compose-auth",
+          "io.insert-koin:koin-bom",
+          "io.insert-koin:koin-core",
+          "io.insert-koin:koin-compose",
+          "io.insert-koin:koin-compose-viewmodel",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:kotlinx-serialization-json",
+          "org.jetbrains.kotlinx:kotlinx-datetime",
+          "dev.jordond.connectivity:connectivity-core",
+          "org.jetbrains.androidx.navigation3:navigation3-ui",
+          "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose",
+          "OtakuWorld:favoritesdatabase",
+          "OtakuWorld:kmpmodels"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      }
+    ]
+  }
+}

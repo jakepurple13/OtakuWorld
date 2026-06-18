@@ -1,0 +1,386 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "iosX64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "jvmApiElements",
+        "sourceSet": [
+          "zlibMain",
+          "commonMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "jvmRuntimeElements",
+        "sourceSet": [
+          "zlibMain",
+          "commonMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "linuxArm64ApiElements",
+        "sourceSet": [
+          "linuxMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "linuxX64ApiElements",
+        "sourceSet": [
+          "linuxMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "macosX64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "mingwX64ApiElements",
+        "sourceSet": [
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "tvosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "tvosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "tvosX64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "commonMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "wasmWasiApiElements",
+        "sourceSet": [
+          "commonMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "wasmWasiRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "nonAppleMain"
+        ]
+      },
+      {
+        "name": "watchosArm32ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "watchosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "watchosDeviceArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "watchosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      },
+      {
+        "name": "watchosX64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "unixMain",
+          "nativeMain",
+          "nonJvmMain",
+          "hashFunctions",
+          "commonMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "unixMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "hashFunctions",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "linuxMain",
+        "dependsOn": [
+          "unixMain",
+          "nonAppleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "linuxMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "nonJvmMain",
+          "zlibMain",
+          "systemFileSystemMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nonAppleMain",
+        "dependsOn": [
+          "hashFunctions"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nonJvmMain",
+        "dependsOn": [
+          "hashFunctions",
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "systemFileSystemMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "unixMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "unixMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "zlibMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

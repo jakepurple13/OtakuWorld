@@ -25,7 +25,19 @@ val supabaseModule = module {
     singleOf(::SupabaseClientProvider)
     single<AuthManager> { AuthManagerImpl(get()) }
     singleOf(::SyncConfig)
-    single<SyncEngine> { SyncEngineImpl(get(), get(), get(), get()) }
+    single<SyncEngine> {
+        SyncEngineImpl(
+            clientProvider = get(),
+            authManager = get(),
+            itemDao = get(),
+            connectivityMonitor = get(),
+            historyDao = getOrNull(),
+            bookmarkDao = getOrNull(),
+            notesDao = getOrNull(),
+            listDao = getOrNull(),
+            heatMapDao = getOrNull(),
+        )
+    }
     singleOf(::SyncManager)
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
