@@ -62,14 +62,19 @@ class SyncManager(
     private fun startInitialSync() {
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
-            try {
-                withRetry {
-                    _syncState.value = SyncState.Syncing()
-                    syncEngine.fullSync()
-                    _syncState.value = SyncState.Idle
+            // Immediate sync on connect, then keep polling while online+authenticated.
+            // Job is cancelled by stopRealtime() when auth/connectivity changes.
+            while (isActive) {
+                try {
+                    withRetry {
+                        _syncState.value = SyncState.Syncing()
+                        syncEngine.fullSync()
+                        _syncState.value = SyncState.Idle
+                    }
+                } catch (e: Exception) {
+                    _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                 }
-            } catch (e: Exception) {
-                _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+                delay(config.value.pollIntervalMs)
             }
         }
     }
@@ -84,10 +89,14 @@ class SyncManager(
             while (isActive) {
                 delay(config.value.pollIntervalMs)
                 if (connectivityMonitor.isOnline.value) {
-                    withRetry {
-                        _syncState.value = SyncState.Syncing()
-                        syncEngine.fullSync()
-                        _syncState.value = SyncState.Idle
+                    try {
+                        withRetry {
+                            _syncState.value = SyncState.Syncing()
+                            syncEngine.fullSync()
+                            _syncState.value = SyncState.Idle
+                        }
+                    } catch (e: Exception) {
+                        _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                     }
                 }
             }
