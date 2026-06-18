@@ -1,0 +1,466 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "debugApiElements",
+        "sourceSet": [
+          "multithreadedMain",
+          "commonMain",
+          "jvmCommonMain"
+        ]
+      },
+      {
+        "name": "debugRuntimeElements",
+        "sourceSet": [
+          "multithreadedMain",
+          "commonMain",
+          "jvmCommonMain"
+        ]
+      },
+      {
+        "name": "releaseApiElements",
+        "sourceSet": [
+          "multithreadedMain",
+          "commonMain",
+          "jvmCommonMain"
+        ]
+      },
+      {
+        "name": "releaseRuntimeElements",
+        "sourceSet": [
+          "multithreadedMain",
+          "commonMain",
+          "jvmCommonMain"
+        ]
+      },
+      {
+        "name": "androidNativeArm32ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "androidNativeArm64ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "androidNativeX64ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "multithreadedMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidNativeX86ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "apple64Main",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "iosX64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "browserCommonMain",
+          "jsWasmCommonMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "browserCommonMain",
+          "jsWasmCommonMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jvmApiElements",
+        "sourceSet": [
+          "multithreadedMain",
+          "commonMain",
+          "jvmCommonMain"
+        ]
+      },
+      {
+        "name": "jvmRuntimeElements",
+        "sourceSet": [
+          "multithreadedMain",
+          "commonMain",
+          "jvmCommonMain"
+        ]
+      },
+      {
+        "name": "linuxArm64ApiElements",
+        "sourceSet": [
+          "linuxMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "linuxX64ApiElements",
+        "sourceSet": [
+          "linuxMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "macosMain",
+          "apple64Main",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "macosX64ApiElements",
+        "sourceSet": [
+          "macosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "mingwX64ApiElements",
+        "sourceSet": [
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "tvosArm64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "apple64Main",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "tvosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "tvosX64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "browserCommonMain",
+          "commonMain",
+          "jsWasmCommonMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "browserCommonMain",
+          "commonMain",
+          "jsWasmCommonMain"
+        ]
+      },
+      {
+        "name": "wasmWasiApiElements",
+        "sourceSet": [
+          "jsWasmCommonMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "wasmWasiRuntimeElements",
+        "sourceSet": [
+          "jsWasmCommonMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "watchosArm32ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "apple32Main",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "watchosArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple32Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "watchosDeviceArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "watchosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      },
+      {
+        "name": "watchosX64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "apple64Main",
+          "multithreadedMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "androidNativeMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "androidNativeMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "apple32Main",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "apple32Main-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "apple64Main",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "apple64Main-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "browserCommonMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "jsWasmCommonMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "jvmCommonMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "linuxMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "linuxMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "macosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "macosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "multithreadedMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "tvosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "tvosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "watchosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "sourceSetCInteropMetadataDirectory": "watchosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      }
+    ]
+  }
+}

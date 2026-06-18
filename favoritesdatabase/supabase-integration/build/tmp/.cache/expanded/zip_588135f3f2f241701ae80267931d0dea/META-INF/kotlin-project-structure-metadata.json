@@ -1,0 +1,210 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "desktopApiElements",
+        "sourceSet": [
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "desktopRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "nativeMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "org.jetbrains.androidx.navigationevent:navigationevent-compose"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "org.jetbrains.androidx.navigationevent:navigationevent-compose"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "jbMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "org.jetbrains.androidx.navigationevent:navigationevent-compose"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain",
+          "jbMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "org.jetbrains.androidx.navigationevent:navigationevent-compose"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nonJvmMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "webMain",
+        "dependsOn": [
+          "nonJvmMain",
+          "jbMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "org.jetbrains.androidx.navigationevent:navigationevent-compose"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

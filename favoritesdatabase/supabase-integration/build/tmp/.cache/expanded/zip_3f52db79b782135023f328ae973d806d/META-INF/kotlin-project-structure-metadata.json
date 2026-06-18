@@ -1,0 +1,245 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "desktopApiElements",
+        "sourceSet": [
+          "commonMain",
+          "skikoMain",
+          "skikoExcludingWebMain"
+        ]
+      },
+      {
+        "name": "desktopRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "skikoMain",
+          "skikoExcludingWebMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "skikoMain",
+          "skikoExcludingWebMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "skikoMain",
+          "skikoExcludingWebMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "skikoMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "skikoMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "nativeMain",
+          "nonJvmMain",
+          "commonMain",
+          "skikoMain",
+          "skikoExcludingWebMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "skikoMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "skikoMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain",
+          "nonJvmMain",
+          "skikoExcludingWebMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nonJvmMain",
+        "dependsOn": [
+          "commonMain",
+          "skikoMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "skikoExcludingWebMain",
+        "dependsOn": [
+          "skikoMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "skikoMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "webMain",
+        "dependsOn": [
+          "nonJvmMain"
+        ],
+        "moduleDependency": [
+          "androidx.annotation:annotation",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection",
+          "org.jetbrains.skiko:skiko"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "desktopApiElements",
+        "sourceSet": [
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "desktopRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "nativeMain",
+          "nonJvmMain",
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "nonAndroidMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nonAndroidMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nonJvmMain",
+        "dependsOn": [
+          "commonMain",
+          "nonAndroidMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "webMain",
+        "dependsOn": [
+          "nonJvmMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.compose.foundation:foundation",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.animation:animation",
+          "org.jetbrains.compose.ui:ui-util"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

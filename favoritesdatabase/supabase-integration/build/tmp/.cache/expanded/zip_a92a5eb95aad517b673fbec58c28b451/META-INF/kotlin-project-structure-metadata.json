@@ -1,0 +1,417 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidNativeArm32ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidNativeArm64ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidNativeX64ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidNativeX86ApiElements",
+        "sourceSet": [
+          "androidNativeMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "iosX64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jvmApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "jvmRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "linuxArm64ApiElements",
+        "sourceSet": [
+          "linuxMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "linuxX64ApiElements",
+        "sourceSet": [
+          "linuxMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "macosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "macosX64ApiElements",
+        "sourceSet": [
+          "macosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "mingwX64ApiElements",
+        "sourceSet": [
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "tvosArm64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "tvosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "tvosX64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "wasmWasiApiElements",
+        "sourceSet": [
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "wasmWasiRuntimeElements",
+        "sourceSet": [
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "watchosArm32ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "watchosArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "watchosDeviceArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "watchosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "watchosX64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "nativeAndWasmWasiMain",
+          "nonJvmMain",
+          "commonMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "androidNativeMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "androidNativeMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "linuxMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "linuxMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "macosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "macosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nativeAndWasmWasiMain",
+        "dependsOn": [
+          "nonJvmMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "nativeAndWasmWasiMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nonJvmMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "tvosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "tvosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "watchosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "sourceSetCInteropMetadataDirectory": "watchosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "webMain",
+        "dependsOn": [
+          "nonJvmMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:kotlinx-serialization-core"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

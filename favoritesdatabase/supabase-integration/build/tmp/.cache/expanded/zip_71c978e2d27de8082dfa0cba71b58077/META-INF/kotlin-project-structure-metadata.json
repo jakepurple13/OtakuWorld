@@ -1,0 +1,299 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidApiElements",
+        "sourceSet": [
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "androidRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "iosX64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "webMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "jvmApiElements",
+        "sourceSet": [
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "jvmRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "linuxX64ApiElements",
+        "sourceSet": [
+          "nativeMain",
+          "commonMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "macosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "macosX64ApiElements",
+        "sourceSet": [
+          "macosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "mingwX64ApiElements",
+        "sourceSet": [
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "tvosArm64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "tvosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "tvosX64ApiElements",
+        "sourceSet": [
+          "tvosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "webMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "watchosArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "watchosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      },
+      {
+        "name": "watchosX64ApiElements",
+        "sourceSet": [
+          "watchosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "settingsMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt",
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "macosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt"
+        ],
+        "sourceSetCInteropMetadataDirectory": "macosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "settingsMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "com.russhwolf:multiplatform-settings-no-arg",
+          "com.russhwolf:multiplatform-settings-coroutines"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "tvosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt"
+        ],
+        "sourceSetCInteropMetadataDirectory": "tvosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "watchosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt"
+        ],
+        "sourceSetCInteropMetadataDirectory": "watchosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "webMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "io.github.jan-tennert.supabase:auth-kt",
+          "org.jetbrains.kotlin:kotlin-stdlib"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}

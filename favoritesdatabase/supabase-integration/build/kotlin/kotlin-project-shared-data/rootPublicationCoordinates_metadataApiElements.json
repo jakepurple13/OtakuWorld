@@ -1,0 +1,8 @@
+{
+  "buildPath": ":",
+  "projectPath": ":favoritesdatabase:supabase-integration",
+  "moduleId": {
+    "groupId": "OtakuWorld.favoritesdatabase",
+    "moduleId": "supabase-integration"
+  }
+}

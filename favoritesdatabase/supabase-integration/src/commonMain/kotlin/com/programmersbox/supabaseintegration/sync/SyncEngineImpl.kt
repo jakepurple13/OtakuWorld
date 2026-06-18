@@ -62,14 +62,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["favorite_items"].delete {
-                        filter { eq("user_id", uid); eq("url", model.url) }
-                    }
-                } else {
-                    client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid, timestamp))
-                }
+                client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid, timestamp))
                 itemDao.markFavoriteSynced(model.url, timestamp)
+                if (model.isDeleted) {
+                    itemDao.deleteFavorite(model)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -79,66 +76,33 @@ class SyncEngineImpl(
         val dirty = itemDao.getDirtyChapters()
         if (dirty.isEmpty()) return
         val errors = mutableListOf<Throwable>()
-        val (deletedList, updatedList) = dirty.partition { it.isDeleted }
+        val deletedList = dirty.filter { it.isDeleted }
 
-        println("Pushing ${dirty.size} | deleted: ${deletedList.size} | updated: ${updatedList.size} | chapters")
+        println("Pushing ${dirty.size} | deleted: ${deletedList.size} | updated: ${dirty.size - deletedList.size} | chapters")
 
-        coroutineScope {
-            // 1. Bulk Delete in chunks
-            if (deletedList.isNotEmpty()) {
-                launch {
-                    // Process max 500 items per network request
-                    deletedList.chunked(500).forEach { chunk ->
-                        runCatching {
-                            val urlsToDelete = chunk.map { it.url }
-                            client.postgrest["chapters_watched"].delete {
-                                filter {
-                                    eq("user_id", uid)
-                                    isIn("url", urlsToDelete)
-                                }
-                            }
-                            // Update local DB for this specific chunk
-                            chunk.forEach { itemDao.markChapterSynced(it.url, it.updatedAt) }
-                        }.onFailure { errors.add(it) } // Catches network errors for this chunk
-                    }
+        // 1. Bulk Upsert ALL items (including tombstones) in chunks
+        dirty.chunked(500).forEach { chunk ->
+            runCatching {
+                val rowsToUpsert = chunk.map { model ->
+                    val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
+                    model.toChapterRow(uid, timestamp)
                 }
-            }
-
-            // 2. Bulk Upsert in chunks
-            if (updatedList.isNotEmpty()) {
-                launch {
-                    // Process max 500 items per network request
-                    updatedList.chunked(500).forEach { chunk ->
-                        runCatching {
-                            val rowsToUpsert = chunk.map { model ->
-                                val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                                model.toChapterRow(uid, timestamp)
-                            }
-                            client.postgrest["chapters_watched"].upsert(rowsToUpsert)
-
-                            // Update local DB for this specific chunk
-                            chunk.forEach { itemDao.markChapterSynced(it.url, it.updatedAt) }
-                        }.onFailure { errors.add(it) } // Catches network errors for this chunk
-                    }
+                client.postgrest["chapters_watched"].upsert(rowsToUpsert)
+                // Mark synced for this chunk
+                chunk.forEach { model ->
+                    val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
+                    itemDao.markChapterSynced(model.url, timestamp)
                 }
+            }.onFailure { errors.add(it) }
+        }
+
+        // 2. After successful tombstone upsert, hard-delete the deleted ones locally
+        if (errors.isEmpty()) {
+            deletedList.forEach { model ->
+                runCatching { itemDao.deleteChapter(model) }.onFailure { errors.add(it) }
             }
         }
-        /*dirty.forEach { model ->
-            runCatching {
-                val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["chapters_watched"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("url", model.url)
-                        }
-                    }
-                } else {
-                    client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid, timestamp))
-                }
-                itemDao.markChapterSynced(model.url, timestamp)
-            }.onFailure { errors.add(it) }
-        }*/
+
         if (errors.isNotEmpty()) throw errors.first()
     }
 
@@ -150,17 +114,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["bookmarked_chapters"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("chapter_url", model.chapterUrl)
-                        }
-                    }
-                } else {
-                    client.postgrest["bookmarked_chapters"].upsert(model.toBookmarkedChapterRow(uid, timestamp))
-                }
+                client.postgrest["bookmarked_chapters"].upsert(model.toBookmarkedChapterRow(uid, timestamp))
                 bookmarkDao.markBookmarkSynced(model.chapterUrl, timestamp)
+                if (model.isDeleted) {
+                    bookmarkDao.deleteBookmark(model)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -174,17 +132,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["notes"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("item_url", model.itemUrl)
-                        }
-                    }
-                } else {
-                    client.postgrest["notes"].upsert(model.toNoteItemRow(uid, timestamp))
-                }
+                client.postgrest["notes"].upsert(model.toNoteItemRow(uid, timestamp))
                 notesDao.markNoteSynced(model.itemUrl, timestamp)
+                if (model.isDeleted) {
+                    notesDao.deleteNote(model.itemUrl)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -198,17 +150,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["history"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("search_text", model.searchText)
-                        }
-                    }
-                } else {
-                    client.postgrest["history"].upsert(model.toHistoryItemRow(uid, timestamp))
-                }
+                client.postgrest["history"].upsert(model.toHistoryItemRow(uid, timestamp))
                 historyDao.markHistorySynced(model.searchText, timestamp)
+                if (model.isDeleted) {
+                    historyDao.deleteHistory(model)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -222,17 +168,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["custom_list_items"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("uuid", model.uuid)
-                        }
-                    }
-                } else {
-                    client.postgrest["custom_list_items"].upsert(model.toCustomListItemRow(uid, timestamp))
-                }
+                client.postgrest["custom_list_items"].upsert(model.toCustomListItemRow(uid, timestamp))
                 listDao.markCustomListItemSynced(model.uuid, timestamp)
+                if (model.isDeleted) {
+                    listDao.removeList(model)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -246,17 +186,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["custom_list_info"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("unique_id", model.uniqueId)
-                        }
-                    }
-                } else {
-                    client.postgrest["custom_list_info"].upsert(model.toCustomListInfoRow(uid, timestamp))
-                }
+                client.postgrest["custom_list_info"].upsert(model.toCustomListInfoRow(uid, timestamp))
                 listDao.markCustomListInfoSynced(model.uniqueId, timestamp)
+                if (model.isDeleted) {
+                    listDao.removeItem(model)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -270,17 +204,11 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                if (model.isDeleted) {
-                    client.postgrest["heatmap_items"].delete {
-                        filter {
-                            eq("user_id", uid)
-                            eq("time", model.time.toString())
-                        }
-                    }
-                } else {
-                    client.postgrest["heatmap_items"].upsert(model.toHeatMapItemRow(uid, timestamp))
-                }
+                client.postgrest["heatmap_items"].upsert(model.toHeatMapItemRow(uid, timestamp))
                 heatMapDao.markHeatMapItemSynced(model.time, timestamp)
+                if (model.isDeleted) {
+                    heatMapDao.deleteHeatMap(model)
+                }
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()

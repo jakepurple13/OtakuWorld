@@ -1,0 +1,238 @@
+{
+  "projectStructure": {
+    "formatVersion": "0.3.3",
+    "isPublishedAsRoot": "true",
+    "variants": [
+      {
+        "name": "androidApiElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "androidRuntimeElements",
+        "sourceSet": [
+          "commonMain"
+        ]
+      },
+      {
+        "name": "desktopApiElements",
+        "sourceSet": [
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "desktopRuntimeElements",
+        "sourceSet": [
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "iosArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "iosSimulatorArm64ApiElements",
+        "sourceSet": [
+          "iosMain",
+          "appleMain",
+          "nativeMain",
+          "commonMain",
+          "nonJvmMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "jsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "jsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "macosArm64ApiElements",
+        "sourceSet": [
+          "appleMain",
+          "nativeMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "wasmJsApiElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      },
+      {
+        "name": "wasmJsRuntimeElements",
+        "sourceSet": [
+          "webMain",
+          "nonJvmMain",
+          "commonMain",
+          "jbMain"
+        ]
+      }
+    ],
+    "sourceSets": [
+      {
+        "name": "appleMain",
+        "dependsOn": [
+          "nativeMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection"
+        ],
+        "sourceSetCInteropMetadataDirectory": "appleMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "commonMain",
+        "dependsOn": [],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "iosMain",
+        "dependsOn": [
+          "appleMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection"
+        ],
+        "sourceSetCInteropMetadataDirectory": "iosMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "jbMain",
+        "dependsOn": [
+          "commonMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "nativeMain",
+        "dependsOn": [
+          "commonMain",
+          "nonJvmMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection"
+        ],
+        "sourceSetCInteropMetadataDirectory": "nativeMain-cinterop",
+        "binaryLayout": "klib",
+        "hostSpecific": "true"
+      },
+      {
+        "name": "nonJvmMain",
+        "dependsOn": [
+          "commonMain",
+          "jbMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection"
+        ],
+        "binaryLayout": "klib"
+      },
+      {
+        "name": "webMain",
+        "dependsOn": [
+          "nonJvmMain"
+        ],
+        "moduleDependency": [
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core",
+          "org.jetbrains.kotlin:kotlin-stdlib",
+          "org.jetbrains.kotlinx:atomicfu",
+          "org.jetbrains.compose.runtime:runtime",
+          "org.jetbrains.compose.ui:ui",
+          "org.jetbrains.compose.ui:ui-unit",
+          "org.jetbrains.compose.ui:ui-graphics",
+          "org.jetbrains.compose.ui:ui-util",
+          "androidx.collection:collection",
+          "org.jetbrains.compose.collection-internal:collection"
+        ],
+        "binaryLayout": "klib"
+      }
+    ]
+  }
+}
