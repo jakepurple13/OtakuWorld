@@ -7,6 +7,7 @@ import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class SyncEngineImpl(
     private val clientProvider: SupabaseClientProvider,
@@ -32,14 +33,15 @@ class SyncEngineImpl(
         val errors = mutableListOf<Throwable>()
         dirty.forEach { model ->
             runCatching {
+                val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
                 if (model.isDeleted) {
                     client.postgrest["favorite_items"].delete {
                         filter { eq("user_id", uid); eq("url", model.url) }
                     }
                 } else {
-                    client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid))
+                    client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid, timestamp))
                 }
-                itemDao.updateFavorite(model.copy(isDirty = false))
+                itemDao.markFavoriteSynced(model.url, timestamp)
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -51,14 +53,15 @@ class SyncEngineImpl(
         val errors = mutableListOf<Throwable>()
         dirty.forEach { model ->
             runCatching {
+                val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
                 if (model.isDeleted) {
                     client.postgrest["chapters_watched"].delete {
                         filter { eq("user_id", uid); eq("url", model.url) }
                     }
                 } else {
-                    client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid))
+                    client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid, timestamp))
                 }
-                itemDao.updateChapterWatched(model.copy(isDirty = false))
+                itemDao.markChapterSynced(model.url, timestamp)
             }.onFailure { errors.add(it) }
         }
         if (errors.isNotEmpty()) throw errors.first()
@@ -73,7 +76,11 @@ class SyncEngineImpl(
             .forEach { row ->
                 val local = itemDao.getFavoriteByUrl(row.url)
                 if (local == null || row.updatedAt > local.updatedAt) {
-                    itemDao.insertFavorite(row.toDbModel())
+                    if (row.isDeleted) {
+                        if (local != null) itemDao.deleteFavorite(local)
+                    } else {
+                        itemDao.insertFavorite(row.toDbModel())
+                    }
                 }
             }
         client.postgrest["chapters_watched"]
@@ -82,7 +89,11 @@ class SyncEngineImpl(
             .forEach { row ->
                 val local = itemDao.getChapterByUrl(row.url)
                 if (local == null || row.updatedAt > local.updatedAt) {
-                    itemDao.insertChapterWatched(row.toChapterWatched())
+                    if (row.isDeleted) {
+                        if (local != null) itemDao.deleteChapter(local)
+                    } else {
+                        itemDao.insertChapterWatched(row.toChapterWatched())
+                    }
                 }
             }
     }

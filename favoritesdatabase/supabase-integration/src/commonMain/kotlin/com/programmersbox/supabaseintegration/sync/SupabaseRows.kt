@@ -29,11 +29,11 @@ fun FavoriteItemRow.toDbModel() = DbModel(
     isDeleted = isDeleted, isDirty = false,
 )
 
-fun DbModel.toFavoriteRow(userId: String) = FavoriteItemRow(
+fun DbModel.toFavoriteRow(userId: String, timestamp: Long = updatedAt) = FavoriteItemRow(
     userId = userId, url = url, title = title, description = description,
     imageUrl = imageUrl, source = source, numChapters = numChapters,
     shouldCheckForUpdate = shouldCheckForUpdate,
-    supabaseId = supabaseId, createdAt = createdAt, updatedAt = updatedAt,
+    supabaseId = supabaseId, createdAt = createdAt, updatedAt = timestamp,
     isDeleted = isDeleted,
 )
 
@@ -55,8 +55,8 @@ fun ChapterWatchedRow.toChapterWatched() = ChapterWatched(
     isDeleted = isDeleted, isDirty = false,
 )
 
-fun ChapterWatched.toChapterRow(userId: String) = ChapterWatchedRow(
+fun ChapterWatched.toChapterRow(userId: String, timestamp: Long = updatedAt) = ChapterWatchedRow(
     userId = userId, url = url, name = name, favoriteUrl = favoriteUrl,
-    supabaseId = supabaseId, createdAt = createdAt, updatedAt = updatedAt,
+    supabaseId = supabaseId, createdAt = createdAt, updatedAt = timestamp,
     isDeleted = isDeleted,
 )
