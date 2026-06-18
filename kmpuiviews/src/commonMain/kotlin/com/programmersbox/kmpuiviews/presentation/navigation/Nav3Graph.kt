@@ -58,6 +58,7 @@ import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.supabaseintegration.ui.supabaseRoutes
@@ -125,7 +126,9 @@ fun entryGraph(
         NotesScreen(onBackPress = { navActions.popBackStack() })
     }
 
-    supabaseRoutes()
+    supabaseRoutes(
+        hideComposable = { HideNavBarWhileOnScreen() }
+    )
 
     genericInfo.globalNav3Setup()
 }

@@ -2,7 +2,9 @@ package com.programmersbox.supabaseintegration.sync
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class SyncConfig(
     val pollIntervalMs: Long = 5 * 60 * 1000L,
     val maxRetries: Int = 5,
@@ -31,6 +33,13 @@ class SyncConfigRepository(
     suspend fun updateMaxRetries(maxRetries: Int) = syncConfigStore.setMaxRetries(maxRetries)
     suspend fun updateInitialBackoffMs(initialBackoffMs: Long) = syncConfigStore.setInitialBackoffMs(initialBackoffMs)
     suspend fun updateMaxBackoffMs(maxBackoffMs: Long) = syncConfigStore.setMaxBackoffMs(maxBackoffMs)
+
+    suspend fun save(config: SyncConfig) {
+        updatePollIntervalMs(config.pollIntervalMs)
+        updateMaxRetries(config.maxRetries)
+        updateInitialBackoffMs(config.initialBackoffMs)
+        updateMaxBackoffMs(config.maxBackoffMs)
+    }
 }
 
 data class SyncConfigDataStore(

@@ -32,15 +32,70 @@ class SupabaseConfigViewModel(
         .listenForChanges()
         .stateIn(viewModelScope, SharingStarted.Eagerly, SyncConfig())
 
+    val pollIntervalMinutes = MutableStateFlow("")
+    val maxRetries = MutableStateFlow("")
+    val initialBackoffSeconds = MutableStateFlow("")
+    val maxBackoffSeconds = MutableStateFlow("")
+    val syncConfigSaved = MutableStateFlow(false)
+
     init {
         credentialManager.getCredentials()?.let {
             projectUrl.value = it.projectUrl
             anonKey.value = it.anonKey
         }
+        syncConfig.value.let { c ->
+            pollIntervalMinutes.value = (c.pollIntervalMs / 60_000).toString()
+            maxRetries.value = c.maxRetries.toString()
+            initialBackoffSeconds.value = (c.initialBackoffMs / 1_000).toString()
+            maxBackoffSeconds.value = (c.maxBackoffMs / 1_000).toString()
+        }
     }
 
-    fun onProjectUrlChange(value: String) { projectUrl.value = value }
-    fun onAnonKeyChange(value: String) { anonKey.value = value }
+    fun onPollIntervalChange(v: String) {
+        pollIntervalMinutes.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun onMaxRetriesChange(v: String) {
+        maxRetries.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun onInitialBackoffChange(v: String) {
+        initialBackoffSeconds.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun onMaxBackoffChange(v: String) {
+        maxBackoffSeconds.value = v
+        syncConfigSaved.value = false
+    }
+
+    fun saveSyncConfig() {
+        viewModelScope.launch {
+            pollIntervalMinutes.value.toLongOrNull()?.takeIf { it > 0 }?.let {
+                syncConfigRepository.updatePollIntervalMs(it * 60_000)
+            }
+            maxRetries.value.toIntOrNull()?.takeIf { it > 0 }?.let {
+                syncConfigRepository.updateMaxRetries(it)
+            }
+            initialBackoffSeconds.value.toLongOrNull()?.takeIf { it > 0 }?.let {
+                syncConfigRepository.updateInitialBackoffMs(it * 1_000)
+            }
+            maxBackoffSeconds.value.toLongOrNull()?.takeIf { it > 0 }?.let {
+                syncConfigRepository.updateMaxBackoffMs(it * 1_000)
+            }
+            syncConfigSaved.value = true
+        }
+    }
+
+    fun onProjectUrlChange(value: String) {
+        projectUrl.value = value
+    }
+
+    fun onAnonKeyChange(value: String) {
+        anonKey.value = value
+    }
 
     fun testConnection() {
         viewModelScope.launch {

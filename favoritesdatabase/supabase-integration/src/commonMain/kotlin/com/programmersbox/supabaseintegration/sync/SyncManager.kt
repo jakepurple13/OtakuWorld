@@ -8,10 +8,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -19,9 +23,10 @@ class SyncManager(
     private val syncEngine: SyncEngine,
     private val authManager: AuthManager,
     private val connectivityMonitor: ConnectivityMonitor,
-    private val config: SyncConfig = SyncConfig(),
+    configFlow: Flow<SyncConfig> = flowOf(SyncConfig()),
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val config = configFlow.stateIn(scope, SharingStarted.Eagerly, SyncConfig())
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
@@ -57,14 +62,19 @@ class SyncManager(
     private fun startInitialSync() {
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
-            try {
-                withRetry(config) {
-                    _syncState.value = SyncState.Syncing()
-                    syncEngine.fullSync()
-                    _syncState.value = SyncState.Idle
+            // Immediate sync on connect, then keep polling while online+authenticated.
+            // Job is cancelled by stopRealtime() when auth/connectivity changes.
+            while (isActive) {
+                try {
+                    withRetry {
+                        _syncState.value = SyncState.Syncing()
+                        syncEngine.fullSync()
+                        _syncState.value = SyncState.Idle
+                    }
+                } catch (e: Exception) {
+                    _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                 }
-            } catch (e: Exception) {
-                _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+                delay(config.value.pollIntervalMs)
             }
         }
     }
@@ -77,12 +87,16 @@ class SyncManager(
         if (pollingJob?.isActive == true) return
         pollingJob = scope.launch {
             while (isActive) {
-                delay(config.pollIntervalMs)
+                delay(config.value.pollIntervalMs)
                 if (connectivityMonitor.isOnline.value) {
-                    withRetry(config) {
-                        _syncState.value = SyncState.Syncing()
-                        syncEngine.fullSync()
-                        _syncState.value = SyncState.Idle
+                    try {
+                        withRetry {
+                            _syncState.value = SyncState.Syncing()
+                            syncEngine.fullSync()
+                            _syncState.value = SyncState.Idle
+                        }
+                    } catch (e: Exception) {
+                        _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                     }
                 }
             }
@@ -94,7 +108,7 @@ class SyncManager(
     }
 
     suspend fun triggerSync() {
-        withRetry(config) {
+        withRetry {
             _syncState.value = SyncState.Syncing()
             syncEngine.fullSync()
         }
@@ -105,17 +119,18 @@ class SyncManager(
         scope.cancel()
     }
 
-    private suspend fun withRetry(config: SyncConfig, block: suspend () -> Unit) {
+    private suspend fun withRetry(block: suspend () -> Unit) {
+        val cfg = config.value
         var attempt = 1
-        var backoff = config.initialBackoffMs
-        while (attempt <= config.maxRetries) {
+        var backoff = cfg.initialBackoffMs
+        while (attempt <= cfg.maxRetries) {
             runCatching { block() }
                 .onSuccess { return }
                 .onFailure { e ->
                     attempt++
-                    if (attempt > config.maxRetries) throw e
+                    if (attempt > cfg.maxRetries) throw e
                     delay(backoff)
-                    backoff = minOf(backoff * 2, config.maxBackoffMs)
+                    backoff = minOf(backoff * 2, cfg.maxBackoffMs)
                 }
         }
     }

@@ -7,7 +7,9 @@ import com.programmersbox.supabaseintegration.sync.SyncState
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SyncViewModel(private val syncManager: SyncManager) : ViewModel() {
+class SyncViewModel(
+    private val syncManager: SyncManager,
+) : ViewModel() {
     val syncState: StateFlow<SyncState> = syncManager.syncState
 
     //TODO: Need to set this up to be a background worker
