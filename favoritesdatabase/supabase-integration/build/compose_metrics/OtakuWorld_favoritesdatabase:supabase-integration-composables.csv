@@ -1,5 +1,0 @@
-package,name,composable,skippable,restartable,readonly,inline,isLambda,hasDefaults,defaultsGroup,groups,calls,
-com.programmersbox.supabaseintegration.ui.AuthScreen,AuthScreen,1,1,1,0,0,0,1,0,4,4,
-com.programmersbox.supabaseintegration.ui.BackupRestoreScreen,BackupRestoreScreen,1,1,1,0,0,0,1,0,4,5,
-com.programmersbox.supabaseintegration.ui.SupabaseConfigScreen,SupabaseConfigScreen,1,1,1,0,0,0,1,0,2,6,
-com.programmersbox.supabaseintegration.ui.SyncStatusScreen,SyncStatusScreen,1,1,1,0,0,0,1,0,2,7,
