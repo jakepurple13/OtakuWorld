@@ -36,7 +36,12 @@ class RestoreManagerImpl(
     override suspend fun downloadBackup(entry: BackupEntry, localPath: String): Result<String> = runCatching {
         val client = clientProvider.getOrCreate() ?: error("Client not initialized")
         val bytes = client.storage[BACKUP_BUCKET].downloadAuthenticated(entry.remotePath)
-        writeFileBytes(localPath, bytes)
-        localPath
+        // Write to a staging path to avoid overwriting the live open database file.
+        // The caller must close the Room database, then atomically rename:
+        //   File(stagingPath).renameTo(File(localPath))
+        // before restarting the database.
+        val stagingPath = "$localPath.restore"
+        writeFileBytes(stagingPath, bytes)
+        stagingPath
     }
 }

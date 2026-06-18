@@ -22,34 +22,46 @@ class SyncEngineImpl(
     override suspend fun pushLocalChanges(): Unit = coroutineScope {
         if (!connectivityMonitor.isOnline.value) return@coroutineScope
         val uid = userId
-        launch {
-            itemDao.getDirtyFavorites().forEach { model ->
-                runCatching {
-                    if (model.isDeleted) {
-                        client.postgrest["favorite_items"].delete {
-                            filter { eq("user_id", uid); eq("url", model.url) }
-                        }
-                    } else {
-                        client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid))
+        launch { pushFavorites(uid) }
+        launch { pushChapters(uid) }
+    }
+
+    private suspend fun pushFavorites(uid: String) {
+        val dirty = itemDao.getDirtyFavorites()
+        if (dirty.isEmpty()) return
+        val errors = mutableListOf<Throwable>()
+        dirty.forEach { model ->
+            runCatching {
+                if (model.isDeleted) {
+                    client.postgrest["favorite_items"].delete {
+                        filter { eq("user_id", uid); eq("url", model.url) }
                     }
-                    itemDao.updateFavorite(model.copy(isDirty = false))
+                } else {
+                    client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid))
                 }
-            }
+                itemDao.updateFavorite(model.copy(isDirty = false))
+            }.onFailure { errors.add(it) }
         }
-        launch {
-            itemDao.getDirtyChapters().forEach { model ->
-                runCatching {
-                    if (model.isDeleted) {
-                        client.postgrest["chapters_watched"].delete {
-                            filter { eq("user_id", uid); eq("url", model.url) }
-                        }
-                    } else {
-                        client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid))
+        if (errors.isNotEmpty()) throw errors.first()
+    }
+
+    private suspend fun pushChapters(uid: String) {
+        val dirty = itemDao.getDirtyChapters()
+        if (dirty.isEmpty()) return
+        val errors = mutableListOf<Throwable>()
+        dirty.forEach { model ->
+            runCatching {
+                if (model.isDeleted) {
+                    client.postgrest["chapters_watched"].delete {
+                        filter { eq("user_id", uid); eq("url", model.url) }
                     }
-                    itemDao.updateChapterWatched(model.copy(isDirty = false))
+                } else {
+                    client.postgrest["chapters_watched"].upsert(model.toChapterRow(uid))
                 }
-            }
+                itemDao.updateChapterWatched(model.copy(isDirty = false))
+            }.onFailure { errors.add(it) }
         }
+        if (errors.isNotEmpty()) throw errors.first()
     }
 
     override suspend fun pullRemoteChanges(since: Long) {

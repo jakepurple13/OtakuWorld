@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,16 +37,24 @@ class SupabaseConfigViewModel(
     fun testConnection() {
         viewModelScope.launch {
             connectionResult.value = null
+            val url = projectUrl.value.trim()
+            val key = anonKey.value.trim()
+            val tempClient = createSupabaseClient(url, key) {
+                install(Postgrest)
+            }
             runCatching {
-                val testClient = SupabaseCredentials(
-                    projectUrl.value.trim(), anonKey.value.trim()
-                )
-                credentialManager.saveCredentials(testClient)
+                // Perform a real network call with limit(0) — succeeds only if URL/key are valid
+                tempClient.from("favorite_items").select { limit(0) }
+            }.onSuccess {
+                // Credentials are valid — persist and rebuild the shared client
+                credentialManager.saveCredentials(SupabaseCredentials(url, key))
                 clientProvider.recreate()
                 connectionResult.value = "✓ Connection successful"
             }.onFailure {
+                // Do NOT persist credentials on failure
                 connectionResult.value = "✗ ${it.message}"
             }
+            tempClient.close()
         }
     }
 

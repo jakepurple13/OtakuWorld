@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="supabase-integration-jvm">
+    <output-path>$PROJECT_DIR$/favoritesdatabase/supabase-integration/build/libs</output-path>
+    <root id="archive" name="supabase-integration-jvm.jar">
+      <element id="module-output" name="OtakuWorld.favoritesdatabase.supabase-integration.jvmMain" />
+    </root>
+  </artifact>
+</component>
