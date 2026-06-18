@@ -54,7 +54,7 @@ ackpine-core = { module = "ru.solrudev.ackpine:ackpine-core", version.ref = "ack
 ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpineVersion" }
 
 # Android Foundation
-androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.1"
+androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.2"
 androidCore = "androidx.core:core-ktx:1.19.0"
 androidxBrowser = "androidx.browser:browser:1.10.0"
 androidxLegacySupport = "androidx.legacy:legacy-support-v4:1.0.0"
