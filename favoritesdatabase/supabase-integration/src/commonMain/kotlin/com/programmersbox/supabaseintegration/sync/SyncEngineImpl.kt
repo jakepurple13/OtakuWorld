@@ -62,7 +62,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid, timestamp))
+                client.postgrest["favorite_items"].upsert(model.toFavoriteRow(uid, timestamp)) {
+                    onConflict = "user_id,url"
+                }
                 itemDao.markFavoriteSynced(model.url, timestamp)
                 if (model.isDeleted) {
                     itemDao.deleteFavorite(model)
@@ -87,7 +89,9 @@ class SyncEngineImpl(
                     val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
                     model.toChapterRow(uid, timestamp)
                 }
-                client.postgrest["chapters_watched"].upsert(rowsToUpsert)
+                client.postgrest["chapters_watched"].upsert(rowsToUpsert) {
+                    onConflict = "user_id,url"
+                }
                 // Mark synced for this chunk
                 chunk.forEach { model ->
                     val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
@@ -114,7 +118,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["bookmarked_chapters"].upsert(model.toBookmarkedChapterRow(uid, timestamp))
+                client.postgrest["bookmarked_chapters"].upsert(model.toBookmarkedChapterRow(uid, timestamp)) {
+                    onConflict = "user_id,chapter_url"
+                }
                 bookmarkDao.markBookmarkSynced(model.chapterUrl, timestamp)
                 if (model.isDeleted) {
                     bookmarkDao.deleteBookmark(model)
@@ -132,7 +138,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["notes"].upsert(model.toNoteItemRow(uid, timestamp))
+                client.postgrest["notes"].upsert(model.toNoteItemRow(uid, timestamp)) {
+                    onConflict = "user_id,item_url"
+                }
                 notesDao.markNoteSynced(model.itemUrl, timestamp)
                 if (model.isDeleted) {
                     notesDao.deleteNote(model.itemUrl)
@@ -150,7 +158,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["history"].upsert(model.toHistoryItemRow(uid, timestamp))
+                client.postgrest["history"].upsert(model.toHistoryItemRow(uid, timestamp)) {
+                    onConflict = "user_id,search_text"
+                }
                 historyDao.markHistorySynced(model.searchText, timestamp)
                 if (model.isDeleted) {
                     historyDao.deleteHistory(model)
@@ -168,7 +178,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["custom_list_items"].upsert(model.toCustomListItemRow(uid, timestamp))
+                client.postgrest["custom_list_items"].upsert(model.toCustomListItemRow(uid, timestamp)) {
+                    onConflict = "user_id,uuid"
+                }
                 listDao.markCustomListItemSynced(model.uuid, timestamp)
                 if (model.isDeleted) {
                     listDao.removeList(model)
@@ -186,7 +198,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["custom_list_info"].upsert(model.toCustomListInfoRow(uid, timestamp))
+                client.postgrest["custom_list_info"].upsert(model.toCustomListInfoRow(uid, timestamp)) {
+                    onConflict = "user_id,unique_id"
+                }
                 listDao.markCustomListInfoSynced(model.uniqueId, timestamp)
                 if (model.isDeleted) {
                     listDao.removeItem(model)
@@ -204,7 +218,9 @@ class SyncEngineImpl(
         dirty.forEach { model ->
             runCatching {
                 val timestamp = if (model.updatedAt == 0L) Clock.System.now().toEpochMilliseconds() else model.updatedAt
-                client.postgrest["heatmap_items"].upsert(model.toHeatMapItemRow(uid, timestamp))
+                client.postgrest["heatmap_items"].upsert(model.toHeatMapItemRow(uid, timestamp)) {
+                    onConflict = "user_id,time"
+                }
                 heatMapDao.markHeatMapItemSynced(model.time, timestamp)
                 if (model.isDeleted) {
                     heatMapDao.deleteHeatMap(model)
