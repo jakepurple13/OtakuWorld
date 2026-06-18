@@ -52,10 +52,6 @@ fun SyncStatusScreen(viewModel: SyncViewModel = koinViewModel()) {
                 statusLabel = "Offline — polling when connection restores"
                 statusColor = offlineColor
             }
-            else -> {
-                statusLabel = ""
-                statusColor = idleColor
-            }
         }
 
         Text(statusLabel, color = statusColor, style = MaterialTheme.typography.bodyLarge)
