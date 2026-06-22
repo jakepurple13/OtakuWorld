@@ -369,6 +369,8 @@ class ReadViewModel(
             }
         }
 
+        if (loadedChapterWindow.isEmpty()) return 0
+
         val toChapterListIndex = loadedChapterWindow.first()
         loadedChapterWindow.addFirst(chapterListIndex)
         loadingChapters = loadingChapters + chapterListIndex
@@ -383,6 +385,7 @@ class ReadViewModel(
 
         loadingChapters = loadingChapters - chapterListIndex
 
+        if (newPages.isEmpty()) return 0
         val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
         pageItems.addAll(0, insertedItems)
         addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
