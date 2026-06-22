@@ -329,7 +329,7 @@ fun ReadView(
                 )
             }
         },
-        gesturesEnabled = (viewModel.list.size > 1 && userGestureAllowed) || drawerState.isOpen
+        gesturesEnabled = (viewModel.chapterCount > 1 && userGestureAllowed) || drawerState.isOpen
     ) {
         //TODO: Maybe make this an option?
         val scrollAlpha by remember {
@@ -367,7 +367,7 @@ fun ReadView(
                         currentChapter = viewModel
                             .currentChapterModel
                             ?.name
-                            ?: "Ch ${viewModel.list.size - viewModel.currentChapter}",
+                            ?: "Ch ${viewModel.chapterCount - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
                         onRefreshClick = viewModel::refresh,
                         showBlur = blurKind.showBlur,
@@ -402,12 +402,12 @@ fun ReadView(
                             onChapterShow = { scope.launch { drawerState.open() } },
                             showBlur = blurKind.showBlur,
                             isAmoledMode = isAmoledMode,
-                            chapterNumber = (viewModel.list.size - viewModel.currentChapter).toString(),
-                            chapterCount = viewModel.list.size.toString(),
+                            chapterNumber = (viewModel.chapterCount - viewModel.currentChapter).toString(),
+                            chapterCount = viewModel.chapterCount.toString(),
                             currentPage = currentPage,
                             pages = animateIntAsState(pagesInCurrentChapter).value,
-                            previousButtonEnabled = viewModel.currentChapter < viewModel.list.lastIndex && viewModel.list.size > 1,
-                            nextButtonEnabled = viewModel.currentChapter > 0 && viewModel.list.size > 1,
+                            previousButtonEnabled = viewModel.currentChapter < viewModel.chapterCount - 1 && viewModel.chapterCount > 1,
+                            nextButtonEnabled = viewModel.currentChapter > 0 && viewModel.chapterCount > 1,
                             modifier = Modifier
                                 .windowInsetsPadding(if (includeInsets) NavigationBarDefaults.windowInsets else WindowInsets(0.dp))
                                 .padding(16.dp)
@@ -573,8 +573,8 @@ fun PagerView(
 
             is PageItem.ChapterTransition -> Box(modifier = Modifier.fillMaxSize()) {
                 ChapterTransitionItem(
-                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name,
-                    toChapterName = vm.list.getOrNull(item.toChapterListIndex)?.name,
+                    fromChapterName = vm.chapterName(item.fromChapterListIndex),
+                    toChapterName = vm.chapterName(item.toChapterListIndex),
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -692,8 +692,8 @@ private fun LazyListScope.reader(
                 contentType = "transition"
             ) {
                 ChapterTransitionItem(
-                    fromChapterName = vm.list.getOrNull(item.fromChapterListIndex)?.name,
-                    toChapterName = vm.list.getOrNull(item.toChapterListIndex)?.name,
+                    fromChapterName = vm.chapterName(item.fromChapterListIndex),
+                    toChapterName = vm.chapterName(item.toChapterListIndex),
                 )
             }
         }
