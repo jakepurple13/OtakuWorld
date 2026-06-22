@@ -1,5 +1,6 @@
 package com.programmersbox.supabaseintegration.di
 
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthManagerImpl
 import com.programmersbox.supabaseintegration.backup.BackupManager
@@ -45,3 +46,7 @@ val supabaseModule = module {
 }
 
 expect fun platformModule(): Module
+
+data class SupabaseActions(
+    val onNavigate: (NavKey) -> Unit,
+)

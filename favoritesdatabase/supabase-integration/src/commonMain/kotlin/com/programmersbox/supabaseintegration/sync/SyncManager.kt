@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.FlowPreview::class)
+
 package com.programmersbox.supabaseintegration.sync
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
@@ -14,10 +16,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class SyncManager(
     private val syncEngine: SyncEngine,
@@ -33,25 +39,40 @@ class SyncManager(
     private var realtimeJob: Job? = null
     private var pollingJob: Job? = null
 
+    // 0L → full pull on first sync; updated to now() after each successful sync.
+    private var lastSyncTimestamp = 0L
+
     fun start() {
         scope.launch {
-            combine(authManager.authState, connectivityMonitor.isOnline) { auth, online -> auth to online }
-                .collect { (auth, online) ->
+            combine(
+                authManager.authState,
+                connectivityMonitor.isOnline,
+                connectivityMonitor.isMetered,
+            ) { auth, online, metered -> Triple(auth, online, metered) }
+                .collect { (auth, online, metered) ->
                     when (auth) {
-                        is AuthState.Authenticated if online -> {
+                        is AuthState.Authenticated if online && !metered -> {
+                            // WiFi: use Realtime for reactive updates, no polling needed.
                             stopPolling()
-                            startInitialSync()
+                            startWifi()
+                        }
+
+                        is AuthState.Authenticated if online && metered -> {
+                            // Cellular: fall back to polling to conserve bandwidth.
+                            stopRealtime()
+                            startPolling()
                         }
 
                         is AuthState.Authenticated if !online -> {
                             stopRealtime()
-                            startPolling()
+                            stopPolling()
                             _syncState.value = SyncState.Offline
                         }
 
                         else -> {
                             stopRealtime()
                             stopPolling()
+                            lastSyncTimestamp = 0L  // reset so next sign-in does a full pull
                             _syncState.value = SyncState.Idle
                         }
                     }
@@ -59,42 +80,56 @@ class SyncManager(
         }
     }
 
-    private fun startInitialSync() {
+    private fun startWifi() {
+        println("Starting realtime listening")
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
-            // Immediate sync on connect, then keep polling while online+authenticated.
-            // Job is cancelled by stopRealtime() when auth/connectivity changes.
-            while (isActive) {
-                try {
-                    withRetry {
-                        _syncState.value = SyncState.Syncing()
-                        syncEngine.fullSync()
-                        _syncState.value = SyncState.Idle
+            // Immediate full sync, then hand off to Realtime for incremental updates.
+            try {
+                withRetry { doSync() }
+            } catch (e: Exception) {
+                _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+            }
+
+            // Push local changes reactively: any is_dirty row → debounce 1s → push only.
+            launch {
+                syncEngine
+                    .observeLocalChanges()
+                    .debounce(1.seconds)
+                    .collect {
+                        try {
+                            withRetry { syncEngine.pushLocalChanges() }
+                        } catch (e: Exception) {
+                            _syncState.value = SyncState.Error(e.message ?: "Push failed")
+                        }
                     }
+            }
+
+            // Realtime subscription — onEvent receives only the tables that changed.
+            syncEngine.subscribeRealtime(this) { tables ->
+                try {
+                    withRetry { doSync(tables) }
                 } catch (e: Exception) {
                     _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                 }
-                delay(config.value.pollIntervalMs)
             }
         }
     }
 
     private fun stopRealtime() {
+        println("Stopping realtime listening")
         realtimeJob?.cancel()
     }
 
     private fun startPolling() {
+        println("Starting polling")
         if (pollingJob?.isActive == true) return
         pollingJob = scope.launch {
             while (isActive) {
-                delay(config.value.pollIntervalMs)
+                delay(config.value.pollIntervalMs.milliseconds)
                 if (connectivityMonitor.isOnline.value) {
                     try {
-                        withRetry {
-                            _syncState.value = SyncState.Syncing()
-                            syncEngine.fullSync()
-                            _syncState.value = SyncState.Idle
-                        }
+                        withRetry { doSync() }
                     } catch (e: Exception) {
                         _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                     }
@@ -104,15 +139,29 @@ class SyncManager(
     }
 
     private fun stopPolling() {
+        println("Stopping polling")
         pollingJob?.cancel()
     }
 
+    /**
+     * Push all dirty rows, then pull remote changes.
+     * [tables] restricts the pull to specific tables (Realtime path); null = all tables (polling / manual).
+     */
+    private suspend fun doSync(tables: Set<String>? = null) {
+        _syncState.value = SyncState.Syncing()
+        syncEngine.pushLocalChanges()
+        syncEngine.pullRemoteChanges(since = lastSyncTimestamp, tables = tables)
+        lastSyncTimestamp = Clock.System.now().toEpochMilliseconds()
+        _syncState.value = SyncState.Idle
+    }
+
     suspend fun triggerSync() {
-        withRetry {
-            _syncState.value = SyncState.Syncing()
-            syncEngine.fullSync()
+        try {
+            withRetry { doSync() }
+        } catch (e: Exception) {
+            _syncState.value = SyncState.Error(e.message ?: "Sync failed")
         }
-        _syncState.value = if (connectivityMonitor.isOnline.value) SyncState.Idle else SyncState.Offline
+        if (!connectivityMonitor.isOnline.value) _syncState.value = SyncState.Offline
     }
 
     fun stop() {
@@ -129,7 +178,7 @@ class SyncManager(
                 .onFailure { e ->
                     attempt++
                     if (attempt > cfg.maxRetries) throw e
-                    delay(backoff)
+                    delay(backoff.milliseconds)
                     backoff = minOf(backoff * 2, cfg.maxBackoffMs)
                 }
         }

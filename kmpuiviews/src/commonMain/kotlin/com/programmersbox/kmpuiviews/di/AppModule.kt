@@ -8,6 +8,7 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
@@ -23,6 +24,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
+import com.programmersbox.supabaseintegration.di.SupabaseActions
 import com.programmersbox.supabaseintegration.di.supabaseModule
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
 import org.koin.core.module.Module
@@ -77,6 +79,13 @@ val appModule = module {
             setInitialBackoffMs = { initialBackoffDataStore.set(it) },
             maxBackoffMs = maxBackOffDataStore.asFlow(),
             setMaxBackoffMs = { maxBackOffDataStore.set(it) },
+        )
+    }
+
+    single {
+        val navHandler = get<NavigationActions>()
+        SupabaseActions(
+            onNavigate = { navHandler.navigate(it) }
         )
     }
 

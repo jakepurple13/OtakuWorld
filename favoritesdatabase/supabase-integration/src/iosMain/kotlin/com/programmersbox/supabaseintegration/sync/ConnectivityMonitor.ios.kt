@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 class IosConnectivityMonitor : ConnectivityMonitor {
     private val _isOnline = MutableStateFlow(true)
     override val isOnline: StateFlow<Boolean> = _isOnline
+    // Stub: NWPathMonitor can distinguish WiFi vs cellular — false = use Realtime
+    override val isMetered: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override fun observe(): Flow<Boolean> = _isOnline
 }
 

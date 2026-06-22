@@ -16,6 +16,9 @@ class AndroidConnectivityMonitor(context: Context) : ConnectivityMonitor {
     override val isOnline: StateFlow<Boolean> = connectivity.statusUpdates
         .map { it.isConnected }
         .stateIn(scope, SharingStarted.Eagerly, true)
+    override val isMetered: StateFlow<Boolean> = connectivity.statusUpdates
+        .map { (it as? Connectivity.Status.Connected)?.metered ?: false }
+        .stateIn(scope, SharingStarted.Eagerly, false)
     override fun observe(): Flow<Boolean> = isOnline
 }
 

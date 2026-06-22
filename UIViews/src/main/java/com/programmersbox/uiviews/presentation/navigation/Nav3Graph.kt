@@ -12,7 +12,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
@@ -51,18 +50,13 @@ import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScre
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
 import com.programmersbox.kmpuiviews.presentation.webview.WebViewScreen
-import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.uiviews.BuildConfig
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.presentation.DebugView
-import com.programmersbox.uiviews.presentation.onboarding.AccountContent
-import com.programmersbox.uiviews.presentation.settings.AccountSettings
-import com.programmersbox.uiviews.presentation.settings.viewmodels.AccountViewModel
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
@@ -87,7 +81,7 @@ fun entryGraph(
         OnboardingScreen(
             navController = LocalNavActions.current,
             customPreferences = customPreferences,
-            accountContent = { AccountContent() }
+            accountContent = { }
         )
     }
 
@@ -132,12 +126,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         SettingScreen(
             composeSettingsDsl = customPreferences,
             navigationActions = navigationActions,
-            accountSettings = {
-                val appConfig: AppConfig = koinInject()
-                if (appConfig.buildType == BuildType.Full) {
-                    AccountSettings()
-                }
-            }
+            accountSettings = {}
         )
     }
 
@@ -231,7 +220,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     twoPaneEntry<Screen.AccountInfo> {
         AccountInfoScreen(
-            profileUrl = koinViewModel<AccountViewModel>().accountInfo?.photoUrl?.toString(),
+            profileUrl = null
         )
     }
 

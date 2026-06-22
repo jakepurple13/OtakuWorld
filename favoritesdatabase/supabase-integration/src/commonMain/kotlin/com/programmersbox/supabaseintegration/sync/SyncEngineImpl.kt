@@ -10,11 +10,25 @@ import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.query.request.SelectRequestBuilder
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
@@ -230,17 +244,19 @@ class SyncEngineImpl(
         if (errors.isNotEmpty()) throw errors.first()
     }
 
-    override suspend fun pullRemoteChanges(since: Long) = coroutineScope {
+    override suspend fun pullRemoteChanges(since: Long, tables: Set<String>?) = coroutineScope {
         if (!connectivityMonitor.isOnline.value) return@coroutineScope
         val uid = userId
+        fun wants(table: String) = tables == null || table in tables
 
-        pullAndRecordTime("favorites") { pullFavorites(uid, since) }
-        pullAndRecordTime("chapters") { pullChapters(uid, since) }
-        pullAndRecordTime("bookmarks") { pullBookmarks(uid, since) }
-        pullAndRecordTime("notes") { pullNotes(uid, since) }
-        pullAndRecordTime("history") { pullHistory(uid, since) }
-        pullAndRecordTime("customlist") { pullLists(uid, since) }
-        pullAndRecordTime("heatmap") { pullHeatMap(uid, since) }
+        if (wants("favorite_items")) pullAndRecordTime("favorites") { pullFavorites(uid, since) }
+        if (wants("chapters_watched")) pullAndRecordTime("chapters") { pullChapters(uid, since) }
+        if (wants("bookmarked_chapters")) pullAndRecordTime("bookmarks") { pullBookmarks(uid, since) }
+        if (wants("notes")) pullAndRecordTime("notes") { pullNotes(uid, since) }
+        if (wants("history")) pullAndRecordTime("history") { pullHistory(uid, since) }
+        if (wants("custom_list_items") || wants("custom_list_info"))
+            pullAndRecordTime("customlist") { pullLists(uid, since) }
+        if (wants("heatmap_items")) pullAndRecordTime("heatmap") { pullHeatMap(uid, since) }
     }
 
     private suspend inline fun <reified T> fetchAllRecords(
@@ -495,8 +511,67 @@ class SyncEngineImpl(
         }
     }
 
+    override fun observeLocalChanges(): Flow<Unit> = merge(
+        itemDao.observeDirtyFavoriteCount(),
+        itemDao.observeDirtyChapterCount(),
+        bookmarkDao.observeDirtyBookmarkCount(),
+        historyDao.observeDirtyHistoryCount(),
+        notesDao.observeDirtyNoteCount(),
+        listDao.observeDirtyCustomListItemCount(),
+        listDao.observeDirtyCustomListInfoCount(),
+        heatMapDao.observeDirtyHeatMapCount(),
+    ).filter { it > 0 }.map { }
+
     override suspend fun fullSync() {
         pushLocalChanges()
         pullRemoteChanges(since = 0L)
+    }
+
+    override fun subscribeRealtime(scope: CoroutineScope, onEvent: suspend (Set<String>) -> Unit): Job = scope.launch {
+        val uid = userId
+        val channel = client.channel("otakuworld-sync-$uid")
+
+        // Buffered: preserves table names so the consumer knows exactly which tables changed.
+        val trigger = Channel<String>(Channel.BUFFERED)
+
+        val tables = listOf(
+            "favorite_items", "chapters_watched", "bookmarked_chapters",
+            "notes", "history", "custom_list_items", "custom_list_info", "heatmap_items",
+        )
+
+        tables.forEach { table ->
+            channel
+                .postgresChangeFlow<PostgresAction>("public") {
+                    this.table = table
+                    filter("user_id", FilterOperator.EQ, uid)
+                }
+                .onEach {
+                    println(it)
+                    trigger.trySend(table)
+                }
+                .launchIn(this)
+        }
+
+        // Single-consumer loop — drains all queued table names into a Set, then syncs only those tables.
+        launch {
+            for (first in trigger) {
+                val changed = mutableSetOf(first)
+                var next = trigger.tryReceive()
+                while (next.isSuccess) {
+                    next.getOrNull()?.let { changed.add(it) }
+                    next = trigger.tryReceive()
+                }
+                onEvent(changed)
+            }
+        }
+
+        try {
+            channel.subscribe(blockUntilSubscribed = true)
+            awaitCancellation()
+        } finally {
+            trigger.close()
+            channel.unsubscribe()
+            runCatching { client.realtime.removeChannel(channel) }
+        }
     }
 }

@@ -109,8 +109,10 @@ LaunchedEffect(Unit) { syncManager.start() }
 
 `SyncManager` monitors auth state and connectivity automatically. It will:
 - Run a full sync immediately when the user signs in while online
-- Poll every 5 minutes when offline
-- Stop when the user signs out
+- **WiFi / Ethernet / Desktop:** subscribe to Supabase Realtime — changes on any device trigger an incremental sync within seconds
+- **Cellular:** fall back to polling every `pollIntervalMs` (default 5 min) to limit bandwidth use
+- Run incremental syncs after the first full pull (`since = lastSyncTimestamp`) — only rows updated since the last sync are fetched
+- Stop and reset state when the user signs out
 
 ---
 
@@ -259,6 +261,37 @@ Without a registered `SyncConfigDataStore`, the module falls back to `SyncConfig
 
 ---
 
+## Realtime setup (required for WiFi sync)
+
+For Realtime to fire row-level change events, each table must be added to the `supabase_realtime` publication and have `REPLICA IDENTITY FULL` set (so Delete events include the old row data). Run once in the SQL Editor:
+
+```sql
+-- Enable full replica identity on all 8 sync tables (required for DELETE events)
+ALTER TABLE favorite_items       REPLICA IDENTITY FULL;
+ALTER TABLE chapters_watched     REPLICA IDENTITY FULL;
+ALTER TABLE bookmarked_chapters  REPLICA IDENTITY FULL;
+ALTER TABLE notes                REPLICA IDENTITY FULL;
+ALTER TABLE history              REPLICA IDENTITY FULL;
+ALTER TABLE custom_list_items    REPLICA IDENTITY FULL;
+ALTER TABLE custom_list_info     REPLICA IDENTITY FULL;
+ALTER TABLE heatmap_items        REPLICA IDENTITY FULL;
+
+-- Add tables to the supabase_realtime publication
+ALTER PUBLICATION supabase_realtime ADD TABLE
+    favorite_items,
+    chapters_watched,
+    bookmarked_chapters,
+    notes,
+    history,
+    custom_list_items,
+    custom_list_info,
+    heatmap_items;
+```
+
+> Without this step, Realtime channels subscribe successfully but receive no events. The app still works via polling — Realtime just has no effect.
+
+---
+
 ## Tombstone cleanup (Supabase cron job)
 
 Soft-deleted rows stay in Supabase as tombstones so that other devices can pull the deletion. Without cleanup, tombstones accumulate forever. Set up a nightly cron job via `pg_cron` to remove old tombstones.
@@ -313,11 +346,13 @@ SELECT cron.unschedule('cleanup-soft-deleted');  -- remove
 Host App
   └── startKoin(supabaseModule + DAO modules)
         └── SyncManager.start()
-              ├── Watches AuthState + ConnectivityMonitor
-              ├── On authenticated + online: SyncEngine.fullSync()
+              ├── Watches AuthState + ConnectivityMonitor (online + metered)
+              ├── WiFi/Ethernet: initial doSync() → subscribeRealtime()
+              │     └── Any row change → coalesced doSync() (incremental)
+              ├── Cellular: polls every pollIntervalMs → doSync() (incremental)
               │     ├── pushLocalChanges() — sends is_dirty=1 rows to Supabase
-              │     └── pullRemoteChanges() — fetches rows updated since last sync
-              └── On offline: polls every pollIntervalMs
+              │     └── pullRemoteChanges(since) — fetches rows changed since lastSyncTimestamp
+              └── On offline / signed out: stop all jobs, reset lastSyncTimestamp
 
 CredentialManager (platform)
   ├── Android: EncryptedSharedPreferences
@@ -339,4 +374,4 @@ AuthManager
 | `supabaseModule` not wired in host apps yet | Requires integration PR per app |
 | Soft-delete not routed through existing delete calls | Host app must adopt `softDelete*()` DAO methods |
 | JVM credential storage uses AES/ECB | Anon keys are semi-public; acceptable, but not production-grade secret storage |
-| Realtime subscriptions | Not wired — polling-only sync currently |
+| iOS Realtime metered detection | `isMetered` is stubbed `false` on iOS — Realtime always used; NWPathMonitor can fix |

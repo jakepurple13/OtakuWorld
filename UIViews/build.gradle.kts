@@ -45,8 +45,6 @@ dependencies {
     androidTestImplementation(TestDeps.androidEspresso)
 
     implementation(platform(androidLibs.firebasePlatform))
-    implementation(androidLibs.firebaseAuth)
-    implementation(androidLibs.playServices)
     implementation(androidLibs.bundles.firebaseCrashLibs)
 
     api(platform(commonLibs.koin.bom))

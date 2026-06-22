@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.onEach
 class JvmConnectivityMonitor : ConnectivityMonitor {
     private val _isOnline = MutableStateFlow(false)
     override val isOnline: StateFlow<Boolean> = _isOnline
+    // Desktop has no cellular — treat as always unmetered so Realtime is used.
+    override val isMetered: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override fun observe(): Flow<Boolean> = _isOnline
 
     init {

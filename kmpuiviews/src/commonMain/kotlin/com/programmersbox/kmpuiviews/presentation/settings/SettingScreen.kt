@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -61,10 +62,7 @@ import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.versionCode
-import com.programmersbox.supabaseintegration.ui.AuthRoute
-import com.programmersbox.supabaseintegration.ui.BackupRestoreRoute
-import com.programmersbox.supabaseintegration.ui.SupabaseConfigRoute
-import com.programmersbox.supabaseintegration.ui.SyncStatusRoute
+import com.programmersbox.supabaseintegration.ui.SupabaseRoutes
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -286,13 +284,11 @@ private fun SettingsScreen(
             onClick = geminiClick
         )
 
-        if (source != null) {
-            segmentedListItem(
-                content = { Text(stringResource(Res.string.view_source_in_browser)) },
-                leadingContent = { Icon(Icons.Default.OpenInBrowser, null) },
-                onClick = { source?.baseUrl?.let { uriHandler.openUri(it) } }
-            )
-        }
+        segmentedListItem(
+            content = { Text(stringResource(Res.string.view_source_in_browser)) },
+            leadingContent = { Icon(Icons.Default.OpenInBrowser, null) },
+            onClick = { source?.baseUrl?.let { uriHandler.openUri(it) } }
+        )
 
         segmentedListItem(
             content = { Text(stringResource(Res.string.viewTranslationModels)) },
@@ -301,27 +297,9 @@ private fun SettingsScreen(
         )
 
         segmentedListItem(
-            onClick = { navController.navigate(SupabaseConfigRoute) },
-            content = { Text("Supabase Config") },
-            leadingContent = { Icon(Icons.Default.Settings, null) },
-        )
-
-        segmentedListItem(
-            onClick = { navController.navigate(AuthRoute) },
-            content = { Text("Supabase Auth") },
-            leadingContent = { Icon(Icons.Default.Settings, null) },
-        )
-
-        segmentedListItem(
-            onClick = { navController.navigate(SyncStatusRoute) },
-            content = { Text("Supabase Sync Status") },
-            leadingContent = { Icon(Icons.Default.Settings, null) },
-        )
-
-        segmentedListItem(
-            onClick = { navController.navigate(BackupRestoreRoute) },
-            content = { Text("Supabase Backup/Restore") },
-            leadingContent = { Icon(Icons.Default.Settings, null) },
+            onClick = { navController.navigate(SupabaseRoutes) },
+            content = { Text("Supabase") },
+            leadingContent = { Icon(Icons.Default.Sync, null) },
         )
     }
 

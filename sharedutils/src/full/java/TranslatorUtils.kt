@@ -1,6 +1,5 @@
 package com.programmersbox.sharedutils
 
-import com.google.firebase.Firebase
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
