@@ -10,11 +10,21 @@ import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.query.request.SelectRequestBuilder
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
@@ -498,5 +508,42 @@ class SyncEngineImpl(
     override suspend fun fullSync() {
         pushLocalChanges()
         pullRemoteChanges(since = 0L)
+    }
+
+    override fun subscribeRealtime(scope: CoroutineScope, onEvent: suspend () -> Unit): Job = scope.launch {
+        val uid = userId
+        val channel = client.channel("otakuworld-sync-$uid")
+
+        // CONFLATED: if a sync is still running when the next event arrives, drop the extra signal.
+        val trigger = Channel<Unit>(Channel.CONFLATED)
+
+        val tables = listOf(
+            "favorite_items", "chapters_watched", "bookmarked_chapters",
+            "notes", "history", "custom_list_items", "custom_list_info", "heatmap_items",
+        )
+
+        tables.forEach { table ->
+            channel.postgresChangeFlow<PostgresAction>("public") {
+                this.table = table
+                filter("user_id", FilterOperator.EQ, uid)
+            }.onEach { trigger.trySend(Unit) }
+             .launchIn(this)
+        }
+
+        // Single-consumer loop — only one sync runs at a time.
+        launch {
+            for (ignored in trigger) {
+                onEvent()
+            }
+        }
+
+        try {
+            channel.subscribe(blockUntilSubscribed = true)
+            awaitCancellation()
+        } finally {
+            trigger.close()
+            channel.unsubscribe()
+            runCatching { client.realtime.removeChannel(channel) }
+        }
     }
 }

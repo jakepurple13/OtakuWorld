@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class SyncManager(
     private val syncEngine: SyncEngine,
@@ -33,25 +34,40 @@ class SyncManager(
     private var realtimeJob: Job? = null
     private var pollingJob: Job? = null
 
+    // 0L → full pull on first sync; updated to now() after each successful sync.
+    private var lastSyncTimestamp = 0L
+
     fun start() {
         scope.launch {
-            combine(authManager.authState, connectivityMonitor.isOnline) { auth, online -> auth to online }
-                .collect { (auth, online) ->
-                    when (auth) {
-                        is AuthState.Authenticated if online -> {
+            combine(
+                authManager.authState,
+                connectivityMonitor.isOnline,
+                connectivityMonitor.isMetered,
+            ) { auth, online, metered -> Triple(auth, online, metered) }
+                .collect { (auth, online, metered) ->
+                    when {
+                        auth is AuthState.Authenticated && online && !metered -> {
+                            // WiFi: use Realtime for reactive updates, no polling needed.
                             stopPolling()
-                            startInitialSync()
+                            startWifi()
                         }
 
-                        is AuthState.Authenticated if !online -> {
+                        auth is AuthState.Authenticated && online && metered -> {
+                            // Cellular: fall back to polling to conserve bandwidth.
                             stopRealtime()
                             startPolling()
+                        }
+
+                        auth is AuthState.Authenticated && !online -> {
+                            stopRealtime()
+                            stopPolling()
                             _syncState.value = SyncState.Offline
                         }
 
                         else -> {
                             stopRealtime()
                             stopPolling()
+                            lastSyncTimestamp = 0L  // reset so next sign-in does a full pull
                             _syncState.value = SyncState.Idle
                         }
                     }
@@ -59,22 +75,23 @@ class SyncManager(
         }
     }
 
-    private fun startInitialSync() {
+    private fun startWifi() {
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
-            // Immediate sync on connect, then keep polling while online+authenticated.
-            // Job is cancelled by stopRealtime() when auth/connectivity changes.
-            while (isActive) {
+            // Immediate full sync, then hand off to Realtime for incremental updates.
+            try {
+                withRetry { doSync() }
+            } catch (e: Exception) {
+                _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+            }
+
+            // Realtime subscription — onEvent fires whenever a watched table row changes.
+            syncEngine.subscribeRealtime(this) {
                 try {
-                    withRetry {
-                        _syncState.value = SyncState.Syncing()
-                        syncEngine.fullSync()
-                        _syncState.value = SyncState.Idle
-                    }
+                    withRetry { doSync() }
                 } catch (e: Exception) {
                     _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                 }
-                delay(config.value.pollIntervalMs)
             }
         }
     }
@@ -90,11 +107,7 @@ class SyncManager(
                 delay(config.value.pollIntervalMs)
                 if (connectivityMonitor.isOnline.value) {
                     try {
-                        withRetry {
-                            _syncState.value = SyncState.Syncing()
-                            syncEngine.fullSync()
-                            _syncState.value = SyncState.Idle
-                        }
+                        withRetry { doSync() }
                     } catch (e: Exception) {
                         _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                     }
@@ -107,12 +120,22 @@ class SyncManager(
         pollingJob?.cancel()
     }
 
+    /** Push dirty rows then pull changes since the last recorded sync timestamp. */
+    private suspend fun doSync() {
+        _syncState.value = SyncState.Syncing()
+        syncEngine.pushLocalChanges()
+        syncEngine.pullRemoteChanges(since = lastSyncTimestamp)
+        lastSyncTimestamp = Clock.System.now().toEpochMilliseconds()
+        _syncState.value = SyncState.Idle
+    }
+
     suspend fun triggerSync() {
-        withRetry {
-            _syncState.value = SyncState.Syncing()
-            syncEngine.fullSync()
+        try {
+            withRetry { doSync() }
+        } catch (e: Exception) {
+            _syncState.value = SyncState.Error(e.message ?: "Sync failed")
         }
-        _syncState.value = if (connectivityMonitor.isOnline.value) SyncState.Idle else SyncState.Offline
+        if (!connectivityMonitor.isOnline.value) _syncState.value = SyncState.Offline
     }
 
     fun stop() {
