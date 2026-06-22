@@ -66,6 +66,9 @@ interface ItemDao {
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url AND is_deleted = 0")
     fun getAllChapters(url: String): Flow<List<ChapterWatched>>
 
+    @Query("SELECT * FROM ChapterWatched")
+    fun getTrulyAllChapters(): Flow<List<ChapterWatched>>
+
     @Query("SELECT * FROM ChapterWatched where favoriteUrl = :url")
     suspend fun getAllChaptersSync(url: String): List<ChapterWatched>
 
@@ -188,6 +191,9 @@ interface ItemDao {
     @Query("SELECT * FROM FavoriteItem WHERE is_dirty = 1")
     suspend fun getDirtyFavorites(): List<DbModel>
 
+    @Query("SELECT COUNT(*) FROM FavoriteItem WHERE is_dirty = 1")
+    fun observeDirtyFavoriteCount(): Flow<Int>
+
     @Query("SELECT * FROM FavoriteItem WHERE url = :url")
     suspend fun getFavoriteByUrl(url: String): DbModel?
 
@@ -196,6 +202,9 @@ interface ItemDao {
 
     @Query("SELECT * FROM ChapterWatched WHERE is_dirty = 1")
     suspend fun getDirtyChapters(): List<ChapterWatched>
+
+    @Query("SELECT COUNT(*) FROM ChapterWatched WHERE is_dirty = 1")
+    fun observeDirtyChapterCount(): Flow<Int>
 
     @Query("SELECT * FROM ChapterWatched WHERE url = :url")
     suspend fun getChapterByUrl(url: String): ChapterWatched?

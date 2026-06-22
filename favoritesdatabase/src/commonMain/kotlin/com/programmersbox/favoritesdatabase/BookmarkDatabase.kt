@@ -91,6 +91,9 @@ interface BookmarkDao {
     @Query("SELECT * FROM bookmarked_chapters WHERE is_dirty = 1")
     suspend fun getDirtyBookmarks(): List<BookmarkedChapter>
 
+    @Query("SELECT COUNT(*) FROM bookmarked_chapters WHERE is_dirty = 1")
+    fun observeDirtyBookmarkCount(): Flow<Int>
+
     @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
     suspend fun getBookmarkByChapterUrl(chapterUrl: String): BookmarkedChapter?
 

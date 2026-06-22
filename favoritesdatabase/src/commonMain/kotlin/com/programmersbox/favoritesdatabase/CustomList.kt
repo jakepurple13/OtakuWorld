@@ -189,8 +189,14 @@ interface ListDao {
     @Query("SELECT * FROM CustomListItem WHERE is_dirty = 1")
     suspend fun getDirtyCustomListItems(): List<CustomListItem>
 
+    @Query("SELECT COUNT(*) FROM CustomListItem WHERE is_dirty = 1")
+    fun observeDirtyCustomListItemCount(): Flow<Int>
+
     @Query("SELECT * FROM CustomListInfo WHERE is_dirty = 1")
     suspend fun getDirtyCustomListInfo(): List<CustomListInfo>
+
+    @Query("SELECT COUNT(*) FROM CustomListInfo WHERE is_dirty = 1")
+    fun observeDirtyCustomListInfoCount(): Flow<Int>
 
     @Query("SELECT * FROM CustomListItem WHERE uuid = :uuid")
     suspend fun getCustomListItemByUuid(uuid: String): CustomListItem?

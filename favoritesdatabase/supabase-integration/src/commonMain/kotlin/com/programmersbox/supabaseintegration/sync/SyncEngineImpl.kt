@@ -23,7 +23,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -506,6 +510,17 @@ class SyncEngineImpl(
             println("$direction $dbId took $duration")
         }
     }
+
+    override fun observeLocalChanges(): Flow<Unit> = merge(
+        itemDao.observeDirtyFavoriteCount(),
+        itemDao.observeDirtyChapterCount(),
+        bookmarkDao.observeDirtyBookmarkCount(),
+        historyDao.observeDirtyHistoryCount(),
+        notesDao.observeDirtyNoteCount(),
+        listDao.observeDirtyCustomListItemCount(),
+        listDao.observeDirtyCustomListInfoCount(),
+        heatMapDao.observeDirtyHeatMapCount(),
+    ).filter { it > 0 }.map { }
 
     override suspend fun fullSync() {
         pushLocalChanges()

@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.FlowPreview::class)
+
 package com.programmersbox.supabaseintegration.sync
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
@@ -14,11 +16,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class SyncManager(
     private val syncEngine: SyncEngine,
@@ -76,8 +81,6 @@ class SyncManager(
     }
 
     private fun startWifi() {
-        //TODO: Listen for updates to each of the tables and when they are updated, push them
-        
         println("Starting realtime listening")
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
@@ -86,6 +89,20 @@ class SyncManager(
                 withRetry { doSync() }
             } catch (e: Exception) {
                 _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+            }
+
+            // Push local changes reactively: any is_dirty row → debounce 1s → push only.
+            launch {
+                syncEngine
+                    .observeLocalChanges()
+                    .debounce(1.seconds)
+                    .collect {
+                        try {
+                            withRetry { syncEngine.pushLocalChanges() }
+                        } catch (e: Exception) {
+                            _syncState.value = SyncState.Error(e.message ?: "Push failed")
+                        }
+                    }
             }
 
             // Realtime subscription — onEvent receives only the tables that changed.
@@ -109,7 +126,7 @@ class SyncManager(
         if (pollingJob?.isActive == true) return
         pollingJob = scope.launch {
             while (isActive) {
-                delay(config.value.pollIntervalMs)
+                delay(config.value.pollIntervalMs.milliseconds)
                 if (connectivityMonitor.isOnline.value) {
                     try {
                         withRetry { doSync() }
@@ -161,7 +178,7 @@ class SyncManager(
                 .onFailure { e ->
                     attempt++
                     if (attempt > cfg.maxRetries) throw e
-                    delay(backoff)
+                    delay(backoff.milliseconds)
                     backoff = minOf(backoff * 2, cfg.maxBackoffMs)
                 }
         }
