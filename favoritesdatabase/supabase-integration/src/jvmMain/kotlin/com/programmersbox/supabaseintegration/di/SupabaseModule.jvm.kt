@@ -1,5 +1,6 @@
 package com.programmersbox.supabaseintegration.di
 
+import com.programmersbox.supabaseintegration.client.SupabaseClientEngine
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
 import com.programmersbox.supabaseintegration.credentials.JvmCredentialManager
 import com.programmersbox.supabaseintegration.migration.JvmMigrationPrefs
@@ -13,4 +14,5 @@ actual fun platformModule(): Module = module {
     single<CredentialManager> { JvmCredentialManager() }
     single<ConnectivityMonitor> { JvmConnectivityMonitor() }
     single<MigrationPrefs> { JvmMigrationPrefs() }
+    single { SupabaseClientEngine() }
 }

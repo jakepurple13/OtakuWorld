@@ -8,6 +8,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
+import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +16,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-class SupabaseClientProvider(private val credentialManager: CredentialManager) {
+class SupabaseClientProvider(
+    private val credentialManager: CredentialManager,
+    private val supabaseClientEngine: SupabaseClientEngine,
+) {
     private val scope = CoroutineScope(Dispatchers.Default)
     private var _client: SupabaseClient? = null
 
@@ -45,9 +49,12 @@ class SupabaseClientProvider(private val credentialManager: CredentialManager) {
             supabaseUrl = credentials.projectUrl,
             supabaseKey = credentials.anonKey
         ) {
+            supabaseClientEngine.engine?.let { httpEngine = it }
             install(Auth)
             install(Postgrest)
             install(Realtime)
             install(Storage)
         }
 }
+
+class SupabaseClientEngine(val engine: HttpClientEngine? = null)

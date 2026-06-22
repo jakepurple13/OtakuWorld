@@ -530,7 +530,10 @@ class SyncEngineImpl(
                     this.table = table
                     filter("user_id", FilterOperator.EQ, uid)
                 }
-                .onEach { trigger.trySend(table) }
+                .onEach {
+                    println(it)
+                    trigger.trySend(table)
+                }
                 .launchIn(this)
         }
 

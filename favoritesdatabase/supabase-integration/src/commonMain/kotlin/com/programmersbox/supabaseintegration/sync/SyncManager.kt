@@ -76,6 +76,8 @@ class SyncManager(
     }
 
     private fun startWifi() {
+        //TODO: Listen for updates to each of the tables and when they are updated, push them
+        
         println("Starting realtime listening")
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
