@@ -316,6 +316,79 @@ class ReadViewModel(
             .launchIn(viewModelScope)
     }
 
+    private fun appendDownloadedChapter(chapterListIndex: Int) {
+        if (chapterListIndex < 0 || chapterListIndex >= downloadedPaths.size) return
+        if (chapterListIndex in loadedChapterWindow) return
+        loadedChapterWindow.addLast(chapterListIndex)
+        val fromChapterListIndex = loadedChapterWindow[loadedChapterWindow.size - 2]
+
+        viewModelScope.launch {
+            while (loadedChapterWindow.size > WINDOW_SIZE) {
+                val dropped = loadedChapterWindow.removeFirst()
+                val firstKeptIdx = pageItems.indexOfFirst { item ->
+                    when (item) {
+                        is PageItem.Page -> item.chapterListIndex != dropped
+                        is PageItem.ChapterTransition -> item.fromChapterListIndex != dropped
+                    }
+                }
+                if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
+            }
+
+            loadingChapters = loadingChapters + chapterListIndex
+
+            val newPageTransition = PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex)
+            if (newPageTransition !in pageItems) pageItems.add(newPageTransition)
+
+            downloadedChapterFlow(downloadedPaths[chapterListIndex])
+                .onEach { urls ->
+                    pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, true) })
+                    pageItems.add(PageItem.ChapterTransition(chapterListIndex, chapterListIndex - 1))
+                    heatMapDao.upsertHeatMap()
+                }
+                .onCompletion {
+                    loadingChapters = loadingChapters - chapterListIndex
+                    addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+                }
+                .launchIn(viewModelScope)
+        }
+    }
+
+    private suspend fun prependDownloadedChapter(chapterListIndex: Int): Int {
+        if (chapterListIndex < 0 || chapterListIndex >= downloadedPaths.size) return 0
+        if (chapterListIndex in loadedChapterWindow) return 0
+
+        if (loadedChapterWindow.size >= WINDOW_SIZE) {
+            val dropped = loadedChapterWindow.removeLast()
+            val removeFrom = pageItems.indexOfFirst {
+                it is PageItem.ChapterTransition && it.toChapterListIndex == dropped
+            }.takeIf { it >= 0 } ?: pageItems.indexOfFirst {
+                it is PageItem.Page && it.chapterListIndex == dropped
+            }
+            if (removeFrom >= 0) {
+                while (pageItems.size > removeFrom) pageItems.removeAt(removeFrom)
+            }
+        }
+
+        val toChapterListIndex = loadedChapterWindow.first()
+        loadedChapterWindow.addFirst(chapterListIndex)
+        loadingChapters = loadingChapters + chapterListIndex
+
+        val newPages = mutableListOf<PageItem>()
+        downloadedChapterFlow(downloadedPaths[chapterListIndex])
+            .firstOrNull()
+            ?.let { urls ->
+                newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, true) })
+                heatMapDao.upsertHeatMap()
+            }
+
+        loadingChapters = loadingChapters - chapterListIndex
+
+        val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
+        pageItems.addAll(0, insertedItems)
+        addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+        return insertedItems.size
+    }
+
     fun chapterRead(item: PageItem.ChapterTransition) {
         viewModelScope.launch {
             list.getOrNull(item.fromChapterListIndex)?.let { item ->
@@ -328,6 +401,10 @@ class ReadViewModel(
     }
 
     fun appendChapter(chapterListIndex: Int) {
+        if (isDownloadedPathsMode) {
+            appendDownloadedChapter(chapterListIndex)
+            return
+        }
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return
         if (chapterListIndex in loadedChapterWindow) return
         loadedChapterWindow.addLast(chapterListIndex)
@@ -375,6 +452,7 @@ class ReadViewModel(
     }
 
     suspend fun prependChapter(chapterListIndex: Int): Int {
+        if (isDownloadedPathsMode) return prependDownloadedChapter(chapterListIndex)
         println("prependChapter: $chapterListIndex")
         println("loadedChapterWindow: $loadedChapterWindow")
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return 0
