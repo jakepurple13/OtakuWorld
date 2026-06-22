@@ -367,6 +367,7 @@ fun ReadView(
                         currentChapter = viewModel
                             .currentChapterModel
                             ?.name
+                            ?: remember(viewModel.currentChapter) { viewModel.chapterName(viewModel.currentChapter) }
                             ?: "Ch ${viewModel.chapterCount - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
                         onRefreshClick = viewModel::refresh,
