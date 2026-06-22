@@ -85,10 +85,10 @@ class SyncManager(
                 _syncState.value = SyncState.Error(e.message ?: "Sync failed")
             }
 
-            // Realtime subscription — onEvent fires whenever a watched table row changes.
-            syncEngine.subscribeRealtime(this) {
+            // Realtime subscription — onEvent receives only the tables that changed.
+            syncEngine.subscribeRealtime(this) { tables ->
                 try {
-                    withRetry { doSync() }
+                    withRetry { doSync(tables) }
                 } catch (e: Exception) {
                     _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                 }
@@ -120,11 +120,14 @@ class SyncManager(
         pollingJob?.cancel()
     }
 
-    /** Push dirty rows then pull changes since the last recorded sync timestamp. */
-    private suspend fun doSync() {
+    /**
+     * Push all dirty rows, then pull remote changes.
+     * [tables] restricts the pull to specific tables (Realtime path); null = all tables (polling / manual).
+     */
+    private suspend fun doSync(tables: Set<String>? = null) {
         _syncState.value = SyncState.Syncing()
         syncEngine.pushLocalChanges()
-        syncEngine.pullRemoteChanges(since = lastSyncTimestamp)
+        syncEngine.pullRemoteChanges(since = lastSyncTimestamp, tables = tables)
         lastSyncTimestamp = Clock.System.now().toEpochMilliseconds()
         _syncState.value = SyncState.Idle
     }

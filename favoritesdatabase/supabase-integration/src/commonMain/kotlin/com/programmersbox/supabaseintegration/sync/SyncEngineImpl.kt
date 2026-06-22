@@ -240,17 +240,19 @@ class SyncEngineImpl(
         if (errors.isNotEmpty()) throw errors.first()
     }
 
-    override suspend fun pullRemoteChanges(since: Long) = coroutineScope {
+    override suspend fun pullRemoteChanges(since: Long, tables: Set<String>?) = coroutineScope {
         if (!connectivityMonitor.isOnline.value) return@coroutineScope
         val uid = userId
+        fun wants(table: String) = tables == null || table in tables
 
-        pullAndRecordTime("favorites") { pullFavorites(uid, since) }
-        pullAndRecordTime("chapters") { pullChapters(uid, since) }
-        pullAndRecordTime("bookmarks") { pullBookmarks(uid, since) }
-        pullAndRecordTime("notes") { pullNotes(uid, since) }
-        pullAndRecordTime("history") { pullHistory(uid, since) }
-        pullAndRecordTime("customlist") { pullLists(uid, since) }
-        pullAndRecordTime("heatmap") { pullHeatMap(uid, since) }
+        if (wants("favorite_items"))      pullAndRecordTime("favorites") { pullFavorites(uid, since) }
+        if (wants("chapters_watched"))    pullAndRecordTime("chapters") { pullChapters(uid, since) }
+        if (wants("bookmarked_chapters")) pullAndRecordTime("bookmarks") { pullBookmarks(uid, since) }
+        if (wants("notes"))               pullAndRecordTime("notes") { pullNotes(uid, since) }
+        if (wants("history"))             pullAndRecordTime("history") { pullHistory(uid, since) }
+        if (wants("custom_list_items") || wants("custom_list_info"))
+                                          pullAndRecordTime("customlist") { pullLists(uid, since) }
+        if (wants("heatmap_items"))       pullAndRecordTime("heatmap") { pullHeatMap(uid, since) }
     }
 
     private suspend inline fun <reified T> fetchAllRecords(
@@ -510,12 +512,12 @@ class SyncEngineImpl(
         pullRemoteChanges(since = 0L)
     }
 
-    override fun subscribeRealtime(scope: CoroutineScope, onEvent: suspend () -> Unit): Job = scope.launch {
+    override fun subscribeRealtime(scope: CoroutineScope, onEvent: suspend (Set<String>) -> Unit): Job = scope.launch {
         val uid = userId
         val channel = client.channel("otakuworld-sync-$uid")
 
-        // CONFLATED: if a sync is still running when the next event arrives, drop the extra signal.
-        val trigger = Channel<Unit>(Channel.CONFLATED)
+        // Buffered: preserves table names so the consumer knows exactly which tables changed.
+        val trigger = Channel<String>(Channel.BUFFERED)
 
         val tables = listOf(
             "favorite_items", "chapters_watched", "bookmarked_chapters",
@@ -526,14 +528,20 @@ class SyncEngineImpl(
             channel.postgresChangeFlow<PostgresAction>("public") {
                 this.table = table
                 filter("user_id", FilterOperator.EQ, uid)
-            }.onEach { trigger.trySend(Unit) }
+            }.onEach { trigger.trySend(table) }
              .launchIn(this)
         }
 
-        // Single-consumer loop — only one sync runs at a time.
+        // Single-consumer loop — drains all queued table names into a Set, then syncs only those tables.
         launch {
-            for (ignored in trigger) {
-                onEvent()
+            for (first in trigger) {
+                val changed = mutableSetOf(first)
+                var next = trigger.tryReceive()
+                while (next.isSuccess) {
+                    next.getOrNull()?.let { changed.add(it) }
+                    next = trigger.tryReceive()
+                }
+                onEvent(changed)
             }
         }
 
