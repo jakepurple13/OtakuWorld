@@ -172,7 +172,7 @@ class ReadViewModel(
 
         val paths = chapterHolder.downloadedChapterPaths
         chapterHolder.downloadedChapterPaths = null
-        if (paths != null && paths.isNotEmpty()) {
+        if (!paths.isNullOrEmpty()) {
             downloadedPaths = paths
             currentChapter = paths.indexOf(mangaReader.filePath).coerceAtLeast(0)
             loadDownloadedChapterAtIndex(currentChapter)
@@ -527,5 +527,6 @@ class ReadViewModel(
         super.onCleared()
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
+        chapterHolder.downloadedChapterPaths = null
     }
 }

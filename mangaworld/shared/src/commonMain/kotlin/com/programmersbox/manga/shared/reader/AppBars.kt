@@ -129,11 +129,11 @@ internal fun FloatingFloatingActionButton(
         },
         modifier = modifier
     ) {
-        val prevShown = vm.currentChapter < vm.list.lastIndex
+        val prevShown = vm.currentChapter < vm.chapterCount - 1
         val nextShown = vm.currentChapter > 0
 
         AnimatedVisibility(
-            visible = prevShown && vm.list.size > 1,
+            visible = prevShown && vm.chapterCount > 1,
             enter = expandHorizontally(expandFrom = Alignment.Start),
             exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
         ) {
@@ -146,7 +146,7 @@ internal fun FloatingFloatingActionButton(
         GoBackIconButton()
 
         AnimatedVisibility(
-            visible = nextShown && vm.list.size > 1,
+            visible = nextShown && vm.chapterCount > 1,
             enter = expandHorizontally(),
             exit = shrinkHorizontally()
         ) {
@@ -191,11 +191,11 @@ internal fun BottomBar(
             else -> BottomAppBarDefaults.containerColor
         }
     ) {
-        val prevShown = vm.currentChapter < vm.list.lastIndex
+        val prevShown = vm.currentChapter < vm.chapterCount - 1
         val nextShown = vm.currentChapter > 0
 
         AnimatedVisibility(
-            visible = prevShown && vm.list.size > 1,
+            visible = prevShown && vm.chapterCount > 1,
             enter = expandHorizontally(expandFrom = Alignment.Start),
             exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
         ) {
@@ -228,7 +228,7 @@ internal fun BottomBar(
         )
 
         AnimatedVisibility(
-            visible = nextShown && vm.list.size > 1,
+            visible = nextShown && vm.chapterCount > 1,
             enter = expandHorizontally(),
             exit = shrinkHorizontally()
         ) {
