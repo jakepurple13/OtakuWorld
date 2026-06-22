@@ -245,14 +245,14 @@ class SyncEngineImpl(
         val uid = userId
         fun wants(table: String) = tables == null || table in tables
 
-        if (wants("favorite_items"))      pullAndRecordTime("favorites") { pullFavorites(uid, since) }
-        if (wants("chapters_watched"))    pullAndRecordTime("chapters") { pullChapters(uid, since) }
+        if (wants("favorite_items")) pullAndRecordTime("favorites") { pullFavorites(uid, since) }
+        if (wants("chapters_watched")) pullAndRecordTime("chapters") { pullChapters(uid, since) }
         if (wants("bookmarked_chapters")) pullAndRecordTime("bookmarks") { pullBookmarks(uid, since) }
-        if (wants("notes"))               pullAndRecordTime("notes") { pullNotes(uid, since) }
-        if (wants("history"))             pullAndRecordTime("history") { pullHistory(uid, since) }
+        if (wants("notes")) pullAndRecordTime("notes") { pullNotes(uid, since) }
+        if (wants("history")) pullAndRecordTime("history") { pullHistory(uid, since) }
         if (wants("custom_list_items") || wants("custom_list_info"))
-                                          pullAndRecordTime("customlist") { pullLists(uid, since) }
-        if (wants("heatmap_items"))       pullAndRecordTime("heatmap") { pullHeatMap(uid, since) }
+            pullAndRecordTime("customlist") { pullLists(uid, since) }
+        if (wants("heatmap_items")) pullAndRecordTime("heatmap") { pullHeatMap(uid, since) }
     }
 
     private suspend inline fun <reified T> fetchAllRecords(
@@ -525,11 +525,13 @@ class SyncEngineImpl(
         )
 
         tables.forEach { table ->
-            channel.postgresChangeFlow<PostgresAction>("public") {
-                this.table = table
-                filter("user_id", FilterOperator.EQ, uid)
-            }.onEach { trigger.trySend(table) }
-             .launchIn(this)
+            channel
+                .postgresChangeFlow<PostgresAction>("public") {
+                    this.table = table
+                    filter("user_id", FilterOperator.EQ, uid)
+                }
+                .onEach { trigger.trySend(table) }
+                .launchIn(this)
         }
 
         // Single-consumer loop — drains all queued table names into a Set, then syncs only those tables.

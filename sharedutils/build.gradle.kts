@@ -16,7 +16,7 @@ android {
         getByName("main") {
             java.srcDirs("src/main/java")
         }
-        ProductFlavorTypes.values().forEach {
+        ProductFlavorTypes.entries.forEach {
             getByName(it.nameType) {
                 java.srcDirs("src/${it.nameType}/java")
             }
@@ -36,12 +36,6 @@ dependencies {
     fullImplementation(androidLibs.mlkitTranslate)
     fullImplementation(androidLibs.mlkitLanguage)
     fullImplementation(platform(androidLibs.firebasePlatform))
-    fullImplementation(androidLibs.firebaseDatabase)
-    fullImplementation(androidLibs.firebaseFirestore)
-    fullImplementation(androidLibs.firebaseAuth)
-    fullImplementation(androidLibs.firebaseUiAuth)
-    fullImplementation(androidLibs.playServices)
-    fullImplementation(androidLibs.coroutinesPlayServices)
 
     implementation(commonLibs.coroutinesCore)
     implementation(androidLibs.coroutinesAndroid)
