@@ -95,7 +95,7 @@ class ReadViewModel(
                 .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
                 .let { emit(it) }
         }
-            .catch { emit(emptyList()) }
+            .catch { e -> exceptionDao.insertException(e); emit(emptyList()) }
             .flowOn(Dispatchers.IO)
 
     companion object {
