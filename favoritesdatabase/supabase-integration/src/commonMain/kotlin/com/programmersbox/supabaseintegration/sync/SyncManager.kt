@@ -45,20 +45,20 @@ class SyncManager(
                 connectivityMonitor.isMetered,
             ) { auth, online, metered -> Triple(auth, online, metered) }
                 .collect { (auth, online, metered) ->
-                    when {
-                        auth is AuthState.Authenticated && online && !metered -> {
+                    when (auth) {
+                        is AuthState.Authenticated if online && !metered -> {
                             // WiFi: use Realtime for reactive updates, no polling needed.
                             stopPolling()
                             startWifi()
                         }
 
-                        auth is AuthState.Authenticated && online && metered -> {
+                        is AuthState.Authenticated if online && metered -> {
                             // Cellular: fall back to polling to conserve bandwidth.
                             stopRealtime()
                             startPolling()
                         }
 
-                        auth is AuthState.Authenticated && !online -> {
+                        is AuthState.Authenticated if !online -> {
                             stopRealtime()
                             stopPolling()
                             _syncState.value = SyncState.Offline
@@ -76,6 +76,7 @@ class SyncManager(
     }
 
     private fun startWifi() {
+        println("Starting realtime listening")
         realtimeJob?.cancel()
         realtimeJob = scope.launch {
             // Immediate full sync, then hand off to Realtime for incremental updates.
@@ -97,10 +98,12 @@ class SyncManager(
     }
 
     private fun stopRealtime() {
+        println("Stopping realtime listening")
         realtimeJob?.cancel()
     }
 
     private fun startPolling() {
+        println("Starting polling")
         if (pollingJob?.isActive == true) return
         pollingJob = scope.launch {
             while (isActive) {
@@ -117,6 +120,7 @@ class SyncManager(
     }
 
     private fun stopPolling() {
+        println("Stopping polling")
         pollingJob?.cancel()
     }
 

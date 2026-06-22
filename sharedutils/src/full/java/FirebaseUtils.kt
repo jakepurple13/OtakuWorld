@@ -1,19 +1,13 @@
 package com.programmersbox.sharedutils
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.net.Uri
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.util.fastMap
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOf
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 object FirebaseAuthentication : KoinComponent {
 

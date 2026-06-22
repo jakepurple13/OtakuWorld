@@ -36,6 +36,7 @@ dependencies {
     fullImplementation(androidLibs.mlkitTranslate)
     fullImplementation(androidLibs.mlkitLanguage)
     fullImplementation(platform(androidLibs.firebasePlatform))
+    fullImplementation(androidLibs.coroutinesPlayServices)
 
     implementation(commonLibs.coroutinesCore)
     implementation(androidLibs.coroutinesAndroid)
