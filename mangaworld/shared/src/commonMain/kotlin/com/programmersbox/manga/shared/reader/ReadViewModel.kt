@@ -87,6 +87,17 @@ class ReadViewModel(
         }
     }
 
+    private fun downloadedChapterFlow(filePath: String): Flow<List<String>> =
+        flow {
+            PlatformFile(filePath)
+                .list()
+                .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
+                .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
+                .let { emit(it) }
+        }
+            .catch { emit(emptyList()) }
+            .flowOn(Dispatchers.IO)
+
     companion object {
         private const val WINDOW_SIZE = 3
 
@@ -132,6 +143,14 @@ class ReadViewModel(
     val isLoadingPages: Boolean get() = loadingChapters.isNotEmpty()
 
     private val loadedChapterWindow = ArrayDeque<Int>()
+
+    private var downloadedPaths: List<String> = emptyList()
+    val isDownloadedPathsMode: Boolean get() = downloadedPaths.isNotEmpty()
+    val chapterCount: Int get() = if (isDownloadedPathsMode) downloadedPaths.size else list.size
+
+    fun chapterName(index: Int): String? =
+        if (isDownloadedPathsMode) downloadedPaths.getOrNull(index)?.substringAfterLast("/")
+        else list.getOrNull(index)?.name
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
@@ -257,15 +276,7 @@ class ReadViewModel(
     private fun loadDirectFromPath(filePath: String) {
         loadedChapterWindow.clear()
         loadedChapterWindow.addLast(0)
-        flow {
-            PlatformFile(filePath)
-                .list()
-                .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
-                .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
-                .let { emit(it) }
-        }
-            .catch { exceptionDao.insertException(it) }
-            .flowOn(Dispatchers.IO)
+        downloadedChapterFlow(filePath)
             .onStart {
                 loadingChapters = loadingChapters + 0
                 pageItems.clear()
