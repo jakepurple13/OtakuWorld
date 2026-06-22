@@ -170,7 +170,13 @@ class ReadViewModel(
             .indexOfFirst { l -> l.url == url }
             .coerceIn(0, list.lastIndex.coerceAtLeast(1))
 
-        if (list.isEmpty() && mangaReader.downloaded && !mangaReader.filePath.isNullOrEmpty()) {
+        val paths = chapterHolder.downloadedChapterPaths
+        chapterHolder.downloadedChapterPaths = null
+        if (paths != null && paths.isNotEmpty()) {
+            downloadedPaths = paths
+            currentChapter = paths.indexOf(mangaReader.filePath).coerceAtLeast(0)
+            loadDownloadedChapterAtIndex(currentChapter)
+        } else if (list.isEmpty() && mangaReader.downloaded && !mangaReader.filePath.isNullOrEmpty()) {
             loadDirectFromPath(mangaReader.filePath)
         } else {
             loadInitialChapter()
@@ -288,6 +294,25 @@ class ReadViewModel(
                 heatMapDao.upsertHeatMap()
             }
             .onCompletion { loadingChapters = loadingChapters - 0 }
+            .launchIn(viewModelScope)
+    }
+
+    private fun loadDownloadedChapterAtIndex(index: Int) {
+        val filePath = downloadedPaths.getOrNull(index) ?: return
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(index)
+        downloadedChapterFlow(filePath)
+            .onStart {
+                loadingChapters = loadingChapters + index
+                pageItems.clear()
+            }
+            .onEach { urls ->
+                pageItems.add(PageItem.ChapterTransition(index + 1, index))
+                pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, index, i, true) })
+                pageItems.add(PageItem.ChapterTransition(index, index - 1))
+                heatMapDao.upsertHeatMap()
+            }
+            .onCompletion { loadingChapters = loadingChapters - index }
             .launchIn(viewModelScope)
     }
 
