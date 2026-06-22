@@ -103,6 +103,9 @@ interface HistoryDao {
     @Query("SELECT * FROM History WHERE is_dirty = 1")
     suspend fun getDirtyHistory(): List<HistoryItem>
 
+    @Query("SELECT COUNT(*) FROM History WHERE is_dirty = 1")
+    fun observeDirtyHistoryCount(): Flow<Int>
+
     @Query("SELECT * FROM RecentlyViewed WHERE is_dirty = 1")
     suspend fun getDirtyRecentlyViewed(): List<RecentModel>
 

@@ -75,6 +75,9 @@ interface NotesDao {
     @Query("SELECT * FROM notes WHERE is_dirty = 1")
     suspend fun getDirtyNotes(): List<NoteItem>
 
+    @Query("SELECT COUNT(*) FROM notes WHERE is_dirty = 1")
+    fun observeDirtyNoteCount(): Flow<Int>
+
     @Query("SELECT * FROM notes WHERE itemUrl = :itemUrl")
     suspend fun getNoteByUrl(itemUrl: String): NoteItem?
 
