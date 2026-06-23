@@ -53,12 +53,12 @@ fun SupabaseSettingsScreen(
                 leadingContent = { Icon(Icons.Default.Settings, null) },
             )
 
-            SegmentedListItem(
+            /*SegmentedListItem(
                 shapes = ListItemDefaults.segmentedShapes(3, 4),
                 onClick = { onNavigate(BackupRestoreRoute) },
                 content = { Text("Supabase Backup/Restore") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
-            )
+            )*/
         }
     }
 }
