@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -35,6 +36,9 @@ class SyncManager(
     private val config = configFlow.stateIn(scope, SharingStarted.Eagerly, SyncConfig())
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+
+    val syncConnectedStatus: StateFlow<SyncConnectedStatus>
+        field = MutableStateFlow<SyncConnectedStatus>(SyncConnectedStatus.Idle)
 
     private var realtimeJob: Job? = null
     private var pollingJob: Job? = null
@@ -55,18 +59,21 @@ class SyncManager(
                             // WiFi: use Realtime for reactive updates, no polling needed.
                             stopPolling()
                             startWifi()
+                            syncConnectedStatus.update { SyncConnectedStatus.Realtime }
                         }
 
                         is AuthState.Authenticated if online && metered -> {
                             // Cellular: fall back to polling to conserve bandwidth.
                             stopRealtime()
                             startPolling()
+                            syncConnectedStatus.update { SyncConnectedStatus.Polling }
                         }
 
                         is AuthState.Authenticated if !online -> {
                             stopRealtime()
                             stopPolling()
                             _syncState.value = SyncState.Offline
+                            syncConnectedStatus.update { SyncConnectedStatus.Offline }
                         }
 
                         else -> {
@@ -74,6 +81,7 @@ class SyncManager(
                             stopPolling()
                             lastSyncTimestamp = 0L  // reset so next sign-in does a full pull
                             _syncState.value = SyncState.Idle
+                            syncConnectedStatus.update { SyncConnectedStatus.Idle }
                         }
                     }
                 }

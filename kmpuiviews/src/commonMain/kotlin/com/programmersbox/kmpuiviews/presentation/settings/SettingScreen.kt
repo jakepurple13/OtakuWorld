@@ -63,6 +63,7 @@ import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.versionCode
 import com.programmersbox.supabaseintegration.ui.SupabaseRoutes
+import com.programmersbox.supabaseintegration.ui.SyncIconComposable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -116,7 +117,9 @@ fun SettingScreen(
             LargeTopAppBar(
                 title = { Text(stringResource(Res.string.settings)) },
                 scrollBehavior = scrollBehavior,
-                actions = { accountSettings() }
+                actions = {
+                    SyncIconComposable(modifier = Modifier.padding(horizontal = 16.dp))
+                }
             )
         },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
