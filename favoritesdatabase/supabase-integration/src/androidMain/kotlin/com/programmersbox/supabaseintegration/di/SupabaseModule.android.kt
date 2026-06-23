@@ -1,6 +1,7 @@
 package com.programmersbox.supabaseintegration.di
 
 import com.programmersbox.supabaseintegration.backup.BackupWorker
+import com.programmersbox.supabaseintegration.backup.FullSyncWorker
 import com.programmersbox.supabaseintegration.client.SupabaseClientEngine
 import com.programmersbox.supabaseintegration.credentials.AndroidCredentialManager
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
@@ -18,5 +19,6 @@ actual fun platformModule(): Module = module {
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(get()) }
     single<MigrationPrefs> { AndroidMigrationPrefs(get()) }
     workerOf(::BackupWorker)
+    workerOf(::FullSyncWorker)
     single { SupabaseClientEngine(OkHttp.create()) }
 }

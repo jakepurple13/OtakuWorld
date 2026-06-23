@@ -4,6 +4,7 @@ import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
+import dev.jordond.connectivity.Connectivity
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
@@ -42,7 +43,7 @@ class SyncEngineImpl(
             ?: error("Not authenticated")
 
     override suspend fun pushLocalChanges(): Unit = coroutineScope {
-        if (!connectivityMonitor.isOnline.value) return@coroutineScope
+        if (connectivityMonitor.isOnline.value is Connectivity.Status.Disconnected) return@coroutineScope
         val uid = userId
         val client = client
 
@@ -52,7 +53,7 @@ class SyncEngineImpl(
     }
 
     override suspend fun pullRemoteChanges(since: Long, tables: Set<String>?) = coroutineScope {
-        if (!connectivityMonitor.isOnline.value) return@coroutineScope
+        if (connectivityMonitor.isOnline.value is Connectivity.Status.Disconnected) return@coroutineScope
         val uid = userId
         val client = client
 
@@ -68,7 +69,6 @@ class SyncEngineImpl(
             }
         }
     }
-
 
     private fun CoroutineScope.pushAndRecordTime(dbId: String, block: suspend () -> Unit) =
         handleAndRecordTime(dbId, "Pushing", block)

@@ -4,6 +4,7 @@ package com.programmersbox.supabaseintegration.sync
 
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
+import dev.jordond.connectivity.Connectivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,8 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -47,45 +49,43 @@ class SyncManager(
     private var lastSyncTimestamp = 0L
 
     fun start() {
-        scope.launch {
-            combine(
-                authManager.authState,
-                connectivityMonitor.isOnline,
-                connectivityMonitor.isMetered,
-            ) { auth, online, metered -> Triple(auth, online, metered) }
-                .collect { (auth, online, metered) ->
-                    when (auth) {
-                        is AuthState.Authenticated if online && !metered -> {
-                            // WiFi: use Realtime for reactive updates, no polling needed.
-                            stopPolling()
-                            startWifi()
-                            syncConnectedStatus.update { SyncConnectedStatus.Realtime }
-                        }
+        combine(
+            authManager.authState,
+            connectivityMonitor.isOnline,
+        ) { auth, online -> auth to online }
+            .onEach { (auth, online) ->
+                when (auth) {
+                    is AuthState.Authenticated if online is Connectivity.Status.Connected && !online.metered -> {
+                        // WiFi: use Realtime for reactive updates, no polling needed.
+                        stopPolling()
+                        startWifi()
+                        syncConnectedStatus.value = SyncConnectedStatus.Realtime
+                    }
 
-                        is AuthState.Authenticated if online && metered -> {
-                            // Cellular: fall back to polling to conserve bandwidth.
-                            stopRealtime()
-                            startPolling()
-                            syncConnectedStatus.update { SyncConnectedStatus.Polling }
-                        }
+                    is AuthState.Authenticated if online is Connectivity.Status.Connected && online.metered -> {
+                        // Cellular: fall back to polling to conserve bandwidth.
+                        stopRealtime()
+                        startPolling()
+                        syncConnectedStatus.value = SyncConnectedStatus.Polling
+                    }
 
-                        is AuthState.Authenticated if !online -> {
-                            stopRealtime()
-                            stopPolling()
-                            _syncState.value = SyncState.Offline
-                            syncConnectedStatus.update { SyncConnectedStatus.Offline }
-                        }
+                    is AuthState.Authenticated if online is Connectivity.Status.Disconnected -> {
+                        stopRealtime()
+                        stopPolling()
+                        _syncState.value = SyncState.Offline
+                        syncConnectedStatus.value = SyncConnectedStatus.Offline
+                    }
 
-                        else -> {
-                            stopRealtime()
-                            stopPolling()
-                            lastSyncTimestamp = 0L  // reset so next sign-in does a full pull
-                            _syncState.value = SyncState.Idle
-                            syncConnectedStatus.update { SyncConnectedStatus.Idle }
-                        }
+                    else -> {
+                        stopRealtime()
+                        stopPolling()
+                        lastSyncTimestamp = 0L  // reset so next sign-in does a full pull
+                        _syncState.value = SyncState.Idle
+                        syncConnectedStatus.value = SyncConnectedStatus.Idle
                     }
                 }
-        }
+            }
+            .launchIn(scope)
     }
 
     private fun startWifi() {
@@ -135,12 +135,10 @@ class SyncManager(
         pollingJob = scope.launch {
             while (isActive) {
                 delay(config.value.pollIntervalMs.milliseconds)
-                if (connectivityMonitor.isOnline.value) {
-                    try {
-                        withRetry { doSync() }
-                    } catch (e: Exception) {
-                        _syncState.value = SyncState.Error(e.message ?: "Sync failed")
-                    }
+                try {
+                    withRetry { doSync() }
+                } catch (e: Exception) {
+                    _syncState.value = SyncState.Error(e.message ?: "Sync failed")
                 }
             }
         }
@@ -169,7 +167,7 @@ class SyncManager(
         } catch (e: Exception) {
             _syncState.value = SyncState.Error(e.message ?: "Sync failed")
         }
-        if (!connectivityMonitor.isOnline.value) _syncState.value = SyncState.Offline
+        if (connectivityMonitor.isOnline.value is Connectivity.Status.Disconnected) _syncState.value = SyncState.Offline
     }
 
     fun stop() {
