@@ -9,9 +9,11 @@ import com.programmersbox.supabaseintegration.migration.AndroidMigrationPrefs
 import com.programmersbox.supabaseintegration.migration.MigrationPrefs
 import com.programmersbox.supabaseintegration.sync.AndroidConnectivityMonitor
 import com.programmersbox.supabaseintegration.sync.ConnectivityMonitor
+import com.programmersbox.supabaseintegration.sync.FullSyncHandler
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
@@ -21,4 +23,5 @@ actual fun platformModule(): Module = module {
     workerOf(::BackupWorker)
     workerOf(::FullSyncWorker)
     single { SupabaseClientEngine(OkHttp.create()) }
+    singleOf(::FullSyncHandler)
 }

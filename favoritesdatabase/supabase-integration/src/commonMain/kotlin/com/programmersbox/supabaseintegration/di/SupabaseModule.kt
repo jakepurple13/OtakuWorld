@@ -47,7 +47,7 @@ val supabaseModule = module {
             syncProcessors = getAll()
         )
     } bind SyncEngine::class
-    single { SyncManager(get(), get(), get(), getOrNull<SyncConfigRepository>()?.listenForChanges() ?: flowOf(SyncConfig())) }
+    single { SyncManager(get(), get(), get(), get(), getOrNull<SyncConfigRepository>()?.listenForChanges() ?: flowOf(SyncConfig())) }
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
     singleOf(::MigrationManager)

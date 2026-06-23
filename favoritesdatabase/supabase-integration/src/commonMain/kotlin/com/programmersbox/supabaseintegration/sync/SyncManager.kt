@@ -32,6 +32,7 @@ class SyncManager(
     private val syncEngine: SyncEngine,
     private val authManager: AuthManager,
     private val connectivityMonitor: ConnectivityMonitor,
+    private val fullSyncHandler: FullSyncHandler,
     configFlow: Flow<SyncConfig> = flowOf(SyncConfig()),
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -54,6 +55,7 @@ class SyncManager(
             connectivityMonitor.isOnline,
         ) { auth, online -> auth to online }
             .onEach { (auth, online) ->
+                if (auth is AuthState.Authenticated) fullSyncHandler.startWorker()
                 when (auth) {
                     is AuthState.Authenticated if online is Connectivity.Status.Connected && !online.metered -> {
                         // WiFi: use Realtime for reactive updates, no polling needed.
