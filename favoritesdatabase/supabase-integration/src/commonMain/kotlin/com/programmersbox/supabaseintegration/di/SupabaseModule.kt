@@ -14,6 +14,15 @@ import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.sync.SyncEngine
 import com.programmersbox.supabaseintegration.sync.SyncEngineImpl
 import com.programmersbox.supabaseintegration.sync.SyncManager
+import com.programmersbox.supabaseintegration.sync.syncprocessor.BookmarksSyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.ChaptersWatchedSyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.CustomListInfoSyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.CustomListItemSyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.FavoritesSyncer
+import com.programmersbox.supabaseintegration.sync.syncprocessor.HeatMapSyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.HistorySyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.NotesSyncProcessor
+import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
 import com.programmersbox.supabaseintegration.ui.SupabaseQrCodeScannerViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel
@@ -30,7 +39,14 @@ val supabaseModule = module {
     singleOf(::SupabaseClientProvider)
     single<AuthManager> { AuthManagerImpl(get(), get()) }
     single { SyncConfigRepository(get()) }
-    singleOf(::SyncEngineImpl) bind SyncEngine::class
+    single {
+        SyncEngineImpl(
+            clientProvider = get(),
+            authManager = get(),
+            connectivityMonitor = get(),
+            syncProcessors = getAll()
+        )
+    } bind SyncEngine::class
     single { SyncManager(get(), get(), get(), getOrNull<SyncConfigRepository>()?.listenForChanges() ?: flowOf(SyncConfig())) }
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
@@ -42,7 +58,20 @@ val supabaseModule = module {
     viewModelOf(::BackupRestoreViewModel)
     viewModelOf(::SupabaseQrCodeScannerViewModel)
 
+    syncProcessorModule()
+
     includes(platformModule())
+}
+
+private fun Module.syncProcessorModule() {
+    singleOf(::FavoritesSyncer) bind SyncProcessor::class
+    singleOf(::ChaptersWatchedSyncProcessor) bind SyncProcessor::class
+    singleOf(::BookmarksSyncProcessor) bind SyncProcessor::class
+    singleOf(::NotesSyncProcessor) bind SyncProcessor::class
+    singleOf(::HistorySyncProcessor) bind SyncProcessor::class
+    singleOf(::CustomListItemSyncProcessor) bind SyncProcessor::class
+    singleOf(::CustomListInfoSyncProcessor) bind SyncProcessor::class
+    singleOf(::HeatMapSyncProcessor) bind SyncProcessor::class
 }
 
 expect fun platformModule(): Module

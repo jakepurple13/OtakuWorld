@@ -1,5 +1,6 @@
 package com.programmersbox.supabaseintegration.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,10 +40,17 @@ fun AuthScreen(viewModel: AuthViewModel = koinViewModel()) {
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
             when (val state = authState) {
-                is AuthState.Authenticated -> Column(Modifier.padding(16.dp)) {
-                    Text("Signed in as ${state.user.email ?: state.user.phone ?: "Anonymous"}")
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = viewModel::signOut) { Text("Sign Out") }
+                is AuthState.Authenticated -> {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text("Signed in as ${state.user.email ?: state.user.phone ?: "Anonymous"}")
+                        Spacer(Modifier.height(16.dp))
+                        Text("User ID: ${state.user.id}")
+                        Text("Display Name: ${state.user.displayName ?: "Anonymous"}")
+                        Button(onClick = viewModel::signOut) { Text("Sign Out") }
+                    }
                 }
 
                 else -> Column(Modifier.fillMaxSize().padding(16.dp)) {
