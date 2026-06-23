@@ -252,7 +252,7 @@ internal fun SheetView(
         topBar = {
             TopAppBar(
                 scrollBehavior = sheetScrollBehavior,
-                title = { Text(readVm.list.getOrNull(readVm.currentChapter)?.name.orEmpty()) },
+                title = { Text(readVm.chapterName(readVm.currentChapter).orEmpty()) },
                 actions = { PageIndicator(currentPage + 1, pages.size) },
                 navigationIcon = {
                     IconButton(onClick = onSheetHide) {

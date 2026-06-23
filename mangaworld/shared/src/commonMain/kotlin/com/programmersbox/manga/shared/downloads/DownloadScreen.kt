@@ -60,6 +60,7 @@ import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
+import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import org.koin.compose.koinInject
@@ -279,6 +280,7 @@ private fun ChapterItem(
     onDeleted: (DownloadedChapters) -> Unit,
     useNewReader: Boolean = true,
 ) {
+    val chapterHolder: ChapterHolder = koinInject()
     var expanded by remember { mutableStateOf(false) }
 
     Column(
@@ -383,6 +385,7 @@ private fun ChapterItem(
                                     interactionSource = null
                                 ) {
                                     if (useNewReader) {
+                                        chapterHolder.downloadedChapterPaths = sortedChapterPaths(file.value)
                                         ReadViewModel.navigateToMangaReader(
                                             navController,
                                             mangaTitle = c?.folderName,
@@ -412,3 +415,10 @@ private fun ChapterItem(
         }
     }
 }
+
+internal fun sortedChapterPaths(chapters: Map<String, List<DownloadedChapters>>): List<String> =
+    chapters.entries
+        .sortedByDescending { (_, pageList) ->
+            pageList.firstOrNull()?.chapterName?.filter { it.isDigit() }?.toIntOrNull() ?: 0
+        }
+        .map { (chapterFolder, _) -> chapterFolder }

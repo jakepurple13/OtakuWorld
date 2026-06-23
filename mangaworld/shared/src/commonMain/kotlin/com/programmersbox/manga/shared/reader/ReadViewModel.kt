@@ -87,6 +87,17 @@ class ReadViewModel(
         }
     }
 
+    private fun downloadedChapterFlow(filePath: String): Flow<List<String>> =
+        flow {
+            PlatformFile(filePath)
+                .list()
+                .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
+                .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
+                .let { emit(it) }
+        }
+            .catch { e -> exceptionDao.insertException(e); emit(emptyList()) }
+            .flowOn(Dispatchers.IO)
+
     companion object {
         private const val WINDOW_SIZE = 3
 
@@ -133,6 +144,14 @@ class ReadViewModel(
 
     private val loadedChapterWindow = ArrayDeque<Int>()
 
+    private var downloadedPaths: List<String> = emptyList()
+    val isDownloadedPathsMode: Boolean get() = downloadedPaths.isNotEmpty()
+    val chapterCount: Int get() = if (isDownloadedPathsMode) downloadedPaths.size else list.size
+
+    fun chapterName(index: Int): String? =
+        if (isDownloadedPathsMode) downloadedPaths.getOrNull(index)?.substringAfterLast("/")
+        else list.getOrNull(index)?.name
+
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
     private val itemListener = fireListener(itemListener = itemListenerFirebase)
@@ -151,7 +170,13 @@ class ReadViewModel(
             .indexOfFirst { l -> l.url == url }
             .coerceIn(0, list.lastIndex.coerceAtLeast(1))
 
-        if (list.isEmpty() && mangaReader.downloaded && !mangaReader.filePath.isNullOrEmpty()) {
+        val paths = chapterHolder.downloadedChapterPaths
+        chapterHolder.downloadedChapterPaths = null
+        if (!paths.isNullOrEmpty()) {
+            downloadedPaths = paths
+            currentChapter = paths.indexOf(mangaReader.filePath).coerceAtLeast(0)
+            loadDownloadedChapterAtIndex(currentChapter)
+        } else if (list.isEmpty() && mangaReader.downloaded && !mangaReader.filePath.isNullOrEmpty()) {
             loadDirectFromPath(mangaReader.filePath)
         } else {
             loadInitialChapter()
@@ -257,15 +282,7 @@ class ReadViewModel(
     private fun loadDirectFromPath(filePath: String) {
         loadedChapterWindow.clear()
         loadedChapterWindow.addLast(0)
-        flow {
-            PlatformFile(filePath)
-                .list()
-                .sortedBy { f -> f.name.split(".").first().toIntOrNull() ?: 0 }
-                .fastMap { sanitizePath(it.toKotlinxIoPath().toString()) }
-                .let { emit(it) }
-        }
-            .catch { exceptionDao.insertException(it) }
-            .flowOn(Dispatchers.IO)
+        downloadedChapterFlow(filePath)
             .onStart {
                 loadingChapters = loadingChapters + 0
                 pageItems.clear()
@@ -280,6 +297,101 @@ class ReadViewModel(
             .launchIn(viewModelScope)
     }
 
+    private fun loadDownloadedChapterAtIndex(index: Int) {
+        val filePath = downloadedPaths.getOrNull(index) ?: return
+        loadedChapterWindow.clear()
+        loadedChapterWindow.addLast(index)
+        downloadedChapterFlow(filePath)
+            .onStart {
+                loadingChapters = loadingChapters + index
+                pageItems.clear()
+            }
+            .onEach { urls ->
+                pageItems.add(PageItem.ChapterTransition(index + 1, index))
+                pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, index, i, true) })
+                pageItems.add(PageItem.ChapterTransition(index, index - 1))
+                heatMapDao.upsertHeatMap()
+            }
+            .onCompletion { loadingChapters = loadingChapters - index }
+            .launchIn(viewModelScope)
+    }
+
+    private fun appendDownloadedChapter(chapterListIndex: Int) {
+        if (chapterListIndex < 0 || chapterListIndex >= downloadedPaths.size) return
+        if (chapterListIndex in loadedChapterWindow) return
+        loadedChapterWindow.addLast(chapterListIndex)
+        val fromChapterListIndex = loadedChapterWindow[loadedChapterWindow.size - 2]
+
+        viewModelScope.launch {
+            while (loadedChapterWindow.size > WINDOW_SIZE) {
+                val dropped = loadedChapterWindow.removeFirst()
+                val firstKeptIdx = pageItems.indexOfFirst { item ->
+                    when (item) {
+                        is PageItem.Page -> item.chapterListIndex != dropped
+                        is PageItem.ChapterTransition -> item.fromChapterListIndex != dropped
+                    }
+                }
+                if (firstKeptIdx > 0) pageItems.subList(0, firstKeptIdx).clear()
+            }
+
+            loadingChapters = loadingChapters + chapterListIndex
+
+            val newPageTransition = PageItem.ChapterTransition(fromChapterListIndex, chapterListIndex)
+            if (newPageTransition !in pageItems) pageItems.add(newPageTransition)
+
+            downloadedChapterFlow(downloadedPaths[chapterListIndex])
+                .onEach { urls ->
+                    pageItems.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, true) })
+                    pageItems.add(PageItem.ChapterTransition(chapterListIndex, chapterListIndex - 1))
+                    heatMapDao.upsertHeatMap()
+                }
+                .onCompletion {
+                    loadingChapters = loadingChapters - chapterListIndex
+                    addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+                }
+                .launchIn(viewModelScope)
+        }
+    }
+
+    private suspend fun prependDownloadedChapter(chapterListIndex: Int): Int {
+        if (chapterListIndex < 0 || chapterListIndex >= downloadedPaths.size) return 0
+        if (chapterListIndex in loadedChapterWindow) return 0
+
+        if (loadedChapterWindow.size >= WINDOW_SIZE) {
+            val dropped = loadedChapterWindow.removeLast()
+            val removeFrom = pageItems.indexOfFirst {
+                it is PageItem.ChapterTransition && it.toChapterListIndex == dropped
+            }.takeIf { it >= 0 } ?: pageItems.indexOfFirst {
+                it is PageItem.Page && it.chapterListIndex == dropped
+            }
+            if (removeFrom >= 0) {
+                while (pageItems.size > removeFrom) pageItems.removeAt(removeFrom)
+            }
+        }
+
+        if (loadedChapterWindow.isEmpty()) return 0
+
+        val toChapterListIndex = loadedChapterWindow.first()
+        loadedChapterWindow.addFirst(chapterListIndex)
+        loadingChapters = loadingChapters + chapterListIndex
+
+        val newPages = mutableListOf<PageItem>()
+        downloadedChapterFlow(downloadedPaths[chapterListIndex])
+            .firstOrNull()
+            ?.let { urls ->
+                newPages.addAll(urls.mapIndexed { i, url -> PageItem.Page(url, chapterListIndex, i, true) })
+                heatMapDao.upsertHeatMap()
+            }
+
+        loadingChapters = loadingChapters - chapterListIndex
+
+        if (newPages.isEmpty()) return 0
+        val insertedItems: List<PageItem> = newPages + PageItem.ChapterTransition(chapterListIndex, toChapterListIndex)
+        pageItems.addAll(0, insertedItems)
+        addToFavorites = addToFavorites.copy(count = addToFavorites.count + 1)
+        return insertedItems.size
+    }
+
     fun chapterRead(item: PageItem.ChapterTransition) {
         viewModelScope.launch {
             list.getOrNull(item.fromChapterListIndex)?.let { item ->
@@ -292,6 +404,10 @@ class ReadViewModel(
     }
 
     fun appendChapter(chapterListIndex: Int) {
+        if (isDownloadedPathsMode) {
+            appendDownloadedChapter(chapterListIndex)
+            return
+        }
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return
         if (chapterListIndex in loadedChapterWindow) return
         loadedChapterWindow.addLast(chapterListIndex)
@@ -339,6 +455,7 @@ class ReadViewModel(
     }
 
     suspend fun prependChapter(chapterListIndex: Int): Int {
+        if (isDownloadedPathsMode) return prependDownloadedChapter(chapterListIndex)
         println("prependChapter: $chapterListIndex")
         println("loadedChapterWindow: $loadedChapterWindow")
         if (chapterListIndex < 0 || chapterListIndex > list.lastIndex) return 0
@@ -410,5 +527,6 @@ class ReadViewModel(
         super.onCleared()
         chapterHolder.chapterModel = null
         chapterHolder.chapters = null
+        chapterHolder.downloadedChapterPaths = null
     }
 }
