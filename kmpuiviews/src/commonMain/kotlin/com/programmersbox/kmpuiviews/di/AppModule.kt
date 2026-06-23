@@ -10,7 +10,6 @@ import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.Backup
-import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
@@ -24,15 +23,13 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
+import com.programmersbox.sharedtools.backupProcessor
 import com.programmersbox.supabaseintegration.di.SupabaseActions
 import com.programmersbox.supabaseintegration.di.supabaseModule
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.new
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.qualifier.named
-import org.koin.dsl.bind
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -108,20 +105,5 @@ private fun Module.backupProcessors() {
     backupProcessor("notes", ::NotesBackupProcessor)
     backupProcessor("recommendations", ::RecommendationsBackupProcessor)
 }
-
-inline fun <reified T : BackupProcessor> Module.backupProcessor(
-    named: String,
-    crossinline factoryBlock: () -> T,
-) = factory(named(named)) { new(factoryBlock) } bind BackupProcessor::class
-
-inline fun <reified T : BackupProcessor, reified T1> Module.backupProcessor(
-    named: String,
-    crossinline factoryBlock: (T1) -> T,
-) = factory(named(named)) { new(factoryBlock) } bind BackupProcessor::class
-
-inline fun <reified T : BackupProcessor, reified T1, reified T2> Module.backupProcessor(
-    named: String,
-    crossinline factoryBlock: (T1, T2) -> T,
-) = factory(named(named)) { new(factoryBlock) } bind BackupProcessor::class
 
 expect fun platformModule(): Module

@@ -11,17 +11,13 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.di.backupProcessor
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
-import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupProcessor
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
-import com.programmersbox.manga.shared.MangaNewSettingsBackupProcessor
 import com.programmersbox.manga.shared.downloads.DownloadChapterWorker
-import com.programmersbox.manga.shared.downloads.DownloadViewModel
 import com.programmersbox.manga.shared.downloads.DownloadedMediaHandler
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.mangaSharedModule
@@ -29,6 +25,7 @@ import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
 import com.programmersbox.mangaworld.reader.ReadActivity
+import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.source_utilities.NetworkHelper
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.ChapterModelSerializer
@@ -37,7 +34,6 @@ import kotlinx.coroutines.flow.first
 import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule = module {
