@@ -179,8 +179,6 @@ class UpdateFlowWorker(
             }
         }
 
-
-
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ForegroundInfo(
                 13,
