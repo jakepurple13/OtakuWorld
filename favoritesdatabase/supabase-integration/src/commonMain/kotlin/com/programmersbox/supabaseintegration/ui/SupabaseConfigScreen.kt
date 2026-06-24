@@ -123,7 +123,7 @@ fun SupabaseConfigScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Supabase Configuration") },
+                title = { Text("Configuration") },
                 actions = {
                     IconButton(onClick = { showShareQrCode = true }) {
                         Icon(Icons.Default.Share, contentDescription = "Share via QR")
@@ -131,7 +131,8 @@ fun SupabaseConfigScreen(
                     IconButton(onClick = { scanShareQrCode = true }) {
                         Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR")
                     }
-                }
+                },
+                navigationIcon = { BackButton() }
             )
         }
     ) { padding ->

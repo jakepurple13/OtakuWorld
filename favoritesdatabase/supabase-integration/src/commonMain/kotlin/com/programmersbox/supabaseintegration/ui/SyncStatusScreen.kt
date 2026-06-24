@@ -54,7 +54,8 @@ fun SyncStatusScreen(viewModel: SyncViewModel = koinViewModel()) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Sync Status") }
+                title = { Text("Sync Status") },
+                navigationIcon = { BackButton() }
             )
         }
     ) { padding ->
