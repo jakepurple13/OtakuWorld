@@ -9,9 +9,17 @@ otakuDependencies {
     androidPackageName = "com.programmersbox.supabaseintegration"
 }
 
+compose.resources {
+    // Exposes Res to other modules
+    publicResClass = true
+    packageOfResClass = "com.programmersbox.supabaseintegration" // Defines a strict, predictable package name
+    generateResClass = always
+}
+
 kotlin {
     android {
         namespace = "com.programmersbox.supabaseintegration"
+        experimentalProperties["android.experimental.kmp.enableAndroidResources"] = true
     }
 
     sourceSets {
@@ -39,6 +47,7 @@ kotlin {
             implementation(projects.kmpmodels)
             implementation(commonLibs.qrose)
             implementation(commonLibs.scanner)
+            implementation(compose.components.resources)
         }
         androidMain.dependencies {
             implementation(commonLibs.connectivity.device)

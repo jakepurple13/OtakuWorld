@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -62,6 +61,7 @@ import com.programmersbox.kmpuiviews.utils.LocalCurrentSource
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.versionCode
+import com.programmersbox.supabaseintegration.ui.SupabaseIcon
 import com.programmersbox.supabaseintegration.ui.SupabaseRoutes
 import com.programmersbox.supabaseintegration.ui.SyncIconComposable
 import org.jetbrains.compose.resources.stringResource
@@ -302,7 +302,7 @@ private fun SettingsScreen(
         segmentedListItem(
             onClick = { navController.navigate(SupabaseRoutes) },
             content = { Text("Supabase") },
-            leadingContent = { Icon(Icons.Default.Sync, null) },
+            leadingContent = { SupabaseIcon() },
         )
     }
 
