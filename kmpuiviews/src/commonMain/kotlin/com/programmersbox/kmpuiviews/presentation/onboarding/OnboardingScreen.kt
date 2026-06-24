@@ -55,8 +55,7 @@ fun OnboardingScreen(
 
         item {
             AccountContent(
-                navController = navController,
-                cloudContent = accountContent
+                navController = navController
             )
         }
 
