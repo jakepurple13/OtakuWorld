@@ -36,7 +36,7 @@ class SyncManager(
     configFlow: Flow<SyncConfig> = flowOf(SyncConfig()),
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val config = configFlow.stateIn(scope, SharingStarted.Eagerly, SyncConfig())
+    val config = configFlow.stateIn(scope, SharingStarted.Eagerly, SyncConfig())
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
