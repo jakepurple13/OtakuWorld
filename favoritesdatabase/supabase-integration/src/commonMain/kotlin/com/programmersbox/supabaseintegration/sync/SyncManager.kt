@@ -115,12 +115,14 @@ class SyncManager(
                     }
             }
 
-            // Realtime subscription — onEvent receives only the tables that changed.
-            syncEngine.subscribeRealtime(this) { tables ->
-                try {
-                    withRetry { doSync(tables) }
-                } catch (e: Exception) {
-                    _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+            runCatching {
+                // Realtime subscription — onEvent receives only the tables that changed.
+                syncEngine.subscribeRealtime(this) { tables ->
+                    try {
+                        withRetry { doSync(tables) }
+                    } catch (e: Exception) {
+                        _syncState.value = SyncState.Error(e.message ?: "Sync failed")
+                    }
                 }
             }
         }
