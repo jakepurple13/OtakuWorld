@@ -65,8 +65,11 @@ fun SettingScreen(
     val searchBarState = rememberSearchBarState()
     val scope = rememberCoroutineScope()
 
+    val mergedRegistry = remember(composeSettingsDsl) {
+        SettingsSearchRegistry(searchRegistry.items + composeSettingsDsl.searchItems())
+    }
     val searchResults by remember {
-        derivedStateOf { searchRegistry.search(textFieldState.text.toString()) }
+        derivedStateOf { mergedRegistry.search(textFieldState.text.toString()) }
     }
 
     OtakuScaffold(

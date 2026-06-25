@@ -91,7 +91,7 @@ val appModule = module {
     }
 
     single { SettingsHighlightState() }
-    single { SettingsSearchRegistry(builtInSettingsItems() + get<ComposeSettingsDsl>().searchItems()) }
+    single { SettingsSearchRegistry(builtInSettingsItems()) }
 
     includes(supabaseModule)
 }
