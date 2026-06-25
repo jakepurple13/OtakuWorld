@@ -47,6 +47,11 @@ val appModule = module {
         )
     }
 
+    single {
+        ComposeSettingsDsl()
+            .apply(get<KmpGenericInfo>().composeCustomPreferences())
+    }
+
     singleOf(::DataStoreHandling)
     singleOf(::MediaUpdateChecker)
     factoryOf(::Backup)

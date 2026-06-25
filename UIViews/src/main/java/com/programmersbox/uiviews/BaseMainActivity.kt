@@ -30,8 +30,7 @@ abstract class BaseMainActivity : FragmentActivity() {
 
     protected val genericInfo: GenericInfo by inject()
     private val navigationActions by inject<NavigationActions>()
-    private val customPreferences = ComposeSettingsDsl()
-        .apply(genericInfo.composeCustomPreferences())
+    private val customPreferences by inject<ComposeSettingsDsl>()
     private val changingSettingsRepository: ChangingSettingsRepository by inject()
     private val dataStoreHandling: DataStoreHandling by inject()
     private val setupRepository by inject<SetupRepository>()
