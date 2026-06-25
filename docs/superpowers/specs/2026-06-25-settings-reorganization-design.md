@@ -224,11 +224,13 @@ class ComposeSettingsDsl {
 data class SettingsSearchItem(
     val displayName: String,
     val keywords: List<String> = emptyList(),
-    val breadcrumb: String,       // e.g. "Appearance > Blur > Blur Kind"
+    val breadcrumb: List<NavKey>, // e.g. [Screen.Settings.Appearance, Screen.Settings.Blur]
     val targetScreen: NavKey,
     val highlightKey: String,     // stable key used for scroll + highlight
 )
 ```
+
+`breadcrumb` is a list of parent `NavKey` screens from root → immediate parent. A `SettingsScreenDisplayNames` object maps each `NavKey` to its human-readable label for rendering as `"Appearance > Blur > Blur Kind"`. Screen renames are caught at compile time — no string drift.
 
 ### `SettingsSearchRegistry`
 
