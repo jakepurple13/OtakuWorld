@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DataObject
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.GetApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
@@ -81,9 +82,7 @@ fun SettingScreen(
             ) {
                 // Search results shown in ExpandedFullScreenSearchBar
                 searchResults.forEach { item ->
-                    val crumb = remember(item.breadcrumb) {
-                        SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
-                    }
+                    val crumb = SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
                     ListItem(
                         headlineContent = { Text(item.displayName) },
                         supportingContent = { Text(crumb) },
@@ -166,7 +165,7 @@ fun SettingScreen(
                 )
                 segmentedListItem(
                     content = { Text("Data Management") },
-                    leadingContent = { Icon(Icons.Default.DataObject, null) },
+                    leadingContent = { Icon(Icons.Default.Storage, null) },
                     onClick = navigationActions::dataManagement,
                 )
                 segmentedListItem(
@@ -175,6 +174,8 @@ fun SettingScreen(
                     onClick = navigationActions::aboutSettings,
                 )
             }
+
+            accountSettings()
         }
     }
 }
