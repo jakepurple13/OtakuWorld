@@ -31,11 +31,23 @@ abstract class AndroidPluginBase<T : BaseExtension>(
                 println(variant.name)
                 val variantName = variant.name
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                val isNoFirebase = ProductFlavorTypes.NoFirebase.nameType == variant.flavorName
+                val isCI = System.getenv("CI") != null
+
                 val googleTask = tasks.findByName("process${variantName}GoogleServices")
                 // Need to get the noFirebase packages in firebase first
                 // googleTask?.enabled = System.getenv("CI") != null
                 //TODO: Testing
-                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName || System.getenv("CI") != null
+                googleTask?.enabled = !isNoFirebase || isCI
+
+                // Crashlytics upload tasks require appIdFile produced by processGoogleServices.
+                // On noFirebase builds locally, processGoogleServices is disabled so appIdFile
+                // never exists. Use matching+configureEach (lazy) because Crashlytics registers
+                // its tasks in its own afterEvaluate, which runs after this one.
+                if (isNoFirebase && !isCI) {
+                    tasks.matching { it.name == "uploadCrashlyticsMappingFile$variantName" }
+                        .configureEach { enabled = false }
+                }
             }
         }
     }
