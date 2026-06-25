@@ -84,8 +84,6 @@ fun GeneralSettings(
     customSettings: @Composable () -> Unit = {},
 ) {
     val navActions = LocalNavActions.current
-    val handling: NewSettingsHandling = koinInject()
-    val dataStoreHandling: DataStoreHandling = koinInject()
 
     SettingsScaffold(
         title = stringResource(Res.string.general_menu_title),
@@ -109,18 +107,6 @@ fun GeneralSettings(
                 leadingContent = { Icon(Icons.Default.BlurOn, null) },
                 content = { Text("Blur Settings") },
             )
-        }
-
-        CategoryGroupListItem {
-            item {
-                NavigationBarSettings(handling = handling)
-            }
-        }
-
-        CategoryGroupListItem {
-            item(false) { GridTypeSettings(handling = handling) }
-            item(false) { DetailPaneSettings(handling = handling) }
-            item(false) { HistorySettings(dataStoreHandling = dataStoreHandling) }
         }
 
         customSettings()
@@ -148,7 +134,7 @@ fun BlurSetting(handling: NewSettingsHandling) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun GridTypeSettings(handling: NewSettingsHandling) {
+internal fun GridTypeSettings(handling: NewSettingsHandling) {
     var gridChoice by handling.rememberGridChoice()
 
     var settingsDialog by settingsDialog(
@@ -231,7 +217,7 @@ fun ShareChapterSettings(handling: NewSettingsHandling) {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun DetailPaneSettings(handling: NewSettingsHandling) {
+internal fun DetailPaneSettings(handling: NewSettingsHandling) {
     var showListDetail by handling.rememberShowListDetail()
 
     SegmentedListItem(
@@ -265,7 +251,7 @@ fun ShowDownloadSettings(handling: NewSettingsHandling) {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun HistorySettings(dataStoreHandling: DataStoreHandling) {
+internal fun HistorySettings(dataStoreHandling: DataStoreHandling) {
     var sliderValue by dataStoreHandling.historySave.asState()
 
     ElevatedCard(

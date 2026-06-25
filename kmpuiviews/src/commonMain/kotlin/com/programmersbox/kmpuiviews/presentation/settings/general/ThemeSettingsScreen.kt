@@ -4,10 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Animation
@@ -28,20 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.PaletteSwatchType
 import com.programmersbox.datastore.SystemThemeMode
 import com.programmersbox.datastore.ThemeColor
-import com.programmersbox.datastore.rememberSwatchStyle
-import com.programmersbox.datastore.rememberSwatchType
 import com.programmersbox.kmpuiviews.presentation.components.ThemeItem
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupDefaults
 import com.programmersbox.kmpuiviews.presentation.components.settings.ListSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowMoreSetting
-import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.seedColor
@@ -82,10 +75,6 @@ fun ThemeSettingsScreen() {
             item { BlurSetting(handling = handling) }
         }
 
-        CategoryGroup {
-            item { PaletteSetting(handling = handling) }
-            item { ColorBlindTypeSettings(handling = handling) }
-        }
     }
 }
 
@@ -190,56 +179,3 @@ private fun ExpressivenessSetting(handling: NewSettingsHandling) {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-@Composable
-private fun PaletteSetting(handling: NewSettingsHandling) {
-    var usePalette by handling.rememberUsePalette()
-
-    SwitchSetting(
-        settingTitle = { Text("Use Palette") },
-        summaryValue = {
-            Text("Use Palette to color the details screen if possible")
-        },
-        settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
-        value = usePalette,
-        updateValue = { usePalette = it }
-    )
-
-    CategoryGroupDefaults.Divider()
-
-    ShowWhen(usePalette) {
-        var paletteSwatchType by rememberSwatchType()
-        ListSetting(
-            settingTitle = { Text("Swatch Type") },
-            dialogIcon = { Icon(Icons.Default.Palette, null) },
-            settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
-            dialogTitle = { Text("Choose a Swatch Type to use") },
-            summaryValue = { Text(paletteSwatchType.name) },
-            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-            value = paletteSwatchType,
-            options = PaletteSwatchType.entries,
-            updateValue = { it, d ->
-                d.value = false
-                paletteSwatchType = it
-            }
-        )
-
-        CategoryGroupDefaults.Divider()
-
-        var paletteStyle by rememberSwatchStyle()
-        ListSetting(
-            settingTitle = { Text("Swatch Style") },
-            dialogIcon = { Icon(Icons.Default.Palette, null) },
-            settingIcon = { Icon(Icons.Default.Palette, null, modifier = Modifier.fillMaxSize()) },
-            dialogTitle = { Text("Choose a Swatch Style to use") },
-            summaryValue = { Text(paletteStyle.name) },
-            confirmText = { TextButton(onClick = { it.value = false }) { Text(stringResource(Res.string.cancel)) } },
-            value = paletteStyle,
-            options = PaletteStyle.entries,
-            updateValue = { it, d ->
-                d.value = false
-                paletteStyle = it
-            }
-        )
-    }
-}

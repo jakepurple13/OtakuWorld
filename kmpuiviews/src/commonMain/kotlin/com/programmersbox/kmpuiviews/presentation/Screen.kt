@@ -19,7 +19,23 @@ sealed class Screen(val route: String) : NavKey {
     @Serializable
     data object Settings : Screen("settings") {
         @Serializable
-        data object Blur : Screen("home")
+        data object Blur : Screen("blur")
+
+        // Added as stubs to unblock SettingsScreenDisplayNames.kt compilation — Task 5 will formalize
+        @Serializable data object Library : Screen("library")
+        @Serializable data object Discover : Screen("discover")
+        @Serializable data object Sources : Screen("sources")
+        @Serializable data object Integrations : Screen("integrations")
+        @Serializable data object Appearance : Screen("appearance")
+        @Serializable data object Colors : Screen("colors")
+        @Serializable data object Behavior : Screen("behavior")
+        @Serializable data object Layout : Screen("layout")
+        @Serializable data object ContentReading : Screen("content_reading")
+        @Serializable data object PrivacySecurity : Screen("privacy_security")
+        @Serializable data object Data : Screen("data")
+        @Serializable data object About : Screen("about")
+        @Serializable data object Diagnostics : Screen("diagnostics")
+        @Serializable data object Developer : Screen("developer")
     }
 
     @Serializable
