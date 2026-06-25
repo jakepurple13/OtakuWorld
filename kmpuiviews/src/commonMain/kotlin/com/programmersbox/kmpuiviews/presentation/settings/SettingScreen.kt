@@ -128,101 +128,101 @@ fun SettingScreen(
             contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         ) { p ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(p)
-        ) {
-            // Quick Actions
-            CategoryGroupListItem {
-                segmentedListItem(
-                    content = { Text("Scan QR Code") },
-                    leadingContent = { Icon(Icons.Default.QrCodeScanner, null) },
-                    onClick = navigationActions::scanQrCode,
-                )
-                segmentedListItem(
-                    content = { Text("Favorites") },
-                    leadingContent = { Icon(Icons.Default.Star, null) },
-                    onClick = navigationActions::favorites,
-                )
-                segmentedListItem(
-                    content = { Text("Saved Notifications") },
-                    leadingContent = { Icon(Icons.Default.Notifications, null) },
-                    onClick = navigationActions::notifications,
-                )
-                segmentedListItem(
-                    content = { Text("Global Search") },
-                    leadingContent = { Icon(Icons.Default.Search, null) },
-                    onClick = { navigationActions.globalSearch() },
-                )
-                apply(composeSettingsDsl.quickActionsSettings)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(p)
+            ) {
+                // Quick Actions
+                CategoryGroupListItem {
+                    segmentedListItem(
+                        content = { Text("Scan QR Code") },
+                        leadingContent = { Icon(Icons.Default.QrCodeScanner, null) },
+                        onClick = navigationActions::scanQrCode,
+                    )
+                    segmentedListItem(
+                        content = { Text("Favorites") },
+                        leadingContent = { Icon(Icons.Default.Star, null) },
+                        onClick = navigationActions::favorites,
+                    )
+                    segmentedListItem(
+                        content = { Text("Saved Notifications") },
+                        leadingContent = { Icon(Icons.Default.Notifications, null) },
+                        onClick = navigationActions::notifications,
+                    )
+                    segmentedListItem(
+                        content = { Text("Global Search") },
+                        leadingContent = { Icon(Icons.Default.Search, null) },
+                        onClick = { navigationActions.globalSearch() },
+                    )
+                    apply(composeSettingsDsl.quickActionsSettings)
+                }
+
+                // App-level viewSettings injection
+                CategoryGroupListItem {
+                    apply(composeSettingsDsl.viewSettings)
+                }
+
+                // Main setting categories
+                CategoryGroupListItem {
+                    segmentedListItem(
+                        content = { Text("Library") },
+                        leadingContent = { Icon(Icons.Default.Star, null) },
+                        onClick = navigationActions::library,
+                    )
+                    segmentedListItem(
+                        content = { Text("Discover") },
+                        leadingContent = { Icon(Icons.Default.Widgets, null) },
+                        onClick = navigationActions::discover,
+                    )
+                    segmentedListItem(
+                        content = { Text("Sources & Extensions") },
+                        leadingContent = { Icon(Icons.Default.Source, null) },
+                        onClick = navigationActions::sources,
+                    )
+                    segmentedListItem(
+                        content = { Text("Integrations") },
+                        leadingContent = { Icon(Icons.Default.DataObject, null) },
+                        onClick = navigationActions::integrations,
+                    )
+                    segmentedListItem(
+                        content = { Text("Appearance") },
+                        leadingContent = { Icon(Icons.Default.Palette, null) },
+                        onClick = navigationActions::appearance,
+                    )
+                    segmentedListItem(
+                        content = { Text("Behavior") },
+                        leadingContent = { Icon(Icons.Default.Settings, null) },
+                        onClick = navigationActions::behaviorSettings,
+                    )
+                    segmentedListItem(
+                        content = { Text("Data Management") },
+                        leadingContent = { Icon(Icons.Default.Storage, null) },
+                        onClick = navigationActions::dataManagement,
+                    )
+                    segmentedListItem(
+                        content = { Text("About") },
+                        leadingContent = { Icon(Icons.Default.Info, null) },
+                        onClick = navigationActions::aboutSettings,
+                    )
+
+                    segmentedListItem(
+                        leadingContent = {
+                            Image(
+                                painterLogo(), null,
+                                modifier = Modifier.size(24.dp).clip(CircleShape)
+                            )
+                        },
+                        overlineContent = { Text(platform()) },
+                        content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
+                        supportingContent = { Text("Version code: ${versionCode()}") },
+                        onClick = {},
+                    )
+                }
+
+                accountSettings()
             }
-
-            // App-level viewSettings injection
-            CategoryGroupListItem {
-                apply(composeSettingsDsl.viewSettings)
-            }
-
-            // Main setting categories
-            CategoryGroupListItem {
-                segmentedListItem(
-                    content = { Text("Library") },
-                    leadingContent = { Icon(Icons.Default.Star, null) },
-                    onClick = navigationActions::library,
-                )
-                segmentedListItem(
-                    content = { Text("Discover") },
-                    leadingContent = { Icon(Icons.Default.Widgets, null) },
-                    onClick = navigationActions::discover,
-                )
-                segmentedListItem(
-                    content = { Text("Sources & Extensions") },
-                    leadingContent = { Icon(Icons.Default.Source, null) },
-                    onClick = navigationActions::sources,
-                )
-                segmentedListItem(
-                    content = { Text("Integrations") },
-                    leadingContent = { Icon(Icons.Default.DataObject, null) },
-                    onClick = navigationActions::integrations,
-                )
-                segmentedListItem(
-                    content = { Text("Appearance") },
-                    leadingContent = { Icon(Icons.Default.Palette, null) },
-                    onClick = navigationActions::appearance,
-                )
-                segmentedListItem(
-                    content = { Text("Behavior") },
-                    leadingContent = { Icon(Icons.Default.Settings, null) },
-                    onClick = navigationActions::behaviorSettings,
-                )
-                segmentedListItem(
-                    content = { Text("Data Management") },
-                    leadingContent = { Icon(Icons.Default.Storage, null) },
-                    onClick = navigationActions::dataManagement,
-                )
-                segmentedListItem(
-                    content = { Text("About") },
-                    leadingContent = { Icon(Icons.Default.Info, null) },
-                    onClick = navigationActions::aboutSettings,
-                )
-
-                segmentedListItem(
-                    leadingContent = {
-                        Image(
-                            painterLogo(), null,
-                            modifier = Modifier.size(24.dp).clip(CircleShape)
-                        )
-                    },
-                    overlineContent = { Text(platform()) },
-                    content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
-                    supportingContent = { Text("Version code: ${versionCode()}") },
-                    onClick = {},
-                )
-            }
-
-            accountSettings()
-        }
         }
 
         ExpandedFullScreenSearchBar(
