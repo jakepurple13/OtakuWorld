@@ -31,7 +31,7 @@ class MultiplatformLibraryPlugin : Plugin<Project> {
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
     ) {
-        jvmToolchain(11)
+        jvmToolchain(17)
 
         (this as org.gradle.api.plugins.ExtensionAware)
             .extensions
