@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -99,19 +101,23 @@ fun SettingScreen(
                 scrollBehavior = searchBarScrollBehavior,
             ) {
                 // Search results shown in ExpandedFullScreenSearchBar
-                searchResults.forEach { item ->
-                    val crumb = SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
-                    ListItem(
-                        content = { Text(item.displayName) },
-                        supportingContent = { Text(crumb) },
-                        leadingContent = { Icon(Icons.Default.Search, null) },
-                        onClick = {
-                            highlightState.pendingHighlightKey = item.highlightKey
-                            scope.launch { searchBarState.animateToCollapsed() }
-                            navigationActions.navigate(item.targetScreen)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(searchResults) { item ->
+                        val crumb = SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
+                        ListItem(
+                            content = { Text(item.displayName) },
+                            supportingContent = { Text(crumb) },
+                            leadingContent = { Icon(Icons.Default.Search, null) },
+                            onClick = {
+                                highlightState.pendingHighlightKey = item.highlightKey
+                                scope.launch { searchBarState.animateToCollapsed() }
+                                navigationActions.navigate(item.targetScreen)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
         },
