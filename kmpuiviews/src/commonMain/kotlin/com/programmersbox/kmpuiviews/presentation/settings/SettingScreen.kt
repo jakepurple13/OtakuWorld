@@ -1,7 +1,9 @@
 package com.programmersbox.kmpuiviews.presentation.settings
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +16,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DataObject
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
@@ -25,14 +28,19 @@ import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material3.ExpandedFullScreenSearchBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -46,7 +54,6 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
-import com.programmersbox.kmpuiviews.presentation.components.DynamicSearchBar
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -86,44 +93,41 @@ fun SettingScreen(
         derivedStateOf { mergedRegistry.search(textFieldState.text.toString()) }
     }
 
-    val searchBarScrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    OtakuScaffold(
-        topBar = {
-            DynamicSearchBar(
-                textFieldState = textFieldState,
-                onSearch = {},
-                searchBarState = searchBarState,
-                placeholder = { Text(stringResource(Res.string.settings)) },
-                leadingIcon = { Icon(Icons.Default.Search, null) },
-                actions = { SyncIconComposable(modifier = Modifier.padding(horizontal = 16.dp)) },
-                isDocked = false,
-                scrollBehavior = searchBarScrollBehavior,
-            ) {
-                // Search results shown in ExpandedFullScreenSearchBar
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    items(searchResults) { item ->
-                        val crumb = SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
-                        ListItem(
-                            content = { Text(item.displayName) },
-                            supportingContent = { Text(crumb) },
-                            leadingContent = { Icon(Icons.Default.Search, null) },
-                            onClick = {
-                                highlightState.pendingHighlightKey = item.highlightKey
-                                scope.launch { searchBarState.animateToCollapsed() }
-                                navigationActions.navigate(item.targetScreen)
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+    val inputField: @Composable () -> Unit = {
+        SearchBarDefaults.InputField(
+            searchBarState = searchBarState,
+            textFieldState = textFieldState,
+            onSearch = {},
+            placeholder = { Text(stringResource(Res.string.settings)) },
+            leadingIcon = {
+                IconButton(onClick = { scope.launch { searchBarState.animateToCollapsed() } }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                 }
-            }
-        },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-        modifier = Modifier.nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
-    ) { p ->
+            },
+        )
+    }
+
+    Box {
+        OtakuScaffold(
+            topBar = {
+                LargeTopAppBar(
+                    title = { Text(stringResource(Res.string.settings)) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { searchBarState.animateToExpanded() } }) {
+                            Icon(Icons.Default.Search, null)
+                        }
+                    },
+                    actions = {
+                        SyncIconComposable(modifier = Modifier.padding(horizontal = 16.dp))
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        ) { p ->
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
@@ -218,6 +222,30 @@ fun SettingScreen(
             }
 
             accountSettings()
+        }
+        }
+
+        ExpandedFullScreenSearchBar(
+            state = searchBarState,
+            inputField = inputField,
+        ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                items(searchResults) { item ->
+                    val crumb = SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
+                    ListItem(
+                        headlineContent = { Text(item.displayName) },
+                        supportingContent = { Text(crumb) },
+                        leadingContent = { Icon(Icons.Default.Search, null) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                highlightState.pendingHighlightKey = item.highlightKey
+                                scope.launch { searchBarState.animateToCollapsed() }
+                                navigationActions.navigate(item.targetScreen)
+                            },
+                    )
+                }
+            }
         }
     }
 }
