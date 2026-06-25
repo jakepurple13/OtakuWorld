@@ -34,11 +34,24 @@ import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountIn
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
 import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
+import com.programmersbox.kmpuiviews.presentation.settings.about.AboutScreen
+import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.about.DeveloperScreen
+import com.programmersbox.kmpuiviews.presentation.settings.appearance.AppearanceScreen
+import com.programmersbox.kmpuiviews.presentation.settings.appearance.ColorsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.behavior.BehaviorScreen
+import com.programmersbox.kmpuiviews.presentation.settings.behavior.ContentReadingScreen
+import com.programmersbox.kmpuiviews.presentation.settings.behavior.LayoutScreen
+import com.programmersbox.kmpuiviews.presentation.settings.behavior.PrivacySecurityScreen
+import com.programmersbox.kmpuiviews.presentation.settings.data.DataManagementScreen
+import com.programmersbox.kmpuiviews.presentation.settings.discover.DiscoverScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.DetailsSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
 import com.programmersbox.kmpuiviews.presentation.settings.general.ThemeSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.incognito.IncognitoScreen
+import com.programmersbox.kmpuiviews.presentation.settings.integrations.IntegrationsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.library.LibraryScreen
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuCustomListScreenStandAlone
 import com.programmersbox.kmpuiviews.presentation.settings.lists.OtakuListView
 import com.programmersbox.kmpuiviews.presentation.settings.lists.deletefromlist.DeleteFromListScreen
@@ -52,6 +65,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.prerelease.Prerelease
 import com.programmersbox.kmpuiviews.presentation.settings.qrcode.ScanQrCode
 import com.programmersbox.kmpuiviews.presentation.settings.security.SecurityScreen
 import com.programmersbox.kmpuiviews.presentation.settings.sourceorder.SourceOrderScreen
+import com.programmersbox.kmpuiviews.presentation.settings.sources.SourcesScreen
 import com.programmersbox.kmpuiviews.presentation.settings.utils.ColorHelperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoScreen
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerScreen
@@ -248,6 +262,26 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     twoPaneEntry<Screen.DetailsSettings> { DetailsSettingsScreen() }
     twoPaneEntry<Screen.SecuritySettings> { SecurityScreen() }
     twoPaneEntry<Screen.ExceptionScreen> { ExceptionsScreen() }
+
+    detailEntry<Screen.Settings.Library> { LibraryScreen() }
+    detailEntry<Screen.Settings.Discover> { DiscoverScreen() }
+    detailEntry<Screen.Settings.Sources> { SourcesScreen() }
+    detailEntry<Screen.Settings.Integrations> { IntegrationsScreen() }
+    detailEntry<Screen.Settings.Appearance> { AppearanceScreen() }
+    detailEntry<Screen.Settings.Colors> { ColorsScreen() }
+    detailEntry<Screen.Settings.Behavior> { BehaviorScreen() }
+    detailEntry<Screen.Settings.Layout> { LayoutScreen() }
+    detailEntry<Screen.Settings.ContentReading> { ContentReadingScreen() }
+    detailEntry<Screen.Settings.PrivacySecurity> { PrivacySecurityScreen() }
+    detailEntry<Screen.Settings.Data> { DataManagementScreen() }
+    detailEntry<Screen.Settings.About> {
+        AboutScreen(
+            usedLibraryClick = { navigationActions.about() },
+            onViewAccountInfoClick = { navigationActions.accountInfo() },
+        )
+    }
+    detailEntry<Screen.Settings.Diagnostics> { DiagnosticsScreen() }
+    detailEntry<Screen.Settings.Developer> { DeveloperScreen() }
 
     genericInfo.settingsNav3Setup()
 }
