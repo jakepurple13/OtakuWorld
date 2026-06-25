@@ -67,7 +67,7 @@ include(
     //":anime_sources",
     //":manga_sources",
     //":novel_sources",
-    ":app",
+    //":app",
     ":Models",
     ":UIViews",
     ":animeworld",

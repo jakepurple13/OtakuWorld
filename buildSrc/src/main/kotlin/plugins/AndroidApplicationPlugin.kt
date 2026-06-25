@@ -37,6 +37,19 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
                     "proguard-rules.pro",
                 )
             }
+            ApplicationBuildTypes.ReleaseMinified.setup(this) {
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                )
+            }
+            ApplicationBuildTypes.BetaMinified.setup(this) {
+                signingConfig = signingConfigs.getByName("debug")
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                )
+            }
             ApplicationBuildTypes.Debug.setup(this)
             ApplicationBuildTypes.Beta.setup(this)
         }

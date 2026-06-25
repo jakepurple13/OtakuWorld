@@ -144,7 +144,6 @@ dependencies {
     api(commonLibs.androidx.navigation3.ui)
     api(commonLibs.androidx.material3.navigation3)
     api(commonLibs.androidx.lifecycle.viewmodel.navigation3)
-    implementation(androidLibs.androidx.activity.ktx)
     implementation(androidLibs.composeActivity)
     implementation(androidLibs.androidx.activity)
 }

@@ -55,29 +55,3 @@ dependencies {
 
     implementation(projects.novelworld.shared)
 }
-
-android {
-    buildTypes {
-        create("releaseMinified") {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            isDebuggable = false
-            matchingFallbacks.add("release")
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-        create("betaMinified") {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            isDebuggable = false
-            signingConfig = signingConfigs.getByName("debug")
-            matchingFallbacks.addAll(listOf("release", "debug"))
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-}
