@@ -15,23 +15,7 @@ private fun SettingsPreview() {
     PreviewTheme {
         SettingScreen(
             composeSettingsDsl = ComposeSettingsDsl(),
-            notificationClick = {},
-            favoritesClick = {},
-            historyClick = {},
-            globalSearchClick = {},
-            listClick = {},
-            extensionClick = {},
-            notificationSettingsClick = {},
-            generalClick = {},
-            otherClick = {},
-            moreInfoClick = {},
-            moreSettingsClick = {},
-            geminiClick = {},
-            sourcesOrderClick = {},
-            appDownloadsClick = {},
             accountSettings = {},
-            scanQrCode = {},
-            securityClick = {}
         )
     }
 }
