@@ -9,7 +9,11 @@ import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsHighlightState
+import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchRegistry
+import com.programmersbox.kmpuiviews.presentation.settings.search.builtInSettingsItems
 import com.programmersbox.kmpuiviews.utils.Backup
+import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
@@ -85,6 +89,9 @@ val appModule = module {
             onNavigate = { navHandler.navigate(it) }
         )
     }
+
+    single { SettingsHighlightState() }
+    single { SettingsSearchRegistry(builtInSettingsItems() + get<ComposeSettingsDsl>().searchItems()) }
 
     includes(supabaseModule)
 }

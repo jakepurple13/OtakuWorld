@@ -60,6 +60,21 @@ interface NavigationActions {
     fun bookmarks()
     fun notes()
 
+    fun library()
+    fun discover()
+    fun sources()
+    fun integrations()
+    fun appearance()
+    fun colors()
+    fun behaviorSettings()
+    fun layout()
+    fun contentReading()
+    fun privacySecurity()
+    fun dataManagement()
+    fun aboutSettings()
+    fun diagnostics()
+    fun developer()
+
     @Composable
     fun currentDestination(screen: Screen): Boolean
 }

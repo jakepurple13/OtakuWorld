@@ -165,6 +165,21 @@ class Navigation3Actions : NavigationActions {
         navBackStack.add(Screen.NotesScreen)
     }
 
+    override fun library() = navigate(Screen.Settings.Library)
+    override fun discover() = navigate(Screen.Settings.Discover)
+    override fun sources() = navigate(Screen.Settings.Sources)
+    override fun integrations() = navigate(Screen.Settings.Integrations)
+    override fun appearance() = navigate(Screen.Settings.Appearance)
+    override fun colors() = navigate(Screen.Settings.Colors)
+    override fun behaviorSettings() = navigate(Screen.Settings.Behavior)
+    override fun layout() = navigate(Screen.Settings.Layout)
+    override fun contentReading() = navigate(Screen.Settings.ContentReading)
+    override fun privacySecurity() = navigate(Screen.Settings.PrivacySecurity)
+    override fun dataManagement() = navigate(Screen.Settings.Data)
+    override fun aboutSettings() = navigate(Screen.Settings.About)
+    override fun diagnostics() = navigate(Screen.Settings.Diagnostics)
+    override fun developer() = navigate(Screen.Settings.Developer)
+
     override fun deleteFromList(uuid: String) {
         navBackStack.add(Screen.CustomListScreen.DeleteFromList(uuid = uuid))
     }
