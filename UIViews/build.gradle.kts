@@ -25,6 +25,7 @@ android {
                 .toString()
                 .also { println("IS_PRERELEASE: $it") }
         )
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     setFlavorDimensions(listOf(ProductFlavorTypes.dimension))
