@@ -1,21 +1,190 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.kts.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ============================================================
+# Kotlin
+# ============================================================
+-keep class kotlin.Metadata { *; }
+-keepclassmembers class **$WhenMappings { *; }
+-keepclassmembers class kotlin.Lazy { *; }
+-dontwarn kotlin.**
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ============================================================
+# Kotlin Coroutines
+# ============================================================
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** { volatile <fields>; }
+-dontwarn kotlinx.coroutines.**
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ============================================================
+# Kotlin Serialization
+# ============================================================
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
+-keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
+-keep,includedescriptorclasses class com.programmersbox.**$$serializer { *; }
+-keepclassmembers class com.programmersbox.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.programmersbox.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep @kotlinx.serialization.Serializable class * { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ============================================================
+# Compose / Compose Multiplatform
+# ============================================================
+-keep class androidx.compose.** { *; }
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable *;
+}
+-keepclassmembers class * {
+    @androidx.compose.ui.tooling.preview.Preview *;
+}
+-dontwarn androidx.compose.**
+
+# ============================================================
+# Koin
+# ============================================================
+-keep class org.koin.** { *; }
+-keepnames class * {
+    @org.koin.core.annotation.* *;
+}
+-dontwarn org.koin.**
+
+# ============================================================
+# Room (KMP / androidx.room3)
+# ============================================================
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Database class * { *; }
+-keep @androidx.room.Dao class * { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase { *; }
+-dontwarn androidx.room.**
+
+# ============================================================
+# Firebase
+# ============================================================
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+# ============================================================
+# Ktor
+# ============================================================
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-dontwarn io.ktor.utils.io.**
+
+# ============================================================
+# OkHttp
+# ============================================================
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# ============================================================
+# Glide
+# ============================================================
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class * extends com.bumptech.glide.module.AppGlideModule { *; }
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
+    **[] $VALUES;
+    public *;
+}
+-dontwarn com.bumptech.glide.**
+
+# ============================================================
+# Kamel (KMP image loading)
+# ============================================================
+-keep class media.kamel.** { *; }
+-dontwarn media.kamel.**
+
+# ============================================================
+# Haze (glassmorphism)
+# ============================================================
+-keep class dev.chrisbanes.haze.** { *; }
+-dontwarn dev.chrisbanes.haze.**
+
+# ============================================================
+# Navigation3
+# ============================================================
+-keep class * implements androidx.navigation3.runtime.NavKey { *; }
+-keep @kotlinx.serialization.Serializable class * implements androidx.navigation3.runtime.NavKey { *; }
+-dontwarn androidx.navigation3.**
+
+# ============================================================
+# DataStore / Protobuf
+# ============================================================
+-keep class * extends com.google.protobuf.GeneratedMessageLite { *; }
+-keep class * extends com.google.protobuf.MessageLite { *; }
+-keep class * extends com.google.protobuf.MessageLiteOrBuilder { *; }
+-dontwarn com.google.protobuf.**
+
+# ============================================================
+# AboutLibraries
+# ============================================================
+-keep class com.mikepenz.aboutlibraries.** { *; }
+-dontwarn com.mikepenz.aboutlibraries.**
+
+# ============================================================
+# Iconics
+# ============================================================
+-keep class com.mikepenz.iconics.** { *; }
+-dontwarn com.mikepenz.iconics.**
+
+# ============================================================
+# jakepurple13 HelpfulTools
+# ============================================================
+-keep class com.github.jakepurple13.** { *; }
+-dontwarn com.github.jakepurple13.**
+
+# ============================================================
+# MangaWorld-specific: Piasy BigImageViewer
+# ============================================================
+-keep class com.github.piasy.** { *; }
+-dontwarn com.github.piasy.**
+
+# ============================================================
+# MangaWorld-specific: SubsamplingScaleImageView
+# ============================================================
+-keep class com.davemorrissey.labs.** { *; }
+-dontwarn com.davemorrissey.labs.**
+
+# ============================================================
+# MangaWorld-specific: pagecurl
+# ============================================================
+-keep class io.github.oleksandrbalan.pagecurl.** { *; }
+-dontwarn io.github.oleksandrbalan.pagecurl.**
+
+# ============================================================
+# MangaWorld-specific: panpf zoomimage
+# ============================================================
+-keep class com.github.panpf.zoomimage.** { *; }
+-dontwarn com.github.panpf.zoomimage.**
+
+# ============================================================
+# MangaWorld-specific: telephoto
+# ============================================================
+-keep class me.saket.telephoto.** { *; }
+-dontwarn me.saket.telephoto.**
+
+# ============================================================
+# MangaWorld-specific: Zipline / Duktape
+# ============================================================
+-keep class com.squareup.duktape.** { *; }
+-keep class app.cash.zipline.** { *; }
+-dontwarn com.squareup.duktape.**
+-dontwarn app.cash.zipline.**
+
+# ============================================================
+# Supabase
+# ============================================================
+-keep class io.github.jan.supabase.** { *; }
+-dontwarn io.github.jan.supabase.**
+
+# ============================================================
+# Preserve stack traces
+# ============================================================
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
