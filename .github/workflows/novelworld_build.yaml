@@ -74,3 +74,42 @@ jobs:
         with:
           name: Signed Novel No Firebase App
           path: novelworld-no-firebase-release.apk
+
+      - name: Build NovelWorld minified artifacts
+        id: buildNovelMinifiedApks
+        run: ./gradlew novelworld:assembleReleaseMinified
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign minified app APK
+        id: novel_sign_minified
+        with:
+          releaseDirectory: novelworld/build/outputs/apk/full/releaseMinified
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign minified no-Firebase app APK
+        id: novel_sign_no_firebase_minified
+        with:
+          releaseDirectory: novelworld/build/outputs/apk/noFirebase/releaseMinified
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up NovelWorld minified artifacts
+        run: |
+          cp ${{ steps.novel_sign_minified.outputs.signedReleaseFile }} novelworld-release-minified.apk
+          cp ${{ steps.novel_sign_no_firebase_minified.outputs.signedReleaseFile }} novelworld-no-firebase-release-minified.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Signed Novel App Minified
+          path: novelworld-release-minified.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Signed Novel No Firebase App Minified
+          path: novelworld-no-firebase-release-minified.apk

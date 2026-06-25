@@ -74,3 +74,42 @@ jobs:
         with:
           name: Signed Anime No Firebase App
           path: animeworld-no-firebase-release.apk
+
+      - name: Build AnimeWorld minified artifacts
+        id: buildAnimeMinifiedApks
+        run: ./gradlew animeworld:assembleReleaseMinified
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign minified app APK
+        id: anime_sign_minified
+        with:
+          releaseDirectory: animeworld/build/outputs/apk/full/releaseMinified
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign minified no-Firebase app APK
+        id: anime_sign_no_firebase_minified
+        with:
+          releaseDirectory: animeworld/build/outputs/apk/noFirebase/releaseMinified
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up AnimeWorld minified artifacts
+        run: |
+          cp ${{ steps.anime_sign_minified.outputs.signedReleaseFile }} animeworld-release-minified.apk
+          cp ${{ steps.anime_sign_no_firebase_minified.outputs.signedReleaseFile }} animeworld-no-firebase-release-minified.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Signed Anime App Minified
+          path: animeworld-release-minified.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Signed Anime No Firebase App Minified
+          path: animeworld-no-firebase-release-minified.apk

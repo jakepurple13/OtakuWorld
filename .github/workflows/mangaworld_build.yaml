@@ -74,3 +74,42 @@ jobs:
         with:
           name: Signed Manga No Firebase App
           path: mangaworld-no-firebase-release.apk
+
+      - name: Build MangaWorld minified artifacts
+        id: buildMangaMinifiedApks
+        run: ./gradlew mangaworld:assembleReleaseMinified
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign minified app APK
+        id: manga_sign_minified
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/full/releaseMinified
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: kevin-david/zipalign-sign-android-release@v2.0.2
+        name: Sign minified no-Firebase app APK
+        id: manga_sign_no_firebase_minified
+        with:
+          releaseDirectory: mangaworld/build/outputs/apk/noFirebase/releaseMinified
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up MangaWorld minified artifacts
+        run: |
+          cp ${{ steps.manga_sign_minified.outputs.signedReleaseFile }} mangaworld-release-minified.apk
+          cp ${{ steps.manga_sign_no_firebase_minified.outputs.signedReleaseFile }} mangaworld-no-firebase-release-minified.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Signed Manga App Minified
+          path: mangaworld-release-minified.apk
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Signed Manga No Firebase App Minified
+          path: mangaworld-no-firebase-release-minified.apk
