@@ -101,6 +101,14 @@
 -dontwarn media.kamel.**
 
 # ============================================================
+# Batik/XMLGraphics (transitive via kamel-decoder-svg-batik — Java AWT not on Android)
+# ============================================================
+-dontwarn org.apache.batik.**
+-dontwarn org.apache.xmlgraphics.**
+-dontwarn java.awt.**
+-dontwarn javax.imageio.**
+
+# ============================================================
 # Haze (glassmorphism)
 # ============================================================
 -keep class dev.chrisbanes.haze.** { *; }
