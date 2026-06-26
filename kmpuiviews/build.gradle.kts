@@ -60,7 +60,7 @@ kotlin {
                 api(commonLibs.haze)
                 api(commonLibs.haze.blur)
                 api(commonLibs.haze.materials)
-                api(commonLibs.backdrop)
+                //api(commonLibs.backdrop)
                 implementation(commonLibs.material.kolor)
                 api(commonLibs.kamel.image)
                 api(commonLibs.kamel.decoder.animated.image)
@@ -241,6 +241,12 @@ kotlin {
             dependsOn(commonMain.get())
             androidMain.get().dependsOn(this)
             jvmMain.get().dependsOn(this)
+        }
+
+        val skikoMain by creating {
+            dependsOn(commonMain.get())
+            jvmMain.get().dependsOn(this)
+            iosMain.get().dependsOn(this)
         }
 
         all {

@@ -33,6 +33,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.window.DialogProperties
 import com.mikepenz.aboutlibraries.Libs
+import com.mikepenz.aboutlibraries.entity.Developer
 import com.mikepenz.aboutlibraries.entity.Library
+import com.mikepenz.aboutlibraries.entity.License
+import com.mikepenz.aboutlibraries.entity.Scm
 import com.mikepenz.aboutlibraries.ui.compose.LibraryDefaults
 import com.mikepenz.aboutlibraries.ui.compose.LibraryPadding
 import com.mikepenz.aboutlibraries.ui.compose.util.author
@@ -70,7 +74,36 @@ fun AboutLibrariesScreen() {
     val aboutLibraryBuilder = koinInject<AboutLibraryBuilder>()
     val libraries by aboutLibraryBuilder.buildLibs()
 
-    val libs = libraries?.libraries.orEmpty()
+    val libs by remember(libraries) {
+        derivedStateOf {
+            libraries?.libraries.orEmpty() + Library(
+                uniqueId = "io.github.kyant0:backdrop",
+                artifactVersion = "2.0.0-custom",
+                name = "Backdrop",
+                description = "Compose Multiplatform Liquid Glass effects",
+                website = "https://github.com/Kyant0/AndroidLiquidGlass",
+                licenses = setOf(
+                    License(
+                        name = "The Apache License, Version 2.0",
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt",
+                        hash = ""
+                    )
+                ),
+                developers = listOf(
+                    Developer(
+                        name = "Kyant0",
+                        organisationUrl = "https://github.com/Kyant0"
+                    )
+                ),
+                organization = null,
+                scm = Scm(
+                    url = "https://github.com/Kyant0/AndroidLiquidGlass",
+                    connection = "scm:git:git://github.com/Kyant0/AndroidLiquidGlass.git",
+                    developerConnection = "scm:git:ssh://git@github.com/Kyant0/AndroidLiquidGlass.git",
+                )
+            )
+        }
+    }
 
     val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
