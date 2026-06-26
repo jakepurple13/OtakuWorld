@@ -324,7 +324,10 @@ class TopLevelBackStack<T : NavKey>(
         updateBackStack()
     }
 
-    fun removeFromAll(navKey: NavKey) = topLevelStacks.forEach {
-        it.value.removeAll { it == navKey }
+    fun removeFromAll(navKey: NavKey) {
+        topLevelStacks.forEach {
+            it.value.removeAll { it == navKey }
+        }
+        updateBackStack()
     }
 }

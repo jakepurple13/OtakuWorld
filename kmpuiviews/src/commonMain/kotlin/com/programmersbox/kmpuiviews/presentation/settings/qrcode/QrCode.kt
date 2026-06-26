@@ -30,9 +30,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -118,7 +119,7 @@ fun ShareViaQrCode(
     onClose: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Expanded)
     val onDismiss: () -> Unit = {
         scope.launch { sheetState.hide() }
         onClose()
@@ -247,7 +248,7 @@ fun ScanQrCode(
 
     val navController = LocalNavActions.current
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Expanded)
     val onDismiss: () -> Unit = {
         scope.launch { sheetState.hide() }
             .invokeOnCompletion { navController.remove(Screen.ScanQrCodeScreen) }
