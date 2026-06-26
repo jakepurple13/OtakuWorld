@@ -10,14 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
-import com.kyant.backdrop.backdrops.LayerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
-import com.kyant.backdrop.highlight.Highlight
 import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.backdrops.LayerBackdrop
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.backdrops.rememberLayerBackdrop
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.drawBackdrop
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.effects.blur
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.effects.lens
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.effects.vibrancy
+import com.programmersbox.kmpuiviews.presentation.components.custombackdrop.highlight.Highlight
 import org.koin.compose.koinInject
 
 @Composable

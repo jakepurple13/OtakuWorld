@@ -7,6 +7,7 @@ import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
@@ -43,6 +44,7 @@ actual fun platformModule(): Module = module {
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }
     singleOf(::TrayState)
+    singleOf(::AboutLibraryBuilder)
 
     single {
         AppDirs {

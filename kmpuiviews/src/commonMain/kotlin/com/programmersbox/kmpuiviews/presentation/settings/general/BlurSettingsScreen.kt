@@ -315,8 +315,8 @@ private fun ColumnScope.LiquidGlassOptions(
             Slider(
                 value = blurAmount,
                 onValueChange = { blurAmount = it },
-                valueRange = 1f..10f,
-                steps = 10
+                valueRange = 0f..10f,
+                steps = 11
             )
         },
         colors = colors,
