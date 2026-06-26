@@ -1,6 +1,7 @@
 package com.programmersbox.supabaseintegration.di
 
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthManagerImpl
 import com.programmersbox.supabaseintegration.backup.BackupManager
@@ -24,6 +25,7 @@ import com.programmersbox.supabaseintegration.sync.syncprocessor.HistorySyncProc
 import com.programmersbox.supabaseintegration.sync.syncprocessor.NotesSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
 import com.programmersbox.supabaseintegration.ui.SupabaseQrCodeScannerViewModel
+import com.programmersbox.supabaseintegration.ui.SupabaseSearchItems
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel
@@ -65,6 +67,8 @@ val supabaseModule = module {
     viewModelOf(::SyncViewModel)
     viewModelOf(::BackupRestoreViewModel)
     viewModelOf(::SupabaseQrCodeScannerViewModel)
+
+    singleOf(::SupabaseSearchItems) bind SearchRegistryItem::class
 
     syncProcessorModule()
 

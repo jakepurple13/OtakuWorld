@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews.utils
 import androidx.compose.runtime.Composable
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupScope
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScope
-import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchItem
 
 class ComposeSettingsDsl {
     //TODO: Turn back to internal once settings move to kmpuiviews
@@ -27,13 +26,6 @@ class ComposeSettingsDsl {
 
     fun onboardingSettings(block: OnboardingScope.() -> Unit) {
         onboardingSettings = block
-    }
-
-    // ── New: search registry ─────────────────────────────────
-    var searchItems: () -> List<SettingsSearchItem> = { emptyList() }
-
-    fun searchItems(block: () -> List<SettingsSearchItem>) {
-        searchItems = block
     }
 
     // ── New: per-section injection ───────────────────────────

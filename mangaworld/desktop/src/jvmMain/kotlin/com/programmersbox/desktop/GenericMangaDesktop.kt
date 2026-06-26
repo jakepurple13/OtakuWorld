@@ -19,6 +19,8 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.koogintegration.Koog
+import com.programmersbox.koogintegration.KoogSettings
 import com.programmersbox.koogintegration.screens.chatscreen.ChatScreen
 import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
@@ -145,12 +147,6 @@ class GenericMangaDesktop(
         }
     }
 }
-
-@Serializable
-data object KoogSettings : NavKey
-
-@Serializable
-data object Koog : NavKey
 
 @Serializable
 data object CustomScraper : NavKey

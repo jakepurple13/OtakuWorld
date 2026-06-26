@@ -9,9 +9,8 @@ import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsHighlightState
-import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchRegistry
-import com.programmersbox.kmpuiviews.presentation.settings.search.builtInSettingsItems
+import com.programmersbox.kmpuiviews.presentation.settings.search.DefaultSettingsItems
+import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
@@ -27,6 +26,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
+import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.sharedtools.backupProcessor
 import com.programmersbox.supabaseintegration.di.SupabaseActions
 import com.programmersbox.supabaseintegration.di.supabaseModule
@@ -34,6 +34,8 @@ import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -95,13 +97,12 @@ val appModule = module {
         )
     }
 
-    single { SettingsHighlightState() }
-    single { SettingsSearchRegistry(builtInSettingsItems()) }
+    viewModel { SettingsSearchViewModel(getAll()) }
+    singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
 
     includes(supabaseModule)
 }
 
-//TODO: Move BackupProcessor to a separate shared like module
 private fun Module.backupProcessors() {
     backupProcessor("backupSettings", ::BackupSettingsProcessor)
     backupProcessor("bookmarks", ::BookmarksBackupProcessor)

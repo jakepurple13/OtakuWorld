@@ -52,7 +52,9 @@ kotlin {
                 implementation(commonLibs.markdown.renderer)
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
                 implementation(commonLibs.bundles.koinKmp)
+                implementation(commonLibs.androidx.navigation3.runtime)
                 implementation(projects.favoritesdatabase)
+                implementation(projects.sharedtools)
                 implementation(commonLibs.kotlinx.datetime)
             }
         }

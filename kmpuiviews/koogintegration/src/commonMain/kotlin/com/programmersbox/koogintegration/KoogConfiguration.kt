@@ -12,6 +12,7 @@ import com.programmersbox.koogintegration.provider.otakutools.LocalExplainTools
 import com.programmersbox.koogintegration.provider.otakutools.RecommendationTools
 import com.programmersbox.koogintegration.screens.chatscreen.ChatViewModel
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
+import com.programmersbox.sharedtools.SearchRegistryItem
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.new
 import org.koin.core.module.dsl.singleOf
@@ -40,6 +41,8 @@ fun buildKoogModule() = module {
             listAnalyzer = get(qualifier = named("list"))
         )
     }
+
+    singleOf(::KoogSearchItems) bind SearchRegistryItem::class
 }
 
 object AppDimension {

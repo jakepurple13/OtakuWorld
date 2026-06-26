@@ -45,6 +45,7 @@ kotlin {
             implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
             implementation(projects.favoritesdatabase)
             implementation(projects.kmpmodels)
+            implementation(projects.sharedtools)
             implementation(commonLibs.qrose)
             implementation(commonLibs.scanner)
             implementation(compose.components.resources)

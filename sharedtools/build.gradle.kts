@@ -30,6 +30,7 @@ kotlin {
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
                 implementation(commonLibs.bundles.koinKmp)
                 implementation(commonLibs.bundles.datastoreLibs)
+                implementation(commonLibs.androidx.navigation3.runtime)
             }
         }
 

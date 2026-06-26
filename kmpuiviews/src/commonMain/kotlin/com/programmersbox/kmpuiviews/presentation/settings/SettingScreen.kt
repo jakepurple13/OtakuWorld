@@ -1,7 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -42,31 +39,28 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.rememberViewModelStoreOwner
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsHighlightState
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsScreenDisplayNames
-import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchRegistry
+import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.versionCode
 import com.programmersbox.supabaseintegration.ui.SyncIconComposable
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.currentVersion
 import otakuworld.kmpuiviews.generated.resources.settings
@@ -78,27 +72,21 @@ fun SettingScreen(
     navigationActions: NavigationActions = LocalNavActions.current,
     accountSettings: @Composable () -> Unit = {},
 ) {
-    val searchRegistry: SettingsSearchRegistry = koinInject()
-    val highlightState: SettingsHighlightState = koinInject()
-    val textFieldState: TextFieldState = rememberTextFieldState()
+    val viewModelStoreOwner = rememberViewModelStoreOwner()
+    val viewModel = koinViewModel<SettingsSearchViewModel>(
+        viewModelStoreOwner = viewModelStoreOwner
+    )
     val searchBarState = rememberSearchBarState()
     val scope = rememberCoroutineScope()
 
     val appVersion = appVersion()
-
-    val mergedRegistry = remember(composeSettingsDsl) {
-        SettingsSearchRegistry(searchRegistry.items + composeSettingsDsl.searchItems())
-    }
-    val searchResults by remember {
-        derivedStateOf { mergedRegistry.search(textFieldState.text.toString()) }
-    }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     val inputField: @Composable () -> Unit = {
         SearchBarDefaults.InputField(
             searchBarState = searchBarState,
-            textFieldState = textFieldState,
+            textFieldState = viewModel.textFieldState,
             onSearch = {},
             placeholder = { Text(stringResource(Res.string.settings)) },
             leadingIcon = {
@@ -230,19 +218,17 @@ fun SettingScreen(
             inputField = inputField,
         ) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                items(searchResults) { item ->
+                items(viewModel.searchResults) { item ->
                     val crumb = SettingsScreenDisplayNames.breadcrumbText(item.breadcrumb)
                     ListItem(
-                        headlineContent = { Text(item.displayName) },
+                        content = { Text(item.displayName) },
                         supportingContent = { Text(crumb) },
                         leadingContent = { Icon(Icons.Default.Search, null) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                highlightState.pendingHighlightKey = item.highlightKey
-                                scope.launch { searchBarState.animateToCollapsed() }
-                                navigationActions.navigate(item.targetScreen)
-                            },
+                        onClick = {
+                            scope.launch { searchBarState.animateToCollapsed() }
+                            navigationActions.navigate(item.targetScreen)
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
