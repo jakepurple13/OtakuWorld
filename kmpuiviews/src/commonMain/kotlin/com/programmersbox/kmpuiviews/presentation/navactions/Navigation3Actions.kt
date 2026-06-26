@@ -15,7 +15,12 @@ import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
 class Navigation3Actions : NavigationActions {
 
-    val navBackStack = TopLevelBackStack<NavKey>(Screen.RecentScreen)
+    val navBackStack = TopLevelBackStack<NavKey>(
+        Screen.RecentScreen,
+        linkedMapOf(
+            Screen.RecentScreen to mutableStateListOf(Screen.RecentScreen),
+        )
+    )
 
     val backStack by derivedStateOf { navBackStack.backStack }
 
@@ -245,12 +250,13 @@ class Navigation3Actions : NavigationActions {
     }
 }
 
-class TopLevelBackStack<T : Any>(startKey: T) {
+class TopLevelBackStack<T : NavKey>(
+    private val startKey: T, // Added 'private val' so we can reference it
+    startingKeys: LinkedHashMap<T, SnapshotStateList<T>>,
+) {
 
     // Maintain a stack for each top level route
-    private var topLevelStacks: LinkedHashMap<T, SnapshotStateList<T>> = linkedMapOf(
-        startKey to mutableStateListOf(startKey)
-    )
+    private var topLevelStacks: LinkedHashMap<T, SnapshotStateList<T>> = startingKeys
 
     // Expose the current top level route for consumers
     var topLevelKey by mutableStateOf(startKey)
@@ -268,15 +274,19 @@ class TopLevelBackStack<T : Any>(startKey: T) {
         }
 
     fun addTopLevel(key: T) {
-
-        // If the top level doesn't exist, add it
-        if (topLevelStacks[key] == null) {
+        if (key == startKey) {
+            // When returning to the home screen (root), clear all other top-level
+            // histories so it acts as the absolute base of the navigation stack.
+            topLevelStacks.clear()
             topLevelStacks[key] = mutableStateListOf(key)
         } else {
-            // Otherwise just move it to the end of the stacks
-            topLevelStacks.apply {
-                remove(key)?.let {
-                    put(key, it)
+            // If the top level doesn't exist, add it
+            if (topLevelStacks[key] == null) {
+                topLevelStacks[key] = mutableStateListOf(key)
+            } else {
+                // Otherwise just move it to the end of the stacks
+                topLevelStacks.apply {
+                    remove(key)?.let { put(key, it) }
                 }
             }
         }
@@ -295,9 +305,21 @@ class TopLevelBackStack<T : Any>(startKey: T) {
     }
 
     fun removeLast() {
+        // Prevent popping the root if it's the last item left
+        if (topLevelKey == startKey && topLevelStacks[topLevelKey]?.size == 1) {
+            return
+        }
+
         val removedKey = topLevelStacks[topLevelKey]?.removeLastOrNull()
+
         // If the removed key was a top level key, remove the associated top level stack
         topLevelStacks.remove(removedKey)
+
+        // Safety fallback: If the map somehow becomes completely empty, restore the root
+        if (topLevelStacks.isEmpty()) {
+            topLevelStacks[startKey] = mutableStateListOf(startKey)
+        }
+
         topLevelKey = topLevelStacks.keys.last()
         updateBackStack()
     }

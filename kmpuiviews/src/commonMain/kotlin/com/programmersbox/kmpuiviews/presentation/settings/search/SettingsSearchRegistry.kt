@@ -89,6 +89,13 @@ class DefaultSettingsItems : SearchRegistryItem {
                 targetScreen = Screen.NotificationScreen,
                 highlightKey = "notification",
             ),
+            SettingSearchItem(
+                displayName = "Account",
+                keywords = listOf("account", "user", "profile"),
+                breadcrumb = listOf(Screen.Settings, Screen.Settings.Data, Screen.AccountInfo),
+                targetScreen = Screen.AccountInfo,
+                highlightKey = "account",
+            ),
             // ── Appearance > Theme ──────────────────────────────────
             SettingSearchItem(
                 displayName = "Light / Dark / System Mode",
