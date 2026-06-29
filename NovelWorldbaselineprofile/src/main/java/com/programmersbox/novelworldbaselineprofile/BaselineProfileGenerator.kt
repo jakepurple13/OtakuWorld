@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworldbaselineprofile
+package com.programmersbox.novelworldbaselineprofile
 
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -10,12 +10,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Generates a Baseline Profile for MangaWorld covering:
+ * Generates a Baseline Profile for NovelWorld covering:
  * 1. Cold startup (app launch to first meaningful frame)
  * 2. First-scroll on the main browse list
  * 3. Navigate to a detail screen and back
  *
- * Run via: ./gradlew :mangaworld:generateNoFirebaseReleaseBaselineProfile
+ * Run via: ./gradlew :novelworld:generateNoFirebaseReleaseBaselineProfile
  *
  * Add Modifier.testTag("browse_list") to the main LazyColumn/LazyVerticalGrid in
  * kmpuiviews and Modifier.testTag("detail_screen") to the detail screen composable
@@ -30,7 +30,7 @@ class BaselineProfileGenerator {
 
     @Test
     fun startupAndScroll() {
-        rule.collect(packageName = "com.programmersbox.mangaworld") {
+        rule.collect(packageName = "com.programmersbox.novelworld") {
             pressHome()
             startActivityAndWait()
 

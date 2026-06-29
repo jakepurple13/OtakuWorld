@@ -94,3 +94,15 @@ expect class SystemAlerter {
     fun alertListItemChange()
     fun alertIncognitoChange()
 }
+
+/**
+ * Signals to the system that this composable represents meaningful drawn content.
+ * On Android this delegates to androidx.activity.compose.ReportDrawnWhen, which
+ * enables accurate timeToFullDisplay (TTFD) reporting in Macrobenchmark.
+ * On other platforms this is a no-op.
+ *
+ * Usage: place inside the first composable that renders real content (not a shimmer/loading state):
+ *   ReportDrawnWhen { items.isNotEmpty() }
+ */
+@Composable
+expect fun ReportDrawnWhen(predicate: () -> Boolean)

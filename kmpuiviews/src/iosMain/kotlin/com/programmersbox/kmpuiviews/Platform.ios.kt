@@ -87,6 +87,11 @@ actual fun logFirebaseMessage(message: String) {
 
 actual fun readPlatformFile(uri: String): PlatformFile = PlatformFile(uri)
 
+@Composable
+actual fun ReportDrawnWhen(predicate: () -> Boolean) {
+    // No-op on iOS — TTFD tracking is Android-only
+}
+
 /*
 fun provideBiometricAuthenticator(): BiometricAuthenticator {
     val osName = System.getProperty("os.name").toLowerCase()

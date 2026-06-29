@@ -52,6 +52,7 @@ import com.programmersbox.kmpuiviews.utils.DateFormatItem
 import com.programmersbox.kmpuiviews.utils.HeatMapWrapper
 import com.programmersbox.kmpuiviews.utils.KmpHeat
 import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
+import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -87,6 +88,7 @@ fun AccountInfoScreen(
             ) {
                 ProfileStripCard(
                     profileUrl = profileUrl.orEmpty(),
+                    supabaseUser = viewModel.supabaseInfo,
                     appConfig = appConfig,
                     modifier = Modifier
                         .animateItem()
@@ -359,6 +361,7 @@ private fun SectionHeader(
 private fun ProfileStripCard(
     profileUrl: String,
     appConfig: AppConfig,
+    supabaseUser: SupabaseUser?,
     modifier: Modifier = Modifier,
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -388,7 +391,10 @@ private fun ProfileStripCard(
                 )
                 Column {
                     Text(
-                        text = appConfig.userName ?: appConfig.appName,
+                        text = supabaseUser?.displayName
+                            ?: supabaseUser?.email
+                            ?: appConfig.userName
+                            ?: appConfig.appName,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimary,

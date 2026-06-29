@@ -1,4 +1,4 @@
-package com.programmersbox.mangaworldbaselineprofile
+package com.programmersbox.animeworldbaselineprofile
 
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
@@ -15,12 +15,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Macrobenchmarks for MangaWorld.
+ * Macrobenchmarks for AnimeWorld.
  *
- * Run via: ./gradlew :MangaWorldbaselineprofile:connectedNoFirebaseReleaseAndroidTest
+ * Run via: ./gradlew :AnimeWorldbaselineprofile:connectedNoFirebaseReleaseAndroidTest
  *   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
  *
- * Results land in: MangaWorldbaselineprofile/build/outputs/connected_android_test_additional_output/
+ * Results land in: AnimeWorldbaselineprofile/build/outputs/connected_android_test_additional_output/
  *
  * IMPORTANT: Run on a physical low-end device or aosp_cf_x86_64_phone-userdebug.
  * Debug builds produce non-representative numbers — always use release.
@@ -94,6 +94,6 @@ class StartupBenchmarks {
     )
 
     companion object {
-        private const val PACKAGE_NAME = "com.programmersbox.mangaworld"
+        private const val PACKAGE_NAME = "com.programmersbox.animeworld"
     }
 }

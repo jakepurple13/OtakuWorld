@@ -54,6 +54,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.KmpGenericInfo
+import com.programmersbox.kmpuiviews.ReportDrawnWhen
 import com.programmersbox.kmpuiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
@@ -249,6 +250,7 @@ fun RecentView(
                         }
 
                         else -> {
+                            ReportDrawnWhen { true }
                             info.ItemListView(
                                 list = viewModel.filteredSourceList,
                                 listState = state,

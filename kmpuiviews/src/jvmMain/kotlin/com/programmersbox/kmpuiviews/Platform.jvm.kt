@@ -215,6 +215,11 @@ actual class SystemAlerter {
     }
 }
 
+@Composable
+actual fun ReportDrawnWhen(predicate: () -> Boolean) {
+    // No-op on Desktop — TTFD tracking is Android-only
+}
+
 class TranslationItemHandler : TranslationHandler {
     override fun translateDescription(
         textToTranslate: String,

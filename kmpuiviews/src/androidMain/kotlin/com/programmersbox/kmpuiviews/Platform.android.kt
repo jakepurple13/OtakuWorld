@@ -386,3 +386,8 @@ actual class SystemAlerter(
         }.onFailure { it.printStackTrace() }
     }
 }
+
+@Composable
+actual fun ReportDrawnWhen(predicate: () -> Boolean) {
+    androidx.activity.compose.ReportDrawnWhen(predicate)
+}
