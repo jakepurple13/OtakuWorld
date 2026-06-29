@@ -52,6 +52,8 @@ inline fun <reified T> ScanQrCode(
     noinline onOpen: (T) -> Unit,
     crossinline onRemove: () -> Unit,
     crossinline customUi: @Composable (T?) -> Unit,
+    openText: String = "Open",
+    showSaveOpenButton: Boolean = true,
     viewModel: QrCodeViewModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -135,12 +137,14 @@ inline fun <reified T> ScanQrCode(
 
                 customUi(qrCodeInfo)
 
-                Button(
-                    onClick = { qrCodeInfo?.let { onOpen(it) } },
-                    enabled = qrCodeInfo != null,
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Open") }
+                if (showSaveOpenButton) {
+                    Button(
+                        onClick = { qrCodeInfo?.let { onOpen(it) } },
+                        enabled = qrCodeInfo != null,
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.fillMaxWidth(.75f)
+                    ) { Text(openText) }
+                }
             }
         }
     }

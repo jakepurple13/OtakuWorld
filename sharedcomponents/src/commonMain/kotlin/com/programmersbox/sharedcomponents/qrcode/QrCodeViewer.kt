@@ -49,6 +49,7 @@ inline fun <reified T : QrCodeInfo> ShareViaQrCode(
     qrCodeInfo: T,
     crossinline onClose: () -> Unit,
     crossinline customUi: @Composable () -> Unit = {},
+    includeShareImage: Boolean = true,
     includeShareUrl: Boolean = true,
     includeSaveImage: Boolean = true,
     crossinline painterCustomize: QrOptionsBuilderScope.() -> Unit = {},
@@ -115,19 +116,21 @@ inline fun <reified T : QrCodeInfo> ShareViaQrCode(
 
                 customUi()
 
-                FilledTonalButton(
-                    onClick = {
-                        scope.launch {
-                            //TODO: In an update, change to copy to clipboard
-                            qrCodeRepository.shareImage(
-                                bitmap = graphicsLayer.toImageBitmap(),
-                                title = qrCodeInfo.title
-                            )
-                        }
-                    },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Share") }
+                if (includeShareImage) {
+                    FilledTonalButton(
+                        onClick = {
+                            scope.launch {
+                                //TODO: In an update, change to copy to clipboard
+                                qrCodeRepository.shareImage(
+                                    bitmap = graphicsLayer.toImageBitmap(),
+                                    title = qrCodeInfo.title
+                                )
+                            }
+                        },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier.fillMaxWidth(.75f)
+                    ) { Text("Share") }
+                }
 
                 if (includeSaveImage) {
                     ElevatedButton(
