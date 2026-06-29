@@ -7,32 +7,6 @@
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
-
-    <permission-group
-        android:name="${applicationId}.group.favorites"
-        android:description="@string/permission_description"
-        android:label="@string/permission_label" />
-
-    <permission
-        android:name="${applicationId}.READ_WRITE_FAVORITES"
-        android:description="@string/permission_description"
-        android:label="@string/permission_label"
-        android:permissionGroup="${applicationId}.group.favorites"
-        android:protectionLevel="dangerous" />
-
-    <permission-group
-        android:name="${applicationId}.group.list"
-        android:description="@string/list_permission_description"
-        android:permissionGroupFlags="personalInfo"
-        android:label="@string/list_permission_label" />
-
-    <permission
-        android:name="${applicationId}.READ_WRITE_LISTS"
-        android:description="@string/list_permission_description"
-        android:label="@string/list_permission_label"
-        android:permissionGroup="${applicationId}.group.list"
-        android:protectionLevel="dangerous" />
-
     <application>
 
         <service

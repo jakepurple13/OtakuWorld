@@ -121,6 +121,7 @@ fun ScanQrCode() {
         showLoadingDialog = showLoadingDialog,
         onDismissRequest = { showLoadingDialog = false }
     )
+
     ScanQrCode<QrCodeInfo>(
         onOpen = { qrCodeInfo ->
             scope.launch {
