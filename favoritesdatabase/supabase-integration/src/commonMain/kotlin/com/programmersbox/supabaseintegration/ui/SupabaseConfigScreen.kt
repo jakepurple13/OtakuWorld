@@ -32,6 +32,8 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,11 +55,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.sharedcomponents.qrcode.ScanQrCode
 import com.programmersbox.sharedcomponents.qrcode.ShareViaQrCode
+import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
+import com.programmersbox.supabaseintegration.supabase_logo_icon
 import com.programmersbox.supabaseintegration.sync.SyncConfig
 import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel
+import io.github.alexzhirkevich.qrose.options.QrLogoPadding
+import io.github.alexzhirkevich.qrose.options.QrLogoShape
+import io.github.alexzhirkevich.qrose.options.circle
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -104,7 +112,12 @@ fun SupabaseConfigScreen(
                     viewModel.onMaxBackoffChange(syncConfig.maxBackoffMs.toString())
                 }
             },
-            onClose = { scanShareQrCode = false }
+            onClose = { scanShareQrCode = false },
+            testScannedCredentials = viewModel::testConnectionWithScannedCredentials,
+            connectionResult = viewModel
+                .scannedConnectionResult
+                .collectAsStateWithLifecycle()
+                .value
         )
     }
 
@@ -346,6 +359,8 @@ fun ShareViaQrCode(
         .listenForChanges()
         .collectAsStateWithLifecycle(SyncConfig())
 
+    val supabaseLogo = painterResource(Res.drawable.supabase_logo_icon)
+
     ShareViaQrCode(
         qrCodeInfo = QrCodeInfo(
             credentials = SupabaseCredentials(baseUrl, key),
@@ -354,6 +369,13 @@ fun ShareViaQrCode(
         onClose = onClose,
         includeShareUrl = false,
         includeSaveImage = false,
+        painterCustomize = {
+            logo {
+                painter = supabaseLogo
+                padding = QrLogoPadding.Natural(.1f)
+                shape = QrLogoShape.circle()
+            }
+        }
     )
 }
 
@@ -362,6 +384,8 @@ fun ShareViaQrCode(
 fun ScanQrCode(
     onSaveCredentials: (SupabaseCredentials) -> Unit,
     onSaveSyncConfig: (SyncConfig) -> Unit,
+    testScannedCredentials: (String, String) -> Unit = { _, _ -> },
+    connectionResult: String?,
     onClose: () -> Unit,
 ) {
     ScanQrCode<QrCodeInfo>(
@@ -369,27 +393,79 @@ fun ScanQrCode(
         onRemove = onClose,
         customUi = { qrCodeInfo ->
             qrCodeInfo?.let { info ->
-                Text("Project url: ${info.credentials.projectUrl}")
-                Text("Project key: ${info.credentials.anonKey}")
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text("Project url: ${info.credentials.projectUrl}")
+                            HorizontalDivider()
+                            Text("Project key: ${info.credentials.anonKey}")
+                            FilledTonalButton(
+                                onClick = { testScannedCredentials(info.credentials.projectUrl, info.credentials.anonKey) },
+                                shapes = ButtonDefaults.shapes(),
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            ) { Text("Test Connection") }
+                            // Smooth appearance for connection result
+                            AnimatedVisibility(
+                                visible = connectionResult != null,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                connectionResult?.let { result ->
+                                    val isSuccess = result.startsWith("✓")
+                                    Surface(
+                                        color = if (isSuccess) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.errorContainer,
+                                        shape = MaterialTheme.shapes.small,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 16.dp)
+                                    ) {
+                                        Text(
+                                            text = result,
+                                            color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer
+                                            else MaterialTheme.colorScheme.onErrorContainer,
+                                            modifier = Modifier.padding(12.dp),
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-                Button(
-                    onClick = { onSaveCredentials(info.credentials) },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Save Credentials") }
+                    Button(
+                        onClick = { onSaveCredentials(info.credentials) },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(.75f)
+                    ) { Text("Save Credentials") }
 
-                Text("Poll interval: ${info.syncConfig.pollIntervalMs}")
-                Text("Max retries: ${info.syncConfig.maxRetries}")
-                Text("Initial backoff: ${info.syncConfig.initialBackoffMs}")
-                Text("Max backoff: ${info.syncConfig.maxBackoffMs}")
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text("Poll interval: ${info.syncConfig.pollIntervalMs}")
+                            Text("Max retries: ${info.syncConfig.maxRetries}")
+                            Text("Initial backoff: ${info.syncConfig.initialBackoffMs}")
+                            Text("Max backoff: ${info.syncConfig.maxBackoffMs}")
+                        }
+                    }
 
-                Button(
-                    onClick = { onSaveSyncConfig(info.syncConfig) },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Save Config") }
+                    Button(
+                        onClick = { onSaveSyncConfig(info.syncConfig) },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(.75f)
+                    ) { Text("Save Config") }
+                }
             }
-
         },
         showSaveOpenButton = false
     )
