@@ -1,4 +1,4 @@
-package com.programmersbox.kmpuiviews.repository
+package com.programmersbox.sharedcomponents.qrcode
 
 import androidx.compose.ui.graphics.ImageBitmap
 

@@ -6,7 +6,6 @@ import com.programmersbox.kmpuiviews.repository.DownloadStateRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
 import com.programmersbox.kmpuiviews.repository.NotificationScreenRepository
 import com.programmersbox.kmpuiviews.repository.PlatformRepository
-import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.repository.SourceInfoRepository
 import com.programmersbox.kmpuiviews.repository.WorkRepository
 import com.programmersbox.kmpuiviews.repository.WorkerRepositoryImpl
@@ -16,7 +15,6 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 actual fun platformRepositories(): Module = module {
-    singleOf(::QrCodeRepository)
     singleOf(::NotificationRepository)
     singleOf(::WorkerRepositoryImpl) { bind<WorkRepository>() }
     singleOf(::DownloadStateRepository) { bind<DownloadStateInterface>() }

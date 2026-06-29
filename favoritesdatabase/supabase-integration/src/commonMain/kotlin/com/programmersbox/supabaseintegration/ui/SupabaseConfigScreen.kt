@@ -1,31 +1,22 @@
 package com.programmersbox.supabaseintegration.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Link
@@ -38,53 +29,45 @@ import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.sharedcomponents.qrcode.ScanQrCode
+import com.programmersbox.sharedcomponents.qrcode.ShareViaQrCode
+import com.programmersbox.supabaseintegration.Res
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
+import com.programmersbox.supabaseintegration.supabase_logo_icon
 import com.programmersbox.supabaseintegration.sync.SyncConfig
 import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel
-import io.github.alexzhirkevich.qrose.rememberQrCodePainter
-import kotlinx.coroutines.launch
+import io.github.alexzhirkevich.qrose.options.QrLogoPadding
+import io.github.alexzhirkevich.qrose.options.QrLogoShape
+import io.github.alexzhirkevich.qrose.options.circle
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import org.publicvalue.multiplatform.qrcode.CameraPosition
-import org.publicvalue.multiplatform.qrcode.CodeType
-import org.publicvalue.multiplatform.qrcode.ScannerWithPermissions
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -115,8 +98,26 @@ fun SupabaseConfigScreen(
 
     if (scanShareQrCode) {
         ScanQrCode(
-            supabaseConfigViewModel = viewModel,
-            onClose = { scanShareQrCode = false }
+            onSaveCredentials = { credentials ->
+                runCatching {
+                    viewModel.onProjectUrlChange(credentials.projectUrl)
+                    viewModel.onAnonKeyChange(credentials.anonKey)
+                }
+            },
+            onSaveSyncConfig = { syncConfig ->
+                runCatching {
+                    viewModel.onPollIntervalChange(syncConfig.pollIntervalMs.toString())
+                    viewModel.onMaxRetriesChange(syncConfig.maxRetries.toString())
+                    viewModel.onInitialBackoffChange(syncConfig.initialBackoffMs.toString())
+                    viewModel.onMaxBackoffChange(syncConfig.maxBackoffMs.toString())
+                }
+            },
+            onClose = { scanShareQrCode = false },
+            testScannedCredentials = viewModel::testConnectionWithScannedCredentials,
+            connectionResult = viewModel
+                .scannedConnectionResult
+                .collectAsStateWithLifecycle()
+                .value
         )
     }
 
@@ -342,7 +343,9 @@ fun SupabaseConfigScreen(
 data class QrCodeInfo(
     val credentials: SupabaseCredentials,
     val syncConfig: SyncConfig,
-)
+    override val title: String = "Supabase Sync Config",
+    override val url: String = credentials.projectUrl,
+) : com.programmersbox.sharedcomponents.qrcode.QrCodeInfo
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -356,235 +359,114 @@ fun ShareViaQrCode(
         .listenForChanges()
         .collectAsStateWithLifecycle(SyncConfig())
 
-    val scope = rememberCoroutineScope()
-    val sheetState = rememberBottomSheetState(SheetValue.Expanded)
-    val onDismiss: () -> Unit = {
-        scope.launch { sheetState.hide() }
-        onClose()
-    }
+    val supabaseLogo = painterResource(Res.drawable.supabase_logo_icon)
 
-    val painter = rememberQrCodePainter(
-        remember {
-            Json.encodeToString(
-                QrCodeInfo(
-                    credentials = SupabaseCredentials(baseUrl, key),
-                    syncConfig = syncConfigInfo
-                )
-            )
-        }
-    )
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surface,
-        sheetState = sheetState
-    ) {
-        Scaffold { padding ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                val graphicsLayer = rememberGraphicsLayer()
-                SelectionContainer {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.drawWithContent {
-                            // call record to capture the content in the graphics layer
-                            graphicsLayer.record {
-                                // draw the contents of the composable into the graphics layer
-                                this@drawWithContent.drawContent()
-                            }
-                            // draw the graphics layer on the visible canvas
-                            drawLayer(graphicsLayer)
-                        }
-                    ) {
-                        Text(
-                            "Supabase Configuration",
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        Image(
-                            painter = painter,
-                            contentDescription = "QR code",
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.onSurface, MaterialTheme.shapes.medium)
-                                .padding(16.dp)
-                                .animateContentSize()
-                        )
-                    }
-                }
-
-                /*FilledTonalButton(
-                    onClick = {
-                        scope.launch {
-                            qrCodeRepository.shareImage(
-                                bitmap = graphicsLayer.toImageBitmap(),
-                                title = qrCodeInfo.title
-                            )
-                        }
-                    },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Share") }
-
-                ElevatedButton(
-                    onClick = {
-                        scope.launch {
-                            qrCodeRepository.saveImage(
-                                bitmap = graphicsLayer.toImageBitmap(),
-                                title = qrCodeInfo.title
-                            )
-                        }
-                    },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Save") }*/
+    ShareViaQrCode(
+        qrCodeInfo = QrCodeInfo(
+            credentials = SupabaseCredentials(baseUrl, key),
+            syncConfig = syncConfigInfo
+        ),
+        onClose = onClose,
+        includeShareUrl = false,
+        includeSaveImage = false,
+        painterCustomize = {
+            logo {
+                painter = supabaseLogo
+                padding = QrLogoPadding.Natural(.1f)
+                shape = QrLogoShape.circle()
             }
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ScanQrCode(
-    supabaseConfigViewModel: SupabaseConfigViewModel,
+    onSaveCredentials: (SupabaseCredentials) -> Unit,
+    onSaveSyncConfig: (SyncConfig) -> Unit,
+    testScannedCredentials: (String, String) -> Unit = { _, _ -> },
+    connectionResult: String?,
     onClose: () -> Unit,
-    viewModel: SupabaseQrCodeScannerViewModel = koinViewModel(),
 ) {
-    val scope = rememberCoroutineScope()
-    val sheetState = rememberBottomSheetState(SheetValue.Hidden)
-    val onDismiss: () -> Unit = {
-        scope.launch { sheetState.hide() }
-            .invokeOnCompletion { onClose() }
-    }
-
-    val qrCodeInfo = viewModel.qrCodeInfo
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surface,
-        sheetState = sheetState
-    ) {
-        Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text("Scan QR code") },
-                    windowInsets = WindowInsets(0.dp),
-                )
-            },
-            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars)
-        ) { padding ->
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxWidth()
-            ) {
-                ScannerWithPermissions(
-                    onScanned = { scan ->
-                        runCatching { Json.decodeFromString<QrCodeInfo>(scan) }
-                            .onSuccess {
-                                viewModel.qrCodeInfo = it
-                                scope.launch { sheetState.expand() }
-                            }
-                            .onFailure { it.printStackTrace() }
-
-                        false
-                    },
-                    types = listOf(CodeType.QR),
-                    enableTorch = false,
-                    cameraPosition = CameraPosition.BACK,
-                    permissionDeniedContent = { permissionState ->
+    ScanQrCode<QrCodeInfo>(
+        onOpen = { onSaveCredentials(it.credentials) },
+        onRemove = onClose,
+        customUi = { qrCodeInfo ->
+            qrCodeInfo?.let { info ->
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
-                                .clip(MaterialTheme.shapes.medium)
-                                .border(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.onSurface,
-                                    MaterialTheme.shapes.medium
-                                )
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Text(
-                                text = "Camera is required for QR Code scanning",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(6.dp)
-                            )
-                            ElevatedButton(
-                                onClick = { permissionState.goToSettings() }
-                            ) { Text("Open Settings") }
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                )
-
-                qrCodeInfo?.let { info ->
-                    Text("Project url: ${info.credentials.projectUrl}")
-                    Text("Project key: ${info.credentials.anonKey}")
-                    Text("Poll interval: ${info.syncConfig.pollIntervalMs}")
-                    Text("Max retries: ${info.syncConfig.maxRetries}")
-                    Text("Initial backoff: ${info.syncConfig.initialBackoffMs}")
-                    Text("Max backoff: ${info.syncConfig.maxBackoffMs}")
-                }
-
-                /*val filePicker = rememberFilePickerLauncher(
-                    type = FileKitType.Image
-                ) { file ->
-                    scope.launch {
-                        runCatching { file?.toImageBitmap()!! }
-                            .onSuccess {
-                                viewModel.scanQrCodeFromImage(it)
-                                scope.launch { sheetState.expand() }
-                            }
-                            .onFailure { it.printStackTrace() }
-                    }
-                }
-
-                FilledTonalButton(
-                    onClick = { filePicker.launch() },
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Upload Image") }*/
-
-                Button(
-                    onClick = {
-                        scope.launch {
-                            qrCodeInfo?.let {
-                                runCatching {
-                                    supabaseConfigViewModel.onProjectUrlChange(it.credentials.projectUrl)
-                                    supabaseConfigViewModel.onAnonKeyChange(it.credentials.anonKey)
-                                    supabaseConfigViewModel.onPollIntervalChange(it.syncConfig.pollIntervalMs.toString())
-                                    supabaseConfigViewModel.onMaxRetriesChange(it.syncConfig.maxRetries.toString())
-                                    supabaseConfigViewModel.onInitialBackoffChange(it.syncConfig.initialBackoffMs.toString())
-                                    supabaseConfigViewModel.onMaxBackoffChange(it.syncConfig.maxBackoffMs.toString())
+                            Text("Project url: ${info.credentials.projectUrl}")
+                            HorizontalDivider()
+                            Text("Project key: ${info.credentials.anonKey}")
+                            FilledTonalButton(
+                                onClick = { testScannedCredentials(info.credentials.projectUrl, info.credentials.anonKey) },
+                                shapes = ButtonDefaults.shapes(),
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            ) { Text("Test Connection") }
+                            // Smooth appearance for connection result
+                            AnimatedVisibility(
+                                visible = connectionResult != null,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                connectionResult?.let { result ->
+                                    val isSuccess = result.startsWith("✓")
+                                    Surface(
+                                        color = if (isSuccess) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.errorContainer,
+                                        shape = MaterialTheme.shapes.small,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 16.dp)
+                                    ) {
+                                        Text(
+                                            text = result,
+                                            color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer
+                                            else MaterialTheme.colorScheme.onErrorContainer,
+                                            modifier = Modifier.padding(12.dp),
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
                         }
-                    },
-                    enabled = qrCodeInfo != null,
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier.fillMaxWidth(.75f)
-                ) { Text("Save") }
+                    }
+
+                    Button(
+                        onClick = { onSaveCredentials(info.credentials) },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(.75f)
+                    ) { Text("Save Credentials") }
+
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text("Poll interval: ${info.syncConfig.pollIntervalMs}")
+                            Text("Max retries: ${info.syncConfig.maxRetries}")
+                            Text("Initial backoff: ${info.syncConfig.initialBackoffMs}")
+                            Text("Max backoff: ${info.syncConfig.maxBackoffMs}")
+                        }
+                    }
+
+                    Button(
+                        onClick = { onSaveSyncConfig(info.syncConfig) },
+                        shapes = ButtonDefaults.shapes(),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(.75f)
+                    ) { Text("Save Config") }
+                }
             }
-        }
-    }
-}
-
-class SupabaseQrCodeScannerViewModel : ViewModel() {
-    var qrCodeInfo by mutableStateOf<QrCodeInfo?>(null)
-
-    fun scanQrCodeFromImage(bitmap: ImageBitmap) {
-
-    }
+        },
+        showSaveOpenButton = false
+    )
 }

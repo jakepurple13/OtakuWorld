@@ -24,6 +24,7 @@ class SupabaseConfigViewModel(
     val projectUrl = MutableStateFlow("")
     val anonKey = MutableStateFlow("")
     val connectionResult = MutableStateFlow<String?>(null)
+    val scannedConnectionResult = MutableStateFlow<String?>(null)
     val hasCredentials: StateFlow<Boolean> = credentialManager
         .hasCredentials()
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -116,6 +117,31 @@ class SupabaseConfigViewModel(
             }.onFailure {
                 // Do NOT persist credentials on failure
                 connectionResult.value = "✗ ${it.message}"
+            }
+            tempClient.close()
+        }
+    }
+
+    fun testConnectionWithScannedCredentials(
+        projectUrl: String,
+        anonKey: String,
+    ) {
+        viewModelScope.launch {
+            scannedConnectionResult.value = null
+            val url = projectUrl.trim()
+            val key = anonKey.trim()
+            val tempClient = createSupabaseClient(url, key) {
+                install(Postgrest)
+            }
+            runCatching {
+                // Perform a real network call with limit(0) — succeeds only if URL/key are valid
+                tempClient.from("favorite_items").select { limit(0) }
+            }.onSuccess {
+                // Credentials are valid — persist and rebuild the shared client
+                scannedConnectionResult.value = "✓ Connection successful"
+            }.onFailure {
+                // Do NOT persist credentials on failure
+                scannedConnectionResult.value = "✗ ${it.message}"
             }
             tempClient.close()
         }

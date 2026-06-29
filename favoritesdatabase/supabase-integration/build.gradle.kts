@@ -46,6 +46,7 @@ kotlin {
             implementation(projects.favoritesdatabase)
             implementation(projects.kmpmodels)
             implementation(projects.sharedtools)
+            implementation(projects.sharedcomponents)
             implementation(commonLibs.qrose)
             implementation(commonLibs.scanner)
             implementation(compose.components.resources)

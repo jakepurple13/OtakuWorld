@@ -24,7 +24,6 @@ import com.programmersbox.supabaseintegration.sync.syncprocessor.HeatMapSyncProc
 import com.programmersbox.supabaseintegration.sync.syncprocessor.HistorySyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.NotesSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
-import com.programmersbox.supabaseintegration.ui.SupabaseQrCodeScannerViewModel
 import com.programmersbox.supabaseintegration.ui.SupabaseSearchItems
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel
@@ -66,8 +65,6 @@ val supabaseModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::SyncViewModel)
     viewModelOf(::BackupRestoreViewModel)
-    viewModelOf(::SupabaseQrCodeScannerViewModel)
-
     singleOf(::SupabaseSearchItems) bind SearchRegistryItem::class
 
     syncProcessorModule()

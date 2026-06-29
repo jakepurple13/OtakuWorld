@@ -86,6 +86,7 @@ kotlin {
                 api(projects.datastore)
                 api(projects.kmpmodels)
                 api(projects.sharedtools)
+                api(projects.sharedcomponents)
                 implementation(projects.sharedutils.kmpextensionloader)
                 implementation(projects.favoritesdatabase.supabaseIntegration)
                 implementation(commonLibs.bundles.datastoreLibs)

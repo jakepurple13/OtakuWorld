@@ -6,6 +6,7 @@ kotlinx-coroutines = "1.11.0"
 nucleusSystem = "1.15.7"
 javase = "3.5.4"
 connectivity = "2.4.1"
+camerak = "1.0"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }
@@ -21,5 +22,10 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 nucleus-system-color = { module = "io.github.kdroidfilter:nucleus.system-color", version.ref = "nucleusSystem" }
 nucleus-system-info = { module = "io.github.kdroidfilter:nucleus.system-info", version.ref = "nucleusSystem" }
 connectivity-http = { module = "dev.jordond.connectivity:connectivity-http", version.ref = "connectivity" }
+camerak = { module = "io.github.kashif-mehmood-km:camerak", version.ref = "camerak" }
+camerak-image-saver = { module = "io.github.kashif-mehmood-km:image_saver_plugin", version.ref = "camerak" }
+camerak-qr-scanner = { module = "io.github.kashif-mehmood-km:qr_scanner_plugin", version.ref = "camerak" }
+camerak-ocr = { module = "io.github.kashif-mehmood-km:ocr_plugin", version.ref = "camerak" }
+camerak-analyzer = { module = "io.github.kashif-mehmood-km:analyzer_plugin", version.ref = "camerak" }
 
 [bundles]

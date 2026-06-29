@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
@@ -26,6 +27,10 @@ fun SupabaseSettingsScreen(
     onNavigate: (NavKey) -> Unit,
 ) {
     val topAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val segmentedColors = ListItemDefaults.segmentedColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer
+    )
 
     Scaffold(
         topBar = {
@@ -49,6 +54,7 @@ fun SupabaseSettingsScreen(
                 onClick = { onNavigate(SupabaseConfigRoute) },
                 content = { Text("Supabase Config") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
+                colors = segmentedColors
             )
 
             SegmentedListItem(
@@ -56,6 +62,7 @@ fun SupabaseSettingsScreen(
                 onClick = { onNavigate(AuthRoute) },
                 content = { Text("Supabase Auth") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
+                colors = segmentedColors
             )
 
             SegmentedListItem(
@@ -63,6 +70,7 @@ fun SupabaseSettingsScreen(
                 onClick = { onNavigate(SyncStatusRoute) },
                 content = { Text("Supabase Sync Status") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
+                colors = segmentedColors
             )
 
             /*SegmentedListItem(

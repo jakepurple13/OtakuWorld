@@ -26,6 +26,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotesBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
+import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.sharedtools.backupProcessor
 import com.programmersbox.supabaseintegration.di.SupabaseActions
@@ -100,7 +101,7 @@ val appModule = module {
     viewModel { SettingsSearchViewModel(getAll()) }
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
 
-    includes(supabaseModule)
+    includes(supabaseModule, qrCodeModule())
 }
 
 private fun Module.backupProcessors() {
