@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -23,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.ColorBlindnessType
 import com.programmersbox.datastore.NewSettingsHandling
@@ -105,9 +108,7 @@ fun ShareViaQrCode(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ScanQrCode(
-    //viewModel: QrCodeScannerViewModel = koinViewModel(),
-) {
+fun ScanQrCode() {
     val navController = LocalNavActions.current
     val dao: ItemDao = koinInject()
     val info = LocalSourcesRepository.current
@@ -123,40 +124,45 @@ fun ScanQrCode(
     ScanQrCode<QrCodeInfo>(
         onOpen = { qrCodeInfo ->
             scope.launch {
-                qrCodeInfo?.let {
-                    info.toSourceByApiServiceName(it.apiService)
-                        ?.apiService
-                        ?.getSourceByUrlFlow(it.url)
-                        ?.dispatchIo()
-                        ?.onStart { showLoadingDialog = true }
-                        ?.catch { showLoadingDialog = false }
-                        ?.onEach { m ->
-                            showLoadingDialog = false
-                            navController.remove(Screen.ScanQrCodeScreen)
-                            navController.details(m)
-                        }
-                        ?.collect()
-                }
+                info.toSourceByApiServiceName(qrCodeInfo.apiService)
+                    ?.apiService
+                    ?.getSourceByUrlFlow(qrCodeInfo.url)
+                    ?.dispatchIo()
+                    ?.onStart { showLoadingDialog = true }
+                    ?.catch { showLoadingDialog = false }
+                    ?.onEach { m ->
+                        showLoadingDialog = false
+                        navController.remove(Screen.ScanQrCodeScreen)
+                        navController.details(m)
+                    }
+                    ?.collect()
             }
         },
         onRemove = { navController.remove(Screen.ScanQrCodeScreen) },
         customUi = { qrCodeInfo ->
             Crossfade(qrCodeInfo) { target ->
-                ListItem(
-                    headlineContent = { Text(target?.title ?: "Waiting for QR code") },
-                    overlineContent = { Text(target?.apiService ?: "") },
-                    leadingContent = {
-                        ImageLoaderChoice(
-                            imageUrl = target?.imageUrl ?: "",
-                            name = target?.title ?: "Waiting for QR code",
-                            placeHolder = { painterLogo() },
-                            colorFilter = colorFilter,
-                            modifier = Modifier
-                                .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
-                                .clip(MaterialTheme.shapes.medium)
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(.75f)
+                ) {
+                    ListItem(
+                        headlineContent = { Text(target?.title ?: "Waiting for QR code") },
+                        overlineContent = { Text(target?.apiService ?: "") },
+                        leadingContent = {
+                            ImageLoaderChoice(
+                                imageUrl = target?.imageUrl ?: "",
+                                name = target?.title ?: "Waiting for QR code",
+                                placeHolder = { painterLogo() },
+                                colorFilter = colorFilter,
+                                modifier = Modifier
+                                    .size(ComposableUtils.IMAGE_WIDTH, ComposableUtils.IMAGE_HEIGHT)
+                                    .clip(MaterialTheme.shapes.medium)
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = Color.Transparent,
                         )
-                    }
-                )
+                    )
+                }
             }
 
             val source = qrCodeInfo

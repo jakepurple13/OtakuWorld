@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -98,21 +99,34 @@ inline fun <reified T> ScanQrCode(
             ) {
                 var torchState by remember { mutableStateOf(false) }
 
-                CameraView(
-                    onScan = { scan ->
-                        runCatching { Json.decodeFromString<T>(scan) }
-                            .onSuccess {
-                                qrCodeInfo = it
-                                scope.launch { sheetState.expand() }
-                            }
-                            .onFailure { it.printStackTrace() }
-                    },
-                    torchState = torchState,
+                ElevatedCard(
                     modifier = Modifier
-                        .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .animateContentSize()
-                )
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth(.75f)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                    ) {
+                        CameraView(
+                            onScan = { scan ->
+                                runCatching { Json.decodeFromString<T>(scan) }
+                                    .onSuccess {
+                                        qrCodeInfo = it
+                                        scope.launch { sheetState.expand() }
+                                    }
+                                    .onFailure { it.printStackTrace() }
+                            },
+                            torchState = torchState,
+                            modifier = Modifier
+                                .sizeIn(maxWidth = 250.dp, maxHeight = 250.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .animateContentSize()
+                        )
+                    }
+                }
 
                 val filePicker = rememberFilePickerLauncher(
                     type = FileKitType.Image
