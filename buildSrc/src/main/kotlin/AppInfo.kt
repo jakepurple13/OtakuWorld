@@ -1,5 +1,5 @@
 object AppInfo {
-    const val otakuVersionName = "32.1.2"
+    const val otakuVersionName = "33.0.0"
     val versionBump = 5000
     val versionCode by lazy {
         val code = if (System.getenv("CI") != null) {

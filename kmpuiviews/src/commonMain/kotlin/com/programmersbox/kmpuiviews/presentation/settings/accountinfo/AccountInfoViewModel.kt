@@ -21,6 +21,9 @@ import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpHeat
 import com.programmersbox.kmpuiviews.utils.fireListener
+import com.programmersbox.supabaseintegration.auth.AuthManager
+import com.programmersbox.supabaseintegration.auth.AuthState
+import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
@@ -48,6 +51,7 @@ class AccountInfoViewModel(
     exceptionDao: ExceptionDao,
     bookmarksDao: BookmarkDao,
     notesDao: NotesDao,
+    private val authManager: AuthManager,
 ) : ViewModel() {
 
     private val favoriteListener = fireListener(itemListener = firebaseConnection)
@@ -55,7 +59,18 @@ class AccountInfoViewModel(
     var accountInfo by mutableStateOf(AccountInfoCount.Empty)
         private set
 
+    var supabaseInfo by mutableStateOf<SupabaseUser?>(null)
+        private set
+
     init {
+        authManager
+            .authState
+            .onEach {
+                if (it is AuthState.Authenticated) supabaseInfo = it.user
+                else if (it is AuthState.Unauthenticated) supabaseInfo = null
+            }
+            .launchIn(viewModelScope)
+
         combine(
             favoriteListener
                 .getAllShowsFlow()
