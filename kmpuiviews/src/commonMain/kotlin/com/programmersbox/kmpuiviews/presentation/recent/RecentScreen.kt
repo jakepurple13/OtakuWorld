@@ -250,7 +250,7 @@ fun RecentView(
                         }
 
                         else -> {
-                            ReportDrawnWhen { viewModel.filteredSourceList.isNotEmpty() }
+                            ReportDrawnWhen { true }
                             info.ItemListView(
                                 list = viewModel.filteredSourceList,
                                 listState = state,
