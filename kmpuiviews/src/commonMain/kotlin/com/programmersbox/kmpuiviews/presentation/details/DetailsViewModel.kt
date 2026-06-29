@@ -5,6 +5,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.ImageBitmap
@@ -92,8 +93,7 @@ class DetailsViewModel(
 
     var favoriteListener by mutableStateOf(false)
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
-    var bookmarkedChapterUrls: Set<String> by mutableStateOf(emptySet())
-        private set
+    val bookmarkedChapterUrls = mutableStateSetOf<String>()
 
     var description: String by mutableStateOf("")
 
@@ -210,9 +210,11 @@ class DetailsViewModel(
             .launchIn(viewModelScope)
 
         itemModel?.url?.let { mangaUrl ->
-            bookmarkRepository.getBookmarksForDetail(mangaUrl)
+            bookmarkRepository
+                .getBookmarksForDetail(mangaUrl)
                 .onEach { bookmarks ->
-                    bookmarkedChapterUrls = bookmarks.map { it.chapterUrl }.toHashSet()
+                    bookmarkedChapterUrls.clear()
+                    bookmarkedChapterUrls.addAll(bookmarks.map { it.chapterUrl })
                 }
                 .launchIn(viewModelScope)
         }
@@ -228,7 +230,7 @@ class DetailsViewModel(
     fun toggleBookmark(chapter: KmpChapterModel) {
         val mangaUrl = itemModel?.url ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            if (chapter.url in bookmarkedChapterUrls) {
+            if (bookmarkRepository.hasBookmark(chapter.url)) {
                 bookmarkRepository.deleteBookmark(chapter.url)
             } else {
                 bookmarkRepository.insertBookmark(

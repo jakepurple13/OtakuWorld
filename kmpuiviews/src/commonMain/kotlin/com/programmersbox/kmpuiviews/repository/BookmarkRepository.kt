@@ -19,6 +19,8 @@ class BookmarkRepository(
     fun getBookmark(chapterUrl: String): Flow<BookmarkedChapter?> =
         dao.getBookmark(chapterUrl)
 
+    suspend fun hasBookmark(chapterUrl: String): Boolean = dao.hasBookmark(chapterUrl)
+
     fun searchBookmarks(query: String): Flow<List<BookmarkedChapter>> =
         dao.searchBookmarks(query)
 

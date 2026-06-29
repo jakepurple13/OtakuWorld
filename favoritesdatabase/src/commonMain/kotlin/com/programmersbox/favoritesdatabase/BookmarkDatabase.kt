@@ -65,7 +65,7 @@ interface BookmarkDao {
     @Query("SELECT * FROM bookmarked_chapters WHERE is_deleted = 0 ORDER BY timestamp DESC")
     fun getAllBookmarks(): Flow<List<BookmarkedChapter>>
 
-    @Query("SELECT * FROM bookmarked_chapters WHERE parentUrl = :parentUrl")
+    @Query("SELECT * FROM bookmarked_chapters WHERE is_deleted = 0 AND parentUrl = :parentUrl")
     fun getBookmarksForDetail(parentUrl: String): Flow<List<BookmarkedChapter>>
 
     @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
@@ -96,6 +96,9 @@ interface BookmarkDao {
 
     @Query("SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl")
     suspend fun getBookmarkByChapterUrl(chapterUrl: String): BookmarkedChapter?
+
+    @Query("SELECT EXISTS(SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl AND is_deleted = 0)")
+    suspend fun hasBookmark(chapterUrl: String): Boolean
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateBookmark(bookmark: BookmarkedChapter)
