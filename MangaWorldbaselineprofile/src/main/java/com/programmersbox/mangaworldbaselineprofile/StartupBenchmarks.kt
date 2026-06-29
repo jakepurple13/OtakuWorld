@@ -2,34 +2,32 @@ package com.programmersbox.mangaworldbaselineprofile
 
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Direction
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * This test class benchmarks the speed of app startup.
- * Run this benchmark to verify how effective a Baseline Profile is.
- * It does this by comparing [CompilationMode.None], which represents the app with no Baseline
- * Profiles optimizations, and [CompilationMode.Partial], which uses Baseline Profiles.
+ * Macrobenchmarks for MangaWorld.
  *
- * Run this benchmark to see startup measurements and captured system traces for verifying
- * the effectiveness of your Baseline Profiles. You can run it directly from Android
- * Studio as an instrumentation test, or run all benchmarks with this Gradle task:
- * ```
- * ./gradlew :MangaWorldbaselineprofile:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
- * ```
+ * Run via: ./gradlew :MangaWorldbaselineprofile:connectedNoFirebaseReleaseAndroidTest
+ *   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
  *
- * You should run the benchmarks on a physical device, not an Android emulator, because the
- * emulator doesn't represent real world performance and shares system resources with its host.
+ * Results land in: MangaWorldbaselineprofile/build/outputs/connected_android_test_additional_output/
  *
- * For more information, see the [Macrobenchmark documentation](https://d.android.com/macrobenchmark#create-macrobenchmark)
- * and the [instrumentation arguments documentation](https://d.android.com/topic/performance/benchmarking/macrobenchmark-instrumentation-args).
- **/
+ * IMPORTANT: Run on a physical low-end device or aosp_cf_x86_64_phone-userdebug.
+ * Debug builds produce non-representative numbers — always use release.
+ *
+ * ReportDrawnWhen { viewModel.filteredSourceList.isNotEmpty() } is wired in RecentScreen
+ * so timeToFullDisplay fires when the first real content frame renders.
+ */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class StartupBenchmarks {
@@ -38,34 +36,64 @@ class StartupBenchmarks {
     val rule = MacrobenchmarkRule()
 
     @Test
-    fun startupCompilationNone() =
-        benchmark(CompilationMode.None())
+    fun startupCompilationNone() = startupBenchmark(CompilationMode.None())
 
     @Test
     fun startupCompilationBaselineProfiles() =
-        benchmark(CompilationMode.Partial(BaselineProfileMode.Require))
+        startupBenchmark(CompilationMode.Partial(BaselineProfileMode.Require))
 
-    private fun benchmark(compilationMode: CompilationMode) {
-        rule.measureRepeated(
-            packageName = "com.programmersbox.mangaworld",
-            metrics = listOf(StartupTimingMetric()),
-            compilationMode = compilationMode,
-            startupMode = StartupMode.COLD,
-            iterations = 10,
-            setupBlock = {
-                pressHome()
-            },
-            measureBlock = {
-                startActivityAndWait()
-                // TODO Add interactions to wait for when your app is fully drawn.
-                // The app is fully drawn when Activity.reportFullyDrawn is called.
-                // For Jetpack Compose, you can use ReportDrawn, ReportDrawnWhen and ReportDrawnAfter
-                // from the AndroidX Activity library.
+    @Test
+    fun warmStartCompilationBaselineProfiles() = rule.measureRepeated(
+        packageName = PACKAGE_NAME,
+        metrics = listOf(StartupTimingMetric()),
+        compilationMode = CompilationMode.Partial(BaselineProfileMode.Require),
+        startupMode = StartupMode.WARM,
+        iterations = 10,
+        setupBlock = { pressHome() },
+        measureBlock = { startActivityAndWait() },
+    )
 
-                // Check the UiAutomator documentation for more information on how to
-                // interact with the app.
-                // https://d.android.com/training/testing/other-components/ui-automator
+    @Test
+    fun hotStartCompilationBaselineProfiles() = rule.measureRepeated(
+        packageName = PACKAGE_NAME,
+        metrics = listOf(StartupTimingMetric()),
+        compilationMode = CompilationMode.Partial(BaselineProfileMode.Require),
+        startupMode = StartupMode.HOT,
+        iterations = 10,
+        setupBlock = { pressHome() },
+        measureBlock = { startActivityAndWait() },
+    )
+
+    @Test
+    fun scrollListFrameTiming() = rule.measureRepeated(
+        packageName = PACKAGE_NAME,
+        metrics = listOf(FrameTimingMetric()),
+        compilationMode = CompilationMode.Partial(BaselineProfileMode.Require),
+        startupMode = StartupMode.WARM,
+        iterations = 5,
+        setupBlock = { pressHome() },
+        measureBlock = {
+            startActivityAndWait()
+            Thread.sleep(1_000)
+            val list = device.findObject(By.scrollable(true))
+            if (list != null) {
+                list.setGestureMargin(device.displayWidth / 5)
+                repeat(3) { list.fling(Direction.DOWN) }
             }
-        )
+        },
+    )
+
+    private fun startupBenchmark(compilationMode: CompilationMode) = rule.measureRepeated(
+        packageName = PACKAGE_NAME,
+        metrics = listOf(StartupTimingMetric()),
+        compilationMode = compilationMode,
+        startupMode = StartupMode.COLD,
+        iterations = 10,
+        setupBlock = { pressHome() },
+        measureBlock = { startActivityAndWait() },
+    )
+
+    companion object {
+        private const val PACKAGE_NAME = "com.programmersbox.mangaworld"
     }
 }

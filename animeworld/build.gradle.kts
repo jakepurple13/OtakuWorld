@@ -5,6 +5,7 @@ plugins {
     id("com.mikepenz.aboutlibraries.plugin.android")
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.firebase.performance)
+    id("androidx.baselineprofile")
 }
 
 android {
@@ -79,4 +80,7 @@ dependencies {
     implementation(androidLibs.bundles.media3)
 
     implementation(commonLibs.ktorAndroid)
+
+    implementation(androidx.profileinstaller.profileinstaller)
+    baselineProfile(projects.animeWorldbaselineprofile)
 }

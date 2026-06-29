@@ -87,7 +87,9 @@ rootProject.name = "OtakuWorld"
 )*/
 //include(":manga_sources:defaultmangasources")
 //include(":anime_sources:defaultanimesources")
-//include(":MangaWorldbaselineprofile")
+include(":MangaWorldbaselineprofile")
+include(":AnimeWorldbaselineprofile")
+include(":NovelWorldbaselineprofile")
 include(":datastore")
 include(":datastore:mangasettings")
 include(":kmpuiviews")

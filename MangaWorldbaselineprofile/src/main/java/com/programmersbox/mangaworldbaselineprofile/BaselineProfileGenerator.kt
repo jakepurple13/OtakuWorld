@@ -3,29 +3,24 @@ package com.programmersbox.mangaworldbaselineprofile
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Direction
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * This test class generates a basic startup baseline profile for the target package.
+ * Generates a Baseline Profile for MangaWorld covering:
+ * 1. Cold startup (app launch to first meaningful frame)
+ * 2. First-scroll on the main browse list
+ * 3. Navigate to a detail screen and back
  *
- * We recommend you start with this but add important user flows to the profile to improve their performance.
- * Refer to the [baseline profile documentation](https://d.android.com/topic/performance/baselineprofiles)
- * for more information.
+ * Run via: ./gradlew :mangaworld:generateNoFirebaseReleaseBaselineProfile
  *
- * You can run the generator with the Generate Baseline Profile run configuration,
- * or directly with `generateBaselineProfile` Gradle task:
- * ```
- * ./gradlew :mangaworld:generateReleaseBaselineProfile -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
- * ```
- * The run configuration runs the Gradle task and applies filtering to run only the generators.
- *
- * Check [documentation](https://d.android.com/topic/performance/benchmarking/macrobenchmark-instrumentation-args)
- * for more information about available instrumentation arguments.
- *
- * After you run the generator, you can verify the improvements running the [StartupBenchmarks] benchmark.
- **/
+ * Add Modifier.testTag("browse_list") to the main LazyColumn/LazyVerticalGrid in
+ * kmpuiviews and Modifier.testTag("detail_screen") to the detail screen composable
+ * to make the journey more precise.
+ */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class BaselineProfileGenerator {
@@ -34,26 +29,30 @@ class BaselineProfileGenerator {
     val rule = BaselineProfileRule()
 
     @Test
-    fun generate() {
-        rule.collect("com.programmersbox.mangaworld") {
-            // This block defines the app's critical user journey. Here we are interested in
-            // optimizing for app startup. But you can also navigate and scroll
-            // through your most important UI.
-
-            // Start default activity for your app
+    fun startupAndScroll() {
+        rule.collect(packageName = "com.programmersbox.mangaworld") {
             pressHome()
             startActivityAndWait()
-            device.click(40, 40)
-            Thread.sleep(5000)
 
-            // TODO Write more interactions to optimize advanced journeys of your app.
-            // For example:
-            // 1. Wait until the content is asynchronously loaded
-            // 2. Scroll the feed content
-            // 3. Navigate to detail screen
+            // Wait for content to load
+            Thread.sleep(2_000)
 
-            // Check UiAutomator documentation for more information how to interact with the app.
-            // https://d.android.com/training/testing/other-components/ui-automator
+            // Scroll the main browse list — finds the first scrollable container
+            val list = device.findObject(By.scrollable(true))
+            if (list != null) {
+                list.setGestureMargin(device.displayWidth / 5)
+                list.fling(Direction.DOWN)
+                list.fling(Direction.DOWN)
+                list.fling(Direction.UP)
+            }
+
+            // Tap the first list item to warm up detail screen composition
+            val firstItem = device.findObject(By.clickable(true).depth(4))
+            if (firstItem != null) {
+                firstItem.click()
+                Thread.sleep(1_500)
+                device.pressBack()
+            }
         }
     }
 }

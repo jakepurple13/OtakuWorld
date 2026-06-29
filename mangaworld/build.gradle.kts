@@ -4,7 +4,7 @@ plugins {
     id("com.mikepenz.aboutlibraries.plugin.android")
     alias(libs.plugins.ksp)
     id("kotlinx-serialization")
-    //id("androidx.baselineprofile")
+    id("androidx.baselineprofile")
     alias(libs.plugins.google.firebase.performance)
     //alias(libs.plugins.hotswan.compiler)
 }
@@ -51,7 +51,7 @@ dependencies {
     implementation(commonLibs.ktorAndroid)
 
     implementation(androidLibs.glide)
-    //baselineProfile(projects.mangaWorldbaselineprofile)
+    baselineProfile(projects.mangaWorldbaselineprofile)
     ksp(androidLibs.glideCompiler)
     // Excludes the support library because it"s already included by Glide.
     implementation(androidLibs.glideRecyclerview) { isTransitive = false }
