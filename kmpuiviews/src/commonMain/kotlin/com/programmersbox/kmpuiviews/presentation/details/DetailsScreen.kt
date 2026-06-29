@@ -126,11 +126,11 @@ import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.kmpuiviews.repository.NotificationRepository
-import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.LocalHistoryDao
 import com.programmersbox.kmpuiviews.utils.LocalItemDao
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
+import com.programmersbox.sharedcomponents.qrcode.QrCodeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.firstOrNull

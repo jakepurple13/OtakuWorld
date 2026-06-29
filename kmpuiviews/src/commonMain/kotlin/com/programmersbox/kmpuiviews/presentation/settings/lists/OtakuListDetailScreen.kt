@@ -113,7 +113,6 @@ import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.presentation.components.optionsSheetList
 import com.programmersbox.kmpuiviews.presentation.components.plus
 import com.programmersbox.kmpuiviews.repository.ListRepository
-import com.programmersbox.kmpuiviews.repository.QrCodeRepository
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ComponentState
@@ -128,6 +127,7 @@ import com.programmersbox.kmpuiviews.utils.dispatchIo
 import com.programmersbox.kmpuiviews.utils.loadItem
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import com.programmersbox.kmpuiviews.utils.rememberBiometricPrompting
+import com.programmersbox.sharedcomponents.qrcode.QrCodeRepository
 import dev.chrisbanes.haze.blur.HazeProgressive
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings

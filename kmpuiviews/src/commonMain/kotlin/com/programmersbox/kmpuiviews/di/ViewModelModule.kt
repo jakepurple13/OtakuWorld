@@ -1,10 +1,13 @@
 package com.programmersbox.kmpuiviews.di
 
 import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
+import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
 import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationViewModel
@@ -22,12 +25,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoView
 import com.programmersbox.kmpuiviews.presentation.settings.moresettings.MoreSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.notifications.NotificationSettingsViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.prerelease.PrereleaseViewModel
-import com.programmersbox.kmpuiviews.presentation.settings.qrcode.QrCodeScannerViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
-import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
-import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
-import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -54,7 +53,6 @@ val viewModels: Module = module {
     viewModelOf(::DownloadStateViewModel)
     viewModelOf(::AccountInfoViewModel)
     viewModelOf(::HistoryViewModel)
-    viewModelOf(::QrCodeScannerViewModel)
     viewModelOf(::WorkerInfoViewModel)
     viewModelOf(::RecommendationViewModel)
     viewModelOf(::UrlOpenerViewModel)
