@@ -41,6 +41,7 @@ class HistoryViewModelTest {
     @AfterTest
     fun tearDown() {
         viewModelStore.clear()
+        Thread.sleep(50)
         database.close()
         dbFile.delete()
     }

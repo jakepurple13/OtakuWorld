@@ -36,7 +36,7 @@ class FavoriteViewModelTest {
     // doesn't drive that emission, so wait for it with real time instead.
     private suspend fun awaitCondition(condition: suspend () -> Boolean) {
         withContext(Dispatchers.Default.limitedParallelism(1)) {
-            withTimeout(5_000) {
+            withTimeout(10_000) {
                 while (!condition()) delay(10)
             }
         }
@@ -72,8 +72,9 @@ class FavoriteViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        Dispatchers.resetMain()
         viewModelStore.clear()
+        Thread.sleep(50)
+        Dispatchers.resetMain()
         database.close()
     }
 

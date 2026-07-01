@@ -80,8 +80,9 @@ class WorkerInfoViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        Dispatchers.resetMain()
         viewModelStore.clear()
+        Thread.sleep(50)
+        Dispatchers.resetMain()
     }
 
     @Test fun `starts with no workers`() = runTest {

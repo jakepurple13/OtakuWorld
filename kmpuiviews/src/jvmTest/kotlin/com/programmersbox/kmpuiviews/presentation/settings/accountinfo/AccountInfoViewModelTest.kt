@@ -124,6 +124,7 @@ class AccountInfoViewModelTest {
     @AfterTest
     fun tearDown() {
         viewModelStore.clear()
+        Thread.sleep(50)
         Dispatchers.resetMain()
         itemDatabase.close()
         listDatabase.close()

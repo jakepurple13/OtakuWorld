@@ -131,8 +131,9 @@ class DetailsViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        Dispatchers.resetMain()
         viewModelStore.clear()
+        Thread.sleep(50)
+        Dispatchers.resetMain()
         Cached.cache.clear()
         itemDatabase.close()
         itemDbFile.delete()

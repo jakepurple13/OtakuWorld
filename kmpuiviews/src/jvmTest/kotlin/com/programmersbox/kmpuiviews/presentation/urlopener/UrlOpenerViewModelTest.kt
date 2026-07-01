@@ -67,6 +67,7 @@ class UrlOpenerViewModelTest {
     @AfterTest
     fun tearDown() {
         viewModelStore.clear()
+        Thread.sleep(50)
         Dispatchers.resetMain()
     }
 

@@ -35,8 +35,9 @@ class MoreInfoViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        Dispatchers.resetMain()
         viewModelStore.clear()
+        Thread.sleep(50)
+        Dispatchers.resetMain()
     }
 
     @Test fun `update does not throw when downloading and installing`() = runTest {

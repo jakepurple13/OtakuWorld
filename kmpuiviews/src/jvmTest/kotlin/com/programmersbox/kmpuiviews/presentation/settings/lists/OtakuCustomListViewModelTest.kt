@@ -71,8 +71,9 @@ class OtakuCustomListViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @AfterTest
     fun tearDown() {
-        Dispatchers.resetMain()
         viewModelStore.clear()
+        Thread.sleep(50)
+        Dispatchers.resetMain()
         database.close()
         dbFile.delete()
     }
@@ -246,6 +247,7 @@ class OtakuCustomListViewModelTest {
         // call deleteAll() makes, so the deletion itself is still verified without racing the
         // now-defunct subscription's real-dispatcher collection.
         viewModelStore.clear()
+        Thread.sleep(50)
 
         listRepository().removeList(customList)
         awaitCondition { dao().getAllListsSync().isEmpty() }
