@@ -220,6 +220,16 @@ kotlin {
             }
         }
 
+        jvmTest {
+            dependencies {
+                implementation(commonLibs.turbine)
+                implementation(commonLibs.koin.test)
+                implementation(commonLibs.androidx.room.sqlite)
+                implementation(project.dependencies.platform(commonLibs.supabase.bom))
+                implementation(commonLibs.supabase.auth)
+            }
+        }
+
         val deviceMain by creating {
             dependsOn(commonMain.get())
             androidMain.get().dependsOn(this)
