@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
+import androidx.lifecycle.ViewModelStore
 import androidx.compose.foundation.text.input.TextFieldState
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -17,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -26,14 +28,17 @@ import kotlin.test.assertTrue
 
 class FavoriteViewModelTest {
 
+    private val viewModelStore = ViewModelStore()
     private lateinit var database: ItemDatabase
 
     // The ViewModel observes ItemDao's Room-generated Flow, which emits on Room's own
     // (real, non-test-controlled) dispatcher. A test-dispatcher virtual-clock advance
     // doesn't drive that emission, so wait for it with real time instead.
-    private suspend fun awaitCondition(condition: () -> Boolean) {
-        withTimeout(5_000) {
-            while (!condition()) delay(10)
+    private suspend fun awaitCondition(condition: suspend () -> Boolean) {
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(5_000) {
+                while (!condition()) delay(10)
+            }
         }
     }
 
@@ -55,7 +60,7 @@ class FavoriteViewModelTest {
             authManager = FakeAuthManager(),
         ),
         firebaseFavoriteListener = FakeKmpFirebaseListener(),
-    )
+    ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
@@ -68,6 +73,7 @@ class FavoriteViewModelTest {
     @AfterTest
     fun tearDown() {
         Dispatchers.resetMain()
+        viewModelStore.clear()
         database.close()
     }
 

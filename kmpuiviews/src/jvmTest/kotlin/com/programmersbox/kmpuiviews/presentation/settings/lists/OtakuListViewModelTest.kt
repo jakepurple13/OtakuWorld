@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.lists
 
+import androidx.lifecycle.ViewModelStore
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.ListDao
@@ -10,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.File
 import kotlin.test.AfterTest
@@ -20,15 +22,18 @@ import kotlin.test.assertTrue
 
 class OtakuListViewModelTest {
 
+    private val viewModelStore = ViewModelStore()
     private lateinit var dbFile: File
     private lateinit var database: ListDatabase
 
     // The ViewModel observes ListDao's Room-generated Flow, which emits on Room's own
     // (real, non-test-controlled) dispatcher. A test-dispatcher virtual-clock advance
     // doesn't drive that emission, so wait for it with real time instead.
-    private suspend fun awaitCondition(condition: () -> Boolean) {
-        withTimeout(5_000) {
-            while (!condition()) delay(10)
+    private suspend fun awaitCondition(condition: suspend () -> Boolean) {
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(5_000) {
+                while (!condition()) delay(10)
+            }
         }
     }
 
@@ -36,7 +41,7 @@ class OtakuListViewModelTest {
 
     private fun viewModel() = OtakuListViewModel(
         listDao = dao(),
-    )
+    ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
@@ -52,6 +57,7 @@ class OtakuListViewModelTest {
     @AfterTest
     fun tearDown() {
         Dispatchers.resetMain()
+        viewModelStore.clear()
         database.close()
         dbFile.delete()
     }
