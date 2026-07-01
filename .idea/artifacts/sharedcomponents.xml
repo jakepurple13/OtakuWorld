@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="sharedcomponents">
+    <output-path>$PROJECT_DIR$/sharedcomponents/build/libs</output-path>
+    <root id="archive" name="sharedcomponents.jar">
+      <element id="module-output" name="OtakuWorld.sharedcomponents.androidMain" />
+    </root>
+  </artifact>
+</component>

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="sharedtools-jvm">
+    <output-path>$PROJECT_DIR$/sharedtools/build/libs</output-path>
+    <root id="archive" name="sharedtools-jvm.jar">
+      <element id="module-output" name="OtakuWorld.sharedtools.jvmMain" />
+    </root>
+  </artifact>
+</component>

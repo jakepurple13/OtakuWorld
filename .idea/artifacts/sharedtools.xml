@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="sharedtools">
+    <output-path>$PROJECT_DIR$/sharedtools/build/libs</output-path>
+    <root id="archive" name="sharedtools.jar">
+      <element id="module-output" name="OtakuWorld.sharedtools.androidMain" />
+    </root>
+  </artifact>
+</component>
