@@ -29,6 +29,11 @@ kotlin {
             implementation(desktopLibs.kotlin.multiplatform.appdirs)
         }
 
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+            implementation(commonLibs.coroutinesTest)
+        }
+
         androidMain.dependencies {
             implementation(projects.models)
         }
