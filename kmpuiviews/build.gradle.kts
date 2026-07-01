@@ -159,6 +159,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.turbine)
             }
         }
 
