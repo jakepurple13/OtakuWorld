@@ -50,6 +50,7 @@ kotlin {
             implementation(commonLibs.qrose)
             implementation(commonLibs.scanner)
             implementation(compose.components.resources)
+            implementation(commonLibs.roomRuntime)
         }
         androidMain.dependencies {
             implementation(commonLibs.connectivity.device)
