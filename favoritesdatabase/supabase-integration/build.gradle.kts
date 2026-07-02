@@ -62,6 +62,12 @@ kotlin {
             implementation(commonLibs.ktorCio)
             implementation(desktopLibs.connectivity.http)
         }
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+            implementation(commonLibs.coroutinesTest)
+            implementation(commonLibs.roomRuntime)
+            implementation(commonLibs.androidx.room.sqlite)
+        }
         iosMain.dependencies {
             implementation(iosLibs.ktorDarwin)
             implementation(commonLibs.connectivity.device)
