@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.BookmarkDao
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.BookmarkedChapterRow
 import com.programmersbox.supabaseintegration.sync.toBookmarkedChapter
 import com.programmersbox.supabaseintegration.sync.toBookmarkedChapterRow
@@ -12,9 +13,11 @@ import kotlinx.coroutines.flow.Flow
 
 class BookmarksSyncProcessor(
     private val bookmarkDao: BookmarkDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<BookmarkedChapter, BookmarkedChapterRow>(
     tableName = "bookmarked_chapters"
 ) {
+    override val displayName: String = "Bookmarks"
 
     // ==========================================
     // Push Implementations

@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.HistoryItemRow
 import com.programmersbox.supabaseintegration.sync.toHistoryItem
 import com.programmersbox.supabaseintegration.sync.toHistoryItemRow
@@ -12,9 +13,11 @@ import kotlinx.coroutines.flow.Flow
 
 class HistorySyncProcessor(
     private val historyDao: HistoryDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<HistoryItem, HistoryItemRow>(
     tableName = "history"
 ) {
+    override val displayName: String = "History"
 
     // ==========================================
     // Push Implementations

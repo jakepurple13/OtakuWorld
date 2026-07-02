@@ -3,6 +3,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.CustomListInfoRow
 import com.programmersbox.supabaseintegration.sync.CustomListItemRow
 import com.programmersbox.supabaseintegration.sync.toCustomListInfo
@@ -16,9 +17,12 @@ import kotlinx.coroutines.flow.Flow
 
 class CustomListInfoSyncProcessor(
     private val listDao: ListDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<CustomListInfo, CustomListInfoRow>(
     tableName = "custom_list_info"
 ) {
+    override val displayName: String = "Custom Lists"
+
     // ==========================================
     // Push Implementations
     // ==========================================
@@ -70,9 +74,12 @@ class CustomListInfoSyncProcessor(
 
 class CustomListItemSyncProcessor(
     private val listDao: ListDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<CustomListItem, CustomListItemRow>(
     tableName = "custom_list_items"
 ) {
+    override val displayName: String = "Custom List Items"
+
     // ==========================================
     // Push Implementations
     // ==========================================

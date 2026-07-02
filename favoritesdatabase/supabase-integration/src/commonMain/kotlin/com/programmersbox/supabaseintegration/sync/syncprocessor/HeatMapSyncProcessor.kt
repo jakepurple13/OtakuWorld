@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.HeatMapItemRow
 import com.programmersbox.supabaseintegration.sync.toHeatMapItem
 import com.programmersbox.supabaseintegration.sync.toHeatMapItemRow
@@ -13,9 +14,11 @@ import kotlinx.datetime.LocalDate
 
 class HeatMapSyncProcessor(
     private val heatMapDao: HeatMapDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<HeatMapItem, HeatMapItemRow>(
     tableName = "heatmap_items"
 ) {
+    override val displayName: String = "Activity Heat Map"
 
     // ==========================================
     // Push Implementations
