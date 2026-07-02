@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation3.runtime.NavKey
 
+private const val SEGMENT_COUNT = 4
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SupabaseSettingsScreen(
@@ -50,7 +52,7 @@ fun SupabaseSettingsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             SegmentedListItem(
-                shapes = ListItemDefaults.segmentedShapes(0, 3),
+                shapes = ListItemDefaults.segmentedShapes(0, SEGMENT_COUNT),
                 onClick = { onNavigate(SupabaseConfigRoute) },
                 content = { Text("Supabase Config") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
@@ -58,7 +60,7 @@ fun SupabaseSettingsScreen(
             )
 
             SegmentedListItem(
-                shapes = ListItemDefaults.segmentedShapes(1, 3),
+                shapes = ListItemDefaults.segmentedShapes(1, SEGMENT_COUNT),
                 onClick = { onNavigate(AuthRoute) },
                 content = { Text("Supabase Auth") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
@@ -66,9 +68,17 @@ fun SupabaseSettingsScreen(
             )
 
             SegmentedListItem(
-                shapes = ListItemDefaults.segmentedShapes(2, 3),
+                shapes = ListItemDefaults.segmentedShapes(2, SEGMENT_COUNT),
                 onClick = { onNavigate(SyncStatusRoute) },
                 content = { Text("Supabase Sync Status") },
+                leadingContent = { Icon(Icons.Default.Settings, null) },
+                colors = segmentedColors
+            )
+
+            SegmentedListItem(
+                shapes = ListItemDefaults.segmentedShapes(3, SEGMENT_COUNT),
+                onClick = { onNavigate(BackupPreferencesRoute) },
+                content = { Text("Supabase Backup Choices") },
                 leadingContent = { Icon(Icons.Default.Settings, null) },
                 colors = segmentedColors
             )

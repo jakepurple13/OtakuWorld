@@ -34,6 +34,13 @@ class SupabaseSearchItems : SearchRegistryItem {
                 targetScreen = SyncStatusRoute,
                 highlightKey = "sync",
             ),
+            SettingSearchItem(
+                displayName = "Supabase Backup/Restore",
+                keywords = listOf("supabase", "backup", "restore"),
+                breadcrumb = listOf(SupabaseRoutes, BackupRestoreRoute),
+                targetScreen = BackupRestoreRoute,
+                highlightKey = "backup",
+            )
         )
     }
 }

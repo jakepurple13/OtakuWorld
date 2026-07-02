@@ -1,5 +1,6 @@
 package com.programmersbox.supabaseintegration.ui.viewmodel
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.supabaseintegration.auth.AuthManager
@@ -12,12 +13,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@Stable
 data class BackupPreferenceItem(
     val tableName: String,
     val displayName: String,
     val enabled: Boolean,
 )
 
+@Stable
 data class BackupPreferencesUiState(
     val items: List<BackupPreferenceItem> = emptyList(),
     val isLoggedIn: Boolean = false,
