@@ -37,6 +37,9 @@ data object SyncStatusRoute : NavKey
 data object BackupRestoreRoute : NavKey
 
 @Serializable
+data object BackupPreferencesRoute : NavKey
+
+@Serializable
 data object SupabaseRoutes : NavKey
 
 fun EntryProviderScope<NavKey>.supabaseRoutes(
@@ -59,6 +62,10 @@ fun EntryProviderScope<NavKey>.supabaseRoutes(
         BackupRestoreScreen(
             getLocalDbPath = { "" }
         )
+    }
+    entry<BackupPreferencesRoute> {
+        hideComposable()
+        BackupPreferencesScreen()
     }
     entry<SupabaseRoutes> {
         val actions = koinInject<SupabaseActions>()

@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.ChapterWatchedRow
 import com.programmersbox.supabaseintegration.sync.toChapterRow
 import com.programmersbox.supabaseintegration.sync.toChapterWatched
@@ -12,9 +13,11 @@ import kotlinx.coroutines.flow.Flow
 
 class ChaptersWatchedSyncProcessor(
     private val itemDao: ItemDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<ChapterWatched, ChapterWatchedRow>(
     tableName = "chapters_watched"
 ) {
+    override val displayName: String = "Chapters Watched"
 
     // ==========================================
     // Push Implementations

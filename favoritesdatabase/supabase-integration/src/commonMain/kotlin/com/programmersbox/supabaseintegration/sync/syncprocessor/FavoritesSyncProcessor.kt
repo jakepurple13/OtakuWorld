@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.FavoriteItemRow
 import com.programmersbox.supabaseintegration.sync.toDbModel
 import com.programmersbox.supabaseintegration.sync.toFavoriteRow
@@ -11,9 +12,12 @@ import io.github.jan.supabase.postgrest.result.PostgrestResult
 
 class FavoritesSyncer(
     private val itemDao: ItemDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<DbModel, FavoriteItemRow>(
     tableName = "favorite_items"
 ) {
+    override val displayName: String = "Favorites"
+
     override suspend fun getDirtyItems() = itemDao.getDirtyFavorites()
     override fun observeDirtyItems() = itemDao.observeDirtyFavoriteCount()
     override fun isLocalDeleted(local: DbModel) = local.isDeleted

@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.NoteItemRow
 import com.programmersbox.supabaseintegration.sync.toNoteItem
 import com.programmersbox.supabaseintegration.sync.toNoteItemRow
@@ -12,9 +13,11 @@ import kotlinx.coroutines.flow.Flow
 
 class NotesSyncProcessor(
     private val notesDao: NotesDao,
+    override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<NoteItem, NoteItemRow>(
     tableName = "notes"
 ) {
+    override val displayName: String = "Notes"
 
     // ==========================================
     // Push Implementations

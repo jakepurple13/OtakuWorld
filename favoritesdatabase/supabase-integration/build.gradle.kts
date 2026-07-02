@@ -50,6 +50,7 @@ kotlin {
             implementation(commonLibs.qrose)
             implementation(commonLibs.scanner)
             implementation(compose.components.resources)
+            implementation(commonLibs.roomRuntime)
         }
         androidMain.dependencies {
             implementation(commonLibs.connectivity.device)
@@ -61,6 +62,12 @@ kotlin {
         jvmMain.dependencies {
             implementation(commonLibs.ktorCio)
             implementation(desktopLibs.connectivity.http)
+        }
+        jvmTest.dependencies {
+            implementation(commonLibs.kotlin.test)
+            implementation(commonLibs.coroutinesTest)
+            implementation(commonLibs.roomRuntime)
+            implementation(commonLibs.androidx.room.sqlite)
         }
         iosMain.dependencies {
             implementation(iosLibs.ktorDarwin)

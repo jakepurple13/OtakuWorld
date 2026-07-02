@@ -1,6 +1,8 @@
 package com.programmersbox.supabaseintegration.di
 
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.favoritesdatabase.BackupPreferenceDao
+import com.programmersbox.favoritesdatabase.SyncPreferences
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthManagerImpl
@@ -10,6 +12,7 @@ import com.programmersbox.supabaseintegration.backup.RestoreManager
 import com.programmersbox.supabaseintegration.backup.RestoreManagerImpl
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.migration.MigrationManager
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.SyncConfig
 import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.sync.SyncEngine
@@ -26,12 +29,14 @@ import com.programmersbox.supabaseintegration.sync.syncprocessor.NotesSyncProces
 import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
 import com.programmersbox.supabaseintegration.ui.SupabaseSearchItems
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
+import com.programmersbox.supabaseintegration.ui.viewmodel.BackupPreferencesViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SyncViewModel
 import kotlinx.coroutines.flow.flowOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -61,10 +66,15 @@ val supabaseModule = module {
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
     singleOf(::MigrationManager)
 
+    single<SyncPreferences> { SyncPreferences.getInstance(get()) }
+    single<BackupPreferenceDao> { get<SyncPreferences>().backupPreferenceDao() }
+    single { BackupPreferenceRepository(get()) }
+
     viewModelOf(::SupabaseConfigViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::SyncViewModel)
     viewModelOf(::BackupRestoreViewModel)
+    viewModel { BackupPreferencesViewModel(get(), getAll(), get()) }
     singleOf(::SupabaseSearchItems) bind SearchRegistryItem::class
 
     syncProcessorModule()

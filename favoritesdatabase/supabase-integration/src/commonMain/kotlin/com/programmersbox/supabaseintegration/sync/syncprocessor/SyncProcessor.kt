@@ -1,5 +1,6 @@
 package com.programmersbox.supabaseintegration.sync.syncprocessor
 
+import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.result.PostgrestResult
@@ -13,6 +14,10 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     // ==========================================
     // Abstract Methods (Implemented per table)
     // ==========================================
+
+    // Metadata
+    abstract val displayName: String
+    abstract val backupPreferenceRepository: BackupPreferenceRepository
 
     // Push Requirements
     abstract suspend fun getDirtyItems(): List<LocalModel>
@@ -36,10 +41,18 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     abstract suspend fun performSelect(postgrestResult: PostgrestResult): List<RemoteModel>
 
     // ==========================================
+    // Backup Preference
+    // ==========================================
+
+    suspend fun isBackupEnabled(): Boolean = backupPreferenceRepository.isBackupEnabled(tableName)
+
+    // ==========================================
     // Shared Sync Logic
     // ==========================================
 
     open suspend fun push(client: SupabaseClient, uid: String) {
+        if (!isBackupEnabled()) return
+
         val dirty = getDirtyItems()
         if (dirty.isEmpty()) return
 
@@ -73,6 +86,8 @@ abstract class SyncProcessor<LocalModel, RemoteModel : Any>(
     }
 
     open suspend fun pull(client: SupabaseClient, uid: String, since: Long) {
+        if (!isBackupEnabled()) return
+
         val allRecords = fetchAllRecords(client, uid, since)
         if (allRecords.isEmpty()) return
 
