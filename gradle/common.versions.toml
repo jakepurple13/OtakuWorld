@@ -49,6 +49,7 @@ reorderable = "3.1.0"
 roomVersion = "3.0.0-rc01"
 scanner = "0.7.1"
 sqlite = "2.6.2"
+turbine = "1.2.0"
 urlencoderLib = "1.6.0"
 xemanticAiToolSchema = "1.2.0"
 kmpalette = "3.1.0"
@@ -133,11 +134,13 @@ koinCores = { module = "io.insert-koin:koin-core" }
 koinComposeKmp = { module = "io.insert-koin:koin-compose" }
 koinViewModel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koinViewModelNavigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation" }
+koin-test = { module = "io.insert-koin:koin-test" }
 
 # Kotlinx
 kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlinTest" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Ktor
 ktorCore = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }

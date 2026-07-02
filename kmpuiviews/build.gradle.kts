@@ -159,6 +159,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.kotlin.test)
                 implementation(commonLibs.coroutinesTest)
+                implementation(commonLibs.turbine)
             }
         }
 
@@ -216,6 +217,16 @@ kotlin {
                 api(desktopLibs.github.nucleus.notifications.common)
                 api(desktopLibs.nucleus.system.info)
                 //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(commonLibs.turbine)
+                implementation(commonLibs.koin.test)
+                implementation(commonLibs.androidx.room.sqlite)
+                implementation(project.dependencies.platform(commonLibs.supabase.bom))
+                implementation(commonLibs.supabase.auth)
             }
         }
 

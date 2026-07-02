@@ -47,7 +47,7 @@ class ListRepository(
     suspend fun removeList(item: CustomList) {
         if (authManager.isLoggedIn()) {
             listDao.softDeleteCustomListItem(item.item.uuid, Clock.System.now().toEpochMilliseconds())
-            item.list.forEach { listDao.softDeleteCustomListInfo(it.uuid, Clock.System.now().toEpochMilliseconds()) }
+            item.list.forEach { listDao.softDeleteCustomListInfo(it.uniqueId, Clock.System.now().toEpochMilliseconds()) }
         } else {
             listDao.removeList(item)
         }

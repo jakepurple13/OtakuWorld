@@ -27,6 +27,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
             }
         }
 
