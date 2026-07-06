@@ -5,12 +5,18 @@ import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
 
 private class FakeManagedTable(
-    override val tableName: String,
-    override val displayName: String,
-    override val supportedActions: List<SupportedTableAction>,
-    override val defaultAction: SupportedTableAction,
-    override val databaseName: String = "test_db",
-) : ManagedTable() {
+    tableName: String,
+    displayName: String,
+    supportedActions: List<SupportedTableAction>,
+    defaultAction: SupportedTableAction,
+    databaseName: String = "test_db",
+) : ManagedTable(
+    databaseName = databaseName,
+    tableName = tableName,
+    displayName = displayName,
+    supportedActions = supportedActions,
+    defaultAction = defaultAction,
+) {
     override suspend fun clearAll() {}
     override suspend fun purgeDeleted() {}
     override suspend fun restoreDeleted() {}
