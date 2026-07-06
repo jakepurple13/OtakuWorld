@@ -109,6 +109,8 @@ fun ReadView(
 
     val settings = LocalSettingsHandling.current
 
+    val isBookmarked by viewModel.isChapterBookmarked.collectAsStateWithLifecycle(initialValue = false)
+
     val isAmoledMode by settings.rememberIsAmoledMode()
 
     var readerType by mangaSettingsHandling.rememberReaderType()
@@ -372,6 +374,9 @@ fun ReadView(
                         onSettingsClick = { settingsPopup = true },
                         onRefreshClick = viewModel::refresh,
                         showBlur = blurKind.showBlur,
+                        isBookmarked = isBookmarked,
+                        onBookmarkClick = viewModel::toggleBookmark,
+                        allowBookmark = !viewModel.currentChapterIsDownloaded,
                         windowInsets = if (includeInsets) TopAppBarDefaults.windowInsets else WindowInsets(0.dp),
                         modifier = Modifier.setBlurKind(
                             blurKindState = blurKind,

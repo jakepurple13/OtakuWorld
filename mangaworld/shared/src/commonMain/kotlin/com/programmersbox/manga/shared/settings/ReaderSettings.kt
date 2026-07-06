@@ -190,7 +190,8 @@ private fun ReaderSettings(
                 ReaderTopBar(
                     currentChapter = "13",
                     onSettingsClick = {},
-                    showBlur = false
+                    showBlur = false,
+                    isBookmarked = false,
                 )
             }
         },

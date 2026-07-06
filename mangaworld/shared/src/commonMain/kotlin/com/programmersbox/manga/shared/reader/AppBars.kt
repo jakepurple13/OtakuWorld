@@ -22,11 +22,13 @@ import androidx.compose.material.icons.filled.ArrowCircleRight
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.Button
@@ -38,6 +40,7 @@ import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarScrollBehavior
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
@@ -71,6 +74,9 @@ fun ReaderTopBar(
     onSettingsClick: () -> Unit,
     showBlur: Boolean,
     modifier: Modifier = Modifier,
+    isBookmarked: Boolean,
+    onBookmarkClick: (Boolean) -> Unit = {},
+    allowBookmark: Boolean = true,
     onRefreshClick: () -> Unit = {},
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
@@ -86,6 +92,19 @@ fun ReaderTopBar(
             )
         },
         actions = {
+            if (allowBookmark) {
+                IconToggleButton(
+                    checked = isBookmarked,
+                    onCheckedChange = onBookmarkClick,
+                ) {
+                    Icon(
+                        imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = if (isBookmarked) "Remove bookmark" else "Bookmark chapter",
+                        tint = if (isBookmarked) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             IconButton(
                 onClick = onRefreshClick,
             ) { Icon(Icons.Default.Refresh, null) }

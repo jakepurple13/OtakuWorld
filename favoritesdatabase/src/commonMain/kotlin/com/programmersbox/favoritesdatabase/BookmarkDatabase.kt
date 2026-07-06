@@ -100,6 +100,9 @@ interface BookmarkDao {
     @Query("SELECT EXISTS(SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl AND is_deleted = 0)")
     suspend fun hasBookmark(chapterUrl: String): Boolean
 
+    @Query("SELECT EXISTS(SELECT * FROM bookmarked_chapters WHERE chapterUrl = :chapterUrl AND is_deleted = 0)")
+    fun hasBookmarkFlow(chapterUrl: String): Flow<Boolean>
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateBookmark(bookmark: BookmarkedChapter)
 

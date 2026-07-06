@@ -12,6 +12,7 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
+import com.programmersbox.favoritesdatabase.BookmarkedChapter
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HeatMapDao
@@ -19,6 +20,7 @@ import com.programmersbox.favoritesdatabase.toDbModel
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIo
@@ -35,6 +37,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -55,6 +58,7 @@ class ReadViewModel(
     private val heatMapDao: HeatMapDao,
     private val exceptionDao: ExceptionDao,
     private val mangaDownloadManager: MangaDownloadManager,
+    private val bookmarkRepository: BookmarkRepository,
 ) : ViewModel() {
 
     val headers = mutableStateMapOf<String, String>()
@@ -162,6 +166,13 @@ class ReadViewModel(
     }
 
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
+
+    val isChapterBookmarked by derivedStateOf {
+        currentChapterModel
+            ?.url
+            ?.let { bookmarkRepository.hasBookmarkFlow(it) }
+            ?: flowOf(false)
+    }
 
     init {
         val url = chapterHolder.chapterModel?.url ?: mangaReader.mangaUrl
@@ -521,6 +532,26 @@ class ReadViewModel(
             }
             .onCompletion { loadingChapters = loadingChapters - chapterIndex }
             .launchIn(viewModelScope)
+    }
+
+    fun toggleBookmark(toggle: Boolean) {
+        viewModelScope.launch {
+            val chapter = currentChapterModel ?: return@launch
+            if (toggle) {
+                bookmarkRepository.insertBookmark(
+                    BookmarkedChapter(
+                        chapterUrl = chapter.url,
+                        chapterName = chapter.name,
+                        parentUrl = mangaUrl,
+                        parentTitle = title,
+                        parentImageUrl = "",
+                        source = chapter.source.serviceName,
+                    )
+                )
+            } else {
+                bookmarkRepository.deleteBookmark(chapter.url)
+            }
+        }
     }
 
     override fun onCleared() {
