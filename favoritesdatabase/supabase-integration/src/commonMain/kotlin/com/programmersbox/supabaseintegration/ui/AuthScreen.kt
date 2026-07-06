@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +33,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,9 +62,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.kmpmodels.ManagedTable
+import com.programmersbox.kmpmodels.SupportedTableAction
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
+import com.programmersbox.supabaseintegration.ui.viewmodel.LogoutUiState
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +78,7 @@ fun AuthScreen(
     viewModel: AuthViewModel = koinViewModel(),
 ) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val logoutUiState by viewModel.logoutUiState.collectAsStateWithLifecycle()
 
     val isLoading = authState is AuthState.Loading
 
@@ -93,7 +102,10 @@ fun AuthScreen(
                         // --- AUTHENTICATED STATE ---
                         AuthenticatedState(
                             state = state,
-                            onSignOut = viewModel::signOut,
+                            logoutUiState = logoutUiState,
+                            onConfirmLogout = viewModel::confirmLogout,
+                            onManageDatabasesEnabledChange = viewModel::setManageDatabasesEnabled,
+                            onTableActionChange = viewModel::setTableAction,
                         )
                     }
 
@@ -113,13 +125,33 @@ fun AuthScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AuthenticatedState(
     state: AuthState.Authenticated,
-    onSignOut: () -> Unit,
+    logoutUiState: LogoutUiState,
+    onConfirmLogout: () -> Unit,
+    onManageDatabasesEnabledChange: (Boolean) -> Unit,
+    onTableActionChange: (ManagedTable, SupportedTableAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showBottomSheet by remember { mutableStateOf(false) }
     var showLogOutDialog by remember { mutableStateOf(false) }
+
+    if (showBottomSheet) {
+        LogoutBottomSheet(
+            manageDatabasesEnabled = logoutUiState.manageDatabasesEnabled,
+            tableSelections = logoutUiState.tableSelections,
+            onManageDatabasesEnabledChange = onManageDatabasesEnabledChange,
+            onTableActionChange = onTableActionChange,
+            onContinueToLogout = {
+                showBottomSheet = false
+                showLogOutDialog = true
+            },
+            onCancel = { showBottomSheet = false },
+            onDismissRequest = { showBottomSheet = false },
+        )
+    }
 
     if (showLogOutDialog) {
         AlertDialog(
@@ -129,7 +161,7 @@ private fun AuthenticatedState(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onSignOut()
+                        onConfirmLogout()
                         showLogOutDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -144,6 +176,11 @@ private fun AuthenticatedState(
             },
         )
     }
+
+    SupabaseLoadingDialog(
+        showLoadingDialog = logoutUiState.isLoggingOut,
+        onDismissRequest = {},
+    )
 
     ElevatedCard(
         modifier = modifier
@@ -187,7 +224,7 @@ private fun AuthenticatedState(
 
             Spacer(Modifier.height(24.dp))
             Button(
-                onClick = { showLogOutDialog = true },
+                onClick = { showBottomSheet = true },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -363,5 +400,34 @@ private fun UnauthenticatedState(
         ) {
             Text("Send Magic Link")
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SupabaseLoadingDialog(
+    showLoadingDialog: Boolean,
+    onDismissRequest: () -> Unit,
+) {
+    if (showLoadingDialog) {
+        Dialog(
+            onDismissRequest = onDismissRequest,
+            DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(28.0.dp))
+            ) {
+                Column {
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    Text(text = "Loading...", Modifier.align(Alignment.CenterHorizontally))
+                }
+            }
+        }
+
     }
 }
