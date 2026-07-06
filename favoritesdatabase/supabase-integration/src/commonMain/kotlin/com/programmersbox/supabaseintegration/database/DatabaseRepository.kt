@@ -1,8 +1,5 @@
 package com.programmersbox.supabaseintegration.database
 
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
-
 class DatabaseRepository(
     val managedTables: List<ManagedTable>,
 ) {

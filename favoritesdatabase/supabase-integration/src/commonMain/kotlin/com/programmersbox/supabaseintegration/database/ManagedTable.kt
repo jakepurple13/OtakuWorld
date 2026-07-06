@@ -1,4 +1,4 @@
-package com.programmersbox.kmpmodels
+package com.programmersbox.supabaseintegration.database
 
 enum class SupportedTableAction(val isDestructive: Boolean) {
     NONE(false),

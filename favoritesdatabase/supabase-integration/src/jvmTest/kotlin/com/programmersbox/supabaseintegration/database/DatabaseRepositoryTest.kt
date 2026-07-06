@@ -1,32 +1,8 @@
 package com.programmersbox.supabaseintegration.database
 
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-private class FakeManagedTable(
-    tableName: String,
-    displayName: String,
-    supportedActions: List<SupportedTableAction>,
-    defaultAction: SupportedTableAction,
-    databaseName: String = "test_db",
-) : ManagedTable(
-    databaseName = databaseName,
-    tableName = tableName,
-    displayName = displayName,
-    supportedActions = supportedActions,
-    defaultAction = defaultAction,
-) {
-    var clearAllCalled = 0
-    var purgeDeletedCalled = 0
-    var restoreDeletedCalled = 0
-
-    override suspend fun clearAll() { clearAllCalled++ }
-    override suspend fun purgeDeleted() { purgeDeletedCalled++ }
-    override suspend fun restoreDeleted() { restoreDeletedCalled++ }
-}
 
 class DatabaseRepositoryTest {
 

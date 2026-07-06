@@ -1,8 +1,6 @@
 package com.programmersbox.supabaseintegration.database
 
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
 
 class FavoritesManagedTable(
     private val favoritesDao: ItemDao,

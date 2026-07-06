@@ -3,7 +3,6 @@ package com.programmersbox.supabaseintegration.di
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.BackupPreferenceDao
 import com.programmersbox.favoritesdatabase.SyncPreferences
-import com.programmersbox.kmpmodels.ManagedTable
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthManagerImpl
@@ -14,6 +13,7 @@ import com.programmersbox.supabaseintegration.backup.RestoreManagerImpl
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.FavoritesManagedTable
+import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.migration.MigrationManager
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.SyncConfig
