@@ -11,6 +11,7 @@ import com.programmersbox.supabaseintegration.backup.BackupManagerImpl
 import com.programmersbox.supabaseintegration.backup.RestoreManager
 import com.programmersbox.supabaseintegration.backup.RestoreManagerImpl
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
+import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.migration.MigrationManager
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.SyncConfig
@@ -65,6 +66,7 @@ val supabaseModule = module {
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
     singleOf(::MigrationManager)
+    single { DatabaseRepository(getAll()) }
 
     single<SyncPreferences> { SyncPreferences.getInstance(get()) }
     single<BackupPreferenceDao> { get<SyncPreferences>().backupPreferenceDao() }
