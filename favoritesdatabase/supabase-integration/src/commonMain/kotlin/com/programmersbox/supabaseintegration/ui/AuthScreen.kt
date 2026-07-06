@@ -82,6 +82,11 @@ fun AuthScreen(
 
     val isLoading = authState is AuthState.Loading
 
+    SupabaseLoadingDialog(
+        showLoadingDialog = logoutUiState.isLoggingOut,
+        onDismissRequest = {},
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -176,11 +181,6 @@ private fun AuthenticatedState(
             },
         )
     }
-
-    SupabaseLoadingDialog(
-        showLoadingDialog = logoutUiState.isLoggingOut,
-        onDismissRequest = {},
-    )
 
     ElevatedCard(
         modifier = modifier
@@ -405,7 +405,7 @@ private fun UnauthenticatedState(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SupabaseLoadingDialog(
+private fun SupabaseLoadingDialog(
     showLoadingDialog: Boolean,
     onDismissRequest: () -> Unit,
 ) {
