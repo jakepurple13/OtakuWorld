@@ -114,14 +114,17 @@ class AuthViewModel(
     fun confirmLogout() {
         viewModelScope.launch {
             _logoutUiState.update { it.copy(isLoggingOut = true) }
-            authManager.signOut()
-            val selections = _logoutUiState.value.tableSelections
-                .filter { it.selectedAction != SupportedTableAction.NONE }
-                .associate { it.table to it.selectedAction }
-            if (selections.isNotEmpty()) {
-                databaseRepository.executeActions(selections)
+            try {
+                authManager.signOut()
+                val selections = _logoutUiState.value.tableSelections
+                    .filter { it.selectedAction != SupportedTableAction.NONE }
+                    .associate { it.table to it.selectedAction }
+                if (selections.isNotEmpty()) {
+                    databaseRepository.executeActions(selections)
+                }
+            } finally {
+                _logoutUiState.update { it.copy(isLoggingOut = false) }
             }
-            _logoutUiState.update { it.copy(isLoggingOut = false) }
         }
     }
 
