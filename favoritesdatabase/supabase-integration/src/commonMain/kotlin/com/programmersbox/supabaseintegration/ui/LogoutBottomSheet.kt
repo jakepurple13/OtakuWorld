@@ -84,10 +84,10 @@ private fun ManagedTableRow(
 ) {
     Column {
         Text(selection.table.displayName, style = MaterialTheme.typography.bodyLarge)
-        val options = listOf(SupportedTableAction.NONE) + selection.table.supportedActions
+        val options = selection.table.supportedActions
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
             options.forEachIndexed { index, action ->
-                val isDestructive = action == SupportedTableAction.CLEAR_ALL || action == SupportedTableAction.PURGE_DELETED
+                val isDestructive = action.isDestructive
                 SegmentedButton(
                     selected = selection.selectedAction == action,
                     onClick = { onActionChange(action) },

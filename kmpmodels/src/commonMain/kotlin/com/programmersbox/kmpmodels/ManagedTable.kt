@@ -1,25 +1,18 @@
 package com.programmersbox.kmpmodels
 
-enum class SupportedTableAction {
-    NONE,
-    CLEAR_ALL,
-    PURGE_DELETED,
-    RESTORE_DELETED,
+enum class SupportedTableAction(val isDestructive: Boolean) {
+    NONE(false),
+    CLEAR_ALL(true),
+    PURGE_DELETED(true),
+    RESTORE_DELETED(false),
 }
 
-abstract class ManagedTable(
-    val databaseName: String,
-    val tableName: String,
-    val displayName: String,
-    val supportedActions: List<SupportedTableAction>,
-    val defaultAction: SupportedTableAction,
-) {
-    init {
-        require(defaultAction == SupportedTableAction.NONE || defaultAction in supportedActions) {
-            "defaultAction must be NONE or one of supportedActions for table '$tableName'"
-        }
-    }
-
+abstract class ManagedTable {
+    abstract val databaseName: String
+    abstract val tableName: String
+    abstract val displayName: String
+    abstract val supportedActions: List<SupportedTableAction>
+    abstract val defaultAction: SupportedTableAction
     abstract suspend fun clearAll()
     abstract suspend fun purgeDeleted()
     abstract suspend fun restoreDeleted()
