@@ -20,8 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
+import com.programmersbox.supabaseintegration.database.ManagedTable
+import com.programmersbox.supabaseintegration.database.SupportedTableAction
 import com.programmersbox.supabaseintegration.ui.viewmodel.ManagedTableSelection
 
 @OptIn(ExperimentalMaterial3Api::class)

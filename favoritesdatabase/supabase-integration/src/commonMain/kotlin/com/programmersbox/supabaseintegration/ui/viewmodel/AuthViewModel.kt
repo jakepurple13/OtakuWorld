@@ -3,12 +3,12 @@ package com.programmersbox.supabaseintegration.ui.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
+import com.programmersbox.supabaseintegration.database.ManagedTable
+import com.programmersbox.supabaseintegration.database.SupportedTableAction
 import io.github.jan.supabase.auth.providers.Apple
 import io.github.jan.supabase.auth.providers.Azure
 import io.github.jan.supabase.auth.providers.Bitbucket

@@ -65,9 +65,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
 import com.programmersbox.supabaseintegration.auth.AuthState
+import com.programmersbox.supabaseintegration.database.ManagedTable
+import com.programmersbox.supabaseintegration.database.SupportedTableAction
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.LogoutUiState
 import org.koin.compose.viewmodel.koinViewModel
