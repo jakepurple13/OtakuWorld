@@ -228,4 +228,16 @@ interface ItemDao {
 
     @Query("UPDATE ChapterWatched SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
     suspend fun markChapterSynced(url: String, timestamp: Long)
+
+    @Query("UPDATE FavoriteItem SET is_deleted = 0")
+    suspend fun resetAllIsDeleted()
+
+    @Query("DELETE FROM FavoriteItem WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedItems()
+
+    @Query("DELETE FROM ChapterWatched WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedChapters()
+
+    @Query("UPDATE ChapterWatched SET is_deleted = 0")
+    suspend fun resetAllChaptersIsDeleted()
 }

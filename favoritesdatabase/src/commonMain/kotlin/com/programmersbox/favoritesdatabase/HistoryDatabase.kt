@@ -137,6 +137,12 @@ interface HistoryDao {
     @Query("UPDATE RecentlyViewed SET updated_at = :timestamp, is_dirty = 0 WHERE url = :url")
     suspend fun markRecentSynced(url: String, timestamp: Long)
 
+    @Query("UPDATE History SET is_deleted = 0")
+    suspend fun resetAllHistoryIsDeleted()
+
+    @Query("DELETE FROM History WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedHistory()
+
 }
 
 @Serializable

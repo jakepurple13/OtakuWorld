@@ -9,8 +9,8 @@ import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
 import androidx.room3.Query
-import androidx.room3.Update
 import androidx.room3.RoomDatabase
+import androidx.room3.Update
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -89,6 +89,12 @@ interface NotesDao {
 
     @Query("UPDATE notes SET updated_at = :timestamp, is_dirty = 0 WHERE itemUrl = :itemUrl")
     suspend fun markNoteSynced(itemUrl: String, timestamp: Long)
+
+    @Query("UPDATE notes SET is_deleted = 0")
+    suspend fun resetAllNotesIsDeleted()
+
+    @Query("DELETE FROM notes WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedNotes()
 }
 
 @Database(

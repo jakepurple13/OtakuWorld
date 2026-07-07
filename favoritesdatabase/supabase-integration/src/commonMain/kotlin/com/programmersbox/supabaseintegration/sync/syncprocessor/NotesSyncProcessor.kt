@@ -2,6 +2,8 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDao
+import com.programmersbox.supabaseintegration.database.ManagedTable
+import com.programmersbox.supabaseintegration.database.NotesManagedTable
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.NoteItemRow
 import com.programmersbox.supabaseintegration.sync.toNoteItem
@@ -16,7 +18,8 @@ class NotesSyncProcessor(
     override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<NoteItem, NoteItemRow>(
     tableName = "notes"
-) {
+),
+    ManagedTable by NotesManagedTable(notesDao) {
     override val displayName: String = "Notes"
 
     // ==========================================
