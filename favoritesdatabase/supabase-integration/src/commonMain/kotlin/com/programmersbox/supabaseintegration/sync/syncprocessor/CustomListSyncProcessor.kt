@@ -18,9 +18,7 @@ import kotlinx.coroutines.flow.Flow
 class CustomListInfoSyncProcessor(
     private val listDao: ListDao,
     override val backupPreferenceRepository: BackupPreferenceRepository,
-) : SyncProcessor<CustomListInfo, CustomListInfoRow>(
-    tableName = "custom_list_info"
-) {
+) : SyncProcessor<CustomListInfo, CustomListInfoRow>(tableName = "custom_list_info") {
     override val displayName: String = "Custom Lists"
 
     // ==========================================

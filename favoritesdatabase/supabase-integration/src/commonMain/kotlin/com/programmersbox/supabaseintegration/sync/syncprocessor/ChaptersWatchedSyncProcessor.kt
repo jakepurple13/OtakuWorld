@@ -16,9 +16,8 @@ import kotlinx.coroutines.flow.Flow
 class ChaptersWatchedSyncProcessor(
     private val itemDao: ItemDao,
     override val backupPreferenceRepository: BackupPreferenceRepository,
-) : SyncProcessor<ChapterWatched, ChapterWatchedRow>(
-    tableName = "chapters_watched"
-), ManagedTable by ChaptersWatchedManagedTable(itemDao) {
+) : SyncProcessor<ChapterWatched, ChapterWatchedRow>(tableName = "chapters_watched"),
+    ManagedTable by ChaptersWatchedManagedTable(itemDao) {
     override val displayName: String = "Chapters Watched"
 
     // ==========================================

@@ -15,9 +15,8 @@ import io.github.jan.supabase.postgrest.result.PostgrestResult
 class FavoritesSyncer(
     private val itemDao: ItemDao,
     override val backupPreferenceRepository: BackupPreferenceRepository,
-) : SyncProcessor<DbModel, FavoriteItemRow>(
-    tableName = "favorite_items"
-), ManagedTable by FavoritesManagedTable(itemDao) {
+) : SyncProcessor<DbModel, FavoriteItemRow>(tableName = "favorite_items"),
+    ManagedTable by FavoritesManagedTable(itemDao) {
     override val displayName: String = "Favorites"
 
     override suspend fun getDirtyItems() = itemDao.getDirtyFavorites()
