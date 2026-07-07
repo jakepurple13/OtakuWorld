@@ -13,7 +13,5 @@ abstract class ManagedTable {
     abstract val displayName: String
     abstract val supportedActions: List<SupportedTableAction>
     abstract val defaultAction: SupportedTableAction
-    abstract suspend fun clearAll()
-    abstract suspend fun purgeDeleted()
-    abstract suspend fun restoreDeleted()
+    abstract suspend fun executeAction(action: SupportedTableAction)
 }

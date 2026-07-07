@@ -18,18 +18,22 @@ class FavoritesManagedTable(
         SupportedTableAction.RESTORE_DELETED
     )
 
-    override suspend fun clearAll() {
-        favoritesDao.getAllFavoritesSync().forEach {
-            favoritesDao.deleteFavorite(it)
+    override suspend fun executeAction(action: SupportedTableAction) {
+        when (action) {
+            SupportedTableAction.NONE -> Unit
+            SupportedTableAction.CLEAR_ALL -> {
+                favoritesDao
+                    .getAllFavoritesSync()
+                    .forEach { favoritesDao.deleteFavorite(it) }
+            }
+
+            SupportedTableAction.PURGE_DELETED -> {
+                favoritesDao.deleteAllDeletedItems()
+            }
+
+            SupportedTableAction.RESTORE_DELETED -> {
+                favoritesDao.resetAllIsDeleted()
+            }
         }
     }
-
-    override suspend fun purgeDeleted() {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun restoreDeleted() {
-        TODO("Not yet implemented")
-    }
-
 }
