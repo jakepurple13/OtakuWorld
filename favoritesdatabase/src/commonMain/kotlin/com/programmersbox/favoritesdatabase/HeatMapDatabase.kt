@@ -106,6 +106,12 @@ interface HeatMapDao {
     @Query("UPDATE HeatMapItem SET updated_at = :timestamp, is_dirty = 0 WHERE time = :time")
     suspend fun markHeatMapItemSynced(time: LocalDate, timestamp: Long)
 
+    @Query("UPDATE HeatMapItem SET is_deleted = 0")
+    suspend fun resetAllHeatMapIsDeleted()
+
+    @Query("DELETE FROM HeatMapItem WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedHeatMapItems()
+
 }
 
 @Serializable

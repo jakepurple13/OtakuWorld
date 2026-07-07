@@ -2,6 +2,8 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.HistoryItem
+import com.programmersbox.supabaseintegration.database.HistoryManagedTable
+import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.HistoryItemRow
 import com.programmersbox.supabaseintegration.sync.toHistoryItem
@@ -16,7 +18,8 @@ class HistorySyncProcessor(
     override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<HistoryItem, HistoryItemRow>(
     tableName = "history"
-) {
+),
+    ManagedTable by HistoryManagedTable(historyDao) {
     override val displayName: String = "History"
 
     // ==========================================

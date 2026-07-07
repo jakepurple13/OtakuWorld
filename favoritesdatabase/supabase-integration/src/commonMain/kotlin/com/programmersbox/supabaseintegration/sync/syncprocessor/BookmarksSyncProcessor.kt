@@ -2,6 +2,8 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.BookmarkDao
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
+import com.programmersbox.supabaseintegration.database.BookmarksManagedTable
+import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.BookmarkedChapterRow
 import com.programmersbox.supabaseintegration.sync.toBookmarkedChapter
@@ -16,7 +18,8 @@ class BookmarksSyncProcessor(
     override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<BookmarkedChapter, BookmarkedChapterRow>(
     tableName = "bookmarked_chapters"
-) {
+),
+    ManagedTable by BookmarksManagedTable(bookmarkDao) {
     override val displayName: String = "Bookmarks"
 
     // ==========================================

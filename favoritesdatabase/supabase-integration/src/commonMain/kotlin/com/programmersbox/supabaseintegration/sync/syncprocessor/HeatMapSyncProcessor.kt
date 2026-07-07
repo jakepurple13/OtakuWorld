@@ -2,6 +2,8 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
+import com.programmersbox.supabaseintegration.database.HeatMapManagedTable
+import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.HeatMapItemRow
 import com.programmersbox.supabaseintegration.sync.toHeatMapItem
@@ -17,7 +19,8 @@ class HeatMapSyncProcessor(
     override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<HeatMapItem, HeatMapItemRow>(
     tableName = "heatmap_items"
-) {
+),
+    ManagedTable by HeatMapManagedTable(heatMapDao) {
     override val displayName: String = "Activity Heat Map"
 
     // ==========================================

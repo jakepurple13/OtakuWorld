@@ -221,6 +221,24 @@ interface ListDao {
 
     @Query("UPDATE CustomListInfo SET updated_at = :timestamp, is_dirty = 0 WHERE uniqueId = :uniqueId")
     suspend fun markCustomListInfoSynced(uniqueId: String, timestamp: Long)
+
+    @Query("SELECT * FROM CustomListItem")
+    suspend fun getAllCustomListItemsSync(): List<CustomListItem>
+
+    @Query("UPDATE CustomListItem SET is_deleted = 0")
+    suspend fun resetAllCustomListItemsIsDeleted()
+
+    @Query("DELETE FROM CustomListItem WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedCustomListItems()
+
+    @Query("SELECT * FROM CustomListInfo")
+    suspend fun getAllCustomListInfoSync(): List<CustomListInfo>
+
+    @Query("UPDATE CustomListInfo SET is_deleted = 0")
+    suspend fun resetAllCustomListInfoIsDeleted()
+
+    @Query("DELETE FROM CustomListInfo WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedCustomListInfo()
 }
 
 @Serializable

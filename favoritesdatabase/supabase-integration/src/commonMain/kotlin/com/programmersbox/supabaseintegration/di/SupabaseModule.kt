@@ -89,12 +89,12 @@ val supabaseModule = module {
 private fun Module.syncProcessorModule() {
     singleOf(::FavoritesSyncer) binds arrayOf(SyncProcessor::class, ManagedTable::class)
     singleOf(::ChaptersWatchedSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
-    singleOf(::BookmarksSyncProcessor) bind SyncProcessor::class
-    singleOf(::NotesSyncProcessor) bind SyncProcessor::class
-    singleOf(::HistorySyncProcessor) bind SyncProcessor::class
-    singleOf(::CustomListItemSyncProcessor) bind SyncProcessor::class
-    singleOf(::CustomListInfoSyncProcessor) bind SyncProcessor::class
-    singleOf(::HeatMapSyncProcessor) bind SyncProcessor::class
+    singleOf(::BookmarksSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::NotesSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::HistorySyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::CustomListItemSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::CustomListInfoSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::HeatMapSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
 }
 
 expect fun platformModule(): Module

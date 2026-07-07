@@ -1,14 +1,14 @@
 package com.programmersbox.supabaseintegration.ui.viewmodel
 
 import androidx.lifecycle.ViewModelStore
-import com.programmersbox.kmpmodels.ManagedTable
-import com.programmersbox.kmpmodels.SupportedTableAction
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
+import com.programmersbox.supabaseintegration.database.ManagedTable
+import com.programmersbox.supabaseintegration.database.SupportedTableAction
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -31,38 +30,35 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 private class FakeManagedTable(
-    tableName: String,
-    displayName: String,
-    supportedActions: List<SupportedTableAction>,
-    defaultAction: SupportedTableAction,
-    databaseName: String = "test_db",
+    override val displayName: String,
+    override val supportedActions: List<SupportedTableAction>,
+    override val defaultAction: SupportedTableAction,
     private val callLog: MutableList<String>? = null,
-) : ManagedTable(
-    databaseName = databaseName,
-    tableName = tableName,
-    displayName = displayName,
-    supportedActions = supportedActions,
-    defaultAction = defaultAction,
-) {
+) : ManagedTable {
     var clearAllCalled = 0
     var purgeDeletedCalled = 0
     var restoreDeletedCalled = 0
-    var onClearAll: (suspend () -> Unit)? = null
+    var onExecuteAction: (suspend (SupportedTableAction) -> Unit)? = null
 
-    override suspend fun clearAll() {
-        clearAllCalled++
-        callLog?.add("clearAll:$tableName")
-        onClearAll?.invoke()
-    }
+    override suspend fun executeAction(action: SupportedTableAction) {
+        when (action) {
+            SupportedTableAction.NONE -> Unit
+            SupportedTableAction.CLEAR_ALL -> {
+                clearAllCalled++
+                callLog?.add("clearAll:$displayName")
+            }
 
-    override suspend fun purgeDeleted() {
-        purgeDeletedCalled++
-        callLog?.add("purgeDeleted:$tableName")
-    }
+            SupportedTableAction.PURGE_DELETED -> {
+                purgeDeletedCalled++
+                callLog?.add("purgeDeleted:$displayName")
+            }
 
-    override suspend fun restoreDeleted() {
-        restoreDeletedCalled++
-        callLog?.add("restoreDeleted:$tableName")
+            SupportedTableAction.RESTORE_DELETED -> {
+                restoreDeletedCalled++
+                callLog?.add("restoreDeleted:$displayName")
+            }
+        }
+        onExecuteAction?.invoke(action)
     }
 }
 
@@ -133,7 +129,7 @@ class AuthViewModelTest {
 
     @Test
     fun `no actions selected logout proceeds without table actions`() = runTest {
-        val table = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val table = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val authManager = FakeLogoutAuthManager()
         val vm = viewModel(listOf(table), authManager)
 
@@ -146,8 +142,8 @@ class AuthViewModelTest {
 
     @Test
     fun `selected action calls only that method on that table`() = runTest {
-        val tableA = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
-        val tableB = FakeManagedTable("settings", "Settings", listOf(SupportedTableAction.PURGE_DELETED), SupportedTableAction.NONE)
+        val tableA = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val tableB = FakeManagedTable("Settings", listOf(SupportedTableAction.PURGE_DELETED), SupportedTableAction.NONE)
         val vm = viewModel(listOf(tableA, tableB))
 
         vm.setManageDatabasesEnabled(true)
@@ -162,10 +158,10 @@ class AuthViewModelTest {
 
     @Test
     fun `mixed actions across tables each execute their own selected action`() = runTest {
-        val tableClear = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
-        val tablePurge = FakeManagedTable("settings", "Settings", listOf(SupportedTableAction.PURGE_DELETED), SupportedTableAction.NONE)
-        val tableRestore = FakeManagedTable("projects", "Projects", listOf(SupportedTableAction.RESTORE_DELETED), SupportedTableAction.NONE)
-        val tableNone = FakeManagedTable("members", "Members", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val tableClear = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val tablePurge = FakeManagedTable("Settings", listOf(SupportedTableAction.PURGE_DELETED), SupportedTableAction.NONE)
+        val tableRestore = FakeManagedTable("Projects", listOf(SupportedTableAction.RESTORE_DELETED), SupportedTableAction.NONE)
+        val tableNone = FakeManagedTable("Members", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val vm = viewModel(listOf(tableClear, tablePurge, tableRestore, tableNone))
 
         vm.setManageDatabasesEnabled(true)
@@ -183,7 +179,7 @@ class AuthViewModelTest {
 
     @Test
     fun `supabase auth is called regardless of whether table actions are configured`() = runTest {
-        val table = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val table = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val authManager = FakeLogoutAuthManager()
         val vm = viewModel(listOf(table), authManager)
 
@@ -198,7 +194,7 @@ class AuthViewModelTest {
     @Test
     fun `supabase auth logout completes before any table action runs`() = runTest {
         val callLog = mutableListOf<String>()
-        val table = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE, callLog = callLog)
+        val table = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE, callLog = callLog)
         val authManager = FakeLogoutAuthManager(callLog = callLog)
         val vm = viewModel(listOf(table), authManager)
 
@@ -207,7 +203,7 @@ class AuthViewModelTest {
         vm.confirmLogout()
         awaitCondition { !vm.logoutUiState.value.isLoggingOut }
 
-        assertEquals(listOf("signOut", "clearAll:users"), callLog)
+        assertEquals(listOf("signOut", "clearAll:Users"), callLog)
     }
 
     // --- ViewModel State Tests ---
@@ -215,7 +211,6 @@ class AuthViewModelTest {
     @Test
     fun `master toggle off reverts every selector to its defaultAction`() = runTest {
         val table = FakeManagedTable(
-            tableName = "settings",
             displayName = "Settings",
             supportedActions = listOf(SupportedTableAction.CLEAR_ALL, SupportedTableAction.PURGE_DELETED),
             defaultAction = SupportedTableAction.PURGE_DELETED,
@@ -233,9 +228,9 @@ class AuthViewModelTest {
     @Test
     fun `isLoggingOut is true while table actions execute and false after`() = runTest {
         var loadingDuringExecution = false
-        val table = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val table = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val vm = viewModel(listOf(table))
-        table.onClearAll = { loadingDuringExecution = vm.logoutUiState.value.isLoggingOut }
+        table.onExecuteAction = { loadingDuringExecution = vm.logoutUiState.value.isLoggingOut }
 
         vm.setManageDatabasesEnabled(true)
         vm.setTableAction(table, SupportedTableAction.CLEAR_ALL)
@@ -248,8 +243,8 @@ class AuthViewModelTest {
 
     @Test
     fun `changing one table selection does not affect other tables`() = runTest {
-        val tableA = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
-        val tableB = FakeManagedTable("settings", "Settings", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val tableA = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val tableB = FakeManagedTable("Settings", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val vm = viewModel(listOf(tableA, tableB))
 
         vm.setTableAction(tableA, SupportedTableAction.CLEAR_ALL)
@@ -262,7 +257,6 @@ class AuthViewModelTest {
     @Test
     fun `default selections are initialized from each table's defaultAction`() = runTest {
         val table = FakeManagedTable(
-            tableName = "settings",
             displayName = "Settings",
             supportedActions = listOf(SupportedTableAction.PURGE_DELETED),
             defaultAction = SupportedTableAction.PURGE_DELETED,
@@ -276,7 +270,7 @@ class AuthViewModelTest {
 
     @Test
     fun `cancel from bottom sheet triggers no logout or table actions`() = runTest {
-        val table = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val table = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val authManager = FakeLogoutAuthManager()
         val vm = viewModel(listOf(table), authManager)
 
@@ -290,7 +284,7 @@ class AuthViewModelTest {
 
     @Test
     fun `cancel from confirmation dialog discards configured actions without executing them`() = runTest {
-        val table = FakeManagedTable("users", "Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
+        val table = FakeManagedTable("Users", listOf(SupportedTableAction.CLEAR_ALL), SupportedTableAction.NONE)
         val authManager = FakeLogoutAuthManager()
         val vm = viewModel(listOf(table), authManager)
 
