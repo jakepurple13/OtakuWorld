@@ -10,7 +10,7 @@ class FakeManagedTable(
     override val supportedActions: List<SupportedTableAction>,
     override val defaultAction: SupportedTableAction,
     val databaseName: String = "test_db",
-) : ManagedTable() {
+) : ManagedTable {
     var clearAllCalled = 0
     var purgeDeletedCalled = 0
     var restoreDeletedCalled = 0

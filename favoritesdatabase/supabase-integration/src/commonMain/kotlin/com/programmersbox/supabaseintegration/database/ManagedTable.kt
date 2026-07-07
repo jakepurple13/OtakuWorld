@@ -7,10 +7,10 @@ enum class SupportedTableAction(val isDestructive: Boolean) {
     RESTORE_DELETED(false),
 }
 
-abstract class ManagedTable {
-    abstract val tableName: String
-    abstract val displayName: String
-    abstract val supportedActions: List<SupportedTableAction>
-    abstract val defaultAction: SupportedTableAction
-    abstract suspend fun executeAction(action: SupportedTableAction)
+interface ManagedTable {
+    val tableName: String
+    val displayName: String
+    val supportedActions: List<SupportedTableAction>
+    val defaultAction: SupportedTableAction
+    suspend fun executeAction(action: SupportedTableAction)
 }

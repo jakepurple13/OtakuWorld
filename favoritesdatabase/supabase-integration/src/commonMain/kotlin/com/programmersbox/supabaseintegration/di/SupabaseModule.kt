@@ -11,6 +11,7 @@ import com.programmersbox.supabaseintegration.backup.BackupManagerImpl
 import com.programmersbox.supabaseintegration.backup.RestoreManager
 import com.programmersbox.supabaseintegration.backup.RestoreManagerImpl
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
+import com.programmersbox.supabaseintegration.database.ChaptersWatchedManagedTable
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.FavoritesManagedTable
 import com.programmersbox.supabaseintegration.database.ManagedTable
@@ -81,9 +82,8 @@ val supabaseModule = module {
     viewModel { BackupPreferencesViewModel(get(), getAll(), get()) }
     singleOf(::SupabaseSearchItems) bind SearchRegistryItem::class
 
-    singleOf(::FavoritesManagedTable) bind ManagedTable::class
-
     syncProcessorModule()
+    managedTableModule()
 
     includes(platformModule())
 }
@@ -97,6 +97,11 @@ private fun Module.syncProcessorModule() {
     singleOf(::CustomListItemSyncProcessor) bind SyncProcessor::class
     singleOf(::CustomListInfoSyncProcessor) bind SyncProcessor::class
     singleOf(::HeatMapSyncProcessor) bind SyncProcessor::class
+}
+
+private fun Module.managedTableModule() {
+    singleOf(::FavoritesManagedTable) bind ManagedTable::class
+    singleOf(::ChaptersWatchedManagedTable) bind ManagedTable::class
 }
 
 expect fun platformModule(): Module

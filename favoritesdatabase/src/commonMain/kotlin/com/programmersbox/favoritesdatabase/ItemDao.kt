@@ -234,4 +234,10 @@ interface ItemDao {
 
     @Query("DELETE FROM FavoriteItem WHERE is_deleted = 1")
     suspend fun deleteAllDeletedItems()
+
+    @Query("DELETE FROM ChapterWatched WHERE is_deleted = 1")
+    suspend fun deleteAllDeletedChapters()
+
+    @Query("UPDATE ChapterWatched SET is_deleted = 0")
+    suspend fun resetAllChaptersIsDeleted()
 }
