@@ -8,7 +8,6 @@ enum class SupportedTableAction(val isDestructive: Boolean) {
 }
 
 abstract class ManagedTable {
-    abstract val databaseName: String
     abstract val tableName: String
     abstract val displayName: String
     abstract val supportedActions: List<SupportedTableAction>

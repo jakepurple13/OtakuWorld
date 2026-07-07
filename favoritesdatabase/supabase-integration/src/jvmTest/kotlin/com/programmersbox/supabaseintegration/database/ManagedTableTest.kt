@@ -9,22 +9,19 @@ class FakeManagedTable(
     override val displayName: String,
     override val supportedActions: List<SupportedTableAction>,
     override val defaultAction: SupportedTableAction,
-    override val databaseName: String = "test_db",
+    val databaseName: String = "test_db",
 ) : ManagedTable() {
     var clearAllCalled = 0
     var purgeDeletedCalled = 0
     var restoreDeletedCalled = 0
 
-    override suspend fun clearAll() {
-        clearAllCalled++
-    }
-
-    override suspend fun purgeDeleted() {
-        purgeDeletedCalled++
-    }
-
-    override suspend fun restoreDeleted() {
-        restoreDeletedCalled++
+    override suspend fun executeAction(action: SupportedTableAction) {
+        when (action) {
+            SupportedTableAction.NONE -> {}
+            SupportedTableAction.CLEAR_ALL -> clearAllCalled++
+            SupportedTableAction.PURGE_DELETED -> purgeDeletedCalled++
+            SupportedTableAction.RESTORE_DELETED -> restoreDeletedCalled++
+        }
     }
 }
 

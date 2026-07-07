@@ -116,12 +116,10 @@ class AuthViewModel(
             _logoutUiState.update { it.copy(isLoggingOut = true) }
             try {
                 authManager.signOut()
-                val selections = _logoutUiState.value.tableSelections
-                    .filter { it.selectedAction != SupportedTableAction.NONE }
+                val selections = _logoutUiState.value
+                    .tableSelections
                     .associate { it.table to it.selectedAction }
-                if (selections.isNotEmpty()) {
-                    databaseRepository.executeActions(selections)
-                }
+                databaseRepository.executeActions(selections)
             } finally {
                 _logoutUiState.update { it.copy(isLoggingOut = false) }
             }
