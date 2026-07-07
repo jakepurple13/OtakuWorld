@@ -2,6 +2,8 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.supabaseintegration.database.ChaptersWatchedManagedTable
+import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.ChapterWatchedRow
 import com.programmersbox.supabaseintegration.sync.toChapterRow
@@ -16,7 +18,7 @@ class ChaptersWatchedSyncProcessor(
     override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<ChapterWatched, ChapterWatchedRow>(
     tableName = "chapters_watched"
-) {
+), ManagedTable by ChaptersWatchedManagedTable(itemDao) {
     override val displayName: String = "Chapters Watched"
 
     // ==========================================

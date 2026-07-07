@@ -2,6 +2,8 @@ package com.programmersbox.supabaseintegration.sync.syncprocessor
 
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.supabaseintegration.database.FavoritesManagedTable
+import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.FavoriteItemRow
 import com.programmersbox.supabaseintegration.sync.toDbModel
@@ -15,7 +17,7 @@ class FavoritesSyncer(
     override val backupPreferenceRepository: BackupPreferenceRepository,
 ) : SyncProcessor<DbModel, FavoriteItemRow>(
     tableName = "favorite_items"
-) {
+), ManagedTable by FavoritesManagedTable(itemDao) {
     override val displayName: String = "Favorites"
 
     override suspend fun getDirtyItems() = itemDao.getDirtyFavorites()

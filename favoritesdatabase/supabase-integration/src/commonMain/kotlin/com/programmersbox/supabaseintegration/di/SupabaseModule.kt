@@ -11,9 +11,7 @@ import com.programmersbox.supabaseintegration.backup.BackupManagerImpl
 import com.programmersbox.supabaseintegration.backup.RestoreManager
 import com.programmersbox.supabaseintegration.backup.RestoreManagerImpl
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
-import com.programmersbox.supabaseintegration.database.ChaptersWatchedManagedTable
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
-import com.programmersbox.supabaseintegration.database.FavoritesManagedTable
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.migration.MigrationManager
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
@@ -43,6 +41,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
+import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val supabaseModule = module {
@@ -83,25 +82,19 @@ val supabaseModule = module {
     singleOf(::SupabaseSearchItems) bind SearchRegistryItem::class
 
     syncProcessorModule()
-    managedTableModule()
 
     includes(platformModule())
 }
 
 private fun Module.syncProcessorModule() {
-    singleOf(::FavoritesSyncer) bind SyncProcessor::class
-    singleOf(::ChaptersWatchedSyncProcessor) bind SyncProcessor::class
+    singleOf(::FavoritesSyncer) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::ChaptersWatchedSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
     singleOf(::BookmarksSyncProcessor) bind SyncProcessor::class
     singleOf(::NotesSyncProcessor) bind SyncProcessor::class
     singleOf(::HistorySyncProcessor) bind SyncProcessor::class
     singleOf(::CustomListItemSyncProcessor) bind SyncProcessor::class
     singleOf(::CustomListInfoSyncProcessor) bind SyncProcessor::class
     singleOf(::HeatMapSyncProcessor) bind SyncProcessor::class
-}
-
-private fun Module.managedTableModule() {
-    singleOf(::FavoritesManagedTable) bind ManagedTable::class
-    singleOf(::ChaptersWatchedManagedTable) bind ManagedTable::class
 }
 
 expect fun platformModule(): Module

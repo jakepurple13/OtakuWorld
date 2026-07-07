@@ -5,7 +5,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class FakeManagedTable(
-    override val tableName: String,
+    val tableName: String,
     override val displayName: String,
     override val supportedActions: List<SupportedTableAction>,
     override val defaultAction: SupportedTableAction,

@@ -5,7 +5,6 @@ import com.programmersbox.favoritesdatabase.ItemDao
 class FavoritesManagedTable(
     private val favoritesDao: ItemDao,
 ) : ManagedTable {
-    override val tableName: String = "favorites"
     override val displayName: String = "Favorites"
 
     override val defaultAction: SupportedTableAction = SupportedTableAction.NONE

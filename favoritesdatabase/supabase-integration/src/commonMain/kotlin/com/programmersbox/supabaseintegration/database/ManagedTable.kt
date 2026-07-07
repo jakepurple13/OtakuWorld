@@ -8,7 +8,6 @@ enum class SupportedTableAction(val isDestructive: Boolean) {
 }
 
 interface ManagedTable {
-    val tableName: String
     val displayName: String
     val supportedActions: List<SupportedTableAction>
     val defaultAction: SupportedTableAction

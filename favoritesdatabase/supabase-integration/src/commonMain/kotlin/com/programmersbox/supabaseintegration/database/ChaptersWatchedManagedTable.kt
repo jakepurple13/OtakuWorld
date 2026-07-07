@@ -5,7 +5,6 @@ import com.programmersbox.favoritesdatabase.ItemDao
 class ChaptersWatchedManagedTable(
     private val itemDao: ItemDao,
 ) : ManagedTable {
-    override val tableName: String = "chapters_watched"
     override val displayName: String = "Chapters Watched"
     override val supportedActions: List<SupportedTableAction> = listOf(
         SupportedTableAction.NONE,
