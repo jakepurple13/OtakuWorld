@@ -116,6 +116,7 @@ bridge is installed.
 - Log in to save your favorites and watched episodes from device to device
 - Favorite to be alerted of any updates
 - Share Anime/Manga and open in app!
+- Build a personal Dictionary/Glossary of terms — manage entries from Settings, or quick-add a term without leaving the page while reading in MangaWorld
 
 ### AnimeWorld
 - Stream and download Anime from various different video sites
