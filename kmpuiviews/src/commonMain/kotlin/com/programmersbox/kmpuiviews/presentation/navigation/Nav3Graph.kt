@@ -24,6 +24,9 @@ import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailScreen
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormScreen
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListScreen
 import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
@@ -138,6 +141,32 @@ fun entryGraph(
     entry<Screen.NotesScreen> {
         val navActions = LocalNavActions.current
         NotesScreen(onBackPress = { navActions.popBackStack() })
+    }
+
+    entry<Screen.DictionaryScreen> {
+        val navActions = LocalNavActions.current
+        DictionaryListScreen(
+            onBackPress = { navActions.popBackStack() },
+            onEntryClick = { id -> navActions.dictionaryDetail(id) },
+            onAddClick = { navActions.dictionaryForm(null) },
+        )
+    }
+
+    entry<Screen.DictionaryScreen.Detail> {
+        val navActions = LocalNavActions.current
+        DictionaryDetailScreen(
+            onBackPress = { navActions.popBackStack() },
+            onEditClick = { id -> navActions.dictionaryForm(id) },
+            vm = koinViewModel { parametersOf(it.id) },
+        )
+    }
+
+    entry<Screen.DictionaryScreen.Form> {
+        val navActions = LocalNavActions.current
+        DictionaryFormScreen(
+            onDone = { navActions.popBackStack() },
+            vm = koinViewModel { parametersOf(it.id) },
+        )
     }
 
     supabaseRoutes(
