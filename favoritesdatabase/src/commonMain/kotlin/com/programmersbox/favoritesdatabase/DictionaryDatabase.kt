@@ -53,6 +53,9 @@ interface DictionaryDao {
     @Query("SELECT * FROM dictionary_entries ORDER BY term COLLATE NOCASE ASC")
     fun getAllByTerm(): Flow<List<DictionaryEntry>>
 
+    @Query("SELECT * FROM dictionary_entries")
+    suspend fun getAllSync(): List<DictionaryEntry>
+
     @Query("SELECT * FROM dictionary_entries ORDER BY dateAdded DESC")
     fun getAllByDateAdded(): Flow<List<DictionaryEntry>>
 

@@ -16,6 +16,7 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
+import com.programmersbox.kmpuiviews.utils.backupproccesor.DictionaryBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.FavoriteBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.HeatMapBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.HistoryBackupProcessor
@@ -118,6 +119,7 @@ private fun Module.backupProcessors() {
     backupProcessor("sourceOrder", ::SourceOrderBackupProcessor)
     backupProcessor("notes", ::NotesBackupProcessor)
     backupProcessor("recommendations", ::RecommendationsBackupProcessor)
+    backupProcessor("dictionary", ::DictionaryBackupProcessor)
 }
 
 expect fun platformModule(): Module
