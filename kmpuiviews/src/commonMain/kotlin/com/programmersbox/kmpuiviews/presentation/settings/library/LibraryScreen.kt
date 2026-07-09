@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +61,11 @@ fun LibraryScreen(
                 content = { Text("Notes") },
                 leadingContent = { Icon(Icons.Default.Edit, null) },
                 onClick = navActions::notes,
+            )
+            segmentedListItem(
+                content = { Text("Dictionary") },
+                leadingContent = { Icon(Icons.Default.MenuBook, null) },
+                onClick = navActions::dictionary,
             )
             segmentedListItem(
                 content = { Text("Custom Lists") },
