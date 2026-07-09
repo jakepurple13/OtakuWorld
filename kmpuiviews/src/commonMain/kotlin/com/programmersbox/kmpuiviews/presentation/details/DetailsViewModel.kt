@@ -46,6 +46,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -113,7 +114,12 @@ class DetailsViewModel(
 
     init {
         itemModel?.url?.let { url ->
-            Cached.cache[url]?.let { flow { emit(Result.success(it)) } } ?: itemModel.toInfoModel()
+            flow {
+                Cached
+                    .cache[url]
+                    ?.let { emit(Result.success(it)) }
+                    ?: emitAll(itemModel.toInfoModel())
+            }
         }
             ?.dispatchIo()
             ?.catch {

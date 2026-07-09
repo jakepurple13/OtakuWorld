@@ -134,6 +134,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
@@ -302,15 +303,15 @@ fun OtakuCustomListScreen(
                 .toSourceByApiServiceName(it.serviceName)
                 ?.apiService
                 ?.let { source ->
-                    Cached.cache[it.url]?.let { model ->
-                        flow {
+                    flow {
+                        Cached.cache[it.url]?.let {
                             emit(
-                                model
+                                it
                                     .toDbModel()
                                     .toItemModel(source)
                             )
-                        }
-                    } ?: source.getSourceByUrlFlow(it.url)
+                        } ?: emitAll(source.getSourceByUrlFlow(it.url))
+                    }
                 }
                 ?.dispatchIo()
                 ?.onStart { showLoadingDialog = true }
@@ -659,15 +660,15 @@ private fun CustomItemVertical(
                         .toSourceByApiServiceName(item.source)
                         ?.apiService
                         ?.let { source ->
-                            Cached.cache[item.url]?.let {
-                                flow {
+                            flow {
+                                Cached.cache[item.url]?.let {
                                     emit(
                                         it
                                             .toDbModel()
                                             .toItemModel(source)
                                     )
-                                }
-                            } ?: source.getSourceByUrlFlow(item.url)
+                                } ?: emitAll(source.getSourceByUrlFlow(item.url))
+                            }
                         }
                         ?.dispatchIo()
                         ?.onStart { showLoadingDialog(true) }

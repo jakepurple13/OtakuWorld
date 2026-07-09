@@ -20,6 +20,9 @@ import com.programmersbox.kmpuiviews.presentation.about.AboutLibrariesScreen
 import com.programmersbox.kmpuiviews.presentation.all.AllScreen
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkScreen
 import com.programmersbox.kmpuiviews.presentation.details.DetailsScreen
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailScreen
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormScreen
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListScreen
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
@@ -30,13 +33,10 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
-import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
-import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
-import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
-import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.about.AboutScreen
-import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.about.DeveloperScreen
+import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.AppearanceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.ColorsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.BehaviorScreen
@@ -45,6 +45,9 @@ import com.programmersbox.kmpuiviews.presentation.settings.behavior.LayoutScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.PrivacySecurityScreen
 import com.programmersbox.kmpuiviews.presentation.settings.data.DataManagementScreen
 import com.programmersbox.kmpuiviews.presentation.settings.discover.DiscoverScreen
+import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
+import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionList
 import com.programmersbox.kmpuiviews.presentation.settings.general.BlurSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.DetailsSettingsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.general.GeneralSettings
@@ -166,6 +169,37 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
                     genericInfo.AccountSettings()
                 }
             }
+        )
+    }
+
+    entry<Screen.DictionaryScreen>(
+        metadata = ListDetailSceneStrategy.listPane()
+    ) {
+        val navActions = LocalNavActions.current
+        HideNavBarWhileOnScreen()
+        DictionaryListScreen(
+            onBackPress = { navActions.popBackStack() },
+            onEntryClick = { id -> navActions.dictionaryDetail(id) },
+            onAddClick = { navActions.dictionaryForm(null) },
+        )
+    }
+
+    detailEntry<Screen.DictionaryScreen.Detail> {
+        val navActions = LocalNavActions.current
+        HideNavBarWhileOnScreen()
+        DictionaryDetailScreen(
+            onBackPress = { navActions.popBackStack() },
+            onEditClick = { id -> navActions.dictionaryForm(id) },
+            vm = koinViewModel { parametersOf(it.id) },
+        )
+    }
+
+    detailEntry<Screen.DictionaryScreen.Form> {
+        val navActions = LocalNavActions.current
+        HideNavBarWhileOnScreen()
+        DictionaryFormScreen(
+            onDone = { navActions.popBackStack() },
+            vm = koinViewModel { parametersOf(it) },
         )
     }
 

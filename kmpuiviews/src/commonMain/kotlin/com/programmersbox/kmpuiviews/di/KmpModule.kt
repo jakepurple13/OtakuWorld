@@ -6,6 +6,7 @@ val kmpModule = module {
     includes(
         appModule,
         databases,
+        dictionaryModule,
         repositories,
         viewModels,
         aiModule,

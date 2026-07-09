@@ -174,6 +174,15 @@ sealed class Screen(val route: String) : NavKey {
 
     @Serializable
     data object NotesScreen : Screen("notes")
+
+    @Serializable
+    data object DictionaryScreen : Screen("dictionary") {
+        @Serializable
+        data class Detail(val id: Long) : Screen("dictionary_detail")
+
+        @Serializable
+        data class Form(val id: Long? = null) : Screen("dictionary_form")
+    }
 }
 
 fun NavController.navigateToDetails(model: KmpItemModel) = navigate(
