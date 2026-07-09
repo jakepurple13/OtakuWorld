@@ -2570,8 +2570,8 @@ git commit -m "feat(sharedcomponents): WizardItemRow composable with expandable 
 - Test: `sharedcomponents/src/commonTest/kotlin/com/programmersbox/sharedcomponents/backup/BackupWizardViewModelTest.kt`
 
 **Interfaces:**
-- Consumes: `BackupUiInfo`, `WizardItemState`, `BackupWizardStep` (Tasks 1, 15).
-- Produces: `BackupWizardViewModel(uiInfos: List<BackupUiInfo>, startBackup: (Set<String>) -> Unit)` with `state: StateFlow<BackupWizardUiState>`, `toggleSelected(key)`, `toggleExpanded(key)`, `selectAll()`, `deselectAll()`, `goToReview()`, `confirm()`. Consumed by Task 19.
+- Consumes: `BackupUiInfo`, `WizardItemState`, `BackupWizardStep`, `ItemResult` (Tasks 1, 15).
+- Produces: `BackupWizardViewModel<F>(uiInfos: List<BackupUiInfo>, resultsFlow: Flow<List<ItemResult>>, startBackup: (F, Set<String>) -> Unit)` with `state: StateFlow<BackupWizardUiState>` (now including `results: List<ItemResult>`), `toggleSelected(key)`, `toggleExpanded(key)`, `selectAll()`, `deselectAll()`, `goToReview()`, `confirm(file: F)`. `confirm` also starts collecting `resultsFlow` and advances `step` to `Complete` once every selected key has a result — this is the piece that makes the Executing→Complete transition actually happen; Task 19's screen only renders `state`, it doesn't drive this itself. Generic over the file type `F` so this file never needs to import a platform file type — Task 20 resolves `F` to `PlatformFile` only at Koin-registration time, mirroring `RestoreWizardViewModel<F>` (Task 18) exactly. Consumed by Task 19 and wired for real in Task 20.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2594,7 +2594,7 @@ private class FakeUiInfo(override val key: String) : BackupUiInfo {
 class BackupWizardViewModelTest {
     @Test
     fun `starts on SelectItems with all items selected`() = runTest {
-        val vm = BackupWizardViewModel(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = {})
+        val vm = BackupWizardViewModel<String>(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = { _, _ -> })
         val state = vm.state.value
         assertEquals(BackupWizardStep.SelectItems, state.step)
         assertTrue(state.items.all { it.selected })
@@ -2602,7 +2602,7 @@ class BackupWizardViewModelTest {
 
     @Test
     fun `deselectAll clears selection, selectAll restores it`() = runTest {
-        val vm = BackupWizardViewModel(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = {})
+        val vm = BackupWizardViewModel<String>(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = { _, _ -> })
         vm.deselectAll()
         assertTrue(vm.state.value.items.none { it.selected })
         vm.selectAll()
@@ -2611,30 +2611,53 @@ class BackupWizardViewModelTest {
 
     @Test
     fun `toggleSelected flips a single item`() = runTest {
-        val vm = BackupWizardViewModel(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = {})
+        val vm = BackupWizardViewModel<String>(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = { _, _ -> })
         vm.toggleSelected("a")
         assertEquals(false, vm.state.value.items.first { it.uiInfo.key == "a" }.selected)
         assertEquals(true, vm.state.value.items.first { it.uiInfo.key == "b" }.selected)
     }
 
     @Test
-    fun `goToReview only carries selected items, confirm calls startBackup with their keys`() = runTest {
-        var startedWith: Set<String>? = null
-        val vm = BackupWizardViewModel(
+    fun `goToReview only carries selected items, confirm calls startBackup with the file and their keys`() = runTest {
+        var startedWith: Pair<String, Set<String>>? = null
+        val vm = BackupWizardViewModel<String>(
             listOf(FakeUiInfo("a"), FakeUiInfo("b")),
-            startBackup = { startedWith = it },
+            resultsFlow = flowOf(emptyList()),
+            startBackup = { file, keys -> startedWith = file to keys },
         )
         vm.toggleSelected("b")
         vm.goToReview()
         assertEquals(BackupWizardStep.Review, vm.state.value.step)
         assertEquals(listOf("a"), vm.state.value.items.map { it.uiInfo.key })
 
-        vm.confirm()
-        assertEquals(setOf("a"), startedWith)
+        vm.confirm("file.zip")
+        assertEquals("file.zip" to setOf("a"), startedWith)
         assertEquals(BackupWizardStep.Executing, vm.state.value.step)
+    }
+
+    @Test
+    fun `confirm advances to Complete once resultsFlow reports every selected key`() = runTest {
+        val results = MutableStateFlow<List<ItemResult>>(emptyList())
+        val vm = BackupWizardViewModel<String>(
+            listOf(FakeUiInfo("a"), FakeUiInfo("b")),
+            resultsFlow = results,
+            startBackup = { _, _ -> },
+        )
+        vm.goToReview()
+        vm.confirm("file.zip")
+        assertEquals(BackupWizardStep.Executing, vm.state.value.step)
+
+        results.value = listOf(ItemResult("a", success = true))
+        assertEquals(BackupWizardStep.Executing, vm.state.value.step)
+
+        results.value = listOf(ItemResult("a", success = true), ItemResult("b", success = true))
+        assertEquals(BackupWizardStep.Complete, vm.state.value.step)
+        assertEquals(2, vm.state.value.results.size)
     }
 }
 ```
+
+Add `import kotlinx.coroutines.flow.MutableStateFlow` and `import kotlinx.coroutines.flow.flowOf` to this test file's imports.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -2649,6 +2672,7 @@ package com.programmersbox.sharedcomponents.backup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -2657,11 +2681,13 @@ import kotlinx.coroutines.flow.update
 data class BackupWizardUiState(
     val step: BackupWizardStep = BackupWizardStep.SelectItems,
     val items: List<WizardItemState> = emptyList(),
+    val results: List<ItemResult> = emptyList(),
 )
 
-class BackupWizardViewModel(
+class BackupWizardViewModel<F>(
     uiInfos: List<BackupUiInfo>,
-    private val startBackup: (Set<String>) -> Unit,
+    private val resultsFlow: Flow<List<ItemResult>>,
+    private val startBackup: (F, Set<String>) -> Unit,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -2694,13 +2720,21 @@ class BackupWizardViewModel(
         _state.update { s ->
             s.copy(step = BackupWizardStep.Review, items = s.items.filter { it.selected })
         }
-        s@ _state.value.items.forEach { if (it.summary == null) loadSummaryIfNeeded(it.uiInfo.key) }
+        _state.value.items.forEach { if (it.summary == null) loadSummaryIfNeeded(it.uiInfo.key) }
     }
 
-    fun confirm() {
+    fun confirm(file: F) {
         val keys = _state.value.items.map { it.uiInfo.key }.toSet()
         _state.update { it.copy(step = BackupWizardStep.Executing) }
-        startBackup(keys)
+        startBackup(file, keys)
+        viewModelScope.launch {
+            resultsFlow.collect { results ->
+                _state.update { it.copy(results = results) }
+                if (results.map { r -> r.key }.toSet() == keys) {
+                    _state.update { it.copy(step = BackupWizardStep.Complete) }
+                }
+            }
+        }
     }
 
     private fun loadSummaryIfNeeded(key: String) {
@@ -2714,17 +2748,6 @@ class BackupWizardViewModel(
         }
     }
 }
-```
-
-Remove the stray `s@` label prefix on the `goToReview()` forEach line above — it's a leftover, not valid/needed Kotlin syntax for this purpose. Corrected `goToReview`:
-
-```kotlin
-    fun goToReview() {
-        _state.update { s ->
-            s.copy(step = BackupWizardStep.Review, items = s.items.filter { it.selected })
-        }
-        _state.value.items.forEach { if (it.summary == null) loadSummaryIfNeeded(it.uiInfo.key) }
-    }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -2748,8 +2771,8 @@ git commit -m "feat(sharedcomponents): BackupWizardViewModel"
 - Test: `sharedcomponents/src/commonTest/kotlin/com/programmersbox/sharedcomponents/backup/RestoreWizardViewModelTest.kt`
 
 **Interfaces:**
-- Consumes: `BackupUiInfo`, `WizardItemState`, `RestoreWizardStep` (Tasks 1, 15).
-- Produces: `RestoreWizardViewModel(uiInfos, peekZip: suspend (file) -> Map<String, BackupDataSummary>, startRestore: (file, Set<String>) -> Unit)` with `pickFile(file)`, `toggleSelected`, `toggleExpanded`, `selectAll`, `deselectAll`, `goToReview`, `confirm`.
+- Consumes: `BackupUiInfo`, `WizardItemState`, `RestoreWizardStep`, `ItemResult` (Tasks 1, 15).
+- Produces: `RestoreWizardViewModel<F>(uiInfos, peekZip: suspend (F) -> Map<String, BackupDataSummary>, resultsFlow: Flow<List<ItemResult>>, startRestore: (F, Set<String>) -> Unit)` with `pickFile(file)`, `toggleSelected`, `toggleExpanded`, `selectAll`, `deselectAll`, `goToReview`, `confirm()`. Like Task 17, `confirm()` collects `resultsFlow` and advances `step` to `Complete` once every selected key has a result.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2793,6 +2816,7 @@ class RestoreWizardViewModelTest {
         val vm = RestoreWizardViewModel(
             uiInfos = listOf(RestoreFakeUiInfo("a")),
             peekZip = { mapOf("a" to BackupDataSummary(itemCount = 1)) },
+            resultsFlow = flowOf(emptyList()),
             startRestore = { file, keys -> called = file to keys },
         )
 
@@ -2803,8 +2827,30 @@ class RestoreWizardViewModelTest {
         assertEquals("file.zip" to setOf("a"), called)
         assertEquals(RestoreWizardStep.Executing, vm.state.value.step)
     }
+
+    @Test
+    fun `confirm advances to Complete once resultsFlow reports every selected key`() = runTest {
+        val results = MutableStateFlow<List<ItemResult>>(emptyList())
+        val vm = RestoreWizardViewModel(
+            uiInfos = listOf(RestoreFakeUiInfo("a")),
+            peekZip = { mapOf("a" to BackupDataSummary(itemCount = 1)) },
+            resultsFlow = results,
+            startRestore = { _, _ -> },
+        )
+
+        vm.pickFile("file.zip")
+        vm.goToReview()
+        vm.confirm()
+        assertEquals(RestoreWizardStep.Executing, vm.state.value.step)
+
+        results.value = listOf(ItemResult("a", success = true))
+        assertEquals(RestoreWizardStep.Complete, vm.state.value.step)
+        assertEquals(1, vm.state.value.results.size)
+    }
 }
 ```
+
+Add `import kotlinx.coroutines.flow.MutableStateFlow` and `import kotlinx.coroutines.flow.flowOf` to this test file's imports.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -2813,7 +2859,7 @@ Expected: FAIL — unresolved references.
 
 - [ ] **Step 3: Write the ViewModel**
 
-Generic over the file type as a plain `String` handle for testability (the real screen passes FileKit's `PlatformFile`; this ViewModel is generic-free by using a type parameter is unnecessary — keep it simple with a `T` type param since the actual file type is platform code the ViewModel shouldn't know about beyond passing it through):
+Generic over the file type `F` (tests use plain `String`; the real screen passes FileKit's `PlatformFile` — the ViewModel itself never needs to know which):
 
 ```kotlin
 package com.programmersbox.sharedcomponents.backup
@@ -2821,6 +2867,7 @@ package com.programmersbox.sharedcomponents.backup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -2830,11 +2877,13 @@ data class RestoreWizardUiState<F>(
     val step: RestoreWizardStep = RestoreWizardStep.PickFile,
     val file: F? = null,
     val items: List<WizardItemState> = emptyList(),
+    val results: List<ItemResult> = emptyList(),
 )
 
 class RestoreWizardViewModel<F>(
     private val uiInfos: List<BackupUiInfo>,
     private val peekZip: suspend (F) -> Map<String, BackupDataSummary>,
+    private val resultsFlow: Flow<List<ItemResult>>,
     private val startRestore: (F, Set<String>) -> Unit,
 ) : ViewModel() {
 
@@ -2882,6 +2931,14 @@ class RestoreWizardViewModel<F>(
         val keys = _state.value.items.map { it.uiInfo.key }.toSet()
         _state.update { it.copy(step = RestoreWizardStep.Executing) }
         startRestore(file, keys)
+        viewModelScope.launch {
+            resultsFlow.collect { results ->
+                _state.update { it.copy(results = results) }
+                if (results.map { r -> r.key }.toSet() == keys) {
+                    _state.update { it.copy(step = RestoreWizardStep.Complete) }
+                }
+            }
+        }
     }
 }
 ```
@@ -2938,29 +2995,29 @@ iOS actual (`sharedcomponents/src/iosMain/kotlin/com/programmersbox/sharedcompon
 ```kotlin
 package com.programmersbox.sharedcomponents.backup
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun BackupWizardScreen(
     onDone: () -> Unit,
-    viewModel: BackupWizardViewModel = koinViewModel(),
+    viewModel: BackupWizardViewModel<PlatformFile> = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val stepLabels = listOf("Select", "Review", "Backup", "Done")
@@ -2998,27 +3055,34 @@ fun BackupWizardScreen(
                 }
 
                 BackupWizardStep.Review -> {
+                    val saveLauncher = rememberFileSaverLauncher(
+                        dialogSettings = FileKitDialogSettings.createDefault()
+                    ) { document -> document?.let { viewModel.confirm(it) } }
+
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(state.items, key = { it.uiInfo.key }) { item ->
                             WizardItemRow(item = item.copy(expanded = true), onToggleSelected = {}, onToggleExpanded = {})
                         }
                     }
                     Button(
-                        onClick = viewModel::confirm,
+                        onClick = { saveLauncher.launch("backup", "zip") },
                         enabled = backupRestoreSupported,
                         modifier = Modifier.padding(16.dp),
                     ) { Text(if (backupRestoreSupported) "Confirm Backup" else "Not supported on this platform yet") }
                 }
 
                 BackupWizardStep.Executing -> {
-                    Column(modifier = Modifier.weight(1f).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Backing up…")
+                    Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+                        Text("Backing up… (${state.results.size}/${state.items.size} done)")
                     }
                 }
 
                 BackupWizardStep.Complete -> {
                     Column(modifier = Modifier.weight(1f).padding(16.dp)) {
                         Text("Backup complete")
+                        state.results.forEach { result ->
+                            Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}")
+                        }
                         Button(onClick = onDone, modifier = Modifier.padding(top = 16.dp)) { Text("Done") }
                     }
                 }
@@ -3028,7 +3092,7 @@ fun BackupWizardScreen(
 }
 ```
 
-Fix the bad import — `androidx.compose.material3.icons.Icons` doesn't exist and `Icons` isn't actually used in this file. Remove that import line entirely before running the compile check.
+`backupRestoreSupported` comes from Step 1 above. The `"backup"` filename literal replaces the app-name-prefixed filename the old flat UI used (`"${appName}_backup"`) since `:sharedcomponents` doesn't import `kmpuiviews`'s `AppConfig` — the user still picks the exact save location/name in the system file-saver dialog, so this is a cosmetic simplification, not a functional gap.
 
 - [ ] **Step 3: `RestoreWizardScreen.kt`**
 
@@ -3115,12 +3179,17 @@ fun RestoreWizardScreen(
                 }
 
                 RestoreWizardStep.Executing -> {
-                    Column(modifier = Modifier.weight(1f).padding(16.dp)) { Text("Restoring…") }
+                    Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+                        Text("Restoring… (${state.results.size}/${state.items.size} done)")
+                    }
                 }
 
                 RestoreWizardStep.Complete -> {
                     Column(modifier = Modifier.weight(1f).padding(16.dp)) {
                         Text("Restore complete")
+                        state.results.forEach { result ->
+                            Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}")
+                        }
                         Button(onClick = onDone, modifier = Modifier.padding(top = 16.dp)) { Text("Done") }
                     }
                 }
@@ -3133,7 +3202,7 @@ fun RestoreWizardScreen(
 - [ ] **Step 4: Compile check**
 
 Run: `./gradlew :sharedcomponents:compileKotlinJvm`
-Expected: BUILD SUCCESSFUL after removing the bad `Icons` import from Step 2.
+Expected: BUILD SUCCESSFUL.
 
 - [ ] **Step 5: Commit**
 
@@ -3142,149 +3211,28 @@ git add sharedcomponents/src/commonMain/kotlin/com/programmersbox/sharedcomponen
 git commit -m "feat(sharedcomponents): BackupWizardScreen and RestoreWizardScreen"
 ```
 
-*Note: the `viewModel::goToReview`/`viewModel::confirm` calls that update `state.step` to `Executing`/`Complete` don't yet trigger the actual worker call or transition to `Complete` automatically — that wiring (calling `startBackup`/`startRestore` via Koin-injected `BackgroundWorkHandler`, observing `backupResultsFlow()`/`restoreResultsFlow()`, and advancing to `Complete` once results arrive) belongs in the ViewModel constructors' Koin factory definitions, which is exactly what Task 20's DI wiring step below covers — don't consider this task's ViewModels "done" until that's confirmed working end to end.*
+*Note: `confirm()`'s Executing→Complete transition (Tasks 17/18) is already fully implemented and unit-tested against a fake `resultsFlow` — this screen only renders `state`. What's still missing is wiring the ViewModels' `startBackup`/`startRestore`/`resultsFlow` constructor params to the real `BackgroundWorkHandler` via Koin, which is exactly what Task 20 covers.*
 
 ---
 
 ## Task 20: Wire ViewModels to real `BackgroundWorkHandler`, Koin registration, navigation
+
+`BackupWizardViewModel<F>`/`RestoreWizardViewModel<F>` (Tasks 17, 18) are already generic over the file type and already take `resultsFlow`/`startBackup`/`startRestore`/`peekZip` as constructor params — this task only resolves `F = PlatformFile` and supplies the real Koin-injected implementations for those params. No ViewModel or screen code changes here.
 
 **Files:**
 - Modify: `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/di/ViewModelModule.kt`
 - Modify: `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/Screen.kt`
 - Modify: `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/navigation/Nav3Graph.kt`
 
-- [ ] **Step 1: Register the wizard ViewModels in `ViewModelModule.kt`**
+- [ ] **Step 1: Register both ViewModels in `ViewModelModule.kt`**
 
 Find the existing `viewModelOf(::MoreSettingsViewModel)` line (per Task 11's grounding) and add nearby:
 
 ```kotlin
     viewModel {
-        BackupWizardViewModel(
-            uiInfos = getAll(),
-            startBackup = { keys -> get<BackgroundWorkHandler>().startBackup(get<CurrentBackupFile>().value, keys) },
-        )
-    }
-```
-
-This requires a way to pass "the file the user picked" into the backup flow — but backup doesn't need a *picked* file, it needs a *save location*, chosen via `rememberFileSaverLauncher` at confirm-time, not upfront. Revisit: **the backup flow's file save location should be chosen at the Review→Confirm step, not injected via DI.** Correct this in Step 2 below instead of registering it this way.
-
-- [ ] **Step 2: Fix the design — file save/pick happens at confirm-time, not via DI**
-
-`BackupWizardViewModel`'s constructor `startBackup: (Set<String>) -> Unit` (Task 17) doesn't take a file — that's wrong for backup, since a save location must be chosen interactively. Update `BackupWizardScreen.kt`'s Review step (Task 19) to launch a `rememberFileSaverLauncher` when the user taps confirm, and change `BackupWizardViewModel.confirm()` (Task 17) to take the file as a parameter instead of closing over it:
-
-In `BackupWizardViewModel.kt`, change:
-```kotlin
-    private val startBackup: (Set<String>) -> Unit,
-```
-to:
-```kotlin
-    private val startBackup: (keys: Set<String>) -> Unit,
-```
-(unchanged signature — re-read Task 17: `confirm()` already just calls `startBackup(keys)` with no file. This is fine as designed IF `startBackup` itself internally launches the file saver.) Since a `Composable`-only API (`rememberFileSaverLauncher`) cannot be called from a plain ViewModel lambda, the actual wiring is: **`BackupWizardScreen`'s Review step wraps `viewModel::confirm` so the file-saver launch happens in the Composable, and the file is threaded through a callback registered once at screen level.**
-
-Change `BackupWizardViewModel.confirm()` (Task 17) to accept the file directly:
-
-```kotlin
-    fun confirm(onReady: (Set<String>) -> Unit) {
-        val keys = _state.value.items.map { it.uiInfo.key }.toSet()
-        _state.update { it.copy(step = BackupWizardStep.Executing) }
-        onReady(keys)
-    }
-```
-
-Remove the `startBackup` constructor param from `BackupWizardViewModel` entirely (it's Koin-injected by pure key-set now doesn't need the callback stored — `onReady` is passed per-call from the screen instead). Update Task 17's test file's three `BackupWizardViewModel(...)` constructions to drop the `startBackup = {}` argument, and update the "confirm calls startBackup" test to call `vm.confirm { startedWith = it }` instead of `vm.confirm()`.
-
-In `BackupWizardScreen.kt`'s Review step, replace the confirm `Button`:
-
-```kotlin
-                BackupWizardStep.Review -> {
-                    val backgroundWorkHandler = koinInject<BackgroundWorkHandler>()
-                    val appConfig = koinInject<AppConfig>()
-                    val saveLauncher = rememberFileSaverLauncher(
-                        dialogSettings = FileKitDialogSettings.createDefault()
-                    ) { document ->
-                        document?.let { file ->
-                            viewModel.confirm { keys -> backgroundWorkHandler.startBackup(file, keys) }
-                        }
-                    }
-
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(state.items, key = { it.uiInfo.key }) { item ->
-                            WizardItemRow(item = item.copy(expanded = true), onToggleSelected = {}, onToggleExpanded = {})
-                        }
-                    }
-                    Button(
-                        onClick = { saveLauncher.launch("${appConfig.appName}_backup", "zip") },
-                        enabled = backupRestoreSupported,
-                        modifier = Modifier.padding(16.dp),
-                    ) { Text(if (backupRestoreSupported) "Confirm Backup" else "Not supported on this platform yet") }
-                }
-```
-
-Add imports to `BackupWizardScreen.kt`: `com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler`, `com.programmersbox.kmpuiviews.utils.AppConfig`, `io.github.vinceglb.filekit.dialogs.FileKitDialogSettings`, `io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher`, `org.koin.compose.koinInject`.
-
-This is a real coupling from `:sharedcomponents` to `:kmpuiviews` types (`BackgroundWorkHandler`, `AppConfig`) — but recall `:kmpuiviews` depends on `:sharedcomponents`, not the other way around, so **this import direction is invalid and won't compile.** Fix properly in Step 3.
-
-- [ ] **Step 3: Correct fix — inject the callback, don't import kmpuiviews types into sharedcomponents**
-
-`BackupWizardScreen` must stay free of `kmpuiviews` imports. Instead, `BackupWizardViewModel` takes a plain platform-agnostic save function as a constructor param (Koin-injected from `kmpuiviews`, where `BackgroundWorkHandler` is visible), and the screen only calls `rememberFileSaverLauncher` (already available via `:sharedcomponents`'s own FileKit dependency) then hands the resulting file to the ViewModel. Revert Task 17's `startBackup` design back to what it originally was — `(Set<String>) -> Unit` is fine, but it must be a **file-aware** callback that's fully resolved OUTSIDE the composable, at Koin registration time, using a generic file type:
-
-Change `BackupWizardViewModel`'s constructor (superseding Task 17 and Step 2 above) to:
-
-```kotlin
-class BackupWizardViewModel<F>(
-    uiInfos: List<BackupUiInfo>,
-    private val startBackup: (F, Set<String>) -> Unit,
-) : ViewModel() {
-    // ... state/toggle/selectAll/deselectAll/goToReview unchanged ...
-
-    fun confirm(file: F) {
-        val keys = _state.value.items.map { it.uiInfo.key }.toSet()
-        _state.update { it.copy(step = BackupWizardStep.Executing) }
-        startBackup(file, keys)
-    }
-}
-```
-
-This mirrors `RestoreWizardViewModel<F>`'s existing generic-file-type shape exactly (Task 18) — consistent design, and `F` is resolved to `PlatformFile` only at the `kmpuiviews`/Koin registration boundary, keeping `:sharedcomponents` free of any `kmpuiviews` import. Update Task 17's test file: change `FakeUiInfo`-based tests' `BackupWizardViewModel(...)` construction to `BackupWizardViewModel<String>(items, startBackup = { file, keys -> startedWith = file to keys })`, and change the confirm test to call `vm.confirm("file.zip")` then assert on `startedWith`.
-
-In `BackupWizardScreen.kt`, revert to the original design but with `F = PlatformFile` and a same-module `rememberFileSaverLauncher`:
-
-```kotlin
-@Composable
-fun BackupWizardScreen(
-    onDone: () -> Unit,
-    viewModel: BackupWizardViewModel<PlatformFile> = koinViewModel(),
-) {
-    // ... state/stepLabels/currentIndex unchanged ...
-                BackupWizardStep.Review -> {
-                    val saveLauncher = rememberFileSaverLauncher(
-                        dialogSettings = FileKitDialogSettings.createDefault()
-                    ) { document -> document?.let { viewModel.confirm(it) } }
-
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(state.items, key = { it.uiInfo.key }) { item ->
-                            WizardItemRow(item = item.copy(expanded = true), onToggleSelected = {}, onToggleExpanded = {})
-                        }
-                    }
-                    Button(
-                        onClick = { saveLauncher.launch("backup", "zip") },
-                        enabled = backupRestoreSupported,
-                        modifier = Modifier.padding(16.dp),
-                    ) { Text(if (backupRestoreSupported) "Confirm Backup" else "Not supported on this platform yet") }
-                }
-    // ... Executing/Complete unchanged ...
-}
-```
-
-Add imports: `io.github.vinceglb.filekit.PlatformFile`, `io.github.vinceglb.filekit.dialogs.FileKitDialogSettings`, `io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher` (all already `:sharedcomponents` dependencies — no new module coupling). The `"backup"` filename literal replaces the app-name-prefixed filename the old flat UI used (`"${appName}_backup"`) since `AppConfig`/`appName` is a `kmpuiviews` type not visible here; this is an acceptable simplification for v1 (the user still picks the exact save location/name in the system file-saver dialog).
-
-- [ ] **Step 4: Register both ViewModels for real in `ViewModelModule.kt`**
-
-```kotlin
-    viewModel {
         BackupWizardViewModel<PlatformFile>(
             uiInfos = getAll(),
+            resultsFlow = get<BackgroundWorkHandler>().backupResultsFlow(),
             startBackup = { file, keys -> get<BackgroundWorkHandler>().startBackup(file, keys) },
         )
     }
@@ -3292,6 +3240,7 @@ Add imports: `io.github.vinceglb.filekit.PlatformFile`, `io.github.vinceglb.file
         RestoreWizardViewModel<PlatformFile>(
             uiInfos = getAll(),
             peekZip = { file -> get<Backup>().peekBackup(file, getAll()) },
+            resultsFlow = get<BackgroundWorkHandler>().restoreResultsFlow(),
             startRestore = { file, keys -> get<BackgroundWorkHandler>().startRestore(file, keys) },
         )
     }
@@ -3299,7 +3248,7 @@ Add imports: `io.github.vinceglb.filekit.PlatformFile`, `io.github.vinceglb.file
 
 Add imports: `com.programmersbox.sharedcomponents.backup.BackupWizardViewModel`, `com.programmersbox.sharedcomponents.backup.RestoreWizardViewModel`, `com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler`, `com.programmersbox.kmpuiviews.utils.Backup`, `io.github.vinceglb.filekit.PlatformFile`.
 
-- [ ] **Step 5: Add `Screen.BackupWizard` / `Screen.RestoreWizard`**
+- [ ] **Step 2: Add `Screen.BackupWizard` / `Screen.RestoreWizard`**
 
 In `Screen.kt`, next to `MoreSettings` (line 57):
 
@@ -3311,7 +3260,7 @@ In `Screen.kt`, next to `MoreSettings` (line 57):
     data object RestoreWizard : Screen("restore_wizard")
 ```
 
-- [ ] **Step 6: Register nav entries in `Nav3Graph.kt`**
+- [ ] **Step 3: Register nav entries in `Nav3Graph.kt`**
 
 Next to the existing `detailEntry<Screen.MoreSettings> { MoreSettingsScreen() }` (around line 199):
 
@@ -3326,22 +3275,15 @@ Next to the existing `detailEntry<Screen.MoreSettings> { MoreSettingsScreen() }`
 
 Add imports `com.programmersbox.sharedcomponents.backup.BackupWizardScreen`, `com.programmersbox.sharedcomponents.backup.RestoreWizardScreen`, `com.programmersbox.kmpuiviews.utils.LocalNavActions` (check whether `LocalNavActions` is already imported in this file first — likely yes, given other screens use it).
 
-- [ ] **Step 7: Full compile check**
+- [ ] **Step 4: Full compile check**
 
 Run: `./gradlew :kmpuiviews:compileKotlinJvm :kmpuiviews:compileNoFirebaseDebugKotlinAndroid :sharedcomponents:compileKotlinJvm`
 Expected: BUILD SUCCESSFUL
 
-- [ ] **Step 8: Update Task 17/18 test files for the confirmed final signatures**
-
-Re-run and fix as needed:
-
-Run: `./gradlew :sharedcomponents:jvmTest --tests "com.programmersbox.sharedcomponents.backup.*"`
-Expected: PASS after adjusting `BackupWizardViewModelTest.kt` to the `<String>` generic + `confirm(file)` shape described in Step 3.
-
-- [ ] **Step 9: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/di/ViewModelModule.kt kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/Screen.kt kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/navigation/Nav3Graph.kt sharedcomponents/src/commonMain/kotlin/com/programmersbox/sharedcomponents/backup/BackupWizardScreen.kt sharedcomponents/src/commonMain/kotlin/com/programmersbox/sharedcomponents/backup/BackupWizardViewModel.kt sharedcomponents/src/commonTest/kotlin/com/programmersbox/sharedcomponents/backup/BackupWizardViewModelTest.kt
+git add kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/di/ViewModelModule.kt kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/Screen.kt kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/navigation/Nav3Graph.kt
 git commit -m "feat(backup): wire wizard ViewModels to BackgroundWorkHandler, register nav entries"
 ```
 
