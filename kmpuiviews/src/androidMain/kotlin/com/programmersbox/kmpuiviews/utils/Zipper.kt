@@ -78,8 +78,8 @@ actual open class Zipper(
                         val processor = backupProcessors.find { it.fileName == name }
                         if (name in selectedKeys && processor != null) {
                             val duration = measureTime {
-                                val bytes = zipIs.readBytes()
                                 val result = runCatching {
+                                    val bytes = zipIs.readBytes()
                                     processor.restore(
                                         json = bytes.decodeToString(),
                                         bufferedSource = Buffer().apply { write(bytes) },
@@ -115,8 +115,10 @@ actual open class Zipper(
                         val name = entry.name
                         val uiInfo = uiInfos.find { it.key == name }
                         if (uiInfo != null) {
-                            val bytes = zipIs.readBytes()
-                            runCatching { uiInfo.parseSummary(json = bytes.decodeToString(), rawBytes = bytes) }
+                            runCatching {
+                                val bytes = zipIs.readBytes()
+                                uiInfo.parseSummary(json = bytes.decodeToString(), rawBytes = bytes)
+                            }
                                 .onSuccess { summaries[name] = it }
                                 .onFailure { it.printStackTrace(); exceptionDao.insertException(it) }
                         }
