@@ -76,6 +76,13 @@ class DefaultSettingsItems : SearchRegistryItem {
                 highlightKey = "note",
             ),
             SettingSearchItem(
+                displayName = "Dictionary",
+                keywords = listOf("dictionary", "glossary", "term", "vocabulary"),
+                breadcrumb = listOf(Screen.Settings, Screen.Settings.Library, Screen.DictionaryScreen),
+                targetScreen = Screen.DictionaryScreen,
+                highlightKey = "dictionary",
+            ),
+            SettingSearchItem(
                 displayName = "Custom Lists",
                 keywords = listOf("custom list", "collection", "list"),
                 breadcrumb = listOf(Screen.Settings, Screen.Settings.Library, Screen.CustomListScreen),
