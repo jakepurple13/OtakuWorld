@@ -68,6 +68,7 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKin
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
 import com.programmersbox.manga.shared.reader.curl.ExperimentalPageCurlApi
@@ -106,6 +107,8 @@ fun ReadView(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val scope = rememberCoroutineScope()
+
+    val navActions = LocalNavActions.current
 
     val settings = LocalSettingsHandling.current
 
@@ -373,6 +376,7 @@ fun ReadView(
                             ?: "Ch ${viewModel.chapterCount - viewModel.currentChapter}",
                         onSettingsClick = { settingsPopup = true },
                         onRefreshClick = viewModel::refresh,
+                        onAddToDictionaryClick = { navActions.dictionaryForm(null) },
                         showBlur = blurKind.showBlur,
                         isBookmarked = isBookmarked,
                         onBookmarkClick = viewModel::toggleBookmark,
