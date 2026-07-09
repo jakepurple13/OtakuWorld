@@ -8,6 +8,9 @@ import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewM
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailViewModel
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationViewModel
@@ -61,6 +64,9 @@ val viewModels: Module = module {
     viewModelOf(::BookmarkChaptersViewModel)
     viewModelOf(::DetailsNotesViewModel)
     viewModelOf(::AllNotesViewModel)
+    viewModelOf(::DictionaryListViewModel)
+    viewModelOf(::DictionaryDetailViewModel)
+    viewModelOf(::DictionaryFormViewModel)
 
     includes(platformViewModels())
 }
