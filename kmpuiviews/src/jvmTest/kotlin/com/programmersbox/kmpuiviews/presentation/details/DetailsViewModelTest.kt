@@ -26,7 +26,7 @@ import com.programmersbox.kmpuiviews.utils.ImageModifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -134,7 +134,7 @@ class DetailsViewModelTest {
         viewModelStore.clear()
         Thread.sleep(50)
         Dispatchers.resetMain()
-        Cached.cache.clear()
+        runBlocking { Cached.cache.cleanUp() }
         itemDatabase.close()
         itemDbFile.delete()
         bookmarkDatabase.close()

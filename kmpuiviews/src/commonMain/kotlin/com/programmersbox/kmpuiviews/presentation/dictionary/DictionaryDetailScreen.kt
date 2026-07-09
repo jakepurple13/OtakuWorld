@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.programmersbox.favoritesdatabase.DictionaryEntry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,11 +49,13 @@ fun DictionaryDetailScreen(
             title = { Text("Delete entry?") },
             text = { Text("Delete \"${current.term}\"? This cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = {
-                    vm.delete()
-                    showDeleteDialog = false
-                    deleted = true
-                }) { Text("Delete") }
+                TextButton(
+                    onClick = {
+                        vm.delete()
+                        showDeleteDialog = false
+                        deleted = true
+                    }
+                ) { Text("Delete") }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }

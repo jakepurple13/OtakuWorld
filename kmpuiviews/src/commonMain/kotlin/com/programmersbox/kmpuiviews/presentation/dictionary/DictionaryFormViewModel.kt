@@ -4,20 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DictionaryEntry
 import com.programmersbox.favoritesdatabase.DictionaryRepository
+import com.programmersbox.kmpuiviews.presentation.Screen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class DictionaryFormViewModel(
-    private val id: Long?,
+    form: Screen.DictionaryScreen.Form,
     private val repository: DictionaryRepository,
 ) : ViewModel() {
 
-    val entry: StateFlow<DictionaryEntry?> = (id?.let { repository.getById(it) } ?: flowOf(null))
+    val entry: StateFlow<DictionaryEntry?> = (form.id?.let { repository.getById(it) } ?: flowOf(null))
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),

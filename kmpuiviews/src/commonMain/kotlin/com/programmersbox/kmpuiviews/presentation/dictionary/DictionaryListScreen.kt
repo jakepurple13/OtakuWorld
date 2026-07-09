@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.presentation.dictionary
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,12 +16,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,7 +40,7 @@ import com.programmersbox.favoritesdatabase.DictionaryEntry
 import com.programmersbox.favoritesdatabase.DictionarySort
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DictionaryListScreen(
     onBackPress: () -> Unit = {},
@@ -60,10 +59,12 @@ fun DictionaryListScreen(
             title = { Text("Delete entry?") },
             text = { Text("Delete \"${pending.term}\"? This cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = {
-                    vm.delete(pending)
-                    entryPendingDelete = null
-                }) { Text("Delete") }
+                TextButton(
+                    onClick = {
+                        vm.delete(pending)
+                        entryPendingDelete = null
+                    }
+                ) { Text("Delete") }
             },
             dismissButton = {
                 TextButton(onClick = { entryPendingDelete = null }) { Text("Cancel") }
@@ -119,7 +120,9 @@ fun DictionaryListScreen(
             }
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+        Column(
+            modifier = Modifier.padding(paddingValues)
+        ) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { q ->
@@ -133,10 +136,15 @@ fun DictionaryListScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(entries, key = { it.id }) { entry ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    entries,
+                    key = { it.id }
+                ) { entry ->
                     ListItem(
-                        headlineContent = { Text(entry.term) },
+                        content = { Text(entry.term) },
                         supportingContent = entry.definition?.let {
                             { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
                         },
@@ -146,9 +154,8 @@ fun DictionaryListScreen(
                                 Icon(Icons.Default.Delete, contentDescription = "Delete ${entry.term}")
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onEntryClick(entry.id) }
+                        onClick = { onEntryClick(entry.id) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                     HorizontalDivider()
                 }

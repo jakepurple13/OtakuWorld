@@ -5,6 +5,7 @@ import com.programmersbox.favoritesdatabase.toItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import org.koin.core.definition.BeanDefinition
 import org.koin.core.module.dsl.binds
@@ -15,15 +16,15 @@ fun SourceRepository.loadItem(
 ) = toSourceByApiServiceName(source)
     ?.apiService
     ?.let { apiSource ->
-        Cached.cache[url]?.let {
-            flow {
+        flow {
+            Cached.cache[url]?.let {
                 emit(
                     it
                         .toDbModel()
                         .toItemModel(apiSource)
                 )
-            }
-        } ?: apiSource.getSourceByUrlFlow(url)
+            } ?: emitAll(apiSource.getSourceByUrlFlow(url))
+        }
     }
     ?.dispatchIo()
 

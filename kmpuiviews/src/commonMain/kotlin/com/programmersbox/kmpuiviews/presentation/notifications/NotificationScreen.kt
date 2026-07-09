@@ -121,6 +121,7 @@ import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -472,15 +473,15 @@ private fun notificationOptionsSheet(
 ) = optionsSheet<NotificationItemOptionsSheet>(
     onOpen = {
         toSource(i.source)?.let { source ->
-            Cached.cache[i.url]?.let {
-                flow {
+            flow {
+                Cached.cache[i.url]?.let {
                     emit(
                         it
                             .toDbModel()
                             .toItemModel(source)
                     )
-                }
-            } ?: source.getSourceByUrlFlow(i.url)
+                } ?: emitAll(source.getSourceByUrlFlow(i.url))
+            }
         }
             ?.dispatchIo()
             ?.onStart { onLoadingChange(true) }
@@ -650,15 +651,15 @@ private fun NotiItem(
                             scope.launch {
                                 biometricOpen.openIfNotIncognito(i.url, i.notiTitle) {
                                     toSource(i.source)?.let { source ->
-                                        Cached.cache[i.url]?.let {
-                                            flow {
+                                        flow {
+                                            Cached.cache[i.url]?.let {
                                                 emit(
                                                     it
                                                         .toDbModel()
                                                         .toItemModel(source)
                                                 )
-                                            }
-                                        } ?: source.getSourceByUrlFlow(i.url)
+                                            } ?: emitAll(source.getSourceByUrlFlow(i.url))
+                                        }
                                     }
                                         ?.dispatchIo()
                                         ?.onStart { onLoadingChange(true) }
@@ -854,15 +855,15 @@ private fun NotificationItem(
                         biometricOpen.openIfNotIncognito(item.url, item.notiTitle) {
                             toSource(item.source)
                                 ?.let { source ->
-                                    Cached.cache[item.url]?.let {
-                                        flow {
+                                    flow {
+                                        Cached.cache[item.url]?.let {
                                             emit(
                                                 it
                                                     .toDbModel()
                                                     .toItemModel(source)
                                             )
-                                        }
-                                    } ?: source.getSourceByUrlFlow(item.url)
+                                        } ?: emitAll(source.getSourceByUrlFlow(item.url))
+                                    }
                                 }
                                 ?.dispatchIo()
                                 ?.onStart { onLoadingChange(true) }
