@@ -5,6 +5,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.testing.FakeBackgroundWorkHandler
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,8 +25,8 @@ class MoreSettingsViewModelTest {
     private val viewModelStore = ViewModelStore()
 
     private class RecordingBackgroundWorkHandler : BackgroundWorkHandler {
-        var backupCalledWith: PlatformFile? = null
-        var restoreCalledWith: PlatformFile? = null
+        var backupCalledWith: Pair<PlatformFile, Set<String>>? = null
+        var restoreCalledWith: Pair<PlatformFile, Set<String>>? = null
 
         override fun localToCloudListener(): Flow<List<WorkInfoKmp>> = flowOf(emptyList())
         override fun cloudToLocalListener(): Flow<List<WorkInfoKmp>> = flowOf(emptyList())
@@ -35,13 +36,16 @@ class MoreSettingsViewModelTest {
         override fun workerInfoFlow(): Flow<List<WorkerInfoModel>> = flowOf(emptyList())
         override fun sourceUpdate() {}
         override fun cancel(uuid: String) {}
-        override fun startBackup(file: PlatformFile) {
-            backupCalledWith = file
+        override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {
+            backupCalledWith = file to selectedKeys
         }
 
-        override fun startRestore(file: PlatformFile) {
-            restoreCalledWith = file
+        override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {
+            restoreCalledWith = file to selectedKeys
         }
+
+        override fun backupResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
+        override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
     }
 
     private fun viewModel(backgroundWorkHandler: BackgroundWorkHandler = FakeBackgroundWorkHandler()) =

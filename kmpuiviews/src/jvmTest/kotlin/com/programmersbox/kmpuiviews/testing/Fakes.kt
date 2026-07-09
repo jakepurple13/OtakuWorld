@@ -35,6 +35,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.datastore.otakuDataStore
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import io.github.jan.supabase.auth.providers.OAuthProvider
@@ -164,8 +165,10 @@ class FakeBackgroundWorkHandler : BackgroundWorkHandler {
     override fun workerInfoFlow(): Flow<List<WorkerInfoModel>> = flowOf(emptyList())
     override fun sourceUpdate() {}
     override fun cancel(uuid: String) {}
-    override fun startBackup(file: PlatformFile) {}
-    override fun startRestore(file: PlatformFile) {}
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {}
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {}
+    override fun backupResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
+    override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
 }
 
 class FakeTranslationModelHandler : TranslationModelHandler {
