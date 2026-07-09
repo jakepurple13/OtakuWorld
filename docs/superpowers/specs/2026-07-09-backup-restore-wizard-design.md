@@ -103,12 +103,12 @@ A shared `WizardStepper` composable renders the current step; each flow supplies
 
 ### Execution model
 
-WorkManager stays the execution mechanism (existing `BackupWorker`/`RestoreWorker`, unlike a plain in-process coroutine, survives process death/backgrounding — matches current architecture and the Desktop JVM impl that already extends it):
+Android keeps WorkManager (existing `BackupWorker`/`RestoreWorker`, survives process death/backgrounding). **Correction from initial draft: Desktop/JVM does not use WorkManager** — its `BackgroundWorkHandlerImpl` (jvmMain) runs on a separate `DesktopTaskScheduler`/nucleus task system with no confirmed incremental-progress channel. The two platforms diverge at the progress-reporting layer:
 
-- Worker input gains a `List<String>` of selected keys (via `Data`), in addition to the existing file reference.
-- The worker resolves `getAll<BackupProcessor>()`, filters to selected keys, iterates, and calls `setProgress` after each item with a serialized `ItemResult(key, displayName, success, error)`.
-- The wizard ViewModel observes `WorkInfo.progress` and updates the Executing/Complete screens' per-item state as results stream in.
-- Restore's real (non-peek) pass reopens the same zip file and calls `processor.restore(...)` only for selected keys.
+- **Android:** worker input gains a `List<String>` of selected keys (via `Data`), in addition to the existing file reference. The worker resolves `getAll<BackupProcessor>()`, filters to selected keys, iterates, and calls `setProgress` after each item with a serialized `ItemResult(key, displayName, success, error)`. The wizard ViewModel observes `WorkInfo.progress` and updates the Executing screen's per-item state as results stream in, live.
+- **Desktop/JVM:** the nucleus task runs the whole selected-item job in one shot and returns a `List<ItemResult>` as its final task output — no incremental updates. The Executing screen shows a single indeterminate spinner for the full run; the Complete screen (identical composable on both platforms) renders the same `List<ItemResult>` once the task finishes.
+- Restore's real (non-peek) pass reopens the same zip file and calls `processor.restore(...)` only for selected keys, on both platforms.
+- Per-item failure isolation already exists on Android's `Zipper` (`runCatching` + log to `ExceptionDao` per processor) — reused as the pattern for building `ItemResult.success/error`. The JVM `Zipper` actual has no `ExceptionDao` and currently swallows per-item failures silently; this plan adds equivalent per-item `runCatching` + `ItemResult` capture there too (logging to `ExceptionDao` optional/best-effort, not required for correctness).
 
 ### ViewModel state
 
