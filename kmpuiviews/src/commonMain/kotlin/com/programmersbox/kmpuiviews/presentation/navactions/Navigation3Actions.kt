@@ -170,6 +170,18 @@ class Navigation3Actions : NavigationActions {
         navBackStack.add(Screen.NotesScreen)
     }
 
+    override fun dictionary() {
+        navBackStack.add(Screen.DictionaryScreen)
+    }
+
+    override fun dictionaryDetail(id: Long) {
+        navBackStack.add(Screen.DictionaryScreen.Detail(id))
+    }
+
+    override fun dictionaryForm(id: Long?) {
+        navBackStack.add(Screen.DictionaryScreen.Form(id))
+    }
+
     override fun library() = navigate(Screen.Settings.Library)
     override fun discover() = navigate(Screen.Settings.Discover)
     override fun sources() = navigate(Screen.Settings.Sources)
