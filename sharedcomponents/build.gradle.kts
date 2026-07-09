@@ -35,6 +35,7 @@ kotlin {
                 implementation(commonLibs.cmp.ui.util)
                 implementation(commonLibs.foundation)
                 implementation(commonLibs.kotlinxSerialization)
+                implementation(commonLibs.kotlinx.datetime)
                 implementation(commonLibs.filekit.core)
                 implementation(commonLibs.filekit.dialogs.compose)
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
@@ -43,6 +44,12 @@ kotlin {
                 implementation(commonLibs.qrose)
                 implementation(commonLibs.scanner)
                 implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(commonLibs.kotlin.test)
             }
         }
 
