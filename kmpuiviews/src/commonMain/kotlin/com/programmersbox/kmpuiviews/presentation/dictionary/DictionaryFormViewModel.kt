@@ -3,8 +3,8 @@ package com.programmersbox.kmpuiviews.presentation.dictionary
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DictionaryEntry
-import com.programmersbox.favoritesdatabase.DictionaryRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.repository.DictionaryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.SharingStarted

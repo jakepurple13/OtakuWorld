@@ -1,5 +1,8 @@
-package com.programmersbox.favoritesdatabase
+package com.programmersbox.kmpuiviews.repository
 
+
+import com.programmersbox.favoritesdatabase.DictionaryDao
+import com.programmersbox.favoritesdatabase.DictionaryEntry
 import kotlinx.coroutines.flow.Flow
 
 enum class DictionarySort { Term, DateAdded, Category }

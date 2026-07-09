@@ -3,8 +3,8 @@ package com.programmersbox.kmpuiviews.presentation.dictionary
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.DictionaryEntry
-import com.programmersbox.favoritesdatabase.DictionaryRepository
-import com.programmersbox.favoritesdatabase.DictionarySort
+import com.programmersbox.kmpuiviews.repository.DictionaryRepository
+import com.programmersbox.kmpuiviews.repository.DictionarySort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview

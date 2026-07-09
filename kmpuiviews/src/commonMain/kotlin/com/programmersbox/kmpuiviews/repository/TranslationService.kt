@@ -1,4 +1,4 @@
-package com.programmersbox.favoritesdatabase
+package com.programmersbox.kmpuiviews.repository
 
 data class TranslationResult(
     val translatedTerm: String,

@@ -1,7 +1,9 @@
-package com.programmersbox.favoritesdatabase
+package com.programmersbox.kmpuiviews.repository
 
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.programmersbox.favoritesdatabase.DictionaryDatabase
+import com.programmersbox.favoritesdatabase.DictionaryEntry
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import java.io.File
