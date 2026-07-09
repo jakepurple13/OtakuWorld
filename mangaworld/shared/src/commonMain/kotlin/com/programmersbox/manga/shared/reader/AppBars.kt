@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -78,6 +79,7 @@ fun ReaderTopBar(
     onBookmarkClick: (Boolean) -> Unit = {},
     allowBookmark: Boolean = true,
     onRefreshClick: () -> Unit = {},
+    onAddToDictionaryClick: () -> Unit = {},
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
     TopAppBar(
@@ -108,6 +110,9 @@ fun ReaderTopBar(
             IconButton(
                 onClick = onRefreshClick,
             ) { Icon(Icons.Default.Refresh, null) }
+            IconButton(
+                onClick = onAddToDictionaryClick,
+            ) { Icon(Icons.Default.MenuBook, contentDescription = "Add to Dictionary") }
             IconButton(
                 onClick = onSettingsClick,
             ) { Icon(Icons.Default.Settings, null) }
