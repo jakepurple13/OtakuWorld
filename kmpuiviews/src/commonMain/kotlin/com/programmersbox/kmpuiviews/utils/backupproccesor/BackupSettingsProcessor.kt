@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.utils.backupproccesor
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.byteArrayPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
@@ -9,14 +11,21 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.kmpuiviews.utils.BackupSettings
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
 import kotlinx.coroutines.flow.firstOrNull
 import okio.BufferedSink
 import okio.BufferedSource
 
-class BackupSettingsProcessor : BackupProcessor() {
+class BackupSettingsProcessor : BackupProcessor(), BackupUiInfo {
     override val fileName: String
         get() = "backupsettings.json"
+
+    override val key: String get() = fileName
+    override val displayName: String get() = "General Preferences"
+    override val description: String? get() = "Raw app preference key-value pairs"
+    override val icon get() = Icons.Default.Settings
 
     override suspend fun backup(sink: BufferedSink) {
         val map = otakuDataStore.data.firstOrNull()?.asMap()!!
@@ -75,5 +84,22 @@ class BackupSettingsProcessor : BackupProcessor() {
                 }
             }
         }
+    }
+
+    private fun BackupSettings.entryCount() =
+        stringSettings.size + intSettings.size + longSettings.size +
+            booleanSettings.size + doubleSettings.size + byteArraySettings.size
+
+    override suspend fun currentSummary(): BackupDataSummary {
+        val map = otakuDataStore.data.firstOrNull()?.asMap().orEmpty()
+        return BackupDataSummary(details = listOf("Preferences" to "${map.size} entries"))
+    }
+
+    override suspend fun parseSummary(json: String?, rawBytes: ByteArray?): BackupDataSummary {
+        val count = json?.let { runCatching { it.fromJson<BackupSettings>().entryCount() }.getOrNull() }
+        return BackupDataSummary(
+            sizeBytes = rawBytes?.size?.toLong(),
+            details = listOf("Preferences" to "${count ?: 0} entries"),
+        )
     }
 }
