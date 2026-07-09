@@ -10,6 +10,8 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ExceptionDao
+import com.programmersbox.favoritesdatabase.ExceptionItem
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -195,4 +197,21 @@ class FakeDownloadStateInterface : DownloadStateInterface {
     override fun install(url: String): Flow<DownloadAndInstallStatus> = emptyFlow()
     override fun downloadAndInstall(url: String) {}
     override fun downloadThenInstall(url: String) {}
+}
+
+class FakeExceptionDao : ExceptionDao {
+    val insertedExceptions = mutableListOf<ExceptionItem>()
+    override fun getAllExceptions(): Flow<List<ExceptionItem>> = flowOf(insertedExceptions.toList())
+    override fun getExceptionCount(): Flow<Int> = flowOf(insertedExceptions.size)
+    override suspend fun insertException(model: ExceptionItem) {
+        insertedExceptions += model
+    }
+
+    override suspend fun deleteException(model: ExceptionItem) {
+        insertedExceptions -= model
+    }
+
+    override suspend fun deleteAll() {
+        insertedExceptions.clear()
+    }
 }
