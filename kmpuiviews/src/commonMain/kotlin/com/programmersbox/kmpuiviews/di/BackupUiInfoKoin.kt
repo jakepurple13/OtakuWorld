@@ -15,3 +15,21 @@ inline fun <reified T> Module.backupProcessorWithUiInfo(
     definition.bind(BackupProcessor::class)
     definition.bind(BackupUiInfo::class)
 }
+
+inline fun <reified T, reified T1> Module.backupProcessorWithUiInfo(
+    named: String,
+    crossinline factoryBlock: (T1) -> T,
+) where T : BackupProcessor, T : BackupUiInfo {
+    val definition = factory(named(named)) { new(factoryBlock) }
+    definition.bind(BackupProcessor::class)
+    definition.bind(BackupUiInfo::class)
+}
+
+inline fun <reified T, reified T1, reified T2> Module.backupProcessorWithUiInfo(
+    named: String,
+    crossinline factoryBlock: (T1, T2) -> T,
+) where T : BackupProcessor, T : BackupUiInfo {
+    val definition = factory(named(named)) { new(factoryBlock) }
+    definition.bind(BackupProcessor::class)
+    definition.bind(BackupUiInfo::class)
+}
