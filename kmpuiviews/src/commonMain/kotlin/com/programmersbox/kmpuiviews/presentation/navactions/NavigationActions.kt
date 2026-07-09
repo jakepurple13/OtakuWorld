@@ -59,6 +59,9 @@ interface NavigationActions {
     fun toOnboarding()
     fun bookmarks()
     fun notes()
+    fun dictionary()
+    fun dictionaryDetail(id: Long)
+    fun dictionaryForm(id: Long? = null)
 
     fun library()
     fun discover()
