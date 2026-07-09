@@ -6,6 +6,7 @@ import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoModel
 import com.programmersbox.kmpuiviews.testing.FakeBackgroundWorkHandler
 import com.programmersbox.sharedcomponents.backup.ItemResult
+import com.programmersbox.sharedtools.BackupProcessor
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,10 +49,13 @@ class MoreSettingsViewModelTest {
         override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
     }
 
-    private fun viewModel(backgroundWorkHandler: BackgroundWorkHandler = FakeBackgroundWorkHandler()) =
-        MoreSettingsViewModel(
-            backgroundWorkHandler = backgroundWorkHandler,
-        ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
+    private fun viewModel(
+        backgroundWorkHandler: BackgroundWorkHandler = FakeBackgroundWorkHandler(),
+        backupProcessors: List<BackupProcessor> = emptyList(),
+    ) = MoreSettingsViewModel(
+        backgroundWorkHandler = backgroundWorkHandler,
+        backupProcessors = backupProcessors,
+    ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeTest
@@ -73,25 +77,29 @@ class MoreSettingsViewModelTest {
         assertEquals(ImportExportListStatus.Idle, vm.importExportListStatus)
     }
 
-    @Test fun `exportFullBackup delegates to backgroundWorkHandler startBackup`() = runTest {
+    @Test fun `exportFullBackup delegates to backgroundWorkHandler startBackup with all processor keys`() = runTest {
         val handler = RecordingBackgroundWorkHandler()
-        val vm = viewModel(handler)
+        val processors = listOf(FakeBackupProcessor("a.json"), FakeBackupProcessor("b.json"))
+        val vm = viewModel(handler, processors)
         val file = PlatformFile("backup.zip")
 
         vm.exportFullBackup(file)
 
-        assertEquals(file, handler.backupCalledWith)
+        assertEquals(file, handler.backupCalledWith?.first)
+        assertEquals(setOf("a.json", "b.json"), handler.backupCalledWith?.second)
         assertTrue(handler.restoreCalledWith == null)
     }
 
-    @Test fun `importFullBackup delegates to backgroundWorkHandler startRestore`() = runTest {
+    @Test fun `importFullBackup delegates to backgroundWorkHandler startRestore with all processor keys`() = runTest {
         val handler = RecordingBackgroundWorkHandler()
-        val vm = viewModel(handler)
+        val processors = listOf(FakeBackupProcessor("a.json"))
+        val vm = viewModel(handler, processors)
         val file = PlatformFile("backup.zip")
 
         vm.importFullBackup(file)
 
-        assertEquals(file, handler.restoreCalledWith)
+        assertEquals(file, handler.restoreCalledWith?.first)
+        assertEquals(setOf("a.json"), handler.restoreCalledWith?.second)
         assertTrue(handler.backupCalledWith == null)
     }
 
@@ -108,4 +116,10 @@ class MoreSettingsViewModelTest {
         vm.importExportListStatus = error
         assertEquals(error, vm.importExportListStatus)
     }
+}
+
+private class FakeBackupProcessor(name: String) : BackupProcessor() {
+    override val fileName: String = name
+    override suspend fun backup(sink: okio.BufferedSink) {}
+    override suspend fun restore(json: String, bufferedSource: okio.BufferedSource) {}
 }
