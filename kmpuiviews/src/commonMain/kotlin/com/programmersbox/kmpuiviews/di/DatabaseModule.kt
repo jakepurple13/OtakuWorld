@@ -16,6 +16,8 @@ import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.NotesDatabase
+import com.programmersbox.favoritesdatabase.DictionaryDao
+import com.programmersbox.favoritesdatabase.DictionaryDatabase
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.favoritesdatabase.RecommendationDatabase
 import com.programmersbox.kmpuiviews.databaseBuilder
@@ -37,4 +39,6 @@ val databases: Module = module {
     single<BookmarkDao> { get<BookmarkDatabase>().bookmarkDao() }
     single<NotesDatabase> { NotesDatabase.getInstance(get()) }
     single<NotesDao> { get<NotesDatabase>().notesDao() }
+    single<DictionaryDatabase> { DictionaryDatabase.getInstance(get()) }
+    single<DictionaryDao> { get<DictionaryDatabase>().dictionaryDao() }
 }
