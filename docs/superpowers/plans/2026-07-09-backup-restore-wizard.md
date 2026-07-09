@@ -1068,7 +1068,7 @@ Change its `backupProcessor("...", ::MangaNewSettingsBackupProcessor)` call to `
 
 - [ ] **Step 3: Compile check**
 
-Run: `./gradlew :kmpuiviews:compileKotlinJvm :mangaworld:compileNoFirebaseDebugKotlinAndroid`
+Run: `./gradlew :kmpuiviews:compileKotlinJvm :mangaworld:compileNoFirebaseDebugKotlin`
 Expected: BUILD SUCCESSFUL. If a processor fails the `where T : BackupProcessor, T : BackupUiInfo` bound, it means Task 3/4/5 missed that file — go back and fix it.
 
 - [ ] **Step 4: Commit**
@@ -1283,7 +1283,7 @@ Replace this block inside `zipFile`'s `forEach`:
 
 - [ ] **Step 3: Compile check**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
 Expected: FAIL at this point — `Backup.kt`, `BackupWorker.kt`, `RestoreWorker.kt` still call the old 1-arg `zipFile`/`readZip` signatures. This is expected; Tasks 9 and 12 fix those call sites. Confirm the failure is ONLY in those three files (not in `Zipper.kt` itself).
 
 - [ ] **Step 4: Commit**
@@ -2145,7 +2145,7 @@ import kotlinx.serialization.json.Json
 
 - [ ] **Step 3: Compile check**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
 Expected: BUILD SUCCESSFUL for the Android source set (JVM source set still fails until Task 14).
 
 - [ ] **Step 4: Commit**
@@ -2287,7 +2287,7 @@ Add the import `com.programmersbox.kmpuiviews.repository.BackupResultsHolder` if
 
 - [ ] **Step 6: Full compile check**
 
-Run: `./gradlew :kmpuiviews:compileKotlinJvm :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
+Run: `./gradlew :kmpuiviews:compileKotlinJvm :kmpuiviews:compileAndroidMain`
 Expected: BUILD SUCCESSFUL for both source sets. This is the point where the entire backend (Zipper → Backup → Worker → BackgroundWorkHandler) compiles cleanly on both platforms.
 
 - [ ] **Step 7: Commit**
@@ -3277,7 +3277,7 @@ Add imports `com.programmersbox.sharedcomponents.backup.BackupWizardScreen`, `co
 
 - [ ] **Step 4: Full compile check**
 
-Run: `./gradlew :kmpuiviews:compileKotlinJvm :kmpuiviews:compileNoFirebaseDebugKotlinAndroid :sharedcomponents:compileKotlinJvm`
+Run: `./gradlew :kmpuiviews:compileKotlinJvm :kmpuiviews:compileAndroidMain :sharedcomponents:compileKotlinJvm`
 Expected: BUILD SUCCESSFUL
 
 - [ ] **Step 5: Commit**
@@ -3339,7 +3339,7 @@ Leave everything else in the file untouched — `viewModel: MoreSettingsViewMode
 
 - [ ] **Step 3: Compile check**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
 Expected: BUILD SUCCESSFUL
 
 - [ ] **Step 4: Commit**
@@ -3358,9 +3358,9 @@ git commit -m "feat(backup): MoreSettingsScreen navigates to the new wizard inst
 - [ ] **Step 1: Full compile across all touched targets**
 
 ```bash
-./gradlew :sharedcomponents:compileKotlinJvm :sharedcomponents:compileDebugKotlinAndroid \
-  :kmpuiviews:compileKotlinJvm :kmpuiviews:compileNoFirebaseDebugKotlinAndroid \
-  :mangaworld:compileNoFirebaseDebugKotlinAndroid :mangaworld:shared:compileKotlinJvm
+./gradlew :sharedcomponents:compileKotlinJvm :sharedcomponents:compileAndroidMain \
+  :kmpuiviews:compileKotlinJvm :kmpuiviews:compileAndroidMain \
+  :mangaworld:compileNoFirebaseDebugKotlin :mangaworld:shared:compileKotlinJvm
 ```
 Expected: BUILD SUCCESSFUL
 
