@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dokar.sonner.ToastType
 import com.dokar.sonner.rememberToasterState
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
@@ -24,10 +25,6 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.ToasterSetup
 import com.programmersbox.kmpuiviews.utils.ToasterUtils
-import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.jetbrains.compose.resources.stringResource
@@ -89,12 +86,6 @@ fun MoreSettingsScreen(
             ) { Text("Backup") }
 
             item {
-                val createBackupLauncher = rememberFileSaverLauncher(
-                    dialogSettings = FileKitDialogSettings.createDefault()
-                ) { document ->
-                    document?.let { viewModel.exportFullBackup(it) }
-                }
-
                 PreferenceSetting(
                     settingTitle = { Text("Create Full Backup") },
                     settingIcon = { Icon(Icons.Default.Backup, null) },
@@ -102,15 +93,11 @@ fun MoreSettingsScreen(
                         enabled = true,
                         indication = ripple(),
                         interactionSource = null
-                    ) { createBackupLauncher.launch("${appName}_backup", "zip") }
+                    ) { navController.navigate(Screen.BackupWizard) }
                 )
             }
 
             item {
-                val importBackupLauncher = rememberFilePickerLauncher(
-                    type = FileKitType.File("zip")
-                ) { document -> document?.let { viewModel.importFullBackup(it) } }
-
                 PreferenceSetting(
                     settingTitle = { Text("Restore Full Backup") },
                     settingIcon = { Icon(Icons.Default.Restore, null) },
@@ -118,7 +105,7 @@ fun MoreSettingsScreen(
                         enabled = true,
                         indication = ripple(),
                         interactionSource = null
-                    ) { importBackupLauncher.launch() }
+                    ) { navController.navigate(Screen.RestoreWizard) }
                 )
             }
         }
