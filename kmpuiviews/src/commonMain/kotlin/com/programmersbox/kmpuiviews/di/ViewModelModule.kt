@@ -28,7 +28,13 @@ import com.programmersbox.kmpuiviews.presentation.settings.prerelease.Prerelease
 import com.programmersbox.kmpuiviews.presentation.settings.translationmodels.TranslationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.utils.Backup
+import com.programmersbox.sharedcomponents.backup.BackupWizardViewModel
+import com.programmersbox.sharedcomponents.backup.RestoreWizardViewModel
+import io.github.vinceglb.filekit.PlatformFile
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -46,6 +52,21 @@ val viewModels: Module = module {
     viewModelOf(::ImportListViewModel)
     viewModelOf(::OtakuListViewModel)
     viewModelOf(::MoreSettingsViewModel)
+    viewModel {
+        BackupWizardViewModel<PlatformFile>(
+            uiInfos = getAll(),
+            resultsFlow = get<BackgroundWorkHandler>().backupResultsFlow(),
+            startBackup = { file, keys -> get<BackgroundWorkHandler>().startBackup(file, keys) },
+        )
+    }
+    viewModel {
+        RestoreWizardViewModel<PlatformFile>(
+            uiInfos = getAll(),
+            peekZip = { file -> get<Backup>().peekBackup(file, getAll()) },
+            resultsFlow = get<BackgroundWorkHandler>().restoreResultsFlow(),
+            startRestore = { file, keys -> get<BackgroundWorkHandler>().startRestore(file, keys) },
+        )
+    }
     viewModelOf(::SettingViewModel)
     viewModelOf(::MoreInfoViewModel)
     viewModelOf(::DetailsViewModel)
