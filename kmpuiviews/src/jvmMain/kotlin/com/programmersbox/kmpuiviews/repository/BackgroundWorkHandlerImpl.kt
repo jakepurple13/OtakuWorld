@@ -17,6 +17,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Compan
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import io.github.kdroidfilter.nucleus.scheduler.DesktopBootReceiver
 import io.github.kdroidfilter.nucleus.scheduler.DesktopTask
 import io.github.kdroidfilter.nucleus.scheduler.DesktopTaskScheduler
@@ -35,6 +36,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -51,6 +53,7 @@ import kotlin.time.measureTimedValue
 
 class BackgroundWorkHandlerImpl(
     private val settingsHandling: NewSettingsHandling,
+    private val resultsHolder: BackupResultsHolder,
 ) : BackgroundWorkHandler {
     override fun localToCloudListener(): Flow<List<WorkInfoKmp>> = flowOf(emptyList())
 
@@ -106,25 +109,28 @@ class BackgroundWorkHandlerImpl(
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    override fun startBackup(file: PlatformFile) {
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {
         scope.launch {
             TestTaskRunner.runTask(
                 BackupWorker(),
                 BackupId,
-                inputData = TaskData.of(BackupRestoreData(file))
+                inputData = TaskData.of(BackupRestoreData(file, selectedKeys))
             )
         }
     }
 
-    override fun startRestore(file: PlatformFile) {
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {
         scope.launch {
             TestTaskRunner.runTask(
                 RestoreWorker(),
                 RestoreId,
-                inputData = TaskData.of(BackupRestoreData(file))
+                inputData = TaskData.of(BackupRestoreData(file, selectedKeys))
             )
         }
     }
+
+    override fun backupResultsFlow(): Flow<List<ItemResult>> = resultsHolder.backupResults
+    override fun restoreResultsFlow(): Flow<List<ItemResult>> = resultsHolder.restoreResults
 
     companion object {
         val SyncId = TaskId("sync")
@@ -258,11 +264,14 @@ class SyncCheckWorker : DesktopTask, KoinComponent {
 
 class BackupWorker : DesktopTask, KoinComponent {
     private val backup: Backup by inject()
+    private val resultsHolder: BackupResultsHolder by inject()
+
     override suspend fun doWork(context: TaskContext): TaskResult {
         val duration = measureTimedValue {
             runCatching {
-                val file = context.inputData<BackupRestoreData>()?.file ?: return@runCatching
-                backup.createBackup(file)
+                val data = context.inputData<BackupRestoreData>() ?: return@runCatching
+                val results = backup.createBackup(data.file, data.selectedKeys) { }
+                resultsHolder.backupResults.value = results
             }
                 .fold(
                     onSuccess = { TaskResult.Success },
@@ -271,18 +280,20 @@ class BackupWorker : DesktopTask, KoinComponent {
         }
 
         println("Took ${duration.duration} to backup")
-
         return duration.value
     }
 }
 
 class RestoreWorker : DesktopTask, KoinComponent {
     private val backup: Backup by inject()
+    private val resultsHolder: BackupResultsHolder by inject()
+
     override suspend fun doWork(context: TaskContext): TaskResult {
         val duration = measureTimedValue {
             runCatching {
-                val file = context.inputData<BackupRestoreData>()?.file ?: return@runCatching
-                backup.restoreBackup(file)
+                val data = context.inputData<BackupRestoreData>() ?: return@runCatching
+                val results = backup.restoreBackup(data.file, data.selectedKeys) { }
+                resultsHolder.restoreResults.value = results
             }
                 .fold(
                     onSuccess = { TaskResult.Success },
@@ -291,12 +302,17 @@ class RestoreWorker : DesktopTask, KoinComponent {
         }
 
         println("Took ${duration.duration} to backup")
-
         return duration.value
     }
+}
+
+class BackupResultsHolder {
+    val backupResults = MutableStateFlow<List<ItemResult>>(emptyList())
+    val restoreResults = MutableStateFlow<List<ItemResult>>(emptyList())
 }
 
 @Serializable
 data class BackupRestoreData(
     val file: PlatformFile,
+    val selectedKeys: Set<String>,
 )
