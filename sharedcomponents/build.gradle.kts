@@ -44,12 +44,14 @@ kotlin {
                 implementation(commonLibs.qrose)
                 implementation(commonLibs.scanner)
                 implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
+                implementation(commonLibs.lifecycle.viewmodel.compose)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(commonLibs.kotlin.test)
+                implementation(commonLibs.coroutinesTest)
             }
         }
 
