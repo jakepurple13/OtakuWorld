@@ -21,14 +21,12 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGr
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.categorySetting
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
-import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.ToasterSetup
 import com.programmersbox.kmpuiviews.utils.ToasterUtils
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.more_settings
@@ -72,8 +70,6 @@ fun MoreSettingsScreen(
             .launchIn(this)
     }
 
-    val appConfig = koinInject<AppConfig>()
-    val appName = appConfig.appName
     SettingsScaffold(
         stringResource(Res.string.more_settings),
         verticalArrangement = Arrangement.spacedBy(16.dp)
