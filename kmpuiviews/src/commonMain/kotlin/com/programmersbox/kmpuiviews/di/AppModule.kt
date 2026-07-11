@@ -29,7 +29,6 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackup
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
 import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
 import com.programmersbox.sharedtools.SearchRegistryItem
-import com.programmersbox.sharedtools.backupProcessor
 import com.programmersbox.supabaseintegration.di.SupabaseActions
 import com.programmersbox.supabaseintegration.di.supabaseModule
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
@@ -119,7 +118,7 @@ private fun Module.backupProcessors() {
     backupProcessorWithUiInfo("sourceOrder", ::SourceOrderBackupProcessor)
     backupProcessorWithUiInfo("notes", ::NotesBackupProcessor)
     backupProcessorWithUiInfo("recommendations", ::RecommendationsBackupProcessor)
-    backupProcessor("dictionary", ::DictionaryBackupProcessor)
+    backupProcessorWithUiInfo("dictionary", ::DictionaryBackupProcessor)
 }
 
 expect fun platformModule(): Module

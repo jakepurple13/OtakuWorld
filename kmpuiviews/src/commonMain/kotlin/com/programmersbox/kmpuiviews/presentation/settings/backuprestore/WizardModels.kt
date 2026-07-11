@@ -1,4 +1,8 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
+
+import androidx.compose.runtime.Stable
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 
 sealed interface BackupWizardStep {
     data object SelectItems : BackupWizardStep
@@ -15,6 +19,7 @@ sealed interface RestoreWizardStep {
     data object Complete : RestoreWizardStep
 }
 
+@Stable
 data class WizardItemState(
     val uiInfo: BackupUiInfo,
     val summary: BackupDataSummary? = null,

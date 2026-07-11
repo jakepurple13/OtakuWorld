@@ -1,7 +1,10 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,10 +13,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -24,7 +28,8 @@ fun BackupWizardScreen(
     onDone: () -> Unit,
     viewModel: BackupWizardViewModel<PlatformFile> = koinViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    HideNavBarWhileOnScreen()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val stepLabels = listOf("Select", "Review", "Backup", "Done")
     val currentIndex = when (state.step) {
         BackupWizardStep.SelectItems -> 0
@@ -39,12 +44,20 @@ fun BackupWizardScreen(
 
             when (state.step) {
                 BackupWizardStep.SelectItems -> {
-                    TextButton(onClick = {
-                        if (state.items.all { it.selected }) viewModel.deselectAll() else viewModel.selectAll()
-                    }) { Text(if (state.items.all { it.selected }) "Deselect All" else "Select All") }
+                    TextButton(
+                        onClick = {
+                            if (state.items.all { it.selected }) viewModel.deselectAll() else viewModel.selectAll()
+                        }
+                    ) { Text(if (state.items.all { it.selected }) "Deselect All" else "Select All") }
 
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(state.items, key = { it.uiInfo.key }) { item ->
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(
+                            items = state.items,
+                            key = { it.uiInfo.key }
+                        ) { item ->
                             WizardItemRow(
                                 item = item,
                                 onToggleSelected = { viewModel.toggleSelected(item.uiInfo.key) },
@@ -52,6 +65,7 @@ fun BackupWizardScreen(
                             )
                         }
                     }
+
 
                     Button(
                         onClick = viewModel::goToReview,
@@ -69,11 +83,21 @@ fun BackupWizardScreen(
                             WizardItemRow(item = item.copy(expanded = true), onToggleSelected = {}, onToggleExpanded = {})
                         }
                     }
-                    Button(
-                        onClick = { saveLauncher.launch("backup", "zip") },
-                        enabled = backupRestoreSupported,
-                        modifier = Modifier.padding(16.dp),
-                    ) { Text(if (backupRestoreSupported) "Confirm Backup" else "Not supported on this platform yet") }
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = viewModel::goToSelectItems,
+                        ) { Text("Previous: Select Items") }
+
+                        Button(
+                            onClick = { saveLauncher.launch(suggestedName = "backup", defaultExtension = "zip") },
+                        ) { Text("Confirm Backup") }
+                    }
                 }
 
                 BackupWizardStep.Executing -> {

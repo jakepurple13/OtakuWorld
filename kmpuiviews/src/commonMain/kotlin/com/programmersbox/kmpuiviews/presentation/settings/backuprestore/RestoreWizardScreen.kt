@@ -1,7 +1,10 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,10 +13,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -24,7 +28,8 @@ fun RestoreWizardScreen(
     onDone: () -> Unit,
     viewModel: RestoreWizardViewModel<PlatformFile> = koinViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    HideNavBarWhileOnScreen()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val stepLabels = listOf("File", "Select", "Review", "Restore", "Done")
     val currentIndex = when (state.step) {
         RestoreWizardStep.PickFile -> 0
@@ -35,7 +40,11 @@ fun RestoreWizardScreen(
     }
 
     Scaffold { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             WizardStepper(steps = stepLabels, currentIndex = currentIndex, modifier = Modifier.padding(16.dp))
 
             when (state.step) {
@@ -49,12 +58,20 @@ fun RestoreWizardScreen(
                 }
 
                 RestoreWizardStep.SelectItems -> {
-                    TextButton(onClick = {
-                        if (state.items.all { it.selected }) viewModel.deselectAll() else viewModel.selectAll()
-                    }) { Text(if (state.items.all { it.selected }) "Deselect All" else "Select All") }
+                    TextButton(
+                        onClick = {
+                            if (state.items.all { it.selected }) viewModel.deselectAll() else viewModel.selectAll()
+                        }
+                    ) { Text(if (state.items.all { it.selected }) "Deselect All" else "Select All") }
 
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(state.items, key = { it.uiInfo.key }) { item ->
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(
+                            items = state.items,
+                            key = { it.uiInfo.key }
+                        ) { item ->
                             WizardItemRow(
                                 item = item,
                                 onToggleSelected = { viewModel.toggleSelected(item.uiInfo.key) },
@@ -63,7 +80,20 @@ fun RestoreWizardScreen(
                         }
                     }
 
-                    Button(onClick = viewModel::goToReview, modifier = Modifier.padding(16.dp)) { Text("Next: Review") }
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = viewModel::goToChooseFile,
+                        ) { Text("Previous: Choose Backup File") }
+
+                        Button(
+                            onClick = viewModel::goToReview,
+                        ) { Text("Next: Review") }
+                    }
                 }
 
                 RestoreWizardStep.Review -> {
@@ -72,11 +102,20 @@ fun RestoreWizardScreen(
                             WizardItemRow(item = item.copy(expanded = true), onToggleSelected = {}, onToggleExpanded = {})
                         }
                     }
-                    Button(
-                        onClick = viewModel::confirm,
-                        enabled = backupRestoreSupported,
-                        modifier = Modifier.padding(16.dp),
-                    ) { Text(if (backupRestoreSupported) "Confirm Restore" else "Not supported on this platform yet") }
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = viewModel::goToSelectItems,
+                        ) { Text("Previous: Select Items") }
+
+                        Button(
+                            onClick = viewModel::confirm,
+                        ) { Text("Confirm Restore") }
+                    }
                 }
 
                 RestoreWizardStep.Executing -> {

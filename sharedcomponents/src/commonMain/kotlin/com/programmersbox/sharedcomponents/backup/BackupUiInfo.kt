@@ -1,8 +1,8 @@
 package com.programmersbox.sharedcomponents.backup
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
 interface BackupUiInfo {
     val key: String

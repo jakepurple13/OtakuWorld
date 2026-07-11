@@ -39,6 +39,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScre
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.AppearanceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.ColorsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardScreen
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.BehaviorScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.ContentReadingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.LayoutScreen
@@ -78,8 +80,6 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
-import com.programmersbox.sharedcomponents.backup.BackupWizardScreen
-import com.programmersbox.sharedcomponents.backup.RestoreWizardScreen
 import com.programmersbox.supabaseintegration.ui.supabaseRoutes
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel

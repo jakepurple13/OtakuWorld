@@ -1,14 +1,16 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class BackupWizardUiState(
     val step: BackupWizardStep = BackupWizardStep.SelectItems,
@@ -26,6 +28,12 @@ class BackupWizardViewModel<F>(
         BackupWizardUiState(items = uiInfos.map { WizardItemState(uiInfo = it) })
     )
     val state: StateFlow<BackupWizardUiState> = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            uiInfos.forEach { loadSummaryIfNeeded(it.key) }
+        }
+    }
 
     fun toggleSelected(key: String) {
         _state.update { s ->
@@ -53,6 +61,12 @@ class BackupWizardViewModel<F>(
             s.copy(step = BackupWizardStep.Review, items = s.items.filter { it.selected })
         }
         _state.value.items.forEach { if (it.summary == null) loadSummaryIfNeeded(it.uiInfo.key) }
+    }
+
+    fun goToSelectItems() {
+        _state.update { s ->
+            s.copy(step = BackupWizardStep.SelectItems)
+        }
     }
 
     fun confirm(file: F) {

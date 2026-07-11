@@ -3,19 +3,21 @@ package com.programmersbox.kmpuiviews.di
 import com.programmersbox.kmpuiviews.presentation.all.AllViewModel
 import com.programmersbox.kmpuiviews.presentation.bookmarks.BookmarkChaptersViewModel
 import com.programmersbox.kmpuiviews.presentation.details.DetailsViewModel
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailViewModel
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
+import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListViewModel
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteViewModel
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchViewModel
 import com.programmersbox.kmpuiviews.presentation.history.HistoryViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
-import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryDetailViewModel
-import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryFormViewModel
-import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
 import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardViewModel
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.exceptions.ExceptionViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionListViewModel
@@ -33,8 +35,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfo
 import com.programmersbox.kmpuiviews.presentation.urlopener.UrlOpenerViewModel
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.utils.Backup
-import com.programmersbox.sharedcomponents.backup.BackupWizardViewModel
-import com.programmersbox.sharedcomponents.backup.RestoreWizardViewModel
 import io.github.vinceglb.filekit.PlatformFile
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
@@ -54,7 +54,7 @@ val viewModels: Module = module {
     viewModelOf(::ImportFullListViewModel)
     viewModelOf(::ImportListViewModel)
     viewModelOf(::OtakuListViewModel)
-    viewModelOf(::MoreSettingsViewModel)
+    viewModel { MoreSettingsViewModel(get(), getAll()) }
     viewModel {
         BackupWizardViewModel<PlatformFile>(
             uiInfos = getAll(),
