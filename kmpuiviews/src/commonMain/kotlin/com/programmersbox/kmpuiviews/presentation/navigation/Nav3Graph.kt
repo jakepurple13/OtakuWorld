@@ -78,6 +78,8 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
+import com.programmersbox.sharedcomponents.backup.BackupWizardScreen
+import com.programmersbox.sharedcomponents.backup.RestoreWizardScreen
 import com.programmersbox.supabaseintegration.ui.supabaseRoutes
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -232,6 +234,15 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     detailEntry<Screen.MoreSettings> {
         MoreSettingsScreen()
+    }
+
+    detailEntry<Screen.BackupWizard> {
+        val navActions = LocalNavActions.current
+        BackupWizardScreen(onDone = { navActions.popBackStack() })
+    }
+    detailEntry<Screen.RestoreWizard> {
+        val navActions = LocalNavActions.current
+        RestoreWizardScreen(onDone = { navActions.popBackStack() })
     }
 
     detailEntry<Screen.HistoryScreen> {

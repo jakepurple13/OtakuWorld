@@ -20,6 +20,7 @@ import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
+import com.programmersbox.kmpuiviews.repository.BackupResultsHolder
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
@@ -40,6 +41,7 @@ actual fun platformModule(): Module = module {
     factoryOf(::ImageModifier)
     singleOf(::SystemAlerter)
     singleOf(::DownloadAndInstaller)
+    singleOf(::BackupResultsHolder)
     singleOf(::BackgroundWorkHandlerImpl) { bind<BackgroundWorkHandler>() }
     factory<TranslationHandler> { TranslationItemHandler() }
     factory<TranslationModelHandler> { TranslationModelHandlerImpl() }

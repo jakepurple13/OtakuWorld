@@ -20,3 +20,4 @@ local.properties
 /animeworldtv/google-services.json
 /otakumanager/google-services.json
 .claude/worktrees/
+.superpowers/

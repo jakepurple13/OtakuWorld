@@ -1,13 +1,16 @@
 package com.programmersbox.kmpuiviews.utils
 
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.sharedtools.BackupProcessor
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.Buffer
 import okio.buffer
 import okio.sink
-import okio.source
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.zip.ZipEntry
@@ -23,45 +26,94 @@ actual class Zipper(
         println("Backup processors: $processors")
     }
 
-    actual suspend fun zipFile(platformFile: PlatformFile) {
-        val f = platformFile.absolutePath()
-        withContext(Dispatchers.IO) {
-            ZipOutputStream(FileOutputStream(f)).use { zip ->
-                backupProcessors.forEach { processor ->
-                    println("Zipping ${processor.fileName}")
-                    val duration = measureTime {
-                        zip.putNextEntry(ZipEntry(processor.fileName))
-                        runCatching { processor.backup(zip.sink().buffer()) }
+    actual suspend fun zipFile(
+        platformFile: PlatformFile,
+        selectedKeys: Set<String>,
+        onItemComplete: suspend (ItemResult) -> Unit,
+    ): List<ItemResult> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<ItemResult>()
+        ZipOutputStream(FileOutputStream(platformFile.absolutePath())).use { zip ->
+            backupProcessors.filter { it.fileName in selectedKeys }.forEach { processor ->
+                println("Zipping ${processor.fileName}")
+                val duration = measureTime {
+                    zip.putNextEntry(ZipEntry(processor.fileName))
+                    val result = runCatching {
+                        val sink = zip.sink().buffer()
+                        processor.backup(sink)
+                        sink.flush()
                     }
-                    println("Zipped ${processor.fileName} in $duration")
+                        .fold(
+                            onSuccess = { ItemResult(processor.fileName, success = true) },
+                            onFailure = { e -> ItemResult(processor.fileName, success = false, error = e.message) },
+                        )
+                    results += result
+                    onItemComplete(result)
                 }
+                println("Zipped ${processor.fileName} in $duration")
             }
         }
+        results
     }
 
-    actual suspend fun readZip(platformFile: PlatformFile) {
-        withContext(Dispatchers.IO) {
-            FileInputStream(platformFile.absolutePath()).use { inStream ->
-                ZipInputStream(inStream).use { zipIs ->
-                    var entry: ZipEntry?
-                    while (true) {
-                        entry = zipIs.nextEntry
-                        if (entry == null) break
+    actual suspend fun readZip(
+        platformFile: PlatformFile,
+        selectedKeys: Set<String>,
+        onItemComplete: suspend (ItemResult) -> Unit,
+    ): List<ItemResult> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<ItemResult>()
+        FileInputStream(platformFile.absolutePath()).use { inStream ->
+            ZipInputStream(inStream).use { zipIs ->
+                var entry: ZipEntry? = zipIs.nextEntry
+                while (entry != null) {
+                    val name = entry.name
+                    val processor = backupProcessors.find { it.fileName == name }
+                    if (name in selectedKeys && processor != null) {
                         val duration = measureTime {
-                            runCatching {
-                                backupProcessors
-                                    .find { it.fileName == entry.name }
-                                    .also { println("Unzipping ${it?.fileName}") }
-                                    ?.restore(
-                                        json = zipIs.bufferedReader().readText(),
-                                        bufferedSource = zipIs.source().buffer()
-                                    )
+                            val result = runCatching {
+                                val bytes = zipIs.readBytes()
+                                processor.restore(
+                                    json = bytes.decodeToString(),
+                                    bufferedSource = Buffer().apply { write(bytes) },
+                                )
                             }
+                                .fold(
+                                    onSuccess = { ItemResult(name, success = true) },
+                                    onFailure = { e -> ItemResult(name, success = false, error = e.message) },
+                                )
+                            results += result
+                            onItemComplete(result)
                         }
-                        println("Unzipped ${entry.name} in $duration")
+                        println("Unzipped $name in $duration")
                     }
+                    entry = zipIs.nextEntry
                 }
             }
         }
+        results
+    }
+
+    actual suspend fun peekZip(
+        platformFile: PlatformFile,
+        uiInfos: List<BackupUiInfo>,
+    ): Map<String, BackupDataSummary> = withContext(Dispatchers.IO) {
+        val summaries = mutableMapOf<String, BackupDataSummary>()
+        FileInputStream(platformFile.absolutePath()).use { inStream ->
+            ZipInputStream(inStream).use { zipIs ->
+                var entry: ZipEntry? = zipIs.nextEntry
+                while (entry != null) {
+                    val name = entry.name
+                    val uiInfo = uiInfos.find { it.key == name }
+                    if (uiInfo != null) {
+                        runCatching {
+                            val bytes = zipIs.readBytes()
+                            uiInfo.parseSummary(json = bytes.decodeToString(), rawBytes = bytes)
+                        }
+                            .onSuccess { summaries[name] = it }
+                    }
+                    entry = zipIs.nextEntry
+                }
+            }
+        }
+        summaries
     }
 }
