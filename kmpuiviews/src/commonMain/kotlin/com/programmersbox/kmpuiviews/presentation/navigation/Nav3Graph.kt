@@ -39,6 +39,8 @@ import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScre
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.AppearanceScreen
 import com.programmersbox.kmpuiviews.presentation.settings.appearance.ColorsScreen
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardScreen
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.BehaviorScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.ContentReadingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.behavior.LayoutScreen
@@ -232,6 +234,15 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     detailEntry<Screen.MoreSettings> {
         MoreSettingsScreen()
+    }
+
+    detailEntry<Screen.BackupWizard> {
+        val navActions = LocalNavActions.current
+        BackupWizardScreen(onDone = { navActions.popBackStack() })
+    }
+    detailEntry<Screen.RestoreWizard> {
+        val navActions = LocalNavActions.current
+        RestoreWizardScreen(onDone = { navActions.popBackStack() })
     }
 
     detailEntry<Screen.HistoryScreen> {

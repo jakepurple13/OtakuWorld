@@ -1,7 +1,11 @@
 package com.programmersbox.manga.shared
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import com.programmersbox.datastore.mangasettings.MangaSettings
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
 import kotlinx.coroutines.flow.firstOrNull
 import okio.BufferedSink
@@ -9,9 +13,14 @@ import okio.BufferedSource
 
 class MangaNewSettingsBackupProcessor(
     private val mangaNewSettingsHandling: MangaNewSettingsHandling,
-) : BackupProcessor() {
+) : BackupProcessor(), BackupUiInfo {
     override val fileName: String
         get() = "manga_settings"
+
+    override val key: String get() = fileName
+    override val displayName: String get() = "Manga Settings"
+    override val description: String? get() = "MangaWorld-specific preferences"
+    override val icon get() = Icons.Default.Settings
 
     override suspend fun backup(sink: BufferedSink) {
         mangaNewSettingsHandling
@@ -26,4 +35,13 @@ class MangaNewSettingsBackupProcessor(
             .preferences
             .updateData { MangaSettings.ADAPTER.decode(bufferedSource) }
     }
+
+    override suspend fun currentSummary() = BackupDataSummary(
+        details = listOf("Type" to "Manga settings"),
+    )
+
+    override suspend fun parseSummary(json: String?, rawBytes: ByteArray?) = BackupDataSummary(
+        sizeBytes = rawBytes?.size?.toLong(),
+        details = listOf("Type" to "Manga settings"),
+    )
 }

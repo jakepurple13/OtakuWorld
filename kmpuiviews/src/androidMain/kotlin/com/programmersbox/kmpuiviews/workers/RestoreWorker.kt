@@ -8,12 +8,16 @@ import androidx.core.content.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.programmersbox.kmpuiviews.readPlatformFile
 import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
+import com.programmersbox.sharedcomponents.backup.ItemResult
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 private const val RESTORE_NOTIFICATION_ID = 201
 
@@ -26,18 +30,23 @@ class RestoreWorker(
 
     override suspend fun doWork(): Result {
         val uri = inputData.getString("uri") ?: return Result.failure()
+        val selectedKeys = inputData.getStringArray("selectedKeys")?.toSet() ?: return Result.failure()
         setForeground(getForegroundInfo())
+        val results = mutableListOf<ItemResult>()
         return runCatching {
-            backup.restoreBackup(readPlatformFile(uri))
+            backup.restoreBackup(readPlatformFile(uri), selectedKeys) { result ->
+                results += result
+                setProgress(workDataOf("results" to Json.encodeToString(results.toList())))
+            }
         }.fold(
-            onSuccess = {
+            onSuccess = { finalResults ->
                 postCompletionNotification("Restore complete", timeoutAfter = 3000L)
-                Result.success()
+                Result.success(workDataOf("results" to Json.encodeToString(finalResults)))
             },
             onFailure = { e ->
                 recordFirebaseException(e)
                 postCompletionNotification("Restore failed", timeoutAfter = null)
-                Result.failure()
+                Result.failure(workDataOf("results" to Json.encodeToString(results.toList())))
             }
         )
     }

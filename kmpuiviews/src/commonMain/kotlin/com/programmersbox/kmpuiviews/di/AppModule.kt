@@ -29,7 +29,6 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackup
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
 import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
 import com.programmersbox.sharedtools.SearchRegistryItem
-import com.programmersbox.sharedtools.backupProcessor
 import com.programmersbox.supabaseintegration.di.SupabaseActions
 import com.programmersbox.supabaseintegration.di.supabaseModule
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
@@ -106,20 +105,20 @@ val appModule = module {
 }
 
 private fun Module.backupProcessors() {
-    backupProcessor("backupSettings", ::BackupSettingsProcessor)
-    backupProcessor("bookmarks", ::BookmarksBackupProcessor)
-    backupProcessor("chaptersWatched", ::ChaptersWatchedBackupProcessor)
-    backupProcessor("favorite", ::FavoriteBackupProcessor)
-    backupProcessor("heatMap", ::HeatMapBackupProcessor)
-    backupProcessor("history", ::HistoryBackupProcessor)
-    backupProcessor("incognito", ::IncognitoBackupProcessor)
-    backupProcessor("list", ::ListBackupProcessor)
-    backupProcessor("newSettings", ::NewSettingsBackupProcessor)
-    backupProcessor("notifications", ::NotificationsBackupProcessor)
-    backupProcessor("sourceOrder", ::SourceOrderBackupProcessor)
-    backupProcessor("notes", ::NotesBackupProcessor)
-    backupProcessor("recommendations", ::RecommendationsBackupProcessor)
-    backupProcessor("dictionary", ::DictionaryBackupProcessor)
+    backupProcessorWithUiInfo("backupSettings", ::BackupSettingsProcessor)
+    backupProcessorWithUiInfo("bookmarks", ::BookmarksBackupProcessor)
+    backupProcessorWithUiInfo("chaptersWatched", ::ChaptersWatchedBackupProcessor)
+    backupProcessorWithUiInfo("favorite", ::FavoriteBackupProcessor)
+    backupProcessorWithUiInfo("heatMap", ::HeatMapBackupProcessor)
+    backupProcessorWithUiInfo("history", ::HistoryBackupProcessor)
+    backupProcessorWithUiInfo("incognito", ::IncognitoBackupProcessor)
+    backupProcessorWithUiInfo("list", ::ListBackupProcessor)
+    backupProcessorWithUiInfo("newSettings", ::NewSettingsBackupProcessor)
+    backupProcessorWithUiInfo("notifications", ::NotificationsBackupProcessor)
+    backupProcessorWithUiInfo("sourceOrder", ::SourceOrderBackupProcessor)
+    backupProcessorWithUiInfo("notes", ::NotesBackupProcessor)
+    backupProcessorWithUiInfo("recommendations", ::RecommendationsBackupProcessor)
+    backupProcessorWithUiInfo("dictionary", ::DictionaryBackupProcessor)
 }
 
 expect fun platformModule(): Module

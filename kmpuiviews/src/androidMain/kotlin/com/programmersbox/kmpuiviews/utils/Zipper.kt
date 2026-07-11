@@ -3,18 +3,19 @@ package com.programmersbox.kmpuiviews.utils
 import android.content.Context
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.sharedtools.BackupProcessor
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.toAndroidUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
+import okio.Buffer
 import okio.buffer
 import okio.sink
-import okio.source
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.OutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -31,73 +32,101 @@ actual open class Zipper(
         println("Backup processors: $processors")
     }
 
-    actual suspend fun zipFile(platformFile: PlatformFile) {
-        val f = platformFile.toAndroidUri("")
-        withContext(Dispatchers.IO) {
-            val pfd = context
-                .contentResolver
-                .openFileDescriptor(f, "w")!!
-            ZipOutputStream(FileOutputStream(pfd.fileDescriptor)).use { zip ->
-                backupProcessors.forEach { backup ->
-                    logFirebaseMessage("Zipping ${backup.fileName}")
-                    val duration = measureTime {
-                        zip.putNextEntry(ZipEntry(backup.fileName))
-                        runCatching {
-                            measureTime {
-                                val sink = zip.sink().buffer()
-                                backup.backup(sink)
-                                sink.flush()
-                            }
-                        }
-                            .onSuccess { println("Wrote ${backup.fileName} in $it") }
-                            .logFailureToDatabase()
+    actual suspend fun zipFile(
+        platformFile: PlatformFile,
+        selectedKeys: Set<String>,
+        onItemComplete: suspend (ItemResult) -> Unit,
+    ): List<ItemResult> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<ItemResult>()
+        val pfd = context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "w")!!
+        ZipOutputStream(FileOutputStream(pfd.fileDescriptor)).use { zip ->
+            backupProcessors.filter { it.fileName in selectedKeys }.forEach { backup ->
+                logFirebaseMessage("Zipping ${backup.fileName}")
+                val duration = measureTime {
+                    zip.putNextEntry(ZipEntry(backup.fileName))
+                    val result = runCatching {
+                        val sink = zip.sink().buffer()
+                        backup.backup(sink)
+                        sink.flush()
                     }
-
-                    logFirebaseMessage("Zipped ${backup.fileName} in $duration")
+                        .onFailure { it.printStackTrace(); exceptionDao.insertException(it) }
+                        .fold(
+                            onSuccess = { ItemResult(backup.fileName, success = true) },
+                            onFailure = { e -> ItemResult(backup.fileName, success = false, error = e.message) },
+                        )
+                    results += result
+                    onItemComplete(result)
                 }
+                logFirebaseMessage("Zipped ${backup.fileName} in $duration")
             }
         }
+        results
     }
 
-    actual suspend fun readZip(platformFile: PlatformFile) {
-        withContext(Dispatchers.IO) {
-            val pfd = context
-                .contentResolver
-                .openFileDescriptor(platformFile.toAndroidUri(""), "r")!!
-            pfd.use {
-                FileInputStream(it.fileDescriptor).use { inStream ->
-                    ZipInputStream(inStream).use { zipIs ->
-                        var entry: ZipEntry?
-                        while (true) {
-                            entry = zipIs.nextEntry
-                            if (entry == null) break
+    actual suspend fun readZip(
+        platformFile: PlatformFile,
+        selectedKeys: Set<String>,
+        onItemComplete: suspend (ItemResult) -> Unit,
+    ): List<ItemResult> = withContext(Dispatchers.IO) {
+        val results = mutableListOf<ItemResult>()
+        context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "r")!!.use { pfd ->
+            FileInputStream(pfd.fileDescriptor).use { inStream ->
+                ZipInputStream(inStream).use { zipIs ->
+                    var entry: ZipEntry? = zipIs.nextEntry
+                    while (entry != null) {
+                        val name = entry.name
+                        val processor = backupProcessors.find { it.fileName == name }
+                        if (name in selectedKeys && processor != null) {
                             val duration = measureTime {
-                                runCatching {
-                                    backupProcessors
-                                        .find { it.fileName == entry.name }
-                                        .also { logFirebaseMessage("Unzipping ${it?.fileName}") }
-                                        ?.restore(
-                                            json = zipIs.bufferedReader().readText(),
-                                            bufferedSource = zipIs.source().buffer()
-                                        )
-                                }.logFailureToDatabase()
+                                val result = runCatching {
+                                    val bytes = zipIs.readBytes()
+                                    processor.restore(
+                                        json = bytes.decodeToString(),
+                                        bufferedSource = Buffer().apply { write(bytes) },
+                                    )
+                                }
+                                    .fold(
+                                        onSuccess = { ItemResult(name, success = true) },
+                                        onFailure = { e -> ItemResult(name, success = false, error = e.message) },
+                                    )
+                                results += result
+                                onItemComplete(result)
                             }
-                            logFirebaseMessage("Unzipped ${entry.name} in $duration")
+                            logFirebaseMessage("Unzipped $name in $duration")
                         }
+                        entry = zipIs.nextEntry
                     }
                 }
             }
         }
+        results
     }
 
-    protected suspend fun <T> Result<T>.logFailureToDatabase() = onFailure {
-        it.printStackTrace()
-        exceptionDao.insertException(it)
-    }
-
-    protected inline fun <reified T> dataToOutputStream(data: T, outputStream: OutputStream) {
-        Json.encodeToString(data)
-            .byteInputStream()
-            .copyTo(outputStream)
+    actual suspend fun peekZip(
+        platformFile: PlatformFile,
+        uiInfos: List<BackupUiInfo>,
+    ): Map<String, BackupDataSummary> = withContext(Dispatchers.IO) {
+        val summaries = mutableMapOf<String, BackupDataSummary>()
+        context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "r")!!.use { pfd ->
+            FileInputStream(pfd.fileDescriptor).use { inStream ->
+                ZipInputStream(inStream).use { zipIs ->
+                    var entry: ZipEntry? = zipIs.nextEntry
+                    while (entry != null) {
+                        val name = entry.name
+                        val uiInfo = uiInfos.find { it.key == name }
+                        if (uiInfo != null) {
+                            runCatching {
+                                val bytes = zipIs.readBytes()
+                                uiInfo.parseSummary(json = bytes.decodeToString(), rawBytes = bytes)
+                            }
+                                .onSuccess { summaries[name] = it }
+                                .onFailure { it.printStackTrace(); exceptionDao.insertException(it) }
+                        }
+                        entry = zipIs.nextEntry
+                    }
+                }
+            }
+        }
+        summaries
     }
 }

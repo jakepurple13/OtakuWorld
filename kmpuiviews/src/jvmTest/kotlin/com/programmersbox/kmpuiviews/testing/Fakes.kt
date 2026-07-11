@@ -10,6 +10,8 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.ExceptionDao
+import com.programmersbox.favoritesdatabase.ExceptionItem
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
@@ -33,6 +35,7 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.datastore.otakuDataStore
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import io.github.jan.supabase.auth.providers.OAuthProvider
@@ -162,8 +165,10 @@ class FakeBackgroundWorkHandler : BackgroundWorkHandler {
     override fun workerInfoFlow(): Flow<List<WorkerInfoModel>> = flowOf(emptyList())
     override fun sourceUpdate() {}
     override fun cancel(uuid: String) {}
-    override fun startBackup(file: PlatformFile) {}
-    override fun startRestore(file: PlatformFile) {}
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {}
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {}
+    override fun backupResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
+    override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
 }
 
 class FakeTranslationModelHandler : TranslationModelHandler {
@@ -195,4 +200,21 @@ class FakeDownloadStateInterface : DownloadStateInterface {
     override fun install(url: String): Flow<DownloadAndInstallStatus> = emptyFlow()
     override fun downloadAndInstall(url: String) {}
     override fun downloadThenInstall(url: String) {}
+}
+
+class FakeExceptionDao : ExceptionDao {
+    val insertedExceptions = mutableListOf<ExceptionItem>()
+    override fun getAllExceptions(): Flow<List<ExceptionItem>> = flowOf(insertedExceptions.toList())
+    override fun getExceptionCount(): Flow<Int> = flowOf(insertedExceptions.size)
+    override suspend fun insertException(model: ExceptionItem) {
+        insertedExceptions += model
+    }
+
+    override suspend fun deleteException(model: ExceptionItem) {
+        insertedExceptions -= model
+    }
+
+    override suspend fun deleteAll() {
+        insertedExceptions.clear()
+    }
 }

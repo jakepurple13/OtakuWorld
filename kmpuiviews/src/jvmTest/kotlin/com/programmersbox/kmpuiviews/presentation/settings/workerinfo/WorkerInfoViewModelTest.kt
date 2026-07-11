@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.workerinfo
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,8 +54,10 @@ class WorkerInfoViewModelTest {
             cancelledIds.add(uuid)
         }
 
-        override fun startBackup(file: PlatformFile) {}
-        override fun startRestore(file: PlatformFile) {}
+        override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {}
+        override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {}
+        override fun backupResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
+        override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
     }
 
     private fun workerInfoModel(id: String, workerName: String = "Worker $id") = WorkerInfoModel(

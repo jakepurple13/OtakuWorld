@@ -22,6 +22,7 @@ import com.programmersbox.kmpuiviews.workers.LocalToCloudSyncWorker
 import com.programmersbox.kmpuiviews.workers.RestoreWorker
 import com.programmersbox.kmpuiviews.workers.SourceUpdateChecker
 import com.programmersbox.kmpuiviews.workers.UpdateFlowWorker
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.toAndroidUri
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -31,6 +32,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -289,23 +292,51 @@ class BackgroundWorkHandlerImpl(
         workManager.cancelWorkById(UUID.fromString(uuid))
     }
 
-    override fun startBackup(file: PlatformFile) {
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {
         workManager.enqueueUniqueWork(
             "backup",
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<BackupWorker>()
-                .setInputData(workDataOf("uri" to file.toAndroidUri("").toString()))
+                .setInputData(
+                    workDataOf(
+                        "uri" to file.toAndroidUri("").toString(),
+                        "selectedKeys" to selectedKeys.toTypedArray(),
+                    )
+                )
                 .build()
         )
     }
 
-    override fun startRestore(file: PlatformFile) {
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {
         workManager.enqueueUniqueWork(
             "restore",
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<RestoreWorker>()
-                .setInputData(workDataOf("uri" to file.toAndroidUri("").toString()))
+                .setInputData(
+                    workDataOf(
+                        "uri" to file.toAndroidUri("").toString(),
+                        "selectedKeys" to selectedKeys.toTypedArray(),
+                    )
+                )
                 .build()
         )
     }
+
+    override fun backupResultsFlow(): Flow<List<ItemResult>> = workManager
+        .getWorkInfosForUniqueWorkFlow("backup")
+        .map { infos ->
+            infos.firstOrNull()
+                ?.let { it.outputData.getString("results") ?: it.progress.getString("results") }
+                ?.let { Json.decodeFromString<List<ItemResult>>(it) }
+                .orEmpty()
+        }
+
+    override fun restoreResultsFlow(): Flow<List<ItemResult>> = workManager
+        .getWorkInfosForUniqueWorkFlow("restore")
+        .map { infos ->
+            infos.firstOrNull()
+                ?.let { it.outputData.getString("results") ?: it.progress.getString("results") }
+                ?.let { Json.decodeFromString<List<ItemResult>>(it) }
+                .orEmpty()
+        }
 }

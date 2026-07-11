@@ -1,16 +1,25 @@
 package com.programmersbox.kmpuiviews.utils.backupproccesor
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.ItemDao
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
 import okio.BufferedSink
 import okio.BufferedSource
 
 class ChaptersWatchedBackupProcessor(
     private val itemDao: ItemDao,
-) : BackupProcessor() {
+) : BackupProcessor(), BackupUiInfo {
     override val fileName: String
         get() = "chapters_watched.json"
+
+    override val key: String get() = fileName
+    override val displayName: String get() = "Chapters Watched"
+    override val description: String? get() = "Read/watched chapter markers"
+    override val icon get() = Icons.Default.CheckCircle
 
     override suspend fun backup(sink: BufferedSink) {
         itemDao
@@ -22,4 +31,11 @@ class ChaptersWatchedBackupProcessor(
     override suspend fun restore(json: String, bufferedSource: BufferedSource) {
         json.fromJson<List<ChapterWatched>>().forEach { itemDao.insertChapter(it) }
     }
+
+    override suspend fun currentSummary() = BackupDataSummary(itemCount = itemDao.getAllChaptersSync().size)
+
+    override suspend fun parseSummary(json: String?, rawBytes: ByteArray?) = BackupDataSummary(
+        itemCount = json?.let { runCatching { it.fromJson<List<ChapterWatched>>().size }.getOrNull() },
+        sizeBytes = rawBytes?.size?.toLong(),
+    )
 }
