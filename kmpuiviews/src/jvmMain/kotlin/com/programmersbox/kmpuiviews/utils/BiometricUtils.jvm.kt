@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.remember
+import eu.anifantakis.lib.ksafe.biometrics.KSafeBiometrics
 
 actual class BiometricPrompting {
 
@@ -26,7 +27,14 @@ actual class BiometricPrompting {
 
     @OptIn(ExperimentalComposeApi::class)
     actual fun authenticate(promptInfo: PromptCallback) {
-        promptInfo.onAuthenticationFailed()
+        KSafeBiometrics.verifyBiometricDirect(
+            reason = "${promptInfo.title}\n${promptInfo.subtitle}",
+        ) {
+            if (it)
+                promptInfo.onAuthenticationSucceeded()
+            else
+                promptInfo.onAuthenticationFailed()
+        }
     }
 }
 
