@@ -1,5 +1,7 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.backup
 
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -16,7 +18,7 @@ class BackupDataSummaryTest {
 
     @Test
     fun `item result defaults error to null`() {
-        val result = ItemResult(key = "favorites.json", success = true)
+        val result = ItemResult(key = "favorites.json", success = true, timeTaken = "100ms")
         assertNull(result.error)
     }
 }

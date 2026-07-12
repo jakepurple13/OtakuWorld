@@ -24,5 +24,6 @@ data class BackupDataSummary(
 data class ItemResult(
     val key: String,
     val success: Boolean,
+    val timeTaken: String,
     val error: String? = null,
 )

@@ -1,5 +1,10 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.backup
 
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardStep
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardViewModel
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -100,7 +105,7 @@ class RestoreWizardViewModelTest {
         vm.confirm()
         assertEquals(RestoreWizardStep.Executing, vm.state.value.step)
 
-        results.value = listOf(ItemResult("a", success = true))
+        results.value = listOf(ItemResult("a", timeTaken = "100ms", success = true))
         awaitCondition { vm.state.value.step == RestoreWizardStep.Complete }
         assertEquals(RestoreWizardStep.Complete, vm.state.value.step)
         assertEquals(1, vm.state.value.results.size)

@@ -20,6 +20,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 actual open class Zipper(
     private val context: Context,
@@ -45,14 +46,32 @@ actual open class Zipper(
                 val duration = measureTime {
                     zip.putNextEntry(ZipEntry(backup.fileName))
                     val result = runCatching {
-                        val sink = zip.sink().buffer()
-                        backup.backup(sink)
-                        sink.flush()
+                        measureTimedValue {
+                            val sink = zip.sink().buffer()
+                            backup.backup(sink)
+                            sink.flush()
+                        }
                     }
-                        .onFailure { it.printStackTrace(); exceptionDao.insertException(it) }
+                        .onFailure {
+                            it.printStackTrace()
+                            exceptionDao.insertException(it)
+                        }
                         .fold(
-                            onSuccess = { ItemResult(backup.fileName, success = true) },
-                            onFailure = { e -> ItemResult(backup.fileName, success = false, error = e.message) },
+                            onSuccess = {
+                                ItemResult(
+                                    backup.fileName,
+                                    timeTaken = it.duration.toString(),
+                                    success = true
+                                )
+                            },
+                            onFailure = { e ->
+                                ItemResult(
+                                    backup.fileName,
+                                    timeTaken = e.message ?: "Unknown error",
+                                    success = false,
+                                    error = e.message
+                                )
+                            },
                         )
                     results += result
                     onItemComplete(result)
@@ -79,15 +98,30 @@ actual open class Zipper(
                         if (name in selectedKeys && processor != null) {
                             val duration = measureTime {
                                 val result = runCatching {
-                                    val bytes = zipIs.readBytes()
-                                    processor.restore(
-                                        json = bytes.decodeToString(),
-                                        bufferedSource = Buffer().apply { write(bytes) },
-                                    )
+                                    measureTimedValue {
+                                        val bytes = zipIs.readBytes()
+                                        processor.restore(
+                                            json = bytes.decodeToString(),
+                                            bufferedSource = Buffer().apply { write(bytes) },
+                                        )
+                                    }
                                 }
                                     .fold(
-                                        onSuccess = { ItemResult(name, success = true) },
-                                        onFailure = { e -> ItemResult(name, success = false, error = e.message) },
+                                        onSuccess = {
+                                            ItemResult(
+                                                name,
+                                                timeTaken = it.duration.toString(),
+                                                success = true
+                                            )
+                                        },
+                                        onFailure = { e ->
+                                            ItemResult(
+                                                name,
+                                                timeTaken = e.message ?: "Unknown error",
+                                                success = false,
+                                                error = e.message
+                                            )
+                                        },
                                     )
                                 results += result
                                 onItemComplete(result)

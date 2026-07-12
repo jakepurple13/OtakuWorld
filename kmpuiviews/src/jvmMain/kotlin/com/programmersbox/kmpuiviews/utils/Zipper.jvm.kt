@@ -17,6 +17,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlin.time.measureTime
+import kotlin.time.measureTimedValue
 
 actual class Zipper(
     private val backupProcessors: List<BackupProcessor>,
@@ -38,13 +39,22 @@ actual class Zipper(
                 val duration = measureTime {
                     zip.putNextEntry(ZipEntry(processor.fileName))
                     val result = runCatching {
-                        val sink = zip.sink().buffer()
-                        processor.backup(sink)
-                        sink.flush()
+                        measureTimedValue {
+                            val sink = zip.sink().buffer()
+                            processor.backup(sink)
+                            sink.flush()
+                        }
                     }
                         .fold(
-                            onSuccess = { ItemResult(processor.fileName, success = true) },
-                            onFailure = { e -> ItemResult(processor.fileName, success = false, error = e.message) },
+                            onSuccess = { ItemResult(processor.fileName, timeTaken = it.duration.toString(), success = true) },
+                            onFailure = { e ->
+                                ItemResult(
+                                    processor.fileName,
+                                    timeTaken = e.message ?: "Unknown Error",
+                                    success = false,
+                                    error = e.message
+                                )
+                            },
                         )
                     results += result
                     onItemComplete(result)
@@ -70,15 +80,24 @@ actual class Zipper(
                     if (name in selectedKeys && processor != null) {
                         val duration = measureTime {
                             val result = runCatching {
-                                val bytes = zipIs.readBytes()
-                                processor.restore(
-                                    json = bytes.decodeToString(),
-                                    bufferedSource = Buffer().apply { write(bytes) },
-                                )
+                                measureTimedValue {
+                                    val bytes = zipIs.readBytes()
+                                    processor.restore(
+                                        json = bytes.decodeToString(),
+                                        bufferedSource = Buffer().apply { write(bytes) },
+                                    )
+                                }
                             }
                                 .fold(
-                                    onSuccess = { ItemResult(name, success = true) },
-                                    onFailure = { e -> ItemResult(name, success = false, error = e.message) },
+                                    onSuccess = { ItemResult(name, timeTaken = it.duration.toString(), success = true) },
+                                    onFailure = { e ->
+                                        ItemResult(
+                                            name,
+                                            timeTaken = e.message ?: "Unknown Error",
+                                            success = false,
+                                            error = e.message
+                                        )
+                                    },
                                 )
                             results += result
                             onItemComplete(result)

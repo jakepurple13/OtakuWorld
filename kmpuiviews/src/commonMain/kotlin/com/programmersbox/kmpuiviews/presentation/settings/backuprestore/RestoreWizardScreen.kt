@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -99,7 +102,11 @@ fun RestoreWizardScreen(
                 RestoreWizardStep.Review -> {
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(state.items, key = { it.uiInfo.key }) { item ->
-                            WizardItemRow(item = item.copy(expanded = true), onToggleSelected = {}, onToggleExpanded = {})
+                            WizardItemRow(
+                                item = item.copy(expanded = true),
+                                onToggleSelected = {},
+                                onToggleExpanded = {}
+                            )
                         }
                     }
                     Row(
@@ -119,16 +126,35 @@ fun RestoreWizardScreen(
                 }
 
                 RestoreWizardStep.Executing -> {
-                    Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
                         Text("Restoring… (${state.results.size}/${state.items.size} done)")
+                        state.results.forEach { result ->
+                            ListItem(
+                                headlineContent = { Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}") },
+                                supportingContent = { Text(result.timeTaken) }
+                            )
+                        }
                     }
                 }
 
                 RestoreWizardStep.Complete -> {
-                    Column(modifier = Modifier.weight(1f).padding(16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
                         Text("Restore complete")
                         state.results.forEach { result ->
-                            Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}")
+                            ListItem(
+                                headlineContent = { Text(if (result.success) "✓ ${result.key}" else "✗ ${result.key}: ${result.error}") },
+                                supportingContent = { Text(result.timeTaken) }
+                            )
                         }
                         Button(onClick = onDone, modifier = Modifier.padding(top = 16.dp)) { Text("Done") }
                     }

@@ -1,5 +1,10 @@
-package com.programmersbox.sharedcomponents.backup
+package com.programmersbox.kmpuiviews.backup
 
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardStep
+import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardViewModel
+import com.programmersbox.sharedcomponents.backup.BackupDataSummary
+import com.programmersbox.sharedcomponents.backup.BackupUiInfo
+import com.programmersbox.sharedcomponents.backup.ItemResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -102,11 +107,11 @@ class BackupWizardViewModelTest {
         vm.confirm("file.zip")
         assertEquals(BackupWizardStep.Executing, vm.state.value.step)
 
-        results.value = listOf(ItemResult("a", success = true))
+        results.value = listOf(ItemResult("a", timeTaken = "100ms", success = true))
         awaitCondition { vm.state.value.results.size == 1 }
         assertEquals(BackupWizardStep.Executing, vm.state.value.step)
 
-        results.value = listOf(ItemResult("a", success = true), ItemResult("b", success = true))
+        results.value = listOf(ItemResult("a", timeTaken = "100ms", success = true), ItemResult("b", timeTaken = "100ms", success = true))
         awaitCondition { vm.state.value.step == BackupWizardStep.Complete }
         assertEquals(BackupWizardStep.Complete, vm.state.value.step)
         assertEquals(2, vm.state.value.results.size)
