@@ -1,19 +1,19 @@
 [versions]
 androidx-baselineprofile = "1.4.1"
 androidxBaselineprofileGradlePlugin = "1.3.4"
-buildKonfig = "0.21.2"
-compose-multiplatform = "1.12.0-alpha02"
+buildKonfig = "0.22.0"
+compose-multiplatform = "1.12.0-beta02"
 easylauncher = "6.4.1"
 firebaseCrashlyticsGradle = "3.0.7"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 googlePerformancePlugin = "2.0.2"
 googleServices = "4.5.0"
 gradle = "9.2.1"
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 kotzilla = "2.2.2"
 kspVersion = "2.3.9"
 latestAboutLibsRelease = "14.2.1"
-roomVersion = "3.0.0-rc01"
+roomVersion = "3.0.0"
 protobufGradlePlugin = "0.10.0"
 
 [libraries]
