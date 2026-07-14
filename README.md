@@ -165,9 +165,8 @@ A JVM/Desktop Compose build of MangaWorld, sharing UI with the Android app via `
 ./gradlew :mangaworld:desktop:run
 ```
 
-**Works:** browsing, search, favorites, manga lists/details, reading chapters in the built-in reader.
-
-**Not yet supported:** downloads and custom lists.
+**Works:** browsing, search, favorites, manga lists/details, reading chapters in the built-in reader, downloads
+(with configurable download directory in Platform Settings), and custom lists.
 
 ## AnimeWorld Desktop
 
