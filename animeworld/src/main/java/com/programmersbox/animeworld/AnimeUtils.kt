@@ -3,7 +3,6 @@ package com.programmersbox.animeworld
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
-import android.content.Intent
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
@@ -50,20 +49,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import com.programmersbox.animeworld.videoplayer.VideoPlayerActivity
-import com.programmersbox.animeworld.videoplayer.VideoViewModel
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.sharedPrefNotNullDelegate
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
 
 var Context.folderLocation: String by sharedPrefNotNullDelegate(
@@ -86,34 +79,6 @@ class AnimeDataStoreHandling {
         key = booleanPreferencesKey("ignore_ssl"),
         defaultValue = true,
     )
-}
-
-@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-fun Context.navigateToVideoPlayer(
-    navController: NavigationActions,
-    assetFileStringUri: String?,
-    videoName: String?,
-    downloadOrStream: Boolean,
-    referer: String = "",
-) {
-    if (runBlocking { useNewPlayerFlow.first() }) {
-        VideoViewModel.navigateToVideoPlayer(
-            navController,
-            assetFileStringUri.orEmpty(),
-            videoName.orEmpty(),
-            downloadOrStream,
-            referer
-        )
-    } else {
-        startActivity(
-            Intent(this, VideoPlayerActivity::class.java).apply {
-                putExtra("showPath", assetFileStringUri)
-                putExtra("showName", videoName)
-                putExtra("downloadOrStream", downloadOrStream)
-                data = assetFileStringUri?.toUri()
-            }
-        )
-    }
 }
 
 data class VideoContent(
