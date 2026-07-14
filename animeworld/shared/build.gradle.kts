@@ -1,3 +1,5 @@
+import plugins.ProductFlavorTypes
+
 plugins {
     `otaku-multiplatform`
     alias(libs.plugins.composeMultiplatform)
@@ -10,6 +12,15 @@ kotlin {
         namespace = "com.programmersbox.anime.shared"
         androidResources {
             enable = true
+        }
+        // :animeworld:shared's android target has no product flavors of its own, but its
+        // androidMain dependency on `projects.uiViews` (for GenericInfo/BatteryInformation2) does
+        // -- UIViews declares the noFirebase/full "version" flavor dimension. Without this, Gradle
+        // can't pick a variant of UIViews to compile against. Match the app's default flavor.
+        localDependencySelection {
+            productFlavorDimension(ProductFlavorTypes.dimension) {
+                selectFrom.set(listOf(ProductFlavorTypes.NoFirebase.nameType))
+            }
         }
     }
 
@@ -35,6 +46,12 @@ kotlin {
             implementation(commonLibs.bundles.datastoreLibs)
 
             implementation(commonLibs.androidx.navigation3.runtime)
+        }
+
+        androidMain.dependencies {
+            implementation(androidLibs.bundles.media3)
+            implementation(projects.uiViews)
+            implementation(Deps.helpfulutils)
         }
 
         jvmMain.dependencies {
