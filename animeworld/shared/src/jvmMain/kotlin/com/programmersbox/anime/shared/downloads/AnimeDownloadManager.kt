@@ -42,6 +42,7 @@ class AnimeDownloadManager(
             val destFile = File(destDir, "${chapter.name.sanitizeForPath()}.mp4")
 
             try {
+                // v1 limitation: buffers entire stream in memory and always writes .mp4 extension (even if source is .m3u8/HLS)
                 val bytes: ByteArray = httpClient.get(link) {
                     headers { storage.headers.forEach { (key, value) -> append(key, value) } }
                 }.body()

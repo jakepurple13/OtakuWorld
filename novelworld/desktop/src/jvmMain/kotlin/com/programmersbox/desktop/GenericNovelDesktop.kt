@@ -2,6 +2,7 @@ package com.programmersbox.desktop
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopMac
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ class GenericNovelDesktop(
         navGraph.entry<PlatformSettings> { JvmSettingsScreen() }
     }
 
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun composeCustomPreferences(): ComposeSettingsDsl.() -> Unit = {
         viewSettings {
             segmentedListItem(

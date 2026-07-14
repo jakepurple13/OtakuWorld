@@ -18,6 +18,7 @@ import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.domain.AppUpdate
 
 class GenericAnimeDesktop(
     appConfig: AppConfig,
@@ -27,6 +28,8 @@ class GenericAnimeDesktop(
 
     @Composable
     override fun ProfileIcon(): String = ""
+
+    override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
 
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
