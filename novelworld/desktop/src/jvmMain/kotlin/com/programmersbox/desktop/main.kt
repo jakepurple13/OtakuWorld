@@ -9,6 +9,8 @@ import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.BuildType
+import com.programmersbox.kmpuiviews.ExtensionWatcher
+import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
@@ -46,6 +48,13 @@ fun main(args: Array<String>) {
                                 )
                             }
                             singleOf(::GenericNovelDesktop) { bindsGenericInfo() }
+                            single {
+                                ExtensionWatcher(
+                                    extensionsDir = get<MangaDesktopSettings>()
+                                        .extensionDirectory
+                                        .asFlow()
+                                )
+                            }
 
                             includes(novelSharedModule())
                         }
