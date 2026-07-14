@@ -58,8 +58,6 @@ import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
 import com.programmersbox.animeworld.videochoice.VideoSourceModel
 import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoScreen
-import com.programmersbox.animeworld.videos.VideoViewerRoute
-import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.datastore.asState
@@ -454,9 +452,7 @@ class GenericAnime(
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
-        navGraph.entry<VideoViewerRoute> {
-            ViewVideoScreen()
-        }
+        // TODO: wire up the shared VideoViewerRoute/ViewVideoScreen (Task 6 of the video-player-shared plan)
     }
 
     @Composable
