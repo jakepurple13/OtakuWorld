@@ -81,6 +81,8 @@ dependencies {
 
     implementation(commonLibs.ktorAndroid)
 
+    implementation(projects.animeworld.shared)
+
     implementation(androidx.profileinstaller.profileinstaller)
     baselineProfile(projects.animeWorldbaselineprofile)
 }
