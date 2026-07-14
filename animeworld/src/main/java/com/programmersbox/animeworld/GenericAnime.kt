@@ -61,6 +61,7 @@ import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.anime.shared.GenericSharedAnime
+import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.datastore.asState
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
@@ -105,10 +106,6 @@ val appModule = module {
     singleOf(::Backup)
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
-}
-
-class StorageHolder {
-    var storageModel: KmpStorage? = null
 }
 
 class GenericAnime(

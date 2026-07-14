@@ -1,7 +1,5 @@
-package com.programmersbox.animeworld.videochoice
+package com.programmersbox.anime.shared.videochoice
 
-import android.content.Context
-import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled._360
 import androidx.compose.material.icons.filled.DeviceUnknown
@@ -14,58 +12,68 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import com.programmersbox.animeworld.GenericAnime
-import com.programmersbox.animeworld.MainActivity
-import com.programmersbox.animeworld.Qualities
-import com.programmersbox.animeworld.R
-import com.programmersbox.animeworld.getQualityFromName
-import com.programmersbox.animeworld.navigateToVideoPlayer
+import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpStorage
+import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomScreen
 import com.programmersbox.kmpuiviews.presentation.components.ListBottomSheetItemModel
-import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.uiviews.GenericInfo
-import org.koin.compose.koinInject
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+
+enum class Qualities(var value: Int) {
+    Unknown(0),
+    P360(-2), // 360p
+    P480(-1), // 480p
+    P720(1), // 720p
+    P1080(2), // 1080p
+    P1440(3), // 1440p
+    P2160(4) // 4k or 2160p
+}
+
+fun getQualityFromName(qualityName: String): Qualities {
+    return when (qualityName.replace("p", "").replace("P", "")) {
+        "360" -> Qualities.P360
+        "480" -> Qualities.P480
+        "720" -> Qualities.P720
+        "1080" -> Qualities.P1080
+        "1440" -> Qualities.P1440
+        "2160" -> Qualities.P2160
+        "4k" -> Qualities.P2160
+        "4K" -> Qualities.P2160
+        else -> Qualities.Unknown
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoChoiceScreen(
-    context: Context = LocalContext.current,
     items: List<KmpStorage>,
     infoModel: KmpInfoModel,
     isStreaming: Boolean,
     model: KmpChapterModel,
-    genericInfo: GenericInfo = koinInject(),
+    genericInfo: KmpGenericInfo,
+    navController: NavigationActions,
+    isCastActive: () -> Boolean = { false },
+    onCastLoad: (KmpStorage) -> Unit = {},
 ) {
-    val navController = LocalNavActions.current
-    val activity = LocalActivity.current
-
     val onAction: (KmpStorage) -> Unit = {
         VideoSourceModel.showVideoSources = null
         if (isStreaming) {
-            if (MainActivity.cast.isCastActive()) {
-                MainActivity.cast.loadUrl(
-                    it.link,
-                    infoModel.title,
-                    model.name,
-                    infoModel.imageUrl,
-                    it.headers
-                )
+            if (isCastActive()) {
+                onCastLoad(it)
             } else {
-                context.navigateToVideoPlayer(
-                    navController,
-                    it.link,
-                    model.name,
-                    false,
-                    it.headers["referer"] ?: it.source.orEmpty()
+                navController.navigate(
+                    VideoScreen(
+                        showPath = it.link.orEmpty(),
+                        showName = model.name,
+                        downloadOrStream = false,
+                        referer = it.headers["referer"] ?: it.source.orEmpty()
+                    )
                 )
             }
         } else {
-            activity?.let { it1 -> (genericInfo as GenericAnime).downloadVideo(it1, model, it) }
+            genericInfo.downloadChapter(model, listOf(model), infoModel, navController)
         }
     }
 
@@ -75,7 +83,7 @@ fun VideoChoiceScreen(
     ) {
         ListBottomScreen(
             includeInsetPadding = false,
-            title = stringResource(R.string.choose_quality_for, model.name),
+            title = "Choose quality for ${model.name}",
             list = items,
             onClick = { onAction(it) }
         ) {

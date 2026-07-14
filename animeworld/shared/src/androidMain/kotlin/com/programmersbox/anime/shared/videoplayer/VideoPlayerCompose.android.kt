@@ -1,4 +1,4 @@
-package com.programmersbox.animeworld.videoplayer
+package com.programmersbox.anime.shared.videoplayer
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -48,7 +48,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -76,13 +75,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -97,9 +95,9 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import com.programmersbox.animeworld.StorageHolder
-import com.programmersbox.animeworld.composables.AirBar
-import com.programmersbox.animeworld.ignoreSsl
+import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
@@ -111,6 +109,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.compose.koinInject
@@ -123,16 +122,22 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import kotlin.math.abs
 
+// `Context.ignoreSsl` (com.programmersbox.animeworld.ignoreSsl in the animeworld app module) can't be
+// imported here: :animeworld:shared's androidMain does not (and must not) depend on the animeworld
+// app module -- dependencies only flow the other direction (app -> shared). This is a local,
+// self-contained copy backed by the same "ignore_ssl" otakuDataStore key, so it reads/writes the
+// same underlying preference as the app module's copy.
+private val IGNORE_SSL = booleanPreferencesKey("ignore_ssl")
+private val Context.ignoreSsl get() = otakuDataStore.data.map { it[IGNORE_SSL] ?: true }
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-fun VideoPlayerUi(
-    screen: VideoScreen,
-    context: Context = LocalContext.current,
-    genericInfo: GenericInfo = koinInject(),
-    storageHolder: StorageHolder = koinInject(),
-    viewModel: VideoViewModel = viewModel { VideoViewModel(screen, context, storageHolder) },
-) {
+actual fun VideoPlayerUi(videoScreen: VideoScreen) {
+    val context = LocalContext.current
+    val genericInfo = koinInject<GenericInfo>()
+    val storageHolder = koinInject<StorageHolder>()
+    val viewModel: VideoViewModel = viewModel { VideoViewModel(videoScreen, context, storageHolder) }
     val activity = LocalActivity.current
 
     val audioManager = remember { context.audioManager }
@@ -412,44 +417,6 @@ fun VideoBottomBar(
                 }
             }
         }
-    }
-}
-
-@Composable
-@Preview
-fun VideoPlayerPreview() {
-    MaterialTheme(darkColorScheme()) {
-        VideoPlayerUi(
-            screen = VideoScreen(
-                showPath = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                showName = "Test",
-                downloadOrStream = true,
-                referer = ""
-            )
-        )
-    }
-}
-
-@Composable
-@Preview(device = Devices.AUTOMOTIVE_1024p, widthDp = 720, heightDp = 360)
-fun BottomBarPreview() {
-    MaterialTheme(darkColorScheme()) {
-        Scaffold(
-            bottomBar = {
-                VideoBottomBar(
-                    visible = true,
-                    currentTime = "00:00",
-                    totalTime = "00:00",
-                    currentPosition = 0L,
-                    totalDuration = 100L,
-                    isPlaying = true,
-                    playPauseToggle = {},
-                    seekTo = {},
-                    rewind = {},
-                    fastForward = {}
-                )
-            }
-        ) { Box(modifier = Modifier.padding(it)) }
     }
 }
 

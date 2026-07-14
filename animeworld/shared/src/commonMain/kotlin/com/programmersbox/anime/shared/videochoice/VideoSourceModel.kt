@@ -1,4 +1,4 @@
-package com.programmersbox.animeworld.videochoice
+package com.programmersbox.anime.shared.videochoice
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
