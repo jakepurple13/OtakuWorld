@@ -46,8 +46,6 @@ kotlin {
             implementation(commonLibs.coroutinesCore)
             implementation(desktopLibs.kotlinx.coroutines.swing)
             api(commonLibs.androidx.navigation3.runtime)
-            api(commonLibs.filekit.core)
-            api(commonLibs.filekit.dialogs.compose)
         }
 
         jvmMain.dependencies {
