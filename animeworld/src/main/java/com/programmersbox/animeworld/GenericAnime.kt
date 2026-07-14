@@ -78,8 +78,8 @@ import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
 import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.animeworld.videos.VideoViewerRoute
 import com.programmersbox.animeworld.videos.ViewVideoScreen
+import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.datastore.asState
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
 import com.programmersbox.helpfulutils.runOnUIThread
@@ -87,12 +87,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.KmpStorage
-import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.domain.AppUpdate
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
-import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
 import com.programmersbox.kmpuiviews.presentation.components.settings.PreferenceSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.ShowWhen
@@ -100,12 +95,10 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSett
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Backup
-import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.Zipper
-import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.bindsGenericInfo
@@ -140,19 +133,10 @@ class GenericAnime(
     val context: Context,
     val storageHolder: StorageHolder,
     val animeDataStoreHandling: AnimeDataStoreHandling,
-    val appConfig: AppConfig,
-) : GenericInfo {
+    appConfig: AppConfig,
+) : GenericSharedAnime(appConfig = appConfig), GenericInfo {
 
-    override val apkString: AppUpdate.AppUpdates.() -> String?
-        get() = {
-            when (appConfig.buildType) {
-                BuildType.NoFirebase -> animeNoFirebaseFile
-                BuildType.Full -> animeFile
-            }
-        }
     override val deepLinkUri: String get() = "animeworld://"
-
-    override val sourceType: String get() = "anime"
 
     override suspend fun chapterOnClick(
         model: KmpChapterModel,
@@ -347,89 +331,6 @@ class GenericAnime(
                     }
                 }
             )
-        }
-    }
-
-    @Composable
-    override fun ComposeShimmerItem() {
-        LazyColumn {
-            items(10) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .m3placeholder(
-                                true,
-                                highlight = PlaceholderHighlight.shimmer()
-                            )
-                    ) {
-                        Icon(
-                            Icons.Default.FavoriteBorder,
-                            contentDescription = null,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
-
-                        Text(
-                            "",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    @OptIn(
-        ExperimentalFoundationApi::class,
-    )
-    @Composable
-    override fun ItemListView(
-        list: List<KmpItemModel>,
-        favorites: List<DbModel>,
-        listState: LazyGridState,
-        onLongPress: (KmpItemModel, ComponentState) -> Unit,
-        modifier: Modifier,
-        paddingValues: PaddingValues,
-        onClick: (KmpItemModel) -> Unit,
-    ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(1),
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            contentPadding = paddingValues,
-            modifier = modifier.fillMaxSize()
-        ) {
-            items(list) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                        .combineClickableWithIndication(
-                            onLongPress = { c -> onLongPress(it, c) },
-                            onClick = { onClick(it) }
-                        )
-                ) {
-                    ListItem(
-                        leadingContent = {
-                            Icon(
-                                if (favorites.fastAny { f -> f.url == it.url }) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = null,
-                            )
-                        },
-                        headlineContent = { Text(it.title) },
-                        overlineContent = { Text(it.source.serviceName) },
-                        supportingContent = if (it.description.isNotEmpty()) {
-                            { Text(it.description) }
-                        } else null
-                    )
-                }
-            }
         }
     }
 
