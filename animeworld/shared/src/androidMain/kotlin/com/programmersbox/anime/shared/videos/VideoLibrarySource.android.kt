@@ -1,6 +1,5 @@
 package com.programmersbox.anime.shared.videos
 
-import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,6 +7,7 @@ import android.database.ContentObserver
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -63,7 +63,7 @@ actual class VideoLibrarySource(private val context: Context) {
 
     actual fun observeVideos(): Flow<List<SharedVideoContent>> = callbackFlow {
         trySend(queryVideos())
-        val observer = object : ContentObserver(Handler()) {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
                 trySend(queryVideos())
             }
