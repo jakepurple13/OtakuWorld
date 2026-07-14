@@ -4,7 +4,6 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseConnection
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
@@ -22,7 +21,6 @@ class FavoritesRepositoryTest {
     private fun repository(loggedIn: Boolean = false) = FavoritesRepository(
         dao = database.itemDao(),
         firebaseDb = FakeKmpFirebaseConnection(),
-        serverRepository = ServerRepository(),
         systemAlerter = SystemAlerter(),
         authManager = FakeAuthManager(loggedIn = loggedIn),
     )

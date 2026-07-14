@@ -5,8 +5,6 @@ import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.domain.customserver.FavoriteHandler
-import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.utils.FireListenerClosable
 import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.supabaseintegration.auth.AuthManager
@@ -20,14 +18,9 @@ import kotlin.time.Clock
 class FavoritesRepository(
     private val dao: ItemDao,
     private val firebaseDb: KmpFirebaseConnection,
-    private val serverRepository: ServerRepository,
     private val systemAlerter: SystemAlerter,
     private val authManager: AuthManager,
 ) {
-
-    private val customServerHandler: FavoriteHandler?
-        get() = serverRepository.customServerHandle.value
-
     suspend fun isIncognito(source: String): Boolean {
         //TODO: Maybe also allow specific items?
         // Not many changes would be needed. Just some up changes
