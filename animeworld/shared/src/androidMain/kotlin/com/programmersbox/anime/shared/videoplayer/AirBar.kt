@@ -1,4 +1,4 @@
-package com.programmersbox.animeworld.composables
+package com.programmersbox.anime.shared.videoplayer
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding

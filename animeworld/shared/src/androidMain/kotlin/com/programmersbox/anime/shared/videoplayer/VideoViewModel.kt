@@ -1,4 +1,4 @@
-package com.programmersbox.animeworld.videoplayer
+package com.programmersbox.anime.shared.videoplayer
 
 import android.content.Context
 import android.net.Uri
@@ -28,7 +28,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
-import com.programmersbox.animeworld.StorageHolder
+import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.uiviews.utils.BatteryInformation2
