@@ -157,6 +157,44 @@ If not using `adb`:
 # Building Locally
 Be sure to change the build variant to a `noFirebase` variant. Other than that, nothing needs to change to run/build locally!
 
+## MangaWorld Desktop
+
+A JVM/Desktop Compose build of MangaWorld, sharing UI with the Android app via `:mangaworld:shared`.
+
+```bash
+./gradlew :mangaworld:desktop:run
+```
+
+**Works:** browsing, search, favorites, manga lists/details, reading chapters in the built-in reader.
+
+**Not yet supported:** downloads and custom lists.
+
+## AnimeWorld Desktop
+
+A JVM/Desktop Compose build of AnimeWorld, sharing UI with the Android app via `:animeworld:shared`.
+
+```bash
+./gradlew :animeworld:desktop:run
+```
+
+**Works:** browsing, search, favorites, episode lists/details, basic downloads (saves the episode
+stream to disk, configurable download folder in Platform Settings).
+
+**Not yet supported:** in-app video playback (clicking an episode shows a placeholder screen) and
+Chromecast/casting — both are Android-only for now.
+
+## NovelWorld Desktop
+
+A JVM/Desktop Compose build of NovelWorld, sharing UI with the Android app via `:novelworld:shared`.
+
+```bash
+./gradlew :novelworld:desktop:run
+```
+
+**Works:** browsing, search, favorites, reading chapters in the built-in reader.
+
+**Not yet supported:** downloads (NovelWorld has no download support on any platform yet).
+
 # Issues
 
 If you run into any issues, please create an issue request with the following details:
