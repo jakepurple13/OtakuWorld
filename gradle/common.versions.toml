@@ -3,12 +3,13 @@ anthropicSdkKotlin = "0.32.5"
 androidx-lifecycle = "2.10.0"
 backdrop = "2.0.0"
 blurhash = "0.4.0-SNAPSHOT"
-cmpLifecycle = "2.11.0-beta02"
+cmpLifecycle = "2.11.0"
 cmp-nav3 = "1.2.0-alpha02"
 cmp-navevent = "1.1.0"
 cmp-nav3-material3 = "1.3.0-beta02"
 coil = "3.4.0"
-compose-multiplatform = "1.12.0-alpha02"
+compose-multiplatform = "1.12.0-beta02"
+cmpMaterial3 = "1.12.0-alpha03"
 composeWebviewMultiplatform = "2.0.3"
 compottie = "2.2.3"
 connectivity = "2.4.1"
@@ -75,7 +76,7 @@ coilCompose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coilOkHttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 
 # Compose Multiplatform
-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmpMaterial3" }
 foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
 runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
