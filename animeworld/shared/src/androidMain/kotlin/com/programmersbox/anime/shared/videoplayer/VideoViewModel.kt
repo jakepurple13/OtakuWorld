@@ -1,4 +1,4 @@
-package com.programmersbox.animeworld.videoplayer
+package com.programmersbox.anime.shared.videoplayer
 
 import android.content.Context
 import android.net.Uri
@@ -28,10 +28,9 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.BandwidthMeter
-import androidx.navigation3.runtime.NavKey
-import com.programmersbox.animeworld.StorageHolder
+import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.helpfulutils.battery
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.uiviews.utils.BatteryInformation2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -39,47 +38,16 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import java.security.cert.X509Certificate
 import java.util.Formatter
 import java.util.Locale
 import javax.net.ssl.X509TrustManager
-
-@Serializable
-data class VideoScreen(
-    val showPath: String,
-    val showName: String,
-    val downloadOrStream: Boolean,
-    val referer: String,
-) : NavKey
 
 class VideoViewModel(
     videoScreen: VideoScreen,
     context: Context,
     private val storageHolder: StorageHolder,
 ) : ViewModel() {
-
-    companion object {
-        const val VideoPlayerRoute =
-            "video_player?showPath={showPath}&showName={showName}&downloadOrStream={downloadOrStream}&referer={referer}"
-
-        fun navigateToVideoPlayer(
-            navController: NavigationActions,
-            showPath: String,
-            showName: String,
-            downloadOrStream: Boolean,
-            referer: String,
-        ) {
-            navController.navigate(
-                VideoScreen(
-                    showPath = showPath,
-                    showName = showName,
-                    downloadOrStream = downloadOrStream,
-                    referer = referer
-                )
-            )
-        }
-    }
 
     val showPath = storageHolder.storageModel?.link ?: videoScreen.showPath
     val showName = videoScreen.showName
