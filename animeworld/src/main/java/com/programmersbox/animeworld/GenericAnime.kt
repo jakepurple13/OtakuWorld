@@ -24,8 +24,10 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PersonalVideo
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,12 +56,16 @@ import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
 import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
-import com.programmersbox.animeworld.videochoice.VideoSourceModel
-import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
-import com.programmersbox.animeworld.videoplayer.VideoScreen
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
+import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.anime.shared.videos.SharedVideoContent
+import com.programmersbox.anime.shared.videos.VideoLibrarySource
+import com.programmersbox.anime.shared.videos.VideoViewerRoute
+import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.datastore.asState
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
@@ -95,11 +101,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import java.io.File
 
 val appModule = module {
     singleOf(::GenericAnime) { bindsGenericInfo() }
     single { NotificationLogo(R.mipmap.ic_launcher_foreground) }
     single { StorageHolder() }
+    singleOf(::VideoLibrarySource)
     single { AnimeDataStoreHandling() }
     singleOf(::Backup)
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
@@ -115,41 +123,30 @@ class GenericAnime(
 
     override val deepLinkUri: String get() = "animeworld://"
 
-    override suspend fun chapterOnClick(
-        model: KmpChapterModel,
-        allChapters: List<KmpChapterModel>,
-        infoModel: KmpInfoModel,
+    override fun playOrCast(
         navController: NavigationActions,
+        storage: KmpStorage,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
     ) {
-        /*if ((model.source as? ShowApi)?.canPlay == false) {
-            Toast.makeText(context, context.getString(R.string.source_no_stream, model.source.serviceName), Toast.LENGTH_SHORT).show()
-            return
-        }*/
-        getEpisodes(
-            errorId = R.string.source_no_stream,
-            model = model,
-            infoModel = infoModel,
-            context = context,
-            isStreaming = true,
-        ) {
-            if (MainActivity.cast.isCastActive()) {
-                MainActivity.cast.loadUrl(
-                    it.link,
-                    infoModel.title,
-                    model.name,
-                    infoModel.imageUrl,
-                    it.headers
+        if (MainActivity.cast.isCastActive()) {
+            MainActivity.cast.loadUrl(
+                storage.link,
+                infoModel.title,
+                model.name,
+                infoModel.imageUrl,
+                storage.headers
+            )
+        } else {
+            storageHolder.storageModel = storage
+            navController.navigate(
+                VideoScreen(
+                    showPath = storage.link.orEmpty(),
+                    showName = model.name,
+                    downloadOrStream = false,
+                    referer = storage.headers["referer"] ?: storage.source.orEmpty()
                 )
-            } else {
-                storageHolder.storageModel = it
-                context.navigateToVideoPlayer(
-                    navController,
-                    it.link,
-                    model.name,
-                    false,
-                    it.headers["referer"] ?: it.source.orEmpty()
-                )
-            }
+            )
         }
     }
 
@@ -452,17 +449,64 @@ class GenericAnime(
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
-        // TODO: wire up the shared VideoViewerRoute/ViewVideoScreen (Task 6 of the video-player-shared plan)
+        navGraph.entry<VideoViewerRoute> {
+            ViewVideoScreen(
+                isCastActive = { MainActivity.cast.isCastActive() },
+                onCastLoad = { content: SharedVideoContent ->
+                    MainActivity.cast.loadMedia(
+                        File(content.path),
+                        context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(content.path, 0L),
+                        null, null
+                    )
+                },
+                castButton = {
+                    AndroidView(
+                        factory = { ctx ->
+                            MediaRouteButton(ctx).apply {
+                                MainActivity.cast.showIntroductoryOverlay(this)
+                                MainActivity.cast.setMediaRouteMenu(ctx, this)
+                            }
+                        }
+                    )
+                },
+                deleteDialog = { content, onResult ->
+                    AlertDialog(
+                        onDismissRequest = { onResult(false) },
+                        title = { Text(stringResource(R.string.remove)) },
+                        text = { Text(content.videoName) },
+                        confirmButton = {
+                            TextButton(onClick = { onResult(true) }) { Text(stringResource(R.string.remove)) }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { onResult(false) }) { Text(stringResource(R.string.cancelText)) }
+                        }
+                    )
+                }
+            )
+        }
     }
 
     @Composable
     override fun DialogSetups() {
         VideoSourceModel.showVideoSources?.let {
+            val navController = LocalNavActions.current
             VideoChoiceScreen(
                 items = it.c,
                 infoModel = it.infoModel,
                 isStreaming = it.isStreaming,
-                model = it.model
+                model = it.model,
+                genericInfo = this,
+                navController = navController,
+                isCastActive = { MainActivity.cast.isCastActive() },
+                onCastLoad = { storage ->
+                    MainActivity.cast.loadUrl(
+                        storage.link,
+                        it.infoModel.title,
+                        it.model.name,
+                        it.infoModel.imageUrl,
+                        storage.headers
+                    )
+                }
             )
         }
     }

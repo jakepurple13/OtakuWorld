@@ -10,7 +10,7 @@ import androidx.core.content.FileProvider
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.icon
-import com.programmersbox.animeworld.videos.VideoViewerRoute
+import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.uiviews.OtakuApp
 import org.koin.core.module.Module
 import org.koin.dsl.module
