@@ -21,21 +21,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAny
+import com.programmersbox.anime.shared.videochoice.VideoSourceModel
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.kmpmodels.KmpInfoModel
 import com.programmersbox.kmpmodels.KmpItemModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.PlaceholderHighlight
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.m3placeholder
 import com.programmersbox.kmpuiviews.presentation.components.placeholder.shimmer
+import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.composables.modifiers.combineClickableWithIndication
+import kotlinx.coroutines.flow.firstOrNull
 
 abstract class GenericSharedAnime(
     protected val appConfig: AppConfig,
@@ -50,6 +59,41 @@ abstract class GenericSharedAnime(
                 BuildType.Full -> animeFile
             }
         }
+
+    var isLoadingChapter by mutableStateOf(false)
+        private set
+
+    override suspend fun chapterOnClick(
+        model: KmpChapterModel,
+        allChapters: List<KmpChapterModel>,
+        infoModel: KmpInfoModel,
+        navController: NavigationActions,
+    ) {
+        isLoadingChapter = true
+        val storages = try {
+            model.getChapterInfo().firstOrNull().orEmpty()
+        } finally {
+            isLoadingChapter = false
+        }
+
+        when {
+            storages.size == 1 -> playOrCast(navController, storages.first(), model, infoModel)
+            storages.isNotEmpty() -> VideoSourceModel.showVideoSources = VideoSourceModel(
+                c = storages,
+                infoModel = infoModel,
+                isStreaming = true,
+                model = model,
+            )
+            else -> Unit
+        }
+    }
+
+    abstract fun playOrCast(
+        navController: NavigationActions,
+        storage: KmpStorage,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
+    )
 
     @Composable
     override fun ComposeShimmerItem() {

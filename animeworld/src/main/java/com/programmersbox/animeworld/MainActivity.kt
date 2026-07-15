@@ -5,8 +5,7 @@ import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.animeworld.cast.CastHelper
 import com.programmersbox.animeworld.databinding.MiniControllerBinding
-import com.programmersbox.animeworld.videos.VideoViewerRoute
-import com.programmersbox.animeworld.videos.ViewVideoViewModel
+import com.programmersbox.anime.shared.videos.VideoViewerRoute
 import com.programmersbox.uiviews.BaseMainActivity
 import com.programmersbox.uiviews.datastore.updatePref
 import kotlinx.coroutines.flow.launchIn

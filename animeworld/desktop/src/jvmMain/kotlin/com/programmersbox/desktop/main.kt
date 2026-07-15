@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
+import com.programmersbox.anime.shared.StorageHolder
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
+import com.programmersbox.anime.shared.videos.VideoLibrarySource
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.BuildType
@@ -53,6 +55,8 @@ fun main(args: Array<String>) {
                             }
                             singleOf(::GenericAnimeDesktop) { bindsGenericInfo() }
                             singleOf(::AnimeDesktopSettings)
+                            singleOf(::StorageHolder)
+                            singleOf(::VideoLibrarySource)
                             single {
                                 ExtensionWatcher(
                                     extensionsDir = get<MangaDesktopSettings>()

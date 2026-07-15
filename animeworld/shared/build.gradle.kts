@@ -52,6 +52,7 @@ kotlin {
             implementation(androidLibs.bundles.media3)
             implementation(projects.uiViews)
             implementation(Deps.helpfulutils)
+            implementation(androidLibs.coilVideo)
         }
 
         jvmMain.dependencies {

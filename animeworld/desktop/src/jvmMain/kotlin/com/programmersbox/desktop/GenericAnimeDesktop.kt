@@ -9,11 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.anime.shared.GenericSharedAnime
-import com.programmersbox.anime.shared.VideoNotSupportedRoute
-import com.programmersbox.anime.shared.VideoNotSupportedScreen
+import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
+import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.anime.shared.videos.VideoViewerRoute
+import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpInfoModel
+import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
@@ -24,6 +28,7 @@ class GenericAnimeDesktop(
     appConfig: AppConfig,
     private val navigationActions: NavigationActions,
     private val animeDownloadManager: AnimeDownloadManager,
+    private val storageHolder: StorageHolder,
 ) : GenericSharedAnime(appConfig = appConfig), PlatformGenericInfo {
 
     @Composable
@@ -31,13 +36,21 @@ class GenericAnimeDesktop(
 
     override val apkString: AppUpdate.AppUpdates.() -> String? = { "" }
 
-    override suspend fun chapterOnClick(
-        model: KmpChapterModel,
-        allChapters: List<KmpChapterModel>,
-        infoModel: KmpInfoModel,
+    override fun playOrCast(
         navController: NavigationActions,
+        storage: KmpStorage,
+        model: KmpChapterModel,
+        infoModel: KmpInfoModel,
     ) {
-        navController.navigate(VideoNotSupportedRoute)
+        storageHolder.storageModel = storage
+        navController.navigate(
+            VideoScreen(
+                showPath = storage.link.orEmpty(),
+                showName = model.name,
+                downloadOrStream = false,
+                referer = storage.headers["referer"] ?: storage.source.orEmpty()
+            )
+        )
     }
 
     override fun downloadChapter(
@@ -51,12 +64,13 @@ class GenericAnimeDesktop(
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun globalNav3Setup() {
-        navGraph.entry<VideoNotSupportedRoute> { VideoNotSupportedScreen() }
+        navGraph.entry<VideoScreen> { VideoPlayerUi(it) }
     }
 
     context(navGraph: EntryProviderScope<NavKey>)
     override fun settingsNav3Setup() {
         navGraph.entry<PlatformSettings> { JvmSettingsScreen() }
+        navGraph.entry<VideoViewerRoute> { ViewVideoScreen() }
     }
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
