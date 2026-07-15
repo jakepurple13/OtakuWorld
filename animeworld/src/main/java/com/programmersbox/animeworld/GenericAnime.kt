@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
@@ -53,15 +52,15 @@ import androidx.navigation3.runtime.NavKey
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.obsez.android.lib.filechooser.ChooserDialog
-import com.programmersbox.animeworld.cast.ExpandedControlsActivity
-import com.programmersbox.animeworld.videochoice.VideoChoiceScreen
-import com.programmersbox.animeworld.videochoice.VideoSourceModel
-import com.programmersbox.animeworld.videoplayer.VideoPlayerUi
-import com.programmersbox.animeworld.videoplayer.VideoScreen
-import com.programmersbox.animeworld.videos.VideoViewerRoute
-import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.anime.shared.GenericSharedAnime
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
+import com.programmersbox.anime.shared.videochoice.VideoChoiceScreen
+import com.programmersbox.anime.shared.videochoice.VideoSourceModel
+import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
+import com.programmersbox.animeworld.cast.ExpandedControlsActivity
+import com.programmersbox.animeworld.videos.VideoViewerRoute
+import com.programmersbox.animeworld.videos.ViewVideoScreen
 import com.programmersbox.datastore.asState
 import com.programmersbox.helpfulutils.downloadManager
 import com.programmersbox.helpfulutils.requestPermissions
@@ -144,12 +143,13 @@ class GenericAnime(
                 )
             } else {
                 storageHolder.storageModel = it
-                context.navigateToVideoPlayer(
-                    navController,
-                    it.link,
-                    model.name,
-                    false,
-                    it.headers["referer"] ?: it.source.orEmpty()
+                navController.navigate(
+                    VideoScreen(
+                        showPath = it.link.orEmpty(),
+                        showName = model.name,
+                        downloadOrStream = false,
+                        referer = it.headers["referer"] ?: it.source.orEmpty()
+                    )
                 )
             }
         }
@@ -466,7 +466,9 @@ class GenericAnime(
                 items = it.c,
                 infoModel = it.infoModel,
                 isStreaming = it.isStreaming,
-                model = it.model
+                model = it.model,
+                genericInfo = this,
+                navController = LocalNavActions.current
             )
         }
     }
