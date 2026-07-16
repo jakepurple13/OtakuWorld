@@ -15,7 +15,9 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 
@@ -99,7 +101,7 @@ actual class SourceLoader(
                 }.getOrDefault(false)
 
                 if (!isOtakuExtension) return
-                GlobalScope.launch {
+                GlobalScope.launch(Dispatchers.IO) {
 
                     when (intent.action) {
                         Intent.ACTION_PACKAGE_REPLACED -> load()
