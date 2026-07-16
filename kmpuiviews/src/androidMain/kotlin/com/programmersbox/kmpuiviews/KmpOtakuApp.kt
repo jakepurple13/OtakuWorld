@@ -76,7 +76,7 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
 
         koinSetup()
 
-        get<SourceLoader>().load()
+        GlobalScope.launch(Dispatchers.IO) { get<SourceLoader>().blockingLoad() }
 
         forLaterSetup()
 

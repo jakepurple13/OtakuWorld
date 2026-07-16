@@ -15,8 +15,8 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -80,6 +80,7 @@ actual class SourceLoader(
     private val extensionType = "$EXTENSION_FEATURE.$sourceType"
 
     init {
+        val scope = CoroutineScope(Dispatchers.IO)
         val uninstallApplication: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent) {
                 if (intent.dataString == null) return
@@ -101,12 +102,11 @@ actual class SourceLoader(
                 }.getOrDefault(false)
 
                 if (!isOtakuExtension) return
-                GlobalScope.launch(Dispatchers.IO) {
-
+                scope.launch {
                     when (intent.action) {
-                        Intent.ACTION_PACKAGE_REPLACED -> load()
-                        Intent.ACTION_PACKAGE_ADDED -> load()
-                        Intent.ACTION_PACKAGE_REMOVED -> load()
+                        Intent.ACTION_PACKAGE_REPLACED -> blockingLoad()
+                        Intent.ACTION_PACKAGE_ADDED -> blockingLoad()
+                        Intent.ACTION_PACKAGE_REMOVED -> blockingLoad()
                     }
                 }
             }
