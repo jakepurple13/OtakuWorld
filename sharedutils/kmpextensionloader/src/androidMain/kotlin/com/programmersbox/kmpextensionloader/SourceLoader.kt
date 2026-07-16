@@ -15,6 +15,7 @@ import com.programmersbox.models.ApiServicesCatalog
 import com.programmersbox.models.ExternalApiServicesCatalog
 import com.programmersbox.models.ExternalCustomApiServicesCatalog
 import com.programmersbox.models.SourceInformation
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.runBlocking
 
 
@@ -98,11 +99,13 @@ actual class SourceLoader(
                 }.getOrDefault(false)
 
                 if (!isOtakuExtension) return
+                GlobalScope.launch {
 
-                when (intent.action) {
-                    Intent.ACTION_PACKAGE_REPLACED -> load()
-                    Intent.ACTION_PACKAGE_ADDED -> load()
-                    Intent.ACTION_PACKAGE_REMOVED -> load()
+                    when (intent.action) {
+                        Intent.ACTION_PACKAGE_REPLACED -> load()
+                        Intent.ACTION_PACKAGE_ADDED -> load()
+                        Intent.ACTION_PACKAGE_REMOVED -> load()
+                    }
                 }
             }
         }
