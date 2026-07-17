@@ -23,7 +23,7 @@ class DeepLinks(
 
     val settings by lazy {
         DeepLinkRoute(
-            serializer = Screen.SettingsScreen.serializer(),
+            serializer = Screen.Settings.serializer(),
             schemeAndHost = genericInfo.deepLinkUri
         )
     }
