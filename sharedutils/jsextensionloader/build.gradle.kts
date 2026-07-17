@@ -24,6 +24,8 @@ kotlin {
                 implementation(commonLibs.ktorJson)
                 implementation(projects.kmpmodels.extensioninterfaces)
                 implementation(projects.datastore)
+                implementation(project.dependencies.platform(commonLibs.koin.bom))
+                implementation(commonLibs.koinCores)
             }
         }
 
