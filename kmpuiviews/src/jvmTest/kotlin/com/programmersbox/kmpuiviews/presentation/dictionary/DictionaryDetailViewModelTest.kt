@@ -5,12 +5,12 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.DictionaryDatabase
 import com.programmersbox.favoritesdatabase.DictionaryEntry
-import com.programmersbox.favoritesdatabase.DictionaryRepository
-import com.programmersbox.favoritesdatabase.StubTranslationService
+import com.programmersbox.kmpuiviews.repository.DictionaryRepository
+import com.programmersbox.kmpuiviews.repository.StubTranslationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain

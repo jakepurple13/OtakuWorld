@@ -36,9 +36,7 @@ import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.utils.Cached
 import com.programmersbox.kmpuiviews.utils.ImageModifier
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIo
-import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.kmpuiviews.utils.printLogs
 import io.github.vinceglb.filekit.dialogs.compose.util.encodeToByteArray
 import kotlinx.coroutines.Dispatchers
@@ -64,9 +62,6 @@ class DetailsViewModel(
     private val blurHashDao: BlurHashDao,
     sourceRepository: SourceRepository,
     private val favoritesRepository: FavoritesRepository,
-    firebaseItemListener: KmpFirebaseConnection.KmpFirebaseListener,
-    firebaseDbModelListener: KmpFirebaseConnection.KmpFirebaseListener,
-    firebaseChapterListener: KmpFirebaseConnection.KmpFirebaseListener,
     private val translationHandler: TranslationHandler,
     private val exceptionDao: ExceptionDao,
     private val imageModifier: ImageModifier,
@@ -87,10 +82,6 @@ class DetailsViewModel(
     var palette by mutableStateOf<Palette?>(null)
 
     private var addRemoveFavoriteJob: Job? = null
-
-    private val itemListener = fireListener("favorite", firebaseItemListener)
-    private val dbModelListener = fireListener("update", firebaseDbModelListener)
-    private val chapterListener = fireListener("chapter", firebaseChapterListener)
 
     var favoriteListener by mutableStateOf(false)
     var chapters: List<ChapterWatched> by mutableStateOf(emptyList())
@@ -272,27 +263,18 @@ class DetailsViewModel(
 
     private fun setup(info: KmpInfoModel) {
         favoritesRepository
-            .isFavorite(
-                url = info.url,
-                fireListenerClosable = itemListener,
-            )
+            .isFavorite(url = info.url)
             .dispatchIo()
             .onEach { favoriteListener = it }
             .launchIn(viewModelScope)
 
         favoritesRepository
-            .getChapters(
-                url = info.url,
-                fireListenerClosable = chapterListener,
-            )
+            .getChapters(url = info.url)
             .onEach { chapters = it }
             .launchIn(viewModelScope)
 
         favoritesRepository
-            .getModel(
-                url = info.url,
-                fireListenerClosable = dbModelListener,
-            )
+            .getModel(url = info.url)
             .onEach { dbModel = it }
             .launchIn(viewModelScope)
     }

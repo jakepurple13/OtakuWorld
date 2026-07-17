@@ -1,23 +1,16 @@
 package com.programmersbox.kmpuiviews.repository
 
-import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.utils.FireListenerClosable
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
 class FavoritesRepository(
     private val dao: ItemDao,
-    private val firebaseDb: KmpFirebaseConnection,
     private val systemAlerter: SystemAlerter,
     private val authManager: AuthManager,
 ) {
@@ -35,7 +28,6 @@ class FavoritesRepository(
                 dao.insertFavorite(db)
                 systemAlerter.alertFavoritesChange()
             }
-            launch { firebaseDb.insertShowFlow(db).collect() }
         }
     }
 
@@ -50,7 +42,6 @@ class FavoritesRepository(
                 }
                 systemAlerter.alertFavoritesChange()
             }
-            launch { firebaseDb.removeShowFlow(db).collect() }
         }
     }
 
@@ -61,7 +52,6 @@ class FavoritesRepository(
                 dao.insertChapter(chapterWatched)
                 systemAlerter.alertChapterChange()
             }
-            launch { firebaseDb.insertEpisodeWatchedFlow(chapterWatched).collect() }
         }
     }
 
@@ -76,7 +66,6 @@ class FavoritesRepository(
                 }
                 systemAlerter.alertChapterChange()
             }
-            launch { firebaseDb.removeEpisodeWatchedFlow(chapterWatched).collect() }
         }
     }
 
@@ -86,37 +75,18 @@ class FavoritesRepository(
                 dao.updateFavoriteItem(db.copy(isDirty = authManager.isLoggedIn()))
                 systemAlerter.alertFavoritesChange()
             }
-            launch {
-                firebaseDb.toggleUpdateCheckShowFlow(db).collect()
-            }
         }
     }
 
-    suspend fun getAllFavorites() = listOf(
-        dao.getAllFavoritesSync(),
-        firebaseDb.getAllShows().requireNoNulls()
-    )
-        .flatten()
-        .groupBy(DbModel::url)
-        .map { it.value.fastMaxBy(DbModel::numChapters)!! }
+    suspend fun getAllFavorites() = dao.getAllFavoritesSync()
 
     fun isFavorite(
         url: String,
-        fireListenerClosable: FireListenerClosable,
-    ) = combine(
-        fireListenerClosable
-            .findItemByUrlFlow(url)
-            .onStart { emit(false) },
-        dao.containsItem(url)
-    ) { f, d -> f || d }
+    ) = dao.containsItem(url)
 
     fun getChapters(
         url: String,
-        fireListenerClosable: FireListenerClosable,
-    ) = combine(
-        fireListenerClosable.getAllEpisodesByShowFlow(url),
-        dao.getAllChapters(url)
-    ) { f, d -> (f + d).distinctBy { it.url } }
+    ) = dao.getAllChapters(url)
 
     fun getChaptersLocal(
         url: String,
@@ -124,14 +94,7 @@ class FavoritesRepository(
 
     fun getModel(
         url: String,
-        fireListenerClosable: FireListenerClosable,
-    ) = combine(
-        fireListenerClosable.getShowFlow(url),
-        dao.getDbModel(url),
-    ) { d, f -> d ?: f }
+    ) = dao.getDbModel(url)
 
-    fun getAllFavorites(fireListenerClosable: FireListenerClosable) = combine(
-        fireListenerClosable.getAllShowsFlow(),
-        dao.getAllFavorites()
-    ) { f, d -> (f + d).groupBy(DbModel::url).map { it.value.fastMaxBy(DbModel::numChapters)!! } }
+    fun getAllFavoritesFlow() = dao.getAllFavorites()
 }

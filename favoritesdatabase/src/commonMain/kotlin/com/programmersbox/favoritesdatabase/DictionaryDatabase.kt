@@ -72,6 +72,9 @@ interface DictionaryDao {
         """
     )
     fun search(query: String): Flow<List<DictionaryEntry>>
+
+    @Query("SELECT COUNT(id) FROM dictionary_entries")
+    fun getCount(): Flow<Int>
 }
 
 @Database(

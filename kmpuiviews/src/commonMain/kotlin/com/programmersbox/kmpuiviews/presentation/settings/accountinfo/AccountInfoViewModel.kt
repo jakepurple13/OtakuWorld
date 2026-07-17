@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BookmarkDao
+import com.programmersbox.favoritesdatabase.DictionaryDao
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
@@ -18,9 +19,7 @@ import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpHeat
-import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
@@ -45,16 +44,15 @@ class AccountInfoViewModel(
     heatMapDao: HeatMapDao,
     translationModelHandler: TranslationModelHandler,
     sourceRepository: SourceRepository,
-    firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
     dataStoreHandling: DataStoreHandling,
     recommendationDao: RecommendationDao,
     exceptionDao: ExceptionDao,
     bookmarksDao: BookmarkDao,
     notesDao: NotesDao,
-    private val authManager: AuthManager,
+    dictionaryDao: DictionaryDao,
+    authManager: AuthManager,
 ) : ViewModel() {
 
-    private val favoriteListener = fireListener(itemListener = firebaseConnection)
 
     var accountInfo by mutableStateOf(AccountInfoCount.Empty)
         private set
@@ -72,9 +70,7 @@ class AccountInfoViewModel(
             .launchIn(viewModelScope)
 
         combine(
-            favoriteListener
-                .getAllShowsFlow()
-                .map { it.size },
+            dictionaryDao.getCount(),
             itemDao.getAllFavoritesCount(),
             itemDao.getAllNotificationCount(),
             itemDao.getAllIncognitoSourcesCount(),
@@ -129,7 +125,7 @@ class AccountInfoViewModel(
 }
 
 data class AccountInfoCount(
-    val cloudFavorites: Int,
+    val dictionaryCount: Int,
     val localFavorites: Int,
     val notifications: Int,
     val incognitoSources: Int,
@@ -150,7 +146,7 @@ data class AccountInfoCount(
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
-        cloudFavorites = array[0],
+        dictionaryCount = array[0],
         localFavorites = array[1],
         notifications = array[2],
         incognitoSources = array[3],
@@ -171,12 +167,12 @@ data class AccountInfoCount(
     )
 
     val totalFavorites: Int
-        get() = cloudFavorites + localFavorites
+        get() = localFavorites
 
     companion object {
         @OptIn(ExperimentalTime::class)
         val Empty = AccountInfoCount(
-            cloudFavorites = 0,
+            dictionaryCount = 0,
             localFavorites = 0,
             notifications = 0,
             incognitoSources = 0,

@@ -1,16 +1,13 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
-import androidx.lifecycle.ViewModelStore
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
-import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseConnection
-import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseListener
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,12 +51,9 @@ class FavoriteViewModelTest {
         sourceRepository = SourceRepository(),
         favoritesRepository = FavoritesRepository(
             dao = database.itemDao(),
-            firebaseDb = FakeKmpFirebaseConnection(),
-            serverRepository = ServerRepository(),
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
         ),
-        firebaseFavoriteListener = FakeKmpFirebaseListener(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)

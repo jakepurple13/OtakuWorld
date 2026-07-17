@@ -165,19 +165,10 @@ fun AccountInfoScreen(
                 ) {
                     SectionHeader("⭐ Collection")
                     CategoryGroup {
-                        if (appConfig.buildType == BuildType.Full) {
-                            item {
-                                AccountInfoItem(
-                                    title = "Cloud Favorites",
-                                    description = "Synced to cloud",
-                                    amount = state.cloudFavorites,
-                                )
-                            }
-                        }
                         item {
                             AccountInfoItem(
-                                title = "Local Favorites",
-                                description = "Stored on device",
+                                title = "Favorites",
+                                description = "Items added to favorites",
                                 amount = state.localFavorites,
                             )
                         }
@@ -200,6 +191,13 @@ fun AccountInfoScreen(
                                 title = "Bookmarks",
                                 description = "Chapters or Episodes bookmarked",
                                 amount = state.bookmarkCount,
+                            )
+                        }
+                        item {
+                            AccountInfoItem(
+                                title = "Dictionary Entries",
+                                description = "Entries in the dictionary",
+                                amount = state.dictionaryCount,
                             )
                         }
                     }
