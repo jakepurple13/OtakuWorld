@@ -10,15 +10,20 @@ class JsExtensionRepository {
     val extensions: StateFlow<List<JsExtension>> = _extensions
 
     fun register(extension: JsExtension) {
+        var replaced: JsExtension? = null
         _extensions.update { current ->
+            replaced = current.find { it.manifest.id == extension.manifest.id }
             current.filterNot { it.manifest.id == extension.manifest.id } + extension
         }
+        replaced?.close()
     }
 
     fun unload(id: String) {
+        var toClose: JsExtension? = null
         _extensions.update { current ->
-            current.find { it.manifest.id == id }?.close()
+            toClose = current.find { it.manifest.id == id }
             current.filterNot { it.manifest.id == id }
         }
+        toClose?.close()
     }
 }
