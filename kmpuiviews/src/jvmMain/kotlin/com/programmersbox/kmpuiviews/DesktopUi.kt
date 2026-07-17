@@ -45,6 +45,9 @@ import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.jsextensionloader.ExtensionDiscovery
+import com.programmersbox.jsextensionloader.JSExtensionLoader
+import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
@@ -160,6 +163,16 @@ fun ApplicationScope.BaseDesktopUi(
                         sourceRepository.addSource(exampleService)
                     }
                     .launchIn(this)
+            }
+
+            val jsExtensionLoader = koinInject<JSExtensionLoader>()
+            val jsExtensionRepository = koinInject<JsExtensionRepository>()
+            val jsExtensionDiscovery = koinInject<ExtensionDiscovery>()
+            LaunchedEffect(Unit) {
+                jsExtensionDiscovery.scanBundledResources().forEach { source ->
+                    val extension = jsExtensionLoader.load(source.scriptText, source.fileName, source.companionManifestJson)
+                    jsExtensionRepository.register(extension)
+                }
             }
 
             val backgroundWorkHandler = koinInject<BackgroundWorkHandler>()

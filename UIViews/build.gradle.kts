@@ -59,6 +59,7 @@ dependencies {
 
     //Extension Loader
     api(projects.sharedutils.kmpextensionloader)
+    api(projects.sharedutils.jsextensionloader)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(commonLibs.coroutinesCore)

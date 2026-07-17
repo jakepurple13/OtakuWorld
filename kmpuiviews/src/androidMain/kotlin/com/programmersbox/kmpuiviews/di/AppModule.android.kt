@@ -6,6 +6,7 @@ import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.jsextensionloader.jsExtensionLoaderModule
 import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
@@ -49,4 +50,5 @@ actual fun platformModule(): Module = module {
     singleOf(::ExtensionShareHandler)
     factoryOf(::ImageModifier)
     kmpWorkers()
+    includes(jsExtensionLoaderModule)
 }

@@ -13,6 +13,9 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.jsextensionloader.ExtensionDiscovery
+import com.programmersbox.jsextensionloader.JSExtensionLoader
+import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -35,6 +38,9 @@ abstract class BaseMainActivity : FragmentActivity() {
     private val dataStoreHandling: DataStoreHandling by inject()
     private val setupRepository by inject<SetupRepository>()
     private val sourceRepository by inject<SourceRepository>()
+    private val jsExtensionLoader by inject<JSExtensionLoader>()
+    private val jsExtensionRepository by inject<JsExtensionRepository>()
+    private val jsExtensionDiscovery by inject<ExtensionDiscovery>()
 
     protected abstract fun onCreate()
 
@@ -50,6 +56,12 @@ abstract class BaseMainActivity : FragmentActivity() {
 
         if (BuildConfig.DEBUG) {
             sourceRepository.addSource(ExampleService.getSourceInformation())
+            lifecycleScope.launch {
+                jsExtensionDiscovery.scanBundledResources().forEach { source ->
+                    val extension = jsExtensionLoader.load(source.scriptText, source.fileName, source.companionManifestJson)
+                    jsExtensionRepository.register(extension)
+                }
+            }
         }
 
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
