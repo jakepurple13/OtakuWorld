@@ -49,6 +49,20 @@ class JsExtensionRepositoryTest {
     }
 
     @Test
+    fun registeringSameIdClosesThePreviousInstance() {
+        val repository = JsExtensionRepository()
+        repository.register(extensionWithId("one"))
+        val firstQuickJs = quickJsInstances.first()
+
+        repository.register(extensionWithId("one"))
+
+        assertTrue(
+            runCatching { firstQuickJs.evaluate("1", "closed-check.js") }.isFailure,
+            "expected the replaced QuickJs instance to be closed",
+        )
+    }
+
+    @Test
     fun unloadRemovesExtensionAndClosesIt() {
         val repository = JsExtensionRepository()
         repository.register(extensionWithId("one"))
