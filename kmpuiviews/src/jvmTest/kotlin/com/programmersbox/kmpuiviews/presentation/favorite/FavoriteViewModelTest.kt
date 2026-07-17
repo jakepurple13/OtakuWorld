@@ -6,7 +6,6 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
 import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseConnection
@@ -55,7 +54,6 @@ class FavoriteViewModelTest {
         favoritesRepository = FavoritesRepository(
             dao = database.itemDao(),
             firebaseDb = FakeKmpFirebaseConnection(),
-            serverRepository = ServerRepository(),
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
         ),
