@@ -43,8 +43,6 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.favoritesdatabase.ChapterWatched
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
@@ -56,11 +54,8 @@ import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.compose.KoinApplication
@@ -116,9 +111,6 @@ fun ApplicationScope.BaseDesktopUi(
                 modules(
                     module {
                         includes(kmpModule)
-
-                        singleOf<KmpFirebaseConnection>(::KmpFirebaseConnectionImpl)
-                        factory<KmpFirebaseConnection.KmpFirebaseListener> { KmpFirebaseConnectionImpl.KmpFirebaseListenerImpl() }
 
                         singleOf(::DataStoreHandling)
                         single {
@@ -293,29 +285,5 @@ fun FrameWindowScope.CustomTitleBar(
                 }
             },
         )
-    }
-}
-
-class KmpFirebaseConnectionImpl : KmpFirebaseConnection {
-    override fun getAllShows(): List<DbModel> = emptyList()
-    override fun insertShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun removeShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun updateShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun toggleUpdateCheckShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched): Flow<Unit> = flowOf(Unit)
-    override fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched): Flow<Unit> = flowOf(Unit)
-
-    class KmpFirebaseListenerImpl : KmpFirebaseConnection.KmpFirebaseListener {
-        override fun getAllShowsFlow(): Flow<List<DbModel>> = flowOf(emptyList())
-
-        override fun getShowFlow(url: String?): Flow<DbModel?> = flowOf(null)
-
-        override fun findItemByUrlFlow(url: String?): Flow<Boolean> = flowOf(false)
-
-        override fun getAllEpisodesByShowFlow(showUrl: String): Flow<List<ChapterWatched>> = flowOf(emptyList())
-
-        override fun unregister() {
-
-        }
     }
 }
