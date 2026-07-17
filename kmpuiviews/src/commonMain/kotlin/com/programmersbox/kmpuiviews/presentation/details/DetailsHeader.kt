@@ -174,7 +174,9 @@ internal fun DetailsHeader(
         ) {
             Row(
                 verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .animateContentSize()
             ) {
                 Surface(
                     shape = MaterialTheme.shapes.medium,
@@ -203,7 +205,9 @@ internal fun DetailsHeader(
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                        .animateContentSize()
                 ) {
                     Text(
                         model.source.serviceName,
