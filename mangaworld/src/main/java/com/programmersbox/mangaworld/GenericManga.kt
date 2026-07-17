@@ -3,7 +3,6 @@ package com.programmersbox.mangaworld
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import androidx.core.app.TaskStackBuilder
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.gsonutils.toJson
@@ -107,30 +106,18 @@ class GenericManga(
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
-        val deepLinkIntent = Intent(
-            Intent.ACTION_VIEW,
-            deepLinkDetailsUri(itemModel),
-            context,
-            MainActivity::class.java
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkDetailsUri(itemModel),
+            activity = MainActivity::class.java
         )
-
-        return TaskStackBuilder.create(context).run {
-            addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        }
     }
 
     override fun deepLinkSettings(context: Context): PendingIntent? {
-        val deepLinkIntent = Intent(
-            Intent.ACTION_VIEW,
-            deepLinkSettingsUri(),
-            context,
-            MainActivity::class.java
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkSettingsUri(),
+            activity = MainActivity::class.java
         )
-
-        return TaskStackBuilder.create(context).run {
-            addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        }
     }
 }

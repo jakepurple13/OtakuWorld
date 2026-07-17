@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
@@ -511,30 +510,18 @@ class GenericAnime(
     }
 
     override fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent? {
-        val deepLinkIntent = Intent(
-            Intent.ACTION_VIEW,
-            deepLinkDetailsUri(itemModel),
-            context,
-            MainActivity::class.java
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkDetailsUri(itemModel),
+            activity = MainActivity::class.java
         )
-
-        return TaskStackBuilder.create(context).run {
-            addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(itemModel?.hashCode() ?: 0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        }
     }
 
     override fun deepLinkSettings(context: Context): PendingIntent? {
-        val deepLinkIntent = Intent(
-            Intent.ACTION_VIEW,
-            deepLinkSettingsUri(),
-            context,
-            MainActivity::class.java
+        return deepLinkSetup(
+            context = context,
+            uri = deepLinkSettingsUri(),
+            activity = MainActivity::class.java
         )
-
-        return TaskStackBuilder.create(context).run {
-            addNextIntentWithParentStack(deepLinkIntent)
-            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        }
     }
 }

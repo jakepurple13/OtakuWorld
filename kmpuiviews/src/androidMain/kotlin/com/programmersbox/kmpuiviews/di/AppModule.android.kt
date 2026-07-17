@@ -12,6 +12,7 @@ import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.repository.PlatformRepository
+import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
@@ -43,6 +44,8 @@ actual fun platformModule(): Module = module {
             sourceRepository = get()
         )
     }
+
+    singleOf(::DeepLinks)
 
     singleOf(::UpdateNotification)
     singleOf(::PlatformRepository)

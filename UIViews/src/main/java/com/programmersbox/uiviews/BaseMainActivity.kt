@@ -1,6 +1,8 @@
 package com.programmersbox.uiviews
 
 import android.app.assist.AssistContent
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.setContent
@@ -12,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation3.runtime.deeplink.DeepLinkRequest
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
@@ -19,6 +22,7 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.uiviews.presentation.navigation.HomeNav
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import kotlinx.coroutines.flow.launchIn
@@ -35,6 +39,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     private val dataStoreHandling: DataStoreHandling by inject()
     private val setupRepository by inject<SetupRepository>()
     private val sourceRepository by inject<SourceRepository>()
+    private val deepLinks by inject<DeepLinks>()
 
     protected abstract fun onCreate()
 
@@ -71,6 +76,8 @@ abstract class BaseMainActivity : FragmentActivity() {
             }
         }
 
+        intent.data?.let { handleDeepLink(it) }
+
         setContent {
             HomeNav(
                 activity = this,
@@ -84,5 +91,24 @@ abstract class BaseMainActivity : FragmentActivity() {
     override fun onProvideAssistContent(outContent: AssistContent?) {
         super.onProvideAssistContent(outContent)
         outContent?.webUri = currentDetailsUrl.toUri()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.data?.let { handleDeepLink(it) }
+    }
+
+    private fun handleDeepLink(uri: Uri) {
+        val request = DeepLinkRequest.fromUri(uri)
+
+        println("[DEEP LINK]: $request")
+
+        for (i in deepLinks.deepLinkMatching) {
+            i.match(request)?.let { match ->
+                println("[DEEP LINK]: $match")
+                navigationActions.navigate(match.key)
+                break
+            }
+        }
     }
 }

@@ -18,6 +18,7 @@ import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.kmpuiviews.utils.GroupBehavior
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
@@ -40,6 +41,7 @@ class UpdateNotification(
     private val icon: NotificationLogo,
     private val appConfig: AppConfig,
     private val info: PlatformGenericInfo,
+    private val deepLinks: DeepLinks,
 ) {
     private val client = HttpClient()
 

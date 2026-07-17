@@ -3,15 +3,20 @@ package com.programmersbox.kmpuiviews
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import androidx.navigation.NavType
-import androidx.navigation.serialization.generateRouteWithArgs
+import androidx.fragment.app.FragmentActivity
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.utils.DeepLinks
 
 actual interface PlatformGenericInfo : KmpGenericInfo {
     val deepLinkUri: String
+
+    val deepLinks: DeepLinks
+        get() = DeepLinks(this)
 
     fun deepLinkDetails(context: Context, itemModel: KmpItemModel?): PendingIntent?
 
@@ -19,26 +24,42 @@ actual interface PlatformGenericInfo : KmpGenericInfo {
 
     @SuppressLint("RestrictedApi")
     fun deepLinkDetailsUri(itemModel: KmpItemModel?): Uri {
-        @Suppress("UNCHECKED_CAST")
-        val route = generateRouteWithArgs(
-            Screen.DetailsScreen.Details(
-                title = itemModel?.title ?: "",
-                description = itemModel?.description ?: "",
-                url = itemModel?.url ?: "",
-                imageUrl = itemModel?.imageUrl ?: "",
-                source = itemModel?.source?.serviceName ?: "",
-            ),
-            mapOf(
-                "title" to NavType.StringType as NavType<Any?>,
-                "description" to NavType.StringType as NavType<Any?>,
-                "url" to NavType.StringType as NavType<Any?>,
-                "imageUrl" to NavType.StringType as NavType<Any?>,
-                "source" to NavType.StringType as NavType<Any?>,
-            )
-        )
-
-        return "$deepLinkUri$route".toUri()
+        return itemModel?.let {
+            deepLinks
+                .details
+                .createUri(
+                    Screen.DetailsScreen.Details(
+                        title = "title",
+                        description = "description",
+                        url = it.url,
+                        imageUrl = it.imageUrl,
+                        source = it.source.serviceName
+                    )
+                )
+                .toUri()
+        } ?: "$deepLinkUri${Screen.DetailsScreen.route}".toUri()
     }
 
-    fun deepLinkSettingsUri() = "$deepLinkUri${Screen.NotificationScreen.route}".toUri()
+    fun deepLinkSettingsUri() = deepLinks
+        .notification
+        .createUri(Screen.NotificationScreen)
+        .toUri()
+
+    fun <T : FragmentActivity> deepLinkSetup(
+        context: Context,
+        uri: Uri,
+        activity: Class<T>,
+    ): PendingIntent? {
+        val deepLinkIntent = Intent(
+            Intent.ACTION_VIEW,
+            uri,
+            context,
+            activity
+        )
+
+        return TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(deepLinkIntent)
+            getPendingIntent(13, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+    }
 }
