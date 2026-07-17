@@ -15,6 +15,10 @@ plugins {
     versionName = "1.0.0" // Your app version
 }*/
 
+compose.resources {
+    packageOfResClass = "com.programmersbox.desktop"
+}
+
 configurations.all {
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-android")
 }
@@ -84,8 +88,18 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.programmersbox.desktop"
+            packageName = "MangaWorld"
             packageVersion = "1.0.0"
+
+            windows {
+                iconFile.set(project.file("icons/icon.ico"))
+            }
+            macOS {
+                iconFile.set(project.file("icons/icon.icns"))
+            }
+            linux {
+                iconFile.set(project.file("icons/icon.png"))
+            }
 
             //com.apple.security.local-authentication
             /*macOS {

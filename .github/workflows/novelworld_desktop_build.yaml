@@ -54,13 +54,13 @@ jobs:
         uses: gradle/gradle-build-action@v3
         with:
           gradle-version: current
-          arguments: ":mangaworld:desktop:packageDistributionForCurrentOS"
+          arguments: ":novelworld:desktop:packageDistributionForCurrentOS"
 
       - name: Upload ${{ matrix.os }} Build
         uses: actions/upload-artifact@v7
         with:
-          name: mangaworld-${{ matrix.os }}-build
+          name: novelworld-${{ matrix.os }}-build
           path: |
-            mangaworld/desktop/build/compose/binaries/main/dmg/*.dmg
-            mangaworld/desktop/build/compose/binaries/main/deb/*.deb
-            mangaworld/desktop/build/compose/binaries/main/msi/*.msi
+            novelworld/desktop/build/compose/binaries/main/dmg/*.dmg
+            novelworld/desktop/build/compose/binaries/main/deb/*.deb
+            novelworld/desktop/build/compose/binaries/main/msi/*.msi
