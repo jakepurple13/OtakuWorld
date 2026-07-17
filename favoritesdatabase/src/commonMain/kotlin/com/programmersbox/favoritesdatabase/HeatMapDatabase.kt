@@ -7,6 +7,7 @@ import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
 import androidx.room3.Entity
+import androidx.room3.Ignore
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.PrimaryKey
@@ -18,11 +19,13 @@ import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -112,6 +115,35 @@ interface HeatMapDao {
     @Query("DELETE FROM HeatMapItem WHERE is_deleted = 1")
     suspend fun deleteAllDeletedHeatMapItems()
 
+    @Ignore
+    fun getDailyAverage() = getAllHeatMaps()
+        .map { heatMaps ->
+            if (heatMaps.isEmpty()) return@map 0
+
+            // FIX 1: Find the actual minimum (oldest) date, regardless of list order
+            val firstReadingDate = heatMaps.minByOrNull { it.time }?.time
+            val totalReadCount = heatMaps.sumOf { it.count }
+
+            if (firstReadingDate != null) {
+                val today = Clock.System.now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
+                    .toEpochDays()
+
+                val firstDay = firstReadingDate.toEpochDays()
+
+                // Ensure we don't accidentally get a 0 or negative denominator if time zones shift
+                val daysSinceFirstReading = maxOf(1, (today - firstDay) + 1)
+
+                // FIX 2: Convert to Float/Double BEFORE dividing to prevent integer truncation
+                (totalReadCount.toFloat() / daysSinceFirstReading).roundToInt()
+            } else {
+                0
+            }
+        }
+
+    @Query("SELECT * FROM HeatMapItem WHERE is_deleted = 0 ORDER BY day_count DESC LIMIT 1")
+    fun getHighestActiveCountItem(): Flow<HeatMapItem?>
 }
 
 @Serializable

@@ -14,9 +14,7 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.createConnectivity
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIoAndCatchList
-import com.programmersbox.kmpuiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.filterNotNull
@@ -32,7 +30,6 @@ class AllViewModel(
     dao: ItemDao,
     private val currentSourceRepository: CurrentSourceRepository,
     favoritesRepository: FavoritesRepository,
-    firebaseListenerImpl: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
     val observeNetwork = createConnectivity()
@@ -51,11 +48,9 @@ class AllViewModel(
 
     var count = 1
 
-    private val itemListener = fireListener(itemListener = firebaseListenerImpl)
-
     init {
         favoritesRepository
-            .getAllFavorites(itemListener)
+            .getAllFavoritesFlow()
             .onEach { favoriteList = it.toMutableStateList() }
             .launchIn(viewModelScope)
 

@@ -23,9 +23,7 @@ import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.repository.CurrentSourceRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.repository.combineSources
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIo
-import com.programmersbox.kmpuiviews.utils.fireListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.catch
@@ -46,7 +44,6 @@ class RecentViewModel(
     sourceRepository: SourceRepository,
     currentSourceRepository: CurrentSourceRepository,
     private val favoritesRepository: FavoritesRepository,
-    itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
     private val exceptionDao: ExceptionDao,
 ) : ViewModel() {
 
@@ -63,7 +60,6 @@ class RecentViewModel(
 
     var count = 1
 
-    private val itemListener = fireListener(itemListener = itemListenerFirebase)
 
     var currentSource by mutableStateOf<KmpApiService?>(null)
 
@@ -84,7 +80,7 @@ class RecentViewModel(
             .launchIn(viewModelScope)
 
         favoritesRepository
-            .getAllFavorites(itemListener)
+            .getAllFavoritesFlow()
             .onEach {
                 favoriteList.clear()
                 favoriteList.addAll(it)

@@ -12,13 +12,10 @@ import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.SystemAlerter
-import com.programmersbox.kmpuiviews.domain.customserver.ServerRepository
 import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.repository.BookmarkRepository
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
-import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseConnection
-import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseListener
 import com.programmersbox.kmpuiviews.testing.FakeKmpGenericInfo
 import com.programmersbox.kmpuiviews.testing.FakeTranslationHandler
 import com.programmersbox.kmpuiviews.utils.Cached
@@ -83,14 +80,9 @@ class DetailsViewModelTest {
         sourceRepository = sourceRepository,
         favoritesRepository = FavoritesRepository(
             dao = itemDatabase.itemDao(),
-            firebaseDb = FakeKmpFirebaseConnection(),
-            serverRepository = ServerRepository(),
             systemAlerter = SystemAlerter(),
             authManager = FakeAuthManager(),
         ),
-        firebaseItemListener = FakeKmpFirebaseListener(),
-        firebaseDbModelListener = FakeKmpFirebaseListener(),
-        firebaseChapterListener = FakeKmpFirebaseListener(),
         translationHandler = FakeTranslationHandler(),
         exceptionDao = exceptionDatabase.exceptionDao(),
         imageModifier = ImageModifier(),

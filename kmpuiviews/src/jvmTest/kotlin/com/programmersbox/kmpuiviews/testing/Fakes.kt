@@ -1,14 +1,18 @@
 package com.programmersbox.kmpuiviews.testing
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.programmersbox.favoritesdatabase.ChapterWatched
+import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.NewSettingsHandling
+import com.programmersbox.datastore.SettingsSerializer
+import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ExceptionItem
@@ -29,12 +33,6 @@ import com.programmersbox.kmpuiviews.repository.DownloadStateInterface
 import com.programmersbox.kmpuiviews.repository.WorkInfoKmp
 import com.programmersbox.kmpuiviews.utils.ComponentState
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
-import com.programmersbox.datastore.DataStoreHandling
-import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.datastore.SettingsSerializer
-import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
@@ -52,28 +50,6 @@ fun createTestItemDatabase(): ItemDatabase {
     return Room.databaseBuilder<ItemDatabase>(name = dbFile.absolutePath)
         .setDriver(BundledSQLiteDriver())
         .build()
-}
-
-class FakeKmpFirebaseConnection(
-    private val shows: List<DbModel> = emptyList(),
-) : KmpFirebaseConnection {
-    override fun getAllShows(): List<DbModel> = shows
-    override fun insertShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun removeShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun updateShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun toggleUpdateCheckShowFlow(showDbModel: DbModel): Flow<Unit> = flowOf(Unit)
-    override fun insertEpisodeWatchedFlow(episodeWatched: ChapterWatched): Flow<Unit> = flowOf(Unit)
-    override fun removeEpisodeWatchedFlow(episodeWatched: ChapterWatched): Flow<Unit> = flowOf(Unit)
-}
-
-class FakeKmpFirebaseListener(
-    private val showsFlow: MutableStateFlow<List<DbModel>> = MutableStateFlow(emptyList()),
-) : KmpFirebaseConnection.KmpFirebaseListener {
-    override fun getAllShowsFlow(): Flow<List<DbModel>> = showsFlow
-    override fun getShowFlow(url: String?): Flow<DbModel?> = flowOf(showsFlow.value.find { it.url == url })
-    override fun findItemByUrlFlow(url: String?): Flow<Boolean> = flowOf(showsFlow.value.any { it.url == url })
-    override fun getAllEpisodesByShowFlow(showUrl: String): Flow<List<ChapterWatched>> = flowOf(emptyList())
-    override fun unregister() {}
 }
 
 class FakeAuthManager(

@@ -5,13 +5,15 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.DictionaryDatabase
 import com.programmersbox.favoritesdatabase.DictionaryEntry
-import com.programmersbox.favoritesdatabase.DictionaryRepository
-import com.programmersbox.favoritesdatabase.StubTranslationService
+import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.kmpuiviews.repository.DictionaryRepository
+import com.programmersbox.kmpuiviews.repository.DictionarySort
+import com.programmersbox.kmpuiviews.repository.StubTranslationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -39,7 +41,7 @@ class DictionaryFormViewModelTest {
         }
     }
 
-    private fun viewModel(id: Long?) = DictionaryFormViewModel(id, repository)
+    private fun viewModel(id: Long?) = DictionaryFormViewModel(Screen.DictionaryScreen.Form(id), repository)
         .also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -91,8 +93,8 @@ class DictionaryFormViewModelTest {
             language = "ja",
         )
 
-        awaitCondition { repository.getAll(com.programmersbox.favoritesdatabase.DictionarySort.Term).first().isNotEmpty() }
-        val stored = repository.getAll(com.programmersbox.favoritesdatabase.DictionarySort.Term).first().first()
+        awaitCondition { repository.getAll(DictionarySort.Term).first().isNotEmpty() }
+        val stored = repository.getAll(DictionarySort.Term).first().first()
 
         assertEquals("Sensei", stored.term)
         assertEquals("Teacher", stored.definition)

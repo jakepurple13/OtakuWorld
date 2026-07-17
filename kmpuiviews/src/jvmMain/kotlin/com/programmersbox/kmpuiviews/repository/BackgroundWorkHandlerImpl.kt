@@ -7,7 +7,6 @@ import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.ExtensionWatcher
-import com.programmersbox.kmpuiviews.KmpFirebaseConnectionImpl
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
@@ -16,7 +15,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfo
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.Backup
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.sharedcomponents.backup.ItemResult
 import io.github.kdroidfilter.nucleus.scheduler.DesktopBootReceiver
 import io.github.kdroidfilter.nucleus.scheduler.DesktopTask
@@ -160,10 +158,6 @@ class BackgroundWorkHandlerImpl(
                         },
                         module {
                             includes(kmpModule)
-
-                            singleOf<KmpFirebaseConnection>(::KmpFirebaseConnectionImpl)
-                            factory<KmpFirebaseConnection.KmpFirebaseListener> { KmpFirebaseConnectionImpl.KmpFirebaseListenerImpl() }
-
                             singleOf(::DataStoreHandling)
                             single {
                                 NewSettingsHandling(

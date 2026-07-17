@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.domain
 
-import androidx.compose.ui.util.fastMaxBy
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.ItemDao
@@ -13,7 +12,6 @@ import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.recordFirebaseException
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +20,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -31,12 +28,12 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
 import otakuworld.kmpuiviews.generated.resources.hadAnUpdate
+import kotlin.time.Duration.Companion.milliseconds
 
 class MediaUpdateChecker(
     private val dao: ItemDao,
     private val sourceRepository: SourceRepository,
     private val sourceLoader: SourceLoader,
-    private val firebaseDb: KmpFirebaseConnection,
     private val exceptionDao: ExceptionDao,
 ) {
 
@@ -155,15 +152,7 @@ class MediaUpdateChecker(
     }
 
     private suspend fun getConsolidatedFavoriteItems(checkAll: Boolean): List<DbModel> {
-        val localFavorites = if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync()
-        val firebaseFavorites = firebaseDb
-            .getAllShows()
-            .requireNoNulls()
-            .let { firebase -> if (checkAll) firebase else firebase.filter { it.shouldCheckForUpdate } }
-
-        return (localFavorites + firebaseFavorites)
-            .groupBy(DbModel::url)
-            .mapNotNull { it.value.fastMaxBy(DbModel::numChapters) } // mapNotNull in case fastMaxBy returns null for an empty list
+        return if (checkAll) dao.getAllFavoritesSync() else dao.getAllNotifyingFavoritesSync()
     }
 
     private suspend fun ensureSourcesLoaded() {
@@ -186,7 +175,7 @@ class MediaUpdateChecker(
                 async(networkDispatcher, start = CoroutineStart.LAZY) { // Use LAZY to control start
                     logFirebaseMessage("Fetching recent items from ${sourceApiService.serviceName}")
                     try {
-                        withTimeoutOrNull(DEFAULT_TIMEOUT_MS) { // Timeout per source
+                        withTimeoutOrNull(DEFAULT_TIMEOUT_MS.milliseconds) { // Timeout per source
                             sourceApiService
                                 .getRecentFlow()
                                 // Explicitly ensure flow collection happens on networkDispatcher
@@ -233,7 +222,7 @@ class MediaUpdateChecker(
                         return@async null
                     }
 
-                    val infoModel = withTimeout(DEFAULT_TIMEOUT_MS) { // Timeout for fetching full info
+                    val infoModel = withTimeout(DEFAULT_TIMEOUT_MS.milliseconds) { // Timeout for fetching full info
                         // Explicitly switch context if toInfoModel might block or do heavy CPU work
                         // However, network operations are usually fine on networkDispatcher
                         model
@@ -275,14 +264,6 @@ class MediaUpdateChecker(
                 try {
                     dao.insertFavorite(dbModel) // This should be an update if the item exists
                     logFirebaseMessage("Saved update for ${dbModel.title}. Chapters: $oldNumChapters -> ${dbModel.numChapters}")
-
-                    // firebaseDb.updateShowFlow might also be suspending and I/O bound
-                    firebaseDb.updateShowFlow(dbModel)
-                        .catch { e ->
-                            recordFirebaseException(e)
-                            logFirebaseMessage("Firebase update failed for ${dbModel.title}: ${e.message}")
-                        }
-                        .collect() // Assuming collect is necessary to trigger the update
                 } catch (e: Exception) {
                     recordFirebaseException(e)
                     logFirebaseMessage("Database save failed for ${dbModel.title}: ${e.message}")

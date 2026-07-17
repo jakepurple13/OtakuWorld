@@ -16,9 +16,7 @@ import com.programmersbox.kmpmodels.KmpChapterModel
 import com.programmersbox.kmpmodels.KmpStorage
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.FavoritesRepository
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.dispatchIo
-import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.novel.shared.ChapterHolder
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.list
@@ -46,7 +44,6 @@ class ReadViewModel(
     novelReader: NovelReader,
     private val chapterHolder: ChapterHolder,
     private val favoritesRepository: FavoritesRepository,
-    itemListenerFirebase: KmpFirebaseConnection.KmpFirebaseListener,
 ) : ViewModel() {
 
     val isDownloaded: Boolean = novelReader.downloaded
@@ -118,7 +115,6 @@ class ReadViewModel(
 
     val currentChapterModel by derivedStateOf { list.getOrNull(currentChapter) }
 
-    private val itemListener = fireListener(itemListener = itemListenerFirebase)
     var addToFavorites by mutableStateOf(FavoriteChecker(false, 0))
 
     data class FavoriteChecker(val hasShown: Boolean, val count: Int, val isFavorite: Boolean = false) {
@@ -133,10 +129,7 @@ class ReadViewModel(
         loadPages(modelPath)
 
         favoritesRepository
-            .isFavorite(
-                url = mangaUrl,
-                fireListenerClosable = itemListener
-            )
+            .isFavorite(url = mangaUrl)
             .dispatchIo()
             .onEach { addToFavorites = addToFavorites.copy(isFavorite = it) }
             .launchIn(viewModelScope)

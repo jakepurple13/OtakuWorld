@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.accountinfo
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BookmarkDao
+import com.programmersbox.favoritesdatabase.DictionaryDao
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
@@ -18,14 +20,16 @@ import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
+import com.programmersbox.kmpuiviews.utils.DateFormatItem
 import com.programmersbox.kmpuiviews.utils.KmpHeat
-import com.programmersbox.kmpuiviews.utils.fireListener
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -45,16 +49,15 @@ class AccountInfoViewModel(
     heatMapDao: HeatMapDao,
     translationModelHandler: TranslationModelHandler,
     sourceRepository: SourceRepository,
-    firebaseConnection: KmpFirebaseConnection.KmpFirebaseListener,
     dataStoreHandling: DataStoreHandling,
     recommendationDao: RecommendationDao,
     exceptionDao: ExceptionDao,
     bookmarksDao: BookmarkDao,
     notesDao: NotesDao,
-    private val authManager: AuthManager,
+    dictionaryDao: DictionaryDao,
+    authManager: AuthManager,
 ) : ViewModel() {
 
-    private val favoriteListener = fireListener(itemListener = firebaseConnection)
 
     var accountInfo by mutableStateOf(AccountInfoCount.Empty)
         private set
@@ -72,9 +75,7 @@ class AccountInfoViewModel(
             .launchIn(viewModelScope)
 
         combine(
-            favoriteListener
-                .getAllShowsFlow()
-                .map { it.size },
+            dictionaryDao.getCount(),
             itemDao.getAllFavoritesCount(),
             itemDao.getAllNotificationCount(),
             itemDao.getAllIncognitoSourcesCount(),
@@ -96,7 +97,8 @@ class AccountInfoViewModel(
             recommendationDao.getRecommendationCount(),
             exceptionDao.getExceptionCount(),
             bookmarksDao.getAllBookmarksCount(),
-            notesDao.getAllNotesCount()
+            notesDao.getAllNotesCount(),
+            heatMapDao.getDailyAverage()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
                 a.copy(timeSpentDoing = b.seconds.toString())
@@ -104,6 +106,13 @@ class AccountInfoViewModel(
             .combine(heatMapDao.getAllHeatMaps()) { a, b ->
                 a.copy(heatMaps = generateHeats(b))
             }
+            .combine(heatMapDao.getHighestActiveCountItem()) { a, b ->
+                a.copy(
+                    topHeatMap =
+                        b?.let { TopHeatMapItem(DateFormatItem.format(it.time), it.count) }
+                )
+            }
+            .flowOn(Dispatchers.IO)
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
@@ -128,8 +137,15 @@ class AccountInfoViewModel(
     }
 }
 
+@Stable
+data class TopHeatMapItem(
+    val time: String,
+    val count: Int,
+)
+
+@Stable
 data class AccountInfoCount(
-    val cloudFavorites: Int,
+    val dictionaryCount: Int,
     val localFavorites: Int,
     val notifications: Int,
     val incognitoSources: Int,
@@ -147,10 +163,12 @@ data class AccountInfoCount(
     val exceptionCount: Int,
     val bookmarkCount: Int,
     val notesCount: Int,
+    val dailyAverage: Int,
+    val topHeatMap: TopHeatMapItem?,
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
-        cloudFavorites = array[0],
+        dictionaryCount = array[0],
         localFavorites = array[1],
         notifications = array[2],
         incognitoSources = array[3],
@@ -168,15 +186,17 @@ data class AccountInfoCount(
         exceptionCount = array[13],
         bookmarkCount = array[14],
         notesCount = array[15],
+        dailyAverage = array[16],
+        topHeatMap = null
     )
 
     val totalFavorites: Int
-        get() = cloudFavorites + localFavorites
+        get() = localFavorites
 
     companion object {
         @OptIn(ExperimentalTime::class)
         val Empty = AccountInfoCount(
-            cloudFavorites = 0,
+            dictionaryCount = 0,
             localFavorites = 0,
             notifications = 0,
             incognitoSources = 0,
@@ -193,7 +213,9 @@ data class AccountInfoCount(
             heatMaps = listOf(),
             exceptionCount = 0,
             bookmarkCount = 0,
-            notesCount = 0
+            notesCount = 0,
+            dailyAverage = 0,
+            topHeatMap = null
         )
     }
 }

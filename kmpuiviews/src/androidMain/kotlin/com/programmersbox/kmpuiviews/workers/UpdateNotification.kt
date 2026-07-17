@@ -17,18 +17,14 @@ import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.logFirebaseMessage
 import com.programmersbox.kmpuiviews.receivers.DeleteNotificationReceiver
 import com.programmersbox.kmpuiviews.receivers.SwipeAwayReceiver
-import com.programmersbox.kmpuiviews.recordFirebaseException
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.GroupBehavior
-import com.programmersbox.kmpuiviews.utils.KmpFirebaseConnection
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationDslBuilder
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import com.programmersbox.kmpuiviews.utils.SemanticActions
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import otakuworld.kmpuiviews.generated.resources.Res
@@ -43,7 +39,6 @@ class UpdateNotification(
     private val mediaUpdateChecker: MediaUpdateChecker,
     private val icon: NotificationLogo,
     private val appConfig: AppConfig,
-    private val kmpFirebaseConnection: KmpFirebaseConnection,
     private val info: PlatformGenericInfo,
 ) {
     private val client = HttpClient()
@@ -55,13 +50,6 @@ class UpdateNotification(
             val item = it.second
             item.numChapters = it.first?.chapters?.size ?: item.numChapters
             dao.insertFavorite(item)
-            kmpFirebaseConnection
-                .updateShowFlow(item)
-                .catch { error ->
-                    logFirebaseMessage("Something went wrong: ${error.message}")
-                    recordFirebaseException(error)
-                }
-                .collect()
         }
     }
 
