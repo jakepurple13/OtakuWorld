@@ -16,6 +16,7 @@ import com.programmersbox.kmpuiviews.ExtensionWatcher
 import com.programmersbox.kmpuiviews.MangaDesktopSettings
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.koogintegration.KoogDataStore
 import com.programmersbox.koogintegration.buildKoogModule
@@ -61,6 +62,7 @@ fun main(args: Array<String>) {
                                     userName = SystemInfo.users().firstOrNull()?.name
                                 )
                             }
+                            single { JvmAppLogo(Res.drawable.app_icon) }
                             singleOf(::GenericMangaDesktop) { bindsGenericInfo() }
                             factoryOf(::DownloadedMediaHandler)
                             single {
