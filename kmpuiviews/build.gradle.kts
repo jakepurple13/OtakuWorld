@@ -88,6 +88,7 @@ kotlin {
                 api(projects.sharedtools)
                 api(projects.sharedcomponents)
                 implementation(projects.sharedutils.kmpextensionloader)
+                implementation(projects.sharedutils.jsextensionloader)
                 implementation(projects.favoritesdatabase.supabaseIntegration)
                 implementation(commonLibs.bundles.datastoreLibs)
 

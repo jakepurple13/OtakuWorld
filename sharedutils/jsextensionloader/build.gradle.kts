@@ -39,6 +39,7 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(commonLibs.ktorOkHttp)
+                implementation(desktopLibs.kotlin.multiplatform.appdirs)
             }
         }
 
