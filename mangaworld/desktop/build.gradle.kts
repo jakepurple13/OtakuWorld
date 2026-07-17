@@ -15,6 +15,10 @@ plugins {
     versionName = "1.0.0" // Your app version
 }*/
 
+compose.resources {
+    packageOfResClass = "com.programmersbox.desktop"
+}
+
 configurations.all {
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-android")
 }

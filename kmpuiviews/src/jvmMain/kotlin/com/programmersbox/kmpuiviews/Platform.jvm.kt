@@ -3,8 +3,6 @@ package com.programmersbox.kmpuiviews
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.RememberMe
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.darkColorScheme
@@ -17,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.UriHandler
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -32,6 +29,7 @@ import com.programmersbox.kmpmodels.KmpSourceInformation
 import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
+import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import io.github.kdroidfilter.nucleus.systemcolor.isSystemInHighContrast
 import io.github.kdroidfilter.nucleus.systemcolor.systemAccentColor
 import io.github.vinceglb.filekit.PlatformFile
@@ -40,6 +38,8 @@ import io.kamel.core.config.KamelConfig
 import io.kamel.core.config.takeFrom
 import io.kamel.image.config.Default
 import io.kamel.image.config.animatedImageDecoder
+import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -165,7 +165,7 @@ actual fun versionCode(): String = BuildKonfig.VERSION_CODE_KMP
 actual fun Modifier.zoomOverlay(): Modifier = this
 
 @Composable
-actual fun painterLogo(): Painter = rememberVectorPainter(Icons.Default.RememberMe)
+actual fun painterLogo(): Painter = painterResource(koinInject<JvmAppLogo>().logo)
 actual class AboutLibraryBuilder {
     @Composable
     actual fun buildLibs(): State<Libs?> = mutableStateOf(null)
