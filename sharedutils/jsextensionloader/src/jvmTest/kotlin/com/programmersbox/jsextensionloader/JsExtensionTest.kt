@@ -22,7 +22,7 @@ class JsExtensionTest {
     private class StubHostBridge(private val response: String = "") : HostBridge {
         var lastUrl: String? = null
         var lastHeadersJson: String? = null
-        override fun httpGet(url: String, headersJson: String): String {
+        override suspend fun httpGet(url: String, headersJson: String): String {
             lastUrl = url
             lastHeadersJson = headersJson
             return response

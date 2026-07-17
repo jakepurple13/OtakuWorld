@@ -13,18 +13,18 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toPath
+import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import okio.Path.Companion.toPath
-import java.io.File
 
 class JsExtensionUpdateRunnerTest {
 
     private class NoOpHostBridge : HostBridge {
-        override fun httpGet(url: String, headersJson: String): String = ""
+        override suspend fun httpGet(url: String, headersJson: String): String = ""
     }
 
     private val repository = JsExtensionRepository()

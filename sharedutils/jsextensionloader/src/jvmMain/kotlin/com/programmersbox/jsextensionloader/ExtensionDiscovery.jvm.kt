@@ -36,17 +36,21 @@ actual class ExtensionDiscovery(
     }
 
     actual suspend fun scanBundledResources(): List<DiscoveredExtensionSource> {
-        val resourceUrl = ExtensionDiscovery::class.java.classLoader?.getResource(bundledResourcesDir)
-            ?: return emptyList()
-        val dir = File(resourceUrl.toURI())
-        val files = dir.listFiles { file -> file.extension == "js" || file.extension == "ts" }.orEmpty()
-        return files.map { file ->
-            DiscoveredExtensionSource(
-                sourceId = file.nameWithoutExtension,
-                fileName = file.name,
-                scriptText = file.readText(),
-                companionManifestJson = null,
-            )
+        return runCatching {
+            val resourceUrl = ExtensionDiscovery::class.java.classLoader?.getResource(bundledResourcesDir)
+                ?: return emptyList()
+            val dir = File(resourceUrl.toURI())
+            val files = dir.listFiles { file -> file.extension == "js" || file.extension == "ts" }.orEmpty()
+            files.map { file ->
+                DiscoveredExtensionSource(
+                    sourceId = file.nameWithoutExtension,
+                    fileName = file.name,
+                    scriptText = file.readText(),
+                    companionManifestJson = null,
+                )
+            }
         }
+            .onFailure { it.printStackTrace() }
+            .getOrDefault(emptyList())
     }
 }

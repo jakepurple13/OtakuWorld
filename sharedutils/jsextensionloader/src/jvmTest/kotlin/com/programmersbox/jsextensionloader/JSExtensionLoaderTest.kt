@@ -9,7 +9,7 @@ import kotlin.test.assertFailsWith
 class JSExtensionLoaderTest {
 
     private class NoOpHostBridge : HostBridge {
-        override fun httpGet(url: String, headersJson: String): String = ""
+        override suspend fun httpGet(url: String, headersJson: String): String = ""
     }
 
     private var loaded: JsExtension? = null

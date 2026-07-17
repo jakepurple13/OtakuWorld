@@ -21,8 +21,7 @@ val jsExtensionLoaderModule = module {
             install(ContentNegotiation) { json(jsExtensionLoaderHttpJson) }
         }
     }
-    single { KtorHostBridge(get()) }
-    single<HostBridge> { get<KtorHostBridge>() }
+    single<HostBridge> { KtorHostBridge(get()) }
     single { JSExtensionLoader(get()) }
     single { JsExtensionRepository() }
     single { ExtensionUpdateChecker(get()) }
