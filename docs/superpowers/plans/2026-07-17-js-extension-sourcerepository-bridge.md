@@ -290,6 +290,10 @@ git commit -m "feat: add JsApiServiceAdapter bridging JsExtension into KmpApiSer
 
 ### Task 2: `JsExtensionSourceBridge`
 
+> **Amendment (post-authoring discovery):** the bridge's `init{}` launches a collector on `jsExtensionRepository.extensions` that never completes by design (a `StateFlow` never finishes). Passing `runTest`'s own scope (`this`) as `scope` in tests makes `runTest` wait for that never-ending coroutine to finish, timing out with `UncompletedCoroutinesError`. `TestScope.backgroundScope` (the usual fix for "launch and don't wait") turned out to desync from the outer `advanceUntilIdle()` calls in this exact shape, so the working pattern here is `scope = TestScope(testScheduler)` — a second `TestScope` sharing the same `TestCoroutineScheduler` as the enclosing `runTest`, which `advanceUntilIdle()` drives correctly without being awaited for completion. This matches the pattern already used successfully in `CoroutineExtensionUpdateSchedulerTest` from the earlier JS/TS extension loader plan. The test code below already reflects this fix.
+>
+> Also: `kmpuiviews`'s jvmTest source set has an unrelated, pre-existing compile break (three `dictionary` package test files reference classes that don't exist) that predates this whole branch. To get a genuine test run, temporarily move those three files aside (`mv X X.bak`), run the test, then restore them immediately and confirm via `git status` that no diff remains — do this every time you need to run `:kmpuiviews:jvmTest` until that unrelated issue is fixed separately.
+
 **Files:**
 - Create: `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/repository/JsExtensionSourceBridge.kt`
 - Test: `kmpuiviews/src/jvmTest/kotlin/com/programmersbox/kmpuiviews/repository/JsExtensionSourceBridgeTest.kt`
@@ -311,6 +315,7 @@ import com.programmersbox.jsextensionloader.HostBridge
 import com.programmersbox.jsextensionloader.JsExtension
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpmodels.SourceRepository
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
@@ -346,7 +351,7 @@ class JsExtensionSourceBridgeTest {
     fun mirrorsNewlyRegisteredExtensionIntoSourceRepository() = runTest {
         val jsExtensionRepository = JsExtensionRepository()
         val sourceRepository = SourceRepository()
-        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = this)
+        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = TestScope(testScheduler))
 
         jsExtensionRepository.register(extensionWithId("a"))
         advanceUntilIdle()
@@ -360,7 +365,7 @@ class JsExtensionSourceBridgeTest {
     fun removesFromSourceRepositoryWhenUnloaded() = runTest {
         val jsExtensionRepository = JsExtensionRepository()
         val sourceRepository = SourceRepository()
-        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = this)
+        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = TestScope(testScheduler))
 
         jsExtensionRepository.register(extensionWithId("a"))
         advanceUntilIdle()
@@ -374,7 +379,7 @@ class JsExtensionSourceBridgeTest {
     fun swapsSourceRepositoryEntryWhenSameIdExtensionIsReplaced() = runTest {
         val jsExtensionRepository = JsExtensionRepository()
         val sourceRepository = SourceRepository()
-        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = this)
+        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = TestScope(testScheduler))
 
         jsExtensionRepository.register(extensionWithId("a", version = "1.0.0"))
         advanceUntilIdle()
@@ -393,7 +398,7 @@ class JsExtensionSourceBridgeTest {
     fun mirrorsMultipleIndependentExtensions() = runTest {
         val jsExtensionRepository = JsExtensionRepository()
         val sourceRepository = SourceRepository()
-        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = this)
+        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = TestScope(testScheduler))
 
         jsExtensionRepository.register(extensionWithId("a"))
         jsExtensionRepository.register(extensionWithId("b"))
