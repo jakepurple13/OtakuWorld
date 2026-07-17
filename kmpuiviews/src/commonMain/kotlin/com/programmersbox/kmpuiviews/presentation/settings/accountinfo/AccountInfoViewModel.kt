@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.accountinfo
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,12 +20,16 @@ import com.programmersbox.favoritesdatabase.NotesDao
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
+import com.programmersbox.kmpuiviews.utils.DateFormatItem
 import com.programmersbox.kmpuiviews.utils.KmpHeat
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -92,7 +97,8 @@ class AccountInfoViewModel(
             recommendationDao.getRecommendationCount(),
             exceptionDao.getExceptionCount(),
             bookmarksDao.getAllBookmarksCount(),
-            notesDao.getAllNotesCount()
+            notesDao.getAllNotesCount(),
+            heatMapDao.getDailyAverage()
         ) { AccountInfoCount(it) }
             .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
                 a.copy(timeSpentDoing = b.seconds.toString())
@@ -100,6 +106,13 @@ class AccountInfoViewModel(
             .combine(heatMapDao.getAllHeatMaps()) { a, b ->
                 a.copy(heatMaps = generateHeats(b))
             }
+            .combine(heatMapDao.getHighestActiveCountItem()) { a, b ->
+                a.copy(
+                    topHeatMap =
+                        b?.let { TopHeatMapItem(DateFormatItem.format(it.time), it.count) }
+                )
+            }
+            .flowOn(Dispatchers.IO)
             .onEach { accountInfo = it }
             .launchIn(viewModelScope)
     }
@@ -124,6 +137,13 @@ class AccountInfoViewModel(
     }
 }
 
+@Stable
+data class TopHeatMapItem(
+    val time: String,
+    val count: Int,
+)
+
+@Stable
 data class AccountInfoCount(
     val dictionaryCount: Int,
     val localFavorites: Int,
@@ -143,6 +163,8 @@ data class AccountInfoCount(
     val exceptionCount: Int,
     val bookmarkCount: Int,
     val notesCount: Int,
+    val dailyAverage: Int,
+    val topHeatMap: TopHeatMapItem?,
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
@@ -164,6 +186,8 @@ data class AccountInfoCount(
         exceptionCount = array[13],
         bookmarkCount = array[14],
         notesCount = array[15],
+        dailyAverage = array[16],
+        topHeatMap = null
     )
 
     val totalFavorites: Int
@@ -189,7 +213,9 @@ data class AccountInfoCount(
             heatMaps = listOf(),
             exceptionCount = 0,
             bookmarkCount = 0,
-            notesCount = 0
+            notesCount = 0,
+            dailyAverage = 0,
+            topHeatMap = null
         )
     }
 }

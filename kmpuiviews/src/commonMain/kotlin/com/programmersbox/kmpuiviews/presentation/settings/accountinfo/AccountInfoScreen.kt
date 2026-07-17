@@ -117,39 +117,10 @@ fun AccountInfoScreen(
                     contentType = "heatMap",
                     key = "heatMap",
                 ) {
-                    var heatItem by remember { mutableStateOf<KmpHeat<Int>?>(null) }
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .animateItem()
-                            .fillMaxWidth(),
-                    ) {
-                        SectionHeader("🕐 Activity")
-                        CategoryGroup {
-                            item {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier
-                                        .animateContentSize()
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                ) {
-                                    HeatMapWrapper(
-                                        data = state.heatMaps,
-                                        onHeatClick = { heatItem = it },
-                                    )
-                                    heatItem?.let {
-                                        Text(
-                                            "Read/Watched ${it.data} on ${DateFormatItem.format(it.date)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    HeatMapItem(
+                        state = state,
+                        modifier = Modifier.animateItem()
+                    )
                 }
             }
 
@@ -474,5 +445,69 @@ private fun HeroChipsRow(
             color = MaterialTheme.colorScheme.tertiary,
             modifier = Modifier.weight(1f),
         )
+    }
+}
+
+@Composable
+private fun HeatMapItem(
+    state: AccountInfoCount,
+    modifier: Modifier = Modifier,
+) {
+    var heatItem by remember { mutableStateOf<KmpHeat<Int>?>(null) }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        SectionHeader("🕐 Activity")
+
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+            maxItemsInEachRow = 2,
+        ) {
+            HeroStatChip(
+                label = "Daily Average",
+                value = state.dailyAverage.toString(),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f),
+            )
+
+            state.topHeatMap?.let {
+                HeroStatChip(
+                    label = it.time,
+                    value = it.count.toString(),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        CategoryGroup {
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .animateContentSize()
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    HeatMapWrapper(
+                        data = state.heatMaps,
+                        onHeatClick = { heatItem = it },
+                    )
+                    heatItem?.let {
+                        Text(
+                            "Read/Watched ${it.data} on ${DateFormatItem.format(it.date)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

@@ -98,7 +98,7 @@ class DefaultSettingsItems : SearchRegistryItem {
             ),
             SettingSearchItem(
                 displayName = "Account",
-                keywords = listOf("account", "user", "profile"),
+                keywords = listOf("account", "user", "profile", "stats", "statistics"),
                 breadcrumb = listOf(Screen.Settings, Screen.Settings.Data, Screen.AccountInfo),
                 targetScreen = Screen.AccountInfo,
                 highlightKey = "account",
