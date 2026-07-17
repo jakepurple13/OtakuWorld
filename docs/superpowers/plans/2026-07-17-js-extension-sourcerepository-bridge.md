@@ -552,7 +552,13 @@ Add this property alongside the other `by inject<...>()` properties (e.g. right 
     private val jsExtensionSourceBridge by inject<JsExtensionSourceBridge>()
 ```
 
-No other change needed — merely referencing the property triggers Koin to construct it, and its `init { }` block starts mirroring immediately. To guarantee the property is actually touched (not just declared — Kotlin property delegates without a getter call site are still eagerly initialized as class properties, so declaring it here is sufficient; no explicit `.let { }` or method call is required).
+> **Amendment (post-review correction):** `org.koin.android.ext.android.inject`'s `by inject<T>()` returns a `Lazy<T>` — Koin's `single { }` factory only runs the first time the property's *value* is actually read, not merely because the property is declared. Since nothing else in this class references `jsExtensionSourceBridge`, declaring it alone is NOT sufficient — the bridge would silently never be constructed and JS extensions would never appear on Android. Add an explicit forcing read in `onCreate` (unconditional — the mirroring mechanism itself isn't debug-gated, only the bundled example extension's loading is), right after `enableEdgeToEdge()`:
+> ```kotlin
+>         // Forces Koin to construct this lazy single now, starting its reactive
+>         // JsExtensionRepository -> SourceRepository mirroring for the process lifetime.
+>         // by inject<T>() only resolves on first access - it is never referenced elsewhere.
+>         jsExtensionSourceBridge.let { }
+> ```
 
 - [ ] **Step 3: Inject it in `DesktopUi.kt` (JVM)**
 

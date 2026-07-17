@@ -56,6 +56,11 @@ abstract class BaseMainActivity : FragmentActivity() {
 
         enableEdgeToEdge()
 
+        // Forces Koin to construct this lazy single now, starting its reactive
+        // JsExtensionRepository -> SourceRepository mirroring for the process lifetime.
+        // by inject<T>() only resolves on first access - it is never referenced elsewhere.
+        jsExtensionSourceBridge.let { }
+
         if (BuildConfig.DEBUG) {
             sourceRepository.addSource(ExampleService.getSourceInformation())
             lifecycleScope.launch {
