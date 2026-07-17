@@ -75,8 +75,18 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.programmersbox.desktop"
+            packageName = "AnimeWorld"
             packageVersion = "1.0.0"
+
+            windows {
+                iconFile.set(project.file("icons/icon.ico"))
+            }
+            macOS {
+                iconFile.set(project.file("icons/icon.icns"))
+            }
+            linux {
+                iconFile.set(project.file("icons/icon.png"))
+            }
         }
     }
 }
