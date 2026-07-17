@@ -58,10 +58,24 @@ Reasons over alternatives:
 
 ## Sandboxing
 
-Only `HostBridge` (e.g. `httpGet(url, headers): String`, `log(msg)`) is bound into each `QuickJs`
-instance via `quickJs.set(...)`. No `fetch`, no filesystem, no other globals. This satisfies
-"extension API is the only bridge" by construction — there is nothing else in the environment to
-reach through, not a policy that could be bypassed.
+**Amendment:** the real `app.cash.zipline:zipline` `QuickJs` class has no `.set()`/`.get()`
+host-function-binding API (confirmed via `javap` against the resolved artifact) — only
+`evaluate()`, `compile()`, `execute()`, `close()`. Zipline's real live-bridge mechanism
+(`Zipline.bind`/`take`) requires the `zipline-kotlin-plugin` compiler plugin and
+`ZiplineService`-adapter codegen on both sides, which assumes Kotlin/JS-compiled code on the JS
+side — it does not fit arbitrary hand-written third-party JS/TS extension text.
+
+Instead, each extension operation splits into a pure **request** function (returns `{url,
+headers}` as JSON — no networking) and a pure **parse** function (turns an already-fetched
+response body into the result). `JsExtension` calls the request function via `quickJs.evaluate()`,
+then calls `HostBridge.httpGet` as a **plain Kotlin method** (no sandbox binding — `JsExtension`
+already runs in Kotlin, so this needs no bridge at all), then calls the parse function via another
+`quickJs.evaluate()` with the fetched body as an argument. No `fetch`, no filesystem, no other
+globals are ever exposed to the sandbox, and the sandbox never calls back into Kotlin
+mid-execution — a *stronger* sandbox guarantee than a live binding would have been, and one that
+"extension API is the only bridge" holds by construction, not policy. The public Kotlin-facing
+`Extension` interface below is unaffected by this — only the JS-facing authoring contract changes
+(a `Request`/`Parse` function pair per operation instead of one function).
 
 ## Extension contract & models (`kmpmodels:extensioninterfaces`)
 

@@ -784,6 +784,10 @@ git commit -m "feat: add SemVerCompare for extension update-version comparisons"
 
 ### Task 5: Sample extension fixtures, `.d.ts`, `HostBridge`, and `JsExtension`
 
+> **Amendment (post-Task-2 discovery):** the real `app.cash.zipline:zipline` `QuickJs` class has no `.set()`/`.get()` host-function-binding API — only `evaluate()`, `compile()`, `execute()`, `close()` (confirmed via `javap` against the resolved `zipline-jvm-1.27.0.jar`). Zipline's real bridging mechanism (`Zipline.bind`/`take`) requires the `zipline-kotlin-plugin` compiler plugin and `ZiplineService`-adapter codegen on **both** sides of the bridge — it's designed for Kotlin/JS-compiled services, not for calling into arbitrary hand-written third-party JS/TS text, so it doesn't fit this feature.
+>
+> **Revised design:** each operation is split into a pure **request** function (`xRequest(...)`, returns `{url, headers}` as JSON — no networking) and a pure **parse** function (`xParse(..., responseBody)` — parses already-fetched text into the result). `JsExtension` calls the request function via `quickJs.evaluate()`, then calls `HostBridge.httpGet` directly as a **plain Kotlin method** (no sandbox binding needed — `JsExtension` already runs in Kotlin), then calls the parse function via `quickJs.evaluate()` with the fetched body as an argument. The sandbox never receives a live network capability and never calls back into Kotlin mid-execution — this is a *stronger* sandbox guarantee than the originally-planned live binding, not a weaker one. The public Kotlin-facing `Extension` interface from Task 1 is unaffected: `getPopular`/`getLatest`/`search`/`getDetail`/`getContent` keep their exact signatures; only the JS-facing contract (what an extension author writes) and `JsExtension`'s internals change. Required function count doubles from 5 to 10 (a `Request`/`Parse` pair per operation).
+
 **Files:**
 - Create: `sharedutils/jsextensionloader/samples/sample-extension.js`
 - Create: `sharedutils/jsextensionloader/samples/sample-extension.ts`
@@ -796,7 +800,7 @@ git commit -m "feat: add SemVerCompare for extension update-version comparisons"
 
 **Interfaces:**
 - Consumes: `ExtensionManifest`, `ExtensionItem`, `ExtensionDetail`, `ExtensionContent` (Task 1)
-- Produces: `HostBridge` interface (`httpGet`), `ExtensionValidator.validate(quickJs: QuickJs): List<String>`, `ExtensionValidationException(missing: List<String>)`, `JsExtension(manifest, quickJs): Extension` — all consumed by `JSExtensionLoader` (Task 6).
+- Produces: `HostBridge` interface (`httpGet`), `ExtensionValidator.validate(quickJs: QuickJs): List<String>`, `ExtensionValidationException(missing: List<String>)`, `JsExtension(manifest, quickJs, hostBridge): Extension` — all consumed by `JSExtensionLoader` (Task 6).
 
 - [ ] **Step 1: Create the sample JS extension file**
 
@@ -810,25 +814,41 @@ Create `sharedutils/jsextensionloader/samples/sample-extension.js`:
 // iconUrl: https://example.com/sample-extension-icon.png
 // updateUrl: https://example.com/sample-extension/update.json
 
-function getPopular(page) {
+function getPopularRequest(page) {
+    return { url: "https://example.com/popular?page=" + page, headers: {} };
+}
+
+function getPopularParse(page, responseBody) {
     return [
         { title: "Sample Item", url: "https://example.com/item/1", imageUrl: null }
     ];
 }
 
-function getLatest(page) {
+function getLatestRequest(page) {
+    return { url: "https://example.com/latest?page=" + page, headers: {} };
+}
+
+function getLatestParse(page, responseBody) {
     return [
         { title: "Latest Sample Item", url: "https://example.com/item/2", imageUrl: null }
     ];
 }
 
-function search(query, page) {
+function searchRequest(query, page) {
+    return { url: "https://example.com/search?q=" + query + "&page=" + page, headers: {} };
+}
+
+function searchParse(query, page, responseBody) {
     return [
         { title: "Search Result for " + query, url: "https://example.com/item/3", imageUrl: null }
     ];
 }
 
-function getDetail(url) {
+function getDetailRequest(url) {
+    return { url: url, headers: {} };
+}
+
+function getDetailParse(url, responseBody) {
     return {
         title: "Sample Item",
         url: url,
@@ -841,7 +861,11 @@ function getDetail(url) {
     };
 }
 
-function getContent(url) {
+function getContentRequest(url) {
+    return { url: url, headers: {} };
+}
+
+function getContentParse(url, responseBody) {
     return {
         urls: ["https://example.com/content/1.png"],
         headers: {}
@@ -867,25 +891,46 @@ interface Item {
     imageUrl: string;
 }
 
-function getPopular(page: number): Item[] {
+interface Request {
+    url: string;
+    headers: Record<string, string>;
+}
+
+function getPopularRequest(page: number): Request {
+    return { url: "https://example.com/popular?page=" + page, headers: {} };
+}
+
+function getPopularParse(page: number, responseBody: string): Item[] {
     return [
         { title: "Sample Item", url: "https://example.com/item/1", imageUrl: null }
     ];
 }
 
-function getLatest(page: number): Item[] {
+function getLatestRequest(page: number): Request {
+    return { url: "https://example.com/latest?page=" + page, headers: {} };
+}
+
+function getLatestParse(page: number, responseBody: string): Item[] {
     return [
         { title: "Latest Sample Item", url: "https://example.com/item/2", imageUrl: null }
     ];
 }
 
-function search(query: string, page: number): Item[] {
+function searchRequest(query: string, page: number): Request {
+    return { url: "https://example.com/search?q=" + query + "&page=" + page, headers: {} };
+}
+
+function searchParse(query: string, page: number, responseBody: string): Item[] {
     return [
         { title: "Search Result for " + query, url: "https://example.com/item/3", imageUrl: null }
     ];
 }
 
-function getDetail(url: string) {
+function getDetailRequest(url: string): Request {
+    return { url: url, headers: {} };
+}
+
+function getDetailParse(url: string, responseBody: string) {
     return {
         title: "Sample Item",
         url: url,
@@ -898,7 +943,11 @@ function getDetail(url: string) {
     };
 }
 
-function getContent(url: string) {
+function getContentRequest(url: string): Request {
+    return { url: url, headers: {} };
+}
+
+function getContentParse(url: string, responseBody: string) {
     return {
         urls: ["https://example.com/content/1.png"],
         headers: {}
@@ -914,6 +963,16 @@ Create `sharedutils/jsextensionloader/samples/otaku-extension.d.ts`:
 // Type declarations for OtakuWorld JS/TS extensions.
 // Reference these in your editor for type-checking and autocomplete.
 // Not consumed on-device — extension functions must be synchronous.
+//
+// Each operation is a pure "request" function (describes what to fetch —
+// no networking) paired with a pure "parse" function (turns the host-fetched
+// response body into the result). The host performs the actual HTTP fetch
+// between the two calls; your code never touches the network directly.
+
+interface ExtensionRequest {
+    url: string;
+    headers?: Record<string, string>;
+}
 
 interface ExtensionItem {
     title: string;
@@ -941,11 +1000,20 @@ interface ExtensionContent {
     headers?: Record<string, string>;
 }
 
-declare function getPopular(page: number): ExtensionItem[];
-declare function getLatest(page: number): ExtensionItem[];
-declare function search(query: string, page: number): ExtensionItem[];
-declare function getDetail(url: string): ExtensionDetail;
-declare function getContent(url: string): ExtensionContent;
+declare function getPopularRequest(page: number): ExtensionRequest;
+declare function getPopularParse(page: number, responseBody: string): ExtensionItem[];
+
+declare function getLatestRequest(page: number): ExtensionRequest;
+declare function getLatestParse(page: number, responseBody: string): ExtensionItem[];
+
+declare function searchRequest(query: string, page: number): ExtensionRequest;
+declare function searchParse(query: string, page: number, responseBody: string): ExtensionItem[];
+
+declare function getDetailRequest(url: string): ExtensionRequest;
+declare function getDetailParse(url: string, responseBody: string): ExtensionDetail;
+
+declare function getContentRequest(url: string): ExtensionRequest;
+declare function getContentParse(url: string, responseBody: string): ExtensionContent;
 ```
 
 - [ ] **Step 4: Copy the sample JS extension into a Kotlin test fixture**
@@ -967,25 +1035,41 @@ object SampleExtensionFixture {
         // iconUrl: https://example.com/sample-extension-icon.png
         // updateUrl: https://example.com/sample-extension/update.json
 
-        function getPopular(page) {
+        function getPopularRequest(page) {
+            return { url: "https://example.com/popular?page=" + page, headers: {} };
+        }
+
+        function getPopularParse(page, responseBody) {
             return [
                 { title: "Sample Item", url: "https://example.com/item/1", imageUrl: null }
             ];
         }
 
-        function getLatest(page) {
+        function getLatestRequest(page) {
+            return { url: "https://example.com/latest?page=" + page, headers: {} };
+        }
+
+        function getLatestParse(page, responseBody) {
             return [
                 { title: "Latest Sample Item", url: "https://example.com/item/2", imageUrl: null }
             ];
         }
 
-        function search(query, page) {
+        function searchRequest(query, page) {
+            return { url: "https://example.com/search?q=" + query + "&page=" + page, headers: {} };
+        }
+
+        function searchParse(query, page, responseBody) {
             return [
                 { title: "Search Result for " + query, url: "https://example.com/item/3", imageUrl: null }
             ];
         }
 
-        function getDetail(url) {
+        function getDetailRequest(url) {
+            return { url: url, headers: {} };
+        }
+
+        function getDetailParse(url, responseBody) {
             return {
                 title: "Sample Item",
                 url: url,
@@ -998,7 +1082,11 @@ object SampleExtensionFixture {
             };
         }
 
-        function getContent(url) {
+        function getContentRequest(url) {
+            return { url: url, headers: {} };
+        }
+
+        function getContentParse(url, responseBody) {
             return {
                 urls: ["https://example.com/content/1.png"],
                 headers: {}
@@ -1006,9 +1094,12 @@ object SampleExtensionFixture {
         }
     """.trimIndent()
 
+    // Defines only the first Request/Parse pair — missing the other 8 required functions.
     const val MISSING_FUNCTIONS_SCRIPT = """
-        function getPopular(page) { return []; }
-        function getLatest(page) { return []; }
+        function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+        function getPopularParse(page, responseBody) { return []; }
+        function getLatestRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+        function getLatestParse(page, responseBody) { return []; }
     """
 }
 ```
@@ -1039,6 +1130,16 @@ class JsExtensionTest {
         updateUrl = null,
     )
 
+    private class StubHostBridge(private val response: String = "") : HostBridge {
+        var lastUrl: String? = null
+        var lastHeadersJson: String? = null
+        override fun httpGet(url: String, headersJson: String): String {
+            lastUrl = url
+            lastHeadersJson = headersJson
+            return response
+        }
+    }
+
     private var quickJs: QuickJs? = null
 
     @AfterTest
@@ -1046,11 +1147,11 @@ class JsExtensionTest {
         quickJs?.close()
     }
 
-    private fun loadSampleExtension(): JsExtension {
+    private fun loadSampleExtension(hostBridge: HostBridge = StubHostBridge()): JsExtension {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
-        return JsExtension(manifest, js)
+        return JsExtension(manifest, js, hostBridge)
     }
 
     @Test
@@ -1085,6 +1186,44 @@ class JsExtensionTest {
     }
 
     @Test
+    fun hostBridgeReceivesTheUrlFromTheRequestPhase() = runTest {
+        val hostBridge = StubHostBridge()
+        val extension = loadSampleExtension(hostBridge)
+        extension.getPopular(page = 3)
+        assertEquals("https://example.com/popular?page=3", hostBridge.lastUrl)
+    }
+
+    @Test
+    fun parsePhaseReceivesTheHostFetchedResponseBody() = runTest {
+        val js = QuickJs.create()
+        quickJs = js
+        js.evaluate(
+            """
+            function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+            function getPopularParse(page, responseBody) {
+                return [{ title: "echo:" + responseBody, url: "https://example.com/1", imageUrl: null }];
+            }
+            function getLatestRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+            function getLatestParse(page, responseBody) { return []; }
+            function searchRequest(query, page) { return { url: "https://example.com/x", headers: {} }; }
+            function searchParse(query, page, responseBody) { return []; }
+            function getDetailRequest(url) { return { url: url, headers: {} }; }
+            function getDetailParse(url, responseBody) {
+                return { title: "t", url: url, imageUrl: null, description: null, genres: [], chapters: [] };
+            }
+            function getContentRequest(url) { return { url: url, headers: {} }; }
+            function getContentParse(url, responseBody) { return { urls: [], headers: {} }; }
+            """.trimIndent(),
+            "echo-extension.js",
+        )
+        val extension = JsExtension(manifest, js, StubHostBridge(response = "fetched-body"))
+
+        val items = extension.getPopular(page = 1)
+
+        assertEquals("echo:fetched-body", items.first().title)
+    }
+
+    @Test
     fun validatorReportsNoMissingFunctionsForSampleExtension() {
         val js = QuickJs.create()
         quickJs = js
@@ -1098,7 +1237,10 @@ class JsExtensionTest {
         quickJs = js
         js.evaluate(SampleExtensionFixture.MISSING_FUNCTIONS_SCRIPT, "incomplete-extension.js")
         val missing = ExtensionValidator.validate(js)
-        assertEquals(listOf("search", "getDetail", "getContent"), missing)
+        assertEquals(
+            listOf("searchRequest", "searchParse", "getDetailRequest", "getDetailParse", "getContentRequest", "getContentParse"),
+            missing,
+        )
     }
 }
 ```
@@ -1125,8 +1267,11 @@ import kotlinx.serialization.json.Json
 private val hostBridgeJson = Json { ignoreUnknownKeys = true; isLenient = true }
 
 /**
- * The ONLY bridge exposed into the QuickJs sandbox. Extension code can reach
- * the network exclusively through [httpGet] — there is no ambient fetch/fs.
+ * The ONLY way extension code reaches the network. [httpGet] is called by the
+ * host (a plain Kotlin method call — never bound into the QuickJs sandbox)
+ * between an extension's pure "request" and "parse" JS function calls. The
+ * sandbox itself has no ambient fetch/fs and never calls back into Kotlin
+ * mid-execution.
  */
 interface HostBridge {
     fun httpGet(url: String, headersJson: String): String
@@ -1159,7 +1304,13 @@ class ExtensionValidationException(val missing: List<String>) :
 
 object ExtensionValidator {
 
-    private val requiredFunctions = listOf("getPopular", "getLatest", "search", "getDetail", "getContent")
+    private val requiredFunctions = listOf(
+        "getPopularRequest", "getPopularParse",
+        "getLatestRequest", "getLatestParse",
+        "searchRequest", "searchParse",
+        "getDetailRequest", "getDetailParse",
+        "getContentRequest", "getContentParse",
+    )
 
     fun validate(quickJs: QuickJs): List<String> {
         val probe = requiredFunctions.joinToString(
@@ -1189,34 +1340,61 @@ import com.programmersbox.extensioninterfaces.ExtensionItem
 import com.programmersbox.extensioninterfaces.ExtensionManifest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 
 private val jsExtensionJson = Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true }
 
+@Serializable
+private data class JsRequest(val url: String, val headers: Map<String, String> = emptyMap())
+
+/**
+ * Wraps a validated [QuickJs] instance. The sandbox never receives a live
+ * network capability: for each operation, a pure "request" JS function
+ * describes what to fetch, [hostBridge] performs the actual fetch (a plain
+ * Kotlin call — not a sandbox binding), and a pure "parse" JS function turns
+ * the fetched body into the result.
+ */
 class JsExtension(
     override val manifest: ExtensionManifest,
     private val quickJs: QuickJs,
+    private val hostBridge: HostBridge,
 ) : Extension {
 
     override suspend fun getPopular(page: Int): List<ExtensionItem> =
-        call("getPopular($page)")
+        fetchAndParse("getPopularRequest($page)") { body -> "getPopularParse($page, $body)" }
 
     override suspend fun getLatest(page: Int): List<ExtensionItem> =
-        call("getLatest($page)")
+        fetchAndParse("getLatestRequest($page)") { body -> "getLatestParse($page, $body)" }
 
-    override suspend fun search(query: String, page: Int): List<ExtensionItem> =
-        call("search(${jsExtensionJson.encodeToString(String.serializer(), query)}, $page)")
+    override suspend fun search(query: String, page: Int): List<ExtensionItem> {
+        val q = jsExtensionJson.encodeToString(query)
+        return fetchAndParse("searchRequest($q, $page)") { body -> "searchParse($q, $page, $body)" }
+    }
 
-    override suspend fun getDetail(url: String): ExtensionDetail =
-        call("getDetail(${jsExtensionJson.encodeToString(String.serializer(), url)})")
+    override suspend fun getDetail(url: String): ExtensionDetail {
+        val u = jsExtensionJson.encodeToString(url)
+        return fetchAndParse("getDetailRequest($u)") { body -> "getDetailParse($u, $body)" }
+    }
 
-    override suspend fun getContent(url: String): ExtensionContent =
-        call("getContent(${jsExtensionJson.encodeToString(String.serializer(), url)})")
+    override suspend fun getContent(url: String): ExtensionContent {
+        val u = jsExtensionJson.encodeToString(url)
+        return fetchAndParse("getContentRequest($u)") { body -> "getContentParse($u, $body)" }
+    }
 
-    private suspend inline fun <reified T> call(callExpression: String): T = withContext(Dispatchers.Default) {
-        val resultJson = quickJs.evaluate("JSON.stringify($callExpression)", "extension-call.js") as String
-        jsExtensionJson.decodeFromString(serializer(), resultJson)
+    private suspend inline fun <reified T> fetchAndParse(
+        requestCall: String,
+        parseCall: (bodyJsonLiteral: String) -> String,
+    ): T = withContext(Dispatchers.Default) {
+        val requestJson = quickJs.evaluate("JSON.stringify($requestCall)", "extension-request.js") as String
+        val request = jsExtensionJson.decodeFromString<JsRequest>(requestJson)
+        val headersJson = jsExtensionJson.encodeToString(request.headers)
+        val responseBody = hostBridge.httpGet(request.url, headersJson)
+        val bodyLiteral = jsExtensionJson.encodeToString(responseBody)
+        val resultJson = quickJs.evaluate("JSON.stringify(${parseCall(bodyLiteral)})", "extension-parse.js") as String
+        jsExtensionJson.decodeFromString<T>(resultJson)
     }
 
     fun close() {
@@ -1228,7 +1406,7 @@ class JsExtension(
 - [ ] **Step 10: Run the tests to verify they pass**
 
 Run: `./gradlew :sharedutils:jsextensionloader:jvmTest`
-Expected: PASS (6 new tests, 24 total)
+Expected: PASS (8 new tests). (Note: from this amendment onward, cumulative "N total" test counts stated in later tasks in this document may be off by a small amount versus actual — trust the real `./gradlew` output over the plan's stated running total.)
 
 - [ ] **Step 11: Commit**
 
@@ -1294,15 +1472,23 @@ class JSExtensionLoaderTest {
             // name: TS Sample
             // version: 1.0.0
             interface Item { title: string; url: string; }
-            function getPopular(page: number): Item[] {
+            interface Request { url: string; headers: Record<string, string>; }
+            function getPopularRequest(page: number): Request {
+                return { url: "https://example.com/popular?page=" + page, headers: {} };
+            }
+            function getPopularParse(page: number, responseBody: string): Item[] {
                 return [{ title: "TS Item", url: "https://example.com/1" }];
             }
-            function getLatest(page: number): Item[] { return []; }
-            function search(query: string, page: number): Item[] { return []; }
-            function getDetail(url: string) {
+            function getLatestRequest(page: number): Request { return { url: "https://example.com/latest", headers: {} }; }
+            function getLatestParse(page: number, responseBody: string): Item[] { return []; }
+            function searchRequest(query: string, page: number): Request { return { url: "https://example.com/search", headers: {} }; }
+            function searchParse(query: string, page: number, responseBody: string): Item[] { return []; }
+            function getDetailRequest(url: string): Request { return { url: url, headers: {} }; }
+            function getDetailParse(url: string, responseBody: string) {
                 return { title: "TS Item", url: url, imageUrl: null, description: null, genres: [], chapters: [] };
             }
-            function getContent(url: string) {
+            function getContentRequest(url: string): Request { return { url: url, headers: {} }; }
+            function getContentParse(url: string, responseBody: string) {
                 return { urls: [], headers: {} };
             }
         """.trimIndent()
@@ -1325,7 +1511,10 @@ class JSExtensionLoaderTest {
                 companionManifestJson = null,
             )
         }
-        assertEquals(listOf("search", "getDetail", "getContent"), exception.missing)
+        assertEquals(
+            listOf("searchRequest", "searchParse", "getDetailRequest", "getDetailParse", "getContentRequest", "getContentParse"),
+            exception.missing,
+        )
     }
 }
 ```
@@ -1353,7 +1542,6 @@ class JSExtensionLoader(private val hostBridge: HostBridge) {
         val transpiled = if (isTypeScript) TsTranspiler.transpile(scriptText) else scriptText
 
         val quickJs = QuickJs.create()
-        quickJs.set("HostBridge", HostBridge::class.java, hostBridge)
         quickJs.evaluate(transpiled, fileName)
 
         val missing = ExtensionValidator.validate(quickJs)
@@ -1362,7 +1550,7 @@ class JSExtensionLoader(private val hostBridge: HostBridge) {
             throw ExtensionValidationException(missing)
         }
 
-        return JsExtension(manifest, quickJs)
+        return JsExtension(manifest, quickJs, hostBridge)
     }
 }
 ```
@@ -1370,7 +1558,7 @@ class JSExtensionLoader(private val hostBridge: HostBridge) {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `./gradlew :sharedutils:jsextensionloader:jvmTest`
-Expected: PASS (3 new tests, 27 total)
+Expected: PASS (3 new tests). Trust the real Gradle output over the plan's stated running totals from this task onward (see Task 5's amendment note).
 
 - [ ] **Step 5: Commit**
 
