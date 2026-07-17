@@ -47,6 +47,11 @@ jobs:
     if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
 
+  animeworld_desktop:
+    uses: ./.github/workflows/animeworld_desktop_build.yaml
+    if: github.event.inputs.build_animeworld == 'true' || github.event_name == 'push'
+    secrets: inherit # pass all secrets
+
   #  animeworldtv:
   #    uses: ./.github/workflows/animeworldtv_build.yaml
   #    if: github.event.inputs.build_animeworldtv == 'true' || github.event_name == 'push'
@@ -54,6 +59,11 @@ jobs:
 
   novelworld:
     uses: ./.github/workflows/novelworld_build.yaml
+    if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'push'
+    secrets: inherit # pass all secrets
+
+  novelworld_desktop:
+    uses: ./.github/workflows/novelworld_desktop_build.yaml
     if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
 
