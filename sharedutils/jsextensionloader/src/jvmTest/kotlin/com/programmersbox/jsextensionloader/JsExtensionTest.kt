@@ -19,6 +19,16 @@ class JsExtensionTest {
         updateUrl = null,
     )
 
+    private class StubHostBridge(private val response: String = "") : HostBridge {
+        var lastUrl: String? = null
+        var lastHeadersJson: String? = null
+        override fun httpGet(url: String, headersJson: String): String {
+            lastUrl = url
+            lastHeadersJson = headersJson
+            return response
+        }
+    }
+
     private var quickJs: QuickJs? = null
 
     @AfterTest
@@ -26,11 +36,11 @@ class JsExtensionTest {
         quickJs?.close()
     }
 
-    private fun loadSampleExtension(): JsExtension {
+    private fun loadSampleExtension(hostBridge: HostBridge = StubHostBridge()): JsExtension {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
-        return JsExtension(manifest, js)
+        return JsExtension(manifest, js, hostBridge)
     }
 
     @Test
@@ -65,6 +75,44 @@ class JsExtensionTest {
     }
 
     @Test
+    fun hostBridgeReceivesTheUrlFromTheRequestPhase() = runTest {
+        val hostBridge = StubHostBridge()
+        val extension = loadSampleExtension(hostBridge)
+        extension.getPopular(page = 3)
+        assertEquals("https://example.com/popular?page=3", hostBridge.lastUrl)
+    }
+
+    @Test
+    fun parsePhaseReceivesTheHostFetchedResponseBody() = runTest {
+        val js = QuickJs.create()
+        quickJs = js
+        js.evaluate(
+            """
+            function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+            function getPopularParse(page, responseBody) {
+                return [{ title: "echo:" + responseBody, url: "https://example.com/1", imageUrl: null }];
+            }
+            function getLatestRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+            function getLatestParse(page, responseBody) { return []; }
+            function searchRequest(query, page) { return { url: "https://example.com/x", headers: {} }; }
+            function searchParse(query, page, responseBody) { return []; }
+            function getDetailRequest(url) { return { url: url, headers: {} }; }
+            function getDetailParse(url, responseBody) {
+                return { title: "t", url: url, imageUrl: null, description: null, genres: [], chapters: [] };
+            }
+            function getContentRequest(url) { return { url: url, headers: {} }; }
+            function getContentParse(url, responseBody) { return { urls: [], headers: {} }; }
+            """.trimIndent(),
+            "echo-extension.js",
+        )
+        val extension = JsExtension(manifest, js, StubHostBridge(response = "fetched-body"))
+
+        val items = extension.getPopular(page = 1)
+
+        assertEquals("echo:fetched-body", items.first().title)
+    }
+
+    @Test
     fun validatorReportsNoMissingFunctionsForSampleExtension() {
         val js = QuickJs.create()
         quickJs = js
@@ -78,6 +126,9 @@ class JsExtensionTest {
         quickJs = js
         js.evaluate(SampleExtensionFixture.MISSING_FUNCTIONS_SCRIPT, "incomplete-extension.js")
         val missing = ExtensionValidator.validate(js)
-        assertEquals(listOf("search", "getDetail", "getContent"), missing)
+        assertEquals(
+            listOf("searchRequest", "searchParse", "getDetailRequest", "getDetailParse", "getContentRequest", "getContentParse"),
+            missing,
+        )
     }
 }

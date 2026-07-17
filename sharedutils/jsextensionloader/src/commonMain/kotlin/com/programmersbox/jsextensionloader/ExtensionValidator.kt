@@ -10,7 +10,13 @@ class ExtensionValidationException(val missing: List<String>) :
 
 object ExtensionValidator {
 
-    private val requiredFunctions = listOf("getPopular", "getLatest", "search", "getDetail", "getContent")
+    private val requiredFunctions = listOf(
+        "getPopularRequest", "getPopularParse",
+        "getLatestRequest", "getLatestParse",
+        "searchRequest", "searchParse",
+        "getDetailRequest", "getDetailParse",
+        "getContentRequest", "getContentParse",
+    )
 
     fun validate(quickJs: QuickJs): List<String> {
         val probe = requiredFunctions.joinToString(

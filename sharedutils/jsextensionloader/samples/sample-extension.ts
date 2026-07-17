@@ -11,25 +11,46 @@ interface Item {
     imageUrl: string;
 }
 
-function getPopular(page: number): Item[] {
+interface Request {
+    url: string;
+    headers: Record<string, string>;
+}
+
+function getPopularRequest(page: number): Request {
+    return { url: "https://example.com/popular?page=" + page, headers: {} };
+}
+
+function getPopularParse(page: number, responseBody: string): Item[] {
     return [
         { title: "Sample Item", url: "https://example.com/item/1", imageUrl: null }
     ];
 }
 
-function getLatest(page: number): Item[] {
+function getLatestRequest(page: number): Request {
+    return { url: "https://example.com/latest?page=" + page, headers: {} };
+}
+
+function getLatestParse(page: number, responseBody: string): Item[] {
     return [
         { title: "Latest Sample Item", url: "https://example.com/item/2", imageUrl: null }
     ];
 }
 
-function search(query: string, page: number): Item[] {
+function searchRequest(query: string, page: number): Request {
+    return { url: "https://example.com/search?q=" + query + "&page=" + page, headers: {} };
+}
+
+function searchParse(query: string, page: number, responseBody: string): Item[] {
     return [
         { title: "Search Result for " + query, url: "https://example.com/item/3", imageUrl: null }
     ];
 }
 
-function getDetail(url: string) {
+function getDetailRequest(url: string): Request {
+    return { url: url, headers: {} };
+}
+
+function getDetailParse(url: string, responseBody: string) {
     return {
         title: "Sample Item",
         url: url,
@@ -42,7 +63,11 @@ function getDetail(url: string) {
     };
 }
 
-function getContent(url: string) {
+function getContentRequest(url: string): Request {
+    return { url: url, headers: {} };
+}
+
+function getContentParse(url: string, responseBody: string) {
     return {
         urls: ["https://example.com/content/1.png"],
         headers: {}

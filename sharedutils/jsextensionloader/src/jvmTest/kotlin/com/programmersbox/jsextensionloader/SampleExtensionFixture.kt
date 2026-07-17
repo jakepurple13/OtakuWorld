@@ -12,25 +12,41 @@ object SampleExtensionFixture {
         // iconUrl: https://example.com/sample-extension-icon.png
         // updateUrl: https://example.com/sample-extension/update.json
 
-        function getPopular(page) {
+        function getPopularRequest(page) {
+            return { url: "https://example.com/popular?page=" + page, headers: {} };
+        }
+
+        function getPopularParse(page, responseBody) {
             return [
                 { title: "Sample Item", url: "https://example.com/item/1", imageUrl: null }
             ];
         }
 
-        function getLatest(page) {
+        function getLatestRequest(page) {
+            return { url: "https://example.com/latest?page=" + page, headers: {} };
+        }
+
+        function getLatestParse(page, responseBody) {
             return [
                 { title: "Latest Sample Item", url: "https://example.com/item/2", imageUrl: null }
             ];
         }
 
-        function search(query, page) {
+        function searchRequest(query, page) {
+            return { url: "https://example.com/search?q=" + query + "&page=" + page, headers: {} };
+        }
+
+        function searchParse(query, page, responseBody) {
             return [
                 { title: "Search Result for " + query, url: "https://example.com/item/3", imageUrl: null }
             ];
         }
 
-        function getDetail(url) {
+        function getDetailRequest(url) {
+            return { url: url, headers: {} };
+        }
+
+        function getDetailParse(url, responseBody) {
             return {
                 title: "Sample Item",
                 url: url,
@@ -43,7 +59,11 @@ object SampleExtensionFixture {
             };
         }
 
-        function getContent(url) {
+        function getContentRequest(url) {
+            return { url: url, headers: {} };
+        }
+
+        function getContentParse(url, responseBody) {
             return {
                 urls: ["https://example.com/content/1.png"],
                 headers: {}
@@ -51,8 +71,11 @@ object SampleExtensionFixture {
         }
     """.trimIndent()
 
+    // Defines only the first Request/Parse pair — missing the other 8 required functions.
     const val MISSING_FUNCTIONS_SCRIPT = """
-        function getPopular(page) { return []; }
-        function getLatest(page) { return []; }
+        function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+        function getPopularParse(page, responseBody) { return []; }
+        function getLatestRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+        function getLatestParse(page, responseBody) { return []; }
     """
 }
