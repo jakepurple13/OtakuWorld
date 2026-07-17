@@ -52,6 +52,7 @@ kotlin {
                 implementation(kotlin("test-junit"))
                 implementation(commonLibs.coroutinesTest)
                 implementation(commonLibs.ktorMock)
+                implementation(commonLibs.datastorePref)
             }
         }
     }
