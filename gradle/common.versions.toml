@@ -56,6 +56,7 @@ xemanticAiToolSchema = "1.2.0"
 kmpalette = "3.1.0"
 materialAdaptiveCmp = "1.2.0"
 supabase = "3.6.0"
+ziplineCoreVersion = "1.27.0"
 
 [libraries]
 # About Libraries (KMP)
@@ -155,6 +156,9 @@ ktorContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", v
 ktorOkHttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorVersion" }
 ktorGson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktorVersion" }
 ktorJsoup = "com.tfowl.ktor:ktor-jsoup:2.3.0"
+
+# Zipline
+zipline = { module = "app.cash.zipline:zipline", version.ref = "ziplineCoreVersion" }
 
 # Lifecycle KMP
 lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "cmpLifecycle" }
