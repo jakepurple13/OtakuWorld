@@ -6,9 +6,8 @@ import com.programmersbox.extensioninterfaces.ExtensionContent
 import com.programmersbox.extensioninterfaces.ExtensionDetail
 import com.programmersbox.extensioninterfaces.ExtensionItem
 import com.programmersbox.extensioninterfaces.ExtensionManifest
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -31,13 +30,8 @@ class JsExtension(
     override val manifest: ExtensionManifest,
     private val quickJs: QuickJs,
     private val hostBridge: HostBridge,
+    private val dispatcher: CoroutineDispatcher,
 ) : Extension {
-
-    // QuickJs is not safe for concurrent use from multiple threads on the same context -
-    // callers can invoke getPopular/getLatest/etc. concurrently (e.g. a background update
-    // check racing the UI's own fetch), and without this every quickJs.evaluate() call here
-    // races against every other, corrupting the engine's internal state.
-    private val quickJsMutex = Mutex()
 
     override suspend fun getPopular(page: Int): List<ExtensionItem> =
         fetchAndParse("getPopularRequest($page)") { body -> "getPopularParse($page, $body)" }
@@ -63,21 +57,22 @@ class JsExtension(
     private suspend inline fun <reified T> fetchAndParse(
         requestCall: String,
         crossinline parseCall: (bodyJsonLiteral: String) -> String,
-    ): T = withContext(Dispatchers.Default) {
-        val requestJson = quickJsMutex.withLock {
+    ): T {
+        val requestJson = withContext(dispatcher) {
             quickJs.evaluate("JSON.stringify($requestCall)", "extension-request.js") as String
         }
         val request = jsExtensionJson.decodeFromString<JsRequest>(requestJson)
         val headersJson = jsExtensionJson.encodeToString(request.headers)
-        val responseBody = hostBridge.httpGet(request.url, headersJson)
+        val responseBody = withContext(Dispatchers.IO) { hostBridge.httpGet(request.url, headersJson) }
         val bodyLiteral = jsExtensionJson.encodeToString(responseBody)
-        val resultJson = quickJsMutex.withLock {
+        val resultJson = withContext(dispatcher) {
             quickJs.evaluate("JSON.stringify(${parseCall(bodyLiteral)})", "extension-parse.js") as String
         }
-        jsExtensionJson.decodeFromString<T>(resultJson)
+        return jsExtensionJson.decodeFromString<T>(resultJson)
     }
 
     fun close() {
         quickJs.close()
+        closeQuickJsDispatcher(dispatcher)
     }
 }

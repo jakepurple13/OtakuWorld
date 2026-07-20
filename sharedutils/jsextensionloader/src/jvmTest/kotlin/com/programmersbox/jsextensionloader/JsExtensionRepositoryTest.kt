@@ -29,7 +29,7 @@ class JsExtensionRepositoryTest {
             id = id, name = id, version = "1.0.0", author = null,
             description = null, iconUrl = null, updateUrl = null,
         )
-        return JsExtension(manifest, quickJs, StubHostBridge())
+        return JsExtension(manifest, quickJs, StubHostBridge(), singleThreadQuickJsDispatcher(id))
     }
 
     @Test
