@@ -7,6 +7,7 @@ import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -16,6 +17,13 @@ import kotlinx.coroutines.flow.onEach
  * Diffs by extension id AND instance identity — an auto-update reload
  * replaces a same-id extension in place, and the mirrored entry must swap to
  * the new instance rather than keep pointing at a closed [JsExtension].
+ *
+ * Also self-heals: the legacy JAR/APK loader calls `SourceRepository.setSources(...)`
+ * (a full replace, not a merge) every time its own extension-directory watcher
+ * fires, independently of anything this bridge does — which silently wipes
+ * out any JS-mirrored entries. Since that legacy loader can't be modified,
+ * this bridge also observes [SourceRepository.sources] itself and re-adds any
+ * of its own entries that go missing.
  */
 class JsExtensionSourceBridge(
     private val jsExtensionRepository: JsExtensionRepository,
@@ -25,12 +33,12 @@ class JsExtensionSourceBridge(
     private val mirrored = mutableMapOf<String, Pair<JsExtension, KmpSourceInformation>>()
 
     init {
-        jsExtensionRepository.extensions
-            .onEach { current -> sync(current) }
+        combine(jsExtensionRepository.extensions, sourceRepository.sources) { extensions, sources -> extensions to sources }
+            .onEach { (extensions, sources) -> sync(extensions, sources) }
             .launchIn(scope)
     }
 
-    private fun sync(current: List<JsExtension>) {
+    private fun sync(current: List<JsExtension>, sourcesNow: List<KmpSourceInformation>) {
         val currentById = current.associateBy { it.manifest.id }
 
         (mirrored.keys - currentById.keys).forEach { id ->
@@ -41,9 +49,12 @@ class JsExtensionSourceBridge(
 
         currentById.forEach { (id, extension) ->
             val existing = mirrored[id]
-            if (existing == null || existing.first !== extension) {
+            val stillPresent = existing != null && existing.second in sourcesNow
+            if (existing == null || existing.first !== extension || !stillPresent) {
                 runCatching {
-                    existing?.let { (_, oldInfo) -> sourceRepository.removeSource(oldInfo) }
+                    if (existing != null && stillPresent && existing.first !== extension) {
+                        sourceRepository.removeSource(existing.second)
+                    }
                     val info = KmpSourceInformation(
                         apiService = JsApiServiceAdapter(extension),
                         name = extension.manifest.name,
