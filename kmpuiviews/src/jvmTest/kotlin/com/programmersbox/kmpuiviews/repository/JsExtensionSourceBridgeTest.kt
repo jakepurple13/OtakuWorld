@@ -5,6 +5,7 @@ import com.programmersbox.extensioninterfaces.ExtensionManifest
 import com.programmersbox.jsextensionloader.HostBridge
 import com.programmersbox.jsextensionloader.JsExtension
 import com.programmersbox.jsextensionloader.JsExtensionRepository
+import com.programmersbox.jsextensionloader.singleThreadQuickJsDispatcher
 import com.programmersbox.kmpmodels.SourceRepository
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.TestScope
@@ -35,7 +36,7 @@ class JsExtensionSourceBridgeTest {
         val js = QuickJs.create()
         createdQuickJs.add(js)
         js.evaluate(BRIDGE_FIXTURE_SCRIPT, "$id.js")
-        return JsExtension(manifest, js, StubHostBridge())
+        return JsExtension(manifest, js, StubHostBridge(), singleThreadQuickJsDispatcher(id))
     }
 
     @Test
