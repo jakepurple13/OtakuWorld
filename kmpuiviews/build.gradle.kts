@@ -85,6 +85,7 @@ kotlin {
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 api(projects.kmpmodels)
+                implementation(projects.kmpmodels.extensioninterfaces)
                 api(projects.sharedtools)
                 api(projects.sharedcomponents)
                 implementation(projects.sharedutils.kmpextensionloader)
@@ -229,6 +230,7 @@ kotlin {
                 implementation(commonLibs.androidx.room.sqlite)
                 implementation(project.dependencies.platform(commonLibs.supabase.bom))
                 implementation(commonLibs.supabase.auth)
+                implementation(commonLibs.zipline)
             }
         }
 

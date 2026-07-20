@@ -7,6 +7,7 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.settings.search.DefaultSettingsItems
@@ -43,6 +44,7 @@ import kotlin.time.Duration.Companion.minutes
 
 val appModule = module {
     singleOf(::AppUpdateCheck)
+    single { JsExtensionSourceBridge(get(), get()) }
     single {
         OtakuWorldCatalog(
             get<KmpGenericInfo>().sourceType

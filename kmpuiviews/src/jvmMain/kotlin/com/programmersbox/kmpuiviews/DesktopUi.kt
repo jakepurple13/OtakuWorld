@@ -47,6 +47,7 @@ import com.programmersbox.jsextensionloader.ExtensionDiscovery
 import com.programmersbox.jsextensionloader.JSExtensionLoader
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
@@ -162,6 +163,7 @@ fun ApplicationScope.BaseDesktopUi(
             val jsExtensionLoader = koinInject<JSExtensionLoader>()
             val jsExtensionRepository = koinInject<JsExtensionRepository>()
             val jsExtensionDiscovery = koinInject<ExtensionDiscovery>()
+            val jsExtensionSourceBridge = koinInject<JsExtensionSourceBridge>()
             LaunchedEffect(Unit) {
                 withContext(Dispatchers.IO) {
                     jsExtensionDiscovery.scanBundledResources().forEach { source ->

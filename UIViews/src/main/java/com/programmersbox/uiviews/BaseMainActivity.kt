@@ -20,6 +20,7 @@ import com.programmersbox.jsextensionloader.ExtensionDiscovery
 import com.programmersbox.jsextensionloader.JSExtensionLoader
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpmodels.ExampleService
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
@@ -45,6 +46,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     private val jsExtensionLoader by inject<JSExtensionLoader>()
     private val jsExtensionRepository by inject<JsExtensionRepository>()
     private val jsExtensionDiscovery by inject<ExtensionDiscovery>()
+    private val jsExtensionSourceBridge by inject<JsExtensionSourceBridge>()
     private val deepLinks by inject<DeepLinks>()
 
     protected abstract fun onCreate()
@@ -58,6 +60,11 @@ abstract class BaseMainActivity : FragmentActivity() {
         onCreate()
 
         enableEdgeToEdge()
+
+        // Forces Koin to construct this lazy single now, starting its reactive
+        // JsExtensionRepository -> SourceRepository mirroring for the process lifetime.
+        // by inject<T>() only resolves on first access - it is never referenced elsewhere.
+        jsExtensionSourceBridge.let { }
 
         if (BuildConfig.DEBUG) {
             sourceRepository.addSource(ExampleService.getSourceInformation())
