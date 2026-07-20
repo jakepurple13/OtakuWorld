@@ -5,7 +5,6 @@ import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.kmpuiviews.SystemAlerter
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
-import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseConnection
 import com.programmersbox.kmpuiviews.testing.createTestItemDatabase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
@@ -20,7 +19,6 @@ class FavoritesRepositoryTest {
 
     private fun repository(loggedIn: Boolean = false) = FavoritesRepository(
         dao = database.itemDao(),
-        firebaseDb = FakeKmpFirebaseConnection(),
         systemAlerter = SystemAlerter(),
         authManager = FakeAuthManager(loggedIn = loggedIn),
     )

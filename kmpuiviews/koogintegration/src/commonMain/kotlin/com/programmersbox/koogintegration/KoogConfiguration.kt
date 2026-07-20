@@ -1,5 +1,6 @@
 package com.programmersbox.koogintegration
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.programmersbox.koogintegration.integrator.BookmarksIntegrator
 import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
@@ -10,19 +11,28 @@ import com.programmersbox.koogintegration.provider.AgentProvider
 import com.programmersbox.koogintegration.provider.OtakuAgentProvider
 import com.programmersbox.koogintegration.provider.otakutools.LocalExplainTools
 import com.programmersbox.koogintegration.provider.otakutools.RecommendationTools
+import com.programmersbox.koogintegration.screens.chatscreen.ChatScreen
 import com.programmersbox.koogintegration.screens.chatscreen.ChatViewModel
+import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
+import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
 import com.programmersbox.sharedtools.SearchRegistryItem
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.new
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.parameter.parametersOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 
-fun buildKoogModule() = module {
+fun buildKoogModule(
+    hideNavBarWhileOnScreen: @Composable () -> Unit,
+) = module {
     singleOf(::AgentMaker)
     single<AgentProvider>(named("otaku_agent")) { new(::OtakuAgentProvider) }
     viewModel { ChatViewModel(get<AgentProvider>(named(it[0])), get(), get()) }
@@ -43,6 +53,22 @@ fun buildKoogModule() = module {
     }
 
     singleOf(::KoogSearchItems) bind SearchRegistryItem::class
+
+    navigation<KoogSettings> {
+        val koogNavigation: KoogNavigation = koinInject()
+        KoogSettingsScreen(
+            onBack = { koogNavigation.onBack() }
+        )
+    }
+    navigation<Koog> {
+        val koogNavigation: KoogNavigation = koinInject()
+
+        hideNavBarWhileOnScreen()
+        ChatScreen(
+            viewModel = koinViewModel { parametersOf("otaku_agent") },
+            koogNavigation = koogNavigation
+        )
+    }
 }
 
 object AppDimension {

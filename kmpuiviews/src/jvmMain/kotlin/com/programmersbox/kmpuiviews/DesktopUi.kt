@@ -43,7 +43,11 @@ import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
+import com.programmersbox.jsextensionloader.ExtensionDiscovery
+import com.programmersbox.jsextensionloader.JSExtensionLoader
+import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
@@ -56,8 +60,10 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
@@ -152,6 +158,19 @@ fun ApplicationScope.BaseDesktopUi(
                         sourceRepository.addSource(exampleService)
                     }
                     .launchIn(this)
+            }
+
+            val jsExtensionLoader = koinInject<JSExtensionLoader>()
+            val jsExtensionRepository = koinInject<JsExtensionRepository>()
+            val jsExtensionDiscovery = koinInject<ExtensionDiscovery>()
+            val jsExtensionSourceBridge = koinInject<JsExtensionSourceBridge>()
+            LaunchedEffect(Unit) {
+                withContext(Dispatchers.IO) {
+                    jsExtensionDiscovery.scanBundledResources().forEach { source ->
+                        val extension = jsExtensionLoader.load(source.scriptText, source.fileName, source.companionManifestJson)
+                        jsExtensionRepository.register(extension)
+                    }
+                }
             }
 
             val backgroundWorkHandler = koinInject<BackgroundWorkHandler>()

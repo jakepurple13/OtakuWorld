@@ -1,5 +1,6 @@
 package com.programmersbox.supabaseintegration.di
 
+import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.BackupPreferenceDao
 import com.programmersbox.favoritesdatabase.SyncPreferences
@@ -29,13 +30,26 @@ import com.programmersbox.supabaseintegration.sync.syncprocessor.HeatMapSyncProc
 import com.programmersbox.supabaseintegration.sync.syncprocessor.HistorySyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.NotesSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
+import com.programmersbox.supabaseintegration.ui.AuthRoute
+import com.programmersbox.supabaseintegration.ui.AuthScreen
+import com.programmersbox.supabaseintegration.ui.BackupPreferencesRoute
+import com.programmersbox.supabaseintegration.ui.BackupPreferencesScreen
+import com.programmersbox.supabaseintegration.ui.BackupRestoreRoute
+import com.programmersbox.supabaseintegration.ui.BackupRestoreScreen
+import com.programmersbox.supabaseintegration.ui.SupabaseConfigRoute
+import com.programmersbox.supabaseintegration.ui.SupabaseConfigScreen
+import com.programmersbox.supabaseintegration.ui.SupabaseRoutes
 import com.programmersbox.supabaseintegration.ui.SupabaseSearchItems
+import com.programmersbox.supabaseintegration.ui.SupabaseSettingsScreen
+import com.programmersbox.supabaseintegration.ui.SyncStatusRoute
+import com.programmersbox.supabaseintegration.ui.SyncStatusScreen
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupPreferencesViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.BackupRestoreViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SupabaseConfigViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.SyncViewModel
 import kotlinx.coroutines.flow.flowOf
+import org.koin.compose.koinInject
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
@@ -43,8 +57,11 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.binds
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 
-val supabaseModule = module {
+fun supabaseModule(
+    hideComposable: @Composable () -> Unit,
+) = module {
     singleOf(::SupabaseClientProvider)
     single<AuthManager> { AuthManagerImpl(get(), get()) }
     single { SyncConfigRepository(get()) }
@@ -84,6 +101,35 @@ val supabaseModule = module {
     syncProcessorModule()
 
     includes(platformModule())
+
+    navigation<SupabaseConfigRoute> {
+        hideComposable()
+        SupabaseConfigScreen()
+    }
+    navigation<AuthRoute> {
+        hideComposable()
+        AuthScreen()
+    }
+    navigation<SyncStatusRoute> {
+        hideComposable()
+        SyncStatusScreen()
+    }
+    navigation<BackupRestoreRoute> {
+        hideComposable()
+        BackupRestoreScreen(
+            getLocalDbPath = { "" }
+        )
+    }
+    navigation<BackupPreferencesRoute> {
+        hideComposable()
+        BackupPreferencesScreen()
+    }
+    navigation<SupabaseRoutes> {
+        val actions = koinInject<SupabaseActions>()
+        SupabaseSettingsScreen(
+            onNavigate = actions.onNavigate
+        )
+    }
 }
 
 private fun Module.syncProcessorModule() {

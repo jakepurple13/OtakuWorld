@@ -9,10 +9,13 @@ import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
+import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
 import com.programmersbox.kmpuiviews.presentation.settings.search.DefaultSettingsItems
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
@@ -43,6 +46,7 @@ import kotlin.time.Duration.Companion.minutes
 
 val appModule = module {
     singleOf(::AppUpdateCheck)
+    single { JsExtensionSourceBridge(get(), get()) }
     single {
         OtakuWorldCatalog(
             get<KmpGenericInfo>().sourceType
@@ -101,7 +105,13 @@ val appModule = module {
     viewModel { SettingsSearchViewModel(getAll()) }
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
 
-    includes(supabaseModule, qrCodeModule())
+    includes(
+        supabaseModule(
+            hideComposable = { HideNavBarWhileOnScreen() }
+        ),
+        qrCodeModule(),
+        buildKmpGraph()
+    )
 }
 
 private fun Module.backupProcessors() {

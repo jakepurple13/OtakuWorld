@@ -10,11 +10,27 @@ class SourceRepository {
     val list get() = sourcesList.value
     val apiServiceList get() = sourcesList.value.map { it.apiService }
 
+    private var previouslyManagedPackageNames: Set<String> = emptySet()
+
+    /**
+     * Replaces the set of sources this caller manages, diffed against what it managed on its
+     * previous call - it only adds/updates/removes entries by [KmpSourceInformation.packageName]
+     * within that managed set. Entries added via [addSource] by some other caller (never part of
+     * any [setSources] call) are left alone, no matter how many times this is called.
+     */
     fun setSources(sourceList: List<KmpSourceInformation>) {
-        sourcesList.update { sourceList }
+        val newPackageNames = sourceList.map { it.packageName }.toSet()
+        sourcesList.update { current ->
+            current.filterNot { it.packageName in previouslyManagedPackageNames } + sourceList
+        }
+        previouslyManagedPackageNames = newPackageNames
     }
 
     fun addSource(sourceInformation: KmpSourceInformation) {
+        sourcesList.update { it + sourceInformation }
+    }
+
+    fun addSources(sourceInformation: List<KmpSourceInformation>) {
         sourcesList.update { it + sourceInformation }
     }
 

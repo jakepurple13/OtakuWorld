@@ -64,4 +64,9 @@ class DataStoreHandling {
         key = longPreferencesKey("timeSpentDoing"),
         defaultValue = 0
     )
+
+    val jsExtensionUpdateMode = DataStoreHandler(
+        key = intPreferencesKey("jsExtensionUpdateMode"),
+        defaultValue = 1 // ExtensionUpdateMode.NOTIFY.ordinal
+    )
 }

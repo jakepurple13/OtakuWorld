@@ -35,6 +35,7 @@ kotlin {
             implementation(commonLibs.koinCores)
             implementation(commonLibs.koinComposeKmp)
             implementation(commonLibs.koinViewModel)
+            implementation(commonLibs.koinNavigation3)
             implementation(commonLibs.coroutinesCore)
             implementation(commonLibs.kotlinxSerialization)
             implementation(commonLibs.kotlinx.datetime)

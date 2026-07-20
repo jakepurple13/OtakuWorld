@@ -49,6 +49,7 @@ dependencies {
 
     api(platform(commonLibs.koin.bom))
     api(androidLibs.bundles.koinLibs)
+    api(commonLibs.bundles.koinKmp)
 
     implementation(projects.kmpmodels)
     implementation(projects.models)
@@ -59,6 +60,7 @@ dependencies {
 
     //Extension Loader
     api(projects.sharedutils.kmpextensionloader)
+    api(projects.sharedutils.jsextensionloader)
 
     implementation(androidx.constraintlayout.constraintlayout)
     implementation(commonLibs.coroutinesCore)

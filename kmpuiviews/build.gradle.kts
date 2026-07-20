@@ -85,9 +85,11 @@ kotlin {
                 implementation(projects.favoritesdatabase)
                 api(projects.datastore)
                 api(projects.kmpmodels)
+                implementation(projects.kmpmodels.extensioninterfaces)
                 api(projects.sharedtools)
                 api(projects.sharedcomponents)
                 implementation(projects.sharedutils.kmpextensionloader)
+                implementation(projects.sharedutils.jsextensionloader)
                 implementation(projects.favoritesdatabase.supabaseIntegration)
                 implementation(commonLibs.bundles.datastoreLibs)
 
@@ -228,6 +230,7 @@ kotlin {
                 implementation(commonLibs.androidx.room.sqlite)
                 implementation(project.dependencies.platform(commonLibs.supabase.bom))
                 implementation(commonLibs.supabase.auth)
+                implementation(commonLibs.zipline)
             }
         }
 
@@ -254,6 +257,9 @@ kotlin {
             dependsOn(commonMain.get())
             androidMain.get().dependsOn(this)
             jvmMain.get().dependsOn(this)
+            dependencies {
+                implementation(projects.kmpuiviews.koogintegration)
+            }
         }
 
         val skikoMain by creating {

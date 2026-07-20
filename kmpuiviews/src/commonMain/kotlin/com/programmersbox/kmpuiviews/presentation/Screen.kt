@@ -134,9 +134,6 @@ sealed class Screen(val route: String) : NavKey {
     }
 
     @Serializable
-    data object GeminiScreen : Screen("gemini")
-
-    @Serializable
     data object OrderScreen : Screen("order")
 
     @Serializable

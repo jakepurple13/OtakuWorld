@@ -19,6 +19,7 @@ import com.programmersbox.novel.shared.novelSharedModule
 import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -57,6 +58,8 @@ fun main(args: Array<String>) {
                                         .asFlow()
                                 )
                             }
+
+                            navigation<PlatformSettings> { JvmSettingsScreen() }
 
                             includes(novelSharedModule())
                         }

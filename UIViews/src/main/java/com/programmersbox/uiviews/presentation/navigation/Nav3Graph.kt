@@ -23,7 +23,6 @@ import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
-import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationScreen
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.downloadstate.DownloadStateScreen
@@ -212,10 +211,6 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     entry<Screen.ExtensionListScreen> {
         ExtensionList()
-    }
-
-    entry<Screen.GeminiScreen> {
-        RecommendationScreen()
     }
 
     twoPaneEntry<Screen.AccountInfo> {
