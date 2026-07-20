@@ -45,7 +45,7 @@ function getDetailParse(url, responseBody) {
         description: "An example item.",
         genres: [],
         chapters: [
-            { name: "Chapter 1", url: "https://example.com/item/1", uploaded: null }
+            { name: "Chapter 1", url: "https://picsum.photos/200/300", uploaded: null }
         ]
     };
 }
@@ -55,5 +55,5 @@ function getContentRequest(url) {
 }
 
 function getContentParse(url, responseBody) {
-    return { urls: [], headers: {} };
+    return { urls: [ "https://picsum.photos/200/300" ], headers: {} };
 }
