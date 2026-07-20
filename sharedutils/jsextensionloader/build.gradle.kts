@@ -10,6 +10,9 @@ otakuDependencies {
 kotlin {
     android {
         namespace = "com.programmersbox.jsextensionloader"
+        androidResources {
+            enable = true
+        }
     }
 
     sourceSets {
