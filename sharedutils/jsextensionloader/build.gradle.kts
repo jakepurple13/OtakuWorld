@@ -10,6 +10,9 @@ otakuDependencies {
 kotlin {
     android {
         namespace = "com.programmersbox.jsextensionloader"
+        androidResources {
+            enable = true
+        }
     }
 
     sourceSets {
@@ -33,6 +36,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.ktorAndroid)
                 implementation(androidLibs.workRuntimeKtx)
+                implementation(androidLibs.androidCore)
             }
         }
 

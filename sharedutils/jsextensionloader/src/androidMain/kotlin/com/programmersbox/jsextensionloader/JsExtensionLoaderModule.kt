@@ -34,7 +34,6 @@ val jsExtensionLoaderModule = module {
         ExtensionDiscovery(
             context = get(),
             extensionsSubDir = "js_extensions",
-            bundledAssetsDir = "js_extensions",
             client = get(),
         )
     }
