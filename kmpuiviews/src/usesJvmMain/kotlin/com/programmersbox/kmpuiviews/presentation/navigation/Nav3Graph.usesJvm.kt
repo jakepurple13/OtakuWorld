@@ -13,6 +13,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 actual fun EntryProviderScope<NavKey>.buildPlatformPaths() {
+    //TODO: Switch to koin nav3
     entry<KoogSettings> {
         val navigationActions = LocalNavActions.current
         KoogSettingsScreen(

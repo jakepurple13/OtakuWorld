@@ -29,6 +29,7 @@ import com.programmersbox.kmpuiviews.presentation.navigation.scenestrategy.Botto
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
 import org.koin.compose.koinInject
+import org.koin.compose.navigation3.koinEntryProvider
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -83,12 +84,7 @@ fun Nav3(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
-        entryProvider = entryGraph(
-            customPreferences = customPreferences,
-            windowSize = windowSize,
-            navigationActions = navigation3Actions,
-            genericInfo = genericInfo
-        ),
+        entryProvider = koinEntryProvider(),
         transitionSpec = {
             // Slide in from right when navigating forward
             slideInHorizontally(initialOffsetX = { it }) togetherWith

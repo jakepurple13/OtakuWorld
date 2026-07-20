@@ -5,13 +5,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
 import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.KmpGenericInfo
@@ -26,7 +24,6 @@ import com.programmersbox.kmpuiviews.presentation.dictionary.DictionaryListScree
 import com.programmersbox.kmpuiviews.presentation.favorite.FavoriteScreen
 import com.programmersbox.kmpuiviews.presentation.globalsearch.GlobalSearchScreen
 import com.programmersbox.kmpuiviews.presentation.history.HistoryUi
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.notes.NotesScreen
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreen
 import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
@@ -79,29 +76,34 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
-import com.programmersbox.supabaseintegration.ui.supabaseRoutes
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.core.module.Module
 import org.koin.core.parameter.parametersOf
+import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
-fun entryGraph(
-    customPreferences: ComposeSettingsDsl,
-    windowSize: WindowSizeClass,
-    genericInfo: KmpGenericInfo,
-    navigationActions: NavigationActions,
-) = entryProvider<NavKey> {
-    entry<Screen.RecentScreen> { RecentView() }
-    entry<Screen.DetailsScreen.Details> {
+@OptIn(
+    ExperimentalAnimationApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalComposeUiApi::class,
+    KoinExperimentalAPI::class
+)
+fun buildKmpGraph(): Module = module {
+    navigation<Screen.RecentScreen> { RecentView() }
+    navigation<Screen.DetailsScreen.Details> {
         DetailsScreen(
             windowSize = LocalWindowSizeClass.current,
             details = koinViewModel { parametersOf(it) }
         )
     }
 
-    dialogEntry<Screen.ScanQrCodeScreen> { ScanQrCode() }
-
-    entry<Screen.OnboardingScreen> {
+    navigation<Screen.OnboardingScreen> {
+        val genericInfo: KmpGenericInfo = koinInject()
+        val customPreferences = koinInject<ComposeSettingsDsl>()
         OnboardingScreen(
             navController = LocalNavActions.current,
             customPreferences = customPreferences,
@@ -109,58 +111,43 @@ fun entryGraph(
         )
     }
 
-    entry<Screen.WebViewScreen> {
+    navigation<Screen.WebViewScreen> {
         WebViewScreen(
             url = it.url
         )
     }
 
-    entry<Screen.IncognitoScreen> {
+    navigation<Screen.IncognitoScreen> {
         IncognitoScreen()
     }
 
-    entry<Screen.AllScreen> {
+    navigation<Screen.AllScreen> {
+        val windowSize = LocalWindowSizeClass.current
         AllScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
     }
 
-    settingsEntryGraph(
-        customPreferences = customPreferences,
-        windowSize = windowSize,
-        genericInfo = genericInfo,
-        navigationActions = navigationActions,
-    )
-
-    entry<Screen.BookmarkScreen> {
+    navigation<Screen.BookmarkScreen> {
         val navActions = LocalNavActions.current
         BookmarkScreen(
             onBackPress = { navActions.popBackStack() },
         )
     }
 
-    entry<Screen.NotesScreen> {
+    navigation<Screen.NotesScreen> {
         val navActions = LocalNavActions.current
         NotesScreen(onBackPress = { navActions.popBackStack() })
     }
 
-    supabaseRoutes(
-        hideComposable = { HideNavBarWhileOnScreen() }
-    )
+    dialogEntry<Screen.ScanQrCodeScreen> { ScanQrCode() }
 
-    genericInfo.globalNav3Setup()
-}
-
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3AdaptiveApi::class)
-private fun EntryProviderScope<NavKey>.settingsEntryGraph(
-    customPreferences: ComposeSettingsDsl,
-    windowSize: WindowSizeClass,
-    genericInfo: KmpGenericInfo,
-    navigationActions: NavigationActions,
-) {
-    entry<Screen.Settings>(
+    navigation<Screen.Settings>(
         metadata = ListDetailSceneStrategy.listPane()
     ) {
+        val customPreferences = koinInject<ComposeSettingsDsl>()
+        val genericInfo: KmpGenericInfo = koinInject()
+        val navigationActions = LocalNavActions.current
         SettingScreen(
             composeSettingsDsl = customPreferences,
             navigationActions = navigationActions,
@@ -173,7 +160,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         )
     }
 
-    entry<Screen.DictionaryScreen>(
+    navigation<Screen.DictionaryScreen>(
         metadata = ListDetailSceneStrategy.listPane()
     ) {
         val navActions = LocalNavActions.current
@@ -215,19 +202,22 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     }
 
     detailEntry<Screen.GeneralSettings> {
+        val customPreferences = koinInject<ComposeSettingsDsl>()
         GeneralSettings(customPreferences.generalSettings)
     }
 
     detailEntry<Screen.MoreInfoSettings> {
+        val navigationActions = LocalNavActions.current
         MoreInfoScreen(
             usedLibraryClick = navigationActions::about,
             onViewAccountInfoClick = navigationActions::accountInfo
         )
     }
 
-    entry<Screen.PrereleaseScreen> { PrereleaseScreen() }
+    navigation<Screen.PrereleaseScreen> { PrereleaseScreen() }
 
     detailEntry<Screen.OtherSettings> {
+        val customPreferences = koinInject<ComposeSettingsDsl>()
         PlaySettings(customPreferences.playerSettings)
     }
 
@@ -248,7 +238,8 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         HistoryUi()
     }
 
-    entry<Screen.FavoriteScreen> {
+    navigation<Screen.FavoriteScreen> {
+        val windowSize = LocalWindowSizeClass.current
         FavoriteScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded
         )
@@ -258,34 +249,32 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         AboutLibrariesScreen()
     }
 
-    entry<Screen.GlobalSearchScreen> {
+    navigation<Screen.GlobalSearchScreen> {
+        val windowSize = LocalWindowSizeClass.current
         GlobalSearchScreen(
             isHorizontal = windowSize.widthSizeClass == WindowWidthSizeClass.Expanded,
             screen = it
         )
     }
 
-    listSettings()
-
-    entry<Screen.ImportListScreen> {
+    navigation<Screen.ImportListScreen> {
         ImportListScreen()
     }
 
-    entry<Screen.ImportFullListScreen> {
+    navigation<Screen.ImportFullListScreen> {
         ImportFullListScreen()
     }
 
-    entry<Screen.NotificationScreen> {
+    navigation<Screen.NotificationScreen> {
         NotificationScreen()
     }
 
-    entry<Screen.ExtensionListScreen> {
+    navigation<Screen.ExtensionListScreen> {
         ExtensionList()
     }
 
-    buildPlatformPaths()
-
     twoPaneEntry<Screen.AccountInfo> {
+        val genericInfo: KmpGenericInfo = koinInject()
         AccountInfoScreen(
             profileUrl = genericInfo.ProfileIcon(),
         )
@@ -293,12 +282,12 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
 
     //additionalSettings()
 
-    entry<Screen.DownloadInstallScreen> {
+    navigation<Screen.DownloadInstallScreen> {
         DownloadStateScreen()
     }
 
-    entry<Screen.UrlOpener> { UrlOpenerScreen() }
-    entry<Screen.ColorHelper> { ColorHelperScreen() }
+    navigation<Screen.UrlOpener> { UrlOpenerScreen() }
+    navigation<Screen.ColorHelper> { ColorHelperScreen() }
     twoPaneEntry<Screen.ThemeSettings> { ThemeSettingsScreen() }
     twoPaneEntry<Screen.Settings.Blur> { BlurSettingsScreen() }
     twoPaneEntry<Screen.DetailsSettings> { DetailsSettingsScreen() }
@@ -317,6 +306,7 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     detailEntry<Screen.Settings.PrivacySecurity> { PrivacySecurityScreen() }
     detailEntry<Screen.Settings.Data> { DataManagementScreen() }
     detailEntry<Screen.Settings.About> {
+        val navigationActions = LocalNavActions.current
         AboutScreen(
             usedLibraryClick = { navigationActions.about() },
             onViewAccountInfoClick = { navigationActions.accountInfo() },
@@ -325,18 +315,13 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
     detailEntry<Screen.Settings.Diagnostics> { DiagnosticsScreen() }
     detailEntry<Screen.Settings.Developer> { DeveloperScreen() }
 
-    genericInfo.settingsNav3Setup()
-}
-
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
-private fun EntryProviderScope<NavKey>.listSettings() {
-    entry<Screen.CustomListScreen>(
+    navigation<Screen.CustomListScreen>(
         metadata = ListDetailSceneStrategy.listPane()
     ) {
         OtakuListView()
     }
 
-    entry<Screen.CustomListScreen.CustomListItem>(
+    navigation<Screen.CustomListScreen.CustomListItem>(
         metadata = ListDetailSceneStrategy.detailPane()
     ) {
         OtakuCustomListScreenStandAlone(it)
@@ -349,33 +334,25 @@ private fun EntryProviderScope<NavKey>.listSettings() {
     }
 }
 
-private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.dialogEntry(
+@OptIn(KoinExperimentalAPI::class)
+private inline fun <reified T : NavKey> Module.dialogEntry(
     noinline content: @Composable (T) -> Unit,
-) = entry<T>(
+) = navigation<T>(
     metadata = DialogSceneStrategy.dialog()
 ) { content(it) }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
-private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.twoPaneEntry(
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, KoinExperimentalAPI::class)
+private inline fun <reified T : NavKey> Module.twoPaneEntry(
     noinline content: @Composable (T) -> Unit,
-) = entry<T>(
+) = navigation<T>(
     metadata = ListDetailSceneStrategy.extraPane()
 ) { content(it) }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
-private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.detailEntry(
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, KoinExperimentalAPI::class)
+private inline fun <reified T : NavKey> Module.detailEntry(
     noinline content: @Composable (T) -> Unit,
-) = entry<T>(
+) = navigation<T>(
     metadata = ListDetailSceneStrategy.detailPane()
 ) { content(it) }
 
 expect fun EntryProviderScope<NavKey>.buildPlatformPaths()
-
-/*
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
-private inline fun <reified T : Any> EntryProviderBuilder<*>.animatedEntry(
-    metadata: Map<String, Any> = emptyMap(),
-    noinline content: @Composable (T) -> Unit,
-) = entry<T>(
-    metadata = ListDetailSceneStrategy.detailPane()
-) { CompositionLocalProvider(LocalNavigationAnimatedScope provides this) { content(it) } }*/

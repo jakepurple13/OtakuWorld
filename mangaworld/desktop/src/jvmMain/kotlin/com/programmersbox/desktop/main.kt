@@ -28,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -86,6 +87,8 @@ fun main(args: Array<String>) {
                                     )
                                 )
                             }
+
+                            navigation<PlatformSettings> { JvmSettingsScreen() }
 
                             includes(mangaSharedModule())
                         }
