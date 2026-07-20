@@ -99,6 +99,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 import java.io.File
 
 val appModule = module {
@@ -110,6 +111,45 @@ val appModule = module {
     singleOf(::Backup)
     factory { Zipper(get(), getAll<BackupProcessor>(), get()) }
     single { SystemAlerter(get(), get(), BuildConfig.APPLICATION_ID) }
+
+    navigation<VideoScreen> { VideoPlayerUi(it) }
+
+    navigation<VideoViewerRoute> {
+        val context = LocalContext.current
+        ViewVideoScreen(
+            isCastActive = { MainActivity.cast.isCastActive() },
+            onCastLoad = { content: SharedVideoContent ->
+                MainActivity.cast.loadMedia(
+                    File(content.path),
+                    context.getSharedPreferences("videos", Context.MODE_PRIVATE).getLong(content.path, 0L),
+                    null, null
+                )
+            },
+            castButton = {
+                AndroidView(
+                    factory = { ctx ->
+                        MediaRouteButton(ctx).apply {
+                            MainActivity.cast.showIntroductoryOverlay(this)
+                            MainActivity.cast.setMediaRouteMenu(ctx, this)
+                        }
+                    }
+                )
+            },
+            deleteDialog = { content, onResult ->
+                AlertDialog(
+                    onDismissRequest = { onResult(false) },
+                    title = { Text(stringResource(R.string.remove)) },
+                    text = { Text(content.videoName) },
+                    confirmButton = {
+                        TextButton(onClick = { onResult(true) }) { Text(stringResource(R.string.remove)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { onResult(false) }) { Text(stringResource(R.string.cancelText)) }
+                    }
+                )
+            }
+        )
+    }
 }
 
 class GenericAnime(

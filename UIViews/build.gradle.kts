@@ -49,6 +49,7 @@ dependencies {
 
     api(platform(commonLibs.koin.bom))
     api(androidLibs.bundles.koinLibs)
+    api(commonLibs.bundles.koinKmp)
 
     implementation(projects.kmpmodels)
     implementation(projects.models)

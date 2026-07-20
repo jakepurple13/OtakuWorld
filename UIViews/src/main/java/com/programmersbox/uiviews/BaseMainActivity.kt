@@ -29,6 +29,7 @@ import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.uiviews.presentation.navigation.HomeNav
 import com.programmersbox.uiviews.utils.currentDetailsUrl
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -68,7 +69,7 @@ abstract class BaseMainActivity : FragmentActivity() {
 
         if (BuildConfig.DEBUG) {
             sourceRepository.addSource(ExampleService.getSourceInformation())
-            lifecycleScope.launch {
+            lifecycleScope.launch(Dispatchers.Default) {
                 jsExtensionDiscovery.scanBundledResources().forEach { source ->
                     val extension = jsExtensionLoader.load(source.scriptText, source.fileName, source.companionManifestJson)
                     jsExtensionRepository.register(extension)

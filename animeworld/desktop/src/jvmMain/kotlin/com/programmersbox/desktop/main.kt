@@ -8,8 +8,12 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.anime.shared.AnimeDesktopSettings
 import com.programmersbox.anime.shared.StorageHolder
+import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.anime.shared.downloads.AnimeDownloadManager
+import com.programmersbox.anime.shared.videoplayer.VideoPlayerUi
 import com.programmersbox.anime.shared.videos.VideoLibrarySource
+import com.programmersbox.anime.shared.videos.VideoViewerRoute
+import com.programmersbox.anime.shared.videos.ViewVideoScreen
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.kmpuiviews.BaseDesktopUi
 import com.programmersbox.kmpuiviews.BuildType
@@ -25,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.koin.dsl.navigation3.navigation
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -73,6 +78,10 @@ fun main(args: Array<String>) {
                                     trayState = get(),
                                 )
                             }
+
+                            navigation<VideoScreen> { VideoPlayerUi(it) }
+                            navigation<PlatformSettings> { JvmSettingsScreen() }
+                            navigation<VideoViewerRoute> { ViewVideoScreen() }
                         }
                     )
                 }
