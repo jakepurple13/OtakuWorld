@@ -4,6 +4,7 @@ import app.cash.zipline.QuickJs
 import com.programmersbox.extensioninterfaces.ExtensionManifest
 import com.programmersbox.jsextensionloader.HostBridge
 import com.programmersbox.jsextensionloader.JsExtension
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -36,7 +37,7 @@ class JsApiServiceAdapterTest {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(FIXTURE_SCRIPT, "adapter-fixture.js")
-        return JsApiServiceAdapter(JsExtension(manifest, js, StubHostBridge()))
+        return JsApiServiceAdapter(JsExtension(manifest, js, StubHostBridge(), Dispatchers.Default))
     }
 
     @Test

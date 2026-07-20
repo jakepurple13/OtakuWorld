@@ -2,6 +2,7 @@ package com.programmersbox.jsextensionloader
 
 import app.cash.zipline.QuickJs
 import com.programmersbox.extensioninterfaces.ExtensionManifest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
@@ -42,7 +43,7 @@ class JsExtensionTest {
         val js = QuickJs.create()
         quickJs = js
         js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
-        return JsExtension(manifest, js, hostBridge)
+        return JsExtension(manifest, js, hostBridge, Dispatchers.Default)
     }
 
     @Test
@@ -107,7 +108,7 @@ class JsExtensionTest {
             """.trimIndent(),
             "echo-extension.js",
         )
-        val extension = JsExtension(manifest, js, StubHostBridge(response = "fetched-body"))
+        val extension = JsExtension(manifest, js, StubHostBridge(response = "fetched-body"), Dispatchers.Default)
 
         val items = extension.getPopular(page = 1)
 
@@ -138,7 +139,7 @@ class JsExtensionTest {
             "echo-extension.js",
         )
         val htmlLikeBody = "<div class=\"item\">\n  <a href=\"/x\">text</a>\n</div>\n".repeat(20_000)
-        val extension = JsExtension(manifest, js, StubHostBridge(response = htmlLikeBody))
+        val extension = JsExtension(manifest, js, StubHostBridge(response = htmlLikeBody), Dispatchers.Default)
 
         val items = extension.getLatest(page = 1)
 
@@ -156,15 +157,20 @@ class JsExtensionTest {
                 return "body-for-$url"
             }
         }
-        val extension = JsExtension(manifest, js, hostBridge)
+        val dispatcher = singleThreadQuickJsDispatcher("concurrency-test")
+        val extension = JsExtension(manifest, js, hostBridge, dispatcher)
 
-        repeat(20) { page ->
-            listOf(
-                async { extension.getPopular(page) },
-                async { extension.getLatest(page) },
-                async { extension.getDetail("https://example.com/item/1") },
-                async { extension.getContent("https://example.com/item/1") },
-            ).awaitAll()
+        try {
+            repeat(20) { page ->
+                listOf(
+                    async { extension.getPopular(page) },
+                    async { extension.getLatest(page) },
+                    async { extension.getDetail("https://example.com/item/1") },
+                    async { extension.getContent("https://example.com/item/1") },
+                ).awaitAll()
+            }
+        } finally {
+            closeQuickJsDispatcher(dispatcher)
         }
     }
 
