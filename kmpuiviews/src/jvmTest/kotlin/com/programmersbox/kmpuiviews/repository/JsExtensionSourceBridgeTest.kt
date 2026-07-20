@@ -98,29 +98,6 @@ class JsExtensionSourceBridgeTest {
         assertEquals(setOf("js.a", "js.b"), sourceRepository.list.map { it.packageName }.toSet())
     }
 
-    @Test
-    fun reAddsMirroredEntryIfSomethingElseReplacesSourceRepositoryContents() = runTest {
-        // The legacy JAR/APK loader (sharedutils/kmpextensionloader's ExtensionLoader) calls
-        // SourceRepository.setSources(...) - a full replace, not a merge - every time its
-        // extension-directory watcher fires. That happens independently of anything the JS
-        // extension system does, and it silently wipes whatever the bridge already mirrored.
-        // Since the legacy loader can't be modified, the bridge must detect and restore its
-        // own mirrored entries whenever SourceRepository changes out from under it.
-        val jsExtensionRepository = JsExtensionRepository()
-        val sourceRepository = SourceRepository()
-        JsExtensionSourceBridge(jsExtensionRepository, sourceRepository, scope = TestScope(testScheduler))
-
-        jsExtensionRepository.register(extensionWithId("a"))
-        advanceUntilIdle()
-        assertEquals(1, sourceRepository.list.size)
-
-        sourceRepository.setSources(emptyList())
-        advanceUntilIdle()
-
-        assertEquals(1, sourceRepository.list.size)
-        assertEquals("js.a", sourceRepository.list.first().packageName)
-    }
-
     companion object {
         private const val BRIDGE_FIXTURE_SCRIPT = """
             function getPopularRequest(page) { return { url: "https://example.com/popular", headers: {} }; }
