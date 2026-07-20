@@ -2,6 +2,8 @@ package com.programmersbox.jsextensionloader
 
 import app.cash.zipline.QuickJs
 import com.programmersbox.extensioninterfaces.ExtensionManifest
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -141,6 +143,29 @@ class JsExtensionTest {
         val items = extension.getLatest(page = 1)
 
         assertEquals("len:${htmlLikeBody.length}", items.first().title)
+    }
+
+    @Test
+    fun concurrentCallsDoNotCorruptTheSharedQuickJsInstance() = runTest {
+        val js = QuickJs.create()
+        quickJs = js
+        js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
+        val hostBridge = object : HostBridge {
+            override fun httpGet(url: String, headersJson: String): String {
+                Thread.sleep(5)
+                return "body-for-$url"
+            }
+        }
+        val extension = JsExtension(manifest, js, hostBridge)
+
+        repeat(20) { page ->
+            listOf(
+                async { extension.getPopular(page) },
+                async { extension.getLatest(page) },
+                async { extension.getDetail("https://example.com/item/1") },
+                async { extension.getContent("https://example.com/item/1") },
+            ).awaitAll()
+        }
     }
 
     @Test
