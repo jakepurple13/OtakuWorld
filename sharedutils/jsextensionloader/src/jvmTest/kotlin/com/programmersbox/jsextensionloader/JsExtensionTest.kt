@@ -113,6 +113,37 @@ class JsExtensionTest {
     }
 
     @Test
+    fun parsePhaseHandlesRealisticHtmlBodyWithManyEscapedNewlinesWithoutOverflowing() = runTest {
+        val js = QuickJs.create()
+        quickJs = js
+        js.evaluate(
+            """
+            function getPopularRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+            function getPopularParse(page, responseBody) { return []; }
+            function getLatestRequest(page) { return { url: "https://example.com/x", headers: {} }; }
+            function getLatestParse(page, responseBody) {
+                return [{ title: "len:" + responseBody.length, url: "https://example.com/1", imageUrl: null }];
+            }
+            function searchRequest(query, page) { return { url: "https://example.com/x", headers: {} }; }
+            function searchParse(query, page, responseBody) { return []; }
+            function getDetailRequest(url) { return { url: url, headers: {} }; }
+            function getDetailParse(url, responseBody) {
+                return { title: "t", url: url, imageUrl: null, description: null, genres: [], chapters: [] };
+            }
+            function getContentRequest(url) { return { url: url, headers: {} }; }
+            function getContentParse(url, responseBody) { return { urls: [], headers: {} }; }
+            """.trimIndent(),
+            "echo-extension.js",
+        )
+        val htmlLikeBody = "<div class=\"item\">\n  <a href=\"/x\">text</a>\n</div>\n".repeat(20_000)
+        val extension = JsExtension(manifest, js, StubHostBridge(response = htmlLikeBody))
+
+        val items = extension.getLatest(page = 1)
+
+        assertEquals("len:${htmlLikeBody.length}", items.first().title)
+    }
+
+    @Test
     fun validatorReportsNoMissingFunctionsForSampleExtension() {
         val js = QuickJs.create()
         quickJs = js
