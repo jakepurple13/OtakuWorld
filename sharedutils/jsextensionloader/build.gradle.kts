@@ -33,6 +33,7 @@ kotlin {
             dependencies {
                 implementation(commonLibs.ktorAndroid)
                 implementation(androidLibs.workRuntimeKtx)
+                implementation(androidLibs.androidCore)
             }
         }
 
