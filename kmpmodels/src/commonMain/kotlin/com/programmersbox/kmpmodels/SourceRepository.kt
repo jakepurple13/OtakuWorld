@@ -18,6 +18,10 @@ class SourceRepository {
         sourcesList.update { it + sourceInformation }
     }
 
+    fun addSources(sourceInformation: List<KmpSourceInformation>) {
+        sourcesList.update { it + sourceInformation }
+    }
+
     fun removeSource(sourceInformation: KmpSourceInformation) {
         sourcesList.update { it - sourceInformation }
     }

@@ -257,6 +257,9 @@ kotlin {
             dependsOn(commonMain.get())
             androidMain.get().dependsOn(this)
             jvmMain.get().dependsOn(this)
+            dependencies {
+                implementation(projects.kmpuiviews.koogintegration)
+            }
         }
 
         val skikoMain by creating {

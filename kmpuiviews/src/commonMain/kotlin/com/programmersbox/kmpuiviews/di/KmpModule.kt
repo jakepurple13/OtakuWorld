@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.di
 
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val kmpModule = module {
@@ -10,6 +11,9 @@ val kmpModule = module {
         repositories,
         viewModels,
         aiModule,
-        navigationModule
+        navigationModule,
+        buildPlatformModule()
     )
 }
+
+expect fun buildPlatformModule(): Module

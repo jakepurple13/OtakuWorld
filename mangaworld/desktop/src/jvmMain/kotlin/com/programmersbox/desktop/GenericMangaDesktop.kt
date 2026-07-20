@@ -1,7 +1,6 @@
 package com.programmersbox.desktop
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.DesktopMac
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -18,20 +17,12 @@ import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.koogintegration.Koog
-import com.programmersbox.koogintegration.KoogSettings
-import com.programmersbox.koogintegration.screens.chatscreen.ChatScreen
-import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
-import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.manga.shared.ChapterHolder
 import com.programmersbox.manga.shared.GenericSharedManga
 import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.reader.ReadViewModel
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import kotlinx.serialization.Serializable
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 class GenericMangaDesktop(
     val chapterHolder: ChapterHolder,
@@ -89,7 +80,7 @@ class GenericMangaDesktop(
     override fun settingsNav3Setup() {
         super<GenericSharedManga>.settingsNav3Setup()
         navGraph.entry<PlatformSettings> { JvmSettingsScreen() }
-        navGraph.entry<KoogSettings> {
+        /*navGraph.entry<KoogSettings> {
             KoogSettingsScreen(
                 onBack = { navigationActions.popBackStack() }
             )
@@ -105,7 +96,7 @@ class GenericMangaDesktop(
                     onListClick = { navigationActions.customList() }
                 )
             )
-        }
+        }*/
 
         /*navGraph.entry<CustomScraper> {
             CustomScraperScreen(
@@ -127,12 +118,6 @@ class GenericMangaDesktop(
                     content = { Text("Platform Settings") },
                     leadingContent = { Icon(Icons.Default.DesktopMac, null) },
                     onClick = { navigationActions.navigate(PlatformSettings) }
-                )
-
-                segmentedListItem(
-                    content = { Text("Koog") },
-                    leadingContent = { Icon(Icons.Default.Bolt, null) },
-                    onClick = { navigationActions.navigate(Koog) }
                 )
 
                 /*segmentedListItem(

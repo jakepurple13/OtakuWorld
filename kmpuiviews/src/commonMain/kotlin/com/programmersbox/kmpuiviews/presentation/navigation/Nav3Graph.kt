@@ -288,6 +288,8 @@ private fun EntryProviderScope<NavKey>.settingsEntryGraph(
         RecommendationScreen()
     }
 
+    buildPlatformPaths()
+
     twoPaneEntry<Screen.AccountInfo> {
         AccountInfoScreen(
             profileUrl = genericInfo.ProfileIcon(),
@@ -371,6 +373,8 @@ private inline fun <reified T : NavKey> EntryProviderScope<NavKey>.detailEntry(
 ) = entry<T>(
     metadata = ListDetailSceneStrategy.detailPane()
 ) { content(it) }
+
+expect fun EntryProviderScope<NavKey>.buildPlatformPaths()
 
 /*
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
