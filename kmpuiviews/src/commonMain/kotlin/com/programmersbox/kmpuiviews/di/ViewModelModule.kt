@@ -13,7 +13,6 @@ import com.programmersbox.kmpuiviews.presentation.notes.AllNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notes.DetailsNotesViewModel
 import com.programmersbox.kmpuiviews.presentation.notifications.NotificationScreenViewModel
 import com.programmersbox.kmpuiviews.presentation.recent.RecentViewModel
-import com.programmersbox.kmpuiviews.presentation.recommendations.RecommendationViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.SettingViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoViewModel
 import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.BackupWizardViewModel
@@ -78,7 +77,6 @@ val viewModels: Module = module {
     viewModelOf(::AccountInfoViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::WorkerInfoViewModel)
-    viewModelOf(::RecommendationViewModel)
     viewModelOf(::UrlOpenerViewModel)
     viewModelOf(::OtakuCustomListViewModel)
     viewModelOf(::ExceptionViewModel)

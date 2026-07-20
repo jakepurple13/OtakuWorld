@@ -2,7 +2,6 @@ package com.programmersbox.kmpuiviews.presentation.settings.discover
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Web
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -31,12 +30,6 @@ fun DiscoverScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         CategoryGroupListItem {
-            segmentedListItem(
-                content = { Text("AI Recommendations") },
-                leadingContent = { Icon(Icons.Default.AutoAwesome, null) },
-                onClick = { navActions.navigate(Screen.GeminiScreen) },
-            )
-
             discoverPaths(navActions)
 
             segmentedListItem(
