@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import androidx.compose.runtime.Stable
-import com.programmersbox.koogintegration.agentresponse.AgentResponse
+import com.programmersbox.koogintegration.agentresponse.AgentResult
 
 data class ChatUiState(
     val title: String = "Agent Demo",
@@ -74,10 +74,10 @@ enum class ChatMessageType {
 // Define message types for the chat
 sealed class ChatMessage {
     data class UserMessage(val text: String) : ChatMessage()
-    data class AgentMessage(val response: AgentResponse) : ChatMessage()
+    data class AgentMessage(val response: AgentResult) : ChatMessage()
     data class SystemMessage(val text: String) : ChatMessage()
     data class ErrorMessage(val text: String) : ChatMessage()
-    data class ResultMessage(val response: AgentResponse) : ChatMessage()
+    data class ResultMessage(val response: AgentResult) : ChatMessage()
     data class ToolCallMessage(val toolName: String, val args: Map<String, String>) : ChatMessage()
     data class LLMCallMessage(val data: LlmCallData) : ChatMessage()
 

@@ -39,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.MoreVert
@@ -55,6 +56,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -102,10 +104,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.koogintegration.AppDimension
-import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
-import com.programmersbox.koogintegration.agentresponse.AgentResponse
-import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
-import com.programmersbox.koogintegration.agentresponse.ListResponse
+import com.programmersbox.koogintegration.agentresponse.AgentResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -158,8 +157,11 @@ private fun ChatScreenContent(
         chatMessages.filter(debugView::shows)
     }
 
+    var showChatBar by remember { mutableStateOf(true) }
+
     // Scroll to bottom when messages change
     LaunchedEffect(visibleMessages.size) {
+        if (visibleMessages.size > 1) showChatBar = false
         if (visibleMessages.isNotEmpty()) {
             listState.animateScrollToItem(visibleMessages.size - 1)
         }
@@ -329,26 +331,32 @@ private fun ChatScreenContent(
                     }
                 }
 
-                ChatOptionsBar(
-                    showRecommendationDrawer = {
-                        scope.launch { drawerState.open() }
-                    },
-                    listState = listState,
-                    bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
-                )
+                Column {
+                    AnimatedVisibility(showChatBar) {
+                        ChatOptionsBar(
+                            showRecommendationDrawer = {
+                                scope.launch { drawerState.open() }
+                            },
+                            listState = listState,
+                            bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
+                        )
+                    }
 
-                // Input area
-                InputArea(
-                    text = inputText,
-                    onTextChanged = { onEvent(ChatUiEvents.UpdateInputText(it)) },
-                    onSendClicked = {
-                        onEvent(ChatUiEvents.SendMessage)
-                        focusManager.clearFocus()
-                    },
-                    isEnabled = isInputEnabled,
-                    isLoading = isLoading,
-                    focusRequester = focusRequester
-                )
+                    // Input area
+                    InputArea(
+                        text = inputText,
+                        onTextChanged = { onEvent(ChatUiEvents.UpdateInputText(it)) },
+                        onSendClicked = {
+                            onEvent(ChatUiEvents.SendMessage)
+                            focusManager.clearFocus()
+                        },
+                        toggleChatBar = { showChatBar = !showChatBar },
+                        showChatBar = showChatBar,
+                        isEnabled = isInputEnabled,
+                        isLoading = isLoading,
+                        focusRequester = focusRequester
+                    )
+                }
             }
         }
     }
@@ -531,7 +539,7 @@ private fun UserMessageBubble(text: String) {
 
 @Composable
 private fun AgentMessageBubble(
-    text: AgentResponse,
+    text: AgentResult,
     onEvent: (ChatUiEvents) -> Unit,
     koogNavigation: KoogNavigation,
     isRecommendationSavedAlready: (com.programmersbox.koogintegration.agentresponse.Recommendation) -> Boolean,
@@ -553,24 +561,24 @@ private fun AgentMessageBubble(
                         .padding(AppDimension.spacingMedium)
                 ) {
                     when (text) {
-                        is AgentRecommendations -> RecommendationsResponse(
+                        is AgentResult.CustomList -> ListResponseItem(
+                            text = text,
+                            koogNavigation = koogNavigation
+                        )
+
+                        is AgentResult.GeneratedList -> GeneratedListResponse(
+                            text = text.list,
+                            onEvent = onEvent
+                        )
+
+                        is AgentResult.Recommendation -> RecommendationsResponse(
                             text = text,
                             koogNavigation = koogNavigation,
                             isRecommendationSavedAlready = isRecommendationSavedAlready,
                             onEvent = onEvent
                         )
 
-                        is AgentResponse.Text -> TextResponse(text)
-
-                        is ListResponse -> ListResponseItem(
-                            text = text,
-                            koogNavigation = koogNavigation
-                        )
-
-                        is GeneratedCustomListResponse -> GeneratedListResponse(
-                            text = text,
-                            onEvent = onEvent
-                        )
+                        is AgentResult.Text -> TextResponse(text)
                     }
                 }
             }
@@ -959,6 +967,8 @@ private fun InputArea(
     text: String,
     onTextChanged: (String) -> Unit,
     onSendClicked: () -> Unit,
+    toggleChatBar: () -> Unit,
+    showChatBar: Boolean,
     isEnabled: Boolean,
     isLoading: Boolean,
     focusRequester: FocusRequester,
@@ -983,6 +993,20 @@ private fun InputArea(
                     textFieldValue = TextFieldValue(text, TextRange(text.length))
                 }
             }
+
+            FilledTonalIconToggleButton(
+                checked = showChatBar,
+                onCheckedChange = { toggleChatBar() },
+                modifier = Modifier.size(AppDimension.iconButtonSizeLarge)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropUp,
+                    contentDescription = "Localized description",
+                )
+            }
+
+            Spacer(modifier = Modifier.width(AppDimension.spacingSmall))
+
             OutlinedTextField(
                 value = textFieldValue,
                 onValueChange = { newValue ->

@@ -12,11 +12,16 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mikepenz.markdown.model.parseMarkdown
 import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.favoritesdatabase.Recommendation
 import com.programmersbox.favoritesdatabase.RecommendationDao
+import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
 import com.programmersbox.koogintegration.agentresponse.AgentResponse
+import com.programmersbox.koogintegration.agentresponse.AgentResult
+import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
+import com.programmersbox.koogintegration.agentresponse.ListResponse
 import com.programmersbox.koogintegration.provider.AgentExecutionTraceEvent
 import com.programmersbox.koogintegration.provider.AgentProvider
 import com.programmersbox.koogintegration.provider.ChatAgentProvider
@@ -128,11 +133,18 @@ class ChatViewModel(
                 val currentAgent = agent ?: createAgent().also { agent = it }
                 val result = currentAgent.run(userInput, sessionId)
 
+                val response = when (result) {
+                    is AgentRecommendations -> AgentResult.Recommendation(parseMarkdown(result.text), result.recommendations)
+                    is AgentResponse.Text -> AgentResult.Text(parseMarkdown(result.text))
+                    is GeneratedCustomListResponse -> AgentResult.GeneratedList(result)
+                    is ListResponse -> AgentResult.CustomList(parseMarkdown(result.text))
+                }
+
                 uiState.update {
                     when (agentProvider) {
                         is SingleTaskAgentProvider -> it.copy(
                             chatMessages = it.chatMessages +
-                                    ChatMessage.ResultMessage(result) +
+                                    ChatMessage.ResultMessage(response) +
                                     ChatMessage.SystemMessage("The agent has stopped."),
                             isInputEnabled = false,
                             isLoading = false,
@@ -140,14 +152,14 @@ class ChatViewModel(
                         )
 
                         is TaskAgentProvider -> it.copy(
-                            chatMessages = it.chatMessages + ChatMessage.ResultMessage(result),
+                            chatMessages = it.chatMessages + ChatMessage.ResultMessage(response),
                             isInputEnabled = true,
                             isLoading = false,
                             isChatEnded = false,
                         )
 
                         is ChatAgentProvider -> it.copy(
-                            chatMessages = it.chatMessages + ChatMessage.AgentMessage(result),
+                            chatMessages = it.chatMessages + ChatMessage.AgentMessage(response),
                             isInputEnabled = true,
                             isLoading = false,
                         )

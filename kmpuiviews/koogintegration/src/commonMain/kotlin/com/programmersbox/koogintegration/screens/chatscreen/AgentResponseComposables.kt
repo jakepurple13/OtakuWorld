@@ -49,16 +49,14 @@ import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
-import com.programmersbox.koogintegration.agentresponse.AgentRecommendations
-import com.programmersbox.koogintegration.agentresponse.AgentResponse
+import com.programmersbox.koogintegration.agentresponse.AgentResult
 import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
-import com.programmersbox.koogintegration.agentresponse.ListResponse
 import com.programmersbox.koogintegration.agentresponse.Recommendation
 
 @Composable
-internal fun TextResponse(text: AgentResponse.Text) {
+internal fun TextResponse(text: AgentResult.Text) {
     Markdown(
-        content = text.text,
+        state = text.state,
         colors = markdownColor(text = MaterialTheme.colorScheme.onPrimaryContainer),
         typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
     )
@@ -66,7 +64,7 @@ internal fun TextResponse(text: AgentResponse.Text) {
 
 @Composable
 internal fun RecommendationsResponse(
-    text: AgentRecommendations,
+    text: AgentResult.Recommendation,
     koogNavigation: KoogNavigation,
     isRecommendationSavedAlready: (Recommendation) -> Boolean,
     onEvent: (ChatUiEvents) -> Unit,
@@ -75,7 +73,7 @@ internal fun RecommendationsResponse(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Markdown(
-            content = text.text,
+            state = text.state,
             colors = markdownColor(text = MaterialTheme.colorScheme.onPrimaryContainer),
             typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
         )
@@ -170,12 +168,12 @@ internal fun RecommendationItem(
 
 @Composable
 internal fun ListResponseItem(
-    text: ListResponse,
+    text: AgentResult.CustomList,
     koogNavigation: KoogNavigation,
 ) {
     Column {
         Markdown(
-            content = text.text,
+            state = text.state,
             colors = markdownColor(text = MaterialTheme.colorScheme.onPrimaryContainer),
             typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
         )
