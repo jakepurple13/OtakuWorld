@@ -160,7 +160,6 @@ private fun ChatScreenContent(
 
     // Scroll to bottom when messages change
     LaunchedEffect(visibleMessages.size) {
-        if (visibleMessages.size > 1) showChatBar = false
         if (visibleMessages.isNotEmpty()) {
             listState.animateScrollToItem(visibleMessages.size - 1)
         }
@@ -344,6 +343,7 @@ private fun ChatScreenContent(
                         onSendClicked = {
                             onEvent(ChatUiEvents.SendMessage)
                             focusManager.clearFocus()
+                            showChatBar = false
                         },
                         toggleChatBar = { showChatBar = !showChatBar },
                         showChatBar = showChatBar,
