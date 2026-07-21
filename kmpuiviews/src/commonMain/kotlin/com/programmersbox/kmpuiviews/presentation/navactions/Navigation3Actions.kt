@@ -11,9 +11,10 @@ import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.kmpmodels.KmpItemModel
 import com.programmersbox.kmpuiviews.presentation.Screen
+import com.programmersbox.sharedcomponents.Navigator
 import net.thauvin.erik.urlencoder.UrlEncoderUtil
 
-class Navigation3Actions : NavigationActions {
+class Navigation3Actions : NavigationActions, Navigator {
 
     val navBackStack = TopLevelBackStack<NavKey>(
         Screen.RecentScreen,
@@ -259,6 +260,22 @@ class Navigation3Actions : NavigationActions {
 
     override fun remove(route: NavKey) {
         navBackStack.removeFromAll(route)
+    }
+
+    override fun navigateTo(route: NavKey) {
+        navigate(route)
+    }
+
+    override fun onBack() {
+        popBackStack()
+    }
+
+    override fun toCustomList() {
+        customList()
+    }
+
+    override fun toGlobalSearch(query: String) {
+        globalSearch(query)
     }
 }
 

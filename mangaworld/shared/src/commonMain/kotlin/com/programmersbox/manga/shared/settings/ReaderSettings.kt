@@ -77,11 +77,11 @@ import com.programmersbox.kmpuiviews.presentation.components.settings.Preference
 import com.programmersbox.kmpuiviews.presentation.components.settings.SliderSetting
 import com.programmersbox.kmpuiviews.presentation.components.settings.SwitchSetting
 import com.programmersbox.kmpuiviews.utils.ComposableUtils
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.manga.shared.reader.FloatingBottomBar
 import com.programmersbox.manga.shared.reader.ReaderTopBar
 import com.programmersbox.manga.shared.reader.dpToPx
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

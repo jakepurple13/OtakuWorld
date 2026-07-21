@@ -1,6 +1,7 @@
 package com.programmersbox.koogintegration.screens.chatscreen
 
 import androidx.compose.runtime.Stable
+import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.koogintegration.agentresponse.GeneratedCustomListResponse
 import com.programmersbox.koogintegration.agentresponse.Recommendation
@@ -29,4 +30,5 @@ data class KoogNavigation(
     val onKoogSettingsClick: () -> Unit,
     val onBack: () -> Unit,
     val onListClick: () -> Unit,
+    val onNavigate: (NavKey) -> Unit,
 )

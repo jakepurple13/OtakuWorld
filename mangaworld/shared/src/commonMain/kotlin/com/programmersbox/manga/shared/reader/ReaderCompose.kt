@@ -67,7 +67,6 @@ import com.programmersbox.kmpuiviews.presentation.components.blurkind.rememberBl
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKind
 import com.programmersbox.kmpuiviews.presentation.components.blurkind.setBlurKindSource
 import com.programmersbox.kmpuiviews.presentation.components.colorFilterBlind
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalSettingsHandling
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
@@ -77,6 +76,7 @@ import com.programmersbox.manga.shared.reader.curl.PageCurlState
 import com.programmersbox.manga.shared.reader.curl.rememberPageCurlConfig
 import com.programmersbox.manga.shared.reader.curl.rememberPageCurlState
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import dev.chrisbanes.haze.blur.HazeProgressive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -9,14 +9,21 @@ class KoogSearchItems : SearchRegistryItem {
             SettingSearchItem(
                 displayName = "Koog",
                 keywords = listOf("koog", "ai", "recommendations", "analyze"),
-                breadcrumb = listOf(Koog),
+                breadcrumb = listOf(KoogScreen, Koog),
                 targetScreen = Koog,
+                highlightKey = "koog",
+            ),
+            SettingSearchItem(
+                displayName = "Koog Settings Screen",
+                keywords = listOf("koog", "ai"),
+                breadcrumb = listOf(KoogScreen),
+                targetScreen = KoogScreen,
                 highlightKey = "koog",
             ),
             SettingSearchItem(
                 displayName = "Koog Settings",
                 keywords = listOf("koog", "configuration", "settings"),
-                breadcrumb = listOf(Koog, KoogSettings),
+                breadcrumb = listOf(KoogScreen, KoogSettings),
                 targetScreen = KoogSettings,
                 highlightKey = "koog_settings",
             )

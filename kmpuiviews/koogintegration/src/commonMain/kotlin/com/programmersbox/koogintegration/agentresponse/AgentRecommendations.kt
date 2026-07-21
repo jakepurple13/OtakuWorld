@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 
 @Serializable
+@LLMDescription("The response type for the agent when it uses the getRecommendations tool. It has a list of recommendations and a text explaining the recommendations.")
 @Stable
 data class AgentRecommendations(
     @property:LLMDescription("Text explaining the recommendations")

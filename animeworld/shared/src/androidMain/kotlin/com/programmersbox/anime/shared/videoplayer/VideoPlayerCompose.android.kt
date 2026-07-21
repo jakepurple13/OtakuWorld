@@ -100,10 +100,10 @@ import com.programmersbox.anime.shared.VideoScreen
 import com.programmersbox.datastore.otakuDataStore
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
-import com.programmersbox.kmpuiviews.utils.HideSystemBarsWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.RecordTimeSpentDoing
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
+import com.programmersbox.sharedcomponents.components.HideSystemBarsWhileOnScreen
 import com.programmersbox.uiviews.GenericInfo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope

@@ -8,14 +8,12 @@ import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
-import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
 import com.programmersbox.kmpuiviews.presentation.settings.search.DefaultSettingsItems
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
@@ -32,7 +30,6 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackup
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
 import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
 import com.programmersbox.sharedtools.SearchRegistryItem
-import com.programmersbox.supabaseintegration.di.SupabaseActions
 import com.programmersbox.supabaseintegration.di.supabaseModule
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
 import org.koin.core.module.Module
@@ -95,20 +92,11 @@ val appModule = module {
         )
     }
 
-    single {
-        val navHandler = get<NavigationActions>()
-        SupabaseActions(
-            onNavigate = { navHandler.navigate(it) }
-        )
-    }
-
     viewModel { SettingsSearchViewModel(getAll()) }
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
 
     includes(
-        supabaseModule(
-            hideComposable = { HideNavBarWhileOnScreen() }
-        ),
+        supabaseModule(),
         qrCodeModule(),
         buildKmpGraph()
     )

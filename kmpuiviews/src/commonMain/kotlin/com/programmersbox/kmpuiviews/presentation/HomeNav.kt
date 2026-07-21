@@ -107,7 +107,6 @@ import com.programmersbox.kmpuiviews.presentation.components.rememberMultipleBar
 import com.programmersbox.kmpuiviews.presentation.navactions.Navigation3Actions
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.presentation.navigation.Nav3
-import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
@@ -115,6 +114,7 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.LocalWindowSizeClass
 import com.programmersbox.kmpuiviews.utils.composables.sharedelements.LocalSharedElementScope
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import com.programmersbox.supabaseintegration.sync.SyncManager
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource

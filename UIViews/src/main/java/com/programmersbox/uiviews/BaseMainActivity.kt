@@ -20,13 +20,13 @@ import com.programmersbox.jsextensionloader.ExtensionDiscovery
 import com.programmersbox.jsextensionloader.JSExtensionLoader
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpmodels.ExampleService
-import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
-import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.DeepLinks
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import com.programmersbox.uiviews.presentation.navigation.HomeNav
 import com.programmersbox.uiviews.utils.currentDetailsUrl
 import kotlinx.coroutines.Dispatchers
