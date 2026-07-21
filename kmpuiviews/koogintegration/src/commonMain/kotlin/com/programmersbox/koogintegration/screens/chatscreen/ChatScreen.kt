@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Recommend
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.ButtonGroup
@@ -202,10 +201,6 @@ private fun ChatScreenContent(
                         ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
                     },
                     actions = {
-                        IconButton(
-                            onClick = koogNavigation.onKoogSettingsClick
-                        ) { Icon(Icons.Default.Settings, contentDescription = "Settings") }
-
                         DebugViewSelector(
                             debugView = debugView,
                             onToggleEnabled = { onEvent(ChatUiEvents.ToggleDebugEnabled) },

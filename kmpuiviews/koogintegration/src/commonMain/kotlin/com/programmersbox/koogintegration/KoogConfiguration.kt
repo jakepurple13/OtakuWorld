@@ -15,6 +15,7 @@ import com.programmersbox.koogintegration.provider.otakutools.RecommendationTool
 import com.programmersbox.koogintegration.screens.chatscreen.ChatScreen
 import com.programmersbox.koogintegration.screens.chatscreen.ChatViewModel
 import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
+import com.programmersbox.koogintegration.screens.settings.KoogScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
 import com.programmersbox.sharedcomponents.Navigator
@@ -22,6 +23,7 @@ import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import com.programmersbox.sharedtools.SearchRegistryItem
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.new
 import org.koin.core.module.dsl.singleOf
@@ -61,7 +63,8 @@ fun buildKoogModule() = module {
             onBack = { navigationActions.onBack() },
             onKoogSettingsClick = { navigationActions.navigateTo(KoogSettings) },
             onSearchClick = { navigationActions.toGlobalSearch(it) },
-            onListClick = { navigationActions.toCustomList() }
+            onListClick = { navigationActions.toCustomList() },
+            onNavigate = { navigationActions.navigateTo(it) }
         )
     }
 
@@ -100,6 +103,12 @@ fun buildKoogModule() = module {
             onBack = { koogNavigation.onBack() }
         )
     }
+    navigation<KoogScreen> {
+        val koogNavigation: KoogNavigation = koinInject()
+        KoogScreen(
+            onNavigate = { koogNavigation.onNavigate(it) }
+        )
+    }
     navigation<Koog> {
         val koogNavigation: KoogNavigation = koinInject()
 
@@ -109,7 +118,11 @@ fun buildKoogModule() = module {
             koogNavigation = koogNavigation
         )
     }
+
+    includes(platformModule())
 }
+
+expect fun platformModule(): Module
 
 object AppDimension {
     // Base spacing units

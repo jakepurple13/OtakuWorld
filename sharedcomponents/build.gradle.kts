@@ -41,6 +41,8 @@ kotlin {
                 implementation(project.dependencies.platform(commonLibs.koin.bom))
                 implementation(commonLibs.bundles.koinKmp)
                 implementation(commonLibs.androidx.navigation3.runtime)
+                implementation(commonLibs.androidx.navigationevent)
+                implementation(commonLibs.cmp.navigation3.ui)
                 implementation(commonLibs.qrose)
                 implementation(commonLibs.scanner)
                 implementation(commonLibs.multiplatform.lifecycle.runtime.compose)
