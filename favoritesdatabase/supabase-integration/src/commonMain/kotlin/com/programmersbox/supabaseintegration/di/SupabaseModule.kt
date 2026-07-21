@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.BackupPreferenceDao
 import com.programmersbox.favoritesdatabase.SyncPreferences
+import com.programmersbox.sharedcomponents.Navigator
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthManagerImpl
@@ -99,6 +100,13 @@ fun supabaseModule(
     singleOf(::SupabaseSearchItems) bind SearchRegistryItem::class
 
     syncProcessorModule()
+
+    single {
+        val navHandler = get<Navigator>()
+        SupabaseActions(
+            onNavigate = { navHandler.navigateTo(it) }
+        )
+    }
 
     includes(platformModule())
 

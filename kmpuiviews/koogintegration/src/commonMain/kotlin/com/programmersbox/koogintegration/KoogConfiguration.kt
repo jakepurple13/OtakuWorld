@@ -2,6 +2,8 @@ package com.programmersbox.koogintegration
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.koogintegration.integrator.BookmarksIntegrator
 import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
 import com.programmersbox.koogintegration.integrator.HeatMapIntegrator
@@ -16,6 +18,7 @@ import com.programmersbox.koogintegration.screens.chatscreen.ChatViewModel
 import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
+import com.programmersbox.sharedcomponents.Navigator
 import com.programmersbox.sharedtools.SearchRegistryItem
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -53,6 +56,45 @@ fun buildKoogModule(
     }
 
     singleOf(::KoogSearchItems) bind SearchRegistryItem::class
+
+    single<KoogNavigation> {
+        val navigationActions = get<Navigator>()
+        KoogNavigation(
+            onBack = { navigationActions.onBack() },
+            onKoogSettingsClick = { navigationActions.navigateTo(KoogSettings) },
+            onSearchClick = { navigationActions.toGlobalSearch(it) },
+            onListClick = { navigationActions.toCustomList() }
+        )
+    }
+
+    single {
+        val koogApiKey = DataStoreHandler(
+            key = stringPreferencesKey("koogApiKey"),
+            defaultValue = ""
+        )
+
+        val koogCompany = DataStoreHandler(
+            key = stringPreferencesKey("koogCompany"),
+            defaultValue = ""
+        )
+
+        val koogModel = DataStoreHandler(
+            key = stringPreferencesKey("koogModel"),
+            defaultValue = ""
+        )
+
+        KoogDataStore(
+            getApiKey = { koogApiKey.get() },
+            getModelCompany = { koogCompany.get() },
+            getModelName = { koogModel.get() },
+            storeApiKey = { koogApiKey.set(it) },
+            storeModelCompany = { koogCompany.set(it) },
+            storeModelName = { koogModel.set(it) },
+            apiKeyFlow = koogApiKey.asFlow(),
+            modelCompanyFlow = koogCompany.asFlow(),
+            modelNameFlow = koogModel.asFlow()
+        )
+    }
 
     navigation<KoogSettings> {
         val koogNavigation: KoogNavigation = koinInject()

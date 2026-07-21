@@ -8,7 +8,6 @@ import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.DialogSceneStrategy
 import com.programmersbox.kmpuiviews.BuildType
@@ -354,5 +353,3 @@ private inline fun <reified T : NavKey> Module.detailEntry(
 ) = navigation<T>(
     metadata = ListDetailSceneStrategy.detailPane()
 ) { content(it) }
-
-expect fun EntryProviderScope<NavKey>.buildPlatformPaths()

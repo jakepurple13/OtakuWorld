@@ -48,6 +48,8 @@ kotlin {
             implementation(projects.kmpmodels)
             implementation(projects.sharedtools)
             implementation(projects.sharedcomponents)
+            implementation(projects.datastore)
+            implementation(commonLibs.bundles.datastoreLibs)
             implementation(commonLibs.qrose)
             implementation(commonLibs.scanner)
             implementation(compose.components.resources)

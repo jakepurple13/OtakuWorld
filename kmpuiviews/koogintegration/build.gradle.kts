@@ -54,7 +54,10 @@ kotlin {
                 implementation(commonLibs.bundles.koinKmp)
                 implementation(commonLibs.androidx.navigation3.runtime)
                 implementation(projects.favoritesdatabase)
+                implementation(projects.datastore)
+                implementation(commonLibs.bundles.datastoreLibs)
                 implementation(projects.sharedtools)
+                implementation(projects.sharedcomponents)
                 implementation(commonLibs.kotlinx.datetime)
             }
         }
