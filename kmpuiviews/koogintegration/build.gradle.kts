@@ -40,6 +40,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinStLib)
                 implementation(commonLibs.koog.agents)
+                implementation(commonLibs.koog.http)
                 implementation(commonLibs.koog.agents.additions)
                 implementation(commonLibs.koog.memory)
                 implementation(commonLibs.compose.material3)

@@ -1,5 +1,6 @@
 package com.programmersbox.koogintegration
 
+import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -45,15 +46,17 @@ class AgentMaker(
             .takeUnless { it.isEmpty() }
             ?: error("Model name not set")
 
+        val httpClient = KtorKoogHttpClient.Factory()
+
         val client = when (modelCompany) {
             NoLLMProvider.display -> return null
-            GoogleLLMProvider.display -> GoogleLLMClient(apiKey = apiKey ?: error("API key not set"))
-            AnthropicLLMProvider.display -> AnthropicLLMClient(apiKey = apiKey ?: error("API key not set"))
-            OpenAILLMProvider.display -> OpenAILLMClient(apiKey = apiKey ?: error("API key not set"))
-            DeepSeekLLMProvider.display -> DeepSeekLLMClient(apiKey = apiKey ?: error("API key not set"))
-            OllamaLLMProvider.display -> OllamaClient()
-            MistralAILLMProvider.display -> MistralAILLMClient(apiKey = apiKey ?: error("API key not set"))
-            OpenRouterLLMProvider.display -> OpenRouterLLMClient(apiKey = apiKey ?: error("API key not set"))
+            GoogleLLMProvider.display -> GoogleLLMClient(apiKey = apiKey ?: error("API key not set"), httpClientFactory = httpClient)
+            AnthropicLLMProvider.display -> AnthropicLLMClient(apiKey = apiKey ?: error("API key not set"), httpClientFactory = httpClient)
+            OpenAILLMProvider.display -> OpenAILLMClient(apiKey = apiKey ?: error("API key not set"), httpClientFactory = httpClient)
+            DeepSeekLLMProvider.display -> DeepSeekLLMClient(apiKey = apiKey ?: error("API key not set"), httpClientFactory = httpClient)
+            OllamaLLMProvider.display -> OllamaClient(httpClientFactory = httpClient)
+            MistralAILLMProvider.display -> MistralAILLMClient(apiKey = apiKey ?: error("API key not set"), httpClientFactory = httpClient)
+            OpenRouterLLMProvider.display -> OpenRouterLLMClient(apiKey = apiKey ?: error("API key not set"), httpClientFactory = httpClient)
             else -> platformAgents.isPlatformProvider(modelCompany, apiKey) ?: return null
         }
 
@@ -125,14 +128,3 @@ data class AgentInfo(
     val llmClient: LLMClient,
     val model: LLModel,
 )
-
-enum class AIProvider(val displayName: String) {
-    OPEN_AI("OpenAI"),
-    ANTHROPIC("Anthropic"),
-    GOOGLE("Google"),
-    DEEP_SEEK("DeepSeek"),
-    OPEN_ROUTER("OpenRouter"),
-    MISTRAL("Mistral"),
-    OLLAMA("Ollama"),
-    NONE("None")
-}

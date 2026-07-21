@@ -69,6 +69,7 @@ generic-ai = { module = "io.github.bay73:generic-ai", version.ref = "genericAi" 
 generativeai-google = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiGoogle" }
 koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
 koog-agents-additions = { module = "ai.koog:koog-agents-additions", version.ref = "koog-beta" }
+koog-http = { module = "ai.koog:http-client-ktor", version.ref = "koog" }
 koog-memory = { module = "ai.koog:agents-features-memory", version.ref = "koog" }
 xemantic-ai-tool-schema = { module = "com.xemantic.ai:xemantic-ai-tool-schema", version.ref = "xemanticAiToolSchema" }
 

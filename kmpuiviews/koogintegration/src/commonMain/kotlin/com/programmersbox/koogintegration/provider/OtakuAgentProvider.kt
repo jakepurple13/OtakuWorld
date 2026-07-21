@@ -10,6 +10,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
+import ai.koog.prompt.executor.model.StructureFixingParser
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.structure.StructuredRequest
@@ -67,12 +68,17 @@ class OtakuAgentProvider(
             strategy = structuredOutputWithToolsStrategy<AgentResponse>(
                 config = StructuredRequestConfig(
                     default = StructuredRequest.Manual(genericStructure)
+                    //default = StructuredRequest.Native(genericStructure)
                 ),
+                fixingParser = StructureFixingParser(
+                    model = agentMakerInfo.agentConfig.model,
+                    retries = 3
+                )
             ),
             toolRegistry = ToolRegistry {
-                tools(recommendationTools.asTools())
-                tools(mathTools.asTools())
-                tools(explainTools.asTools())
+                tools(recommendationTools)
+                tools(mathTools)
+                tools(explainTools)
             }
         ) {
             install(EventHandler) {
