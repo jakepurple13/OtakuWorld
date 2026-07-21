@@ -345,7 +345,7 @@ private fun ChatScreenContent(
                             focusManager.clearFocus()
                             showChatBar = false
                         },
-                        toggleChatBar = { showChatBar = !showChatBar },
+                        toggleChatBar = { showChatBar = it },
                         showChatBar = showChatBar,
                         isEnabled = isInputEnabled,
                         isLoading = isLoading,
@@ -962,7 +962,7 @@ private fun InputArea(
     text: String,
     onTextChanged: (String) -> Unit,
     onSendClicked: () -> Unit,
-    toggleChatBar: () -> Unit,
+    toggleChatBar: (Boolean) -> Unit,
     showChatBar: Boolean,
     isEnabled: Boolean,
     isLoading: Boolean,
@@ -991,7 +991,7 @@ private fun InputArea(
 
             FilledTonalIconToggleButton(
                 checked = showChatBar,
-                onCheckedChange = { toggleChatBar() },
+                onCheckedChange = { toggleChatBar(it) },
                 modifier = Modifier.size(AppDimension.iconButtonSizeLarge)
             ) {
                 Icon(
