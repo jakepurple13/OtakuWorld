@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.about
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -59,8 +60,8 @@ import otakuworld.kmpuiviews.generated.resources.please_update_for_latest_featur
 import otakuworld.kmpuiviews.generated.resources.support
 import otakuworld.kmpuiviews.generated.resources.support_summary
 import otakuworld.kmpuiviews.generated.resources.update
-import otakuworld.kmpuiviews.generated.resources.update_available
 import otakuworld.kmpuiviews.generated.resources.updateTo
+import otakuworld.kmpuiviews.generated.resources.update_available
 import otakuworld.kmpuiviews.generated.resources.view_libraries_used
 import otakuworld.kmpuiviews.generated.resources.view_on_github
 
@@ -113,7 +114,12 @@ fun AboutScreen(
                 },
                 overlineContent = { Text(platform()) },
                 content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
-                supportingContent = { Text("Version code: ${versionCode()}") },
+                supportingContent = {
+                    Column {
+                        Text("Version code: ${versionCode()}")
+                        Text("GIT SHA: ${BuildKonfig.COMMIT_SHA}")
+                    }
+                },
                 onClick = { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker() } },
             )
 

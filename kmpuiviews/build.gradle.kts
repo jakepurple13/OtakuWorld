@@ -303,5 +303,28 @@ buildkonfig {
             name = "VERSION_CODE_KMP",
             value = AppInfo.versionCode.toString()
         )
+
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            const = true,
+            name = "COMMIT_SHA",
+            value = gitCommitSha()
+        )
+    }
+}
+
+fun gitCommitSha(): String {
+    try {
+        // Executes a git command to get the full SHA-1 hash
+        return providers.exec { commandLine("git", "rev-parse", "HEAD") }
+            .standardOutput
+            .asText
+            .map { it.trim() }
+            .getOrElse("unknown")
+            .also { println("Commit SHA: $it") }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        // Handle cases where git is not available
+        return "unknown"
     }
 }

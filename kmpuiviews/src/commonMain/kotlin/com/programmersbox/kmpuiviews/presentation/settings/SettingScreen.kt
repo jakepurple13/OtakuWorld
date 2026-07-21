@@ -199,7 +199,9 @@ fun SettingScreen(
                         leadingContent = {
                             Image(
                                 painterLogo(), null,
-                                modifier = Modifier.size(24.dp).clip(CircleShape)
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
                             )
                         },
                         overlineContent = { Text(platform()) },
