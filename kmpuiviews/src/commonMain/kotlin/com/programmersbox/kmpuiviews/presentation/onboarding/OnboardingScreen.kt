@@ -33,7 +33,7 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.composables.ThemeCo
 import com.programmersbox.kmpuiviews.presentation.onboarding.composables.WelcomeContent
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

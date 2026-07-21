@@ -38,9 +38,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.favoritesdatabase.ExceptionItem
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.toLocalDateTime
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.format.DateTimeFormat
 import org.koin.compose.viewmodel.koinViewModel

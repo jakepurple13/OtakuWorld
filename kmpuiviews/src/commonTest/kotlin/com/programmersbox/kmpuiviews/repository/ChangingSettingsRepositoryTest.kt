@@ -1,6 +1,7 @@
 package com.programmersbox.kmpuiviews.repository
 
 import app.cash.turbine.test
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue

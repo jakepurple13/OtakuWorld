@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewState
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,10 +1,10 @@
 package com.programmersbox.supabaseintegration.di
 
-import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
 import com.programmersbox.favoritesdatabase.BackupPreferenceDao
 import com.programmersbox.favoritesdatabase.SyncPreferences
 import com.programmersbox.sharedcomponents.Navigator
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthManagerImpl
@@ -60,9 +60,7 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation
 
-fun supabaseModule(
-    hideComposable: @Composable () -> Unit,
-) = module {
+fun supabaseModule() = module {
     singleOf(::SupabaseClientProvider)
     single<AuthManager> { AuthManagerImpl(get(), get()) }
     single { SyncConfigRepository(get()) }
@@ -111,25 +109,25 @@ fun supabaseModule(
     includes(platformModule())
 
     navigation<SupabaseConfigRoute> {
-        hideComposable()
+        HideNavBarWhileOnScreen()
         SupabaseConfigScreen()
     }
     navigation<AuthRoute> {
-        hideComposable()
+        HideNavBarWhileOnScreen()
         AuthScreen()
     }
     navigation<SyncStatusRoute> {
-        hideComposable()
+        HideNavBarWhileOnScreen()
         SyncStatusScreen()
     }
     navigation<BackupRestoreRoute> {
-        hideComposable()
+        HideNavBarWhileOnScreen()
         BackupRestoreScreen(
             getLocalDbPath = { "" }
         )
     }
     navigation<BackupPreferencesRoute> {
-        hideComposable()
+        HideNavBarWhileOnScreen()
         BackupPreferencesScreen()
     }
     navigation<SupabaseRoutes> {

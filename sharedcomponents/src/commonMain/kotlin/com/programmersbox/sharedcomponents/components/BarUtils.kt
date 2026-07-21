@@ -1,8 +1,8 @@
-package com.programmersbox.kmpuiviews.utils
+package com.programmersbox.sharedcomponents.components
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.programmersbox.kmpuiviews.repository.ChangingSettingsRepository
+import com.programmersbox.sharedcomponents.repository.ChangingSettingsRepository
 import org.koin.compose.koinInject
 
 @Composable

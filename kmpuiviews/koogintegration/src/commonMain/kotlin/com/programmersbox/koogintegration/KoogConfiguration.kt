@@ -1,6 +1,5 @@
 package com.programmersbox.koogintegration
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.programmersbox.datastore.DataStoreHandler
@@ -19,6 +18,7 @@ import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
 import com.programmersbox.sharedcomponents.Navigator
+import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import com.programmersbox.sharedtools.SearchRegistryItem
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,9 +33,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation
 
-fun buildKoogModule(
-    hideNavBarWhileOnScreen: @Composable () -> Unit,
-) = module {
+fun buildKoogModule() = module {
     singleOf(::AgentMaker)
     single<AgentProvider>(named("otaku_agent")) { new(::OtakuAgentProvider) }
     viewModel { ChatViewModel(get<AgentProvider>(named(it[0])), get(), get()) }
@@ -105,7 +103,7 @@ fun buildKoogModule(
     navigation<Koog> {
         val koogNavigation: KoogNavigation = koinInject()
 
-        hideNavBarWhileOnScreen()
+        HideNavBarWhileOnScreen()
         ChatScreen(
             viewModel = koinViewModel { parametersOf("otaku_agent") },
             koogNavigation = koogNavigation

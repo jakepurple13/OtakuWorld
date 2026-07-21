@@ -14,7 +14,6 @@ import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearch
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
-import com.programmersbox.kmpuiviews.utils.HideNavBarWhileOnScreen
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
@@ -97,9 +96,7 @@ val appModule = module {
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
 
     includes(
-        supabaseModule(
-            hideComposable = { HideNavBarWhileOnScreen() }
-        ),
+        supabaseModule(),
         qrCodeModule(),
         buildKmpGraph()
     )

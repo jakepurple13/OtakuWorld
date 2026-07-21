@@ -1090,7 +1090,7 @@ private fun EmptyState(
     ) {
         Text(
             "Start chatting or choose an option below to get started!",
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
