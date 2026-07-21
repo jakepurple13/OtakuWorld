@@ -16,12 +16,12 @@ import ai.koog.prompt.llm.MistralAILLMProvider
 import ai.koog.prompt.llm.OllamaLLMProvider
 import ai.koog.prompt.llm.OpenAILLMProvider
 import ai.koog.prompt.llm.OpenRouterLLMProvider
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.DropdownMenuItem
@@ -55,6 +55,7 @@ import com.programmersbox.koogintegration.NoLLMProvider
 import com.programmersbox.koogintegration.canDownloadModel
 import com.programmersbox.koogintegration.getModelLinkToDownload
 import com.programmersbox.koogintegration.platformModels
+import com.programmersbox.sharedcomponents.components.GenericBackButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -66,7 +67,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun KoogSettingsScreen(
     viewModel: KoogSettingsViewModel = koinViewModel(),
-    onBack: () -> Unit = {},
 ) {
     val state = viewModel.screenState
     val downloadState = viewModel.modelDownloadState
@@ -74,11 +74,7 @@ fun KoogSettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Otaku AI Helper") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack
-                    ) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
-                }
+                navigationIcon = { GenericBackButton() }
             )
         },
     ) { padding ->
@@ -105,6 +101,7 @@ fun KoogSettingsScreen(
                 item {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
@@ -126,7 +123,7 @@ fun KoogSettingsScreen(
                 AIModelDropdown(
                     selectedProvider = state.modelName,
                     onProviderSelected = { viewModel.updateModelName(it) },
-                    canDownload = canDownloadModel(state.modelCompany.display),
+                    canDownload = canDownloadModel(state.modelCompany.display) && !downloadState.isDownloading,
                     isModelDownloaded = state.hasModelDownloaded,
                     downloadModel = viewModel::downloadModel,
                     modelList = when (state.modelCompany) {

@@ -11,3 +11,6 @@ data object Koog : NavKey
 
 @Serializable
 data object KoogScreen : NavKey
+
+@Serializable
+data object KoogModels : NavKey

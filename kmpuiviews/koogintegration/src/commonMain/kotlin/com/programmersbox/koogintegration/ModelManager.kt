@@ -84,4 +84,54 @@ class ModelManager(
 
         return targetFile.toString()
     }
+
+    fun listModels(): List<DownloadedModel> {
+        val cacheDir = cacheDirectoryPath.toPath()
+
+        if (!fileSystem.exists(cacheDir)) {
+            return emptyList()
+        }
+
+        return fileSystem.list(cacheDir).mapNotNull { path ->
+            val metadata = fileSystem.metadataOrNull(path)
+
+            // Only return regular files (ignore subdirectories if any exist)
+            if (metadata != null && metadata.isRegularFile) {
+                DownloadedModel(
+                    fileName = path.name,
+                    path = path.toString(),
+                    sizeBytes = metadata.size ?: 0L,
+                    lastModifiedEpochMillis = metadata.lastModifiedAtMillis ?: 0L
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    /**
+     * Deletes a model from the cache by its file name.
+     * @return true if successful, false otherwise.
+     */
+    fun deleteModel(fileName: String): Boolean {
+        val targetFile = cacheDirectoryPath.toPath() / fileName
+        return try {
+            if (fileSystem.exists(targetFile)) {
+                fileSystem.delete(targetFile)
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }
+
+data class DownloadedModel(
+    val fileName: String,
+    val path: String,
+    val sizeBytes: Long,
+    val lastModifiedEpochMillis: Long,
+)

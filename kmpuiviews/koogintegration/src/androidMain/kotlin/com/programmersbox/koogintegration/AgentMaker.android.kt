@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.clients.litert.LiteRTLLModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import android.content.Context
+import java.io.File
 
 
 actual fun platformModels(modelCompany: String): List<LLModel> = when (modelCompany) {
@@ -36,8 +37,8 @@ actual class PlatformAgents(
     ): LLMClient? = when (modelCompany) {
         LiteRTLLMProvider.display -> LiteRTLLMClient(
             config = LiteRTClientConfig(
-                modelsPath = context.filesDir.absolutePath,
-                cacheDir = context.cacheDir.absolutePath
+                modelsPath = File(context.filesDir, "models").absolutePath,
+                cacheDir = File(context.cacheDir, "models").absolutePath
             )
         )
 

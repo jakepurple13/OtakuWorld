@@ -18,6 +18,7 @@ import com.programmersbox.koogintegration.screens.chatscreen.KoogNavigation
 import com.programmersbox.koogintegration.screens.settings.KoogScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsScreen
 import com.programmersbox.koogintegration.screens.settings.KoogSettingsViewModel
+import com.programmersbox.koogintegration.screens.settings.ModelListScreen
 import com.programmersbox.sharedcomponents.Navigator
 import com.programmersbox.sharedcomponents.components.HideNavBarWhileOnScreen
 import com.programmersbox.sharedtools.SearchRegistryItem
@@ -97,18 +98,17 @@ fun buildKoogModule() = module {
         )
     }
 
-    navigation<KoogSettings> {
-        val koogNavigation: KoogNavigation = koinInject()
-        KoogSettingsScreen(
-            onBack = { koogNavigation.onBack() }
-        )
-    }
+    navigation<KoogSettings> { KoogSettingsScreen() }
     navigation<KoogScreen> {
         val koogNavigation: KoogNavigation = koinInject()
         KoogScreen(
             onNavigate = { koogNavigation.onNavigate(it) }
         )
     }
+    navigation<KoogModels> {
+        ModelListScreen()
+    }
+
     navigation<Koog> {
         val koogNavigation: KoogNavigation = koinInject()
 
