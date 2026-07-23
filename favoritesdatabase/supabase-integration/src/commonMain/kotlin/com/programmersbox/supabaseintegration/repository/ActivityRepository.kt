@@ -16,7 +16,6 @@ class ActivityRepository(
 
     suspend fun onActivityStop() {
         activityDao.markDirtyNow(Clock.System.now().toEpochMilliseconds())
-        syncManager.triggerSync()
     }
 
     suspend fun migrateFromDataStoreIfNeeded() {
