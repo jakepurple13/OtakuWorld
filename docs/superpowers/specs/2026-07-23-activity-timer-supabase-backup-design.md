@@ -28,7 +28,9 @@ RecordTimeSpentDoing() composable (kmpuiviews)
 ProcessLifecycle ON_STOP observer (kmpuiviews, new)
   └─ activityRepository.onActivityStop()
 
-ActivityRepository (kmpuiviews, new Koin singleton)
+ActivityRepository (favoritesdatabase/supabase-integration, new Koin singleton
+                    — lives here, not kmpuiviews, since it depends on SyncManager
+                    which is defined in this module)
   ├─ incrementSeconds()          → activityDao.incrementSeconds()
   ├─ onActivityStop()            → activityDao.markDirtyNow(); syncManager.triggerSync()
   └─ migrateFromDataStoreIfNeeded() → one-time, called at app startup
@@ -106,9 +108,14 @@ abstract class SettingsDatabase : RoomDatabase() {
 that keeps per-second writes from ever marking the row dirty, so the existing
 WiFi-reactive push path (which reacts to dirty rows) never fires from ticking alone.
 
-### 2. `ActivityRepository` (kmpuiviews, new)
+### 2. `ActivityRepository` (favoritesdatabase/supabase-integration, new)
 
-File: `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/repository/ActivityRepository.kt`
+File: `favoritesdatabase/supabase-integration/src/commonMain/kotlin/com/programmersbox/supabaseintegration/repository/ActivityRepository.kt`
+
+Lives in `supabase-integration`, not `kmpuiviews` — it depends on `SyncManager`,
+which is defined in this module, and `supabase-integration` already depends on
+both `favoritesdatabase` (for `ActivityDao`) and `datastore` (for
+`DataStoreHandling`), so no new cross-module dependency is needed.
 
 ```kotlin
 class ActivityRepository(
@@ -132,14 +139,27 @@ class ActivityRepository(
 }
 ```
 
-Registered as a Koin singleton in `kmpuiviews/.../di/DatabaseModule.kt` (or a new
-small `ActivityModule.kt` alongside it):
+`SettingsDatabase`/`ActivityDao` are still registered in `kmpuiviews/.../di/DatabaseModule.kt`
+(consistent with every other Room DB in `favoritesdatabase`, all wired there
+regardless of which Gradle module ultimately consumes them):
 
 ```kotlin
 single<SettingsDatabase> { SettingsDatabase.getInstance(get()) }
 single<ActivityDao> { get<SettingsDatabase>().activityDao() }
+```
+
+`ActivityRepository` itself is registered inside `supabaseModule()` in
+`favoritesdatabase/supabase-integration/.../di/SupabaseModule.kt`:
+
+```kotlin
 singleOf(::ActivityRepository)
 ```
+
+This works because `kmpModule` (`kmpuiviews/.../di/KmpModule.kt`) includes both
+`databases` (which provides `ActivityDao`) and, transitively via `AppModule.kt`,
+`supabaseModule()` — both end up in the same Koin container at startup, so Koin
+resolves `ActivityDao` for `ActivityRepository` regardless of which Gradle module
+declared which class.
 
 ### 3. Trigger points
 
@@ -366,8 +386,9 @@ DataStore value; if already zero, no-op.
 | `favoritesdatabase/supabase-integration/.../database/ActivityManagedTable.kt` | New |
 | `favoritesdatabase/supabase-integration/.../sync/SupabaseRows.kt` | Add `ActivityRow` + mappers |
 | `favoritesdatabase/supabase-integration/.../di/SupabaseModule.kt` | Register `ActivitySyncProcessor` in `syncProcessorModule()` |
-| `kmpuiviews/.../repository/ActivityRepository.kt` | New |
-| `kmpuiviews/.../di/DatabaseModule.kt` | Register `SettingsDatabase`, `ActivityDao`, `ActivityRepository` |
+| `favoritesdatabase/supabase-integration/.../repository/ActivityRepository.kt` | New |
+| `kmpuiviews/.../di/DatabaseModule.kt` | Register `SettingsDatabase`, `ActivityDao` |
+| `favoritesdatabase/supabase-integration/.../di/SupabaseModule.kt` | Also register `ActivityRepository` (in addition to `ActivitySyncProcessor`) |
 | `kmpuiviews/.../utils/ComposableUtils.kt` | `RecordTimeSpentDoing()` uses `ActivityRepository` instead of `DataStoreHandling.timeSpentDoing`, adds `onDispose` stop hook |
 | `kmpuiviews/src/androidMain/kotlin/.../KmpOtakuApp.kt` | Register `ProcessLifecycleOwner` `ON_STOP` observer (Android only); call `activityRepository.migrateFromDataStoreIfNeeded()` once after `koinSetup()` |
 | `docs/supabase/supabase_schema.sql` | Add `activity_timer` table + RLS policy |
