@@ -61,22 +61,21 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: Clean up MangaWorld artifacts
-        # ABI splits produce one signed APK per ABI now (instead of a single universal APK),
-        # so collect every signedReleaseFileN the action emitted instead of the single-file output.
+        # ABI splits produce one signed APK per ABI (armeabi-v7a, arm64-v8a) plus a
+        # universal fallback APK, so collect every signedReleaseFileN the action
+        # emitted instead of the single-file output.
         run: |
           mkdir -p signed-apks/full signed-apks/noFirebase
           for f in \
             "${{ steps.manga_sign.outputs.signedReleaseFile0 }}" \
             "${{ steps.manga_sign.outputs.signedReleaseFile1 }}" \
-            "${{ steps.manga_sign.outputs.signedReleaseFile2 }}" \
-            "${{ steps.manga_sign.outputs.signedReleaseFile3 }}"; do
+            "${{ steps.manga_sign.outputs.signedReleaseFile2 }}"; do
             [ -n "$f" ] && cp "$f" signed-apks/full/
           done
           for f in \
             "${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile0 }}" \
             "${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile1 }}" \
-            "${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile2 }}" \
-            "${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile3 }}"; do
+            "${{ steps.manga_sign_no_firebase.outputs.signedReleaseFile2 }}"; do
             [ -n "$f" ] && cp "$f" signed-apks/noFirebase/
           done
 
