@@ -12,7 +12,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -23,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.supabaseintegration.repository.ActivityRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -136,7 +137,6 @@ fun LazyListState.isScrollingUp(): Boolean {
 @Composable
 fun RecordTimeSpentDoing() {
     val activityRepository = koinInject<ActivityRepository>()
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -147,7 +147,11 @@ fun RecordTimeSpentDoing() {
 
     DisposableEffect(Unit) {
         onDispose {
-            scope.launch { activityRepository.onActivityStop() }
+            // rememberCoroutineScope() is cancelled as part of this same composable's
+            // teardown, so a fire-and-forget network call (triggerSync) launched on it
+            // here would be cancelled before it can complete. Use a scope that outlives
+            // the disposal, matching the equivalent app-level trigger in KmpOtakuApp.kt.
+            GlobalScope.launch(Dispatchers.IO) { activityRepository.onActivityStop() }
         }
     }
 }
