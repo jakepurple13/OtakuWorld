@@ -180,6 +180,18 @@ ALTER TABLE heatmap_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own_heatmap" ON heatmap_items FOR ALL USING (auth.uid() = user_id);
 CREATE INDEX idx_heatmap_updated ON heatmap_items(user_id, updated_at);
 
+-- ─── ACTIVITY TIMER ───────────────────────────────────────────────────────────
+CREATE TABLE activity_timer (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id),
+    cumulative_seconds BIGINT NOT NULL DEFAULT 0,
+    updated_at BIGINT NOT NULL DEFAULT 0
+);
+
+ALTER TABLE activity_timer ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY own_activity_timer ON activity_timer
+    USING (auth.uid() = user_id);
+
 -- ─── STORAGE BUCKET ───────────────────────────────────────────────────────────
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('otakuworld-backups', 'otakuworld-backups', false)
