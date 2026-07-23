@@ -22,7 +22,7 @@ class ActivityRepository(
     suspend fun migrateFromDataStoreIfNeeded() {
         val existing = dataStoreHandling.timeSpentDoing.getOrNull() ?: 0L
         if (existing == 0L) return
-        activityDao.incrementSeconds(existing)
         dataStoreHandling.timeSpentDoing.set(0L)
+        activityDao.incrementSeconds(existing)
     }
 }

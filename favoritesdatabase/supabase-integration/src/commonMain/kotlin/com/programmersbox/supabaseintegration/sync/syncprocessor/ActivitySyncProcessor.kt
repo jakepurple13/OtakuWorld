@@ -7,11 +7,11 @@ import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.sync.ActivityRow
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.toActivityRow
-import com.programmersbox.supabaseintegration.sync.toActivityTable
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 
@@ -58,7 +58,7 @@ class ActivitySyncProcessor(
         activityDao.getActivity()?.takeIf { it.isDirty }?.let { listOf(it) } ?: emptyList()
 
     override fun observeDirtyItems(): Flow<Int> =
-        activityDao.observeActivity().map { if (it?.isDirty == true) 1 else 0 }
+        activityDao.observeActivity().map { if (it?.isDirty == true) 1 else 0 }.distinctUntilChanged()
 
     override fun isLocalDeleted(local: ActivityTable): Boolean = false
 

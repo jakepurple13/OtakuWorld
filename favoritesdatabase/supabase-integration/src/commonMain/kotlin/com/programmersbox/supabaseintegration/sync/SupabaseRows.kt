@@ -307,12 +307,6 @@ data class ActivityRow(
     @SerialName("updated_at") val updatedAt: Long = 0L,
 )
 
-fun ActivityRow.toActivityTable() = ActivityTable(
-    cumulativeSeconds = cumulativeSeconds,
-    updatedAt = updatedAt,
-    isDirty = false,
-)
-
 fun ActivityTable.toActivityRow(userId: String, timestamp: Long = updatedAt) = ActivityRow(
     userId = userId,
     cumulativeSeconds = cumulativeSeconds,
