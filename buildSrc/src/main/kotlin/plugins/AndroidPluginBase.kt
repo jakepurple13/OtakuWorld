@@ -35,7 +35,10 @@ abstract class AndroidPluginBase<T : BaseExtension>(
                 // Need to get the noFirebase packages in firebase first
                 // googleTask?.enabled = System.getenv("CI") != null
                 //TODO: Testing
-                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName || System.getenv("CI") != null
+                val isNoFirebaseLocalBuild = ProductFlavorTypes.NoFirebase.nameType == variant.flavorName && System.getenv("CI") == null
+                googleTask?.enabled = !isNoFirebaseLocalBuild
+                // Needs the GoogleServices app-id file above, which doesn't exist for noFirebase local builds.
+                tasks.findByName("uploadCrashlyticsMappingFile$variantName")?.enabled = !isNoFirebaseLocalBuild
             }
         }
     }
