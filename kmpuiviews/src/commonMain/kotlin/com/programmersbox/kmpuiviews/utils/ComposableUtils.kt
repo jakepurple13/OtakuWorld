@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -18,10 +19,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.supabaseintegration.repository.ActivityRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 object ComposableUtils {
@@ -132,11 +136,22 @@ fun LazyListState.isScrollingUp(): Boolean {
 
 @Composable
 fun RecordTimeSpentDoing() {
-    val timeSpent = koinInject<DataStoreHandling>().timeSpentDoing
+    val activityRepository = koinInject<ActivityRepository>()
+
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000)
-            timeSpent.set((timeSpent.getOrNull() ?: 0) + 1)
+            activityRepository.incrementSeconds()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            // rememberCoroutineScope() is cancelled as part of this same composable's
+            // teardown, so a fire-and-forget network call (triggerSync) launched on it
+            // here would be cancelled before it can complete. Use a scope that outlives
+            // the disposal, matching the equivalent app-level trigger in KmpOtakuApp.kt.
+            GlobalScope.launch(Dispatchers.IO) { activityRepository.onActivityStop() }
         }
     }
 }

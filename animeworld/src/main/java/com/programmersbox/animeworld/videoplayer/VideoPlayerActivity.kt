@@ -48,13 +48,13 @@ import com.programmersbox.animeworld.databinding.MxMobileBrightnessDialogBinding
 import com.programmersbox.animeworld.databinding.MxMobileVolumeDialogBinding
 import com.programmersbox.animeworld.databinding.MxProgressDialogBinding
 import com.programmersbox.animeworld.ignoreSsl
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.gsonutils.fromJson
 import com.programmersbox.helpfulutils.audioManager
 import com.programmersbox.helpfulutils.battery
 import com.programmersbox.helpfulutils.enableImmersiveMode
 import com.programmersbox.helpfulutils.startDrawable
 import com.programmersbox.kmpmodels.KmpChapterModel
+import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import com.programmersbox.uiviews.GenericInfo
 import com.programmersbox.uiviews.utils.BatteryInformation
 import com.programmersbox.uiviews.utils.BatteryInformation2
@@ -171,7 +171,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private val genericInfo: GenericInfo by inject()
 
-    private val dataStoreHandling by inject<DataStoreHandling>()
+    private val activityRepository by inject<ActivityRepository>()
 
     private val chapterModel: KmpChapterModel? by lazy {
         intent.getStringExtra("chapterModel")
@@ -197,8 +197,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             exoBinding.videoLock.toolTipText(R.string.videoPlayerLockUnlock)
         }
 
-        val timeSpent = dataStoreHandling.timeSpentDoing
-
         flow {
             var count = 0L
             while (true) {
@@ -206,7 +204,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 delay(1000)
             }
         }
-            .onEach { timeSpent.set(timeSpent.get() + 1) }
+            .onEach { activityRepository.incrementSeconds() }
             .launchIn(lifecycleScope)
 
         //exoBinding.backThirty.onAnimationStart = { playerView.player?.let { p -> p.seekTo(p.currentPosition - 30000) } }
@@ -371,6 +369,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         }
         retriever.release()
+        lifecycleScope.launch { activityRepository.onActivityStop() }
         super.onStop()
     }
 

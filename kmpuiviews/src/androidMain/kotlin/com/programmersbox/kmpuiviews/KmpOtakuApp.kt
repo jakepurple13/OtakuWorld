@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composer
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import androidx.compose.runtime.tooling.ComposeStackTraceMode
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.favoritesdatabase.CustomListItem
@@ -26,6 +29,7 @@ import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationGroups
 import com.programmersbox.kmpuiviews.utils.OtakuLogger
 import com.programmersbox.kmpuiviews.utils.printLogs
+import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -87,13 +91,14 @@ abstract class KmpOtakuApp : Application(), Configuration.Provider {
 
         shortcutSetup()
 
-        //TODO: Remove the migration after the next full release
-        /*migrateSettings(
-            context = this,
-            dataStoreHandling = dataStoreHandling,
-            settingsHandling = settingsHandling,
-            newSettingsHandling = newSettingsHandling
-        )*/
+        val activityRepository = get<ActivityRepository>()
+        GlobalScope.launch(Dispatchers.IO) { activityRepository.migrateFromDataStoreIfNeeded() }
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStop(owner: LifecycleOwner) {
+                GlobalScope.launch(Dispatchers.IO) { activityRepository.onActivityStop() }
+            }
+        })
 
         /*runCatching {
             get<ServerRepository>()

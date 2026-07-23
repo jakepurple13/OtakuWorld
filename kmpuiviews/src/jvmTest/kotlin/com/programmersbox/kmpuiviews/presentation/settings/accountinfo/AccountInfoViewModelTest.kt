@@ -6,6 +6,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.BlurHashDatabase
 import com.programmersbox.favoritesdatabase.BookmarkDatabase
 import com.programmersbox.favoritesdatabase.DbModel
+import com.programmersbox.favoritesdatabase.DictionaryDatabase
 import com.programmersbox.favoritesdatabase.ExceptionDatabase
 import com.programmersbox.favoritesdatabase.HeatMapDatabase
 import com.programmersbox.favoritesdatabase.HistoryDatabase
@@ -14,16 +15,14 @@ import com.programmersbox.favoritesdatabase.ListDatabase
 import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDatabase
 import com.programmersbox.favoritesdatabase.RecommendationDatabase
+import com.programmersbox.favoritesdatabase.SettingsDatabase
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
-import com.programmersbox.kmpuiviews.testing.FakeKmpFirebaseListener
 import com.programmersbox.kmpuiviews.testing.FakeTranslationModelHandler
-import com.programmersbox.kmpuiviews.testing.createTestDataStoreHandling
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -48,9 +47,9 @@ class AccountInfoViewModelTest {
     private lateinit var exceptionDatabase: ExceptionDatabase
     private lateinit var bookmarkDatabase: BookmarkDatabase
     private lateinit var notesDatabase: NotesDatabase
+    private lateinit var settingsDatabase: SettingsDatabase
+    private lateinit var dictionaryDatabase: DictionaryDatabase
 
-    private val showsFlow = MutableStateFlow<List<DbModel>>(emptyList())
-    private val firebaseListener = FakeKmpFirebaseListener(showsFlow)
 
     // The ViewModel observes several Room-generated Flows, which emit on Room's own
     // (real, non-test-controlled) dispatcher. A test-dispatcher virtual-clock advance
@@ -73,12 +72,12 @@ class AccountInfoViewModelTest {
         heatMapDao = heatMapDatabase.heatMapDao(),
         translationModelHandler = FakeTranslationModelHandler(),
         sourceRepository = sourceRepository,
-        firebaseConnection = firebaseListener,
-        dataStoreHandling = createTestDataStoreHandling(),
         recommendationDao = recommendationDatabase.recommendationDao(),
         exceptionDao = exceptionDatabase.exceptionDao(),
         bookmarksDao = bookmarkDatabase.bookmarkDao(),
         notesDao = notesDatabase.notesDao(),
+        activityDao = settingsDatabase.activityDao(),
+        dictionaryDao = dictionaryDatabase.dictionaryDao(),
         authManager = FakeAuthManager(),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
@@ -117,6 +116,12 @@ class AccountInfoViewModelTest {
         }
         notesDatabase = tempDatabase("account-info-notes-test") {
             Room.databaseBuilder<NotesDatabase>(name = it).setDriver(BundledSQLiteDriver()).build()
+        }
+        settingsDatabase = tempDatabase("account-info-settings-test") {
+            Room.databaseBuilder<SettingsDatabase>(name = it).setDriver(BundledSQLiteDriver()).build()
+        }
+        dictionaryDatabase = tempDatabase("account-info-dictionary-test") {
+            Room.databaseBuilder<DictionaryDatabase>(name = it).setDriver(BundledSQLiteDriver()).build()
         }
     }
 
@@ -159,24 +164,6 @@ class AccountInfoViewModelTest {
         awaitCondition { vm.accountInfo.localFavorites == 1 }
 
         assertEquals(1, vm.accountInfo.localFavorites)
-        assertEquals(1, vm.accountInfo.totalFavorites)
-    }
-
-    @Test fun `cloud favorites from firebase listener are counted`() = runTest {
-        showsFlow.value = listOf(
-            DbModel(
-                title = "Title",
-                description = "Description",
-                url = "https://example.com/1",
-                imageUrl = "https://example.com/1.jpg",
-                source = "ExampleService",
-            )
-        )
-
-        val vm = viewModel()
-        awaitCondition { vm.accountInfo.cloudFavorites == 1 }
-
-        assertEquals(1, vm.accountInfo.cloudFavorites)
         assertEquals(1, vm.accountInfo.totalFavorites)
     }
 

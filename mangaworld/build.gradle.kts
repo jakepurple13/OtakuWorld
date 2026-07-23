@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.uiViews)
     implementation(projects.kmpmodels)
     implementation(projects.favoritesdatabase)
+    implementation(projects.favoritesdatabase.supabaseIntegration)
     implementation(projects.sharedutils)
     implementation(projects.sourceUtilities)
     implementation(projects.datastore.mangasettings)

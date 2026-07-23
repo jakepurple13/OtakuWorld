@@ -201,6 +201,7 @@ tv-material = { module = "androidx.tv:tv-material", version = "1.1.0" }
 lifecycleExtensions = "androidx.lifecycle:lifecycle-extensions:2.2.0"
 lifecycleLivedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 lifecycleRuntime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycleProcess = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
 lifecycleViewModel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 
 # Lottie

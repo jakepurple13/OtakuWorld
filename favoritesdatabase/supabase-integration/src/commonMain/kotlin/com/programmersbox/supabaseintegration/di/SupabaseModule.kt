@@ -16,12 +16,14 @@ import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.migration.MigrationManager
+import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.SyncConfig
 import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.sync.SyncEngine
 import com.programmersbox.supabaseintegration.sync.SyncEngineImpl
 import com.programmersbox.supabaseintegration.sync.SyncManager
+import com.programmersbox.supabaseintegration.sync.syncprocessor.ActivitySyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.BookmarksSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.ChaptersWatchedSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.CustomListInfoSyncProcessor
@@ -84,6 +86,7 @@ fun supabaseModule() = module {
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
     singleOf(::MigrationManager)
+    singleOf(::ActivityRepository)
     single { DatabaseRepository(getAll()) }
 
     single<SyncPreferences> { SyncPreferences.getInstance(get()) }
@@ -147,6 +150,7 @@ private fun Module.syncProcessorModule() {
     singleOf(::CustomListItemSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
     singleOf(::CustomListInfoSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
     singleOf(::HeatMapSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::ActivitySyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
 }
 
 expect fun platformModule(): Module

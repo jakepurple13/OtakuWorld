@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.favoritesdatabase.ActivityDao
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BookmarkDao
 import com.programmersbox.favoritesdatabase.DictionaryDao
@@ -49,12 +49,12 @@ class AccountInfoViewModel(
     heatMapDao: HeatMapDao,
     translationModelHandler: TranslationModelHandler,
     sourceRepository: SourceRepository,
-    dataStoreHandling: DataStoreHandling,
     recommendationDao: RecommendationDao,
     exceptionDao: ExceptionDao,
     bookmarksDao: BookmarkDao,
     notesDao: NotesDao,
     dictionaryDao: DictionaryDao,
+    activityDao: ActivityDao,
     authManager: AuthManager,
 ) : ViewModel() {
 
@@ -100,8 +100,8 @@ class AccountInfoViewModel(
             notesDao.getAllNotesCount(),
             heatMapDao.getDailyAverage()
         ) { AccountInfoCount(it) }
-            .combine(dataStoreHandling.timeSpentDoing.asFlow()) { a, b ->
-                a.copy(timeSpentDoing = b.seconds.toString())
+            .combine(activityDao.observeActivity()) { a, b ->
+                a.copy(timeSpentDoing = (b?.cumulativeSeconds ?: 0L).seconds.toString())
             }
             .combine(heatMapDao.getAllHeatMaps()) { a, b ->
                 a.copy(heatMaps = generateHeats(b))

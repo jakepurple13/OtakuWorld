@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.di
 
+import com.programmersbox.favoritesdatabase.ActivityDao
 import com.programmersbox.favoritesdatabase.BlurHashDao
 import com.programmersbox.favoritesdatabase.BlurHashDatabase
 import com.programmersbox.favoritesdatabase.BookmarkDao
@@ -20,6 +21,7 @@ import com.programmersbox.favoritesdatabase.DictionaryDao
 import com.programmersbox.favoritesdatabase.DictionaryDatabase
 import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.favoritesdatabase.RecommendationDatabase
+import com.programmersbox.favoritesdatabase.SettingsDatabase
 import com.programmersbox.kmpuiviews.databaseBuilder
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -41,4 +43,6 @@ val databases: Module = module {
     single<NotesDao> { get<NotesDatabase>().notesDao() }
     single<DictionaryDatabase> { DictionaryDatabase.getInstance(get()) }
     single<DictionaryDao> { get<DictionaryDatabase>().dictionaryDao() }
+    single<SettingsDatabase> { SettingsDatabase.getInstance(get()) }
+    single<ActivityDao> { get<SettingsDatabase>().activityDao() }
 }

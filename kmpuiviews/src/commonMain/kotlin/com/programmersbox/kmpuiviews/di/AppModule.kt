@@ -14,6 +14,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearch
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.utils.Backup
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.backupproccesor.ActivityBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
@@ -117,6 +118,7 @@ private fun Module.backupProcessors() {
     backupProcessorWithUiInfo("notes", ::NotesBackupProcessor)
     backupProcessorWithUiInfo("recommendations", ::RecommendationsBackupProcessor)
     backupProcessorWithUiInfo("dictionary", ::DictionaryBackupProcessor)
+    backupProcessorWithUiInfo("activity", ::ActivityBackupProcessor)
 }
 
 expect fun platformModule(): Module
