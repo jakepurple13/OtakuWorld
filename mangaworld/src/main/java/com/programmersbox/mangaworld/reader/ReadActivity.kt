@@ -368,6 +368,11 @@ class ReadActivity : AppCompatActivity() {
             .launchIn(lifecycleScope)
     }
 
+    override fun onStop() {
+        super.onStop()
+        lifecycleScope.launch { activityRepository.onActivityStop() }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Glide.get(this).clearMemory()

@@ -369,6 +369,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         }
         retriever.release()
+        lifecycleScope.launch { activityRepository.onActivityStop() }
         super.onStop()
     }
 
