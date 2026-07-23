@@ -16,6 +16,7 @@ import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.migration.MigrationManager
+import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.SyncConfig
 import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
@@ -84,6 +85,7 @@ fun supabaseModule() = module {
     single<BackupManager> { BackupManagerImpl(get(), get()) }
     single<RestoreManager> { RestoreManagerImpl(get(), get()) }
     singleOf(::MigrationManager)
+    singleOf(::ActivityRepository)
     single { DatabaseRepository(getAll()) }
 
     single<SyncPreferences> { SyncPreferences.getInstance(get()) }
