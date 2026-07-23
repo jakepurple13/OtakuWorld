@@ -4,6 +4,7 @@ import com.programmersbox.favoritesdatabase.BookmarkedChapter
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
+import com.programmersbox.favoritesdatabase.ActivityTable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HeatMapItem
 import com.programmersbox.favoritesdatabase.HistoryItem
@@ -297,4 +298,23 @@ fun HeatMapItem.toHeatMapItemRow(userId: String, timestamp: Long = updatedAt) = 
     createdAt = createdAt,
     updatedAt = timestamp,
     isDeleted = isDeleted,
+)
+
+@Serializable
+data class ActivityRow(
+    @SerialName("user_id") val userId: String,
+    @SerialName("cumulative_seconds") val cumulativeSeconds: Long = 0L,
+    @SerialName("updated_at") val updatedAt: Long = 0L,
+)
+
+fun ActivityRow.toActivityTable() = ActivityTable(
+    cumulativeSeconds = cumulativeSeconds,
+    updatedAt = updatedAt,
+    isDirty = false,
+)
+
+fun ActivityTable.toActivityRow(userId: String, timestamp: Long = updatedAt) = ActivityRow(
+    userId = userId,
+    cumulativeSeconds = cumulativeSeconds,
+    updatedAt = timestamp,
 )
