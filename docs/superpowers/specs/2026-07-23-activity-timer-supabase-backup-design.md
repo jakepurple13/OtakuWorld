@@ -98,8 +98,9 @@ abstract class SettingsDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
 
     companion object {
-        fun getInstance(databaseBuilder: DatabaseBuilder): SettingsDatabase =
-            databaseBuilder.build("settings_database.db")
+        fun getInstance(databaseBuilder: DatabaseBuilder): SettingsDatabase = databaseBuilder
+            .build<SettingsDatabase>("settings_database.db")
+            .build()
     }
 }
 ```
@@ -327,8 +328,7 @@ CREATE TABLE activity_timer (
 
 ALTER TABLE activity_timer ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY own_activity_timer ON activity_timer
-    USING (auth.uid() = user_id);
+CREATE POLICY "own_activity_timer" ON activity_timer FOR ALL USING (auth.uid() = user_id);
 ```
 
 ---
