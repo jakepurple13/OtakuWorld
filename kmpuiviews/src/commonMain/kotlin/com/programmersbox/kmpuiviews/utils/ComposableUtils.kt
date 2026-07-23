@@ -6,11 +6,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -18,10 +20,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.GridChoice
 import com.programmersbox.datastore.ThemeColor
+import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 object ComposableUtils {
@@ -132,11 +135,19 @@ fun LazyListState.isScrollingUp(): Boolean {
 
 @Composable
 fun RecordTimeSpentDoing() {
-    val timeSpent = koinInject<DataStoreHandling>().timeSpentDoing
+    val activityRepository = koinInject<ActivityRepository>()
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         while (true) {
             delay(1000)
-            timeSpent.set((timeSpent.getOrNull() ?: 0) + 1)
+            activityRepository.incrementSeconds()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            scope.launch { activityRepository.onActivityStop() }
         }
     }
 }
