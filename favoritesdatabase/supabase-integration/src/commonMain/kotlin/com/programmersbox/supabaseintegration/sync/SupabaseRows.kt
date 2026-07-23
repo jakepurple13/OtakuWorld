@@ -1,10 +1,10 @@
 package com.programmersbox.supabaseintegration.sync
 
+import com.programmersbox.favoritesdatabase.ActivityTable
 import com.programmersbox.favoritesdatabase.BookmarkedChapter
 import com.programmersbox.favoritesdatabase.ChapterWatched
 import com.programmersbox.favoritesdatabase.CustomListInfo
 import com.programmersbox.favoritesdatabase.CustomListItem
-import com.programmersbox.favoritesdatabase.ActivityTable
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.HeatMapItem
 import com.programmersbox.favoritesdatabase.HistoryItem
