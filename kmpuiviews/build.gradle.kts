@@ -193,6 +193,7 @@ kotlin {
                 implementation(androidLibs.workRuntime)
                 implementation(androidLibs.koin.workmanager)
                 implementation(androidx.paging.pagingCompose)
+                implementation(androidLibs.lifecycleProcess)
             }
         }
 
