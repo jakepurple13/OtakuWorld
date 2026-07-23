@@ -23,6 +23,7 @@ import com.programmersbox.supabaseintegration.sync.SyncConfigRepository
 import com.programmersbox.supabaseintegration.sync.SyncEngine
 import com.programmersbox.supabaseintegration.sync.SyncEngineImpl
 import com.programmersbox.supabaseintegration.sync.SyncManager
+import com.programmersbox.supabaseintegration.sync.syncprocessor.ActivitySyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.BookmarksSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.ChaptersWatchedSyncProcessor
 import com.programmersbox.supabaseintegration.sync.syncprocessor.CustomListInfoSyncProcessor
@@ -149,6 +150,7 @@ private fun Module.syncProcessorModule() {
     singleOf(::CustomListItemSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
     singleOf(::CustomListInfoSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
     singleOf(::HeatMapSyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
+    singleOf(::ActivitySyncProcessor) binds arrayOf(SyncProcessor::class, ManagedTable::class)
 }
 
 expect fun platformModule(): Module
