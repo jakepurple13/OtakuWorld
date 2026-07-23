@@ -1,5 +1,5 @@
 [versions]
-ackpineVersion = "0.23.0"
+ackpineVersion = "0.25.2"
 accompanist = "0.37.3"
 activity = "1.13.0"
 arcore = "1.0.0-alpha13"
