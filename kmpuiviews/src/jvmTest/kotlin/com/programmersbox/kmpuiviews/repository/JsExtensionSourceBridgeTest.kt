@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 class JsExtensionSourceBridgeTest {
 
     private class StubHostBridge : HostBridge {
-        override fun httpGet(url: String, headersJson: String): String = ""
+        override suspend fun httpGet(url: String, headersJson: String): String = ""
     }
 
     private val createdQuickJs = mutableListOf<QuickJs>()

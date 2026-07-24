@@ -36,6 +36,8 @@ import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
+import io.github.jan.supabase.auth.passkey.PasskeyRegistrationResponse
+import io.github.jan.supabase.auth.passkey.PasskeyRegistrationVerifyResponse
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +68,11 @@ class FakeAuthManager(
     override suspend fun signOut() {}
     override suspend fun deleteAccount() {}
     override suspend fun refreshSession() {}
+    override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
+        throw NotImplementedError("startPasskeyRegistration is not faked")
+    override suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse =
+        throw NotImplementedError("verifyPasskeyRegistration is not faked")
+    override fun reportError(message: String) {}
 }
 
 fun createTestDataStoreHandling(): DataStoreHandling {
