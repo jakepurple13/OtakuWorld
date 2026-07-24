@@ -12,8 +12,6 @@ import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.database.SupportedTableAction
-import io.github.jan.supabase.auth.passkey.PasskeyRegistrationResponse
-import io.github.jan.supabase.auth.passkey.PasskeyRegistrationVerifyResponse
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -87,10 +85,11 @@ private class FakeLogoutAuthManager(
     }
     override suspend fun deleteAccount() {}
     override suspend fun refreshSession() {}
-    override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
+
+    /*override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
         throw NotImplementedError()
     override suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse =
-        throw NotImplementedError()
+        throw NotImplementedError()*/
     override fun reportError(message: String) {}
 }
 

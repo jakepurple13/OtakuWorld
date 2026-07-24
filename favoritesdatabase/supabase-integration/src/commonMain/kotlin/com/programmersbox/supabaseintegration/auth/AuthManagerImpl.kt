@@ -2,10 +2,7 @@ package com.programmersbox.supabaseintegration.auth
 
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
-import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.passkey.PasskeyRegistrationResponse
-import io.github.jan.supabase.auth.passkey.PasskeyRegistrationVerifyResponse
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.OTP
@@ -164,7 +161,7 @@ class AuthManagerImpl(
         runCatching { auth.refreshCurrentSession() }
     }
 
-    @OptIn(SupabaseExperimental::class)
+    /*@OptIn(SupabaseExperimental::class)
     override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse {
         return auth.passkeys.startRegistration()
     }
@@ -175,7 +172,7 @@ class AuthManagerImpl(
         credentialJson: String,
     ): PasskeyRegistrationVerifyResponse {
         return auth.passkeys.verifyRegistration(challengeId, credentialJson)
-    }
+    }*/
 
     override fun reportError(message: String) {
         _authState.value = AuthState.Error(message)

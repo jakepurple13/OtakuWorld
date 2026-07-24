@@ -8,7 +8,6 @@ import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
 import com.programmersbox.supabaseintegration.credentials.CredentialSignIn
 import com.programmersbox.supabaseintegration.credentials.CredentialSignInResult
-import com.programmersbox.supabaseintegration.credentials.PasskeyRegistrationResult
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.database.SupportedTableAction
@@ -114,7 +113,7 @@ class AuthViewModel(
     fun registerPasskey() {
         viewModelScope.launch {
             _passkeyRegistrationState.value = PasskeyRegistrationUiState.Loading
-            try {
+            /*try {
                 val registration = authManager.startPasskeyRegistration()
                 when (val result = credentialSignIn.registerPasskey(registration.challengeId, registration.options.toString())) {
                     is PasskeyRegistrationResult.Success -> {
@@ -130,7 +129,7 @@ class AuthViewModel(
                 }
             } catch (e: Exception) {
                 _passkeyRegistrationState.value = PasskeyRegistrationUiState.Error(e.message ?: "Passkey registration failed")
-            }
+            }*/
         }
     }
 

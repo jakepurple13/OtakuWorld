@@ -9,8 +9,6 @@ import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.sync.BackupPreferenceRepository
 import com.programmersbox.supabaseintegration.sync.syncprocessor.SyncProcessor
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.passkey.PasskeyRegistrationResponse
-import io.github.jan.supabase.auth.passkey.PasskeyRegistrationVerifyResponse
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import io.github.jan.supabase.postgrest.result.PostgrestResult
 import kotlinx.coroutines.Dispatchers
@@ -67,10 +65,11 @@ private class FakeAuthManager(initial: AuthState = AuthState.Unauthenticated) : 
     override suspend fun signOut() {}
     override suspend fun deleteAccount() {}
     override suspend fun refreshSession() {}
-    override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
+
+    /*override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
         throw NotImplementedError()
     override suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse =
-        throw NotImplementedError()
+        throw NotImplementedError()*/
     override fun reportError(message: String) {}
 
     fun setAuthState(state: AuthState) {
