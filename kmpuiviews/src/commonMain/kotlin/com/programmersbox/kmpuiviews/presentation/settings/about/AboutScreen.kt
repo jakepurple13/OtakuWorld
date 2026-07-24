@@ -1,10 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.about
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AttachMoney
@@ -24,8 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
@@ -34,7 +28,6 @@ import com.programmersbox.kmpuiviews.BuildKonfig
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
-import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
@@ -45,9 +38,6 @@ import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.composables.icons.Discord
 import com.programmersbox.kmpuiviews.utils.composables.icons.Github
 import com.programmersbox.kmpuiviews.versionCode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -106,23 +96,36 @@ fun AboutScreen(
     ) {
         CategoryGroupListItem {
             segmentedListItem(
-                leadingContent = {
-                    Image(
-                        painterLogo(), null,
-                        modifier = Modifier.size(24.dp).clip(CircleShape)
-                    )
-                },
-                overlineContent = { Text(platform()) },
                 content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
-                supportingContent = {
-                    Column {
-                        Text("Version code: ${versionCode()}")
-                        Text("GIT SHA: ${BuildKonfig.COMMIT_SHA}")
-                    }
-                },
-                onClick = { scope.launch(Dispatchers.IO) { infoViewModel.updateChecker() } },
+                onClick = { },
             )
 
+            segmentedListItem(
+                content = { Text(platform()) },
+                onClick = { },
+            )
+
+            segmentedListItem(
+                content = { Text("Version code: ${versionCode()}") },
+                onClick = { },
+            )
+
+            segmentedListItem(
+                content = { Text("GIT SHA: ${BuildKonfig.COMMIT_SHA}") },
+                onClick = { },
+            )
+
+            segmentedListItem(
+                content = { Text("Commit Count: ${BuildKonfig.COMMIT_COUNT}") },
+                onClick = { },
+            )
+
+            segmentedListItem(
+                content = { Text("Build Time: ${BuildKonfig.BUILD_TIME}") },
+                onClick = { },
+            )
+        }
+        CategoryGroupListItem {
             if (AppUpdate.checkForUpdate(appVersion, appUpdate?.updateRealVersion.orEmpty())) {
                 segmentedListItem(
                     content = { Text(stringResource(Res.string.update_available)) },
