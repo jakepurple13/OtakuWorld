@@ -77,14 +77,14 @@ class AuthManagerImpl(
         get() = clientProvider.getOrCreate()?.auth
             ?: error("Supabase client not initialized — save credentials first")
 
-    override suspend fun signInWithEmail(email: String, password: String) {
+    override suspend fun signInWithEmail(email: String, password: String, context: Any?) {
         _authState.value = AuthState.Loading
         runCatching {
             auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
-            credentialSignIn.savePassword(email, password)
+            credentialSignIn.savePassword(email, password, context)
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)
@@ -92,14 +92,14 @@ class AuthManagerImpl(
         }
     }
 
-    override suspend fun signUpWithEmail(email: String, password: String) {
+    override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {
         _authState.value = AuthState.Loading
         runCatching {
             auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
-            credentialSignIn.savePassword(email, password)
+            credentialSignIn.savePassword(email, password, context)
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)

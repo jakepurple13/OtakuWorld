@@ -88,34 +88,34 @@ class AuthViewModel(
     )
     val logoutUiState: StateFlow<LogoutUiState> = _logoutUiState.asStateFlow()
 
-    fun signInWithEmail(email: String, password: String) {
-        viewModelScope.launch { authManager.signInWithEmail(email, password) }
+    fun signInWithEmail(email: String, password: String, context: Any? = null) {
+        viewModelScope.launch { authManager.signInWithEmail(email, password, context) }
     }
 
-    fun signInWithCredentialManager() {
+    fun signInWithCredentialManager(context: Any? = null) {
         viewModelScope.launch {
-            when (val result = credentialSignIn.signInWithSavedPassword()) {
-                is CredentialSignInResult.Success -> signInWithEmail(result.email, result.password)
+            when (val result = credentialSignIn.signInWithSavedPassword(context)) {
+                is CredentialSignInResult.Success -> signInWithEmail(result.email, result.password, context)
                 CredentialSignInResult.Cancelled, CredentialSignInResult.NoCredentials -> Unit
                 is CredentialSignInResult.Error -> authManager.reportError(result.message)
             }
         }
     }
 
-    fun signUpWithEmail(email: String, password: String) {
-        viewModelScope.launch { authManager.signUpWithEmail(email, password) }
+    fun signUpWithEmail(email: String, password: String, context: Any? = null) {
+        viewModelScope.launch { authManager.signUpWithEmail(email, password, context) }
     }
 
     fun signInWithMagicLink(email: String) {
         viewModelScope.launch { authManager.signInWithMagicLink(email) }
     }
 
-    fun registerPasskey() {
+    fun registerPasskey(context: Any? = null) {
         viewModelScope.launch {
             _passkeyRegistrationState.value = PasskeyRegistrationUiState.Loading
             /*try {
                 val registration = authManager.startPasskeyRegistration()
-                when (val result = credentialSignIn.registerPasskey(registration.challengeId, registration.options.toString())) {
+                when (val result = credentialSignIn.registerPasskey(registration.challengeId, registration.options.toString(), context)) {
                     is PasskeyRegistrationResult.Success -> {
                         authManager.verifyPasskeyRegistration(registration.challengeId, result.credentialJson)
                         _passkeyRegistrationState.value = PasskeyRegistrationUiState.Success

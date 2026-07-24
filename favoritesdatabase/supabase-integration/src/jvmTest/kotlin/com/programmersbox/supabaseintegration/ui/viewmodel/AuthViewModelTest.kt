@@ -73,8 +73,8 @@ private class FakeLogoutAuthManager(
     override val authState: StateFlow<AuthState> = _authState
     var signOutCallCount = 0
     override fun isLoggedIn(): Boolean = _authState.value is AuthState.Authenticated
-    override suspend fun signInWithEmail(email: String, password: String) {}
-    override suspend fun signUpWithEmail(email: String, password: String) {}
+    override suspend fun signInWithEmail(email: String, password: String, context: Any?) {}
+    override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {}
     override suspend fun signInWithOAuth(provider: OAuthProvider) {}
     override suspend fun signInWithMagicLink(email: String) {}
     override suspend fun signInWithPhone(phone: String, otp: String) {}
@@ -102,10 +102,10 @@ private class FakeCredentialManager : CredentialManager {
 
 private class FakeCredentialSignIn : CredentialSignIn {
     override val isSupported: Boolean = false
-    override suspend fun signInWithSavedPassword(): CredentialSignInResult =
+    override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult =
         CredentialSignInResult.NoCredentials
 
-    override suspend fun registerPasskey(challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult =
+    override suspend fun registerPasskey(challengeId: String, creationOptionsJson: String, context: Any?): PasskeyRegistrationResult =
         PasskeyRegistrationResult.Cancelled
 }
 

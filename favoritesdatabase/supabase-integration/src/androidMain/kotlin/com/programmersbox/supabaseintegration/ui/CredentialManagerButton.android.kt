@@ -8,15 +8,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 actual fun CredentialManagerSignInButton(
-    onClick: () -> Unit,
+    onClick: (context: Any?) -> Unit,
     enabled: Boolean,
     modifier: Modifier,
 ) {
+    val context = LocalContext.current
     OutlinedButton(
-        onClick = onClick,
+        onClick = { onClick(context) },
         enabled = enabled,
         modifier = modifier,
     ) {
@@ -27,12 +29,13 @@ actual fun CredentialManagerSignInButton(
 
 @Composable
 actual fun RegisterPasskeyButton(
-    onClick: () -> Unit,
+    onClick: (context: Any?) -> Unit,
     enabled: Boolean,
     modifier: Modifier,
 ) {
+    val context = LocalContext.current
     OutlinedButton(
-        onClick = onClick,
+        onClick = { onClick(context) },
         enabled = enabled,
         modifier = modifier,
     ) {
@@ -40,3 +43,6 @@ actual fun RegisterPasskeyButton(
         Text("Register a Passkey")
     }
 }
+
+@Composable
+actual fun rememberCredentialManagerContext(): Any? = LocalContext.current

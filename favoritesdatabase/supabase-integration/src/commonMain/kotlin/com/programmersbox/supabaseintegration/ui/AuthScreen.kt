@@ -147,7 +147,7 @@ private fun AuthenticatedState(
     onManageDatabasesEnabledChange: (Boolean) -> Unit,
     onTableActionChange: (ManagedTable, SupportedTableAction) -> Unit,
     credentialManagerSupported: Boolean,
-    onRegisterPasskey: () -> Unit,
+    onRegisterPasskey: (context: Any?) -> Unit,
     passkeyRegistrationState: PasskeyRegistrationUiState,
     onDismissPasskeyResult: () -> Unit,
     modifier: Modifier = Modifier,
@@ -284,11 +284,11 @@ private fun AuthenticatedState(
 private fun UnauthenticatedState(
     state: AuthState,
     isLoading: Boolean,
-    onSignIn: (String, String) -> Unit,
-    onSignUp: (String, String) -> Unit,
+    onSignIn: (String, String, Any?) -> Unit,
+    onSignUp: (String, String, Any?) -> Unit,
     signInWithMagicLink: (String) -> Unit,
     credentialManagerSupported: Boolean,
-    onCredentialManagerSignIn: () -> Unit,
+    onCredentialManagerSignIn: (context: Any?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -297,6 +297,7 @@ private fun UnauthenticatedState(
     var passwordVisible by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+    val credentialContext = rememberCredentialManagerContext()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -361,8 +362,8 @@ private fun UnauthenticatedState(
             keyboardActions = KeyboardActions(
                 onDone = {
                     focusManager.clearFocus()
-                    if (selectedTab == 0) onSignIn(email, password)
-                    else onSignUp(email, password)
+                    if (selectedTab == 0) onSignIn(email, password, credentialContext)
+                    else onSignUp(email, password, credentialContext)
                 }
             ),
             modifier = Modifier.fillMaxWidth(),
@@ -397,8 +398,8 @@ private fun UnauthenticatedState(
         Button(
             onClick = {
                 focusManager.clearFocus()
-                if (selectedTab == 0) onSignIn(email, password)
-                else onSignUp(email, password)
+                if (selectedTab == 0) onSignIn(email, password, credentialContext)
+                else onSignUp(email, password, credentialContext)
             },
             modifier = Modifier
                 .fillMaxWidth()

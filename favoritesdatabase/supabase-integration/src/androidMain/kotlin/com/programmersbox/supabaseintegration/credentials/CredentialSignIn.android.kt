@@ -32,17 +32,19 @@ class AndroidCredentialSignIn(private val context: Context) : CredentialSignIn {
     override val isSupported: Boolean = true
     private val manager = AndroidxCredentialManager.create(context)
 
-    override suspend fun savePassword(email: String, password: String) {
+    override suspend fun savePassword(email: String, password: String, context: Any?) {
+        val activityContext = context as? Context ?: this.context
         val credential = CreatePasswordRequest(id = email, password = password)
         runCatching {
-            manager.createCredential(context, credential)
+            manager.createCredential(activityContext, credential)
         }
     }
 
-    override suspend fun signInWithSavedPassword(): CredentialSignInResult {
+    override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult {
+        val activityContext = context as? Context ?: this.context
         val request = GetCredentialRequest(listOf(GetPasswordOption()))
         return try {
-            val response = manager.getCredential(context, request)
+            val response = manager.getCredential(activityContext, request)
             val credential = response.credential as? PasswordCredential
             if (credential != null) {
                 CredentialSignInResult.Success(email = credential.id, password = credential.password)
@@ -61,11 +63,12 @@ class AndroidCredentialSignIn(private val context: Context) : CredentialSignIn {
     override suspend fun registerPasskey(
         challengeId: String,
         creationOptionsJson: String,
+        context: Any?,
     ): PasskeyRegistrationResult {
-        val manager = AndroidxCredentialManager.create(context)
+        val activityContext = context as? Context ?: this.context
         val request = CreatePublicKeyCredentialRequest(requestJson = creationOptionsJson)
         return try {
-            val response = manager.createCredential(context, request) as CreatePublicKeyCredentialResponse
+            val response = manager.createCredential(activityContext, request) as CreatePublicKeyCredentialResponse
             PasskeyRegistrationResult.Success(credentialJson = response.registrationResponseJson)
         } catch (e: CreateCredentialCancellationException) {
             PasskeyRegistrationResult.Cancelled

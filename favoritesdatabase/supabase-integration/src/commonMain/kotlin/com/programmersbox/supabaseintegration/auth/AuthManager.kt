@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 interface AuthManager {
     val authState: StateFlow<AuthState>
     fun isLoggedIn(): Boolean
-    suspend fun signInWithEmail(email: String, password: String)
-    suspend fun signUpWithEmail(email: String, password: String)
+    suspend fun signInWithEmail(email: String, password: String, context: Any? = null)
+    suspend fun signUpWithEmail(email: String, password: String, context: Any? = null)
     suspend fun signInWithOAuth(provider: OAuthProvider)
     suspend fun signInWithMagicLink(email: String)
     suspend fun signInWithPhone(phone: String, otp: String)
