@@ -55,7 +55,7 @@ urlencoderLib = "1.6.0"
 xemanticAiToolSchema = "1.2.0"
 kmpalette = "3.1.0"
 materialAdaptiveCmp = "1.2.0"
-supabase = "3.6.0"
+supabase = "3.7.0"
 ziplineCoreVersion = "1.27.0"
 
 [libraries]
