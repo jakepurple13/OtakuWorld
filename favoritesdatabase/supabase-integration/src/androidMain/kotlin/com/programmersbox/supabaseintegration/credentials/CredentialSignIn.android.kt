@@ -1,6 +1,7 @@
 package com.programmersbox.supabaseintegration.credentials
 
 import android.content.Context
+import androidx.credentials.CreatePasswordRequest
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.GetCredentialRequest
@@ -29,9 +30,16 @@ import androidx.credentials.CredentialManager as AndroidxCredentialManager
 class AndroidCredentialSignIn(private val context: Context) : CredentialSignIn {
 
     override val isSupported: Boolean = true
+    private val manager = AndroidxCredentialManager.create(context)
+
+    override suspend fun savePassword(email: String, password: String) {
+        val credential = CreatePasswordRequest(id = email, password = password)
+        runCatching {
+            manager.createCredential(context, credential)
+        }
+    }
 
     override suspend fun signInWithSavedPassword(): CredentialSignInResult {
-        val manager = AndroidxCredentialManager.create(context)
         val request = GetCredentialRequest(listOf(GetPasswordOption()))
         return try {
             val response = manager.getCredential(context, request)

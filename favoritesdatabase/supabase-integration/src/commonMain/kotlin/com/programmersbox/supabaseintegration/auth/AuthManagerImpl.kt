@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.auth
 
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
+import com.programmersbox.supabaseintegration.credentials.CredentialSignIn
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -21,6 +22,7 @@ import kotlinx.serialization.json.jsonPrimitive
 class AuthManagerImpl(
     private val clientProvider: SupabaseClientProvider,
     private val exceptionDao: ExceptionDao,
+    private val credentialSignIn: CredentialSignIn,
 ) : AuthManager {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
@@ -82,6 +84,7 @@ class AuthManagerImpl(
                 this.email = email
                 this.password = password
             }
+            credentialSignIn.savePassword(email, password)
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)
@@ -96,6 +99,7 @@ class AuthManagerImpl(
                 this.email = email
                 this.password = password
             }
+            credentialSignIn.savePassword(email, password)
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)

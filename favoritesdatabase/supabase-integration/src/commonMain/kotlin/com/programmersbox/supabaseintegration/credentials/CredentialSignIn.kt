@@ -34,6 +34,7 @@ sealed interface PasskeyRegistrationResult {
 interface CredentialSignIn {
     val isSupported: Boolean
     suspend fun signInWithSavedPassword(): CredentialSignInResult
+    suspend fun savePassword(email: String, password: String) {}
     suspend fun registerPasskey(challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult
 }
 
