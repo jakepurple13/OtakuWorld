@@ -20,6 +20,15 @@ android {
         dataBinding = true
         viewBinding = true
     }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = true
+        }
+    }
 }
 
 dependencies {
@@ -47,7 +56,6 @@ dependencies {
     implementation(projects.mangaworld.shared)
 
     implementation(commonLibs.kamel.image)
-    implementation(androidLibs.duktape)
     implementation(androidLibs.bundles.ziplineLibs)
     implementation(commonLibs.ktorAndroid)
 
@@ -58,7 +66,6 @@ dependencies {
     implementation(androidLibs.glideRecyclerview) { isTransitive = false }
 
     implementation(androidLibs.bundles.piasyLibs)
-    implementation(androidLibs.subsamplingImageView)
 
     implementation(androidLibs.iconicsCore)
     implementation(Deps.materialTypeface)
@@ -74,7 +81,6 @@ dependencies {
 
     implementation(platform(androidLibs.composePlatform))
     implementation(androidLibs.bundles.compose)
-    implementation(androidLibs.coilGif)
 
     implementation(androidx.datastore.datastore)
     implementation(androidx.datastore.datastorePreferences)
@@ -84,10 +90,6 @@ dependencies {
     implementation(commonLibs.zoomableModifier)
 
     implementation(androidLibs.pagecurl)
-
-    implementation(androidLibs.panpf.zoomimage.compose.glide)
-
-    implementation(androidLibs.telephoto.zoomable.image.glide)
 
     implementation(commonLibs.sonner)
 
