@@ -3,11 +3,10 @@ package com.programmersbox.supabaseintegration.credentials
 private class UnsupportedCredentialSignIn : CredentialSignIn {
     override val isSupported: Boolean = false
 
-    override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult =
+    override suspend fun signInWithSavedPassword(): CredentialSignInResult =
         CredentialSignInResult.Error("Credential Manager sign-in is not supported on this platform")
 
     override suspend fun registerPasskey(
-        context: Any?,
         challengeId: String,
         creationOptionsJson: String,
     ): PasskeyRegistrationResult =

@@ -103,9 +103,10 @@ private class FakeCredentialManager : CredentialManager {
 
 private class FakeCredentialSignIn : CredentialSignIn {
     override val isSupported: Boolean = false
-    override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult =
+    override suspend fun signInWithSavedPassword(): CredentialSignInResult =
         CredentialSignInResult.NoCredentials
-    override suspend fun registerPasskey(context: Any?, challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult =
+
+    override suspend fun registerPasskey(challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult =
         PasskeyRegistrationResult.Cancelled
 }
 

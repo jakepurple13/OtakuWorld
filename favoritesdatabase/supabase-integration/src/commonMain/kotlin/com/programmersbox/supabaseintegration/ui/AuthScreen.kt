@@ -147,7 +147,7 @@ private fun AuthenticatedState(
     onManageDatabasesEnabledChange: (Boolean) -> Unit,
     onTableActionChange: (ManagedTable, SupportedTableAction) -> Unit,
     credentialManagerSupported: Boolean,
-    onRegisterPasskey: (context: Any?) -> Unit,
+    onRegisterPasskey: () -> Unit,
     passkeyRegistrationState: PasskeyRegistrationUiState,
     onDismissPasskeyResult: () -> Unit,
     modifier: Modifier = Modifier,
@@ -288,7 +288,7 @@ private fun UnauthenticatedState(
     onSignUp: (String, String) -> Unit,
     signInWithMagicLink: (String) -> Unit,
     credentialManagerSupported: Boolean,
-    onCredentialManagerSignIn: (context: Any?) -> Unit,
+    onCredentialManagerSignIn: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }

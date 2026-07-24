@@ -93,9 +93,9 @@ class AuthViewModel(
         viewModelScope.launch { authManager.signInWithEmail(email, password) }
     }
 
-    fun signInWithCredentialManager(context: Any?) {
+    fun signInWithCredentialManager() {
         viewModelScope.launch {
-            when (val result = credentialSignIn.signInWithSavedPassword(context)) {
+            when (val result = credentialSignIn.signInWithSavedPassword()) {
                 is CredentialSignInResult.Success -> signInWithEmail(result.email, result.password)
                 CredentialSignInResult.Cancelled, CredentialSignInResult.NoCredentials -> Unit
                 is CredentialSignInResult.Error -> authManager.reportError(result.message)
@@ -111,12 +111,12 @@ class AuthViewModel(
         viewModelScope.launch { authManager.signInWithMagicLink(email) }
     }
 
-    fun registerPasskey(context: Any?) {
+    fun registerPasskey() {
         viewModelScope.launch {
             _passkeyRegistrationState.value = PasskeyRegistrationUiState.Loading
             try {
                 val registration = authManager.startPasskeyRegistration()
-                when (val result = credentialSignIn.registerPasskey(context, registration.challengeId, registration.options.toString())) {
+                when (val result = credentialSignIn.registerPasskey(registration.challengeId, registration.options.toString())) {
                     is PasskeyRegistrationResult.Success -> {
                         authManager.verifyPasskeyRegistration(registration.challengeId, result.credentialJson)
                         _passkeyRegistrationState.value = PasskeyRegistrationUiState.Success

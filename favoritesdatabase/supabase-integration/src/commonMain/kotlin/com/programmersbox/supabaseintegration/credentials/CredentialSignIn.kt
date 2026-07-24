@@ -33,8 +33,8 @@ sealed interface PasskeyRegistrationResult {
  */
 interface CredentialSignIn {
     val isSupported: Boolean
-    suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult
-    suspend fun registerPasskey(context: Any?, challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult
+    suspend fun signInWithSavedPassword(): CredentialSignInResult
+    suspend fun registerPasskey(challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult
 }
 
 expect fun createCredentialSignIn(): CredentialSignIn

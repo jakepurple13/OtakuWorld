@@ -3,7 +3,6 @@ package com.programmersbox.supabaseintegration.credentials
 import android.content.Context
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
-import androidx.credentials.CredentialManager as AndroidxCredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPasswordOption
 import androidx.credentials.PasswordCredential
@@ -12,6 +11,7 @@ import androidx.credentials.exceptions.CreateCredentialException
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
+import androidx.credentials.CredentialManager as AndroidxCredentialManager
 
 /*
  * Supabase dashboard setup for passkeys (registration only — sign-in is not yet supported by
@@ -30,12 +30,11 @@ class AndroidCredentialSignIn(private val context: Context) : CredentialSignIn {
 
     override val isSupported: Boolean = true
 
-    override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult {
-        val activityContext = context as? Context ?: this.context
-        val manager = AndroidxCredentialManager.create(activityContext)
+    override suspend fun signInWithSavedPassword(): CredentialSignInResult {
+        val manager = AndroidxCredentialManager.create(context)
         val request = GetCredentialRequest(listOf(GetPasswordOption()))
         return try {
-            val response = manager.getCredential(activityContext, request)
+            val response = manager.getCredential(context, request)
             val credential = response.credential as? PasswordCredential
             if (credential != null) {
                 CredentialSignInResult.Success(email = credential.id, password = credential.password)
@@ -52,15 +51,13 @@ class AndroidCredentialSignIn(private val context: Context) : CredentialSignIn {
     }
 
     override suspend fun registerPasskey(
-        context: Any?,
         challengeId: String,
         creationOptionsJson: String,
     ): PasskeyRegistrationResult {
-        val activityContext = context as? Context ?: this.context
-        val manager = AndroidxCredentialManager.create(activityContext)
+        val manager = AndroidxCredentialManager.create(context)
         val request = CreatePublicKeyCredentialRequest(requestJson = creationOptionsJson)
         return try {
-            val response = manager.createCredential(activityContext, request) as CreatePublicKeyCredentialResponse
+            val response = manager.createCredential(context, request) as CreatePublicKeyCredentialResponse
             PasskeyRegistrationResult.Success(credentialJson = response.registrationResponseJson)
         } catch (e: CreateCredentialCancellationException) {
             PasskeyRegistrationResult.Cancelled
