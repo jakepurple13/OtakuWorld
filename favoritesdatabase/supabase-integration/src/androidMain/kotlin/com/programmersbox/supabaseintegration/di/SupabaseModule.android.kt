@@ -4,7 +4,9 @@ import com.programmersbox.supabaseintegration.backup.BackupWorker
 import com.programmersbox.supabaseintegration.backup.FullSyncWorker
 import com.programmersbox.supabaseintegration.client.SupabaseClientEngine
 import com.programmersbox.supabaseintegration.credentials.AndroidCredentialManager
+import com.programmersbox.supabaseintegration.credentials.AndroidCredentialSignIn
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
+import com.programmersbox.supabaseintegration.credentials.CredentialSignIn
 import com.programmersbox.supabaseintegration.migration.AndroidMigrationPrefs
 import com.programmersbox.supabaseintegration.migration.MigrationPrefs
 import com.programmersbox.supabaseintegration.sync.AndroidConnectivityMonitor
@@ -18,6 +20,7 @@ import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
     single<CredentialManager> { AndroidCredentialManager(get()) }
+    single<CredentialSignIn> { AndroidCredentialSignIn(get()) }
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(get()) }
     single<MigrationPrefs> { AndroidMigrationPrefs(get()) }
     workerOf(::BackupWorker)
