@@ -198,7 +198,8 @@ fun SettingScreen(
                     segmentedListItem(
                         leadingContent = {
                             Image(
-                                painterLogo(), null,
+                                painterLogo(),
+                                null,
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
