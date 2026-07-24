@@ -74,6 +74,8 @@ preference = "androidx.preference:preference-ktx:1.2.1"
 recyclerview = "androidx.recyclerview:recyclerview:1.4.0"
 swiperefresh = "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0"
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+androidx-credentials = { module = "androidx.credentials:credentials", version = "1.6.0" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version = "1.6.0" }
 
 # AnimeWorld
 autoBindings = { module = "io.github.kaustubhpatange:autobindings", version.ref = "autoBinding" }

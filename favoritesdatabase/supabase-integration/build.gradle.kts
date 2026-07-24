@@ -61,6 +61,8 @@ kotlin {
             implementation(androidLibs.workRuntimeKtx)
             implementation(androidLibs.koin.workmanager)
             implementation(androidLibs.androidx.security.crypto)
+            implementation(androidLibs.androidx.credentials)
+            implementation(androidLibs.androidx.credentials.play.services.auth)
         }
         jvmMain.dependencies {
             implementation(commonLibs.ktorCio)
