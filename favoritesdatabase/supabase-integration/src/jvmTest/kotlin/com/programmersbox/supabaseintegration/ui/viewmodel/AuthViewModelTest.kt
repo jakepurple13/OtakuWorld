@@ -5,10 +5,15 @@ import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
+import com.programmersbox.supabaseintegration.credentials.CredentialSignIn
+import com.programmersbox.supabaseintegration.credentials.CredentialSignInResult
+import com.programmersbox.supabaseintegration.credentials.PasskeyRegistrationResult
 import com.programmersbox.supabaseintegration.credentials.SupabaseCredentials
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.database.SupportedTableAction
+import io.github.jan.supabase.auth.passkey.PasskeyRegistrationResponse
+import io.github.jan.supabase.auth.passkey.PasskeyRegistrationVerifyResponse
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -82,6 +87,11 @@ private class FakeLogoutAuthManager(
     }
     override suspend fun deleteAccount() {}
     override suspend fun refreshSession() {}
+    override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
+        throw NotImplementedError()
+    override suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse =
+        throw NotImplementedError()
+    override fun reportError(message: String) {}
 }
 
 private class FakeCredentialManager : CredentialManager {
@@ -89,6 +99,14 @@ private class FakeCredentialManager : CredentialManager {
     override suspend fun saveCredentials(credentials: SupabaseCredentials) {}
     override fun getCredentials(): SupabaseCredentials? = null
     override suspend fun clearCredentials() {}
+}
+
+private class FakeCredentialSignIn : CredentialSignIn {
+    override val isSupported: Boolean = false
+    override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult =
+        CredentialSignInResult.NoCredentials
+    override suspend fun registerPasskey(context: Any?, challengeId: String, creationOptionsJson: String): PasskeyRegistrationResult =
+        PasskeyRegistrationResult.Cancelled
 }
 
 class AuthViewModelTest {
@@ -109,6 +127,7 @@ class AuthViewModelTest {
     ) = AuthViewModel(
         authManager = authManager,
         credentialManager = FakeCredentialManager(),
+        credentialSignIn = FakeCredentialSignIn(),
         databaseRepository = DatabaseRepository(managedTables),
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 

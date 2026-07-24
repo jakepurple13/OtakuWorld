@@ -1,5 +1,7 @@
 package com.programmersbox.supabaseintegration.auth
 
+import io.github.jan.supabase.auth.passkey.PasskeyRegistrationResponse
+import io.github.jan.supabase.auth.passkey.PasskeyRegistrationVerifyResponse
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import kotlinx.coroutines.flow.StateFlow
 
@@ -15,4 +17,7 @@ interface AuthManager {
     suspend fun signOut()
     suspend fun deleteAccount()
     suspend fun refreshSession()
+    suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse
+    suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse
+    fun reportError(message: String)
 }

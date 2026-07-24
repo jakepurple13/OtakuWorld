@@ -70,6 +70,7 @@ import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.database.SupportedTableAction
 import com.programmersbox.supabaseintegration.ui.viewmodel.AuthViewModel
 import com.programmersbox.supabaseintegration.ui.viewmodel.LogoutUiState
+import com.programmersbox.supabaseintegration.ui.viewmodel.PasskeyRegistrationUiState
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,6 +80,7 @@ fun AuthScreen(
 ) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val logoutUiState by viewModel.logoutUiState.collectAsStateWithLifecycle()
+    val passkeyRegistrationState by viewModel.passkeyRegistrationState.collectAsStateWithLifecycle()
 
     val isLoading = authState is AuthState.Loading
 
@@ -111,6 +113,10 @@ fun AuthScreen(
                             onConfirmLogout = viewModel::confirmLogout,
                             onManageDatabasesEnabledChange = viewModel::setManageDatabasesEnabled,
                             onTableActionChange = viewModel::setTableAction,
+                            credentialManagerSupported = viewModel.credentialManagerSupported,
+                            onRegisterPasskey = viewModel::registerPasskey,
+                            passkeyRegistrationState = passkeyRegistrationState,
+                            onDismissPasskeyResult = viewModel::dismissPasskeyRegistrationResult,
                         )
                     }
 
@@ -122,6 +128,8 @@ fun AuthScreen(
                             onSignIn = viewModel::signInWithEmail,
                             onSignUp = viewModel::signUpWithEmail,
                             signInWithMagicLink = viewModel::signInWithMagicLink,
+                            credentialManagerSupported = viewModel.credentialManagerSupported,
+                            onCredentialManagerSignIn = viewModel::signInWithCredentialManager,
                         )
                     }
                 }
@@ -138,6 +146,10 @@ private fun AuthenticatedState(
     onConfirmLogout: () -> Unit,
     onManageDatabasesEnabledChange: (Boolean) -> Unit,
     onTableActionChange: (ManagedTable, SupportedTableAction) -> Unit,
+    credentialManagerSupported: Boolean,
+    onRegisterPasskey: (context: Any?) -> Unit,
+    passkeyRegistrationState: PasskeyRegistrationUiState,
+    onDismissPasskeyResult: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -178,6 +190,28 @@ private fun AuthenticatedState(
                 TextButton(
                     onClick = { showLogOutDialog = false },
                 ) { Text("No") }
+            },
+        )
+    }
+
+    if (passkeyRegistrationState is PasskeyRegistrationUiState.Success) {
+        AlertDialog(
+            onDismissRequest = onDismissPasskeyResult,
+            title = { Text("Passkey Registered") },
+            text = { Text("You can now sign in with this passkey once passkey sign-in ships.") },
+            confirmButton = {
+                TextButton(onClick = onDismissPasskeyResult) { Text("OK") }
+            },
+        )
+    }
+
+    if (passkeyRegistrationState is PasskeyRegistrationUiState.Error) {
+        AlertDialog(
+            onDismissRequest = onDismissPasskeyResult,
+            title = { Text("Passkey Registration Failed") },
+            text = { Text(passkeyRegistrationState.message) },
+            confirmButton = {
+                TextButton(onClick = onDismissPasskeyResult) { Text("OK") }
             },
         )
     }
@@ -233,6 +267,15 @@ private fun AuthenticatedState(
             ) {
                 Text("Sign Out")
             }
+
+            if (credentialManagerSupported) {
+                Spacer(Modifier.height(8.dp))
+                RegisterPasskeyButton(
+                    onClick = onRegisterPasskey,
+                    enabled = passkeyRegistrationState !is PasskeyRegistrationUiState.Loading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }
@@ -244,6 +287,8 @@ private fun UnauthenticatedState(
     onSignIn: (String, String) -> Unit,
     onSignUp: (String, String) -> Unit,
     signInWithMagicLink: (String) -> Unit,
+    credentialManagerSupported: Boolean,
+    onCredentialManagerSignIn: (context: Any?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -399,6 +444,17 @@ private fun UnauthenticatedState(
             enabled = email.isNotBlank() && !isLoading,
         ) {
             Text("Send Magic Link")
+        }
+
+        if (credentialManagerSupported) {
+            Spacer(Modifier.height(16.dp))
+            CredentialManagerSignInButton(
+                onClick = onCredentialManagerSignIn,
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+            )
         }
     }
 }
