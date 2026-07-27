@@ -85,7 +85,7 @@ class AuthManagerImpl(
                 this.password = password
             }
         }
-            .onSuccess { credentialSignIn.savePassword(email, password, context) }
+            .mapCatching { credentialSignIn.savePassword(email, password, context) }
             .onFailure {
                 it.printStackTrace()
                 exceptionDao.insertException(it)
@@ -101,7 +101,7 @@ class AuthManagerImpl(
                 this.password = password
             }
         }
-            .onSuccess { credentialSignIn.savePassword(email, password, context) }
+            .mapCatching { credentialSignIn.savePassword(email, password, context) }
             .onFailure {
                 it.printStackTrace()
                 exceptionDao.insertException(it)
