@@ -84,12 +84,13 @@ class AuthManagerImpl(
                 this.email = email
                 this.password = password
             }
-            credentialSignIn.savePassword(email, password, context)
-        }.onFailure {
-            it.printStackTrace()
-            exceptionDao.insertException(it)
-            _authState.value = AuthState.Error(it.message ?: "Sign in failed")
         }
+            .onSuccess { credentialSignIn.savePassword(email, password, context) }
+            .onFailure {
+                it.printStackTrace()
+                exceptionDao.insertException(it)
+                _authState.value = AuthState.Error(it.message ?: "Sign in failed")
+            }
     }
 
     override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {
@@ -99,12 +100,13 @@ class AuthManagerImpl(
                 this.email = email
                 this.password = password
             }
-            credentialSignIn.savePassword(email, password, context)
-        }.onFailure {
-            it.printStackTrace()
-            exceptionDao.insertException(it)
-            _authState.value = AuthState.Error(it.message ?: "Sign up failed")
         }
+            .onSuccess { credentialSignIn.savePassword(email, password, context) }
+            .onFailure {
+                it.printStackTrace()
+                exceptionDao.insertException(it)
+                _authState.value = AuthState.Error(it.message ?: "Sign up failed")
+            }
     }
 
     override suspend fun signInWithOAuth(provider: OAuthProvider) {

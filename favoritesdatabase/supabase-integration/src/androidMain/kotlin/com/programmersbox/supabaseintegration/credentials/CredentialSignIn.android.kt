@@ -36,8 +36,9 @@ class AndroidCredentialSignIn(private val context: Context) : CredentialSignIn {
         val activityContext = context as? Context ?: this.context
         val credential = CreatePasswordRequest(id = email, password = password)
         runCatching {
-            manager.createCredential(activityContext, credential)
-        }
+            val d = manager.createCredential(activityContext, credential)
+            println(d)
+        }.onFailure { it.printStackTrace() }
     }
 
     override suspend fun signInWithSavedPassword(context: Any?): CredentialSignInResult {
