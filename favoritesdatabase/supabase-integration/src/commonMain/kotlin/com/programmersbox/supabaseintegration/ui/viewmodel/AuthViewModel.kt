@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.credentials.CredentialManager
+import com.programmersbox.supabaseintegration.credentials.CredentialSignIn
+import com.programmersbox.supabaseintegration.credentials.CredentialSignInResult
 import com.programmersbox.supabaseintegration.database.DatabaseRepository
 import com.programmersbox.supabaseintegration.database.ManagedTable
 import com.programmersbox.supabaseintegration.database.SupportedTableAction
@@ -56,12 +58,26 @@ data class LogoutUiState(
     val isLoggingOut: Boolean = false,
 )
 
+@Stable
+sealed interface PasskeyRegistrationUiState {
+    data object Idle : PasskeyRegistrationUiState
+    data object Loading : PasskeyRegistrationUiState
+    data object Success : PasskeyRegistrationUiState
+    data class Error(val message: String) : PasskeyRegistrationUiState
+}
+
 class AuthViewModel(
     private val authManager: AuthManager,
     private val credentialManager: CredentialManager,
+    private val credentialSignIn: CredentialSignIn,
     private val databaseRepository: DatabaseRepository,
 ) : ViewModel() {
     val authState: StateFlow<AuthState> = authManager.authState
+
+    val credentialManagerSupported: Boolean = credentialSignIn.isSupported
+
+    private val _passkeyRegistrationState = MutableStateFlow<PasskeyRegistrationUiState>(PasskeyRegistrationUiState.Idle)
+    val passkeyRegistrationState: StateFlow<PasskeyRegistrationUiState> = _passkeyRegistrationState.asStateFlow()
 
     private val _logoutUiState = MutableStateFlow(
         LogoutUiState(
@@ -72,16 +88,53 @@ class AuthViewModel(
     )
     val logoutUiState: StateFlow<LogoutUiState> = _logoutUiState.asStateFlow()
 
-    fun signInWithEmail(email: String, password: String) {
-        viewModelScope.launch { authManager.signInWithEmail(email, password) }
+    fun signInWithEmail(email: String, password: String, context: Any? = null) {
+        viewModelScope.launch { authManager.signInWithEmail(email, password, context) }
     }
 
-    fun signUpWithEmail(email: String, password: String) {
-        viewModelScope.launch { authManager.signUpWithEmail(email, password) }
+    fun signInWithCredentialManager(context: Any? = null) {
+        viewModelScope.launch {
+            when (val result = credentialSignIn.signInWithSavedPassword(context)) {
+                is CredentialSignInResult.Success -> signInWithEmail(result.email, result.password, context)
+                CredentialSignInResult.Cancelled, CredentialSignInResult.NoCredentials -> Unit
+                is CredentialSignInResult.Error -> authManager.reportError(result.message)
+            }
+        }
+    }
+
+    fun signUpWithEmail(email: String, password: String, context: Any? = null) {
+        viewModelScope.launch { authManager.signUpWithEmail(email, password, context) }
     }
 
     fun signInWithMagicLink(email: String) {
         viewModelScope.launch { authManager.signInWithMagicLink(email) }
+    }
+
+    fun registerPasskey(context: Any? = null) {
+        viewModelScope.launch {
+            _passkeyRegistrationState.value = PasskeyRegistrationUiState.Loading
+            /*try {
+                val registration = authManager.startPasskeyRegistration()
+                when (val result = credentialSignIn.registerPasskey(registration.challengeId, registration.options.toString(), context)) {
+                    is PasskeyRegistrationResult.Success -> {
+                        authManager.verifyPasskeyRegistration(registration.challengeId, result.credentialJson)
+                        _passkeyRegistrationState.value = PasskeyRegistrationUiState.Success
+                    }
+                    PasskeyRegistrationResult.Cancelled -> {
+                        _passkeyRegistrationState.value = PasskeyRegistrationUiState.Idle
+                    }
+                    is PasskeyRegistrationResult.Error -> {
+                        _passkeyRegistrationState.value = PasskeyRegistrationUiState.Error(result.message)
+                    }
+                }
+            } catch (e: Exception) {
+                _passkeyRegistrationState.value = PasskeyRegistrationUiState.Error(e.message ?: "Passkey registration failed")
+            }*/
+        }
+    }
+
+    fun dismissPasskeyRegistrationResult() {
+        _passkeyRegistrationState.value = PasskeyRegistrationUiState.Idle
     }
 
     fun signInWithProvider(provider: OAuthProvider) {

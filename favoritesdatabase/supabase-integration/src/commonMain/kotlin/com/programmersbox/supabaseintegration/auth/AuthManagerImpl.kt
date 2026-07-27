@@ -2,6 +2,7 @@ package com.programmersbox.supabaseintegration.auth
 
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.supabaseintegration.client.SupabaseClientProvider
+import com.programmersbox.supabaseintegration.credentials.CredentialSignIn
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.OAuthProvider
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -21,6 +22,7 @@ import kotlinx.serialization.json.jsonPrimitive
 class AuthManagerImpl(
     private val clientProvider: SupabaseClientProvider,
     private val exceptionDao: ExceptionDao,
+    private val credentialSignIn: CredentialSignIn,
 ) : AuthManager {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
@@ -75,32 +77,36 @@ class AuthManagerImpl(
         get() = clientProvider.getOrCreate()?.auth
             ?: error("Supabase client not initialized — save credentials first")
 
-    override suspend fun signInWithEmail(email: String, password: String) {
+    override suspend fun signInWithEmail(email: String, password: String, context: Any?) {
         _authState.value = AuthState.Loading
         runCatching {
             auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
-        }.onFailure {
-            it.printStackTrace()
-            exceptionDao.insertException(it)
-            _authState.value = AuthState.Error(it.message ?: "Sign in failed")
         }
+            .onSuccess { credentialSignIn.savePassword(email, password, context) }
+            .onFailure {
+                it.printStackTrace()
+                exceptionDao.insertException(it)
+                _authState.value = AuthState.Error(it.message ?: "Sign in failed")
+            }
     }
 
-    override suspend fun signUpWithEmail(email: String, password: String) {
+    override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {
         _authState.value = AuthState.Loading
         runCatching {
             auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
-        }.onFailure {
-            it.printStackTrace()
-            exceptionDao.insertException(it)
-            _authState.value = AuthState.Error(it.message ?: "Sign up failed")
         }
+            .onSuccess { credentialSignIn.savePassword(email, password, context) }
+            .onFailure {
+                it.printStackTrace()
+                exceptionDao.insertException(it)
+                _authState.value = AuthState.Error(it.message ?: "Sign up failed")
+            }
     }
 
     override suspend fun signInWithOAuth(provider: OAuthProvider) {
@@ -159,5 +165,22 @@ class AuthManagerImpl(
 
     override suspend fun refreshSession() {
         runCatching { auth.refreshCurrentSession() }
+    }
+
+    /*@OptIn(SupabaseExperimental::class)
+    override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse {
+        return auth.passkeys.startRegistration()
+    }
+
+    @OptIn(SupabaseExperimental::class)
+    override suspend fun verifyPasskeyRegistration(
+        challengeId: String,
+        credentialJson: String,
+    ): PasskeyRegistrationVerifyResponse {
+        return auth.passkeys.verifyRegistration(challengeId, credentialJson)
+    }*/
+
+    override fun reportError(message: String) {
+        _authState.value = AuthState.Error(message)
     }
 }

@@ -64,7 +64,7 @@ import org.koin.dsl.navigation3.navigation
 
 fun supabaseModule() = module {
     singleOf(::SupabaseClientProvider)
-    single<AuthManager> { AuthManagerImpl(get(), get()) }
+    single<AuthManager> { AuthManagerImpl(get(), get(), get()) }
     single { SyncConfigRepository(get()) }
     single {
         SyncEngineImpl(

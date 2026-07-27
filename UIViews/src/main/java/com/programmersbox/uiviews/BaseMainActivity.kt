@@ -119,7 +119,7 @@ abstract class BaseMainActivity : FragmentActivity() {
     }
 
     private fun handleDeepLink(uri: Uri) {
-        val request = DeepLinkRequest.fromUri(uri)
+        val request = DeepLinkRequest(uri.toString())
 
         println("[DEEP LINK]: $request")
 

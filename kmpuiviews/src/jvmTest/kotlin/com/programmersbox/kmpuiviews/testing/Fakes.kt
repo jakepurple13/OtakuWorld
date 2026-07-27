@@ -66,6 +66,12 @@ class FakeAuthManager(
     override suspend fun signOut() {}
     override suspend fun deleteAccount() {}
     override suspend fun refreshSession() {}
+
+    /*override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
+        throw NotImplementedError("startPasskeyRegistration is not faked")
+    override suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse =
+        throw NotImplementedError("verifyPasskeyRegistration is not faked")*/
+    override fun reportError(message: String) {}
 }
 
 fun createTestDataStoreHandling(): DataStoreHandling {

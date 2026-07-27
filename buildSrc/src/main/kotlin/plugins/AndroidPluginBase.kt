@@ -35,7 +35,7 @@ abstract class AndroidPluginBase<T : BaseExtension>(
                 // Need to get the noFirebase packages in firebase first
                 // googleTask?.enabled = System.getenv("CI") != null
                 //TODO: Testing
-                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName || System.getenv("CI") != null
+                googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
             }
         }
     }

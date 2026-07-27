@@ -56,8 +56,8 @@ private class FakeAuthManager(initial: AuthState = AuthState.Unauthenticated) : 
     private val _authState = MutableStateFlow(initial)
     override val authState: StateFlow<AuthState> = _authState
     override fun isLoggedIn(): Boolean = _authState.value is AuthState.Authenticated
-    override suspend fun signInWithEmail(email: String, password: String) {}
-    override suspend fun signUpWithEmail(email: String, password: String) {}
+    override suspend fun signInWithEmail(email: String, password: String, context: Any?) {}
+    override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {}
     override suspend fun signInWithOAuth(provider: OAuthProvider) {}
     override suspend fun signInWithMagicLink(email: String) {}
     override suspend fun signInWithPhone(phone: String, otp: String) {}
@@ -65,6 +65,12 @@ private class FakeAuthManager(initial: AuthState = AuthState.Unauthenticated) : 
     override suspend fun signOut() {}
     override suspend fun deleteAccount() {}
     override suspend fun refreshSession() {}
+
+    /*override suspend fun startPasskeyRegistration(): PasskeyRegistrationResponse =
+        throw NotImplementedError()
+    override suspend fun verifyPasskeyRegistration(challengeId: String, credentialJson: String): PasskeyRegistrationVerifyResponse =
+        throw NotImplementedError()*/
+    override fun reportError(message: String) {}
 
     fun setAuthState(state: AuthState) {
         _authState.value = state
