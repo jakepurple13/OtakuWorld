@@ -107,6 +107,7 @@ dependencies {
     implementation(commonLibs.sonner)
 
     implementation(commonLibs.lifecycle.viewmodel.compose)
+    implementation(androidLibs.brotli)
 
     //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
