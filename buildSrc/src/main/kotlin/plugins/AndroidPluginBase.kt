@@ -26,7 +26,7 @@ abstract class AndroidPluginBase<T : BaseExtension>(
     }
 
     protected fun Project.useGoogleType() {
-        extensions.findByType<BaseAppModuleExtension>()?.apply {
+        /*extensions.findByType<BaseAppModuleExtension>()?.apply {
             applicationVariants.forEach { variant ->
                 println(variant.name)
                 val variantName = variant.name
@@ -36,6 +36,34 @@ abstract class AndroidPluginBase<T : BaseExtension>(
                 // googleTask?.enabled = System.getenv("CI") != null
                 //TODO: Testing
                 googleTask?.enabled = ProductFlavorTypes.NoFirebase.nameType != variant.flavorName
+            }
+        }*/
+        extensions.findByType<BaseAppModuleExtension>()?.apply {
+            applicationVariants.configureEach { // configureEach is safer than forEach in Gradle
+                val variant = this
+                val variantName = variant.name.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                }
+
+                val isNoFirebase = ProductFlavorTypes.NoFirebase.nameType == variant.flavorName
+
+                // Lazily find and disable the Google Services task
+                project.tasks.matching { it.name == "process${variantName}GoogleServices" }
+                    .configureEach {
+                        enabled = !isNoFirebase
+                    }
+
+                // CRITICAL: Because you applied "com.google.firebase.crashlytics",
+                // you must also disable Crashlytics tasks for the NoFirebase flavor,
+                // otherwise they will crash looking for Google Services outputs.
+                if (isNoFirebase) {
+                    project.tasks.matching {
+                        it.name.contains("Crashlytics", ignoreCase = true) &&
+                                it.name.contains(variantName, ignoreCase = true)
+                    }.configureEach {
+                        enabled = false
+                    }
+                }
             }
         }
     }

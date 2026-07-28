@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -212,145 +213,146 @@ private fun ChatScreenContent(
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = MaterialTheme.colorScheme.background,
-            modifier = Modifier.nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection),
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .imePadding()
-            ) {
-                // Messages list
-                LazyColumn(
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(AppDimension.spacingMedium),
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = AppDimension.spacingMedium)
+            bottomBar = {
+                Surface(
+                    color = BottomAppBarDefaults.containerColor,
+                    modifier = Modifier.windowInsetsPadding(BottomAppBarDefaults.windowInsets)
                 ) {
-                    items(
-                        items = visibleMessages,
-                        contentType = { it.type }
-                    ) { message ->
-                        SelectionContainer {
-                            when (message) {
-                                is ChatMessage.UserMessage -> UserMessageBubble(message.text)
-                                is ChatMessage.AgentMessage -> AgentMessageBubble(
-                                    text = message.response,
-                                    koogNavigation = koogNavigation,
-                                    onEvent = onEvent,
-                                    isRecommendationSavedAlready = {
-                                        savedRecommendations.any { s -> s.title == it.title }
-                                    }
-                                )
-
-                                is ChatMessage.ResultMessage -> AgentMessageBubble(
-                                    text = message.response,
-                                    koogNavigation = koogNavigation,
-                                    onEvent = onEvent,
-                                    isRecommendationSavedAlready = {
-                                        savedRecommendations.any { s -> s.title == it.title }
-                                    }
-                                )
-
-                                is ChatMessage.SystemMessage -> SystemMessageItem(message.text)
-                                is ChatMessage.ErrorMessage -> ErrorMessageItem(message.text)
-                                is ChatMessage.ToolCallMessage -> ToolCallMessageItem(
-                                    message.toolName,
-                                    message.args
-                                )
-
-                                is ChatMessage.LLMCallMessage -> LLMCallMessageItem(message.data)
-                                is ChatMessage.ExecutionTraceMessage -> ExecutionTraceMessageItem(
-                                    message.item
-                                )
-
-                                is ChatMessage.MermaidGraphMessage -> MermaidGraphMessageBubble(
-                                    text = message.mermaidGraphString,
-                                    onCopyEvent = onCopyEvent
-                                )
-
-                                is ChatMessage.LLMTokenUsageMessage -> LLMTokenUsageMessageItem(message)
-                            }
-                        }
-                    }
-
-                    if (!hideEmptyState) {
-                        item(
-                            contentType = "empty-state",
-                        ) {
-                            EmptyState(
-                                emptyStateItems = listOf(
-                                    EmptyStateItem(
-                                        title = "Analyze my favorites",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Analyze my reading habits",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Analyze my collections (lists)",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my lists"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Analyze my bookmarks",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my bookmarks"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Recommend me something",
-                                        action = { onEvent(ChatUiEvents.UpdateInputText("I want something similar to ")) }
-                                    )
-                                ),
+                    Column {
+                        AnimatedVisibility(showChatBar) {
+                            ChatOptionsBar(
+                                showRecommendationDrawer = {
+                                    scope.launch { drawerState.open() }
+                                },
+                                listState = listState,
+                                bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
                             )
                         }
-                    }
 
-                    // Add extra space at the bottom for better UX
-                    item(contentType = "spacer") {
-                        Spacer(modifier = Modifier.height(AppDimension.spacingMedium))
+                        // Input area
+                        InputArea(
+                            text = inputText,
+                            onTextChanged = { onEvent(ChatUiEvents.UpdateInputText(it)) },
+                            onSendClicked = {
+                                onEvent(ChatUiEvents.SendMessage)
+                                focusManager.clearFocus()
+                                showChatBar = false
+                            },
+                            toggleChatBar = { showChatBar = it },
+                            showChatBar = showChatBar,
+                            isEnabled = isInputEnabled,
+                            isLoading = isLoading,
+                            focusRequester = focusRequester
+                        )
+                    }
+                }
+            },
+            modifier = Modifier
+                .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
+                .imePadding(),
+        ) { paddingValues ->
+            // Messages list
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(AppDimension.spacingMedium),
+                contentPadding = paddingValues,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = AppDimension.spacingMedium)
+            ) {
+                items(
+                    items = visibleMessages,
+                    contentType = { it.type }
+                ) { message ->
+                    SelectionContainer {
+                        when (message) {
+                            is ChatMessage.UserMessage -> UserMessageBubble(message.text)
+                            is ChatMessage.AgentMessage -> AgentMessageBubble(
+                                text = message.response,
+                                koogNavigation = koogNavigation,
+                                onEvent = onEvent,
+                                isRecommendationSavedAlready = {
+                                    savedRecommendations.any { s -> s.title == it.title }
+                                }
+                            )
+
+                            is ChatMessage.ResultMessage -> AgentMessageBubble(
+                                text = message.response,
+                                koogNavigation = koogNavigation,
+                                onEvent = onEvent,
+                                isRecommendationSavedAlready = {
+                                    savedRecommendations.any { s -> s.title == it.title }
+                                }
+                            )
+
+                            is ChatMessage.SystemMessage -> SystemMessageItem(message.text)
+                            is ChatMessage.ErrorMessage -> ErrorMessageItem(message.text)
+                            is ChatMessage.ToolCallMessage -> ToolCallMessageItem(
+                                message.toolName,
+                                message.args
+                            )
+
+                            is ChatMessage.LLMCallMessage -> LLMCallMessageItem(message.data)
+                            is ChatMessage.ExecutionTraceMessage -> ExecutionTraceMessageItem(
+                                message.item
+                            )
+
+                            is ChatMessage.MermaidGraphMessage -> MermaidGraphMessageBubble(
+                                text = message.mermaidGraphString,
+                                onCopyEvent = onCopyEvent
+                            )
+
+                            is ChatMessage.LLMTokenUsageMessage -> LLMTokenUsageMessageItem(message)
+                        }
                     }
                 }
 
-                Column {
-                    AnimatedVisibility(showChatBar) {
-                        ChatOptionsBar(
-                            showRecommendationDrawer = {
-                                scope.launch { drawerState.open() }
-                            },
-                            listState = listState,
-                            bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
+                if (!hideEmptyState) {
+                    item(
+                        contentType = "empty-state",
+                    ) {
+                        EmptyState(
+                            emptyStateItems = listOf(
+                                EmptyStateItem(
+                                    title = "Analyze my favorites",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my reading habits",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my collections (lists)",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my lists"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my bookmarks",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my bookmarks"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Recommend me something",
+                                    action = { onEvent(ChatUiEvents.UpdateInputText("I want something similar to ")) }
+                                )
+                            ),
                         )
                     }
+                }
 
-                    // Input area
-                    InputArea(
-                        text = inputText,
-                        onTextChanged = { onEvent(ChatUiEvents.UpdateInputText(it)) },
-                        onSendClicked = {
-                            onEvent(ChatUiEvents.SendMessage)
-                            focusManager.clearFocus()
-                            showChatBar = false
-                        },
-                        toggleChatBar = { showChatBar = it },
-                        showChatBar = showChatBar,
-                        isEnabled = isInputEnabled,
-                        isLoading = isLoading,
-                        focusRequester = focusRequester
-                    )
+                // Add extra space at the bottom for better UX
+                item(contentType = "spacer") {
+                    Spacer(modifier = Modifier.height(AppDimension.spacingMedium))
                 }
             }
         }
@@ -377,7 +379,7 @@ private fun ChatOptionsBar(
     }
 
     LaunchedEffect(bottomAppBarScrollBehavior.state.collapsedFraction) {
-        showBottomAppBar = bottomAppBarScrollBehavior.state.collapsedFraction == 0f
+        //showBottomAppBar = bottomAppBarScrollBehavior.state.collapsedFraction == 0f
     }
 
     AnimatedVisibility(
@@ -991,7 +993,7 @@ private fun InputArea(
 
             FilledTonalIconToggleButton(
                 checked = showChatBar,
-                onCheckedChange = { toggleChatBar(it) },
+                onCheckedChange = toggleChatBar,
                 modifier = Modifier.size(AppDimension.iconButtonSizeLarge)
             ) {
                 Icon(

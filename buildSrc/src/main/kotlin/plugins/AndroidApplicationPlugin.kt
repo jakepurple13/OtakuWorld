@@ -13,7 +13,7 @@ class AndroidApplicationPlugin : AndroidPluginBase<BaseAppModuleExtension>(BaseA
         pluginManager.apply("com.google.gms.google-services")
         pluginManager.apply("com.google.firebase.crashlytics")
         pluginManager.apply(libs.plugins.compose.compiler.get().pluginId)
-        afterEvaluate { useGoogleType() }
+        useGoogleType()
     }
 
     override fun BaseAppModuleExtension.androidConfig(project: Project) {

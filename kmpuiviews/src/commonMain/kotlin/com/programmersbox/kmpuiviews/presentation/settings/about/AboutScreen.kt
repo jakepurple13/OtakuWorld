@@ -92,10 +92,12 @@ fun AboutScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showUpdateDialog = false }) { Text(stringResource(Res.string.notNow)) }
-                TextButton(onClick = {
-                    uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest")
-                    showUpdateDialog = false
-                }) { Text(stringResource(Res.string.gotoBrowser)) }
+                TextButton(
+                    onClick = {
+                        uriHandler.openUri("https://github.com/jakepurple13/OtakuWorld/releases/latest")
+                        showUpdateDialog = false
+                    }
+                ) { Text(stringResource(Res.string.gotoBrowser)) }
             }
         )
     }
