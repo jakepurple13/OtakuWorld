@@ -21,11 +21,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -212,13 +212,46 @@ private fun ChatScreenContent(
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = MaterialTheme.colorScheme.background,
+            bottomBar = {
+                Surface(
+                    color = BottomAppBarDefaults.containerColor,
+                    modifier = Modifier.windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+                ) {
+                    Column {
+                        AnimatedVisibility(showChatBar) {
+                            ChatOptionsBar(
+                                showRecommendationDrawer = {
+                                    scope.launch { drawerState.open() }
+                                },
+                                listState = listState,
+                                bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
+                            )
+                        }
+
+                        // Input area
+                        InputArea(
+                            text = inputText,
+                            onTextChanged = { onEvent(ChatUiEvents.UpdateInputText(it)) },
+                            onSendClicked = {
+                                onEvent(ChatUiEvents.SendMessage)
+                                focusManager.clearFocus()
+                                showChatBar = false
+                            },
+                            toggleChatBar = { showChatBar = it },
+                            showChatBar = showChatBar,
+                            isEnabled = isInputEnabled,
+                            isLoading = isLoading,
+                            focusRequester = focusRequester
+                        )
+                    }
+                }
+            },
             modifier = Modifier.nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection),
         ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .imePadding()
             ) {
                 // Messages list
                 LazyColumn(
@@ -323,34 +356,6 @@ private fun ChatScreenContent(
                     item(contentType = "spacer") {
                         Spacer(modifier = Modifier.height(AppDimension.spacingMedium))
                     }
-                }
-
-                Column {
-                    AnimatedVisibility(showChatBar) {
-                        ChatOptionsBar(
-                            showRecommendationDrawer = {
-                                scope.launch { drawerState.open() }
-                            },
-                            listState = listState,
-                            bottomAppBarScrollBehavior = bottomAppBarScrollBehavior,
-                        )
-                    }
-
-                    // Input area
-                    InputArea(
-                        text = inputText,
-                        onTextChanged = { onEvent(ChatUiEvents.UpdateInputText(it)) },
-                        onSendClicked = {
-                            onEvent(ChatUiEvents.SendMessage)
-                            focusManager.clearFocus()
-                            showChatBar = false
-                        },
-                        toggleChatBar = { showChatBar = it },
-                        showChatBar = showChatBar,
-                        isEnabled = isInputEnabled,
-                        isLoading = isLoading,
-                        focusRequester = focusRequester
-                    )
                 }
             }
         }
