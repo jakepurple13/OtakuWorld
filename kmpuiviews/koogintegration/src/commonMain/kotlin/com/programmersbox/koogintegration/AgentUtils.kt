@@ -23,6 +23,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.LLMParams
 import com.programmersbox.koogintegration.provider.AgentExecutionTraceEvent
 
 fun EventHandlerConfig.trackEvents(
@@ -118,7 +119,10 @@ internal suspend fun generateAiConfig(
     val executor = MultiLLMPromptExecutor(agentInfo.llmClient)
 
     val agentConfig = AIAgentConfig(
-        prompt = prompt(promptId) {
+        prompt = prompt(
+            promptId,
+            params = LLMParams(maxTokens = runCatching { agentInfo.model.maxOutputTokens?.toInt() }.getOrNull())
+        ) {
             system(prompt)
         },
         model = agentInfo.model,
