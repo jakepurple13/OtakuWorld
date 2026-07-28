@@ -30,6 +30,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+        }
     }
 }
 

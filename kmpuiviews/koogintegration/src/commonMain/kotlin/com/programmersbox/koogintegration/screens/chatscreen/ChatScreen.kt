@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -246,116 +247,112 @@ private fun ChatScreenContent(
                     }
                 }
             },
-            modifier = Modifier.nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
+                .imePadding(),
         ) { paddingValues ->
-            Column(
+            // Messages list
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(AppDimension.spacingMedium),
+                contentPadding = paddingValues,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(horizontal = AppDimension.spacingMedium)
             ) {
-                // Messages list
-                LazyColumn(
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(AppDimension.spacingMedium),
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = AppDimension.spacingMedium)
-                ) {
-                    items(
-                        items = visibleMessages,
-                        contentType = { it.type }
-                    ) { message ->
-                        SelectionContainer {
-                            when (message) {
-                                is ChatMessage.UserMessage -> UserMessageBubble(message.text)
-                                is ChatMessage.AgentMessage -> AgentMessageBubble(
-                                    text = message.response,
-                                    koogNavigation = koogNavigation,
-                                    onEvent = onEvent,
-                                    isRecommendationSavedAlready = {
-                                        savedRecommendations.any { s -> s.title == it.title }
-                                    }
-                                )
-
-                                is ChatMessage.ResultMessage -> AgentMessageBubble(
-                                    text = message.response,
-                                    koogNavigation = koogNavigation,
-                                    onEvent = onEvent,
-                                    isRecommendationSavedAlready = {
-                                        savedRecommendations.any { s -> s.title == it.title }
-                                    }
-                                )
-
-                                is ChatMessage.SystemMessage -> SystemMessageItem(message.text)
-                                is ChatMessage.ErrorMessage -> ErrorMessageItem(message.text)
-                                is ChatMessage.ToolCallMessage -> ToolCallMessageItem(
-                                    message.toolName,
-                                    message.args
-                                )
-
-                                is ChatMessage.LLMCallMessage -> LLMCallMessageItem(message.data)
-                                is ChatMessage.ExecutionTraceMessage -> ExecutionTraceMessageItem(
-                                    message.item
-                                )
-
-                                is ChatMessage.MermaidGraphMessage -> MermaidGraphMessageBubble(
-                                    text = message.mermaidGraphString,
-                                    onCopyEvent = onCopyEvent
-                                )
-
-                                is ChatMessage.LLMTokenUsageMessage -> LLMTokenUsageMessageItem(message)
-                            }
-                        }
-                    }
-
-                    if (!hideEmptyState) {
-                        item(
-                            contentType = "empty-state",
-                        ) {
-                            EmptyState(
-                                emptyStateItems = listOf(
-                                    EmptyStateItem(
-                                        title = "Analyze my favorites",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Analyze my reading habits",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Analyze my collections (lists)",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my lists"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Analyze my bookmarks",
-                                        action = {
-                                            onEvent(ChatUiEvents.UpdateInputText("Analyze my bookmarks"))
-                                            onEvent(ChatUiEvents.SendMessage)
-                                        }
-                                    ),
-                                    EmptyStateItem(
-                                        title = "Recommend me something",
-                                        action = { onEvent(ChatUiEvents.UpdateInputText("I want something similar to ")) }
-                                    )
-                                ),
+                items(
+                    items = visibleMessages,
+                    contentType = { it.type }
+                ) { message ->
+                    SelectionContainer {
+                        when (message) {
+                            is ChatMessage.UserMessage -> UserMessageBubble(message.text)
+                            is ChatMessage.AgentMessage -> AgentMessageBubble(
+                                text = message.response,
+                                koogNavigation = koogNavigation,
+                                onEvent = onEvent,
+                                isRecommendationSavedAlready = {
+                                    savedRecommendations.any { s -> s.title == it.title }
+                                }
                             )
+
+                            is ChatMessage.ResultMessage -> AgentMessageBubble(
+                                text = message.response,
+                                koogNavigation = koogNavigation,
+                                onEvent = onEvent,
+                                isRecommendationSavedAlready = {
+                                    savedRecommendations.any { s -> s.title == it.title }
+                                }
+                            )
+
+                            is ChatMessage.SystemMessage -> SystemMessageItem(message.text)
+                            is ChatMessage.ErrorMessage -> ErrorMessageItem(message.text)
+                            is ChatMessage.ToolCallMessage -> ToolCallMessageItem(
+                                message.toolName,
+                                message.args
+                            )
+
+                            is ChatMessage.LLMCallMessage -> LLMCallMessageItem(message.data)
+                            is ChatMessage.ExecutionTraceMessage -> ExecutionTraceMessageItem(
+                                message.item
+                            )
+
+                            is ChatMessage.MermaidGraphMessage -> MermaidGraphMessageBubble(
+                                text = message.mermaidGraphString,
+                                onCopyEvent = onCopyEvent
+                            )
+
+                            is ChatMessage.LLMTokenUsageMessage -> LLMTokenUsageMessageItem(message)
                         }
                     }
+                }
 
-                    // Add extra space at the bottom for better UX
-                    item(contentType = "spacer") {
-                        Spacer(modifier = Modifier.height(AppDimension.spacingMedium))
+                if (!hideEmptyState) {
+                    item(
+                        contentType = "empty-state",
+                    ) {
+                        EmptyState(
+                            emptyStateItems = listOf(
+                                EmptyStateItem(
+                                    title = "Analyze my favorites",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my favorites"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my reading habits",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my reading habits"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my collections (lists)",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my lists"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Analyze my bookmarks",
+                                    action = {
+                                        onEvent(ChatUiEvents.UpdateInputText("Analyze my bookmarks"))
+                                        onEvent(ChatUiEvents.SendMessage)
+                                    }
+                                ),
+                                EmptyStateItem(
+                                    title = "Recommend me something",
+                                    action = { onEvent(ChatUiEvents.UpdateInputText("I want something similar to ")) }
+                                )
+                            ),
+                        )
                     }
+                }
+
+                // Add extra space at the bottom for better UX
+                item(contentType = "spacer") {
+                    Spacer(modifier = Modifier.height(AppDimension.spacingMedium))
                 }
             }
         }
@@ -382,7 +379,7 @@ private fun ChatOptionsBar(
     }
 
     LaunchedEffect(bottomAppBarScrollBehavior.state.collapsedFraction) {
-        showBottomAppBar = bottomAppBarScrollBehavior.state.collapsedFraction == 0f
+        //showBottomAppBar = bottomAppBarScrollBehavior.state.collapsedFraction == 0f
     }
 
     AnimatedVisibility(
@@ -996,7 +993,7 @@ private fun InputArea(
 
             FilledTonalIconToggleButton(
                 checked = showChatBar,
-                onCheckedChange = { toggleChatBar(it) },
+                onCheckedChange = toggleChatBar,
                 modifier = Modifier.size(AppDimension.iconButtonSizeLarge)
             ) {
                 Icon(
