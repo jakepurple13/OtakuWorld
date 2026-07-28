@@ -52,13 +52,13 @@
 -dontwarn org.koin.**
 
 # ============================================================
-# Room 3 (androidx.room3 artifact, package androidx.room)
+# Room 3 (androidx.room3 artifact and package)
 # ============================================================
--keep @androidx.room.Entity class * { *; }
--keep @androidx.room.Database class * { *; }
--keep @androidx.room.Dao class * { *; }
--keepclassmembers class * extends androidx.room.RoomDatabase { *; }
--dontwarn androidx.room.**
+-keep @androidx.room3.Entity class * { *; }
+-keep @androidx.room3.Database class * { *; }
+-keep @androidx.room3.Dao class * { *; }
+-keepclassmembers class * extends androidx.room3.RoomDatabase { *; }
+-dontwarn androidx.room3.**
 
 # ============================================================
 # Extension / source-loading contract (kmpmodels)
@@ -192,6 +192,17 @@
 # ============================================================
 -keep class io.github.jan.supabase.** { *; }
 -dontwarn io.github.jan.supabase.**
+
+# ============================================================
+# R8 missing classes (transitive deps not present on Android;
+# see mangaworld/build/outputs/mapping/noFirebaseBeta/missing_rules.txt)
+# ============================================================
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedLongCounter
+-dontwarn io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder
+-dontwarn java.awt.geom.Rectangle2D
+-dontwarn javax.imageio.event.IIOWriteWarningListener
 
 # ============================================================
 # Preserve stack traces
