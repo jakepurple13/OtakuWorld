@@ -13,6 +13,9 @@
 - minSdk 28, compileSdk/targetSdk 37 (`buildSrc/src/main/kotlin/AppInfo.kt`).
 - Use the `noFirebase` flavor for all local build/compile verification (per `CLAUDE.md`) — Gradle task variant suffix is `NoFirebaseDebug`.
 - Unit tests are explicitly out of scope for this feature (project constraint) — verification steps use Gradle compile/assemble commands, not test suites.
+- **Kotlin compile verification command is `./gradlew :kmpuiviews:compileAndroidMain`** (not a flavor-qualified name — `kmpuiviews`'s Kotlin Multiplatform `androidTarget()` has no product-flavor dimension, unlike app modules, so there is no `NoFirebaseDebug`-suffixed variant of this task for it). This single task compiles `kmpuiviews`'s merged `commonMain` + `androidMain` sources together, so it is the correct verification command for every task in this plan that touches Kotlin, whether the file is in `commonMain` or `androidMain`. Do not use `:kmpuiviews:compileCommonMainKotlinMetadata` — it fails independent of this plan on a pre-existing, unrelated issue (`favoritesdatabase`'s `@Database` classes need `@ConstructedBy` for Room 3's KSP metadata target; confirmed by running it against an unmodified checkout — the failing files, `Recommendations.kt` and `DictionaryDatabase.kt`, are untouched by this plan). App-module task names (`:mangaworld:assembleNoFirebaseDebug`, `:mangaworld:assembleNoFirebaseRelease`, `:mangaworld:processNoFirebaseDebugMainManifest`) are flavor-qualified and correct as written elsewhere in this plan — only the `kmpuiviews`-scoped Kotlin compile task is exempt from flavor qualification.
+- **Building requires a valid `local.properties`** with `sdk.dir` pointing at an installed Android SDK. If `./gradlew :kmpuiviews:compileAndroidMain` fails immediately with "SDK location not found," create `local.properties` at the repo root with one line: `sdk.dir=<path to your Android SDK>` (commonly `~/Library/Android/sdk` on macOS) — this file is gitignored and machine-specific, so it is never committed.
+- **This plan's tasks land in a specific order and the module will not compile cleanly (`BUILD SUCCESSFUL`) until Task 10 completes.** Each task's Kotlin-compile step below states exactly which pre-existing errors (in files not yet touched, scheduled for a later task) are expected and not a sign of that task's own failure — a task is correct if it introduces *zero new errors* and touches *zero unexpected files*, even while the overall module remains red. Only Task 10's compile step should show `BUILD SUCCESSFUL`.
 - Ackpine (`ru.solrudev.ackpine:*`) must be fully removed: no `ru.solrudev.ackpine.*` import may remain anywhere in the repo after this plan completes.
 - `ConfirmationType` (`IMMEDIATE`/`DEFERRED`) stays in the `DownloadAndInstaller` expect/actual signature as a no-op on Android — do not remove it or change any call site's arguments.
 - `DownloadWorker` and `InstallWorker` (the unused chained-worker experiment in `DownloadAndInstallWorker.kt`) are left untouched beyond the minimum required for the file to compile against the new `DownloadAndInstallStatus` shape (an added `InstallErrorReason` argument to existing `Error(...)` constructor calls, and one `else` branch per exhaustive `when` that would otherwise fail to compile). Do not otherwise modify their logic.
@@ -99,10 +102,16 @@ enum class ConfirmationType {
 }
 ```
 
-- [ ] **Step 2: Verify commonMain compiles on its own**
+- [ ] **Step 2: Verify**
 
-Run: `./gradlew :kmpuiviews:compileCommonMainKotlinMetadata`
-Expected: BUILD SUCCESSFUL. (The Android and JVM `actual` implementations will not compile yet — that's expected and fixed in later tasks; this Gradle task only compiles the `commonMain` source set against `expect` declarations, not the platform actuals.)
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, with errors in exactly these pre-existing, not-yet-migrated locations and nowhere else (the errors below prove the new 2-arg `Error` and 3 new sealed cases took effect and are now enforced — that's the point of this check, not a clean build):
+- `kmpuiviews/src/androidMain/kotlin/com/programmersbox/kmpuiviews/utils/DownloadAndInstaller.kt` (still calls the old 1-arg `Error(message)` — fixed in Task 5)
+- `kmpuiviews/src/androidMain/kotlin/com/programmersbox/kmpuiviews/workers/DownloadAndInstallWorker.kt`, multiple lines (old 1-arg `Error(...)` calls and non-exhaustive `when`s — fixed in Task 8)
+- `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/settings/downloadstate/DownloadStateScreen.kt` (non-exhaustive `when` — fixed in Task 9)
+- `kmpuiviews/src/commonMain/kotlin/com/programmersbox/kmpuiviews/presentation/settings/prerelease/PrereleaseScreen.kt` (non-exhaustive `when` — fixed in Task 10)
+
+If any error appears outside these four files, that's a real regression from this task's change — stop and fix it before committing.
 
 - [ ] **Step 3: Commit**
 
@@ -161,10 +170,10 @@ class InstallStatusRepository {
 
 `registerTempFile`/`consumeTempFile` are `@Synchronized` because they're written from `DownloadAndInstaller.install()`'s calling coroutine and read from `PackageInstallReceiver.onReceive`, which runs on the main thread outside that coroutine's dispatcher.
 
-- [ ] **Step 2: Verify it compiles**
+- [ ] **Step 2: Verify**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
-Expected: BUILD SUCCESSFUL (this file has no dependents yet, and doesn't touch the still-Ackpine-based `DownloadAndInstaller.kt`, so the module continues compiling).
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, with the exact same four pre-existing error locations listed in Task 1's verification step, and no others. This new file has no dependents yet and doesn't touch any of those four files, so the error set should be identical to Task 1's — if it isn't, something in this task's code is broken.
 
 - [ ] **Step 3: Commit**
 
@@ -351,8 +360,8 @@ class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
 
 - [ ] **Step 2: Verify Tasks 3 and 4 compile together**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
-Expected: BUILD SUCCESSFUL. (`DownloadAndInstaller.kt`'s Android `actual` still uses Ackpine at this point and is untouched, so the module as a whole still builds.)
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, with the exact same four pre-existing error locations listed in Task 1's verification step, and no others. Neither `PackageInstallEngine.kt` nor `PackageInstallReceiver.kt` should themselves produce any error — they reference each other and `InstallStatusRepository` correctly but nothing yet calls into them from `DownloadAndInstaller.kt` (that wiring is Task 5).
 
 - [ ] **Step 3: Commit**
 
@@ -546,10 +555,10 @@ Notes on what changed from the Ackpine version:
 
 - [ ] **Step 1: Replace the file with the code above.**
 
-- [ ] **Step 2: Verify it compiles**
+- [ ] **Step 2: Verify**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
-Expected: BUILD SUCCESSFUL. (Koin's `singleOf(::DownloadAndInstaller)` in `AppModule.android.kt` doesn't get its two new constructor params wired up until Task 7 — but that's a runtime DI concern, not a compile-time one, since `PackageInstallEngine`/`InstallStatusRepository` already exist as real classes from Tasks 2–3. The Kotlin compiler doesn't need Koin's module DSL to be correct.)
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, but `DownloadAndInstaller.kt` itself should now be error-free — it's fully rewritten and no longer calls the old 1-arg `Error(...)`. Remaining errors should only be in `DownloadAndInstallWorker.kt` (fixed in Task 8), `DownloadStateScreen.kt` (Task 9), and `PrereleaseScreen.kt` (Task 10). If `DownloadAndInstaller.kt` itself still shows an error, check for a typo against the code block above before proceeding. (Koin's `singleOf(::DownloadAndInstaller)` in `AppModule.android.kt` doesn't get its two new constructor params wired up until Task 7 — that's a runtime DI concern, not a compile-time one, since `PackageInstallEngine`/`InstallStatusRepository` already exist as real classes from Tasks 2–3, so it produces no compile error here.)
 
 - [ ] **Step 3: Commit**
 
@@ -694,10 +703,10 @@ ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpi
 Run: `grep -rn "ackpine" --include="*.kt" --include="*.kts" --include="*.toml" .`
 Expected: no output.
 
-- [ ] **Step 4: Full build verification**
+- [ ] **Step 4: Verify**
 
-Run: `./gradlew :mangaworld:assembleNoFirebaseDebug`
-Expected: BUILD SUCCESSFUL. (This is the first point where the whole dependency graph — Koin wiring included — is exercised, since `AppModule.android.kt` is now correct and Ackpine is gone.)
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, with the exact same remaining errors as after Task 5 (`DownloadAndInstallWorker.kt`, `DownloadStateScreen.kt`, `PrereleaseScreen.kt` — fixed in Tasks 8–10) and no others. `AppModule.android.kt` itself should be error-free — this confirms the Koin wiring compiles and Ackpine is fully gone from this module's dependency graph. A full app assemble (`:mangaworld:assembleNoFirebaseDebug`) isn't expected to succeed until Task 10 lands, since it depends on the same not-yet-fixed files.
 
 - [ ] **Step 5: Commit**
 
@@ -1025,8 +1034,8 @@ In both `DownloadWorker.doWork()` and `InstallWorker.doWork()`, their `notify(..
 
 - [ ] **Step 7: Verify**
 
-Run: `./gradlew :kmpuiviews:compileNoFirebaseDebugKotlinAndroid`
-Expected: BUILD SUCCESSFUL.
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, but `DownloadAndInstallWorker.kt` should now be error-free. Remaining errors should only be in `DownloadStateScreen.kt` (fixed in Task 9) and `PrereleaseScreen.kt` (fixed in Task 10).
 
 - [ ] **Step 8: Commit**
 
@@ -1123,8 +1132,8 @@ with:
 
 - [ ] **Step 3: Verify**
 
-Run: `./gradlew :kmpuiviews:compileCommonMainKotlinMetadata`
-Expected: BUILD SUCCESSFUL.
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD FAILED, but `DownloadStateScreen.kt` should now be error-free. The only remaining error should be in `PrereleaseScreen.kt` (fixed in Task 10).
 
 - [ ] **Step 4: Commit**
 
@@ -1195,8 +1204,8 @@ with:
 
 - [ ] **Step 2: Verify**
 
-Run: `./gradlew :kmpuiviews:compileCommonMainKotlinMetadata`
-Expected: BUILD SUCCESSFUL.
+Run: `./gradlew :kmpuiviews:compileAndroidMain`
+Expected: BUILD SUCCESSFUL. This is the first point in the plan where the whole module compiles clean — every file touched by Tasks 1–10 is now consistent. If anything still fails, check it against the expected-error lists in the earlier tasks' verification steps to find which one was missed.
 
 - [ ] **Step 3: Commit**
 
