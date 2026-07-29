@@ -9,6 +9,7 @@ import androidx.core.content.PermissionChecker
 import androidx.core.net.toUri
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -20,6 +21,7 @@ import com.programmersbox.kmpuiviews.repository.DownloadAndInstallState
 import com.programmersbox.kmpuiviews.utils.ConfirmationType
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
+import com.programmersbox.kmpuiviews.utils.InstallErrorReason
 import com.programmersbox.kmpuiviews.utils.NotificationChannels
 import com.programmersbox.kmpuiviews.utils.NotificationLogo
 import io.github.vinceglb.filekit.PlatformFile
@@ -53,7 +55,7 @@ class DownloadAndInstallWorker(
                     notify(notificationLogo, url) {
                         when (it) {
                             is DownloadAndInstallStatus.Error -> {
-                                setContentText("Error during download and install.")
+                                setContentText("Error: ${it.message}")
                                     .setProgress(0, 0, false)
                             }
 
@@ -76,6 +78,21 @@ class DownloadAndInstallWorker(
                                 setContentText("Download and install completed.")
                                     .setProgress(0, 0, false)
                                     .setTimeoutAfter(5000)
+                            }
+
+                            DownloadAndInstallStatus.PendingUserAction -> {
+                                setContentText("Waiting for install confirmation...")
+                                    .setProgress(0, 0, false)
+                            }
+
+                            DownloadAndInstallStatus.PermissionRequired -> {
+                                setContentText("Enable install permission in Settings, then retry.")
+                                    .setProgress(0, 0, false)
+                            }
+
+                            DownloadAndInstallStatus.Cancelled -> {
+                                setContentText("Install cancelled.")
+                                    .setProgress(0, 0, false)
                             }
                         }
                     }
@@ -150,7 +167,9 @@ class DownloadAndInstallWorker(
 
         fun downloadAndInstall(context: Context, url: String) {
             WorkManager.getInstance(context)
-                .enqueue(
+                .enqueueUniqueWork(
+                    "downloadAndInstall",
+                    ExistingWorkPolicy.APPEND_OR_REPLACE,
                     OneTimeWorkRequestBuilder<DownloadAndInstallWorker>()
                         .setInputData(workDataOf("url" to url))
                         .addTag("downloadAndInstall")
@@ -174,7 +193,7 @@ class DownloadAndInstallWorker(
                         name = it.progress.getString("url")?.toUri()?.lastPathSegment ?: "",
                         id = it.id.toString(),
                         status = if (it.state == WorkInfo.State.CANCELLED) {
-                            DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
+                            DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
                         } else {
                             when (it.progress.getString("progress")) {
                                 "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Downloading" ->
@@ -186,10 +205,19 @@ class DownloadAndInstallWorker(
                                 "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installing" ->
                                     DownloadAndInstallStatus.Installing
 
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$PendingUserAction" ->
+                                    DownloadAndInstallStatus.PendingUserAction
+
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$PermissionRequired" ->
+                                    DownloadAndInstallStatus.PermissionRequired
+
+                                "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Cancelled" ->
+                                    DownloadAndInstallStatus.Cancelled
+
                                 "com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus\$Installed" ->
                                     DownloadAndInstallStatus.Installed
 
-                                else -> DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
+                                else -> DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
                             }
                         }
                     )
@@ -245,6 +273,11 @@ class DownloadWorker(
                                 setContentText("Download and install completed.")
                                     .setProgress(0, 0, false)
                                     .setTimeoutAfter(5000)
+                            }
+
+                            else -> {
+                                setContentText("Status: $it")
+                                    .setProgress(0, 0, false)
                             }
                         }
                     }
@@ -362,7 +395,7 @@ class DownloadWorker(
                         name = it.progress.getString("url")?.toUri()?.lastPathSegment ?: "",
                         id = it.id.toString(),
                         status = if (it.state == WorkInfo.State.CANCELLED) {
-                            DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
+                            DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
                         } else {
                             when (it.progress.getString("progress")) {
                                 "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Downloading" ->
@@ -377,7 +410,7 @@ class DownloadWorker(
                                 "com.programmersbox.uiviews.presentation.settings.downloadstate.DownloadAndInstallStatus\$Installed" ->
                                     DownloadAndInstallStatus.Installed
 
-                                else -> DownloadAndInstallStatus.Error(it.progress.getString("error") ?: "Unknown error")
+                                else -> DownloadAndInstallStatus.Error(InstallErrorReason.UNKNOWN, it.progress.getString("error") ?: "Unknown error")
                             }
                         }
                     )
@@ -436,6 +469,11 @@ class InstallWorker(
                                 setContentText("Download and install completed.")
                                     .setProgress(0, 0, false)
                                     .setTimeoutAfter(5000)
+                            }
+
+                            else -> {
+                                setContentText("Status: $it")
+                                    .setProgress(0, 0, false)
                             }
                         }
                     }
