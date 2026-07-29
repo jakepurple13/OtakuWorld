@@ -1,5 +1,4 @@
 [versions]
-ackpineVersion = "0.25.2"
 accompanist = "0.37.3"
 activity = "1.13.0"
 arcore = "1.0.0-alpha13"
@@ -49,10 +48,6 @@ zoomimageComposeGlide = "1.6.0"
 # Accompanist
 adaptive = { module = "com.google.accompanist:accompanist-adaptive", version.ref = "accompanist" }
 drawablePainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
-
-# Ackpine
-ackpine-core = { module = "ru.solrudev.ackpine:ackpine-core", version.ref = "ackpineVersion" }
-ackpine-ktx = { module = "ru.solrudev.ackpine:ackpine-ktx", version.ref = "ackpineVersion" }
 
 # Android Foundation
 androidBrowserHelper = "com.google.androidbrowserhelper:androidbrowserhelper:2.7.2"

@@ -3,7 +3,6 @@ package com.programmersbox.kmpuiviews
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Build
 import android.text.format.DateFormat
 import android.view.WindowManager
@@ -151,7 +150,11 @@ actual class IconLoader(
     private val packageManager by lazy { context.packageManager }
 
     actual fun load(packageName: String): Any {
-        return packageManager.getApplicationIcon(packageName)
+        return try {
+            packageManager.getApplicationIcon(packageName)
+        } catch (e: PackageManager.NameNotFoundException) {
+            e
+        }
     }
 }
 

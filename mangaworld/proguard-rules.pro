@@ -312,3 +312,6 @@
 # Firebase
 -keep class com.google.firebase.installations.** { *; }
 -keep interface com.google.firebase.installations.** { *; }
+
+# PackageInstaller broadcast receiver — instantiated by the OS via manifest registration
+-keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }

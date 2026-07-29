@@ -182,8 +182,6 @@ kotlin {
                 implementation(androidLibs.playServices)
                 implementation(androidLibs.bundles.firebaseCrashLibs)
                 implementation(androidLibs.drawablePainter)
-                implementation(androidLibs.ackpine.core)
-                implementation(androidLibs.ackpine.ktx)
                 implementation(androidLibs.glideCompose)
                 implementation(androidLibs.landscapist.bom)
                 implementation(androidLibs.landscapistGlide)

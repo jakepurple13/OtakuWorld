@@ -36,10 +36,24 @@ sealed class DownloadAndInstallStatus {
     data object Installing : DownloadAndInstallStatus()
 
     @Serializable
+    data object PendingUserAction : DownloadAndInstallStatus()
+
+    @Serializable
+    data object PermissionRequired : DownloadAndInstallStatus()
+
+    @Serializable
     data object Installed : DownloadAndInstallStatus()
 
     @Serializable
-    data class Error(val message: String) : DownloadAndInstallStatus()
+    data object Cancelled : DownloadAndInstallStatus()
+
+    @Serializable
+    data class Error(val reason: InstallErrorReason, val message: String) : DownloadAndInstallStatus()
+}
+
+@Serializable
+enum class InstallErrorReason {
+    BLOCKED, CONFLICT, INCOMPATIBLE, INVALID, STORAGE, GENERIC, UNKNOWN,
 }
 
 enum class ConfirmationType {

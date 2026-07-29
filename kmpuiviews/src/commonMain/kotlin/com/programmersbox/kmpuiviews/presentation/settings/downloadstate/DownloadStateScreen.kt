@@ -96,7 +96,11 @@ private fun DownloadItem(
 
     OutlinedCard(
         onClick = {
-            if (item.status is DownloadAndInstallStatus.Installing || item.status is DownloadAndInstallStatus.Error) {
+            if (
+                item.status is DownloadAndInstallStatus.Installing ||
+                item.status is DownloadAndInstallStatus.Error ||
+                item.status is DownloadAndInstallStatus.PermissionRequired
+            ) {
                 onInstall()
             }
         },
@@ -160,6 +164,26 @@ private fun DownloadStatus(
             ListItem(
                 headlineContent = { Text("Installing") },
                 supportingContent = { LinearWavyProgressIndicator() },
+            )
+        }
+
+        DownloadAndInstallStatus.PendingUserAction -> {
+            ListItem(
+                headlineContent = { Text("Waiting for confirmation") },
+                supportingContent = { Text("Check the system install dialog") },
+            )
+        }
+
+        DownloadAndInstallStatus.PermissionRequired -> {
+            ListItem(
+                headlineContent = { Text("Permission required") },
+                supportingContent = { Text("Enable install from this source in Settings, then tap to retry") },
+            )
+        }
+
+        DownloadAndInstallStatus.Cancelled -> {
+            ListItem(
+                headlineContent = { Text("Cancelled") },
             )
         }
     }

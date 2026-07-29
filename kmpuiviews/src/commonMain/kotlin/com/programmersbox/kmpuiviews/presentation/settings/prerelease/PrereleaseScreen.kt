@@ -169,5 +169,25 @@ private fun DownloadStatus(
                 supportingContent = { LinearWavyProgressIndicator() },
             )
         }
+
+        DownloadAndInstallStatus.PendingUserAction -> {
+            ListItem(
+                headlineContent = { Text("Waiting for confirmation") },
+                supportingContent = { Text("Check the system install dialog") },
+            )
+        }
+
+        DownloadAndInstallStatus.PermissionRequired -> {
+            ListItem(
+                headlineContent = { Text("Permission required") },
+                supportingContent = { Text("Enable install from this source in Settings, then tap Download to retry") },
+            )
+        }
+
+        DownloadAndInstallStatus.Cancelled -> {
+            ListItem(
+                headlineContent = { Text("Cancelled") },
+            )
+        }
     }
 }
