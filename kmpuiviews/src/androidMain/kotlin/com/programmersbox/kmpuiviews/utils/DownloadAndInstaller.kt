@@ -14,6 +14,7 @@ import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.withContext
 import java.io.File
 
 actual class DownloadAndInstaller(
@@ -107,19 +109,21 @@ actual class DownloadAndInstaller(
     actual fun install(
         file: PlatformFile,
         confirmationType: ConfirmationType,
-    ): Flow<DownloadAndInstallStatus> {
+    ): Flow<DownloadAndInstallStatus> = flow {
         var sessionId: Int? = null
         var terminalReached = false
 
-        return flow {
+        try {
             if (!packageInstallEngine.canRequestPackageInstalls()) {
                 emit(DownloadAndInstallStatus.PermissionRequired)
                 return@flow
             }
 
-            val localFile = resolveLocalFile(file)
+            val localFile = withContext(Dispatchers.IO) { resolveLocalFile(file) }
 
-            sessionId = runCatching { packageInstallEngine.commit(localFile) }
+            sessionId = withContext(Dispatchers.IO) {
+                runCatching { packageInstallEngine.commit(localFile) }
+            }
                 .onFailure {
                     emit(DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, it.message ?: "Unable to start install"))
                 }
@@ -139,12 +143,14 @@ actual class DownloadAndInstaller(
                     !terminal
                 }
             )
-        }.onCompletion {
+        } finally {
             val id = sessionId
-            if (id != null && !terminalReached) {
-                packageInstallEngine.abandon(id)
-                installStatusRepository.consumeTempFile(id)?.delete()
+            if (id != null) {
                 installStatusRepository.clear(id)
+                if (!terminalReached) {
+                    packageInstallEngine.abandon(id)
+                    installStatusRepository.consumeTempFile(id)?.delete()
+                }
             }
         }
     }
