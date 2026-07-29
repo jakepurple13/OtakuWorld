@@ -1,5 +1,6 @@
 package com.programmersbox.sharedtools
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import okio.BufferedSink
 import okio.BufferedSource
@@ -7,6 +8,15 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.new
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
+
+/**
+ * Per-processor backup/restore outcome. [successCount] counts rows that succeeded;
+ * [failed] holds a human-readable identifier for each row that threw during restore.
+ */
+data class ProcessorResult(
+    val successCount: Int,
+    val failed: List<String> = emptyList(),
+)
 
 /**
  * Abstract class representing a backup processor that handles the backup and restoration of data.
@@ -24,11 +34,9 @@ abstract class BackupProcessor {
     /**
      * Backs up data to the specified sink.
      *
-     * This method performs a suspend operation to transfer data into the provided `sink`.
-     *
      * @param sink The `BufferedSink` where the data will be written during the backup operation.
      */
-    abstract suspend fun backup(sink: BufferedSink)
+    abstract suspend fun backup(sink: BufferedSink): ProcessorResult
 
     /**
      * Restores the state or configuration of an object using the provided JSON string and buffered source.
@@ -36,16 +44,37 @@ abstract class BackupProcessor {
      * @param json A JSON-formatted string used for restoration.
      * @param bufferedSource A buffered source containing additional data necessary for the restore operation.
      */
-    abstract suspend fun restore(json: String, bufferedSource: BufferedSource)
+    abstract suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult
+
+    /**
+     * Restores each row independently: a row whose [action] throws is recorded in
+     * [ProcessorResult.failed] (via [idOf]) instead of aborting the remaining rows.
+     * `CancellationException` is rethrown so coroutine cancellation still propagates.
+     */
+    protected suspend inline fun <T> Iterable<T>.restoreEachCatching(
+        idOf: (T) -> String,
+        action: (T) -> Unit,
+    ): ProcessorResult {
+        var successCount = 0
+        val failed = mutableListOf<String>()
+        for (row in this) {
+            try {
+                action(row)
+                successCount++
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                failed += idOf(row)
+            }
+        }
+        return ProcessorResult(successCount, failed)
+    }
 
     /**
      * Converts an object of type [T] into its JSON string representation.
      *
      * This method leverages Kotlin's serialization library to serialize the object.
      * The type [T] must be annotated with `@Serializable` for the serialization to succeed.
-     *
-     * The function is inlined and uses reified type parameters, making it easier to
-     * work with generic types at runtime without explicitly passing the class type.
      *
      * @receiver The object of type [T] to be serialized into a JSON string.
      * @return A JSON-formatted string representing the serialized object.
@@ -82,4 +111,3 @@ inline fun <reified T : BackupProcessor, reified T1, reified T2> Module.backupPr
     named: String,
     crossinline factoryBlock: (T1, T2) -> T,
 ) = factory(named(named)) { new(factoryBlock) } bind BackupProcessor::class
-

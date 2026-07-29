@@ -41,12 +41,22 @@ actual class Zipper(
                     val result = runCatching {
                         measureTimedValue {
                             val sink = zip.sink().buffer()
-                            processor.backup(sink)
+                            val processorResult = processor.backup(sink)
                             sink.flush()
+                            processorResult
                         }
                     }
                         .fold(
-                            onSuccess = { ItemResult(processor.fileName, timeTaken = it.duration.toString(), success = true) },
+                            onSuccess = { timedValue ->
+                                val processorResult = timedValue.value
+                                ItemResult(
+                                    processor.fileName,
+                                    timeTaken = timedValue.duration.toString(),
+                                    success = processorResult.successCount > 0,
+                                    error = processorResult.failed.takeIf { it.isNotEmpty() }
+                                        ?.let { "${it.size} failed: ${it.joinToString()}" },
+                                )
+                            },
                             onFailure = { e ->
                                 ItemResult(
                                     processor.fileName,
@@ -89,7 +99,16 @@ actual class Zipper(
                                 }
                             }
                                 .fold(
-                                    onSuccess = { ItemResult(name, timeTaken = it.duration.toString(), success = true) },
+                                    onSuccess = { timedValue ->
+                                        val processorResult = timedValue.value
+                                        ItemResult(
+                                            name,
+                                            timeTaken = timedValue.duration.toString(),
+                                            success = processorResult.successCount > 0,
+                                            error = processorResult.failed.takeIf { it.isNotEmpty() }
+                                                ?.let { "${it.size} failed: ${it.joinToString()}" },
+                                        )
+                                    },
                                     onFailure = { e ->
                                         ItemResult(
                                             name,

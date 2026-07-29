@@ -48,8 +48,9 @@ actual open class Zipper(
                     val result = runCatching {
                         measureTimedValue {
                             val sink = zip.sink().buffer()
-                            backup.backup(sink)
+                            val processorResult = backup.backup(sink)
                             sink.flush()
+                            processorResult
                         }
                     }
                         .onFailure {
@@ -57,11 +58,14 @@ actual open class Zipper(
                             exceptionDao.insertException(it)
                         }
                         .fold(
-                            onSuccess = {
+                            onSuccess = { timedValue ->
+                                val processorResult = timedValue.value
                                 ItemResult(
                                     backup.fileName,
-                                    timeTaken = it.duration.toString(),
-                                    success = true
+                                    timeTaken = timedValue.duration.toString(),
+                                    success = processorResult.successCount > 0,
+                                    error = processorResult.failed.takeIf { it.isNotEmpty() }
+                                        ?.let { "${it.size} failed: ${it.joinToString()}" },
                                 )
                             },
                             onFailure = { e ->
@@ -107,11 +111,14 @@ actual open class Zipper(
                                     }
                                 }
                                     .fold(
-                                        onSuccess = {
+                                        onSuccess = { timedValue ->
+                                            val processorResult = timedValue.value
                                             ItemResult(
                                                 name,
-                                                timeTaken = it.duration.toString(),
-                                                success = true
+                                                timeTaken = timedValue.duration.toString(),
+                                                success = processorResult.successCount > 0,
+                                                error = processorResult.failed.takeIf { it.isNotEmpty() }
+                                                    ?.let { "${it.size} failed: ${it.joinToString()}" },
                                             )
                                         },
                                         onFailure = { e ->
