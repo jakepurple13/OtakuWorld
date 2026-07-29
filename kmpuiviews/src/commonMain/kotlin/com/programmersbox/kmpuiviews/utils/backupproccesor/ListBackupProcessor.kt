@@ -24,21 +24,28 @@ class ListBackupProcessor(
     override val description: String? get() = "User-created custom lists"
     override val icon get() = Icons.Default.FormatListBulleted
 
+    /** When non-null, only lists whose [com.programmersbox.favoritesdatabase.CustomListItem.uuid] is in this set are backed up/restored. */
+    var listIdFilter: Set<String>? = null
+
     override suspend fun backup(sink: BufferedSink): ProcessorResult {
-        val lists = listDao.getAllListsSync()
+        val lists = listDao.getAllListsSync().let { all -> filterByListId(all) }
         lists.toJson().let { sink.writeUtf8(it) }
         return ProcessorResult(successCount = lists.size)
     }
 
     override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult {
-        json
-            .fromJson<List<CustomList>>()
-            .forEach {
-                listRepository.createList(it.item)
-                it.list.forEach { listItem -> listRepository.addItem(listItem) }
-            }
-        return ProcessorResult(successCount = 1)
+        val lists = filterByListId(json.fromJson<List<CustomList>>())
+        return lists.restoreEachCatching(idOf = { it.item.name }) {
+            listRepository.createList(it.item)
+            it.list.forEach { listItem -> listRepository.addItem(listItem) }
+        }
     }
+
+    /** Parses a raw `lists.json` entry's contents, for previewing a zip's lists before restoring. */
+    fun parseLists(json: String): List<CustomList> = json.fromJson()
+
+    private fun filterByListId(lists: List<CustomList>): List<CustomList> =
+        listIdFilter?.let { ids -> lists.filter { it.item.uuid in ids } } ?: lists
 
     override suspend fun currentSummary() = BackupDataSummary(itemCount = listDao.getAllListsSync().size)
 
