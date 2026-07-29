@@ -22,8 +22,16 @@ class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
         when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 installStatusRepository.update(sessionId, DownloadAndInstallStatus.PendingUserAction)
-                confirmationIntent(intent)?.let {
-                    context.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                val confirmation = confirmationIntent(intent)
+                val shown = confirmation != null && runCatching {
+                    context.startActivity(confirmation.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }.isSuccess
+                if (!shown) {
+                    installStatusRepository.update(
+                        sessionId,
+                        DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, "Could not show install confirmation")
+                    )
+                    installStatusRepository.consumeTempFile(sessionId)
                 }
             }
 
@@ -34,7 +42,7 @@ class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
 
             PackageInstaller.STATUS_FAILURE_ABORTED -> {
                 installStatusRepository.update(sessionId, DownloadAndInstallStatus.Cancelled)
-                installStatusRepository.consumeTempFile(sessionId)?.delete()
+                installStatusRepository.consumeTempFile(sessionId)
             }
 
             PackageInstaller.STATUS_FAILURE_BLOCKED ->
@@ -71,7 +79,7 @@ class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
         } ?: intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: reason.name
 
         installStatusRepository.update(sessionId, DownloadAndInstallStatus.Error(reason, detail))
-        installStatusRepository.consumeTempFile(sessionId)?.delete()
+        installStatusRepository.consumeTempFile(sessionId)
     }
 
     @Suppress("DEPRECATION")

@@ -21,21 +21,26 @@ class PackageInstallEngine(private val context: Context) {
         params.setSize(file.length())
         val sessionId = packageInstaller.createSession(params)
 
-        packageInstaller.openSession(sessionId).use { session ->
-            session.openWrite(file.name, 0, file.length()).use { out ->
-                file.inputStream().use { input -> input.copyTo(out) }
-                session.fsync(out)
+        try {
+            packageInstaller.openSession(sessionId).use { session ->
+                session.openWrite(file.name, 0, file.length()).use { out ->
+                    file.inputStream().use { input -> input.copyTo(out) }
+                    session.fsync(out)
+                }
+
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    sessionId,
+                    Intent(context, PackageInstallReceiver::class.java),
+                    PendingIntent.FLAG_UPDATE_CURRENT or
+                        (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0)
+                )
+
+                session.commit(pendingIntent.intentSender)
             }
-
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                sessionId,
-                Intent(context, PackageInstallReceiver::class.java),
-                PendingIntent.FLAG_UPDATE_CURRENT or
-                    (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0)
-            )
-
-            session.commit(pendingIntent.intentSender)
+        } catch (t: Throwable) {
+            abandon(sessionId)
+            throw t
         }
 
         return sessionId
