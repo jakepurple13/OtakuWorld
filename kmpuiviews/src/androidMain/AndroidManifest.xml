@@ -33,6 +33,10 @@
             android:enabled="true"
             android:exported="true" />
 
+        <receiver
+            android:name=".receivers.PackageInstallReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>
