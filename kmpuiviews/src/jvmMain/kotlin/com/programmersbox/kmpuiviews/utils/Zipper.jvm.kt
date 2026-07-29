@@ -19,6 +19,20 @@ import java.util.zip.ZipOutputStream
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
+private fun processorResultToItemResult(
+    key: String,
+    timedValue: kotlin.time.TimedValue<com.programmersbox.sharedtools.ProcessorResult>,
+): ItemResult {
+    val processorResult = timedValue.value
+    return ItemResult(
+        key,
+        timeTaken = timedValue.duration.toString(),
+        success = processorResult.successCount > 0 || processorResult.failed.isEmpty(),
+        error = processorResult.failed.takeIf { it.isNotEmpty() }
+            ?.let { "${it.size} failed: ${it.joinToString()}" },
+    )
+}
+
 actual class Zipper(
     private val backupProcessors: List<BackupProcessor>,
 ) {
@@ -47,16 +61,7 @@ actual class Zipper(
                         }
                     }
                         .fold(
-                            onSuccess = { timedValue ->
-                                val processorResult = timedValue.value
-                                ItemResult(
-                                    processor.fileName,
-                                    timeTaken = timedValue.duration.toString(),
-                                    success = processorResult.successCount > 0,
-                                    error = processorResult.failed.takeIf { it.isNotEmpty() }
-                                        ?.let { "${it.size} failed: ${it.joinToString()}" },
-                                )
-                            },
+                            onSuccess = { processorResultToItemResult(processor.fileName, it) },
                             onFailure = { e ->
                                 ItemResult(
                                     processor.fileName,
@@ -99,16 +104,7 @@ actual class Zipper(
                                 }
                             }
                                 .fold(
-                                    onSuccess = { timedValue ->
-                                        val processorResult = timedValue.value
-                                        ItemResult(
-                                            name,
-                                            timeTaken = timedValue.duration.toString(),
-                                            success = processorResult.successCount > 0,
-                                            error = processorResult.failed.takeIf { it.isNotEmpty() }
-                                                ?.let { "${it.size} failed: ${it.joinToString()}" },
-                                        )
-                                    },
+                                    onSuccess = { processorResultToItemResult(name, it) },
                                     onFailure = { e ->
                                         ItemResult(
                                             name,
