@@ -83,16 +83,19 @@ sealed class DownloadAndInstallStatus {
 }
 
 enum class InstallErrorReason {
-    ABORTED, BLOCKED, CONFLICT, INCOMPATIBLE, INVALID,
-    STORAGE, TIMEOUT, PERMISSION_DENIED, GENERIC, UNKNOWN,
+    BLOCKED, CONFLICT, INCOMPATIBLE, INVALID, STORAGE, GENERIC, UNKNOWN,
 }
 ```
 
 `Cancelled` is kept distinct from `Error` so the UI can render it neutrally instead of as a
-failure.
-
-`InstallErrorReason` is a direct 1:1 mapping from `PackageInstaller.STATUS_FAILURE_*` int
-constants, done in `PackageInstallReceiver`.
+failure. `STATUS_FAILURE_ABORTED` (the code the system broadcasts when the user taps "Cancel" on
+the install confirmation dialog) maps to `Cancelled`, not `Error` — declining the dialog isn't a
+failure, it's a cancellation. `InstallErrorReason` therefore only covers the codes that represent
+genuine failures, mapped 1:1 from the remaining `PackageInstaller.STATUS_FAILURE_*` int constants
+in `PackageInstallReceiver`. There is no native `STATUS_FAILURE_TIMEOUT` or permission-denied
+failure code (permission is handled separately via `PermissionRequired`, checked before a session
+is even created) — both were part of Ackpine's constraint layer, not the native API, so they're
+dropped.
 
 Adding cases to this sealed class breaks exhaustive `when` blocks in `DownloadStateScreen.kt`
 and `PrereleaseScreen.kt` — both must be updated to render the three new states. This is
@@ -108,13 +111,18 @@ every call site (`DownloadAndInstallWorker`, `DownloadWorker`, `InstallWorker`,
 ## Permission handling (`REQUEST_INSTALL_PACKAGES` / unknown-sources)
 
 `PackageInstallEngine` checks `canRequestPackageInstalls()` before creating a session. If false,
-it emits `PermissionRequired` and stops — it does not launch Settings itself, since an
-androidMain non-Activity class shouldn't own that responsibility. The caller (ViewModel/UI)
-reacts to `PermissionRequired` by launching `Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES` via
-`rememberLauncherForActivityResult(StartActivityForResult())` — same pattern already used in
-`kmpuiviews/src/androidMain/.../utils/PermissionUtils.kt` — and on return, re-invokes
-`downloadAndInstall`. This reuses the existing retry path (below) rather than introducing a
-second retry mechanism just for permissions.
+it emits `PermissionRequired` and stops.
+
+The screens that render `DownloadAndInstallStatus` (`DownloadStateScreen`, `PrereleaseScreen`)
+are commonMain — shared with the JVM/desktop target — so they cannot call
+`Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES` or touch `android.content.Context` directly without
+adding new expect/actual plumbing through the ViewModel → Screen → nav graph chain. Given this is
+a rare edge case (hit at most once per device install, until the user revokes the permission),
+that plumbing isn't justified: `PermissionRequired` renders as guidance text ("Enable install
+from this source in Settings, then tap to retry") and reuses the existing tap-to-retry affordance
+already in `DownloadStateScreen` (the card's `onClick` re-invokes `install()`), extended to also
+fire from this state. The user grants the permission themselves via Settings and returns to
+retry — no new retry mechanism, no cross-platform plumbing.
 
 ## Cancellation
 
