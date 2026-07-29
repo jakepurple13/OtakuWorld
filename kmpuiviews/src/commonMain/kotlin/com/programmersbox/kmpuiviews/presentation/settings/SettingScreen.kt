@@ -49,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.rememberViewModelStoreOwner
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.painterLogo
 import com.programmersbox.kmpuiviews.platform
+import com.programmersbox.kmpuiviews.presentation.Screen
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
@@ -208,7 +209,7 @@ fun SettingScreen(
                         overlineContent = { Text(platform()) },
                         content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
                         supportingContent = { Text("Version code: ${versionCode()}") },
-                        onClick = {},
+                        onClick = { navigationActions.navigate(Screen.Settings.AppInfo) },
                     )
                 }
 

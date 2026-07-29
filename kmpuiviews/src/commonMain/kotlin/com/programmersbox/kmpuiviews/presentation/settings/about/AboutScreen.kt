@@ -1,9 +1,6 @@
 package com.programmersbox.kmpuiviews.presentation.settings.about
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.AttachMoney
@@ -23,8 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
@@ -33,25 +28,18 @@ import com.programmersbox.kmpuiviews.BuildKonfig
 import com.programmersbox.kmpuiviews.appVersion
 import com.programmersbox.kmpuiviews.domain.AppUpdate
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
-import com.programmersbox.kmpuiviews.painterLogo
-import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.presentation.settings.moreinfo.MoreInfoViewModel
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.LocalNavActions
-import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.utils.composables.icons.Discord
 import com.programmersbox.kmpuiviews.utils.composables.icons.Github
-import com.programmersbox.kmpuiviews.versionCode
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import otakuworld.kmpuiviews.generated.resources.Res
-import otakuworld.kmpuiviews.generated.resources.currentVersion
 import otakuworld.kmpuiviews.generated.resources.gotoBrowser
 import otakuworld.kmpuiviews.generated.resources.join_discord
 import otakuworld.kmpuiviews.generated.resources.notNow
@@ -63,7 +51,6 @@ import otakuworld.kmpuiviews.generated.resources.updateTo
 import otakuworld.kmpuiviews.generated.resources.update_available
 import otakuworld.kmpuiviews.generated.resources.view_libraries_used
 import otakuworld.kmpuiviews.generated.resources.view_on_github
-import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -106,68 +93,6 @@ fun AboutScreen(
         title = "About",
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        CategoryGroupListItem {
-            segmentedListItem(
-                content = { Text(appConfig.appName) },
-                supportingContent = { Text(appConfig.buildType.name) },
-                overlineContent = if (appConfig.isDebug) {
-                    {
-                        Text("Debug")
-                    }
-                } else null,
-                leadingContent = {
-                    Image(
-                        painterLogo(),
-                        null,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                    )
-                },
-                onClick = { },
-            )
-
-            segmentedListItem(
-                content = { Text(stringResource(Res.string.currentVersion, appVersion)) },
-                onClick = { },
-            )
-
-            segmentedListItem(
-                content = { Text("Platform: ${platform()}") },
-                onClick = { },
-            )
-
-            segmentedListItem(
-                content = { Text("Version code: ${versionCode()}") },
-                onClick = { },
-            )
-
-            segmentedListItem(
-                content = { Text("GIT SHA: ${BuildKonfig.COMMIT_SHA}") },
-                onClick = { },
-            )
-
-            segmentedListItem(
-                content = { Text("Commit Count: ${BuildKonfig.COMMIT_COUNT}") },
-                onClick = { },
-            )
-
-            segmentedListItem(
-                content = {
-                    val formatter = LocalSystemDateTimeFormat.current
-                    val format = remember(formatter) {
-                        runCatching {
-                            formatter.format(
-                                Instant.parse(BuildKonfig.BUILD_TIME)
-                                    .toLocalDateTime(TimeZone.currentSystemDefault())
-                            )
-                        }.getOrDefault(BuildKonfig.BUILD_TIME)
-                    }
-                    Text("Build Time: $format")
-                },
-                onClick = { },
-            )
-        }
         CategoryGroupListItem {
             if (AppUpdate.checkForUpdate(appVersion, appUpdate?.updateRealVersion.orEmpty())) {
                 segmentedListItem(

@@ -29,6 +29,7 @@ import com.programmersbox.kmpuiviews.presentation.onboarding.OnboardingScreen
 import com.programmersbox.kmpuiviews.presentation.recent.RecentView
 import com.programmersbox.kmpuiviews.presentation.settings.SettingScreen
 import com.programmersbox.kmpuiviews.presentation.settings.about.AboutScreen
+import com.programmersbox.kmpuiviews.presentation.settings.about.AppInfoScreen
 import com.programmersbox.kmpuiviews.presentation.settings.about.DeveloperScreen
 import com.programmersbox.kmpuiviews.presentation.settings.about.DiagnosticsScreen
 import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.AccountInfoScreen
@@ -311,6 +312,7 @@ fun buildKmpGraph(): Module = module {
             onViewAccountInfoClick = { navigationActions.accountInfo() },
         )
     }
+    detailEntry<Screen.Settings.AppInfo> { AppInfoScreen() }
     detailEntry<Screen.Settings.Diagnostics> { DiagnosticsScreen() }
     detailEntry<Screen.Settings.Developer> { DeveloperScreen() }
 
