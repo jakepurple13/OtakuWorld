@@ -5,15 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.os.Build
+import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.repository.InstallStatusRepository
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstallStatus
 import com.programmersbox.kmpuiviews.utils.InstallErrorReason
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
 
     private val installStatusRepository: InstallStatusRepository by inject()
+    private val sourceLoader: SourceLoader by inject()
 
     override fun onReceive(context: Context, intent: Intent) {
         val sessionId = intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1)
@@ -38,6 +43,8 @@ class PackageInstallReceiver : BroadcastReceiver(), KoinComponent {
             PackageInstaller.STATUS_SUCCESS -> {
                 installStatusRepository.update(sessionId, DownloadAndInstallStatus.Installed)
                 installStatusRepository.consumeTempFile(sessionId)?.delete()
+                @OptIn(DelicateCoroutinesApi::class)
+                GlobalScope.launch { sourceLoader.blockingLoad() }
             }
 
             PackageInstaller.STATUS_FAILURE_ABORTED -> {
