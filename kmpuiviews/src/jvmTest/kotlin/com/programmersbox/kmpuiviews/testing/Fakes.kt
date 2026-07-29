@@ -57,8 +57,8 @@ class FakeAuthManager(
 ) : AuthManager {
     override val authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override fun isLoggedIn(): Boolean = loggedIn
-    override suspend fun signInWithEmail(email: String, password: String) {}
-    override suspend fun signUpWithEmail(email: String, password: String) {}
+    override suspend fun signInWithEmail(email: String, password: String, context: Any?) {}
+    override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {}
     override suspend fun signInWithOAuth(provider: OAuthProvider) {}
     override suspend fun signInWithMagicLink(email: String) {}
     override suspend fun signInWithPhone(phone: String, otp: String) {}

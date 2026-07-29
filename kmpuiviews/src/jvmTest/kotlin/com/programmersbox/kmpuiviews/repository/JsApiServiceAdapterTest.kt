@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 class JsApiServiceAdapterTest {
 
     private class StubHostBridge(private val response: String = "") : HostBridge {
-        override fun httpGet(url: String, headersJson: String): String = response
+        override suspend fun httpGet(url: String, headersJson: String): String = response
     }
 
     private val manifest = ExtensionManifest(
