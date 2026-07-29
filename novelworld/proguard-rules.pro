@@ -19,3 +19,6 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# PackageInstaller broadcast receiver — instantiated by the OS via manifest registration
+-keep class com.programmersbox.kmpuiviews.receivers.PackageInstallReceiver { public <init>(); }
