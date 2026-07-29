@@ -23,10 +23,35 @@ class DownloadViewModel(
 
     val fileList = downloadedMediaHandler
         .listenToUpdates()
-        .map { f ->
-            f
+        .map { folder ->
+            val numberRegex = Regex("[0-9]+(?:\\.[0-9]+)?")
+
+            folder
                 .groupBy { it.folder }
-                .mapValues { entry -> entry.value.groupBy { c -> c.chapterFolder } }
+                // 1. Sort the OUTER map by 'folder' name
+                .toList()
+                .sortedBy { it.first }
+                .toMap()
+                .mapValues { entry ->
+                    entry.value
+                        .groupBy { c -> c.chapterFolder }
+                        // 2. Sort the INNER map by 'chapterFolder' name DESCENDING (Latest first in the UI)
+                        .toList()
+                        .sortedWith(
+                            compareByDescending<Pair<String, List<DownloadedChapters>>> { innerEntry ->
+                                numberRegex.find(innerEntry.first)?.value?.toDoubleOrNull() ?: 0.0
+                            }.thenByDescending { innerEntry -> innerEntry.first }
+                        )
+                        .toMap()
+                        // 3. Sort the actual chapters inside those folders by 'chapterName' DESCENDING
+                        .mapValues { sortedInnerEntry ->
+                            sortedInnerEntry.value.sortedWith(
+                                compareByDescending<DownloadedChapters> { c ->
+                                    numberRegex.find(c.chapterName)?.value?.toDoubleOrNull() ?: 0.0
+                                }.thenByDescending { c -> c.chapterName }
+                            )
+                        }
+                }
         }
         .distinctUntilChanged()
         .flowOn(Dispatchers.IO)

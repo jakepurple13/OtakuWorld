@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,9 +26,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -40,7 +41,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.material3.ripple
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -50,8 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -273,7 +274,7 @@ private fun EmptyState(p1: PaddingValues) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ChapterItem(
     file: Map.Entry<String, Map<String, List<DownloadedChapters>>>,
@@ -287,29 +288,23 @@ private fun ChapterItem(
         modifier = Modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            tonalElevation = 4.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    indication = ripple(),
-                    interactionSource = null
-                ) { expanded = !expanded }
-        ) {
-            ListItem(
-                modifier = Modifier.padding(4.dp),
-                headlineContent = { Text(file.value.values.firstOrNull()?.firstOrNull()?.folderName.orEmpty()) },
-                supportingContent = { Text("Chapter Count ${file.value.size}") },
-                trailingContent = {
-                    Icon(
-                        Icons.Default.ArrowDropDown,
-                        null,
-                        modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
-                    )
-                }
-            )
-        }
+        ListItem(
+            content = { Text(file.value.values.firstOrNull()?.firstOrNull()?.folderName.orEmpty()) },
+            supportingContent = { Text("Chapters Count ${file.value.size}") },
+            trailingContent = {
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    null,
+                    modifier = Modifier.rotate(animateFloatAsState(if (expanded) 180f else 0f, label = "").value)
+                )
+            },
+            checked = expanded,
+            onCheckedChange = { expanded = it },
+            colors = ListItemDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+            ),
+            modifier = Modifier.padding(4.dp)
+        )
 
         if (expanded) {
             file.value.values.forEach { chapter ->
@@ -369,46 +364,34 @@ private fun ChapterItem(
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = null,
-                                modifier = Modifier.scale(scale)
+                                modifier = Modifier.graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
                             )
                         }
                     },
                     content = {
                         val navController = LocalNavActions.current
-                        Surface(
-                            shape = MaterialTheme.shapes.medium,
-                            tonalElevation = 4.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    indication = ripple(),
-                                    interactionSource = null
-                                ) {
-                                    if (useNewReader) {
-                                        chapterHolder.downloadedChapterPaths = sortedChapterPaths(file.value)
-                                        ReadViewModel.navigateToMangaReader(
-                                            navController,
-                                            mangaTitle = c?.folderName,
-                                            filePath = c?.chapterFolder,
-                                            downloaded = true
-                                        )
-                                    } else {
-                                        /*context.startActivity(
-                                            Intent(context, ReadActivity::class.java).apply {
-                                                putExtra("downloaded", true)
-                                                putExtra("filePath", c?.chapterFolder?.let { f -> File(f) })
-                                            }
-                                        )*/
-                                    }
-                                }
-                        ) {
-                            ListItem(
-                                modifier = Modifier.padding(4.dp),
-                                headlineContent = { Text(c?.chapterName.orEmpty()) },
-                                supportingContent = { Text("Chapter Count ${chapter.size}") },
-                                trailingContent = { Icon(Icons.Default.ChevronRight, null) }
-                            )
-                        }
+                        ListItem(
+                            content = { Text(c?.chapterName.orEmpty()) },
+                            supportingContent = { Text("Pages Count ${chapter.size}") },
+                            trailingContent = { Icon(Icons.Default.ChevronRight, null) },
+                            onClick = {
+                                chapterHolder.downloadedChapterPaths = sortedChapterPaths(file.value)
+                                ReadViewModel.navigateToMangaReader(
+                                    navController,
+                                    mangaTitle = c?.folderName,
+                                    filePath = c?.chapterFolder,
+                                    downloaded = true
+                                )
+                            },
+                            colors = ListItemDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                            ),
+                            elevation = ListItemDefaults.elevation(4.dp),
+                            modifier = Modifier.padding(4.dp)
+                        )
                     }
                 )
             }

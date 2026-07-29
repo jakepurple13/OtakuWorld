@@ -108,6 +108,7 @@ dependencies {
 
     implementation(commonLibs.lifecycle.viewmodel.compose)
     implementation(androidLibs.brotli)
+    implementation(androidLibs.zstd)
 
     //debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
