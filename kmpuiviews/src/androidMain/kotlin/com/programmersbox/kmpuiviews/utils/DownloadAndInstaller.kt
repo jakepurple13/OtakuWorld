@@ -1,10 +1,11 @@
 package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
-import android.widget.Toast
+import android.content.Intent
 import androidx.core.net.toUri
 import com.google.firebase.perf.trace
 import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.repository.InstallStatusRepository
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.PlatformFile
 import io.ktor.client.HttpClient
@@ -16,42 +17,26 @@ import io.ktor.utils.io.copyAndClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import ru.solrudev.ackpine.installer.InstallFailure
-import ru.solrudev.ackpine.installer.PackageInstaller
-import ru.solrudev.ackpine.installer.createSession
-import ru.solrudev.ackpine.installer.parameters.InstallConstraints
-import ru.solrudev.ackpine.installer.parameters.InstallerType
-import ru.solrudev.ackpine.installer.parameters.PackageSource
-import ru.solrudev.ackpine.session.Session
-import ru.solrudev.ackpine.session.await
-import ru.solrudev.ackpine.session.parameters.Confirmation
-import ru.solrudev.ackpine.session.state
-import ru.solrudev.ackpine.uninstaller.PackageUninstaller
-import ru.solrudev.ackpine.uninstaller.createSession
+import kotlinx.coroutines.flow.transformWhile
 import java.io.File
-import kotlin.time.Duration.Companion.minutes
 
-//TODO: Also need a wrapper for it.
-// Probably an expect/actual class
 actual class DownloadAndInstaller(
     private val context: Context,
+    private val packageInstallEngine: PackageInstallEngine,
+    private val installStatusRepository: InstallStatusRepository,
 ) {
-    private val packageInstaller by lazy { PackageInstaller.getInstance(context) }
-    private val packageUninstaller by lazy { PackageUninstaller.getInstance(context) }
     private val client = HttpClient()
 
     actual suspend fun uninstall(packageName: String) {
-        packageUninstaller.createSession(packageName) {
-            confirmation = Confirmation.IMMEDIATE
-        }
-            .await()
-            .let {
-                printLogs { it }
-                Toast.makeText(context, "Uninstalled $packageName", Toast.LENGTH_SHORT).show()
-            }
+        context.startActivity(
+            Intent(Intent.ACTION_UNINSTALL_PACKAGE, "package:$packageName".toUri())
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 
     actual fun downloadAndInstall(
@@ -74,20 +59,20 @@ actual class DownloadAndInstaller(
 
                 printLogs { "Starting Install Session" }
 
-                install(
-                    PlatformFile(file),
-                    confirmationType
-                )
+                install(PlatformFile(file), confirmationType)
                     .onEach { send(it) }
                     .launchIn(this@channelFlow)
             }
         }
-            .catch { it.printStackTrace() }
+            .catch {
+                it.printStackTrace()
+                emit(DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, it.message ?: "Unknown error"))
+            }
             .onEach {
                 printLogs { it }
                 if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
-                if (it is DownloadAndInstallStatus.Installed) file.delete()
             }
+            .onCompletion { cause -> if (cause != null) file.delete() }
     }
 
     actual fun download(
@@ -108,67 +93,69 @@ actual class DownloadAndInstaller(
                 }
             }
         }
-            .catch { it.printStackTrace() }
+            .catch {
+                it.printStackTrace()
+                emit(DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, it.message ?: "Unknown error"))
+            }
             .onEach {
                 printLogs { it }
                 if (it !is DownloadAndInstallStatus.Downloading) logFirebaseMessage(it.toString())
-                if (it is DownloadAndInstallStatus.Installed) file.delete()
             }
+            .onCompletion { cause -> if (cause != null) file.delete() }
     }
 
     actual fun install(
         file: PlatformFile,
         confirmationType: ConfirmationType,
-    ): Flow<DownloadAndInstallStatus> = channelFlow {
-        val sess = packageInstaller.createSession(
-            when (val f = file.androidFile) {
-                is AndroidFile.FileWrapper -> f.file.toUri()
-                is AndroidFile.UriWrapper -> f.uri
-            }
-        ) {
-            packageSource = PackageSource.DownloadedFile
+    ): Flow<DownloadAndInstallStatus> {
+        var sessionId: Int? = null
+        var terminalReached = false
 
-            confirmation = when (confirmationType) {
-                ConfirmationType.IMMEDIATE -> Confirmation.IMMEDIATE
-                ConfirmationType.DEFERRED -> Confirmation.DEFERRED
+        return flow {
+            if (!packageInstallEngine.canRequestPackageInstalls()) {
+                emit(DownloadAndInstallStatus.PermissionRequired)
+                return@flow
             }
-            installerType = InstallerType.SESSION_BASED
 
-            constraints = InstallConstraints.gentleUpdate(
-                timeout = 1.minutes,
-                timeoutStrategy = InstallConstraints.TimeoutStrategy.Fail
+            val localFile = resolveLocalFile(file)
+
+            sessionId = runCatching { packageInstallEngine.commit(localFile) }
+                .onFailure {
+                    emit(DownloadAndInstallStatus.Error(InstallErrorReason.GENERIC, it.message ?: "Unable to start install"))
+                }
+                .getOrNull()
+            val id = sessionId ?: return@flow
+
+            installStatusRepository.registerTempFile(id, localFile)
+            emit(DownloadAndInstallStatus.Installing)
+
+            emitAll(
+                installStatusRepository.flowFor(id).transformWhile { status ->
+                    emit(status)
+                    val terminal = status is DownloadAndInstallStatus.Installed ||
+                        status is DownloadAndInstallStatus.Cancelled ||
+                        status is DownloadAndInstallStatus.Error
+                    if (terminal) terminalReached = true
+                    !terminal
+                }
             )
-
-            requireUserAction = true
-            requestUpdateOwnership = true
+        }.onCompletion {
+            val id = sessionId
+            if (id != null && !terminalReached) {
+                packageInstallEngine.abandon(id)
+                installStatusRepository.consumeTempFile(id)?.delete()
+                installStatusRepository.clear(id)
+            }
         }
+    }
 
-        sess
-            .state
-            .map { s ->
-                when (s) {
-                    is Session.State.Failed<*> -> DownloadAndInstallStatus.Error(
-                        when (val failure = s.failure) {
-                            is InstallFailure.Aborted -> "Aborted"
-                            is InstallFailure.Blocked -> "Blocked by ${failure.otherPackageName}"
-                            is InstallFailure.Conflict -> "Conflicting with ${failure.otherPackageName}"
-                            is InstallFailure.Exceptional -> failure.exception.message
-                            is InstallFailure.Generic -> "Generic failure"
-                            is InstallFailure.Incompatible -> "Incompatible"
-                            is InstallFailure.Invalid -> "Invalid"
-                            is InstallFailure.Storage -> "Storage path: ${failure.storagePath}"
-                            is InstallFailure.Timeout -> "Timeout"
-                            else -> "Unknown failure"
-                        }.orEmpty()
-                    )
-
-                    Session.State.Succeeded -> DownloadAndInstallStatus.Installed
-                    else -> DownloadAndInstallStatus.Installing
+    private fun resolveLocalFile(file: PlatformFile): File =
+        when (val androidFile = file.androidFile) {
+            is AndroidFile.FileWrapper -> androidFile.file
+            is AndroidFile.UriWrapper -> File(context.cacheDir, "install_${androidFile.uri.hashCode()}.apk").also { copy ->
+                context.contentResolver.openInputStream(androidFile.uri)?.use { input ->
+                    copy.outputStream().use { input.copyTo(it) }
                 }
             }
-            .onEach { send(it) }
-            .launchIn(this@channelFlow)
-
-        sess.await()
-    }
+        }
 }
