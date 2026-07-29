@@ -8,6 +8,7 @@ import com.programmersbox.kmpuiviews.repository.ListRepository
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import okio.BufferedSink
 import okio.BufferedSource
 
@@ -23,20 +24,20 @@ class ListBackupProcessor(
     override val description: String? get() = "User-created custom lists"
     override val icon get() = Icons.Default.FormatListBulleted
 
-    override suspend fun backup(sink: BufferedSink) {
-        listDao
-            .getAllListsSync()
-            .toJson()
-            .let { sink.writeUtf8(it) }
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val lists = listDao.getAllListsSync()
+        lists.toJson().let { sink.writeUtf8(it) }
+        return ProcessorResult(successCount = lists.size)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult {
         json
             .fromJson<List<CustomList>>()
             .forEach {
                 listRepository.createList(it.item)
                 it.list.forEach { listItem -> listRepository.addItem(listItem) }
             }
+        return ProcessorResult(successCount = 1)
     }
 
     override suspend fun currentSummary() = BackupDataSummary(itemCount = listDao.getAllListsSync().size)

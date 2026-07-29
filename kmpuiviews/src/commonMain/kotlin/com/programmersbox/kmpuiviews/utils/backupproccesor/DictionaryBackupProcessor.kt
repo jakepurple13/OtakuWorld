@@ -7,6 +7,7 @@ import com.programmersbox.favoritesdatabase.DictionaryEntry
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import okio.BufferedSink
 import okio.BufferedSource
 
@@ -20,18 +21,16 @@ class DictionaryBackupProcessor(
     override val description: String? get() = "Dictionary Entries"
     override val icon get() = Icons.Default.MenuBook
 
-    override suspend fun backup(sink: BufferedSink) {
-        dictionaryDao
-            .getAllSync()
-            .toJson()
-            .let { sink.writeUtf8(it) }
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val entries = dictionaryDao.getAllSync()
+        entries.toJson().let { sink.writeUtf8(it) }
+        return ProcessorResult(successCount = entries.size)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
-        json
-            .fromJson<List<DictionaryEntry>>()
-            .forEach { dictionaryDao.insert(it) }
-    }
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult =
+        json.fromJson<List<DictionaryEntry>>().restoreEachCatching(idOf = { it.term }) {
+            dictionaryDao.insert(it)
+        }
 
     override suspend fun currentSummary() = BackupDataSummary(itemCount = dictionaryDao.getAllSync().size)
 

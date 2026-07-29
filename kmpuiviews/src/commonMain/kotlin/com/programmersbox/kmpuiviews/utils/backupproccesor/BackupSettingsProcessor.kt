@@ -14,6 +14,7 @@ import com.programmersbox.kmpuiviews.utils.BackupSettings
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import kotlinx.coroutines.flow.firstOrNull
 import okio.BufferedSink
 import okio.BufferedSource
@@ -27,7 +28,7 @@ class BackupSettingsProcessor : BackupProcessor(), BackupUiInfo {
     override val description: String? get() = "Raw app preference key-value pairs"
     override val icon get() = Icons.Default.Settings
 
-    override suspend fun backup(sink: BufferedSink) {
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
         val map = otakuDataStore.data.firstOrNull()?.asMap()!!
 
         BackupSettings(
@@ -58,9 +59,10 @@ class BackupSettingsProcessor : BackupProcessor(), BackupUiInfo {
         )
             .toJson()
             .let { sink.writeUtf8(it) }
+        return ProcessorResult(successCount = 1)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult {
         val backupSettings = json.fromJson<BackupSettings>()
         with(backupSettings) {
             otakuDataStore.edit { p ->
@@ -84,6 +86,7 @@ class BackupSettingsProcessor : BackupProcessor(), BackupUiInfo {
                 }
             }
         }
+        return ProcessorResult(successCount = 1)
     }
 
     private fun BackupSettings.entryCount() =

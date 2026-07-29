@@ -7,6 +7,7 @@ import com.programmersbox.kmpuiviews.presentation.settings.workerinfo.WorkerInfo
 import com.programmersbox.kmpuiviews.testing.FakeBackgroundWorkHandler
 import com.programmersbox.sharedcomponents.backup.ItemResult
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -120,6 +121,6 @@ class MoreSettingsViewModelTest {
 
 private class FakeBackupProcessor(name: String) : BackupProcessor() {
     override val fileName: String = name
-    override suspend fun backup(sink: okio.BufferedSink) {}
-    override suspend fun restore(json: String, bufferedSource: okio.BufferedSource) {}
+    override suspend fun backup(sink: okio.BufferedSink): ProcessorResult = ProcessorResult(successCount = 1)
+    override suspend fun restore(json: String, bufferedSource: okio.BufferedSource): ProcessorResult = ProcessorResult(successCount = 1)
 }
