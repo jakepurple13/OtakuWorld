@@ -9,6 +9,9 @@ import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
 import com.programmersbox.kmpuiviews.domain.MediaUpdateChecker
 import com.programmersbox.kmpuiviews.presentation.navigation.buildKmpGraph
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstats.CollectionStatisticsProvider
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstats.DiscoveryStatisticsProvider
+import com.programmersbox.kmpuiviews.presentation.settings.accountinfo.accountstats.SystemStatisticsProvider
 import com.programmersbox.kmpuiviews.presentation.settings.search.DefaultSettingsItems
 import com.programmersbox.kmpuiviews.presentation.settings.search.SettingsSearchViewModel
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
@@ -30,6 +33,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.NotificationsBackupPr
 import com.programmersbox.kmpuiviews.utils.backupproccesor.RecommendationsBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.SourceOrderBackupProcessor
 import com.programmersbox.sharedcomponents.qrcode.qrCodeModule
+import com.programmersbox.sharedcomponents.stats.StatisticsProvider
 import com.programmersbox.sharedtools.SearchRegistryItem
 import com.programmersbox.supabaseintegration.di.supabaseModule
 import com.programmersbox.supabaseintegration.sync.SyncConfigDataStore
@@ -95,6 +99,10 @@ val appModule = module {
 
     viewModel { SettingsSearchViewModel(getAll()) }
     singleOf(::DefaultSettingsItems) bind SearchRegistryItem::class
+
+    factoryOf(::CollectionStatisticsProvider) bind StatisticsProvider::class
+    factoryOf(::DiscoveryStatisticsProvider) bind StatisticsProvider::class
+    factoryOf(::SystemStatisticsProvider) bind StatisticsProvider::class
 
     includes(
         supabaseModule(),

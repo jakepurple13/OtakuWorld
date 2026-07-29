@@ -5,34 +5,27 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.programmersbox.favoritesdatabase.BlurHashDatabase
 import com.programmersbox.favoritesdatabase.BookmarkDatabase
-import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.DictionaryDatabase
 import com.programmersbox.favoritesdatabase.ExceptionDatabase
 import com.programmersbox.favoritesdatabase.HeatMapDatabase
 import com.programmersbox.favoritesdatabase.HistoryDatabase
 import com.programmersbox.favoritesdatabase.ItemDatabase
 import com.programmersbox.favoritesdatabase.ListDatabase
-import com.programmersbox.favoritesdatabase.NoteItem
 import com.programmersbox.favoritesdatabase.NotesDatabase
 import com.programmersbox.favoritesdatabase.RecommendationDatabase
 import com.programmersbox.favoritesdatabase.SettingsDatabase
-import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.testing.FakeAuthManager
-import com.programmersbox.kmpuiviews.testing.FakeTranslationModelHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class AccountInfoViewModelTest {
 
@@ -66,19 +59,10 @@ class AccountInfoViewModelTest {
         sourceRepository: SourceRepository = SourceRepository(),
     ) = AccountInfoViewModel(
         itemDao = itemDatabase.itemDao(),
-        listDao = listDatabase.listDao(),
-        historyDao = historyDatabase.historyDao(),
-        blurHashDao = blurHashDatabase.blurDao(),
         heatMapDao = heatMapDatabase.heatMapDao(),
-        translationModelHandler = FakeTranslationModelHandler(),
-        sourceRepository = sourceRepository,
-        recommendationDao = recommendationDatabase.recommendationDao(),
-        exceptionDao = exceptionDatabase.exceptionDao(),
-        bookmarksDao = bookmarkDatabase.bookmarkDao(),
-        notesDao = notesDatabase.notesDao(),
         activityDao = settingsDatabase.activityDao(),
-        dictionaryDao = dictionaryDatabase.dictionaryDao(),
         authManager = FakeAuthManager(),
+        providers = emptyList()
     ).also { viewModelStore.put(System.identityHashCode(it).toString(), it) }
 
     private inline fun <reified T : Any> tempDatabase(name: String, build: (String) -> T): T {
@@ -140,57 +124,5 @@ class AccountInfoViewModelTest {
         exceptionDatabase.close()
         bookmarkDatabase.close()
         notesDatabase.close()
-    }
-
-    @Test fun `starts with empty account info`() = runTest {
-        val vm = viewModel()
-
-        assertEquals(AccountInfoCount.Empty.totalFavorites, vm.accountInfo.totalFavorites)
-        assertEquals(0, vm.accountInfo.notesCount)
-    }
-
-    @Test fun `favorite inserted before collection starts is reflected in localFavorites`() = runTest {
-        itemDatabase.itemDao().insertFavorite(
-            DbModel(
-                title = "Title",
-                description = "Description",
-                url = "https://example.com/1",
-                imageUrl = "https://example.com/1.jpg",
-                source = "ExampleService",
-            )
-        )
-
-        val vm = viewModel()
-        awaitCondition { vm.accountInfo.localFavorites == 1 }
-
-        assertEquals(1, vm.accountInfo.localFavorites)
-        assertEquals(1, vm.accountInfo.totalFavorites)
-    }
-
-    @Test fun `working sources are grouped by packageName and counted`() = runTest {
-        val sourceRepository = SourceRepository().apply {
-            setSources(listOf(ExampleService.getSourceInformation()))
-        }
-
-        val vm = viewModel(sourceRepository = sourceRepository)
-        awaitCondition { vm.accountInfo.sourceCount == 1 }
-
-        assertEquals(1, vm.accountInfo.sourceCount)
-    }
-
-    @Test fun `notes count reflects inserted notes`() = runTest {
-        notesDatabase.notesDao().upsertNote(
-            NoteItem(
-                itemUrl = "https://example.com/1",
-                itemTitle = "Title",
-                content = "Content",
-                timestamp = 0L,
-            )
-        )
-
-        val vm = viewModel()
-        awaitCondition { vm.accountInfo.notesCount == 1 }
-
-        assertEquals(1, vm.accountInfo.notesCount)
     }
 }

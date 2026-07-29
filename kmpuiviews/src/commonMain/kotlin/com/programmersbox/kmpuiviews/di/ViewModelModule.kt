@@ -74,7 +74,15 @@ val viewModels: Module = module {
     viewModelOf(::DetailsViewModel)
     viewModelOf(::TranslationViewModel)
     viewModelOf(::DownloadStateViewModel)
-    viewModelOf(::AccountInfoViewModel)
+    viewModel {
+        AccountInfoViewModel(
+            itemDao = get(),
+            heatMapDao = get(),
+            activityDao = get(),
+            authManager = get(),
+            providers = getAll()
+        )
+    }
     viewModelOf(::HistoryViewModel)
     viewModelOf(::WorkerInfoViewModel)
     viewModelOf(::UrlOpenerViewModel)

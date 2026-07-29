@@ -7,32 +7,23 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.programmersbox.favoritesdatabase.ActivityDao
-import com.programmersbox.favoritesdatabase.BlurHashDao
-import com.programmersbox.favoritesdatabase.BookmarkDao
-import com.programmersbox.favoritesdatabase.DictionaryDao
-import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.favoritesdatabase.HeatMapDao
 import com.programmersbox.favoritesdatabase.HeatMapItem
-import com.programmersbox.favoritesdatabase.HistoryDao
 import com.programmersbox.favoritesdatabase.ItemDao
-import com.programmersbox.favoritesdatabase.ListDao
-import com.programmersbox.favoritesdatabase.NotesDao
-import com.programmersbox.favoritesdatabase.RecommendationDao
-import com.programmersbox.kmpmodels.SourceRepository
-import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.DateFormatItem
 import com.programmersbox.kmpuiviews.utils.KmpHeat
+import com.programmersbox.sharedcomponents.stats.StatisticsProvider
 import com.programmersbox.supabaseintegration.auth.AuthManager
 import com.programmersbox.supabaseintegration.auth.AuthState
 import com.programmersbox.supabaseintegration.auth.SupabaseUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
@@ -43,27 +34,26 @@ import kotlin.time.ExperimentalTime
 
 class AccountInfoViewModel(
     itemDao: ItemDao,
-    listDao: ListDao,
-    historyDao: HistoryDao,
-    blurHashDao: BlurHashDao,
     heatMapDao: HeatMapDao,
-    translationModelHandler: TranslationModelHandler,
-    sourceRepository: SourceRepository,
-    recommendationDao: RecommendationDao,
-    exceptionDao: ExceptionDao,
-    bookmarksDao: BookmarkDao,
-    notesDao: NotesDao,
-    dictionaryDao: DictionaryDao,
     activityDao: ActivityDao,
     authManager: AuthManager,
+    providers: List<StatisticsProvider>,
 ) : ViewModel() {
-
 
     var accountInfo by mutableStateOf(AccountInfoCount.Empty)
         private set
 
     var supabaseInfo by mutableStateOf<SupabaseUser?>(null)
         private set
+
+    val uiState = combine(
+        providers.map { it.getStats() }
+    ) { items -> items.sortedBy { it.priority } }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     init {
         authManager
@@ -75,29 +65,8 @@ class AccountInfoViewModel(
             .launchIn(viewModelScope)
 
         combine(
-            dictionaryDao.getCount(),
             itemDao.getAllFavoritesCount(),
-            itemDao.getAllNotificationCount(),
-            itemDao.getAllIncognitoSourcesCount(),
-            historyDao.getAllRecentHistoryCount(),
-            listDao.getAllListsCount(),
-            listDao.getAllListItemsCount(),
             itemDao.getAllChaptersCount(),
-            blurHashDao.getAllHashesCount(),
-            flow { emit(translationModelHandler.modelList().size) },
-            sourceRepository
-                .sources
-                .map { list ->
-                    list
-                        .filterNot { it.apiService.notWorking }
-                        .groupBy { it.packageName }
-                        .size
-                },
-            historyDao.getAllHistoryCount(),
-            recommendationDao.getRecommendationCount(),
-            exceptionDao.getExceptionCount(),
-            bookmarksDao.getAllBookmarksCount(),
-            notesDao.getAllNotesCount(),
             heatMapDao.getDailyAverage()
         ) { AccountInfoCount(it) }
             .combine(activityDao.observeActivity()) { a, b ->
@@ -145,48 +114,20 @@ data class TopHeatMapItem(
 
 @Stable
 data class AccountInfoCount(
-    val dictionaryCount: Int,
     val localFavorites: Int,
-    val notifications: Int,
-    val incognitoSources: Int,
-    val history: Int,
-    val lists: Int,
-    val itemsInLists: Int,
     val chapters: Int,
-    val blurHashes: Int,
-    val translationModels: Int,
-    val sourceCount: Int,
-    val globalSearchHistory: Int,
-    val savedRecommendations: Int,
     val timeSpentDoing: String,
     val heatMaps: List<KmpHeat<Int>>,
-    val exceptionCount: Int,
-    val bookmarkCount: Int,
-    val notesCount: Int,
     val dailyAverage: Int,
     val topHeatMap: TopHeatMapItem?,
 ) {
     @OptIn(ExperimentalTime::class)
     constructor(array: Array<Int>) : this(
-        dictionaryCount = array[0],
-        localFavorites = array[1],
-        notifications = array[2],
-        incognitoSources = array[3],
-        history = array[4],
-        lists = array[5],
-        itemsInLists = array[6],
-        chapters = array[7],
-        blurHashes = array[8],
-        translationModels = array[9],
-        sourceCount = array[10],
-        globalSearchHistory = array[11],
-        savedRecommendations = array[12],
+        localFavorites = array[0],
+        chapters = array[1],
         timeSpentDoing = "0 seconds",
         heatMaps = listOf(),
-        exceptionCount = array[13],
-        bookmarkCount = array[14],
-        notesCount = array[15],
-        dailyAverage = array[16],
+        dailyAverage = array[2],
         topHeatMap = null
     )
 
@@ -196,24 +137,10 @@ data class AccountInfoCount(
     companion object {
         @OptIn(ExperimentalTime::class)
         val Empty = AccountInfoCount(
-            dictionaryCount = 0,
             localFavorites = 0,
-            notifications = 0,
-            incognitoSources = 0,
-            history = 0,
-            lists = 0,
-            itemsInLists = 0,
             chapters = 0,
-            blurHashes = 0,
-            translationModels = 0,
-            sourceCount = 0,
-            globalSearchHistory = 0,
-            savedRecommendations = 0,
             timeSpentDoing = "0 seconds",
             heatMaps = listOf(),
-            exceptionCount = 0,
-            bookmarkCount = 0,
-            notesCount = 0,
             dailyAverage = 0,
             topHeatMap = null
         )

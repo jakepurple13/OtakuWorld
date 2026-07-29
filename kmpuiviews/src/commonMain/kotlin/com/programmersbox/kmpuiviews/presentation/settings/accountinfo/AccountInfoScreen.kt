@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,7 +44,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.programmersbox.kmpuiviews.BuildType
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.kmpuiviews.presentation.components.BackButton
 import com.programmersbox.kmpuiviews.presentation.components.OtakuScaffold
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroup
@@ -65,6 +66,8 @@ fun AccountInfoScreen(
 ) {
     val state = viewModel.accountInfo
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    val list by viewModel.uiState.collectAsStateWithLifecycle()
 
     OtakuScaffold(
         topBar = {
@@ -124,153 +127,28 @@ fun AccountInfoScreen(
                 }
             }
 
-            item(
-                contentType = "collection",
-                key = "collection",
-            ) {
+            items(
+                list,
+                key = { it.key },
+                contentType = { it.contentType },
+            ) { statInfo ->
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
                         .animateItem()
                         .fillMaxWidth(),
                 ) {
-                    SectionHeader("⭐ Collection")
+                    SectionHeader(statInfo.header)
                     CategoryGroup {
-                        item {
-                            AccountInfoItem(
-                                title = "Favorites",
-                                description = "Items added to favorites",
-                                amount = state.localFavorites,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Notifications",
-                                description = "Pending update notifications",
-                                amount = state.notifications,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Incognito Sources",
-                                description = "Sources browsed privately",
-                                amount = state.incognitoSources,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Bookmarks",
-                                description = "Chapters or Episodes bookmarked",
-                                amount = state.bookmarkCount,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Dictionary Entries",
-                                description = "Entries in the dictionary",
-                                amount = state.dictionaryCount,
-                            )
-                        }
-                    }
-                }
-            }
-
-            item(
-                contentType = "readingList",
-                key = "readingList",
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .animateItem()
-                        .fillMaxWidth(),
-                ) {
-                    SectionHeader("🔍 Discovery")
-                    CategoryGroup {
-                        item {
-                            AccountInfoItem(
-                                title = "Sources",
-                                description = "Installed extensions",
-                                amount = state.sourceCount,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Search History",
-                                description = "Recent searches",
-                                amount = state.history,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Global Search History",
-                                description = "Cross-source searches",
-                                amount = state.globalSearchHistory,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Saved Recommendations",
-                                description = "Suggested titles saved",
-                                amount = state.savedRecommendations,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Lists",
-                                description = "${state.itemsInLists} items total",
-                                amount = state.lists,
-                            )
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Notes",
-                                description = "Notes saved",
-                                amount = state.notesCount,
-                            )
-                        }
-                    }
-                }
-            }
-
-            item(
-                contentType = "system",
-                key = "system",
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .animateItem()
-                        .fillMaxWidth(),
-                ) {
-                    SectionHeader("⚙️ System")
-                    CategoryGroup {
-                        item {
-                            AccountInfoItem(
-                                title = "Blur Hash Cache",
-                                description = "Speeds up image loading",
-                                amount = state.blurHashes,
-                            )
-                        }
-                        if (appConfig.buildType != BuildType.NoFirebase) {
+                        statInfo.stats.forEach {
                             item {
                                 AccountInfoItem(
-                                    title = "Translation Models",
-                                    description = "Downloaded language models",
-                                    amount = state.translationModels,
+                                    title = it.label,
+                                    description = it.description,
+                                    amount = it.value,
+                                    valueColor = it.valueColor()
                                 )
                             }
-                        }
-                        item {
-                            AccountInfoItem(
-                                title = "Logged Exceptions",
-                                description = "Errors captured by the app",
-                                amount = state.exceptionCount,
-                                valueColor = if (state.exceptionCount > 0)
-                                    MaterialTheme.colorScheme.error
-                                else
-                                    Color.Unspecified,
-                            )
                         }
                     }
                 }
@@ -283,32 +161,18 @@ fun AccountInfoScreen(
 private fun AccountInfoItem(
     title: String,
     description: String,
-    amount: Int,
-    modifier: Modifier = Modifier,
+    amount: String,
     valueColor: Color = Color.Unspecified,
+    modifier: Modifier = Modifier,
 ) = ListItem(
     headlineContent = { Text(title) },
     supportingContent = { Text(description) },
     trailingContent = {
         Text(
-            text = animateIntAsState(amount, label = "accountInfoItemAmount").value.toString(),
+            text = amount,
             color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.primary else valueColor,
         )
     },
-    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    modifier = modifier
-)
-
-@Composable
-private fun AccountInfoItem(
-    title: String,
-    description: String,
-    amount: String,
-    modifier: Modifier = Modifier,
-) = ListItem(
-    headlineContent = { Text(title) },
-    supportingContent = { Text(description) },
-    trailingContent = { Text(amount) },
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     modifier = modifier
 )
