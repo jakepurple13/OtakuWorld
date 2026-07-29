@@ -13,9 +13,11 @@ import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
 import com.programmersbox.kmpuiviews.repository.PlatformRepository
+import com.programmersbox.kmpuiviews.repository.InstallStatusRepository
 import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
+import com.programmersbox.kmpuiviews.utils.PackageInstallEngine
 import com.programmersbox.kmpuiviews.workers.UpdateNotification
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -23,6 +25,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
+    singleOf(::PackageInstallEngine)
+    singleOf(::InstallStatusRepository)
     singleOf(::DownloadAndInstaller)
     singleOf(::IconLoader)
     singleOf(::DateTimeFormatHandler)
