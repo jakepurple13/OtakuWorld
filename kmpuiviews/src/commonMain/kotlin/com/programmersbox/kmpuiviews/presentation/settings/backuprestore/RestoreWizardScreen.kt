@@ -79,6 +79,7 @@ fun RestoreWizardScreen(
                                 item = item,
                                 onToggleSelected = { viewModel.toggleSelected(item.uiInfo.key) },
                                 onToggleExpanded = { viewModel.toggleExpanded(item.uiInfo.key) },
+                                onToggleListSelected = { listId -> viewModel.toggleListSelected(listId) },
                             )
                         }
                     }
