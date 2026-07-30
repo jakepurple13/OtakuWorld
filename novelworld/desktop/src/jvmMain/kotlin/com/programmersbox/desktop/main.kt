@@ -16,7 +16,7 @@ import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.novel.shared.novelSharedModule
-import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
+import dev.nucleusframework.systeminfo.SystemInfo
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.dsl.navigation3.navigation

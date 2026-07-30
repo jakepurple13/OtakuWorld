@@ -645,17 +645,17 @@ javase = "3.5.4"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }
-github-nucleus-notifications-common = { module = "io.github.kdroidfilter:nucleus.notification-common", version.ref = "nucleusSystem" }
-github-nucleus-scheduler = { module = "io.github.kdroidfilter:nucleus.scheduler", version.ref = "nucleusSystem" }
-github-nucleus-scheduler-testing = { module = "io.github.kdroidfilter:nucleus.scheduler-testing", version.ref = "nucleusSystem" }
-github-nucleus-taskbar-progress = { module = "io.github.kdroidfilter:nucleus.taskbar-progress", version.ref = "nucleusSystem" }
+github-nucleus-notifications-common = { module = "dev.nucleusframework.notification-common", version.ref = "nucleusSystem" }
+github-nucleus-scheduler = { module = "dev.nucleusframework.scheduler", version.ref = "nucleusSystem" }
+github-nucleus-scheduler-testing = { module = "dev.nucleusframework.scheduler-testing", version.ref = "nucleusSystem" }
+github-nucleus-taskbar-progress = { module = "dev.nucleusframework.taskbar-progress", version.ref = "nucleusSystem" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
 kfswatch = { module = "io.github.irgaly.kfswatch:kfswatch", version.ref = "kfswatch" }
 knotify = { module = "io.github.kdroidfilter:knotify", version.ref = "knotify" }
 kotlin-multiplatform-appdirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "kotlinMultiplatformAppdirsVersion" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
-nucleus-system-color = { module = "io.github.kdroidfilter:nucleus.system-color", version.ref = "nucleusSystem" }
-nucleus-system-info = { module = "io.github.kdroidfilter:nucleus.system-info", version.ref = "nucleusSystem" }
+nucleus-system-color = { module = "dev.nucleusframework.system-color", version.ref = "nucleusSystem" }
+nucleus-system-info = { module = "dev.nucleusframework.system-info", version.ref = "nucleusSystem" }
 
 [bundles]
 ```

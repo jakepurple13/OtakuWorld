@@ -21,7 +21,7 @@ import com.programmersbox.manga.shared.downloads.MangaDownloadManager
 import com.programmersbox.manga.shared.mangaSharedModule
 import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.mangasettings.MangaNewSettingsSerializer
-import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
+import dev.nucleusframework.systeminfo.SystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

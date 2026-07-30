@@ -47,19 +47,20 @@ import com.programmersbox.jsextensionloader.ExtensionDiscovery
 import com.programmersbox.jsextensionloader.JSExtensionLoader
 import com.programmersbox.jsextensionloader.JsExtensionRepository
 import com.programmersbox.kmpextensionloader.SourceLoader
-import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpmodels.ExampleService
 import com.programmersbox.kmpmodels.SourceRepository
 import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import dev.nucleusframework.application.NucleusApplicationScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -80,36 +81,43 @@ fun ApplicationScope.BaseDesktopUi(
     title: String,
     moduleBlock: KoinApplication.() -> Unit,
 ) {
-    //TODO: add a screen where you paste a url and select a source that then opens the details screen
+    InternalDesktopUi(
+        title = title,
+        tray = {
+            Tray(
+                state = koinInject<TrayState>(),
+                icon = painterLogo(),
+                tooltip = koinInject<AppConfig>().appName,
+                menu = {}
+            )
+        },
+        exitApplication = ::exitApplication,
+        moduleBlock = moduleBlock
+    )
+}
 
-    //TODO: Also need to create a generic module in kmpuiviews
-    /*LaunchedEffect(Unit) {
-        DataStoreSettings { File(System.getProperty("user.home"), it).absolutePath }
-    }*/
-    //TODO: UI Goes here!
-    //UrlOpenerScreen()
-    //ScanQrCode()
-    /*
-    val backStack = rememberNavBackStack(Screen.SettingsScreen)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun NucleusApplicationScope.BaseDesktopUi(
+    title: String,
+    moduleBlock: KoinApplication.() -> Unit,
+) {
+    InternalDesktopUi(
+        title = title,
+        tray = {},
+        exitApplication = ::exitApplication,
+        moduleBlock = moduleBlock
+    )
+}
 
-    NavDisplay(
-        backStack = backStack,
-        onBack = { backStack.removeLastOrNull() },
-        entryDecorators = listOf(
-            rememberSceneSetupNavEntryDecorator(),
-            rememberSavedStateNavEntryDecorator(),
-        ),
-        entryProvider = entryProvider {
-            entry<Screen.SettingsScreen> {
-                SettingScreen(
-                    composeSettingsDsl = ComposeSettingsDsl(),
-                    accountSettings = {},
-                    onDebugBuild = {},
-                    scanQrCode = {}
-                )
-            }
-        }
-    )*/
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+private fun InternalDesktopUi(
+    title: String,
+    tray: @Composable () -> Unit,
+    exitApplication: () -> Unit,
+    moduleBlock: KoinApplication.() -> Unit,
+) {
     KoinApplication(
         configuration = koinConfiguration(
             declaration = {
@@ -178,17 +186,12 @@ fun ApplicationScope.BaseDesktopUi(
                 backgroundWorkHandler.setupPeriodicCheckers()
             }
 
-            Tray(
-                state = koinInject<TrayState>(),
-                icon = painterLogo(),
-                tooltip = koinInject<AppConfig>().appName,
-                menu = {}
-            )
+            tray()
 
             val windowState = rememberWindowState()
 
             Window(
-                onCloseRequest = ::exitApplication,
+                onCloseRequest = exitApplication,
                 title = title,
                 state = windowState,
                 undecorated = true,
@@ -220,7 +223,7 @@ fun ApplicationScope.BaseDesktopUi(
                                                 WindowPlacement.Maximized
                                             }
                                         },
-                                        onCloseClick = ::exitApplication
+                                        onCloseClick = exitApplication
                                     )
                                     HorizontalDivider()
                                     //UrlOpenerScreen()

@@ -222,7 +222,10 @@ kotlin {
                 api(desktopLibs.github.nucleus.notifications.common)
                 api(desktopLibs.nucleus.system.info)
                 implementation(desktopLibs.ksafe.biometrics)
-                //implementation("io.github.n7ghtm4r3:Biometrik:1.0.0beta-01")
+                api(desktopLibs.nucleus.core.runtime)
+                api(desktopLibs.nucleus.aot.runtime)
+                api(desktopLibs.nucleus.updater.runtime)
+                api(desktopLibs.nucleus.nucleus.application)
             }
         }
 

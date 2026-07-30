@@ -30,8 +30,8 @@ import com.programmersbox.kmpuiviews.domain.KmpCustomRemoteModel
 import com.programmersbox.kmpuiviews.domain.TranslationHandler
 import com.programmersbox.kmpuiviews.domain.TranslationModelHandler
 import com.programmersbox.kmpuiviews.utils.JvmAppLogo
-import io.github.kdroidfilter.nucleus.systemcolor.isSystemInHighContrast
-import io.github.kdroidfilter.nucleus.systemcolor.systemAccentColor
+import dev.nucleusframework.systemcolor.isSystemInHighContrast
+import dev.nucleusframework.systemcolor.systemAccentColor
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig

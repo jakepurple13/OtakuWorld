@@ -3,7 +3,7 @@ kfswatch = "1.4.0"
 knotify = "0.4.3"
 kotlinMultiplatformAppdirsVersion = "2.0.0"
 kotlinx-coroutines = "1.11.0"
-nucleusSystem = "1.15.7"
+nucleusSystem = "2.1.10"
 javase = "3.5.4"
 connectivity = "2.5.0"
 camerak = "1.1"
@@ -11,17 +11,21 @@ ksafe = "2.2.1"
 
 [libraries]
 core = { module = "com.google.zxing:core", version.ref = "javase" }
-github-nucleus-notifications-common = { module = "io.github.kdroidfilter:nucleus.notification-common", version.ref = "nucleusSystem" }
-github-nucleus-scheduler = { module = "io.github.kdroidfilter:nucleus.scheduler", version.ref = "nucleusSystem" }
-github-nucleus-scheduler-testing = { module = "io.github.kdroidfilter:nucleus.scheduler-testing", version.ref = "nucleusSystem" }
-github-nucleus-taskbar-progress = { module = "io.github.kdroidfilter:nucleus.taskbar-progress", version.ref = "nucleusSystem" }
+github-nucleus-notifications-common = { module = "dev.nucleusframework:nucleus.notification-common", version.ref = "nucleusSystem" }
+github-nucleus-scheduler = { module = "dev.nucleusframework:nucleus.scheduler", version.ref = "nucleusSystem" }
+github-nucleus-scheduler-testing = { module = "dev.nucleusframework:nucleus.scheduler-testing", version.ref = "nucleusSystem" }
+github-nucleus-taskbar-progress = { module = "dev.nucleusframework:nucleus.taskbar-progress", version.ref = "nucleusSystem" }
+nucleus-core-runtime = { module = "dev.nucleusframework:nucleus.core-runtime", version.ref = "nucleusSystem" }
+nucleus-aot-runtime = { module = "dev.nucleusframework:nucleus.aot-runtime", version.ref = "nucleusSystem" }
+nucleus-updater-runtime = { module = "dev.nucleusframework:nucleus.updater-runtime", version.ref = "nucleusSystem" }
+nucleus-nucleus-application = { module = "dev.nucleusframework:nucleus.nucleus-application", version.ref = "nucleusSystem" }
 javase = { module = "com.google.zxing:javase", version.ref = "javase" }
 kfswatch = { module = "io.github.irgaly.kfswatch:kfswatch", version.ref = "kfswatch" }
 knotify = { module = "io.github.kdroidfilter:knotify", version.ref = "knotify" }
 kotlin-multiplatform-appdirs = { module = "ca.gosyer:kotlin-multiplatform-appdirs", version.ref = "kotlinMultiplatformAppdirsVersion" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
-nucleus-system-color = { module = "io.github.kdroidfilter:nucleus.system-color", version.ref = "nucleusSystem" }
-nucleus-system-info = { module = "io.github.kdroidfilter:nucleus.system-info", version.ref = "nucleusSystem" }
+nucleus-system-color = { module = "dev.nucleusframework:nucleus.system-color", version.ref = "nucleusSystem" }
+nucleus-system-info = { module = "dev.nucleusframework:nucleus.system-info", version.ref = "nucleusSystem" }
 connectivity-http = { module = "dev.jordond.connectivity:connectivity-http", version.ref = "connectivity" }
 camerak = { module = "io.github.kashif-mehmood-km:camerak", version.ref = "camerak" }
 camerak-image-saver = { module = "io.github.kashif-mehmood-km:image_saver_plugin", version.ref = "camerak" }

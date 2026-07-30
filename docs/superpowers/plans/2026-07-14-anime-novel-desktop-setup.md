@@ -641,7 +641,7 @@ import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
 import com.programmersbox.novel.shared.novelSharedModule
-import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
+import dev.nucleusframework.systeminfo.SystemInfo
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import java.io.File
@@ -1717,7 +1717,7 @@ import com.programmersbox.kmpuiviews.BuildType
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.bindsGenericInfo
-import io.github.kdroidfilter.nucleus.systeminfo.SystemInfo
+import dev.nucleusframework.systeminfo.SystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

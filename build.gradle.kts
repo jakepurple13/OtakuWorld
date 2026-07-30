@@ -88,6 +88,7 @@ plugins {
     alias(libs.plugins.koin.compiler) apply false
     //alias(libs.plugins.hotswan.compiler) apply false
     alias(libs.plugins.kotzilla) apply false
+    id("dev.nucleusframework") version desktopLibs.versions.nucleusSystem.get() apply false
 }
 
 //To run:

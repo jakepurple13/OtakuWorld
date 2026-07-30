@@ -6,7 +6,9 @@
 
 **Architecture:** `BackupUiInfo` + `BackupDataSummary` + `ItemResult` live in `:sharedcomponents` (commonMain). All 13 existing `BackupProcessor` subclasses (+ mangaworld's variant) additionally implement `BackupUiInfo`. `Zipper` (kmpuiviews expect/actual) gains selective `zipFile`/`readZip` (filtered by a `Set<String>` of keys, with a per-item progress callback) and a read-only `peekZip` for restore-side summaries. Android execution stays on WorkManager with live per-item progress; Desktop/JVM runs the whole job in one shot via the existing nucleus task system and reports only a final result list. The wizard UI (stepper, checklist, review, executing, complete) is new Compose code in `:sharedcomponents`.
 
-**Tech Stack:** Kotlin Multiplatform, Compose Multiplatform, Koin, kotlinx.serialization, kotlinx-datetime, okio, WorkManager (Android), `io.github.kdroidfilter.nucleus.scheduler` (Desktop), FileKit (file picking, already wired).
+**Tech Stack:** Kotlin Multiplatform, Compose Multiplatform, Koin, kotlinx.serialization,
+kotlinx-datetime, okio, WorkManager (Android), `dev.nucleusframework.scheduler` (Desktop), FileKit (
+file picking, already wired).
 
 ## Global Constraints
 

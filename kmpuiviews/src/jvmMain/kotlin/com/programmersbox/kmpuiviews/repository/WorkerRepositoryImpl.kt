@@ -1,8 +1,8 @@
 package com.programmersbox.kmpuiviews.repository
 
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl.Companion.ManualSyncId
-import io.github.kdroidfilter.nucleus.scheduler.TaskData
-import io.github.kdroidfilter.nucleus.scheduler.testing.TestTaskRunner
+import dev.nucleusframework.scheduler.TaskData
+import dev.nucleusframework.scheduler.testing.TestTaskRunner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
