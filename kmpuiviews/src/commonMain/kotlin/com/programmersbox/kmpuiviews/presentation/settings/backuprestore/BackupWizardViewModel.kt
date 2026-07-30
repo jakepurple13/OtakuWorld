@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.ListDao
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedcomponents.backup.ItemResult
 import kotlinx.coroutines.flow.Flow
@@ -18,10 +19,13 @@ data class BackupWizardUiState(
     val results: List<ItemResult> = emptyList(),
 )
 
+private const val LISTS_KEY = "lists.json"
+
 class BackupWizardViewModel<F>(
     uiInfos: List<BackupUiInfo>,
+    private val listDao: ListDao? = null,
     private val resultsFlow: Flow<List<ItemResult>> = emptyFlow(),
-    private val startBackup: (F, Set<String>) -> Unit,
+    private val startBackup: (F, Set<String>, Set<String>?) -> Unit,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -48,6 +52,15 @@ class BackupWizardViewModel<F>(
         loadSummaryIfNeeded(key)
     }
 
+    fun toggleListSelected(listId: String) {
+        _state.update { s ->
+            s.copy(items = s.items.map { item ->
+                if (item.uiInfo.key != LISTS_KEY) item
+                else item.copy(subItems = item.subItems?.map { if (it.id == listId) it.copy(selected = !it.selected) else it })
+            })
+        }
+    }
+
     fun selectAll() {
         _state.update { s -> s.copy(items = s.items.map { it.copy(selected = true) }) }
     }
@@ -71,8 +84,12 @@ class BackupWizardViewModel<F>(
 
     fun confirm(file: F) {
         val keys = _state.value.items.map { it.uiInfo.key }.toSet()
+        val listSubItems = _state.value.items.find { it.uiInfo.key == LISTS_KEY }?.subItems
+        val selectedListIds = listSubItems
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { all -> all.filter { it.selected }.map { it.id }.toSet().takeIf { it.size != all.size } }
         _state.update { it.copy(step = BackupWizardStep.Executing) }
-        startBackup(file, keys)
+        startBackup(file, keys, selectedListIds)
         viewModelScope.launch {
             resultsFlow.collect { results ->
                 _state.update { it.copy(results = results) }
@@ -88,8 +105,23 @@ class BackupWizardViewModel<F>(
         if (current.summary != null) return
         viewModelScope.launch {
             val summary = current.uiInfo.currentSummary()
+            val subItems = if (key == LISTS_KEY && listDao != null) {
+                listDao.getAllListsSync().map {
+                    ListSubItemState(
+                        id = it.item.uuid,
+                        name = it.item.name,
+                        coverUrl = it.list.firstOrNull()?.imageUrl,
+                        itemCount = it.list.size,
+                        requiresBiometric = it.item.useBiometric,
+                    )
+                }
+            } else {
+                null
+            }
             _state.update { s ->
-                s.copy(items = s.items.map { if (it.uiInfo.key == key) it.copy(summary = summary) else it })
+                s.copy(items = s.items.map {
+                    if (it.uiInfo.key == key) it.copy(summary = summary, subItems = subItems) else it
+                })
             }
         }
     }

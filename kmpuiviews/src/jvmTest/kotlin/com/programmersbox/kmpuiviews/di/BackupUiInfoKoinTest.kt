@@ -3,6 +3,7 @@ package com.programmersbox.kmpuiviews.di
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import okio.BufferedSink
 import okio.BufferedSource
 import org.koin.core.context.startKoin
@@ -20,8 +21,8 @@ private class FakeProcessor : BackupProcessor(), BackupUiInfo {
     override val displayName = "Fake"
     override val description: String? = null
     override val icon = null
-    override suspend fun backup(sink: BufferedSink) {}
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {}
+    override suspend fun backup(sink: BufferedSink): ProcessorResult = ProcessorResult(successCount = 1)
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult = ProcessorResult(successCount = 1)
     override suspend fun currentSummary() = BackupDataSummary()
     override suspend fun parseSummary(json: String?, rawBytes: ByteArray?) = BackupDataSummary()
 }

@@ -1,55 +1,71 @@
 package com.programmersbox.supabaseintegration.credentials
 
+import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.preferences.core.PreferencesFileSerializer
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.tink.AeadSerializer
+import ca.gosyer.appdirs.AppDirs
+import com.google.crypto.tink.Aead
+import com.google.crypto.tink.KeyTemplate
+import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.RegistryConfiguration
+import com.google.crypto.tink.aead.AeadConfig
+import com.google.crypto.tink.aead.PredefinedAeadParameters
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import java.io.File
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.SecretKeySpec
 
-class JvmCredentialManager : CredentialManager {
-    private val configDir = File(System.getProperty("user.home"), ".otakuworld")
-    private val credFile = File(configDir, "supabase.enc")
-    private val keyFile = File(configDir, "supabase.key")
-    private val _hasCredentials = MutableStateFlow(credFile.exists())
-
-    private fun getOrCreateKey(): SecretKey {
-        if (!keyFile.exists()) {
-            configDir.mkdirs()
-            val kg = KeyGenerator.getInstance("AES").apply { init(256) }
-            keyFile.writeBytes(kg.generateKey().encoded)
-        }
-        return SecretKeySpec(keyFile.readBytes(), "AES")
+class JvmCredentialManager(
+    appDirs: AppDirs,
+) : CredentialManager {
+    init {
+        AeadConfig.register()
     }
 
-    override fun hasCredentials(): Flow<Boolean> = _hasCredentials
+    private val dataStore by lazy {
+        // 2. Generate or load a KeysetHandle (AES256_GCM is recommended)
+        val keysetHandle = KeysetHandle.generateNew(KeyTemplate.createFrom(PredefinedAeadParameters.AES256_GCM))
+        val aead: Aead = keysetHandle.getPrimitive(
+            RegistryConfiguration.get(),
+            Aead::class.java,
+        )
+
+        val encryptedSerializer = AeadSerializer(
+            aead = aead, // Pass the initialized Tink AEAD primitive
+            wrappedSerializer = PreferencesFileSerializer,
+        )
+
+        DataStoreFactory.create(
+            serializer = encryptedSerializer,
+            produceFile = { File(appDirs.getUserDataDir(), "supabase_credentials.pb") },
+        )
+    }
+
+    override fun hasCredentials(): Flow<Boolean> = dataStore
+        .data
+        .map { !it[key].isNullOrBlank() }
 
     override suspend fun saveCredentials(credentials: SupabaseCredentials) {
-        configDir.mkdirs()
-        val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding").apply {
-            init(Cipher.ENCRYPT_MODE, getOrCreateKey())
+        dataStore.updateData { prefs ->
+            prefs.copy { it[key] = Json.encodeToString(credentials) }
         }
-        val json = Json.encodeToString(credentials)
-        credFile.writeBytes(cipher.doFinal(json.toByteArray()))
-        _hasCredentials.value = true
     }
 
-    override fun getCredentials(): SupabaseCredentials? {
-        if (!credFile.exists()) return null
-        return runCatching {
-            val cipher = Cipher.getInstance("AES/ECB/PKCS5Padding").apply {
-                init(Cipher.DECRYPT_MODE, getOrCreateKey())
-            }
-            Json.decodeFromString<SupabaseCredentials>(String(cipher.doFinal(credFile.readBytes())))
-        }.getOrNull()
+    override suspend fun getCredentials(): SupabaseCredentials? {
+        return runCatching { dataStore.data.map { it[key] }.firstOrNull()!! }
+            .mapCatching { Json.decodeFromString<SupabaseCredentials>(it) }
+            .getOrNull()
     }
 
     override suspend fun clearCredentials() {
-        credFile.delete()
-        _hasCredentials.value = false
+        dataStore.updateData { prefs -> prefs.copy { it[key] = "" } }
+    }
+
+    companion object {
+        private const val KEY_CREDENTIALS = "credentials_json"
+        private const val KEY_CREDENTIALS_JSON = "${KEY_CREDENTIALS}.json"
+        private val key = stringPreferencesKey(KEY_CREDENTIALS)
     }
 }
-
-actual fun createCredentialManager(context: Any?): CredentialManager = JvmCredentialManager()

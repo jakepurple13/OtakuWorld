@@ -57,8 +57,8 @@ class FakeAuthManager(
 ) : AuthManager {
     override val authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override fun isLoggedIn(): Boolean = loggedIn
-    override suspend fun signInWithEmail(email: String, password: String) {}
-    override suspend fun signUpWithEmail(email: String, password: String) {}
+    override suspend fun signInWithEmail(email: String, password: String, context: Any?) {}
+    override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {}
     override suspend fun signInWithOAuth(provider: OAuthProvider) {}
     override suspend fun signInWithMagicLink(email: String) {}
     override suspend fun signInWithPhone(phone: String, otp: String) {}
@@ -147,8 +147,8 @@ class FakeBackgroundWorkHandler : BackgroundWorkHandler {
     override fun workerInfoFlow(): Flow<List<WorkerInfoModel>> = flowOf(emptyList())
     override fun sourceUpdate() {}
     override fun cancel(uuid: String) {}
-    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {}
-    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {}
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {}
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {}
     override fun backupResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
     override fun restoreResultsFlow(): Flow<List<ItemResult>> = flowOf(emptyList())
 }

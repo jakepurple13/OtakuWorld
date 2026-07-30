@@ -20,9 +20,20 @@ sealed interface RestoreWizardStep {
 }
 
 @Stable
+data class ListSubItemState(
+    val id: String,
+    val name: String,
+    val coverUrl: String?,
+    val itemCount: Int,
+    val requiresBiometric: Boolean,
+    val selected: Boolean = true,
+)
+
+@Stable
 data class WizardItemState(
     val uiInfo: BackupUiInfo,
     val summary: BackupDataSummary? = null,
     val expanded: Boolean = false,
     val selected: Boolean = true,
+    val subItems: List<ListSubItemState>? = null,
 )

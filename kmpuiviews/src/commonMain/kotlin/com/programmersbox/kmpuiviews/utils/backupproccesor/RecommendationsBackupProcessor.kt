@@ -7,6 +7,7 @@ import com.programmersbox.favoritesdatabase.RecommendationDao
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import okio.BufferedSink
 import okio.BufferedSource
 
@@ -21,18 +22,16 @@ class RecommendationsBackupProcessor(
     override val description: String? get() = "AI/recommendation cache"
     override val icon get() = Icons.Default.ThumbUp
 
-    override suspend fun backup(sink: BufferedSink) {
-        recommendationDao
-            .getAllRecommendationsSync()
-            .toJson()
-            .let { sink.writeUtf8(it) }
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val recommendations = recommendationDao.getAllRecommendationsSync()
+        recommendations.toJson().let { sink.writeUtf8(it) }
+        return ProcessorResult(successCount = recommendations.size)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
-        json
-            .fromJson<List<Recommendation>>()
-            .forEach { recommendationDao.insertRecommendation(it) }
-    }
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult =
+        json.fromJson<List<Recommendation>>().restoreEachCatching(idOf = { it.title }) {
+            recommendationDao.insertRecommendation(it)
+        }
 
     override suspend fun currentSummary() = BackupDataSummary(itemCount = recommendationDao.getAllRecommendationsSync().size)
 

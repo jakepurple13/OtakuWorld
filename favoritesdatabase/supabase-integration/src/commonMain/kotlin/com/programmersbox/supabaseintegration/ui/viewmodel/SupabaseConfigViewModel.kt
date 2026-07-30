@@ -40,15 +40,17 @@ class SupabaseConfigViewModel(
     val syncConfigSaved = MutableStateFlow(false)
 
     init {
-        credentialManager.getCredentials()?.let {
-            projectUrl.value = it.projectUrl
-            anonKey.value = it.anonKey
-        }
-        syncConfig.value.let { c ->
-            pollIntervalMinutes.value = (c.pollIntervalMs / 60_000).toString()
-            maxRetries.value = c.maxRetries.toString()
-            initialBackoffSeconds.value = (c.initialBackoffMs / 1_000).toString()
-            maxBackoffSeconds.value = (c.maxBackoffMs / 1_000).toString()
+        viewModelScope.launch {
+            credentialManager.getCredentials()?.let {
+                projectUrl.value = it.projectUrl
+                anonKey.value = it.anonKey
+            }
+            syncConfig.value.let { c ->
+                pollIntervalMinutes.value = (c.pollIntervalMs / 60_000).toString()
+                maxRetries.value = c.maxRetries.toString()
+                initialBackoffSeconds.value = (c.initialBackoffMs / 1_000).toString()
+                maxBackoffSeconds.value = (c.maxBackoffMs / 1_000).toString()
+            }
         }
     }
 

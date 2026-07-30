@@ -37,7 +37,7 @@ class SyncEngineImpl(
         syncProcessors.associateBy { it.tableName }
     }
 
-    private val client get() = clientProvider.getOrCreate() ?: error("Client not initialized")
+    private suspend fun client() = clientProvider.getOrCreate() ?: error("Client not initialized")
     private val userId
         get() = (authManager.authState.value as? AuthState.Authenticated)?.user?.id
             ?: error("Not authenticated")
@@ -45,7 +45,7 @@ class SyncEngineImpl(
     override suspend fun pushLocalChanges(): Unit = coroutineScope {
         if (connectivityMonitor.isOnline.value is Connectivity.Status.Disconnected) return@coroutineScope
         val uid = runCatching { userId }.getOrNull() ?: return@coroutineScope
-        val client = runCatching { client }.getOrNull() ?: return@coroutineScope
+        val client = runCatching { client() }.getOrNull() ?: return@coroutineScope
 
         syncProcessorMap.forEach { (tableName, processor) ->
             pushAndRecordTime(tableName) { processor.push(client, uid) }
@@ -55,7 +55,7 @@ class SyncEngineImpl(
     override suspend fun pullRemoteChanges(since: Long, tables: Set<String>?) = coroutineScope {
         if (connectivityMonitor.isOnline.value is Connectivity.Status.Disconnected) return@coroutineScope
         val uid = runCatching { userId }.getOrNull() ?: return@coroutineScope
-        val client = runCatching { client }.getOrNull() ?: return@coroutineScope
+        val client = runCatching { client() }.getOrNull() ?: return@coroutineScope
 
         if (tables != null) {
             tables.forEach {
@@ -107,7 +107,7 @@ class SyncEngineImpl(
 
     override fun subscribeRealtime(scope: CoroutineScope, onEvent: suspend (Set<String>) -> Unit): Job = scope.launch {
         val uid = runCatching { userId }.getOrNull() ?: return@launch
-        val client = runCatching { client }.getOrNull() ?: return@launch
+        val client = runCatching { client() }.getOrNull() ?: return@launch
         val channel = client.channel("otakuworld-sync-$uid")
 
         // Buffered: preserves table names so the consumer knows exactly which tables changed.

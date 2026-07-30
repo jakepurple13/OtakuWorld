@@ -96,7 +96,7 @@ private class FakeLogoutAuthManager(
 private class FakeCredentialManager : CredentialManager {
     override fun hasCredentials(): Flow<Boolean> = flowOf(false)
     override suspend fun saveCredentials(credentials: SupabaseCredentials) {}
-    override fun getCredentials(): SupabaseCredentials? = null
+    override suspend fun getCredentials(): SupabaseCredentials? = null
     override suspend fun clearCredentials() {}
 }
 

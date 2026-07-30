@@ -58,6 +58,7 @@ kotlin {
         androidMain.dependencies {
             implementation(commonLibs.connectivity.device)
             implementation(commonLibs.ktorOkHttp)
+            implementation(commonLibs.datastoreTink)
             implementation(androidLibs.workRuntimeKtx)
             implementation(androidLibs.koin.workmanager)
             implementation(androidLibs.androidx.security.crypto)
@@ -67,6 +68,7 @@ kotlin {
         jvmMain.dependencies {
             implementation(commonLibs.ktorCio)
             implementation(desktopLibs.connectivity.http)
+            implementation(commonLibs.datastoreTink)
         }
         jvmTest.dependencies {
             implementation(commonLibs.kotlin.test)

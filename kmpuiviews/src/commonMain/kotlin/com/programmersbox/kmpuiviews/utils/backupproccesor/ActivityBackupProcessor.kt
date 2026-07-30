@@ -8,6 +8,7 @@ import com.programmersbox.favoritesdatabase.ActivityTable
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import okio.BufferedSink
 import okio.BufferedSource
 import kotlin.time.Instant
@@ -18,17 +19,15 @@ class ActivityBackupProcessor(
     override val fileName: String
         get() = "activity.json"
 
-    override suspend fun backup(sink: BufferedSink) {
-        activityDao
-            .getActivity()
-            ?.toJson()
-            ?.let { sink.writeUtf8(it) }
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val item = activityDao.getActivity()
+        item?.toJson()?.let { sink.writeUtf8(it) }
+        return ProcessorResult(successCount = if (item != null) 1 else 0)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
-        json
-            .fromJson<ActivityTable>()
-            .let { activityDao.upsertSynced(it.cumulativeSeconds, it.updatedAt) }
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult {
+        json.fromJson<ActivityTable>().let { activityDao.upsertSynced(it.cumulativeSeconds, it.updatedAt) }
+        return ProcessorResult(successCount = 1)
     }
 
     override val key: String

@@ -76,7 +76,7 @@
     <string name="all">All</string>
     <string name="settings">Settings</string>
 
-    <string name="you_re_offline">You\'re Offline</string>
+    <string name="you_re_offline">You're Offline</string>
     <string name="searchFor">Search: %1$s</string>
     <string name="theresAnUpdate">There's an Update!</string>
     <string name="versionAvailable">Version %1$s is now available!</string>

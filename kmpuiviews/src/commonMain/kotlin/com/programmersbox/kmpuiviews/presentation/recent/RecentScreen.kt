@@ -12,14 +12,11 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -30,7 +27,6 @@ import androidx.compose.material.icons.filled.Source
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -47,20 +43,17 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.programmersbox.datastore.DataStoreHandling
 import com.programmersbox.datastore.NewSettingsHandling
-import com.programmersbox.favoritesdatabase.ItemDao
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.ReportDrawnWhen
 import com.programmersbox.kmpuiviews.presentation.components.NoSourcesInstalled
 import com.programmersbox.kmpuiviews.presentation.components.OtakuHazeScaffold
 import com.programmersbox.kmpuiviews.presentation.components.OtakuPullToRefreshBox
+import com.programmersbox.kmpuiviews.presentation.components.ToolTipWrapper
 import com.programmersbox.kmpuiviews.presentation.components.optionsKmpSheet
 import com.programmersbox.kmpuiviews.presentation.settings.utils.showSourceChooser
-import com.programmersbox.kmpuiviews.utils.LocalNavActions
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
 import com.programmersbox.kmpuiviews.utils.composables.InfiniteListHandler
 import com.programmersbox.kmpuiviews.utils.rememberBiometricOpening
@@ -83,10 +76,8 @@ fun RecentView(
     viewModel: RecentViewModel = koinViewModel(),
 ) {
     val info = koinInject<KmpGenericInfo>()
-    val navController = LocalNavActions.current
     val settingsHandling: NewSettingsHandling = koinInject()
     val dataStoreHandling = koinInject<DataStoreHandling>()
-    val itemDao = koinInject<ItemDao>()
     val state = viewModel.gridState
     val scope = rememberCoroutineScope()
     val source = viewModel.currentSource
@@ -146,12 +137,31 @@ fun RecentView(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    AnimatedVisibility(
-                        viewModel.isIncognitoSource,
-                        enter = slideInHorizontally() + fadeIn(),
-                        exit = fadeOut() + slideOutHorizontally()
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(Icons.Default.HideSource, null)
+                        AnimatedVisibility(
+                            viewModel.isIncognitoSource,
+                            enter = slideInHorizontally() + fadeIn(),
+                            exit = fadeOut() + slideOutHorizontally()
+                        ) {
+                            Icon(Icons.Default.HideSource, null)
+                        }
+
+                        AnimatedVisibility(
+                            !isConnected,
+                            enter = slideInHorizontally() + fadeIn(),
+                            exit = fadeOut() + slideOutHorizontally()
+                        ) {
+                            ToolTipWrapper(
+                                info = { Text(stringResource(Res.string.you_re_offline)) }
+                            ) {
+                                Icon(
+                                    Icons.Default.CloudOff,
+                                    null
+                                )
+                            }
+                        }
                     }
                 },
                 title = {
@@ -211,68 +221,47 @@ fun RecentView(
             )
         }
     ) { p ->
-        Crossfade(
-            targetState = isConnected,
-            label = ""
-        ) { connected ->
-            if (!connected) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        Icons.Default.CloudOff,
-                        null,
-                        modifier = Modifier.size(50.dp),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground)
-                    )
-                    Text(stringResource(Res.string.you_re_offline), style = MaterialTheme.typography.titleLarge)
-                }
-            } else {
-                val biometric = rememberBiometricOpening()
+        val biometric = rememberBiometricOpening()
 
-                OtakuPullToRefreshBox(
-                    isRefreshing = viewModel.isRefreshing,
-                    onRefresh = { viewModel.reset() },
-                    state = pull,
-                    paddingValues = p
-                ) {
-                    when {
-                        sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
+        OtakuPullToRefreshBox(
+            isRefreshing = viewModel.isRefreshing,
+            onRefresh = { viewModel.reset() },
+            state = pull,
+            paddingValues = p
+        ) {
+            when {
+                sourceList.isEmpty() -> NoSourcesInstalled(Modifier.fillMaxSize())
 
-                        viewModel.filteredSourceList.isEmpty() -> {
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .padding(top = p.calculateTopPadding())
-                            ) { info.ComposeShimmerItem() }
-                        }
-
-                        else -> {
-                            ReportDrawnWhen { true }
-                            info.ItemListView(
-                                list = viewModel.filteredSourceList,
-                                listState = state,
-                                favorites = viewModel.favoriteList,
-                                paddingValues = p,
-                                onLongPress = { item, c ->
-                                    optionsSheet = item
-                                    //newItemModel(item)
-                                    //newItemModel(if (c == ComponentState.Pressed) item else null)
-                                    //showBanner = c == ComponentState.Pressed
-                                },
-                                modifier = Modifier.fillMaxSize()
-                            ) { scope.launch { biometric.openIfNotIncognito(it) } }
-                        }
-                    }
+                viewModel.filteredSourceList.isEmpty() -> {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(top = p.calculateTopPadding())
+                    ) { info.ComposeShimmerItem() }
                 }
 
-                if (source?.canScroll == true && viewModel.filteredSourceList.isNotEmpty()) {
-                    InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
-                        viewModel.loadMore()
-                    }
+                else -> {
+                    ReportDrawnWhen { true }
+                    info.ItemListView(
+                        list = viewModel.filteredSourceList,
+                        listState = state,
+                        favorites = viewModel.favoriteList,
+                        paddingValues = p,
+                        onLongPress = { item, _ ->
+                            optionsSheet = item
+                            //newItemModel(item)
+                            //newItemModel(if (c == ComponentState.Pressed) item else null)
+                            //showBanner = c == ComponentState.Pressed
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    ) { scope.launch { biometric.openIfNotIncognito(it) } }
                 }
+            }
+        }
+
+        if (source?.canScroll == true && viewModel.filteredSourceList.isNotEmpty()) {
+            InfiniteListHandler(listState = state, buffer = info.scrollBuffer) {
+                viewModel.loadMore()
             }
         }
     }
