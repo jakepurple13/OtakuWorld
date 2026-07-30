@@ -19,7 +19,7 @@ class Backup(
     ): List<ItemResult> {
         var output: List<ItemResult> = emptyList()
         val time = measureTime {
-            output = runCatching { zipper.zipFile(document, selectedKeys, onItemComplete) }
+            output = runCatching { zipper.zipFile(document, selectedKeys, onItemComplete = onItemComplete) }
                 .logFailureToDatabase()
                 .getOrThrow()
         }
@@ -32,7 +32,7 @@ class Backup(
         selectedKeys: Set<String>,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> =
-        runCatching { zipper.readZip(document, selectedKeys, onItemComplete) }
+        runCatching { zipper.readZip(document, selectedKeys, onItemComplete = onItemComplete) }
             .logFailureToDatabase()
             .getOrThrow()
 

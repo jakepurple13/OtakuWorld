@@ -1,5 +1,12 @@
 package com.programmersbox.kmpuiviews.utils
 
+import androidx.room3.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.programmersbox.favoritesdatabase.ListDatabase
+import com.programmersbox.kmpuiviews.SystemAlerter
+import com.programmersbox.kmpuiviews.repository.ListRepository
+import com.programmersbox.kmpuiviews.testing.FakeAuthManager
+import com.programmersbox.kmpuiviews.utils.backupproccesor.ListBackupProcessor
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
@@ -104,5 +111,29 @@ class ZipperTest {
         val result = restoreResults.single()
         assertTrue(result.success)
         assertEquals("1 failed: bad-row", result.error)
+    }
+
+    @Test
+    fun `zipFile filters ListBackupProcessor by selectedListIds and resets the filter afterward`(): Unit = runBlocking {
+        val dbFile = File.createTempFile("zipper-list-test", ".db").also { it.deleteOnExit() }
+        val database = Room.databaseBuilder<ListDatabase>(name = dbFile.absolutePath)
+            .setDriver(BundledSQLiteDriver())
+            .build()
+        val repository = ListRepository(database.listDao(), SystemAlerter(), FakeAuthManager())
+        repository.create("keep-me")
+        repository.create("drop-me")
+        val keepUuid = database.listDao().getAllListsSync().first { it.item.name == "keep-me" }.item.uuid
+        val listProcessor = ListBackupProcessor(repository, database.listDao())
+        val zipper = Zipper(listOf(listProcessor))
+        val platformFile = PlatformFile(tempFile.absolutePath)
+
+        zipper.zipFile(platformFile, setOf("lists.json"), setOf(keepUuid)) { }
+
+        assertEquals(null, listProcessor.listIdFilter)
+        val restored = zipper.peekListContents(platformFile)
+        assertEquals(listOf("keep-me"), restored.map { it.item.name })
+
+        database.close()
+        dbFile.delete()
     }
 }

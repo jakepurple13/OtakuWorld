@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.utils
 
+import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.kmpuiviews.utils.backupproccesor.ListBackupProcessor
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedcomponents.backup.ItemResult
@@ -44,6 +46,7 @@ actual class Zipper(
     actual suspend fun zipFile(
         platformFile: PlatformFile,
         selectedKeys: Set<String>,
+        selectedListIds: Set<String>?,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<ItemResult>()
@@ -52,25 +55,30 @@ actual class Zipper(
                 println("Zipping ${processor.fileName}")
                 val duration = measureTime {
                     zip.putNextEntry(ZipEntry(processor.fileName))
-                    val result = runCatching {
-                        measureTimedValue {
-                            val sink = zip.sink().buffer()
-                            val processorResult = processor.backup(sink)
-                            sink.flush()
-                            processorResult
+                    if (processor is ListBackupProcessor) processor.listIdFilter = selectedListIds
+                    val result = try {
+                        runCatching {
+                            measureTimedValue {
+                                val sink = zip.sink().buffer()
+                                val processorResult = processor.backup(sink)
+                                sink.flush()
+                                processorResult
+                            }
                         }
+                            .fold(
+                                onSuccess = { processorResultToItemResult(processor.fileName, it) },
+                                onFailure = { e ->
+                                    ItemResult(
+                                        processor.fileName,
+                                        timeTaken = e.message ?: "Unknown Error",
+                                        success = false,
+                                        error = e.message
+                                    )
+                                },
+                            )
+                    } finally {
+                        if (processor is ListBackupProcessor) processor.listIdFilter = null
                     }
-                        .fold(
-                            onSuccess = { processorResultToItemResult(processor.fileName, it) },
-                            onFailure = { e ->
-                                ItemResult(
-                                    processor.fileName,
-                                    timeTaken = e.message ?: "Unknown Error",
-                                    success = false,
-                                    error = e.message
-                                )
-                            },
-                        )
                     results += result
                     onItemComplete(result)
                 }
@@ -83,6 +91,7 @@ actual class Zipper(
     actual suspend fun readZip(
         platformFile: PlatformFile,
         selectedKeys: Set<String>,
+        selectedListIds: Set<String>?,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<ItemResult>()
@@ -93,27 +102,32 @@ actual class Zipper(
                     val name = entry.name
                     val processor = backupProcessors.find { it.fileName == name }
                     if (name in selectedKeys && processor != null) {
+                        if (processor is ListBackupProcessor) processor.listIdFilter = selectedListIds
                         val duration = measureTime {
-                            val result = runCatching {
-                                measureTimedValue {
-                                    val bytes = zipIs.readBytes()
-                                    processor.restore(
-                                        json = bytes.decodeToString(),
-                                        bufferedSource = Buffer().apply { write(bytes) },
-                                    )
-                                }
-                            }
-                                .fold(
-                                    onSuccess = { processorResultToItemResult(name, it) },
-                                    onFailure = { e ->
-                                        ItemResult(
-                                            name,
-                                            timeTaken = e.message ?: "Unknown Error",
-                                            success = false,
-                                            error = e.message
+                            val result = try {
+                                runCatching {
+                                    measureTimedValue {
+                                        val bytes = zipIs.readBytes()
+                                        processor.restore(
+                                            json = bytes.decodeToString(),
+                                            bufferedSource = Buffer().apply { write(bytes) },
                                         )
-                                    },
-                                )
+                                    }
+                                }
+                                    .fold(
+                                        onSuccess = { processorResultToItemResult(name, it) },
+                                        onFailure = { e ->
+                                            ItemResult(
+                                                name,
+                                                timeTaken = e.message ?: "Unknown Error",
+                                                success = false,
+                                                error = e.message
+                                            )
+                                        },
+                                    )
+                            } finally {
+                                if (processor is ListBackupProcessor) processor.listIdFilter = null
+                            }
                             results += result
                             onItemComplete(result)
                         }
@@ -149,5 +163,25 @@ actual class Zipper(
             }
         }
         summaries
+    }
+
+    actual suspend fun peekListContents(platformFile: PlatformFile): List<CustomList> = withContext(Dispatchers.IO) {
+        val processor = backupProcessors.filterIsInstance<ListBackupProcessor>().firstOrNull()
+        var result: List<CustomList> = emptyList()
+        if (processor != null) {
+            FileInputStream(platformFile.absolutePath()).use { inStream ->
+                ZipInputStream(inStream).use { zipIs ->
+                    var entry: ZipEntry? = zipIs.nextEntry
+                    while (entry != null) {
+                        if (entry.name == processor.fileName) {
+                            result = runCatching { processor.parseLists(zipIs.readBytes().decodeToString()) }
+                                .getOrDefault(emptyList())
+                        }
+                        entry = zipIs.nextEntry
+                    }
+                }
+            }
+        }
+        result
     }
 }
