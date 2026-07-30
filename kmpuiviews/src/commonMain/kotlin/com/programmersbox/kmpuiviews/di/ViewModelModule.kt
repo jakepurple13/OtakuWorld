@@ -57,16 +57,18 @@ val viewModels: Module = module {
     viewModel {
         BackupWizardViewModel<PlatformFile>(
             uiInfos = getAll(),
+            listDao = get(),
             resultsFlow = get<BackgroundWorkHandler>().backupResultsFlow(),
-            startBackup = { file, keys -> get<BackgroundWorkHandler>().startBackup(file, keys) },
+            startBackup = { file, keys, listIds -> get<BackgroundWorkHandler>().startBackup(file, keys, listIds) },
         )
     }
     viewModel {
         RestoreWizardViewModel<PlatformFile>(
             uiInfos = getAll(),
             peekZip = { file -> get<Backup>().peekBackup(file, getAll()) },
+            peekListContents = { file -> get<Backup>().peekListContents(file) },
             resultsFlow = get<BackgroundWorkHandler>().restoreResultsFlow(),
-            startRestore = { file, keys -> get<BackgroundWorkHandler>().startRestore(file, keys) },
+            startRestore = { file, keys, listIds -> get<BackgroundWorkHandler>().startRestore(file, keys, listIds) },
         )
     }
     viewModelOf(::SettingViewModel)

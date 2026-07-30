@@ -7,6 +7,7 @@ import com.programmersbox.mangasettings.MangaNewSettingsHandling
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import kotlinx.coroutines.flow.firstOrNull
 import okio.BufferedSink
 import okio.BufferedSource
@@ -22,18 +23,15 @@ class MangaNewSettingsBackupProcessor(
     override val description: String? get() = "MangaWorld-specific preferences"
     override val icon get() = Icons.Default.Settings
 
-    override suspend fun backup(sink: BufferedSink) {
-        mangaNewSettingsHandling
-            .preferences
-            .data
-            .firstOrNull()
-            ?.encode(sink)
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val settings = mangaNewSettingsHandling.preferences.data.firstOrNull()
+        settings?.encode(sink)
+        return ProcessorResult(successCount = if (settings != null) 1 else 0)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
-        mangaNewSettingsHandling
-            .preferences
-            .updateData { MangaSettings.ADAPTER.decode(bufferedSource) }
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult {
+        mangaNewSettingsHandling.preferences.updateData { MangaSettings.ADAPTER.decode(bufferedSource) }
+        return ProcessorResult(successCount = 1)
     }
 
     override suspend fun currentSummary() = BackupDataSummary(

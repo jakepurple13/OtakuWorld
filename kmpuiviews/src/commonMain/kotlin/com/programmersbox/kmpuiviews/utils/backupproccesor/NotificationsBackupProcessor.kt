@@ -7,6 +7,7 @@ import com.programmersbox.favoritesdatabase.NotificationItem
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import okio.BufferedSink
 import okio.BufferedSource
 
@@ -21,18 +22,16 @@ class NotificationsBackupProcessor(
     override val description: String? get() = "Notification inbox items"
     override val icon get() = Icons.Default.Notifications
 
-    override suspend fun backup(sink: BufferedSink) {
-        itemDao
-            .getAllNotifications()
-            .toJson()
-            .let { sink.writeUtf8(it) }
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val notifications = itemDao.getAllNotifications()
+        notifications.toJson().let { sink.writeUtf8(it) }
+        return ProcessorResult(successCount = notifications.size)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
-        json
-            .fromJson<List<NotificationItem>>()
-            .forEach { itemDao.insertNotification(it) }
-    }
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult =
+        json.fromJson<List<NotificationItem>>().restoreEachCatching(idOf = { it.notiTitle }) {
+            itemDao.insertNotification(it)
+        }
 
     override suspend fun currentSummary() = BackupDataSummary(itemCount = itemDao.getAllNotifications().size)
 

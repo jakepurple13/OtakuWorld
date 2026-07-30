@@ -7,6 +7,7 @@ import com.programmersbox.datastore.Settings
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
+import com.programmersbox.sharedtools.ProcessorResult
 import kotlinx.coroutines.flow.firstOrNull
 import okio.BufferedSink
 import okio.BufferedSource
@@ -22,18 +23,15 @@ class NewSettingsBackupProcessor(
     override val description: String? get() = "Preferences and app configuration"
     override val icon get() = Icons.Default.Settings
 
-    override suspend fun backup(sink: BufferedSink) {
-        newSettingsHandling
-            .preferences
-            .data
-            .firstOrNull()
-            ?.encode(sink)
+    override suspend fun backup(sink: BufferedSink): ProcessorResult {
+        val settings = newSettingsHandling.preferences.data.firstOrNull()
+        settings?.encode(sink)
+        return ProcessorResult(successCount = if (settings != null) 1 else 0)
     }
 
-    override suspend fun restore(json: String, bufferedSource: BufferedSource) {
-        newSettingsHandling
-            .preferences
-            .updateData { Settings.ADAPTER.decode(bufferedSource) }
+    override suspend fun restore(json: String, bufferedSource: BufferedSource): ProcessorResult {
+        newSettingsHandling.preferences.updateData { Settings.ADAPTER.decode(bufferedSource) }
+        return ProcessorResult(successCount = 1)
     }
 
     override suspend fun currentSummary() = BackupDataSummary(

@@ -1,8 +1,10 @@
 package com.programmersbox.kmpuiviews.utils
 
 import android.content.Context
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.kmpuiviews.logFirebaseMessage
+import com.programmersbox.kmpuiviews.utils.backupproccesor.ListBackupProcessor
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedcomponents.backup.ItemResult
@@ -22,6 +24,20 @@ import java.util.zip.ZipOutputStream
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
+private fun processorResultToItemResult(
+    key: String,
+    timedValue: kotlin.time.TimedValue<com.programmersbox.sharedtools.ProcessorResult>,
+): ItemResult {
+    val processorResult = timedValue.value
+    return ItemResult(
+        key,
+        timeTaken = timedValue.duration.toString(),
+        success = processorResult.successCount > 0 || processorResult.failed.isEmpty(),
+        error = processorResult.failed.takeIf { it.isNotEmpty() }
+            ?.let { "${it.size} failed: ${it.joinToString()}" },
+    )
+}
+
 actual open class Zipper(
     private val context: Context,
     private val backupProcessors: List<BackupProcessor>,
@@ -36,6 +52,7 @@ actual open class Zipper(
     actual suspend fun zipFile(
         platformFile: PlatformFile,
         selectedKeys: Set<String>,
+        selectedListIds: Set<String>?,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<ItemResult>()
@@ -48,8 +65,13 @@ actual open class Zipper(
                     val result = runCatching {
                         measureTimedValue {
                             val sink = zip.sink().buffer()
-                            backup.backup(sink)
+                            val processorResult = if (backup is ListBackupProcessor) {
+                                backup.withListFilter(selectedListIds) { backup.backup(sink) }
+                            } else {
+                                backup.backup(sink)
+                            }
                             sink.flush()
+                            processorResult
                         }
                     }
                         .onFailure {
@@ -57,13 +79,7 @@ actual open class Zipper(
                             exceptionDao.insertException(it)
                         }
                         .fold(
-                            onSuccess = {
-                                ItemResult(
-                                    backup.fileName,
-                                    timeTaken = it.duration.toString(),
-                                    success = true
-                                )
-                            },
+                            onSuccess = { processorResultToItemResult(backup.fileName, it) },
                             onFailure = { e ->
                                 ItemResult(
                                     backup.fileName,
@@ -85,6 +101,7 @@ actual open class Zipper(
     actual suspend fun readZip(
         platformFile: PlatformFile,
         selectedKeys: Set<String>,
+        selectedListIds: Set<String>?,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<ItemResult>()
@@ -100,20 +117,23 @@ actual open class Zipper(
                                 val result = runCatching {
                                     measureTimedValue {
                                         val bytes = zipIs.readBytes()
-                                        processor.restore(
-                                            json = bytes.decodeToString(),
-                                            bufferedSource = Buffer().apply { write(bytes) },
-                                        )
+                                        if (processor is ListBackupProcessor) {
+                                            processor.withListFilter(selectedListIds) {
+                                                processor.restore(
+                                                    json = bytes.decodeToString(),
+                                                    bufferedSource = Buffer().apply { write(bytes) },
+                                                )
+                                            }
+                                        } else {
+                                            processor.restore(
+                                                json = bytes.decodeToString(),
+                                                bufferedSource = Buffer().apply { write(bytes) },
+                                            )
+                                        }
                                     }
                                 }
                                     .fold(
-                                        onSuccess = {
-                                            ItemResult(
-                                                name,
-                                                timeTaken = it.duration.toString(),
-                                                success = true
-                                            )
-                                        },
+                                        onSuccess = { processorResultToItemResult(name, it) },
                                         onFailure = { e ->
                                             ItemResult(
                                                 name,
@@ -162,5 +182,27 @@ actual open class Zipper(
             }
         }
         summaries
+    }
+
+    actual suspend fun peekListContents(platformFile: PlatformFile): List<CustomList> = withContext(Dispatchers.IO) {
+        val processor = backupProcessors.filterIsInstance<ListBackupProcessor>().firstOrNull()
+        var result: List<CustomList> = emptyList()
+        if (processor != null) {
+            context.contentResolver.openFileDescriptor(platformFile.toAndroidUri(""), "r")!!.use { pfd ->
+                FileInputStream(pfd.fileDescriptor).use { inStream ->
+                    ZipInputStream(inStream).use { zipIs ->
+                        var entry: ZipEntry? = zipIs.nextEntry
+                        while (entry != null) {
+                            if (entry.name == processor.fileName) {
+                                result = runCatching { processor.parseLists(zipIs.readBytes().decodeToString()) }
+                                    .getOrDefault(emptyList())
+                            }
+                            entry = zipIs.nextEntry
+                        }
+                    }
+                }
+            }
+        }
+        result
     }
 }
