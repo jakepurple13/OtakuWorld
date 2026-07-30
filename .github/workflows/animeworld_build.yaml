@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: adopt
-          java-version: 17
+          java-version: 21
 
       - name: Set Java Options
         run: echo "JAVA_OPTS=-Xmx4g" >> $GITHUB_ENV

@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        jdk: [ 18 ]
+        jdk: [ 21 ]
 
     steps:
       - name: Check out the source code
@@ -38,7 +38,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: adopt
-          java-version: 18
+          java-version: 21
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v5
