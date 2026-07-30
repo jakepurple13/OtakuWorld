@@ -55,30 +55,29 @@ actual class Zipper(
                 println("Zipping ${processor.fileName}")
                 val duration = measureTime {
                     zip.putNextEntry(ZipEntry(processor.fileName))
-                    if (processor is ListBackupProcessor) processor.listIdFilter = selectedListIds
-                    val result = try {
-                        runCatching {
-                            measureTimedValue {
-                                val sink = zip.sink().buffer()
-                                val processorResult = processor.backup(sink)
-                                sink.flush()
-                                processorResult
+                    val result = runCatching {
+                        measureTimedValue {
+                            val sink = zip.sink().buffer()
+                            val processorResult = if (processor is ListBackupProcessor) {
+                                processor.withListFilter(selectedListIds) { processor.backup(sink) }
+                            } else {
+                                processor.backup(sink)
                             }
+                            sink.flush()
+                            processorResult
                         }
-                            .fold(
-                                onSuccess = { processorResultToItemResult(processor.fileName, it) },
-                                onFailure = { e ->
-                                    ItemResult(
-                                        processor.fileName,
-                                        timeTaken = e.message ?: "Unknown Error",
-                                        success = false,
-                                        error = e.message
-                                    )
-                                },
-                            )
-                    } finally {
-                        if (processor is ListBackupProcessor) processor.listIdFilter = null
                     }
+                        .fold(
+                            onSuccess = { processorResultToItemResult(processor.fileName, it) },
+                            onFailure = { e ->
+                                ItemResult(
+                                    processor.fileName,
+                                    timeTaken = e.message ?: "Unknown Error",
+                                    success = false,
+                                    error = e.message
+                                )
+                            },
+                        )
                     results += result
                     onItemComplete(result)
                 }
@@ -102,32 +101,36 @@ actual class Zipper(
                     val name = entry.name
                     val processor = backupProcessors.find { it.fileName == name }
                     if (name in selectedKeys && processor != null) {
-                        if (processor is ListBackupProcessor) processor.listIdFilter = selectedListIds
                         val duration = measureTime {
-                            val result = try {
-                                runCatching {
-                                    measureTimedValue {
-                                        val bytes = zipIs.readBytes()
+                            val result = runCatching {
+                                measureTimedValue {
+                                    val bytes = zipIs.readBytes()
+                                    if (processor is ListBackupProcessor) {
+                                        processor.withListFilter(selectedListIds) {
+                                            processor.restore(
+                                                json = bytes.decodeToString(),
+                                                bufferedSource = Buffer().apply { write(bytes) },
+                                            )
+                                        }
+                                    } else {
                                         processor.restore(
                                             json = bytes.decodeToString(),
                                             bufferedSource = Buffer().apply { write(bytes) },
                                         )
                                     }
                                 }
-                                    .fold(
-                                        onSuccess = { processorResultToItemResult(name, it) },
-                                        onFailure = { e ->
-                                            ItemResult(
-                                                name,
-                                                timeTaken = e.message ?: "Unknown Error",
-                                                success = false,
-                                                error = e.message
-                                            )
-                                        },
-                                    )
-                            } finally {
-                                if (processor is ListBackupProcessor) processor.listIdFilter = null
                             }
+                                .fold(
+                                    onSuccess = { processorResultToItemResult(name, it) },
+                                    onFailure = { e ->
+                                        ItemResult(
+                                            name,
+                                            timeTaken = e.message ?: "Unknown Error",
+                                            success = false,
+                                            error = e.message
+                                        )
+                                    },
+                                )
                             results += result
                             onItemComplete(result)
                         }

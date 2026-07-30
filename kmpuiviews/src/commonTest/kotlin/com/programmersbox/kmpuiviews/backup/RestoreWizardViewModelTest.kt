@@ -156,4 +156,24 @@ class RestoreWizardViewModelTest {
 
         assertEquals(setOf("zip-list-a"), called?.third)
     }
+
+    @Test
+    fun `confirm sends null list filter when peekListContents returns empty instead of a silent-skip empty set`() = runTest {
+        val listUiInfo = RestoreFakeUiInfo("lists.json")
+        var called: Triple<String, Set<String>, Set<String>?>? = null
+        val vm = RestoreWizardViewModel<String>(
+            uiInfos = listOf(listUiInfo),
+            peekZip = { mapOf("lists.json" to BackupDataSummary(itemCount = 0)) },
+            peekListContents = { emptyList() },
+            resultsFlow = flowOf(emptyList()),
+            startRestore = { file, keys, listIds -> called = Triple(file, keys, listIds) },
+        )
+
+        vm.pickFile("file.zip")
+        awaitCondition { vm.state.value.items.singleOrNull()?.subItems != null }
+        vm.goToReview()
+        vm.confirm()
+
+        assertEquals(null, called?.third)
+    }
 }

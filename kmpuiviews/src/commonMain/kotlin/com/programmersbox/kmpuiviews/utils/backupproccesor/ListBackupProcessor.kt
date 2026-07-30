@@ -9,6 +9,8 @@ import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedtools.BackupProcessor
 import com.programmersbox.sharedtools.ProcessorResult
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okio.BufferedSink
 import okio.BufferedSource
 
@@ -26,6 +28,22 @@ class ListBackupProcessor(
 
     /** When non-null, only lists whose [com.programmersbox.favoritesdatabase.CustomListItem.uuid] is in this set are backed up/restored. */
     var listIdFilter: Set<String>? = null
+
+    private val listFilterMutex = Mutex()
+
+    /**
+     * Runs [block] with [listIdFilter] set to [ids], resetting it afterward — serialized by a
+     * mutex so a shared (e.g. JVM singleton-scoped) Zipper never lets one call's filter leak into
+     * another's in-flight backup/restore.
+     */
+    suspend fun <R> withListFilter(ids: Set<String>?, block: suspend () -> R): R = listFilterMutex.withLock {
+        listIdFilter = ids
+        try {
+            block()
+        } finally {
+            listIdFilter = null
+        }
+    }
 
     override suspend fun backup(sink: BufferedSink): ProcessorResult {
         val lists = listDao.getAllListsSync().let { all -> filterByListId(all) }

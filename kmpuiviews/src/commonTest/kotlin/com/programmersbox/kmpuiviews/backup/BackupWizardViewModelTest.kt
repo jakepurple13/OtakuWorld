@@ -201,4 +201,21 @@ class BackupWizardViewModelTest {
         assertEquals("file.zip", startedWith?.first)
         assertEquals(setOf("list-a"), startedWith?.third)
     }
+
+    @Test
+    fun `confirm sends null list filter when listDao returns no lists`() = runTest {
+        var startedWith: Triple<String, Set<String>, Set<String>?>? = null
+        val vm = BackupWizardViewModel<String>(
+            listOf(FakeUiInfo("lists.json")),
+            listDao = fakeListDao(emptyList()),
+            resultsFlow = flowOf(emptyList()),
+            startBackup = { file, keys, listIds -> startedWith = Triple(file, keys, listIds) },
+        )
+        awaitCondition { vm.state.value.items.single().subItems != null }
+
+        vm.goToReview()
+        vm.confirm("file.zip")
+
+        assertEquals(null, startedWith?.third)
+    }
 }

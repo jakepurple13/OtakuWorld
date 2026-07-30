@@ -84,12 +84,10 @@ class BackupWizardViewModel<F>(
 
     fun confirm(file: F) {
         val keys = _state.value.items.map { it.uiInfo.key }.toSet()
-        val selectedListIds = _state.value.items
-            .find { it.uiInfo.key == LISTS_KEY }
-            ?.subItems
-            ?.filter { it.selected }
-            ?.map { it.id }
-            ?.toSet()
+        val listSubItems = _state.value.items.find { it.uiInfo.key == LISTS_KEY }?.subItems
+        val selectedListIds = listSubItems
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { all -> all.filter { it.selected }.map { it.id }.toSet().takeIf { it.size != all.size } }
         _state.update { it.copy(step = BackupWizardStep.Executing) }
         startBackup(file, keys, selectedListIds)
         viewModelScope.launch {

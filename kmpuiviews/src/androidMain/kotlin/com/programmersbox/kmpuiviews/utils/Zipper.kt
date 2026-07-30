@@ -62,34 +62,33 @@ actual open class Zipper(
                 logFirebaseMessage("Zipping ${backup.fileName}")
                 val duration = measureTime {
                     zip.putNextEntry(ZipEntry(backup.fileName))
-                    if (backup is ListBackupProcessor) backup.listIdFilter = selectedListIds
-                    val result = try {
-                        runCatching {
-                            measureTimedValue {
-                                val sink = zip.sink().buffer()
-                                val processorResult = backup.backup(sink)
-                                sink.flush()
-                                processorResult
+                    val result = runCatching {
+                        measureTimedValue {
+                            val sink = zip.sink().buffer()
+                            val processorResult = if (backup is ListBackupProcessor) {
+                                backup.withListFilter(selectedListIds) { backup.backup(sink) }
+                            } else {
+                                backup.backup(sink)
                             }
+                            sink.flush()
+                            processorResult
                         }
-                            .onFailure {
-                                it.printStackTrace()
-                                exceptionDao.insertException(it)
-                            }
-                            .fold(
-                                onSuccess = { processorResultToItemResult(backup.fileName, it) },
-                                onFailure = { e ->
-                                    ItemResult(
-                                        backup.fileName,
-                                        timeTaken = e.message ?: "Unknown error",
-                                        success = false,
-                                        error = e.message
-                                    )
-                                },
-                            )
-                    } finally {
-                        if (backup is ListBackupProcessor) backup.listIdFilter = null
                     }
+                        .onFailure {
+                            it.printStackTrace()
+                            exceptionDao.insertException(it)
+                        }
+                        .fold(
+                            onSuccess = { processorResultToItemResult(backup.fileName, it) },
+                            onFailure = { e ->
+                                ItemResult(
+                                    backup.fileName,
+                                    timeTaken = e.message ?: "Unknown error",
+                                    success = false,
+                                    error = e.message
+                                )
+                            },
+                        )
                     results += result
                     onItemComplete(result)
                 }
@@ -114,32 +113,36 @@ actual open class Zipper(
                         val name = entry.name
                         val processor = backupProcessors.find { it.fileName == name }
                         if (name in selectedKeys && processor != null) {
-                            if (processor is ListBackupProcessor) processor.listIdFilter = selectedListIds
                             val duration = measureTime {
-                                val result = try {
-                                    runCatching {
-                                        measureTimedValue {
-                                            val bytes = zipIs.readBytes()
+                                val result = runCatching {
+                                    measureTimedValue {
+                                        val bytes = zipIs.readBytes()
+                                        if (processor is ListBackupProcessor) {
+                                            processor.withListFilter(selectedListIds) {
+                                                processor.restore(
+                                                    json = bytes.decodeToString(),
+                                                    bufferedSource = Buffer().apply { write(bytes) },
+                                                )
+                                            }
+                                        } else {
                                             processor.restore(
                                                 json = bytes.decodeToString(),
                                                 bufferedSource = Buffer().apply { write(bytes) },
                                             )
                                         }
                                     }
-                                        .fold(
-                                            onSuccess = { processorResultToItemResult(name, it) },
-                                            onFailure = { e ->
-                                                ItemResult(
-                                                    name,
-                                                    timeTaken = e.message ?: "Unknown error",
-                                                    success = false,
-                                                    error = e.message
-                                                )
-                                            },
-                                        )
-                                } finally {
-                                    if (processor is ListBackupProcessor) processor.listIdFilter = null
                                 }
+                                    .fold(
+                                        onSuccess = { processorResultToItemResult(name, it) },
+                                        onFailure = { e ->
+                                            ItemResult(
+                                                name,
+                                                timeTaken = e.message ?: "Unknown error",
+                                                success = false,
+                                                error = e.message
+                                            )
+                                        },
+                                    )
                                 results += result
                                 onItemComplete(result)
                             }
