@@ -112,7 +112,7 @@ class BackgroundWorkHandlerImpl(
             TestTaskRunner.runTask(
                 BackupWorker(),
                 BackupId,
-                inputData = TaskData.of(BackupRestoreData(file, selectedKeys))
+                inputData = TaskData.of(BackupRestoreData(file, selectedKeys, selectedListIds))
             )
         }
     }
@@ -122,7 +122,7 @@ class BackgroundWorkHandlerImpl(
             TestTaskRunner.runTask(
                 RestoreWorker(),
                 RestoreId,
-                inputData = TaskData.of(BackupRestoreData(file, selectedKeys))
+                inputData = TaskData.of(BackupRestoreData(file, selectedKeys, selectedListIds))
             )
         }
     }
@@ -264,7 +264,7 @@ class BackupWorker : DesktopTask, KoinComponent {
         val duration = measureTimedValue {
             runCatching {
                 val data = context.inputData<BackupRestoreData>() ?: return@runCatching
-                val results = backup.createBackup(data.file, data.selectedKeys) { }
+                val results = backup.createBackup(data.file, data.selectedKeys, data.selectedListIds) { }
                 resultsHolder.backupResults.value = results
             }
                 .fold(
@@ -286,7 +286,7 @@ class RestoreWorker : DesktopTask, KoinComponent {
         val duration = measureTimedValue {
             runCatching {
                 val data = context.inputData<BackupRestoreData>() ?: return@runCatching
-                val results = backup.restoreBackup(data.file, data.selectedKeys) { }
+                val results = backup.restoreBackup(data.file, data.selectedKeys, data.selectedListIds) { }
                 resultsHolder.restoreResults.value = results
             }
                 .fold(
@@ -309,4 +309,5 @@ class BackupResultsHolder {
 data class BackupRestoreData(
     val file: PlatformFile,
     val selectedKeys: Set<String>,
+    val selectedListIds: Set<String>? = null,
 )
