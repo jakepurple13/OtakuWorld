@@ -11,37 +11,42 @@ import io.github.jan.supabase.storage.Storage
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class SupabaseClientProvider(
     private val credentialManager: CredentialManager,
     private val supabaseClientEngine: SupabaseClientEngine,
 ) {
     private val scope = CoroutineScope(Dispatchers.Default)
-    private var _client: SupabaseClient? = null
+    private val _clientState = MutableStateFlow<SupabaseClient?>(null)
+    val clientState: StateFlow<SupabaseClient?> = _clientState.asStateFlow()
 
-    val clientState: StateFlow<SupabaseClient?> = credentialManager.hasCredentials()
-        .map { hasCredentials -> if (hasCredentials) getOrCreate() else null }
-        .stateIn(scope, SharingStarted.Eagerly, null)
+    init {
+        scope.launch {
+            credentialManager.hasCredentials().collect { hasCredentials ->
+                _clientState.value = if (hasCredentials) getOrCreate() else null
+            }
+        }
+    }
 
     suspend fun getOrCreate(): SupabaseClient? {
+        _clientState.value?.let { return it }
         val credentials = credentialManager.getCredentials() ?: return null
-        if (_client == null) _client = buildClient(credentials)
-        return _client
+        return buildClient(credentials).also { _clientState.value = it }
     }
 
     suspend fun recreate(): SupabaseClient? {
-        _client?.close()
-        _client = null
+        _clientState.value?.close()
+        _clientState.value = null
         return getOrCreate()
     }
 
     suspend fun close() {
-        _client?.close()
-        _client = null
+        _clientState.value?.close()
+        _clientState.value = null
     }
 
     private fun buildClient(credentials: SupabaseCredentials): SupabaseClient =
