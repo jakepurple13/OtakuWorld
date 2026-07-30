@@ -15,7 +15,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
-    single<CredentialManager> { JvmCredentialManager() }
+    single<CredentialManager> { JvmCredentialManager(get()) }
     single<CredentialSignIn> { createCredentialSignIn() }
     single<ConnectivityMonitor> { JvmConnectivityMonitor() }
     single<MigrationPrefs> { JvmMigrationPrefs() }
