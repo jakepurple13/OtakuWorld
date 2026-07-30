@@ -108,6 +108,7 @@ coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ver
 datastore = { module = "androidx.datastore:datastore-core", version.ref = "datastore" }
 datastorePref = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 datastoreOkio = { module = "androidx.datastore:datastore-core-okio", version.ref = "datastore" }
+datastoreTink = { module = "androidx.datastore:datastore-tink", version.ref = "datastore" }
 
 # FileKit
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }

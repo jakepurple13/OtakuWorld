@@ -24,6 +24,7 @@ configurations.all {
 }
 
 kotlin {
+    jvmToolchain(21)
     jvm()
 
     compilerOptions {

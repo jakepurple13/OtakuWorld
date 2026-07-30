@@ -27,7 +27,7 @@ class SupabaseClientProvider(
         .map { hasCredentials -> if (hasCredentials) getOrCreate() else null }
         .stateIn(scope, SharingStarted.Eagerly, null)
 
-    fun getOrCreate(): SupabaseClient? {
+    suspend fun getOrCreate(): SupabaseClient? {
         val credentials = credentialManager.getCredentials() ?: return null
         if (_client == null) _client = buildClient(credentials)
         return _client

@@ -17,7 +17,7 @@ class IosCredentialManager : CredentialManager {
         _hasCredentials.value = true
     }
 
-    override fun getCredentials(): SupabaseCredentials? {
+    override suspend fun getCredentials(): SupabaseCredentials? {
         val json = defaults.stringForKey(KEY) ?: return null
         return runCatching { Json.decodeFromString<SupabaseCredentials>(json) }.getOrNull()
     }
@@ -32,4 +32,3 @@ class IosCredentialManager : CredentialManager {
     }
 }
 
-actual fun createCredentialManager(context: Any?): CredentialManager = IosCredentialManager()

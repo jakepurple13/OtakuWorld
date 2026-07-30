@@ -73,14 +73,13 @@ class AuthManagerImpl(
         }
     }
 
-    private val auth
-        get() = clientProvider.getOrCreate()?.auth
+    private suspend fun auth() = clientProvider.getOrCreate()?.auth
             ?: error("Supabase client not initialized — save credentials first")
 
     override suspend fun signInWithEmail(email: String, password: String, context: Any?) {
         _authState.value = AuthState.Loading
         runCatching {
-            auth.signInWith(Email) {
+            auth().signInWith(Email) {
                 this.email = email
                 this.password = password
             }
@@ -96,7 +95,7 @@ class AuthManagerImpl(
     override suspend fun signUpWithEmail(email: String, password: String, context: Any?) {
         _authState.value = AuthState.Loading
         runCatching {
-            auth.signUpWith(Email) {
+            auth().signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
@@ -112,7 +111,7 @@ class AuthManagerImpl(
     override suspend fun signInWithOAuth(provider: OAuthProvider) {
         _authState.value = AuthState.Loading
         runCatching {
-            auth.signInWith(provider)
+            auth().signInWith(provider)
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)
@@ -122,7 +121,7 @@ class AuthManagerImpl(
 
     override suspend fun signInWithMagicLink(email: String) {
         runCatching {
-            auth.signInWith(OTP) { this.email = email }
+            auth().signInWith(OTP) { this.email = email }
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)
@@ -132,7 +131,7 @@ class AuthManagerImpl(
 
     override suspend fun signInWithPhone(phone: String, otp: String) {
         runCatching {
-            auth.verifyPhoneOtp(type = io.github.jan.supabase.auth.OtpType.Phone.SMS, phone = phone, token = otp)
+            auth().verifyPhoneOtp(type = io.github.jan.supabase.auth.OtpType.Phone.SMS, phone = phone, token = otp)
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)
@@ -142,7 +141,7 @@ class AuthManagerImpl(
 
     override suspend fun signInAnonymously() {
         runCatching {
-            auth.signInAnonymously()
+            auth().signInAnonymously()
         }.onFailure {
             it.printStackTrace()
             exceptionDao.insertException(it)
@@ -151,7 +150,7 @@ class AuthManagerImpl(
     }
 
     override suspend fun signOut() {
-        runCatching { auth.signOut() }
+        runCatching { auth().signOut() }
     }
 
     override suspend fun deleteAccount() {
@@ -164,7 +163,7 @@ class AuthManagerImpl(
     }
 
     override suspend fun refreshSession() {
-        runCatching { auth.refreshCurrentSession() }
+        runCatching { auth().refreshCurrentSession() }
     }
 
     /*@OptIn(SupabaseExperimental::class)
