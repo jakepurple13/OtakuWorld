@@ -66,7 +66,7 @@ val viewModels: Module = module {
             uiInfos = getAll(),
             peekZip = { file -> get<Backup>().peekBackup(file, getAll()) },
             resultsFlow = get<BackgroundWorkHandler>().restoreResultsFlow(),
-            startRestore = { file, keys -> get<BackgroundWorkHandler>().startRestore(file, keys) },
+            startRestore = { file, keys, _ -> get<BackgroundWorkHandler>().startRestore(file, keys) },
         )
     }
     viewModelOf(::SettingViewModel)

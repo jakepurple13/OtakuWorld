@@ -1,5 +1,8 @@
 package com.programmersbox.kmpuiviews.backup
 
+import com.programmersbox.favoritesdatabase.CustomList
+import com.programmersbox.favoritesdatabase.CustomListInfo
+import com.programmersbox.favoritesdatabase.CustomListItem
 import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardStep
 import com.programmersbox.kmpuiviews.presentation.settings.backuprestore.RestoreWizardViewModel
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
@@ -28,11 +31,13 @@ private class RestoreFakeUiInfo(override val key: String) : BackupUiInfo {
     override suspend fun parseSummary(json: String?, rawBytes: ByteArray?) = BackupDataSummary(itemCount = 5)
 }
 
+private fun customList(name: String) = CustomList(
+    item = CustomListItem(uuid = name, name = name),
+    list = listOf(CustomListInfo(uuid = name, title = "T", description = "D", url = "https://example.com/$name", imageUrl = "https://example.com/$name.jpg", source = "Src")),
+)
+
 class RestoreWizardViewModelTest {
 
-    // pickFile() and confirm() launch work inside viewModelScope, which runs on the real Main
-    // dispatcher (set to Dispatchers.Default below) rather than runTest's virtual scheduler.
-    // A test-dispatcher advance doesn't drive that work, so poll for it with real time.
     private suspend fun awaitCondition(condition: () -> Boolean) {
         withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(5_000) { while (!condition()) delay(10) }
@@ -58,7 +63,7 @@ class RestoreWizardViewModelTest {
         val vm = RestoreWizardViewModel<String>(
             uiInfos = listOf(a, b),
             peekZip = { mapOf("a" to BackupDataSummary(itemCount = 5)) },
-            startRestore = { _, _ -> },
+            startRestore = { _, _, _ -> },
         )
 
         vm.pickFile("file.zip")
@@ -71,13 +76,13 @@ class RestoreWizardViewModelTest {
     }
 
     @Test
-    fun `confirm calls startRestore with the picked file and selected keys`() = runTest {
-        var called: Pair<String, Set<String>>? = null
+    fun `confirm calls startRestore with the picked file, selected keys, and null list filter`() = runTest {
+        var called: Triple<String, Set<String>, Set<String>?>? = null
         val vm = RestoreWizardViewModel<String>(
             uiInfos = listOf(RestoreFakeUiInfo("a")),
             peekZip = { mapOf("a" to BackupDataSummary(itemCount = 1)) },
             resultsFlow = flowOf(emptyList()),
-            startRestore = { file, keys -> called = file to keys },
+            startRestore = { file, keys, listIds -> called = Triple(file, keys, listIds) },
         )
 
         vm.pickFile("file.zip")
@@ -85,7 +90,7 @@ class RestoreWizardViewModelTest {
         vm.goToReview()
         vm.confirm()
 
-        assertEquals("file.zip" to setOf("a"), called)
+        assertEquals(Triple("file.zip", setOf("a"), null), called)
         assertEquals(RestoreWizardStep.Executing, vm.state.value.step)
     }
 
@@ -96,7 +101,7 @@ class RestoreWizardViewModelTest {
             uiInfos = listOf(RestoreFakeUiInfo("a")),
             peekZip = { mapOf("a" to BackupDataSummary(itemCount = 1)) },
             resultsFlow = results,
-            startRestore = { _, _ -> },
+            startRestore = { _, _, _ -> },
         )
 
         vm.pickFile("file.zip")
@@ -109,5 +114,46 @@ class RestoreWizardViewModelTest {
         awaitCondition { vm.state.value.step == RestoreWizardStep.Complete }
         assertEquals(RestoreWizardStep.Complete, vm.state.value.step)
         assertEquals(1, vm.state.value.results.size)
+    }
+
+    @Test
+    fun `pickFile loads subItems for the lists row from peekListContents, not the local db`() = runTest {
+        val listUiInfo = RestoreFakeUiInfo("lists.json")
+        val zipLists = listOf(customList("zip-list-a"), customList("zip-list-b"))
+        val vm = RestoreWizardViewModel<String>(
+            uiInfos = listOf(listUiInfo),
+            peekZip = { mapOf("lists.json" to BackupDataSummary(itemCount = 2)) },
+            peekListContents = { zipLists },
+            startRestore = { _, _, _ -> },
+        )
+
+        vm.pickFile("file.zip")
+        awaitCondition { vm.state.value.items.singleOrNull()?.subItems != null }
+
+        val subItems = vm.state.value.items.single().subItems!!
+        assertEquals(setOf("zip-list-a", "zip-list-b"), subItems.map { it.name }.toSet())
+    }
+
+    @Test
+    fun `toggleListSelected flips one sub-item, confirm sends only the selected list ids`() = runTest {
+        val listUiInfo = RestoreFakeUiInfo("lists.json")
+        val zipLists = listOf(customList("zip-list-a"), customList("zip-list-b"))
+        var called: Triple<String, Set<String>, Set<String>?>? = null
+        val vm = RestoreWizardViewModel<String>(
+            uiInfos = listOf(listUiInfo),
+            peekZip = { mapOf("lists.json" to BackupDataSummary(itemCount = 2)) },
+            peekListContents = { zipLists },
+            resultsFlow = flowOf(emptyList()),
+            startRestore = { file, keys, listIds -> called = Triple(file, keys, listIds) },
+        )
+
+        vm.pickFile("file.zip")
+        awaitCondition { vm.state.value.items.singleOrNull()?.subItems != null }
+
+        vm.toggleListSelected("zip-list-b")
+        vm.goToReview()
+        vm.confirm()
+
+        assertEquals(setOf("zip-list-a"), called?.third)
     }
 }

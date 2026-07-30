@@ -2,6 +2,7 @@ package com.programmersbox.kmpuiviews.presentation.settings.backuprestore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
 import com.programmersbox.sharedcomponents.backup.ItemResult
@@ -20,11 +21,14 @@ data class RestoreWizardUiState<F>(
     val results: List<ItemResult> = emptyList(),
 )
 
+private const val LISTS_KEY = "lists.json"
+
 class RestoreWizardViewModel<F>(
     private val uiInfos: List<BackupUiInfo>,
     private val peekZip: suspend (F) -> Map<String, BackupDataSummary>,
+    private val peekListContents: suspend (F) -> List<CustomList> = { emptyList() },
     private val resultsFlow: Flow<List<ItemResult>> = emptyFlow(),
-    private val startRestore: (F, Set<String>) -> Unit,
+    private val startRestore: (F, Set<String>, Set<String>?) -> Unit,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RestoreWizardUiState<F>())
@@ -37,6 +41,21 @@ class RestoreWizardViewModel<F>(
                 .filter { summaries.containsKey(it.key) }
                 .map { WizardItemState(uiInfo = it, summary = summaries[it.key]) }
             _state.update { it.copy(file = file, step = RestoreWizardStep.SelectItems, items = items) }
+
+            if (items.any { it.uiInfo.key == LISTS_KEY }) {
+                val subItems = peekListContents(file).map {
+                    ListSubItemState(
+                        id = it.item.uuid,
+                        name = it.item.name,
+                        coverUrl = it.list.firstOrNull()?.imageUrl,
+                        itemCount = it.list.size,
+                        requiresBiometric = it.item.useBiometric,
+                    )
+                }
+                _state.update { s ->
+                    s.copy(items = s.items.map { item -> if (item.uiInfo.key == LISTS_KEY) item.copy(subItems = subItems) else item })
+                }
+            }
         }
     }
 
@@ -49,6 +68,15 @@ class RestoreWizardViewModel<F>(
     fun toggleExpanded(key: String) {
         _state.update { s ->
             s.copy(items = s.items.map { if (it.uiInfo.key == key) it.copy(expanded = !it.expanded) else it })
+        }
+    }
+
+    fun toggleListSelected(listId: String) {
+        _state.update { s ->
+            s.copy(items = s.items.map { item ->
+                if (item.uiInfo.key != LISTS_KEY) item
+                else item.copy(subItems = item.subItems?.map { if (it.id == listId) it.copy(selected = !it.selected) else it })
+            })
         }
     }
 
@@ -81,8 +109,14 @@ class RestoreWizardViewModel<F>(
     fun confirm() {
         val file = _state.value.file ?: return
         val keys = _state.value.items.map { it.uiInfo.key }.toSet()
+        val selectedListIds = _state.value.items
+            .find { it.uiInfo.key == LISTS_KEY }
+            ?.subItems
+            ?.filter { it.selected }
+            ?.map { it.id }
+            ?.toSet()
         _state.update { it.copy(step = RestoreWizardStep.Executing) }
-        startRestore(file, keys)
+        startRestore(file, keys, selectedListIds)
         viewModelScope.launch {
             resultsFlow.collect { results ->
                 _state.update { it.copy(results = results) }
