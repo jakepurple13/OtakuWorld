@@ -1,5 +1,6 @@
 package com.programmersbox.kmpuiviews.utils
 
+import com.programmersbox.favoritesdatabase.CustomList
 import com.programmersbox.favoritesdatabase.ExceptionDao
 import com.programmersbox.sharedcomponents.backup.BackupDataSummary
 import com.programmersbox.sharedcomponents.backup.BackupUiInfo
@@ -15,11 +16,12 @@ class Backup(
     suspend fun createBackup(
         document: PlatformFile,
         selectedKeys: Set<String>,
+        selectedListIds: Set<String>? = null,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> {
         var output: List<ItemResult> = emptyList()
         val time = measureTime {
-            output = runCatching { zipper.zipFile(document, selectedKeys, onItemComplete = onItemComplete) }
+            output = runCatching { zipper.zipFile(document, selectedKeys, selectedListIds, onItemComplete) }
                 .logFailureToDatabase()
                 .getOrThrow()
         }
@@ -30,9 +32,10 @@ class Backup(
     suspend fun restoreBackup(
         document: PlatformFile,
         selectedKeys: Set<String>,
+        selectedListIds: Set<String>? = null,
         onItemComplete: suspend (ItemResult) -> Unit,
     ): List<ItemResult> =
-        runCatching { zipper.readZip(document, selectedKeys, onItemComplete = onItemComplete) }
+        runCatching { zipper.readZip(document, selectedKeys, selectedListIds, onItemComplete) }
             .logFailureToDatabase()
             .getOrThrow()
 
@@ -40,6 +43,11 @@ class Backup(
         runCatching { zipper.peekZip(document, uiInfos) }
             .logFailureToDatabase()
             .getOrThrow()
+
+    suspend fun peekListContents(document: PlatformFile): List<CustomList> =
+        runCatching { zipper.peekListContents(document) }
+            .logFailureToDatabase()
+            .getOrElse { emptyList() }
 
     private suspend fun <T> Result<T>.logFailureToDatabase() = onFailure {
         it.printStackTrace()
