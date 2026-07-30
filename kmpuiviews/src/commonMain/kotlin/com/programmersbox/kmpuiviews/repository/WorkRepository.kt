@@ -30,8 +30,8 @@ interface BackgroundWorkHandler {
     fun workerInfoFlow(): Flow<List<WorkerInfoModel>>
     fun sourceUpdate()
     fun cancel(uuid: String)
-    fun startBackup(file: PlatformFile, selectedKeys: Set<String>)
-    fun startRestore(file: PlatformFile, selectedKeys: Set<String>)
+    fun startBackup(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>? = null)
+    fun startRestore(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>? = null)
     fun backupResultsFlow(): Flow<List<ItemResult>>
     fun restoreResultsFlow(): Flow<List<ItemResult>>
 }

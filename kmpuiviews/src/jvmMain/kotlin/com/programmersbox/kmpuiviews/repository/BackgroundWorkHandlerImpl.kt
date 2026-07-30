@@ -107,7 +107,7 @@ class BackgroundWorkHandlerImpl(
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {
         scope.launch {
             TestTaskRunner.runTask(
                 BackupWorker(),
@@ -117,7 +117,7 @@ class BackgroundWorkHandlerImpl(
         }
     }
 
-    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {
         scope.launch {
             TestTaskRunner.runTask(
                 RestoreWorker(),

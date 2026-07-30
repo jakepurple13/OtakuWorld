@@ -31,10 +31,15 @@ class RestoreWorker(
     override suspend fun doWork(): Result {
         val uri = inputData.getString("uri") ?: return Result.failure()
         val selectedKeys = inputData.getStringArray("selectedKeys")?.toSet() ?: return Result.failure()
+        val selectedListIds = if (inputData.getBoolean("hasListFilter", false)) {
+            inputData.getStringArray("selectedListIds")?.toSet().orEmpty()
+        } else {
+            null
+        }
         setForeground(getForegroundInfo())
         val results = mutableListOf<ItemResult>()
         return runCatching {
-            backup.restoreBackup(readPlatformFile(uri), selectedKeys) { result ->
+            backup.restoreBackup(readPlatformFile(uri), selectedKeys, selectedListIds) { result ->
                 results += result
                 setProgress(workDataOf("results" to Json.encodeToString(results.toList())))
             }

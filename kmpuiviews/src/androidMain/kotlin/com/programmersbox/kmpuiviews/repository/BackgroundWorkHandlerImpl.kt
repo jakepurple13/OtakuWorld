@@ -292,7 +292,7 @@ class BackgroundWorkHandlerImpl(
         workManager.cancelWorkById(UUID.fromString(uuid))
     }
 
-    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {
+    override fun startBackup(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {
         workManager.enqueueUniqueWork(
             "backup",
             ExistingWorkPolicy.KEEP,
@@ -301,13 +301,15 @@ class BackgroundWorkHandlerImpl(
                     workDataOf(
                         "uri" to file.toAndroidUri("").toString(),
                         "selectedKeys" to selectedKeys.toTypedArray(),
+                        "hasListFilter" to (selectedListIds != null),
+                        "selectedListIds" to (selectedListIds ?: emptySet()).toTypedArray(),
                     )
                 )
                 .build()
         )
     }
 
-    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {
+    override fun startRestore(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {
         workManager.enqueueUniqueWork(
             "restore",
             ExistingWorkPolicy.KEEP,
@@ -316,6 +318,8 @@ class BackgroundWorkHandlerImpl(
                     workDataOf(
                         "uri" to file.toAndroidUri("").toString(),
                         "selectedKeys" to selectedKeys.toTypedArray(),
+                        "hasListFilter" to (selectedListIds != null),
+                        "selectedListIds" to (selectedListIds ?: emptySet()).toTypedArray(),
                     )
                 )
                 .build()

@@ -38,11 +38,11 @@ class MoreSettingsViewModelTest {
         override fun workerInfoFlow(): Flow<List<WorkerInfoModel>> = flowOf(emptyList())
         override fun sourceUpdate() {}
         override fun cancel(uuid: String) {}
-        override fun startBackup(file: PlatformFile, selectedKeys: Set<String>) {
+        override fun startBackup(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {
             backupCalledWith = file to selectedKeys
         }
 
-        override fun startRestore(file: PlatformFile, selectedKeys: Set<String>) {
+        override fun startRestore(file: PlatformFile, selectedKeys: Set<String>, selectedListIds: Set<String>?) {
             restoreCalledWith = file to selectedKeys
         }
 
