@@ -28,7 +28,7 @@ class MultiplatformLibraryNoIosPlugin : Plugin<Project> {
     private fun KotlinMultiplatformExtension.setup(
         dependencyHandling: DependencyHandling,
     ) {
-        jvmToolchain(21)
+        jvmToolchain(17)
 
         (this as org.gradle.api.plugins.ExtensionAware)
             .extensions

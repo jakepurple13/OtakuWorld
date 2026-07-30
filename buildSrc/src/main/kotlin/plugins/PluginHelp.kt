@@ -23,7 +23,7 @@ internal fun Project.setupKotlinCompileOptions() {
         compilerOptions {
             freeCompilerArgs.add("-Xwhen-guards")
             freeCompilerArgs.add("-Xcontext-parameters")
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 }

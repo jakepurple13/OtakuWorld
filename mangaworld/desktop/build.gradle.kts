@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     //`otaku-multiplatform-application`
@@ -24,8 +25,11 @@ configurations.all {
 }
 
 kotlin {
-    jvmToolchain(21)
-    jvm()
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
+    }
 
     compilerOptions {
         freeCompilerArgs.add("-Xwhen-guards")
