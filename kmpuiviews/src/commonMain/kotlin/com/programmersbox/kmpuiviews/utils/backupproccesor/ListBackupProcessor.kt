@@ -46,7 +46,7 @@ class ListBackupProcessor(
     }
 
     override suspend fun backup(sink: BufferedSink): ProcessorResult {
-        val lists = listDao.getAllListsSync().let { all -> filterByListId(all) }
+        val lists = filterByListId(listDao.getAllListsSync())
         lists.toJson().let { sink.writeUtf8(it) }
         return ProcessorResult(successCount = lists.size)
     }
