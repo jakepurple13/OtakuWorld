@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -18,12 +20,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.programmersbox.kmpuiviews.painterLogo
+import com.programmersbox.kmpuiviews.utils.composables.imageloaders.ImageLoaderChoice
 
 @Composable
 fun WizardItemRow(
     item: WizardItemState,
     onToggleSelected: () -> Unit,
     onToggleExpanded: () -> Unit,
+    onToggleListSelected: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -51,14 +56,46 @@ fun WizardItemRow(
             }
             AnimatedVisibility(visible = item.expanded) {
                 Column(modifier = Modifier.padding(start = 48.dp, top = 4.dp, bottom = 4.dp)) {
-                    item.uiInfo.description?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-                    item.summary?.let { summary ->
-                        summary.itemCount?.let { Text("Records: $it", style = MaterialTheme.typography.bodySmall) }
-                        summary.sizeBytes?.let { Text("Size: $it bytes", style = MaterialTheme.typography.bodySmall) }
-                        summary.details.forEach { (k, v) ->
-                            Text("$k: $v", style = MaterialTheme.typography.bodySmall)
+                    val subItems = item.subItems
+                    if (subItems != null) {
+                        subItems.forEach { subItem ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                            ) {
+                                Checkbox(
+                                    checked = subItem.selected,
+                                    onCheckedChange = { onToggleListSelected(subItem.id) },
+                                )
+                                ImageLoaderChoice(
+                                    imageUrl = subItem.coverUrl.orEmpty(),
+                                    name = subItem.name,
+                                    placeHolder = { painterLogo() },
+                                    modifier = Modifier.size(40.dp).padding(end = 8.dp),
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(subItem.name, style = MaterialTheme.typography.bodyMedium)
+                                    Text("${subItem.itemCount} items", style = MaterialTheme.typography.bodySmall)
+                                }
+                                if (subItem.requiresBiometric) {
+                                    Icon(
+                                        Icons.Default.Lock,
+                                        contentDescription = "Requires biometric unlock",
+                                        modifier = Modifier.padding(start = 4.dp),
+                                    )
+                                }
+                            }
                         }
-                    } ?: Text("Loading…", style = MaterialTheme.typography.bodySmall)
+                    } else {
+                        item.uiInfo.description?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                        item.summary?.let { summary ->
+                            summary.itemCount?.let { Text("Records: $it", style = MaterialTheme.typography.bodySmall) }
+                            summary.sizeBytes?.let { Text("Size: $it bytes", style = MaterialTheme.typography.bodySmall) }
+                            summary.details.forEach { (k, v) ->
+                                Text("$k: $v", style = MaterialTheme.typography.bodySmall)
+                            }
+                        } ?: Text("Loading…", style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
