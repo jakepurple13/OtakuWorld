@@ -58,7 +58,7 @@ val viewModels: Module = module {
         BackupWizardViewModel<PlatformFile>(
             uiInfos = getAll(),
             resultsFlow = get<BackgroundWorkHandler>().backupResultsFlow(),
-            startBackup = { file, keys -> get<BackgroundWorkHandler>().startBackup(file, keys) },
+            startBackup = { file, keys, _ -> get<BackgroundWorkHandler>().startBackup(file, keys) },
         )
     }
     viewModel {
