@@ -82,6 +82,8 @@ compose.desktop {
             packageName = "NovelWorld"
             packageVersion = "1.0.0"
 
+            modules("jdk.unsupported")
+
             windows {
                 iconFile.set(project.file("icons/icon.ico"))
             }
