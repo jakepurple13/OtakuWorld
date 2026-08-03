@@ -65,7 +65,6 @@ class SettingsSerializer : GenericSerializer<Settings> {
                 endAction = MiddleNavigationAction.Notifications,
             ),
             mediaCheckerSettings = defaultMediaCheckerSettings,
-            aiSettings = defaultAiSettings,
             colorBlindnessType = ColorBlindnessType.None,
             detailsChapterSwipeBehavior = defaultDetailsChapterSwipeBehavior,
             useProgressive = true,
@@ -83,23 +82,6 @@ class SettingsSerializer : GenericSerializer<Settings> {
     override fun encode(t: Settings): ByteArray = t.encode()
 
     companion object {
-        val defaultAiSettings = AiSettings(
-            aiService = AiService.Gemini,
-            geminiSettings = GeminiSettings(
-                apiKey = "",
-                modelName = "gemini-2.0-flash",
-            ),
-            openAiSettings = OpenAiSettings(
-                apiKey = "",
-                modelName = "gpt-3.5-turbo",
-            ),
-            anthropicSettings = AnthropicSettings(
-                apiKey = "",
-                modelName = "claude-2",
-            ),
-            prompt = AI_PROMPT,
-        )
-
         val defaultMediaCheckerSettings = MediaCheckerSettings(
             shouldRun = true,
             networkType = MediaCheckerNetworkType.Connected,
@@ -266,13 +248,6 @@ class NewSettingsHandling(
         key = { it.mediaCheckerSettings ?: SettingsSerializer.defaultMediaCheckerSettings },
         update = { copy(mediaCheckerSettings = it) },
         defaultValue = SettingsSerializer.defaultMediaCheckerSettings
-    )
-
-    val aiSettings = ProtoStoreHandler(
-        preferences = preferences,
-        key = { it.aiSettings ?: SettingsSerializer.defaultAiSettings },
-        update = { copy(aiSettings = it) },
-        defaultValue = SettingsSerializer.defaultAiSettings
     )
 
     val detailsChapterSwipeBehavior = ProtoStoreHandler(

@@ -29,6 +29,14 @@ kotlin {
             implementation(commonLibs.material.kolor)
             implementation(commonLibs.kmpalette.core)
         }
+
+        androidMain.dependencies {
+            implementation(commonLibs.datastoreTink)
+        }
+
+        jvmMain.dependencies {
+            implementation(commonLibs.datastoreTink)
+        }
     }
 }
 

@@ -5,15 +5,16 @@ import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.PlatformDataStoreHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
-import com.programmersbox.kmpextensionloader.SourceLoader
+import com.programmersbox.datastore.encrypted.EncryptedDataStoreFactory
 import com.programmersbox.jsextensionloader.jsExtensionLoaderModule
+import com.programmersbox.kmpextensionloader.SourceLoader
 import com.programmersbox.kmpuiviews.AboutLibraryBuilder
 import com.programmersbox.kmpuiviews.DateTimeFormatHandler
 import com.programmersbox.kmpuiviews.IconLoader
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.presentation.settings.extensions.ExtensionShareHandler
-import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.repository.InstallStatusRepository
+import com.programmersbox.kmpuiviews.repository.PlatformRepository
 import com.programmersbox.kmpuiviews.utils.DeepLinks
 import com.programmersbox.kmpuiviews.utils.DownloadAndInstaller
 import com.programmersbox.kmpuiviews.utils.ImageModifier
@@ -56,6 +57,7 @@ actual fun platformModule(): Module = module {
     singleOf(::PlatformRepository)
     singleOf(::ExtensionShareHandler)
     factoryOf(::ImageModifier)
+    singleOf(::EncryptedDataStoreFactory)
     kmpWorkers()
     includes(jsExtensionLoaderModule)
 }
