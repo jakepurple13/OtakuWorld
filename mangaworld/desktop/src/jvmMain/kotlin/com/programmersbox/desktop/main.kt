@@ -1,7 +1,5 @@
 package com.programmersbox.desktop
 
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.createProtobuf
 import com.programmersbox.kmpuiviews.BuildType
@@ -75,8 +73,4 @@ fun main(args: Array<String>) {
             includes(mangaSharedModule())
         }
     )
-}
-
-private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
-    override val viewModelStore: ViewModelStore = ViewModelStore()
 }
