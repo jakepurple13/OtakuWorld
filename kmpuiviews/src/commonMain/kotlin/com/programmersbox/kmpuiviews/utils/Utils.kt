@@ -8,7 +8,9 @@ import com.programmersbox.kmpuiviews.PlatformGenericInfo
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import org.koin.core.definition.BeanDefinition
+import org.koin.core.definition.KoinDefinition
 import org.koin.core.module.dsl.binds
+import org.koin.dsl.binds
 
 fun SourceRepository.loadItem(
     source: String,
@@ -36,3 +38,10 @@ fun <T : PlatformGenericInfo> BeanDefinition<T>.bindsGenericInfo() {
         )
     )
 }
+
+fun KoinDefinition<*>.bindsPlatformGenericInfo() = binds(
+    arrayOf(
+        KmpGenericInfo::class,
+        PlatformGenericInfo::class
+    )
+)

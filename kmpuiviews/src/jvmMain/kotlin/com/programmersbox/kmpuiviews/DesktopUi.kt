@@ -38,8 +38,14 @@ import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.TrayState
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
+import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import ca.gosyer.appdirs.AppDirs
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.DataStoreSettings
 import com.programmersbox.datastore.NewSettingsHandling
 import com.programmersbox.datastore.SettingsSerializer
 import com.programmersbox.datastore.createProtobuf
@@ -53,13 +59,16 @@ import com.programmersbox.kmpuiviews.di.kmpModule
 import com.programmersbox.kmpuiviews.presentation.HomeNav
 import com.programmersbox.kmpuiviews.presentation.navactions.NavigationActions
 import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandler
+import com.programmersbox.kmpuiviews.repository.BackgroundWorkHandlerImpl
 import com.programmersbox.kmpuiviews.repository.JsExtensionSourceBridge
 import com.programmersbox.kmpuiviews.repository.SetupRepository
 import com.programmersbox.kmpuiviews.theme.OtakuMaterialTheme
 import com.programmersbox.kmpuiviews.utils.AppConfig
 import com.programmersbox.kmpuiviews.utils.ComposeSettingsDsl
+import com.programmersbox.kmpuiviews.utils.JvmAppLogo
 import com.programmersbox.kmpuiviews.utils.KmpLocalCompositionSetup
 import com.programmersbox.kmpuiviews.utils.LocalNavHostPadding
+import com.programmersbox.kmpuiviews.utils.bindsPlatformGenericInfo
 import dev.nucleusframework.application.NucleusApplicationScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -68,12 +77,53 @@ import kotlinx.coroutines.withContext
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.core.KoinApplication
+import org.koin.core.definition.KoinDefinition
 import org.koin.core.logger.Level
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.scope.Scope
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
 import java.awt.Cursor
 import java.io.File
+
+private class DesktopViewModelStoreOwner : ViewModelStoreOwner {
+    override val viewModelStore: ViewModelStore = ViewModelStore()
+}
+
+fun desktopSetup(
+    args: Array<String>,
+    name: String,
+    appDirs: AppDirs,
+    appConfig: Scope.() -> AppConfig,
+    jvmAppLogo: Scope.() -> JvmAppLogo,
+    genericInfo: Module.() -> KoinDefinition<PlatformGenericInfo>,
+    moduleBlock: Module.() -> Unit,
+) {
+    DataStoreSettings { File(appDirs.getUserDataDir(), it).absolutePath }
+
+    if (BackgroundWorkHandlerImpl.setupSyncCheckers(args)) return
+    val desktopViewModelStoreOwner = DesktopViewModelStoreOwner()
+    application {
+        CompositionLocalProvider(
+            LocalViewModelStoreOwner provides desktopViewModelStoreOwner
+        ) {
+            BaseDesktopUi(
+                title = name,
+                moduleBlock = {
+                    modules(
+                        module {
+                            single { appConfig() }
+                            single { jvmAppLogo() }
+                            genericInfo(this).bindsPlatformGenericInfo()
+                            moduleBlock()
+                        }
+                    )
+                }
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
