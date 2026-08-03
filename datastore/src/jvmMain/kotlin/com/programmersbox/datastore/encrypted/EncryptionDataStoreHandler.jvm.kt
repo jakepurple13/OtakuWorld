@@ -8,12 +8,12 @@ import androidx.datastore.preferences.core.PreferencesFileSerializer
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.tink.AeadSerializer
 import com.google.crypto.tink.Aead
-import com.google.crypto.tink.CleartextKeysetHandle
-import com.google.crypto.tink.JsonKeysetReader
-import com.google.crypto.tink.JsonKeysetWriter
+import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.KeyTemplate
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.RegistryConfiguration
+import com.google.crypto.tink.SecretKeyAccess
+import com.google.crypto.tink.TinkJsonProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import java.io.File
@@ -33,14 +33,22 @@ actual class EncryptedDataStoreFactory(
 
         // 2. Load the existing key, or generate and save a new one if it doesn't exist
         val keysetHandle = if (keysetFile.exists()) {
-            CleartextKeysetHandle.read(JsonKeysetReader.withInputStream(keysetFile.inputStream()))
+            val storedKeyJson = keysetFile.readText()
+            TinkJsonProtoKeysetFormat.parseKeyset(
+                storedKeyJson,
+                SecretKeyAccess.requireAccess(InsecureSecretKeyAccess.get())
+            )
         } else {
-            keysetFile.createNewFile()
-
             val newHandle = KeysetHandle.generateNew(
                 KeyTemplate.createFrom(PredefinedAeadParameters.AES256_GCM)
             )
-            CleartextKeysetHandle.write(newHandle, JsonKeysetWriter.withOutputStream(keysetFile.outputStream()))
+
+            val serializedKey = TinkJsonProtoKeysetFormat.serializeKeyset(
+                newHandle,
+                SecretKeyAccess.requireAccess(InsecureSecretKeyAccess.get())
+            )
+            keysetFile.writeText(serializedKey)
+
             newHandle
         }
 

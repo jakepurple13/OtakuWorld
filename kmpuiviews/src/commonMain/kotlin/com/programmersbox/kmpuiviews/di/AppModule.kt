@@ -23,6 +23,7 @@ import com.programmersbox.kmpuiviews.utils.backupproccesor.BackupSettingsProcess
 import com.programmersbox.kmpuiviews.utils.backupproccesor.BookmarksBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.ChaptersWatchedBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.DictionaryBackupProcessor
+import com.programmersbox.kmpuiviews.utils.backupproccesor.EncryptedBackupSettingsProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.FavoriteBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.HeatMapBackupProcessor
 import com.programmersbox.kmpuiviews.utils.backupproccesor.HistoryBackupProcessor
@@ -115,6 +116,7 @@ val appModule = module {
 
 private fun Module.backupProcessors() {
     backupProcessorWithUiInfo("backupSettings", ::BackupSettingsProcessor)
+    backupProcessorWithUiInfo("encryptedBackupSettings", ::EncryptedBackupSettingsProcessor)
     backupProcessorWithUiInfo("bookmarks", ::BookmarksBackupProcessor)
     backupProcessorWithUiInfo("chaptersWatched", ::ChaptersWatchedBackupProcessor)
     backupProcessorWithUiInfo("favorite", ::FavoriteBackupProcessor)
