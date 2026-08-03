@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.programmersbox.datastore.DataStoreHandler
 import com.programmersbox.datastore.DataStoreHandling
+import com.programmersbox.datastore.encrypted.EncryptedDataStoreHandling
 import com.programmersbox.kmpuiviews.KmpGenericInfo
 import com.programmersbox.kmpuiviews.OtakuWorldCatalog
 import com.programmersbox.kmpuiviews.domain.AppUpdateCheck
@@ -61,6 +62,7 @@ val appModule = module {
             .apply(get<KmpGenericInfo>().composeCustomPreferences())
     }
 
+    singleOf(::EncryptedDataStoreHandling)
     singleOf(::DataStoreHandling)
     singleOf(::MediaUpdateChecker)
     factoryOf(::Backup)

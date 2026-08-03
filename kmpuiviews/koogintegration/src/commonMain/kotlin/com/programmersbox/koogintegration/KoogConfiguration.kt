@@ -3,6 +3,8 @@ package com.programmersbox.koogintegration
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.programmersbox.datastore.DataStoreHandler
+import com.programmersbox.datastore.encrypted.EncryptedDataStoreHandling
+import com.programmersbox.datastore.encrypted.EncryptionDataStoreHandler
 import com.programmersbox.koogintegration.integrator.BookmarksIntegrator
 import com.programmersbox.koogintegration.integrator.FavoritesIntegrator
 import com.programmersbox.koogintegration.integrator.HeatMapIntegrator
@@ -70,9 +72,11 @@ fun buildKoogModule() = module {
     }
 
     single {
-        val koogApiKey = DataStoreHandler(
+        val encryptedHandler = get<EncryptedDataStoreHandling>()
+        val koogApiKey = EncryptionDataStoreHandler(
             key = stringPreferencesKey("koogApiKey"),
-            defaultValue = ""
+            defaultValue = "",
+            dataStore = encryptedHandler.dataStore
         )
 
         val koogCompany = DataStoreHandler(

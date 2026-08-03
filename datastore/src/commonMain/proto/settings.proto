@@ -24,7 +24,6 @@ message Settings {
   bool notifyOnReboot = 20;
   bool hasMigrated = 21;
   MediaCheckerSettings mediaCheckerSettings = 22;
-  AiSettings aiSettings = 23;
   ColorBlindnessType colorBlindnessType = 24;
   DetailsChapterSwipeBehaviorHandle detailsChapterSwipeBehavior = 27;
 
@@ -104,35 +103,6 @@ enum MediaCheckerNetworkType {
   Connected = 0;
   Metered = 1;
   Unmetered = 2;
-}
-
-message AiSettings {
-  AiService aiService = 1;
-  string prompt = 2;
-  GeminiSettings geminiSettings = 3;
-  OpenAiSettings openAiSettings = 4;
-  AnthropicSettings anthropicSettings = 5;
-}
-
-enum AiService {
-  Gemini = 0;
-  OpenAi = 1;
-  Anthropic = 2;
-}
-
-message GeminiSettings {
-  string apiKey = 1;
-  string modelName = 2;
-}
-
-message OpenAiSettings {
-  string apiKey = 1;
-  string modelName = 2;
-}
-
-message AnthropicSettings {
-  string apiKey = 1;
-  string modelName = 2;
 }
 
 enum ColorBlindnessType {
