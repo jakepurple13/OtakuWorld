@@ -108,9 +108,13 @@ class RestoreWizardViewModel<F>(
 
     fun confirm() {
         val file = _state.value.file ?: return
-        val keys = _state.value.items.map { it.uiInfo.key }.toSet()
-        val listSubItems = _state.value.items.find { it.uiInfo.key == LISTS_KEY }?.subItems
-        val selectedListIds = listSubItems
+        val keys = _state.value.items
+            .filter { it.selected }
+            .map { it.uiInfo.key }
+            .toSet()
+        val selectedListIds = _state.value.items
+            .find { it.uiInfo.key == LISTS_KEY }
+            ?.subItems
             ?.takeIf { it.isNotEmpty() }
             ?.let { all -> all.filter { it.selected }.map { it.id }.toSet().takeIf { it.size != all.size } }
         _state.update { it.copy(step = RestoreWizardStep.Executing) }

@@ -31,7 +31,7 @@ class ActivityBackupProcessor(
     }
 
     override val key: String
-        get() = "activity"
+        get() = fileName
     override val displayName: String
         get() = "Time Spent Doing"
     override val description: String
