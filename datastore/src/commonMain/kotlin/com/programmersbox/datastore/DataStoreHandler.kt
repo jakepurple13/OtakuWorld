@@ -27,24 +27,30 @@ class DataStoreSettings(
     }
 }
 
-class DataStoreHandler<T>(
+abstract class InternalDataStoreHandler<T>(
     internal val key: Preferences.Key<T>,
     internal val defaultValue: T,
+    internal val dataStore: DataStore<Preferences>,
 ) {
-    fun asFlow() = otakuDataStore.data.map { it[key] ?: defaultValue }
+    fun asFlow() = dataStore.data.map { it[key] ?: defaultValue }
 
     suspend fun get() = asFlow().firstOrNull() ?: defaultValue
 
     suspend fun getOrNull() = asFlow().firstOrNull()
 
     suspend fun set(value: T) {
-        otakuDataStore.edit { it[key] = value }
+        dataStore.edit { it[key] = value }
     }
 
     suspend fun clear() {
-        otakuDataStore.edit { it.remove(key) }
+        dataStore.edit { it.remove(key) }
     }
 }
+
+class DataStoreHandler<T>(
+    key: Preferences.Key<T>,
+    defaultValue: T,
+) : InternalDataStoreHandler<T>(key, defaultValue, otakuDataStore)
 
 class DataStoreHandlerObject<T, R>(
     internal val key: Preferences.Key<T>,
@@ -92,7 +98,7 @@ class DataStoreHandlerNullable<T>(
 }
 
 @Composable
-fun <T> DataStoreHandler<T>.asState() = rememberPreference(key, defaultValue)
+fun <T> InternalDataStoreHandler<T>.asState() = rememberPreference(key, defaultValue)
 
 @Composable
 fun <T, R> DataStoreHandlerObject<T, R>.asState() = rememberPreference(key, mapToType, mapToKey, defaultValue)

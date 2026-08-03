@@ -46,8 +46,7 @@ actual class EncryptedDataStoreFactory(
         scope = GlobalScope,
     )
 
-    actual fun create(): DataStore<Preferences> =
-        context.dataStore
+    actual fun create(): DataStore<Preferences> = context.dataStore
 
     companion object {
         private const val ENCRYPTED_DATASTORE_KEY = "encrypted_datastore_key"
