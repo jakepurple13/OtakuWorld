@@ -43,12 +43,12 @@ jobs:
       - name: Run all tests
         run: ./gradlew allTests
 
+        # ADDED STEP: Publish the test results to the PR/Build Summary (macOS compatible)
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: mikepenz/action-junit-report@v4
         if: always()
         with:
-          # Gradle puts the JUnit XML files in the test-results directory
-          files: '**/build/test-results/**/*.xml'
+          report_paths: '**/build/test-results/**/*.xml'
 
       - name: Upload Test Reports
         # This ensures the test reports are saved even if a test fails
