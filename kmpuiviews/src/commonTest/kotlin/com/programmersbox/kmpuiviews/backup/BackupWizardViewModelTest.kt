@@ -12,7 +12,6 @@ import com.programmersbox.sharedcomponents.backup.ItemResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.resetMain
@@ -108,7 +107,7 @@ class BackupWizardViewModelTest {
     }
 
     @Test
-    fun `deselectAll clears selection, selectAll restores it`() = runTest {
+    fun `deselectAll clears selection selectAll restores it`() = runTest {
         val vm = BackupWizardViewModel<String>(listOf(FakeUiInfo("a"), FakeUiInfo("b")), startBackup = { _, _, _ -> })
         vm.deselectAll()
         assertTrue(vm.state.value.items.none { it.selected })
@@ -125,7 +124,7 @@ class BackupWizardViewModelTest {
     }
 
     @Test
-    fun `goToReview only carries selected items, confirm calls startBackup with the file, keys, and null list filter`() = runTest {
+    fun `goToReview only carries selected items confirm calls startBackup with the file keys and null list filter`() = runTest {
         var startedWith: Triple<String, Set<String>, Set<String>?>? = null
         val vm = BackupWizardViewModel<String>(
             listOf(FakeUiInfo("a"), FakeUiInfo("b")),
@@ -179,7 +178,7 @@ class BackupWizardViewModelTest {
     }
 
     @Test
-    fun `toggleListSelected flips one sub-item, confirm sends only the selected list ids`() = runTest {
+    fun `toggleListSelected flips one sub-item confirm sends only the selected list ids`() = runTest {
         val lists = listOf(customList("list-a"), customList("list-b"))
         var startedWith: Triple<String, Set<String>, Set<String>?>? = null
         val vm = BackupWizardViewModel<String>(

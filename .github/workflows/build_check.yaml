@@ -73,6 +73,7 @@ jobs:
 
   unit_tests:
     uses: ./.github/workflows/unit_tests.yaml
+    if: github.event_name == 'pull_request'
     secrets: inherit # pass all secrets
 
 #  otakuworld:

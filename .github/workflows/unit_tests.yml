@@ -1,4 +1,4 @@
-name: Compose Multiplatform Tests
+name: Unit Tests
 
 on:
   workflow_dispatch:
@@ -19,7 +19,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - run: echo "IS_PRERELEASE=${{ inputs.IS_PRERELEASE }}" >> $GITHUB_ENV
+      - run: |
+          echo "IS_PRERELEASE=${{ inputs.IS_PRERELEASE }}" >> $GITHUB_ENV
 
       - name: Setup JDK
         uses: actions/setup-java@v5
@@ -34,7 +35,7 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
 
       - name: Run all tests
-        run: ./gradlew jvmTest
+        run: ./gradlew allTests
 
       - name: Upload Test Reports
         # This ensures the test reports are saved even if a test fails

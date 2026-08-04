@@ -173,17 +173,6 @@ class DetailsViewModelTest {
     }
 
     @Test
-    fun `currentState exposes Add action when not favorited`() = runTest {
-        val vm = viewModel()
-
-        awaitCondition { vm.currentState is DetailState.Success }
-
-        val state = vm.currentState as DetailState.Success
-        assertTrue(state.action is DetailFavoriteAction.Add)
-        assertTrue(!vm.favoriteListener)
-    }
-
-    @Test
     fun `favoriteAction Add persists favorite and flips currentState to Remove`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }

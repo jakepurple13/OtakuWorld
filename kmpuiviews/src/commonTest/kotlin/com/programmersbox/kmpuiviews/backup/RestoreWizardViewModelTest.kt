@@ -76,7 +76,7 @@ class RestoreWizardViewModelTest {
     }
 
     @Test
-    fun `confirm calls startRestore with the picked file, selected keys, and null list filter`() = runTest {
+    fun `confirm calls startRestore with the picked file selected keys and null list filter`() = runTest {
         var called: Triple<String, Set<String>, Set<String>?>? = null
         val vm = RestoreWizardViewModel<String>(
             uiInfos = listOf(RestoreFakeUiInfo("a")),
@@ -117,7 +117,7 @@ class RestoreWizardViewModelTest {
     }
 
     @Test
-    fun `pickFile loads subItems for the lists row from peekListContents, not the local db`() = runTest {
+    fun `pickFile loads subItems for the lists row from peekListContents not the local db`() = runTest {
         val listUiInfo = RestoreFakeUiInfo("lists.json")
         val zipLists = listOf(customList("zip-list-a"), customList("zip-list-b"))
         val vm = RestoreWizardViewModel<String>(
@@ -135,7 +135,7 @@ class RestoreWizardViewModelTest {
     }
 
     @Test
-    fun `toggleListSelected flips one sub-item, confirm sends only the selected list ids`() = runTest {
+    fun `toggleListSelected flips one sub-item confirm sends only the selected list ids`() = runTest {
         val listUiInfo = RestoreFakeUiInfo("lists.json")
         val zipLists = listOf(customList("zip-list-a"), customList("zip-list-b"))
         var called: Triple<String, Set<String>, Set<String>?>? = null

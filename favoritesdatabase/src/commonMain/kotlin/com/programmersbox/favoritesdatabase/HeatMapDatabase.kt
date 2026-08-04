@@ -3,6 +3,7 @@ package com.programmersbox.favoritesdatabase
 import androidx.room3.ColumnInfo
 import androidx.room3.ColumnTypeConverter
 import androidx.room3.ColumnTypeConverters
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -34,6 +35,7 @@ import kotlin.time.ExperimentalTime
     version = 2,
 )
 @ColumnTypeConverters(HeatMapConverter::class)
+@ConstructedBy(HeatMapDatabaseConstructor::class)
 abstract class HeatMapDatabase : RoomDatabase() {
 
     abstract fun heatMapDao(): HeatMapDao

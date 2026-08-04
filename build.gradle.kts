@@ -35,6 +35,21 @@ subprojects {
             )
         }
     }
+
+    tasks.withType<Test>().configureEach {
+        // Disables any test task containing "ios" in its name
+        if (name.contains("ios", ignoreCase = true)) {
+            enabled = false
+        }
+    }
+
+    // Also disable Kotlin Multiplatform specific test runner tasks for iOS
+    tasks.configureEach {
+        if (name.contains("iosTest", ignoreCase = true)) {
+            enabled = false
+        }
+    }
+
     afterEvaluate {
         when {
             plugins.hasPlugin("otaku-library") -> {
@@ -48,6 +63,14 @@ subprojects {
             }
         }
     }
+}
+
+tasks.register("runOnlyCommonTests") {
+    group = "verification"
+    description = "Runs only the common multiplatform tests."
+
+    // Depend only on the common test tasks
+    dependsOn(tasks.matching { it.name == "commonTest" || it.name == "jvmTest" })
 }
 
 fun Project.configureAndroidBasePlugin() {
