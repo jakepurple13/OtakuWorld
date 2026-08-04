@@ -9,6 +9,12 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
+
 jobs:
   build-and-test:
     # macOS is REQUIRED if your project includes iOS targets.
@@ -36,6 +42,13 @@ jobs:
 
       - name: Run all tests
         run: ./gradlew allTests
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          # Gradle puts the JUnit XML files in the test-results directory
+          files: '**/build/test-results/**/*.xml'
 
       - name: Upload Test Reports
         # This ensures the test reports are saved even if a test fails
