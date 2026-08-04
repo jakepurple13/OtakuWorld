@@ -152,7 +152,7 @@ class JsExtensionTest {
         quickJs = js
         js.evaluate(SampleExtensionFixture.SCRIPT_TEXT, "sample-extension.js")
         val hostBridge = object : HostBridge {
-            override fun httpGet(url: String, headersJson: String): String {
+            override suspend fun httpGet(url: String, headersJson: String): String {
                 Thread.sleep(5)
                 return "body-for-$url"
             }

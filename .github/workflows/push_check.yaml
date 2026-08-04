@@ -67,6 +67,10 @@ jobs:
     if: github.event.inputs.build_novelworld == 'true' || github.event_name == 'push'
     secrets: inherit # pass all secrets
 
+  unit_tests:
+    uses: ./.github/workflows/unit_tests.yaml
+    secrets: inherit # pass all secrets
+
 #  otakuworld:
 #    uses: ./.github/workflows/otakuworld_build.yaml
 #    if: github.event.inputs.build_otakuworld == 'true' || github.event_name == 'push'

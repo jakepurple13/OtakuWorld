@@ -1,0 +1,45 @@
+name: Compose Multiplatform Tests
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      IS_PRERELEASE:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-and-test:
+    # macOS is REQUIRED if your project includes iOS targets.
+    # If you only target Android/Desktop/Web, change this to ubuntu-latest to save money/time.
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - run: echo "IS_PRERELEASE=${{ inputs.IS_PRERELEASE }}" >> $GITHUB_ENV
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: adopt
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          # Optional: Only download dependencies if gradle files change, speeds up builds
+          cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
+
+      - name: Run all tests
+        run: ./gradlew jvmTest
+
+      - name: Upload Test Reports
+        # This ensures the test reports are saved even if a test fails
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: '**/build/reports/tests/'

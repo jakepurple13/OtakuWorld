@@ -96,6 +96,7 @@ class FavoriteViewModelTest {
         dao.insertFavorite(favorite("https://example.com/2", title = "Beta"))
 
         val vm = viewModel()
+        vm.resetSources()
         awaitCondition { vm.listSources.size == 2 }
 
         vm.searchText = TextFieldState("alp")
