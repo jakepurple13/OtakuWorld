@@ -3,6 +3,7 @@ package com.programmersbox.favoritesdatabase
 import androidx.room3.ColumnInfo
 import androidx.room3.ColumnTypeConverter
 import androidx.room3.ColumnTypeConverters
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -24,6 +25,7 @@ import kotlinx.serialization.json.Json
     version = 2,
 )
 @ColumnTypeConverters(Converters::class)
+@ConstructedBy(RecommendationDatabaseConstructor::class)
 abstract class RecommendationDatabase : RoomDatabase() {
 
     abstract fun recommendationDao(): RecommendationDao

@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.AutoMigration
+import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.migration.Migration
@@ -26,6 +27,7 @@ import androidx.sqlite.execSQL
         ),
     ],
 )
+@ConstructedBy(FavoritesDatabaseConstructor::class)
 abstract class ItemDatabase : RoomDatabase() {
 
     abstract fun itemDao(): ItemDao

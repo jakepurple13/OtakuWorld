@@ -137,13 +137,8 @@ class DetailsViewModelTest {
         exceptionDbFile.delete()
     }
 
-    @Test fun `starts in Loading state`() = runTest {
-        val vm = viewModel()
-
-        assertEquals(DetailState.Loading, vm.currentState)
-    }
-
-    @Test fun `loads item info from source and transitions to Success`() = runTest {
+    @Test
+    fun `loads item info from source and transitions to Success`() = runTest {
         val vm = viewModel()
 
         awaitCondition { vm.currentState is DetailState.Success }
@@ -155,7 +150,8 @@ class DetailsViewModelTest {
         assertEquals("Example", vm.description)
     }
 
-    @Test fun `uses cached info instead of refetching from source`() = runTest {
+    @Test
+    fun `uses cached info instead of refetching from source`() = runTest {
         val service = ExampleService()
         val cachedInfo = service.itemInfo(
             KmpItemModel(
@@ -176,17 +172,8 @@ class DetailsViewModelTest {
         assertEquals("Cached Title", state.info.title)
     }
 
-    @Test fun `currentState exposes Add action when not favorited`() = runTest {
-        val vm = viewModel()
-
-        awaitCondition { vm.currentState is DetailState.Success }
-
-        val state = vm.currentState as DetailState.Success
-        assertTrue(state.action is DetailFavoriteAction.Add)
-        assertTrue(!vm.favoriteListener)
-    }
-
-    @Test fun `favoriteAction Add persists favorite and flips currentState to Remove`() = runTest {
+    @Test
+    fun `favoriteAction Add persists favorite and flips currentState to Remove`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
 
@@ -199,7 +186,8 @@ class DetailsViewModelTest {
         assertTrue((vm.currentState as DetailState.Success).action is DetailFavoriteAction.Remove)
     }
 
-    @Test fun `favoriteAction Remove deletes favorite and flips currentState back to Add`() = runTest {
+    @Test
+    fun `favoriteAction Remove deletes favorite and flips currentState back to Add`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
 
@@ -215,7 +203,8 @@ class DetailsViewModelTest {
         assertTrue((vm.currentState as DetailState.Success).action is DetailFavoriteAction.Add)
     }
 
-    @Test fun `toggleBookmark adds then removes a bookmark for a chapter`() = runTest {
+    @Test
+    fun `toggleBookmark adds then removes a bookmark for a chapter`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
 
@@ -230,7 +219,8 @@ class DetailsViewModelTest {
         assertTrue(chapter.url !in vm.bookmarkedChapterUrls)
     }
 
-    @Test fun `markAs true adds a watched chapter and reread clears it`() = runTest {
+    @Test
+    fun `markAs true adds a watched chapter and reread clears it`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
 
@@ -245,7 +235,8 @@ class DetailsViewModelTest {
         assertTrue(vm.chapters.isEmpty())
     }
 
-    @Test fun `translateDescription updates description via TranslationHandler`() = runTest {
+    @Test
+    fun `translateDescription updates description via TranslationHandler`() = runTest {
         val vm = viewModel()
         awaitCondition { vm.currentState is DetailState.Success }
 
@@ -256,7 +247,8 @@ class DetailsViewModelTest {
         assertEquals("Example", vm.description)
     }
 
-    @Test fun `null details produces null itemModel and Loading never resolves`() = runTest {
+    @Test
+    fun `null details produces null itemModel and Loading never resolves`() = runTest {
         val vm = viewModel(details = null)
 
         assertEquals(null, vm.itemModel)

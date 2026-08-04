@@ -24,6 +24,7 @@ import com.programmersbox.datastore.ThemeColor
 import com.programmersbox.supabaseintegration.repository.ActivityRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject

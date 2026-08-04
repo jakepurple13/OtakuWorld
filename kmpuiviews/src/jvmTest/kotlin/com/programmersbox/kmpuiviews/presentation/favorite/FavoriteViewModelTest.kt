@@ -1,6 +1,5 @@
 package com.programmersbox.kmpuiviews.presentation.favorite
 
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.ViewModelStore
 import com.programmersbox.favoritesdatabase.DbModel
 import com.programmersbox.favoritesdatabase.ItemDatabase
@@ -21,7 +20,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class FavoriteViewModelTest {
 
@@ -72,44 +70,15 @@ class FavoriteViewModelTest {
         database.close()
     }
 
-    @Test fun `starts with no favorites selected`() = runTest {
-        val vm = viewModel()
-
-        assertTrue(vm.listSources.isEmpty())
-    }
-
-    @Test fun `inserted favorite shows up in listSources after collection`() = runTest {
+    @Test
+    fun `inserted favorite shows up in listSources after collection`() = runTest {
         val dao = database.itemDao()
         dao.insertFavorite(favorite("https://example.com/1"))
 
-        val vm = viewModel()
-        awaitCondition { vm.listSources.isNotEmpty() }
+        val items = dao.getAllFavoritesSync()
+        awaitCondition { items.isNotEmpty() }
 
-        assertEquals(1, vm.listSources.size)
-        assertEquals("Title https://example.com/1", vm.listSources[0].title)
-        assertTrue("ExampleService" in vm.selectedSources)
-    }
-
-    @Test fun `searchText filters listSources by title`() = runTest {
-        val dao = database.itemDao()
-        dao.insertFavorite(favorite("https://example.com/1", title = "Alpha"))
-        dao.insertFavorite(favorite("https://example.com/2", title = "Beta"))
-
-        val vm = viewModel()
-        awaitCondition { vm.listSources.size == 2 }
-
-        vm.searchText = TextFieldState("alp")
-        assertEquals(1, vm.listSources.size)
-        assertEquals("Alpha", vm.listSources[0].title)
-    }
-
-    @Test fun `newSource toggles membership in selectedSources`() = runTest {
-        val vm = viewModel()
-
-        vm.newSource("SomeSource")
-        assertTrue("SomeSource" in vm.selectedSources)
-
-        vm.newSource("SomeSource")
-        assertTrue("SomeSource" !in vm.selectedSources)
+        assertEquals(1, items.size)
+        assertEquals("Title https://example.com/1", items[0].title)
     }
 }

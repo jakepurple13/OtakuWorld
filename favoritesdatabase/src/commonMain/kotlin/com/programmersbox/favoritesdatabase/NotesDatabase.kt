@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Entity
@@ -102,6 +103,7 @@ interface NotesDao {
     version = 2,
     exportSchema = true,
 )
+@ConstructedBy(NotesDatabaseConstructor::class)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun notesDao(): NotesDao
 

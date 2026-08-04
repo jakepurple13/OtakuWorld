@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Entity
@@ -37,6 +38,7 @@ interface BackupPreferenceDao {
     version = 1,
     exportSchema = true,
 )
+@ConstructedBy(SyncPreferencesConstructor::class)
 abstract class SyncPreferences : RoomDatabase() {
     abstract fun backupPreferenceDao(): BackupPreferenceDao
 

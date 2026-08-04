@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -124,6 +125,7 @@ interface BookmarkDao {
     version = 2,
     exportSchema = true,
 )
+@ConstructedBy(BookmarkDatabaseConstructor::class)
 abstract class BookmarkDatabase : RoomDatabase() {
     abstract fun bookmarkDao(): BookmarkDao
 

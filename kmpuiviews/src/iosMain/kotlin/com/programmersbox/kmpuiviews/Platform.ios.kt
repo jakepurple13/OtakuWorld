@@ -1,15 +1,25 @@
 package com.programmersbox.kmpuiviews
 
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavHostController
+import com.mikepenz.aboutlibraries.Libs
 import com.programmersbox.favoritesdatabase.DatabaseBuilder
+import com.programmersbox.kmpmodels.KmpSourceInformation
 import io.github.vinceglb.filekit.PlatformFile
 import io.kamel.core.ExperimentalKamelApi
 import io.kamel.core.config.KamelConfig
@@ -144,3 +154,56 @@ fun provideBiometricAuthenticator(): BiometricAuthenticator {
         )
     }
 }*/
+@Composable
+actual fun rememberCustomUriHandler(): CustomUriHandler = CustomUriHandler()
+actual fun analyticsScreen(screenName: String) {
+}
+
+@Composable
+actual fun versionCode(): String = BuildKonfig.VERSION_CODE_KMP
+
+@Composable
+actual fun appVersion(): String = BuildKonfig.VERSION_NAME_KMP
+
+@Composable
+actual fun painterLogo(): Painter = rememberVectorPainter(Icons.Default.AcUnit)
+actual class AboutLibraryBuilder {
+    @Composable
+    actual fun buildLibs(): State<Libs?> = mutableStateOf(null)
+}
+
+@Composable
+actual fun Modifier.zoomOverlay(): Modifier = Modifier
+
+@Composable
+actual fun HideScreen(shouldHide: Boolean) {
+}
+
+@Composable
+actual fun InitialSetup() {
+}
+
+@Composable
+actual fun SourceIcon(iconLoader: IconLoader, sourceInfo: KmpSourceInformation) {
+}
+
+@Composable
+actual fun ScrollBar(lazyListState: LazyListState) {
+}
+
+actual class SystemAlerter {
+    actual fun alertFavoritesChange() {
+    }
+
+    actual fun alertChapterChange() {
+    }
+
+    actual fun alertListChange() {
+    }
+
+    actual fun alertListItemChange() {
+    }
+
+    actual fun alertIncognitoChange() {
+    }
+}

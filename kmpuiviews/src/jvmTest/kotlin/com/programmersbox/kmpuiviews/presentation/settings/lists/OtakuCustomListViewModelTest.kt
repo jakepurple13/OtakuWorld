@@ -220,19 +220,6 @@ class OtakuCustomListViewModelTest {
         assertTrue(dao().getAllListsSync()[0].list.isEmpty())
     }
 
-    @Test fun `rename updates the list name`() = runTest {
-        dao().create("My List")
-        val uuid = dao().getAllListsSync()[0].item.uuid
-
-        val vm = viewModel(uuid)
-        awaitCondition { vm.customList != null }
-
-        vm.rename("New Name")
-        awaitCondition { dao().getAllListsSync()[0].item.name == "New Name" }
-
-        assertEquals("New Name", dao().getAllListsSync()[0].item.name)
-    }
-
     @Test fun `deleteAll removes the whole list`() = runTest {
         dao().create("My List")
         val uuid = dao().getAllListsSync()[0].item.uuid

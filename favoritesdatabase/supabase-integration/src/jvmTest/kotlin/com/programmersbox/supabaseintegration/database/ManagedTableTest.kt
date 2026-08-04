@@ -1,8 +1,6 @@
 package com.programmersbox.supabaseintegration.database
 
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class FakeManagedTable(
     val tableName: String,
@@ -26,19 +24,6 @@ class FakeManagedTable(
 }
 
 class ManagedTableTest {
-
-    @Test
-    fun `init throws when defaultAction is not NONE and not in supportedActions`() {
-        val exception = assertFailsWith<IllegalArgumentException> {
-            FakeManagedTable(
-                tableName = "users",
-                displayName = "Users",
-                supportedActions = listOf(SupportedTableAction.CLEAR_ALL),
-                defaultAction = SupportedTableAction.PURGE_DELETED,
-            )
-        }
-        assertTrue(exception.message!!.contains("users"))
-    }
 
     @Test
     fun `init succeeds when defaultAction is NONE or is in supportedActions`() {

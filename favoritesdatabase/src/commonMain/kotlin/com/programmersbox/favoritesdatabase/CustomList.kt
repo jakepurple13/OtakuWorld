@@ -4,6 +4,7 @@ package com.programmersbox.favoritesdatabase
 
 import androidx.room3.AutoMigration
 import androidx.room3.ColumnInfo
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -38,6 +39,7 @@ import kotlin.uuid.Uuid
         AutoMigration(from = 10, to = 11),
     ]
 )
+@ConstructedBy(ListDatabaseConstructor::class)
 abstract class ListDatabase : RoomDatabase() {
 
     abstract fun listDao(): ListDao

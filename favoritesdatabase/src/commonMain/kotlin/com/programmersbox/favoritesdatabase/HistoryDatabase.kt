@@ -3,6 +3,7 @@ package com.programmersbox.favoritesdatabase
 import androidx.paging.PagingSource
 import androidx.room3.AutoMigration
 import androidx.room3.ColumnInfo
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.DaoReturnTypeConverters
 import androidx.room3.Database
@@ -30,6 +31,7 @@ import kotlin.time.ExperimentalTime
         AutoMigration(from = 1, to = 2)
     ]
 )
+@ConstructedBy(HistoryDatabaseConstructor::class)
 abstract class HistoryDatabase : RoomDatabase() {
 
     abstract fun historyDao(): HistoryDao

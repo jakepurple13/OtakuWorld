@@ -1,6 +1,7 @@
 package com.programmersbox.favoritesdatabase
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ConstructedBy
 import androidx.room3.Dao
 import androidx.room3.Database
 import androidx.room3.Delete
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
     entities = [BlurHashItem::class],
     version = 2,
 )
+@ConstructedBy(BlurHashDatabaseConstructor::class)
 abstract class BlurHashDatabase : RoomDatabase() {
 
     abstract fun blurDao(): BlurHashDao
