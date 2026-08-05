@@ -65,4 +65,28 @@ class ShowcaseSymbolProcessorTest {
         assertTrue(generated.contains("group = \"Buttons\""))
         assertTrue(generated.contains("content = { test.SampleButton() }"))
     }
+
+    @Test
+    fun `missing Composable annotation produces the exact expected error`() {
+        val source = SourceFile.kotlin(
+            "Sample.kt",
+            """
+            package test
+
+            import com.programmersbox.showcase.annotations.ShowcaseComponent
+
+            @ShowcaseComponent(name = "Sample", description = "desc", group = "Group")
+            fun NotComposable() {}
+            """.trimIndent(),
+        )
+
+        val result = compile(source)
+
+        assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+        assertTrue(
+            result.messages.contains(
+                "Function 'NotComposable' is annotated with @ShowcaseComponent but is not a @Composable function"
+            )
+        )
+    }
 }
