@@ -19,6 +19,7 @@ dependencies {
     implementation(commonLibs.runtime)
     implementation(commonLibs.ui)
     implementation(commonLibs.foundation)
+    implementation(commonLibs.material.kolor)
     implementation(compose.desktop.currentOs)
 
     implementation(projects.kmpuiviews)

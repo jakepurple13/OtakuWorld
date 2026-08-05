@@ -9,9 +9,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 
 
 @Composable
@@ -72,4 +78,35 @@ fun CheckBoxSetting(
             colors = checkboxColors
         )
     }
+}
+
+@ShowcaseComponent(
+    name = "Switch Setting",
+    description = "A switch setting component.",
+    group = "Settings"
+)
+@Composable
+fun SwitchSettingSample() {
+    var switchValue by remember { mutableStateOf(true) }
+    SwitchSetting(
+        value = switchValue,
+        settingTitle = { Text("Switch Setting") },
+        updateValue = { switchValue = it }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@ShowcaseComponent(
+    name = "Checkbox Setting",
+    description = "A checkbox setting component.",
+    group = "Settings"
+)
+@Composable
+fun CheckBoxSettingSample() {
+    var checkBoxValue by remember { mutableStateOf(true) }
+    CheckBoxSetting(
+        value = checkBoxValue,
+        settingTitle = { Text("Checkbox Setting") },
+        updateValue = { checkBoxValue = it }
+    )
 }

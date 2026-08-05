@@ -14,11 +14,17 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assistant
+import androidx.compose.material.icons.outlined.Assistant
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -36,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 
 /**
  * Defaults for [DiagonalWipeIcon].
@@ -638,4 +645,23 @@ private fun clipRectangleWithHalfPlane(
     }
 
     return outCount
+}
+
+@ShowcaseComponent(
+    name = "Diagonal Wipe",
+    description = "A wipe effect that uses a diagonal line to wipe the icon",
+    group = "Buttons"
+)
+@Composable
+fun DiagonalWipeSample() {
+    var isWiped by remember { mutableStateOf(false) }
+    IconButton(
+        onClick = { isWiped = !isWiped },
+    ) {
+        DiagonalWipeIcon(
+            isWiped = isWiped,
+            baseIcon = Icons.Default.Assistant,
+            wipedIcon = Icons.Outlined.Assistant
+        )
+    }
 }

@@ -18,8 +18,10 @@ import com.programmersbox.kmpuiviews.platform
 import com.programmersbox.kmpuiviews.presentation.components.settings.CategoryGroupListItem
 import com.programmersbox.kmpuiviews.presentation.settings.SettingsScaffold
 import com.programmersbox.kmpuiviews.utils.AppConfig
+import com.programmersbox.kmpuiviews.utils.DateTimeFormatItem
 import com.programmersbox.kmpuiviews.utils.LocalSystemDateTimeFormat
 import com.programmersbox.kmpuiviews.versionCode
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
@@ -103,5 +105,63 @@ fun AppInfoScreen() {
                 onClick = { },
             )
         }
+    }
+}
+
+@ShowcaseComponent(
+    name = "Category Group",
+    description = "Shows a category group implementation",
+    group = "Settings"
+)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun AppInfoSample() {
+    CategoryGroupListItem {
+        segmentedListItem(
+            overlineContent = { Text("Version:") },
+            content = { Text(BuildKonfig.VERSION_NAME_KMP) },
+            onClick = { },
+        )
+
+        segmentedListItem(
+            overlineContent = { Text("Platform:") },
+            content = { Text(platform()) },
+            onClick = { },
+        )
+
+        segmentedListItem(
+            overlineContent = { Text("Version code:") },
+            content = { Text(versionCode()) },
+            onClick = { },
+        )
+
+        segmentedListItem(
+            overlineContent = { Text("GIT SHA:") },
+            content = { Text(BuildKonfig.COMMIT_SHA) },
+            onClick = { },
+        )
+
+        segmentedListItem(
+            overlineContent = { Text("Build Time:") },
+            content = {
+                val formatter = DateTimeFormatItem(isUsing24HourTime = true)
+                val format = remember(formatter) {
+                    runCatching {
+                        formatter.format(
+                            Instant.parse(BuildKonfig.BUILD_TIME)
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                        )
+                    }.getOrDefault(BuildKonfig.BUILD_TIME)
+                }
+                Text(format)
+            },
+            onClick = { },
+        )
+
+        segmentedListItem(
+            overlineContent = { Text("Commit Count:") },
+            content = { Text(BuildKonfig.COMMIT_COUNT) },
+            onClick = { },
+        )
     }
 }
