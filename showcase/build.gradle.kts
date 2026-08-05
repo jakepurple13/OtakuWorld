@@ -24,6 +24,10 @@ dependencies {
     implementation(projects.kmpuiviews)
 }
 
+ksp {
+    arg("showcaseModuleId", "showcase")
+}
+
 compose.desktop {
     application {
         mainClass = "com.programmersbox.showcase.MainKt"

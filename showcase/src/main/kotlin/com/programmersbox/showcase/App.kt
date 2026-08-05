@@ -28,10 +28,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.programmersbox.showcase.generated.ShowcaseEntry
-import com.programmersbox.showcase.generated.ShowcaseRegistry
+import com.programmersbox.showcase.annotations.ShowcaseEntry
+import com.programmersbox.showcase.annotations.ShowcaseRegistryProvider
+import java.util.ServiceLoader
 
 private const val ALL_GROUP = "All"
+
+private val allEntries: List<ShowcaseEntry> by lazy {
+    ServiceLoader.load(ShowcaseRegistryProvider::class.java).flatMap { it.entries }
+}
 
 @Composable
 fun App() {
@@ -40,7 +45,7 @@ fun App() {
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
             var selectedGroup by remember { mutableStateOf<String?>(null) }
-            val groups = remember { ShowcaseRegistry.entries.map { it.group }.distinct().sorted() }
+            val groups = remember { allEntries.map { it.group }.distinct().sorted() }
 
             Row(modifier = Modifier.fillMaxSize()) {
                 NavigationRail {
@@ -65,9 +70,9 @@ fun App() {
                         null -> WelcomePlaceholder()
                         else -> {
                             val entries = if (group == ALL_GROUP) {
-                                ShowcaseRegistry.entries
+                                allEntries
                             } else {
-                                ShowcaseRegistry.entries.filter { it.group == group }
+                                allEntries.filter { it.group == group }
                             }
                             ComponentList(entries)
                         }
