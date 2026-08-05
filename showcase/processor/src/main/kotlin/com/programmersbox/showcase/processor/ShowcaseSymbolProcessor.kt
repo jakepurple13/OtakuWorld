@@ -73,7 +73,8 @@ class ShowcaseSymbolProcessor(
 
     private fun sanitizedModuleId(): String {
         val sanitized = moduleId.replace(Regex("[^A-Za-z0-9]"), "_")
-        return sanitized.replaceFirstChar { it.uppercase() }
+        val safe = if (sanitized.firstOrNull()?.isDigit() == true) "_$sanitized" else sanitized
+        return safe.replaceFirstChar { it.uppercase() }
     }
 
     private fun toEntryOrReportError(function: KSFunctionDeclaration): GeneratedEntry? {
