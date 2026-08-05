@@ -1,5 +1,6 @@
 package com.programmersbox.showcase.processor
 
+import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -7,6 +8,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.Visibility
 
 private const val SHOWCASE_ANNOTATION = "com.programmersbox.showcase.annotations.ShowcaseComponent"
 private const val COMPOSABLE_ANNOTATION = "androidx.compose.runtime.Composable"
@@ -40,7 +42,7 @@ class ShowcaseSymbolProcessor(
 
         val entries = functions.mapNotNull { function -> toEntryOrReportError(function) }
 
-        val sortedEntries = entries.sortedWith(compareBy({ it.group }, { it.name }))
+        val sortedEntries = entries.sortedWith(compareBy({ it.group }, { it.name }, { it.qualifiedReference }))
         val dependencies = Dependencies(
             aggregating = true,
             *functions.mapNotNull { it.containingFile }.toTypedArray(),
@@ -57,6 +59,22 @@ class ShowcaseSymbolProcessor(
 
     private fun toEntryOrReportError(function: KSFunctionDeclaration): GeneratedEntry? {
         val functionName = function.simpleName.asString()
+
+        if (function.parentDeclaration != null) {
+            logger.error(
+                "Function '$functionName' is annotated with @ShowcaseComponent but is not a top-level function. Showcase components must be top-level.",
+                function,
+            )
+            return null
+        }
+
+        if (function.getVisibility() == Visibility.PRIVATE) {
+            logger.error(
+                "Function '$functionName' is annotated with @ShowcaseComponent but is private. Showcase components must not be private.",
+                function,
+            )
+            return null
+        }
 
         val isComposable = function.annotations.any {
             it.annotationType.resolve().declaration.qualifiedName?.asString() == COMPOSABLE_ANNOTATION

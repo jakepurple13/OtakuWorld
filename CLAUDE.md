@@ -74,6 +74,9 @@ Flavor-specific Firebase utility implementations live in
 | `novelworld`              | NovelWorld Android app                                                                                                          |
 | `novelworld:shared`       | Shared novel reader UI (KMP)                                                                                                    |
 | `app`                     | OtakuWorld companion/manager app                                                                                                |
+| `showcase`                | Standalone Compose Desktop app for browsing @ShowcaseComponent-annotated composables (dev tool, not part of app runtime)        |
+| `showcase:annotations`    | `@ShowcaseComponent` annotation (KMP)                                                                                           |
+| `showcase:processor`      | KSP processor that discovers annotated composables and generates the showcase registry                                         |
 
 ## Source plugin architecture
 

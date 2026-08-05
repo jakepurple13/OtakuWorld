@@ -1,21 +1,35 @@
 # Component Showcase
 
-A standalone Compose Desktop app for browsing this repo's `@Composable` UI components in
-isolation. Annotate any zero-parameter composable with `@ShowcaseComponent`, rebuild, and it
-appears in the showcase app automatically.
+A standalone Compose Desktop app for browsing `@Composable` UI components in isolation. Annotate
+any zero-parameter composable in the `:showcase` module with `@ShowcaseComponent`, rebuild, and it
+appears in the showcase app automatically (see "Current limitation" below).
 
 This is a developer tool only — it is not part of MangaWorld/AnimeWorld/NovelWorld's runtime.
 
 ## Modules
 
-- **`:showcase:annotations`** — Kotlin Multiplatform module holding the `@ShowcaseComponent`
-  annotation (`name`, `description`, `group`; source retention; function target).
+- **`:showcase:annotations`** — a Kotlin Multiplatform module (currently only a `jvm()` target is
+  declared; an Android/iOS consumer would need a target added first) holding the
+  `@ShowcaseComponent` annotation (`name`, `description`, `group`; source retention; function
+  target).
 - **`:showcase:processor`** — a KSP `SymbolProcessor` that finds every `@ShowcaseComponent`
   function, validates it, and generates `com.programmersbox.showcase.generated.ShowcaseRegistry`
   — a `List<ShowcaseEntry>` sorted alphabetically by group, then by name.
 - **`:showcase`** — the Compose Desktop app itself. Renders the generated registry behind a
   Material 3 `NavigationRail` (one rail item per group, plus "All"), with live-rendered previews
   of each component.
+
+## Current limitation
+
+Only composables inside the `:showcase` module itself are scanned — the processor runs wherever
+KSP is applied, and today that's only `:showcase`. Samples must live in the `:showcase` module
+(e.g. under `showcase/src/main/kotlin/com/programmersbox/showcase/samples/`). Annotating a
+`@Composable` in another module (MangaWorld, `kmpuiviews`, etc.) has no effect — it will not appear
+in the showcase app.
+
+Cross-module aggregation is not supported yet: the generated package
+(`com.programmersbox.showcase.generated`) is fixed, so if another module applied the processor it
+would generate its own `ShowcaseRegistry` under the same package, colliding with this one.
 
 ## Annotating a composable
 
@@ -45,5 +59,6 @@ Requirements, enforced at compile time by the processor:
 ./gradlew :showcase:run
 ```
 
-Rebuild (`./gradlew :showcase:processor:build` runs automatically as part of `:showcase:build`)
-whenever you add or change a `@ShowcaseComponent` annotation — there's no hot-reload.
+Rebuild (the processor is rebuilt automatically as part of `:showcase:build` — only its `jar`
+output is a dependency, not its full `build`/`check`) whenever you add or change a
+`@ShowcaseComponent` annotation — there's no hot-reload.

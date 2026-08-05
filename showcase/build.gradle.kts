@@ -1,5 +1,6 @@
+// bare id(...) — buildSrc convention plugins already apply this plugin unversioned; alias(libs.plugins.*) conflicts with that.
 plugins {
-    id("org.jetbrains.kotlin.jvm")
+    id("kotlin")
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
@@ -18,7 +19,6 @@ dependencies {
     implementation(commonLibs.runtime)
     implementation(commonLibs.ui)
     implementation(commonLibs.foundation)
-    implementation(commonLibs.cmp.ui.util)
     implementation(compose.desktop.currentOs)
 }
 

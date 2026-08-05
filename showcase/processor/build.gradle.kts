@@ -1,5 +1,6 @@
+// bare id(...) — buildSrc convention plugins already apply this plugin unversioned; alias(libs.plugins.*) conflicts with that.
 plugins {
-    id("org.jetbrains.kotlin.jvm")
+    id("kotlin")
 }
 
 kotlin {
@@ -19,3 +20,7 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+// :showcase:processor is a plain JVM module, so it has no KMP `allTests` task.
+// CI runs `./gradlew allTests` — register an alias so these tests are not skipped.
+tasks.register("allTests") { dependsOn(tasks.named("test")) }
