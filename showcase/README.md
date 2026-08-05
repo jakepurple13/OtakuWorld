@@ -1,8 +1,8 @@
 # Component Showcase
 
 A standalone Compose Desktop app for browsing `@Composable` UI components in isolation. Annotate
-any zero-parameter composable in the `:showcase` module with `@ShowcaseComponent`, rebuild, and it
-appears in the showcase app automatically (see "Current limitation" below).
+any zero-parameter composable with `@ShowcaseComponent` in any module wired up per "Adding a new
+module" below, rebuild, and it appears in the showcase app automatically.
 
 This is a developer tool only — it is not part of MangaWorld/AnimeWorld/NovelWorld's runtime.
 
@@ -19,17 +19,29 @@ This is a developer tool only — it is not part of MangaWorld/AnimeWorld/NovelW
   Material 3 `NavigationRail` (one rail item per group, plus "All"), with live-rendered previews
   of each component.
 
-## Current limitation
+## Adding a new module
 
-Only composables inside the `:showcase` module itself are scanned — the processor runs wherever
-KSP is applied, and today that's only `:showcase`. Samples must live in the `:showcase` module
-(e.g. under `showcase/src/main/kotlin/com/programmersbox/showcase/samples/`). Annotating a
-`@Composable` in another module (MangaWorld, `kmpuiviews`, etc.) has no effect — it will not appear
-in the showcase app.
+Any module can contribute components to the showcase. To wire one up:
 
-Cross-module aggregation is not supported yet: the generated package
-(`com.programmersbox.showcase.generated`) is fixed, so if another module applied the processor it
-would generate its own `ShowcaseRegistry` under the same package, colliding with this one.
+1. Add dependencies: `implementation(projects.showcase.annotations)` and
+   `ksp(projects.showcase.processor)` (or the target-specific KSP configuration, e.g. `kspJvm` for
+   a Kotlin Multiplatform module's JVM target).
+2. Give it a unique module id via the `ksp { }` Gradle DSL:
+   ```kotlin
+   ksp {
+       arg("showcaseModuleId", "your-module-name")
+   }
+   ```
+   This must be unique across every module that applies the processor — it's what keeps each
+   module's generated registry class from colliding with another's. Missing or blank fails the
+   build with a clear error.
+3. Make sure the module ends up as a (direct or transitive) dependency of `:showcase` itself —
+   only then will its generated registry actually be on the showcase app's runtime classpath for
+   `ServiceLoader` to find.
+4. Annotate composables with `@ShowcaseComponent` as usual.
+
+Each module's components are discovered automatically at runtime via `java.util.ServiceLoader` —
+no changes to the showcase app itself are needed when a new module is added.
 
 ## Annotating a composable
 
