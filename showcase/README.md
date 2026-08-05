@@ -13,8 +13,10 @@ This is a developer tool only — it is not part of MangaWorld/AnimeWorld/NovelW
   `@ShowcaseComponent` annotation (`name`, `description`, `group`; source retention; function
   target).
 - **`:showcase:processor`** — a KSP `SymbolProcessor` that finds every `@ShowcaseComponent`
-  function, validates it, and generates `com.programmersbox.showcase.generated.ShowcaseRegistry`
-  — a `List<ShowcaseEntry>` sorted alphabetically by group, then by name.
+  function in a module, validates it, and generates a `ShowcaseRegistryProvider` implementation
+  for that module (in package `com.programmersbox.showcase.generated`) — a `List<ShowcaseEntry>`
+  sorted alphabetically by group, then by name, registered for runtime discovery via
+  `java.util.ServiceLoader`.
 - **`:showcase`** — the Compose Desktop app itself. Renders the generated registry behind a
   Material 3 `NavigationRail` (one rail item per group, plus "All"), with live-rendered previews
   of each component.
