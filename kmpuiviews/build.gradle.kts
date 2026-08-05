@@ -1,5 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
+import implementation
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -158,6 +159,8 @@ kotlin {
                 implementation(commonLibs.cmp.lifecycle.viewmodel.navigation3)
                 implementation(commonLibs.cmp.navigationevent.compose)
                 implementation(commonLibs.cmp.material3.adaptive.nav3)
+
+                implementation(projects.showcase.annotations)
             }
         }
 
@@ -278,6 +281,10 @@ kotlin {
 
         }
     }
+}
+
+dependencies {
+    add("kspJvm", projects.showcase.processor)
 }
 
 buildkonfig {
