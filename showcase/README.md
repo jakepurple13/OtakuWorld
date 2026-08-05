@@ -4,27 +4,44 @@ A standalone Compose Desktop app for browsing `@Composable` UI components in iso
 any zero-parameter composable with `@ShowcaseComponent` in any module wired up per "Adding a new
 module" below, rebuild, and it appears in the showcase app automatically.
 
-This is a developer tool only — it is not part of MangaWorld/AnimeWorld/NovelWorld's runtime.
+The showcase app (`:showcase`) and processor (`:showcase:processor`) are dev-tools only, never part
+of the shipping apps' runtime. `:showcase:annotations` (just the annotation plus two small shared
+types) may end up on a production app's classpath if that app depends on a module that's been
+wired into the showcase (e.g. `kmpuiviews`), but nothing in it is ever exercised outside a
+`@ShowcaseComponent`-annotated module's own showcase-processor pass.
 
 ## Modules
 
-- **`:showcase:annotations`** — a Kotlin Multiplatform module (currently only a `jvm()` target is
-  declared; an Android/iOS consumer would need a target added first) holding the
-  `@ShowcaseComponent` annotation (`name`, `description`, `group`; source retention; function
-  target).
+- **`:showcase:annotations`** — a Kotlin Multiplatform module (targets: `jvm()`, `android { }`,
+  `iosArm64()`, `iosSimulatorArm64()`) holding the `@ShowcaseComponent` annotation (`name`,
+  `description`, `group`; source retention; function target), plus the shared `ShowcaseEntry` data
+  class and `ShowcaseRegistryProvider` marker interface that every generated provider implements.
 - **`:showcase:processor`** — a KSP `SymbolProcessor` that finds every `@ShowcaseComponent`
   function in a module, validates it, and generates a `ShowcaseRegistryProvider` implementation
   for that module (in package `com.programmersbox.showcase.generated`) — a `List<ShowcaseEntry>`
   sorted alphabetically by group, then by name, registered for runtime discovery via
   `java.util.ServiceLoader`.
-- **`:showcase`** — the Compose Desktop app itself. Renders the generated registry behind a
-  Material 3 `NavigationRail` (one rail item per group, plus "All"), with live-rendered previews
-  of each component.
+- **`:showcase`** — the Compose Desktop app itself. Renders the merged entries from every
+  discovered provider behind a Material 3 `NavigationRail` (one rail item per group, plus "All"),
+  with live-rendered previews of each component.
+
+## Known limitation
+
+`showcaseModuleId` uniqueness is enforced only by convention, not detected. If two different
+modules pick the same `showcaseModuleId`, they generate a class with the identical fully-qualified
+name and identical `META-INF/services` entry — at runtime only one is discoverable, silently,
+reproducing the exact bug this feature was built to fix, just one level up. Always pick a
+`showcaseModuleId` that's unique across every module that applies the processor; a duplicate causes
+one module's components to silently not appear, with no build error, since the collision only
+manifests as runtime classloader/ServiceLoader shadowing, not a compile-time duplicate-class error.
 
 ## Adding a new module
 
 Any module can contribute components to the showcase. To wire one up:
 
+0. Apply the KSP Gradle plugin: `alias(libs.plugins.ksp)` in the module's `plugins { }` block (if
+   not already applied) — without it, neither the `ksp(...)`/`kspJvm` configuration nor the
+   `ksp { }` extension block used below exists.
 1. Add dependencies: `implementation(projects.showcase.annotations)` and
    `ksp(projects.showcase.processor)` (or the target-specific KSP configuration, e.g. `kspJvm` for
    a Kotlin Multiplatform module's JVM target).

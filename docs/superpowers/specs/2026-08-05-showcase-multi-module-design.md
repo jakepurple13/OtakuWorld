@@ -136,3 +136,5 @@ wiring a new module into the showcase: the `annotations` + `ksp(processor)` depe
 - Automatic derivation of `showcaseModuleId` (e.g. from the Gradle project path) — KSP has no
   reliable way to learn this on its own; requiring an explicit, unique string is the deliberate
   choice here.
+- Detecting `showcaseModuleId` collisions (e.g. comparing `ClassLoader.getResources(...)` count
+  against distinct providers found) was considered but not implemented.

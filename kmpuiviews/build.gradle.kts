@@ -1,6 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
-import implementation
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
