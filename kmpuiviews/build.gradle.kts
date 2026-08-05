@@ -147,11 +147,6 @@ kotlin {
                 /*implementation(commonLibs.androidx.navigation3.runtime)
                 implementation(commonLibs.androidx.navigation3.ui)*/
 
-                implementation(commonLibs.generativeai.google)
-                implementation(commonLibs.generic.ai)
-                implementation(commonLibs.anthropic.sdk.kotlin)
-                implementation(commonLibs.xemantic.ai.tool.schema)
-
                 //implementation(commonLibs.heatmap)
 
                 implementation(commonLibs.cmp.navigation3.ui)

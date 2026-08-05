@@ -22,6 +22,11 @@ dependencies {
     implementation(commonLibs.material.kolor)
     implementation(compose.desktop.currentOs)
 
+    implementation(commonLibs.cmp.navigation3.ui)
+    implementation(commonLibs.cmp.lifecycle.viewmodel.navigation3)
+    implementation(commonLibs.cmp.navigationevent.compose)
+    implementation(commonLibs.cmp.material3.adaptive.nav3)
+
     implementation(projects.kmpuiviews)
 }
 

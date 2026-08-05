@@ -1,5 +1,7 @@
 package com.programmersbox.kmpuiviews.utils.composables.modifiers
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -10,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 
 /**
  * Extension function to apply a privacy-sensitive effect when the app enters the recent apps menu.
@@ -56,7 +59,7 @@ private fun Modifier.applyRedact(color: Color = Color.Black) = drawWithContent {
  *
  * @param blurRadius The radius of the blur effect in Dp. Default is 15.dp.
  */
-fun Modifier.applyBlur(blurRadius: Dp = 15.dp): Modifier = this.blur(blurRadius)
+private fun Modifier.applyBlur(blurRadius: Dp = 15.dp): Modifier = this.blur(blurRadius)
 
 /**
  * Sealed class defining different privacy effects.
@@ -75,4 +78,28 @@ sealed class PrivacyEffect {
      * @param blurRadius The intensity of the blur effect. Default is 15.dp.
      */
     data class Blur(val blurRadius: Dp = 15.dp) : PrivacyEffect()
+}
+
+@ShowcaseComponent(
+    name = "Privacy Sample",
+    description = "Shows different privacy effects",
+    group = "Modifiers"
+)
+@Composable
+fun PrivacySample() {
+    Column {
+        Text("This is a sensitive piece of information.")
+        Text(
+            "This is a sensitive piece of information.",
+            modifier = Modifier.privacySensitive(PrivacyEffect.Redact(Color.Gray))
+        )
+        Text(
+            "This is a sensitive piece of information.",
+            modifier = Modifier.applyBlur()
+        )
+        Text(
+            "This is a sensitive piece of information.",
+            modifier = Modifier.applyRedact()
+        )
+    }
 }

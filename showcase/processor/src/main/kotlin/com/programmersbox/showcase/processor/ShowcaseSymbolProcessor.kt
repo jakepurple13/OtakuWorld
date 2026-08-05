@@ -45,6 +45,8 @@ class ShowcaseSymbolProcessor(
             .filterIsInstance<KSFunctionDeclaration>()
             .toList()
 
+        println("Function count: ${functions.size}")
+
         val entries = functions.mapNotNull { function -> toEntryOrReportError(function) }
 
         val sortedEntries = entries.sortedWith(compareBy({ it.group }, { it.name }, { it.qualifiedReference }))
