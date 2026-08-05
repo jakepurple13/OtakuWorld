@@ -9,7 +9,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.navigationevent.DirectNavigationEventInput
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.programmersbox.showcase.annotations.ShowcaseComponent
 
+@ShowcaseComponent(
+    name = "Back Button",
+    description = "A simple back button.",
+    group = "Buttons",
+)
 @Composable
 fun BackButton() {
     val navEvent = LocalNavigationEventDispatcherOwner.current?.navigationEventDispatcher

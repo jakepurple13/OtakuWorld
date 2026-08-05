@@ -287,6 +287,10 @@ dependencies {
     add("kspJvm", projects.showcase.processor)
 }
 
+ksp {
+    arg("showcaseModuleId", "kmpuiviews")
+}
+
 buildkonfig {
     packageName = "com.programmersbox.kmpuiviews"
 
