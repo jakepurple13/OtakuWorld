@@ -12,6 +12,8 @@ import com.google.devtools.ksp.symbol.Visibility
 
 private const val SHOWCASE_ANNOTATION = "com.programmersbox.showcase.annotations.ShowcaseComponent"
 private const val COMPOSABLE_ANNOTATION = "androidx.compose.runtime.Composable"
+private const val PROVIDER_INTERFACE = "com.programmersbox.showcase.annotations.ShowcaseRegistryProvider"
+private const val GENERATED_PACKAGE = "com.programmersbox.showcase.generated"
 
 private data class GeneratedEntry(
     val name: String,
@@ -23,6 +25,7 @@ private data class GeneratedEntry(
 class ShowcaseSymbolProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
+    private val moduleId: String,
 ) : SymbolProcessor {
 
     private var invoked = false
@@ -36,6 +39,8 @@ class ShowcaseSymbolProcessor(
         if (invoked) return emptyList()
         invoked = true
 
+        if (moduleId.isBlank()) return emptyList()
+
         val functions = resolver.getSymbolsWithAnnotation(SHOWCASE_ANNOTATION)
             .filterIsInstance<KSFunctionDeclaration>()
             .toList()
@@ -48,13 +53,27 @@ class ShowcaseSymbolProcessor(
             *functions.mapNotNull { it.containingFile }.toTypedArray(),
         )
 
+        val className = "${sanitizedModuleId()}ShowcaseRegistryProvider"
+        val qualifiedClassName = "$GENERATED_PACKAGE.$className"
+
         codeGenerator.createNewFile(
             dependencies = dependencies,
-            packageName = "com.programmersbox.showcase.generated",
-            fileName = "ShowcaseRegistry",
-        ).bufferedWriter().use { writer -> writer.write(generateFileContents(sortedEntries)) }
+            packageName = GENERATED_PACKAGE,
+            fileName = className,
+        ).bufferedWriter().use { writer -> writer.write(generateFileContents(className, sortedEntries)) }
+
+        codeGenerator.createNewFileByPath(
+            dependencies = dependencies,
+            path = "META-INF/services/$PROVIDER_INTERFACE",
+            extensionName = "",
+        ).bufferedWriter().use { writer -> writer.write(qualifiedClassName) }
 
         return emptyList()
+    }
+
+    private fun sanitizedModuleId(): String {
+        val sanitized = moduleId.replace(Regex("[^A-Za-z0-9]"), "_")
+        return sanitized.replaceFirstChar { it.uppercase() }
     }
 
     private fun toEntryOrReportError(function: KSFunctionDeclaration): GeneratedEntry? {
@@ -109,20 +128,14 @@ class ShowcaseSymbolProcessor(
         return GeneratedEntry(name, description, group, qualifiedReference)
     }
 
-    private fun generateFileContents(entries: List<GeneratedEntry>): String = buildString {
-        appendLine("package com.programmersbox.showcase.generated")
+    private fun generateFileContents(className: String, entries: List<GeneratedEntry>): String = buildString {
+        appendLine("package $GENERATED_PACKAGE")
         appendLine()
-        appendLine("import androidx.compose.runtime.Composable")
+        appendLine("import com.programmersbox.showcase.annotations.ShowcaseEntry")
+        appendLine("import com.programmersbox.showcase.annotations.ShowcaseRegistryProvider")
         appendLine()
-        appendLine("data class ShowcaseEntry(")
-        appendLine("    val name: String,")
-        appendLine("    val description: String,")
-        appendLine("    val group: String,")
-        appendLine("    val content: @Composable () -> Unit,")
-        appendLine(")")
-        appendLine()
-        appendLine("object ShowcaseRegistry {")
-        appendLine("    val entries: List<ShowcaseEntry> = listOf(")
+        appendLine("class $className : ShowcaseRegistryProvider {")
+        appendLine("    override val entries: List<ShowcaseEntry> = listOf(")
         entries.forEach { entry ->
             appendLine("        ShowcaseEntry(")
             appendLine("            name = ${entry.name.quoted()},")
