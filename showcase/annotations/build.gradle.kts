@@ -28,4 +28,10 @@ kotlin {
     jvm()
 
     applyDefaultHierarchyTemplate()
+
+    sourceSets {
+        commonMain.dependencies {
+            api(commonLibs.runtime)
+        }
+    }
 }
