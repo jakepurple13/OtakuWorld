@@ -20,6 +20,8 @@ dependencies {
     implementation(commonLibs.ui)
     implementation(commonLibs.foundation)
     implementation(compose.desktop.currentOs)
+
+    implementation(projects.kmpuiviews)
 }
 
 compose.desktop {

@@ -107,6 +107,8 @@ include(":kmpuiviews:koogintegration")
 include(":kmpuiviews:koogintegration:customscraper")
 include(":sharedtools")
 include(":sharedcomponents")
-include(":showcase")
+if (System.getenv("CI") == null) {
+    include(":showcase")
+}
 include(":showcase:annotations")
 include(":showcase:processor")

@@ -19,6 +19,7 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +35,9 @@ private const val ALL_GROUP = "All"
 
 @Composable
 fun App() {
-    MaterialTheme {
+    MaterialTheme(
+        colorScheme = darkColorScheme(),
+    ) {
         Surface(modifier = Modifier.fillMaxSize()) {
             var selectedGroup by remember { mutableStateOf<String?>(null) }
             val groups = remember { ShowcaseRegistry.entries.map { it.group }.distinct().sorted() }
