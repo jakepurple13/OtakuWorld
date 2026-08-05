@@ -89,4 +89,30 @@ class ShowcaseSymbolProcessorTest {
             )
         )
     }
+
+    @Test
+    fun `function with parameters produces the exact expected error`() {
+        val source = SourceFile.kotlin(
+            "Sample.kt",
+            """
+            package test
+
+            import androidx.compose.runtime.Composable
+            import com.programmersbox.showcase.annotations.ShowcaseComponent
+
+            @ShowcaseComponent(name = "Sample", description = "desc", group = "Group")
+            @Composable
+            fun WithParams(text: String) {}
+            """.trimIndent(),
+        )
+
+        val result = compile(source)
+
+        assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode)
+        assertTrue(
+            result.messages.contains(
+                "Function 'WithParams' is annotated with @ShowcaseComponent but has parameters. Showcase components must have zero parameters."
+            )
+        )
+    }
 }
