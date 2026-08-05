@@ -115,4 +115,38 @@ class ShowcaseSymbolProcessorTest {
             )
         )
     }
+
+    @Test
+    fun `entries across multiple groups are sorted by group then name regardless of declaration order`() {
+        val source = SourceFile.kotlin(
+            "Sample.kt",
+            """
+            package test
+
+            import androidx.compose.runtime.Composable
+            import com.programmersbox.showcase.annotations.ShowcaseComponent
+
+            @ShowcaseComponent(name = "Zeta", description = "z", group = "Widgets")
+            @Composable
+            fun ZetaWidget() {}
+
+            @ShowcaseComponent(name = "Alpha", description = "a", group = "Widgets")
+            @Composable
+            fun AlphaWidget() {}
+
+            @ShowcaseComponent(name = "Only", description = "c", group = "Cards")
+            @Composable
+            fun CardSample() {}
+            """.trimIndent(),
+        )
+
+        val generated = generatedRegistrySource(source)
+
+        val cardIndex = generated.indexOf("name = \"Only\"")
+        val alphaIndex = generated.indexOf("name = \"Alpha\"")
+        val zetaIndex = generated.indexOf("name = \"Zeta\"")
+
+        assertTrue(cardIndex in 0 until alphaIndex, "Cards group ('Only') must come before Widgets group entries")
+        assertTrue(alphaIndex in 0 until zetaIndex, "Alpha must come before Zeta within the Widgets group")
+    }
 }
