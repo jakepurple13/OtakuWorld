@@ -2,6 +2,8 @@
 plugins {
     id("kotlin-multiplatform")
     id("com.android.kotlin.multiplatform.library")
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
