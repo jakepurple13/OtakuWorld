@@ -11,7 +11,7 @@ import com.programmersbox.showcase.annotations.ShowcaseComponent
 @ShowcaseComponent(
     name = "Simple Card",
     description = "A basic Material 3 card with text content.",
-    group = "Cards",
+    group = "Sample",
 )
 @Composable
 fun SimpleCardSample() {

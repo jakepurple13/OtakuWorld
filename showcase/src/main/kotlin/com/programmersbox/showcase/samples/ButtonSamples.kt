@@ -9,7 +9,7 @@ import com.programmersbox.showcase.annotations.ShowcaseComponent
 @ShowcaseComponent(
     name = "Primary Button",
     description = "Standard filled Material 3 button.",
-    group = "Buttons",
+    group = "Sample",
 )
 @Composable
 fun PrimaryButtonSample() {
@@ -21,7 +21,7 @@ fun PrimaryButtonSample() {
 @ShowcaseComponent(
     name = "Text Button",
     description = "Low-emphasis text-only Material 3 button.",
-    group = "Buttons",
+    group = "Sample",
 )
 @Composable
 fun TextButtonSample() {
